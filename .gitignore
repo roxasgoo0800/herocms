@@ -1,0 +1,46 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+.cache/
+
+# PHP / Composer
+vendor/
+composer.phar
+.phpunit.result.cache
+
+# Go
+bin/
+*.exe
+*.test
+*.out
+vendor/
+
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+acme.json
+
+# Docker data volumes (if mapped locally)
+postgres_data/
+redis_data/
+redpanda_data/
+minio_data/
+n8n_data/
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tsbuildinfo
+*.log

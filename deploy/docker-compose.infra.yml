@@ -1,0 +1,138 @@
+version: '3.9'
+
+services:
+  # -------------------------------------------------------------
+  # Edge Ingress & Reverse Proxy (Traefik v3)
+  # -------------------------------------------------------------
+  traefik:
+    image: traefik:v3.1
+    container_name: cloudcms_traefik
+    restart: always
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=cloudcms_edge_network"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Traefik Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/acme.json:/acme.json
+    networks:
+      - cloudcms_edge_network
+
+  # -------------------------------------------------------------
+  # Primary Database (PostgreSQL 16 Multi-Tenant)
+  # -------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: cloudcms_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: cloudcms_db
+      POSTGRES_USER: cloudcms_user
+      POSTGRES_PASSWORD: secret_postgres_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cloudcms_internal_net
+
+  # -------------------------------------------------------------
+  # Cache & Fast Top-Views Sorted Sets (Redis 7)
+  # -------------------------------------------------------------
+  redis:
+    image: redis:7.2-alpine
+    container_name: cloudcms_redis
+    restart: always
+    command: ["redis-server", "--requirepass", "secret_redis_password", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cloudcms_internal_net
+
+  # -------------------------------------------------------------
+  # High-Throughput Event Streaming (Redpanda / Kafka API)
+  # -------------------------------------------------------------
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.1.2
+    container_name: cloudcms_redpanda
+    restart: always
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 512M
+      - --overprovisioned
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092"
+      - "9644:9644" # Admin API
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    networks:
+      - cloudcms_internal_net
+
+  # -------------------------------------------------------------
+  # Object Storage for Media & Content Assets (MinIO S3)
+  # -------------------------------------------------------------
+  minio:
+    image: minio/minio:RELEASE.2024-05-10T01-41-38Z
+    container_name: cloudcms_minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # Web Console
+    volumes:
+      - minio_data:/data
+    networks:
+      - cloudcms_internal_net
+
+  # -------------------------------------------------------------
+  # Workflow & Social Automation Engine (n8n)
+  # -------------------------------------------------------------
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: cloudcms_n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=adminpassword
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - cloudcms_internal_net
+
+networks:
+  cloudcms_edge_network:
+    name: cloudcms_edge_network
+    driver: bridge
+  cloudcms_internal_net:
+    name: cloudcms_internal_net
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  redpanda_data:
+  minio_data:
+  n8n_data:
