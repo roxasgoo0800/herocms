@@ -2923,22 +2923,23 @@ const copySchemaJson = () => {
   gap: 8px;
   padding: 7px 9px;
   border-radius: 8px;
-  border: 1.5px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
   background: #ffffff;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.15s ease;
   text-align: left;
   outline: none;
 }
 
 .palette-card-btn:hover {
-  border-color: #94a3b8;
+  border-color: #cbd5e1;
   background: #f8fafc;
 }
 
 .palette-card-btn.active {
-  border-color: #0f172a;
-  background: #f8fafc;
+  border-color: #94a3b8;
+  background: #f1f5f9;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .palette-swatch-dot {
