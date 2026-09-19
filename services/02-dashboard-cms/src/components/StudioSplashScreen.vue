@@ -25,7 +25,7 @@ const stages = [
   { at: 45, text: 'Menghubungkan ke backend Go & database PostgreSQL...' },
   { at: 75, text: 'Memuat modul studio visual, stylesheet CSS & telemetri...' },
   { at: 95, text: 'Menyiapkan workspace konsol tenant...' },
-  { at: 100, text: 'Sesi siap! Membuka HeroCMS Studio...' }
+  { at: 100, text: 'Selesai! Membuka HeroCMS Studio...' }
 ];
 
 const currentStageText = computed(() => {
@@ -69,48 +69,57 @@ onUnmounted(() => {
 <template>
   <transition name="splash-dissolve">
     <div v-if="!isFinished" class="studio-splash-screen" role="status" aria-live="polite">
-      <!-- Ambient Glow Behind Elements -->
-      <div class="splash-ambient-aura" aria-hidden="true"></div>
+      <!-- 1. Base Subtle Dot Matrix Grid (Exact match with HeroCMS BackgroundWave) -->
+      <div class="base-dot-grid" aria-hidden="true"></div>
 
-      <div class="splash-center-pod">
-        <!-- Glowing Brand Logo Icon -->
-        <div class="splash-logo-pod">
-          <div class="splash-pulse-ring"></div>
-          <div class="splash-glyph-box">
-            <Layers :size="36" color="#ffffff" />
+      <!-- 2. Ambient Mesh Diffused Glow -->
+      <div class="ambient-mesh-glow" aria-hidden="true"></div>
+
+      <!-- 3. Central Cohesive Surface Container -->
+      <div class="auth-surface-container">
+        <!-- Modern Brand Header (Exact match with LoginView) -->
+        <header class="auth-brand-badge">
+          <div class="brand-glyph-box">
+            <Layers :size="22" color="#ffffff" />
           </div>
-        </div>
+          <div class="brand-title-wrap">
+            <h1 class="brand-wordmark">HeroCMS <span class="wordmark-highlight">Studio</span></h1>
+          </div>
+        </header>
 
-        <!-- Wordmark -->
-        <div class="splash-brand-text">
-          <h1 class="splash-title">
-            HeroCMS <span class="splash-title-accent">Studio</span>
-          </h1>
-          <p class="splash-subtitle">Platform CMS Multi-Tenant & Kontainer Docker Otonom</p>
-        </div>
-
-        <!-- Progress Console Box -->
-        <div class="splash-progress-card">
-          <!-- Header info: status & percent -->
-          <div class="progress-meta-row">
-            <div class="meta-status-wrap">
-              <span class="pulsing-live-dot"></span>
-              <span class="meta-status-text">{{ currentStageText }}</span>
+        <!-- Glassmorphic Card (Exact match with LoginView auth-panel-glass) -->
+        <div class="auth-panel-glass splash-card">
+          <!-- Card Heading Intro -->
+          <div class="panel-intro">
+            <div class="splash-badge-row">
+              <span class="pulse-live-dot"></span>
+              <span class="splash-mode-badge">WORKSPACE INITIALIZATION</span>
             </div>
-            <span class="meta-percent-counter">{{ progress }}%</span>
+            <h2 class="panel-heading">Mempersiapkan Konsol Studio</h2>
+            <p class="panel-sub">
+              Menyinkronkan sesi kredensial, runtime kontainer, dan aset visual...
+            </p>
           </div>
 
-          <!-- Progress Bar Track -->
-          <div class="progress-track-shell">
-            <div
-              class="progress-fill-glow"
-              :style="{ width: `${progress}%` }"
-            >
-              <div class="fill-glimmer"></div>
+          <!-- Progress Console Zone -->
+          <div class="splash-progress-zone">
+            <div class="progress-meta-row">
+              <span class="meta-stage-text">{{ currentStageText }}</span>
+              <span class="meta-percent-number">{{ progress }}%</span>
+            </div>
+
+            <!-- Progress Track Shell -->
+            <div class="progress-track-shell">
+              <div
+                class="progress-fill-glow"
+                :style="{ width: `${progress}%` }"
+              >
+                <div class="fill-glimmer"></div>
+              </div>
             </div>
           </div>
 
-          <!-- Bottom Telemetry Chips -->
+          <!-- Infrastructure Telemetry Badges -->
           <div class="telemetry-badges-row">
             <div class="tele-chip">
               <ShieldCheck :size="12" color="#059669" />
@@ -129,6 +138,12 @@ onUnmounted(() => {
               <span>PostgreSQL RLS</span>
             </div>
           </div>
+
+          <!-- Security Ingress Guarantee Badge (Exact match with LoginView) -->
+          <footer class="panel-security-chip">
+            <ShieldCheck :size="14" color="#059669" />
+            <span>Koneksi TLS v1.3 • cgroups v2 Terisolasi</span>
+          </footer>
         </div>
       </div>
     </div>
@@ -136,180 +151,197 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* Fullscreen Backdrop */
 .studio-splash-screen {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(248, 250, 252, 0.98);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background-color: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 48px 20px;
   overflow: hidden;
   user-select: none;
 }
 
-/* Ambient Radial Glow */
-.splash-ambient-aura {
+/* 1. Base Subtle Dot Matrix Grid (Exact match with HeroCMS BackgroundWave) */
+.base-dot-grid {
   position: absolute;
-  width: 650px;
-  height: 500px;
+  inset: 0;
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+  background-size: 28px 28px;
+  background-position: -14px -14px;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 2. Ambient Diffused Glow */
+.ambient-mesh-glow {
+  position: absolute;
+  width: 580px;
+  height: 440px;
   background: radial-gradient(
     circle,
     rgba(37, 99, 235, 0.12) 0%,
-    rgba(56, 189, 248, 0.08) 40%,
+    rgba(148, 163, 184, 0.08) 50%,
     transparent 70%
   );
   filter: blur(50px);
   pointer-events: none;
-  animation: auraBreath 4s ease-in-out infinite alternate;
+  z-index: 2;
+  animation: meshBreath 3.5s ease-in-out infinite alternate;
 }
 
-@keyframes auraBreath {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
+@keyframes meshBreath {
+  0% { transform: scale(0.96); opacity: 0.8; }
+  100% { transform: scale(1.08); opacity: 1; }
 }
 
-.splash-center-pod {
+/* 3. Surface Container */
+.auth-surface-container {
+  width: 100%;
+  max-width: 440px;
   position: relative;
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  max-width: 480px;
-  padding: 0 24px;
+}
+
+/* Brand Header (Identical to LoginView) */
+.auth-brand-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+  margin-bottom: 24px;
 }
 
-/* Logo & Pulse Ring */
-.splash-logo-pod {
-  position: relative;
-  width: 84px;
-  height: 84px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 22px;
-}
-
-.splash-pulse-ring {
-  position: absolute;
-  inset: -8px;
-  border-radius: 28px;
-  border: 1.5px solid rgba(37, 99, 235, 0.25);
-  animation: pulseExpand 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-}
-
-@keyframes pulseExpand {
-  0% {
-    transform: scale(0.92);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.06);
-    opacity: 0.4;
-  }
-  100% {
-    transform: scale(0.92);
-    opacity: 0.8;
-  }
-}
-
-.splash-glyph-box {
-  position: relative;
-  width: 68px;
-  height: 68px;
+.brand-glyph-box {
+  width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow:
-    0 8px 24px -4px rgba(15, 23, 42, 0.2),
-    0 0 20px rgba(37, 99, 235, 0.25);
+  margin-bottom: 12px;
+  box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: logoPulse 2s ease-in-out infinite alternate;
 }
 
-/* Brand Typography */
-.splash-brand-text {
-  margin-bottom: 28px;
+@keyframes logoPulse {
+  0% { transform: scale(1); box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.2); }
+  100% { transform: scale(1.04); box-shadow: 0 10px 24px -2px rgba(37, 99, 235, 0.25); }
 }
 
-.splash-title {
-  font-size: 1.6rem;
+.brand-wordmark {
+  font-size: 1.55rem;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.03em;
-  margin-bottom: 6px;
+  line-height: 1.2;
 }
 
-.splash-title-accent {
-  color: #2563eb;
+.wordmark-highlight {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glassmorphic Panel (Identical to LoginView auth-panel-glass) */
+.auth-panel-glass.splash-card {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.03),
+    0 16px 36px -8px rgba(15, 23, 42, 0.07),
+    0 2px 6px rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Heading Intro */
+.panel-intro {
+  margin-bottom: 2px;
+}
+
+.splash-badge-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  padding: 3px 9px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.pulse-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+  animation: liveDotPulse 1.4s infinite;
+}
+
+@keyframes liveDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.splash-mode-badge {
+  font-size: 0.65rem;
   font-weight: 800;
+  color: #1d4ed8;
+  letter-spacing: 0.06em;
 }
 
-.splash-subtitle {
+.panel-heading {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.panel-sub {
   font-size: 0.82rem;
-  font-weight: 500;
   color: #64748b;
   line-height: 1.45;
   margin: 0;
 }
 
-/* Progress Console Card */
-.splash-progress-card {
-  width: 100%;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 18px 20px;
-  box-shadow:
-    0 1px 3px rgba(15, 23, 42, 0.04),
-    0 12px 28px -6px rgba(15, 23, 42, 0.06);
+/* Progress Zone */
+.splash-progress-zone {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
 }
 
 .progress-meta-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 
-.meta-status-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-align: left;
-  overflow: hidden;
-}
-
-.pulsing-live-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
-  flex-shrink: 0;
-  animation: liveDotPulse 1.4s infinite;
-}
-
-@keyframes liveDotPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.85); }
-}
-
-.meta-status-text {
+.meta-stage-text {
   font-size: 0.76rem;
   font-weight: 600;
   color: #334155;
@@ -318,12 +350,11 @@ onUnmounted(() => {
   text-overflow: ellipsis;
 }
 
-.meta-percent-counter {
-  font-size: 0.82rem;
+.meta-percent-number {
+  font-size: 0.8rem;
   font-weight: 700;
   color: #2563eb;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  letter-spacing: -0.02em;
   flex-shrink: 0;
 }
 
@@ -331,8 +362,8 @@ onUnmounted(() => {
 .progress-track-shell {
   position: relative;
   width: 100%;
-  height: 7px;
-  background: #f1f5f9;
+  height: 6px;
+  background: #e2e8f0;
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -372,18 +403,16 @@ onUnmounted(() => {
 .telemetry-badges-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 4px;
-  border-top: 1px solid #f1f5f9;
+  gap: 6px;
 }
 
 .tele-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 8px;
+  padding: 4px 8px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
@@ -392,16 +421,27 @@ onUnmounted(() => {
   color: #475569;
 }
 
-/* Exit Dissolve Transition */
+/* Security Guarantee Chip (Exact match with LoginView) */
+.panel-security-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #64748b;
+  padding-top: 4px;
+}
+
+/* Exit Transition */
 .splash-dissolve-leave-active {
-  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .splash-dissolve-leave-to {
   opacity: 0;
-  transform: scale(1.03);
-  filter: blur(8px);
+  transform: scale(1.02);
+  filter: blur(6px);
 }
 </style>
