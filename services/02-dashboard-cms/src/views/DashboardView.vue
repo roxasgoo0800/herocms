@@ -117,7 +117,7 @@ const handleLogout = () => {
           >
             <FolderKanban :size="17" />
             <span class="nav-link-text">Situs & Kontainer</span>
-            <span class="nav-count-badge">{{ usedContainersCount }}/{{ userPlan.maxContainers }}</span>
+            <span class="nav-badge">{{ usedContainersCount }}/{{ userPlan.maxContainers }}</span>
           </button>
 
           <button
@@ -137,7 +137,7 @@ const handleLogout = () => {
           >
             <FileText :size="17" />
             <span class="nav-link-text">Artikel & Halaman</span>
-            <span class="nav-pill-tag">{{ articles.length }}</span>
+            <span class="nav-badge">{{ articles.length }}</span>
           </button>
 
           <button
@@ -147,7 +147,7 @@ const handleLogout = () => {
           >
             <HardDrive :size="17" />
             <span class="nav-link-text">Media Assets (S3)</span>
-            <span class="nav-pill-tag">120MB</span>
+            <span class="nav-badge">120MB</span>
           </button>
 
           <button
@@ -157,7 +157,6 @@ const handleLogout = () => {
           >
             <Palette :size="17" />
             <span class="nav-link-text">Katalog Template</span>
-            <span class="nav-pill-tag">Store</span>
           </button>
         </nav>
 
@@ -170,7 +169,7 @@ const handleLogout = () => {
           >
             <Globe :size="17" />
             <span class="nav-link-text">Custom Domain & DNS</span>
-            <span class="nav-pill-tag green">SSL</span>
+            <span class="nav-badge badge-success">SSL</span>
           </button>
 
           <button
@@ -210,7 +209,7 @@ const handleLogout = () => {
           >
             <Receipt :size="17" />
             <span class="nav-link-text">Faktur & Invoice</span>
-            <span class="nav-pill-tag green">Lunas</span>
+            <span class="nav-badge badge-success">Lunas</span>
           </button>
         </nav>
 
@@ -223,7 +222,7 @@ const handleLogout = () => {
           >
             <LifeBuoy :size="17" />
             <span class="nav-link-text">Tiket Support</span>
-            <span class="nav-pill-tag amber">1 Aktif</span>
+            <span class="nav-badge badge-warning">1 Aktif</span>
           </button>
         </nav>
       </div>
@@ -628,9 +627,10 @@ const handleLogout = () => {
 
 /* 1. LEFT SIDEBAR (GLASSMORPHIC & SLEEK) */
 .app-sidebar {
-  width: 256px;
+  width: 272px;
+  min-width: 272px;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid rgba(226, 232, 240, 0.9);
@@ -727,17 +727,18 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 7px 10px;
   border-radius: 8px;
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-size: 0.835rem;
+  font-weight: 500;
   color: #475569;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: all 0.15s ease;
+  white-space: nowrap;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-link:hover:not(:disabled) {
@@ -748,7 +749,8 @@ const handleLogout = () => {
 .nav-link.active {
   background: #0f172a;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16);
 }
 
 .nav-link:disabled {
@@ -758,29 +760,77 @@ const handleLogout = () => {
 
 .nav-link-text {
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.835rem;
+  letter-spacing: -0.01em;
 }
 
-.nav-count-badge {
-  font-size: 0.7rem;
-  background: rgba(148, 163, 184, 0.2);
-  color: inherit;
-  padding: 1px 6px;
-  border-radius: 999px;
-  font-family: monospace;
-}
-
-.nav-link.active .nav-count-badge {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-}
-
-.nav-pill-tag {
+/* Revamped Unified Nav Badge System: 100% Theme-Aligned */
+.nav-badge {
   font-size: 0.68rem;
-  background: #eff6ff;
-  color: #2563eb;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-weight: 700;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2.5px 7px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.nav-link:hover:not(:disabled) .nav-badge {
+  background: #e2e8f0;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+.nav-link.active .nav-badge {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Subtle Semantic Status Variants */
+.nav-badge.badge-success {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+.nav-link:hover:not(:disabled) .nav-badge.badge-success {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+.nav-link.active .nav-badge.badge-success {
+  background: rgba(16, 185, 129, 0.25);
+  color: #a7f3d0;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.nav-badge.badge-warning {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+.nav-link:hover:not(:disabled) .nav-badge.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.nav-link.active .nav-badge.badge-warning {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fde68a;
+  border-color: rgba(245, 158, 11, 0.4);
 }
 
 .sidebar-footer {
