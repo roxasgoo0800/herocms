@@ -236,127 +236,132 @@ const handlePrintInvoice = () => {
     </div>
 
     <!-- MODAL: RINCIAN FAKTUR RESMI & PPN (TAX INVOICE DETAIL) -->
-    <div v-if="isInvoiceDetailModalOpen && selectedInvoice" class="modal-backdrop" @click.self="isInvoiceDetailModalOpen = false">
-      <div class="modal-dialog modal-dialog-lg">
-        <div class="modal-header">
-          <div class="modal-header-leading">
-            <div class="modal-header-icon-box">
-              <Receipt :size="18" />
+    <Teleport to="body">
+      <div v-if="isInvoiceDetailModalOpen && selectedInvoice" class="modal-backdrop" @click.self="isInvoiceDetailModalOpen = false">
+        <div class="modal-dialog modal-dialog-lg">
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box">
+                <Receipt :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Faktur Pajak Elektronik Resmi (E-Faktur)</h3>
+                <p class="modal-subheading">Dokumen tagihan resmi ber-NPWP PT Hero Digital Multitek untuk pembukuan fiskal.</p>
+              </div>
             </div>
-            <div>
-              <h3 class="modal-heading">Faktur Pajak Elektronik Resmi (E-Faktur)</h3>
-              <p class="modal-subheading">Dokumen tagihan resmi ber-NPWP PT Hero Digital Multitek untuk pembukuan fiskal.</p>
+            <button class="modal-close-button" @click="isInvoiceDetailModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
+          </div>
+
+          <div class="invoice-doc-body">
+            <div class="invoice-paper" id="printable-invoice">
+              <!-- Paper Header -->
+              <div class="inv-paper-top">
+                <div class="inv-company-brand">
+                  <div class="inv-brand-mark">
+                    <Layers :size="22" />
+                  </div>
+                  <div>
+                    <h4 class="inv-brand-title">PT HERO DIGITAL MULTITEK</h4>
+                    <p class="inv-brand-sub">NPWP: 01.889.341.2-021.000 • ID Billing E-Faktur</p>
+                    <p class="inv-brand-sub">Cyber 2 Tower Lt. 18, Jl. H.R. Rasuna Said, Jakarta Selatan 12950</p>
+                  </div>
+                </div>
+                <div class="inv-badge-block">
+                  <div class="inv-paid-seal">
+                    <CheckCircle2 :size="14" />
+                    <span>PAID / LUNAS</span>
+                  </div>
+                  <div class="inv-number-stamp">{{ selectedInvoice.id }}</div>
+                </div>
+              </div>
+
+              <!-- Meta Grid -->
+              <div class="inv-meta-grid">
+                <div class="inv-meta-col">
+                  <span class="inv-meta-hdr">DITAGIHKAN KEPADA:</span>
+                  <strong class="inv-meta-val">Rizal Pratama</strong>
+                  <span class="inv-meta-sub">{{ userEmail }}</span>
+                  <span class="inv-meta-sub">ID Pelanggan: CUST-TENANT-9942</span>
+                </div>
+                <div class="inv-meta-col">
+                  <span class="inv-meta-hdr">TANGGAL PENAGIHAN:</span>
+                  <strong class="inv-meta-val">{{ selectedInvoice.date }}</strong>
+                  <span class="inv-meta-sub">Jatuh Tempo: {{ selectedInvoice.dueDate }}</span>
+                </div>
+                <div class="inv-meta-col">
+                  <span class="inv-meta-hdr">METODE PEMBAYARAN:</span>
+                  <strong class="inv-meta-val">{{ selectedInvoice.paymentMethod }}</strong>
+                  <span class="inv-meta-sub">Status: Verifikasi Kliring Otomatis</span>
+                </div>
+              </div>
+
+              <!-- Items Table -->
+              <div class="inv-table-wrap">
+                <table class="inv-items-table">
+                  <thead>
+                    <tr>
+                      <th>DESKRIPSI LAYANAN SAAS</th>
+                      <th>PERIODE</th>
+                      <th style="text-align: center">KUOTA</th>
+                      <th style="text-align: right">JUMLAH (IDR)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <strong>{{ selectedInvoice.planName }}</strong>
+                        <p class="inv-item-desc">Alokasi CPU cgroups v2, Traefik edge proxy ingress, Redis telemetry, SSL auto-renew.</p>
+                      </td>
+                      <td>{{ selectedInvoice.period }}</td>
+                      <td style="text-align: center">{{ selectedInvoice.containerQuota }} Kontainer</td>
+                      <td style="text-align: right">Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Summary & Tax -->
+              <div class="inv-summary-row">
+                <div class="inv-note-box">
+                  <strong>Catatan Pembayaran Resmi:</strong>
+                  <p>Faktur ini sah dan diterbitkan secara digital oleh sistem penagihan HeroCMS. PPN 11% telah dipungut dan disetorkan ke kas negara sesuai ketentuan PMK-60/PMK.03/2022.</p>
+                </div>
+                <div class="inv-calc-box">
+                  <div class="inv-calc-line">
+                    <span>Subtotal Dasar</span>
+                    <strong>Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}</strong>
+                  </div>
+                  <div class="inv-calc-line">
+                    <span>PPN Terhitung (11%)</span>
+                    <strong>Rp {{ selectedInvoice.tax.toLocaleString('id-ID') }}</strong>
+                  </div>
+                  <div class="inv-calc-total">
+                    <span>Total Tagihan Bersih</span>
+                    <strong>Rp {{ selectedInvoice.total.toLocaleString('id-ID') }}</strong>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <button class="modal-close-button" @click="isInvoiceDetailModalOpen = false" title="Tutup">
-            <X :size="16" />
-          </button>
-        </div>
 
-        <div class="invoice-doc-body">
-          <div class="invoice-paper" id="printable-invoice">
-            <!-- Paper Header -->
-            <div class="inv-paper-top">
-              <div class="inv-company-brand">
-                <div class="inv-brand-mark">
-                  <Layers :size="22" />
-                </div>
-                <div>
-                  <h4 class="inv-brand-title">PT HERO DIGITAL MULTITEK</h4>
-                  <p class="inv-brand-sub">NPWP: 01.889.341.2-021.000 • ID Billing E-Faktur</p>
-                  <p class="inv-brand-sub">Cyber 2 Tower Lt. 18, Jl. H.R. Rasuna Said, Jakarta Selatan 12950</p>
-                </div>
-              </div>
-              <div class="inv-badge-block">
-                <div class="inv-paid-seal">
-                  <CheckCircle2 :size="14" />
-                  <span>PAID / LUNAS</span>
-                </div>
-                <div class="inv-number-stamp">{{ selectedInvoice.id }}</div>
-              </div>
-            </div>
-
-            <!-- Meta Grid -->
-            <div class="inv-meta-grid">
-              <div class="inv-meta-col">
-                <span class="inv-meta-hdr">DITAGIHKAN KEPADA:</span>
-                <strong class="inv-meta-val">Rizal Pratama</strong>
-                <span class="inv-meta-sub">{{ userEmail }}</span>
-                <span class="inv-meta-sub">ID Pelanggan: CUST-TENANT-9942</span>
-              </div>
-              <div class="inv-meta-col">
-                <span class="inv-meta-hdr">TANGGAL PENAGIHAN:</span>
-                <strong class="inv-meta-val">{{ selectedInvoice.date }}</strong>
-                <span class="inv-meta-sub">Jatuh Tempo: {{ selectedInvoice.dueDate }}</span>
-              </div>
-              <div class="inv-meta-col">
-                <span class="inv-meta-hdr">METODE PEMBAYARAN:</span>
-                <strong class="inv-meta-val">{{ selectedInvoice.paymentMethod }}</strong>
-                <span class="inv-meta-sub">Status: Verifikasi Kliring Otomatis</span>
-              </div>
-            </div>
-
-            <!-- Items Table -->
-            <div class="inv-table-wrap">
-              <table class="inv-items-table">
-                <thead>
-                  <tr>
-                    <th>DESKRIPSI LAYANAN SAAS</th>
-                    <th>PERIODE</th>
-                    <th style="text-align: center">KUOTA</th>
-                    <th style="text-align: right">JUMLAH (IDR)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <strong>{{ selectedInvoice.planName }}</strong>
-                      <p class="inv-item-desc">Alokasi CPU cgroups v2, Traefik edge proxy ingress, Redis telemetry, SSL auto-renew.</p>
-                    </td>
-                    <td>{{ selectedInvoice.period }}</td>
-                    <td style="text-align: center">{{ selectedInvoice.containerQuota }} Kontainer</td>
-                    <td style="text-align: right">Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Summary & Tax -->
-            <div class="inv-summary-row">
-              <div class="inv-note-box">
-                <strong>Catatan Pembayaran Resmi:</strong>
-                <p>Faktur ini sah dan diterbitkan secara digital oleh sistem penagihan HeroCMS. PPN 11% telah dipungut dan disetorkan ke kas negara sesuai ketentuan PMK-60/PMK.03/2022.</p>
-              </div>
-              <div class="inv-calc-box">
-                <div class="inv-calc-line">
-                  <span>Subtotal Dasar</span>
-                  <strong>Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}</strong>
-                </div>
-                <div class="inv-calc-line">
-                  <span>PPN Terhitung (11%)</span>
-                  <strong>Rp {{ selectedInvoice.tax.toLocaleString('id-ID') }}</strong>
-                </div>
-                <div class="inv-calc-total">
-                  <span>Total Tagihan Bersih</span>
-                  <strong>Rp {{ selectedInvoice.total.toLocaleString('id-ID') }}</strong>
-                </div>
-              </div>
-            </div>
+          <div class="modal-footer-row">
+            <button type="button" class="btn-modal-ghost" @click="isInvoiceDetailModalOpen = false">
+              <span>Tutup</span>
+            </button>
+            <button type="button" class="btn-modal-ghost" @click="handlePrintInvoice">
+              <Printer :size="14" />
+              <span>Cetak Faktur</span>
+            </button>
+            <button type="button" class="btn-modal-confirm" @click="downloadInvoiceReceipt(selectedInvoice)">
+              <Download :size="14" />
+              <span>Unduh Dokumen Faktur</span>
+            </button>
           </div>
-        </div>
-
-        <div class="modal-footer-row">
-          <button type="button" class="btn-modal-ghost" @click="handlePrintInvoice">
-            <Printer :size="14" />
-            <span>Cetak Faktur</span>
-          </button>
-          <button type="button" class="btn-modal-confirm" @click="downloadInvoiceReceipt(selectedInvoice)">
-            <Download :size="14" />
-            <span>Unduh Dokumen Faktur</span>
-          </button>
         </div>
       </div>
-    </div>
+    </Teleport>
   </section>
 </template>
 
@@ -764,24 +769,27 @@ const handlePrintInvoice = () => {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  padding: 20px;
+  z-index: 99999;
+  padding: 24px;
 }
 
 .modal-dialog-lg {
-  max-width: 780px !important;
+  max-width: 820px !important;
 }
 
 .modal-dialog {
   background: #ffffff;
   border-radius: 16px;
   width: 100%;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
   border: 1px solid #e2e8f0;
   overflow: hidden;
   animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -795,14 +803,17 @@ const handlePrintInvoice = () => {
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   padding: 18px 24px;
   border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+  flex-shrink: 0;
 }
 
 .modal-header-leading {
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
 .modal-header-icon-box {
@@ -821,33 +832,40 @@ const handlePrintInvoice = () => {
   font-size: 16px;
   font-weight: 700;
   color: #0f172a;
-  margin: 0 0 3px 0;
+  margin: 0 0 2px 0;
 }
 
 .modal-subheading {
-  font-size: 12.5px;
+  font-size: 12px;
   color: #64748b;
   margin: 0;
 }
 
 .modal-close-button {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.15s ease;
 }
 
 .modal-close-button:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
 }
 
 /* Printable E-Faktur Paper */
 .invoice-doc-body {
-  padding: 20px 24px;
-  max-height: 70vh;
+  padding: 24px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   background: #f8fafc;
 }
@@ -1056,6 +1074,8 @@ const handlePrintInvoice = () => {
   gap: 10px;
   padding: 16px 24px;
   border-top: 1px solid #f1f5f9;
+  background: #ffffff;
+  flex-shrink: 0;
 }
 
 .btn-modal-ghost {
