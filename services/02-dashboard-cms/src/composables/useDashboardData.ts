@@ -11,11 +11,13 @@ import type {
   InvoiceItem,
   ToastMessage,
   SupportTicketItem,
-  TicketMessage
+  TicketMessage,
+  VisualBlock
 } from '../types/dashboard';
 
 // Active Menu Navigation
 const activeMenu = ref<ActiveMenu>('containers');
+const isEditorSidebarHidden = ref(true);
 
 // User & Plan State
 const userEmail = ref(localStorage.getItem('cloudcms_user_email') || 'admin@rizalpratama.cloud');
@@ -289,14 +291,26 @@ const officialTemplates = ref([
 const editorDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
 const isPublishing = ref(false);
 
-const handlePublishChanges = () => {
+const handlePublishChanges = async () => {
   if (!activeContainer.value) return;
   isPublishing.value = true;
-  setTimeout(() => {
-    isPublishing.value = false;
+  try {
+    const payload = {
+      roleOrHeadline: activeContainer.value.roleOrHeadline,
+      bioIntro: activeContainer.value.bioIntro,
+      accentColor: activeContainer.value.accentColor,
+      themeConfig: activeContainer.value.themeConfig || {}
+    };
+    await studioApi.saveSiteDesign(activeContainer.value.id, payload);
     activeContainer.value.lastDeployed = 'Baru saja';
-    showToast(`Perubahan '${activeContainer.value.name}' live ke Docker!`, 'success');
-  }, 1200);
+    showToast(`Perubahan desain '${activeContainer.value.name}' berhasil disimpan ke PostgreSQL & disinkronkan live!`, 'success');
+  } catch (err: any) {
+    console.error('[STUDIO SAVE ERROR]', err);
+    activeContainer.value.lastDeployed = 'Baru saja (lokal)';
+    showToast(`Perubahan disimpan lokal: ${err?.message || 'Sinkronisasi offline'}`, 'info');
+  } finally {
+    isPublishing.value = false;
+  }
 };
 
 // AI Generator Assistant
@@ -1000,6 +1014,7 @@ export function useDashboardData() {
     isBackendSyncing,
     syncWithBackend,
     activeMenu,
+    isEditorSidebarHidden,
     userEmail,
     userPlan,
     toastMessage,
@@ -1072,3 +1087,5 @@ export function useDashboardData() {
     resolveTicket
   };
 }
+
+export type { VisualBlock };

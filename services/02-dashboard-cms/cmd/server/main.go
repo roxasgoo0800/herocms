@@ -84,6 +84,7 @@ func main() {
 			// Containers & Multi-Site Hub
 			protected.GET("/containers", h.ListContainers)
 			protected.POST("/containers", h.CreateContainer)
+			protected.PUT("/containers/:id/design", h.SaveSiteDesign)
 			protected.POST("/containers/:id/start", h.StartContainer)
 			protected.POST("/containers/:id/stop", h.StopContainer)
 			protected.DELETE("/containers/:id", h.DeleteContainer)

@@ -214,11 +214,24 @@ func (h *Handler) Logout(c *gin.Context) {
 }
 
 // -----------------------------------------------------------------------------
+// Helper to extract Tenant ID
+// -----------------------------------------------------------------------------
+
+func getTenantID(c *gin.Context) string {
+	if val, exists := c.Get("tenant_id"); exists {
+		if tID, ok := val.(string); ok && tID != "" {
+			return tID
+		}
+	}
+	return "99420000-0000-0000-0000-000000009942"
+}
+
+// -----------------------------------------------------------------------------
 // Containers
 // -----------------------------------------------------------------------------
 
 func (h *Handler) ListContainers(c *gin.Context) {
-	data, err := h.Services.GetContainers()
+	data, err := h.Services.GetContainers(c.Request.Context(), getTenantID(c))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -240,7 +253,7 @@ func (h *Handler) CreateContainer(c *gin.Context) {
 		return
 	}
 
-	created, err := h.Services.CreateContainer(service.CreateContainerInput{
+	created, err := h.Services.CreateContainer(c.Request.Context(), getTenantID(c), service.CreateContainerInput{
 		Name:      req.Name,
 		Subdomain: req.Subdomain,
 		Category:  req.Category,
@@ -256,7 +269,7 @@ func (h *Handler) CreateContainer(c *gin.Context) {
 
 func (h *Handler) StartContainer(c *gin.Context) {
 	id := c.Param("id")
-	ok, err := h.Services.StartContainer(id)
+	ok, err := h.Services.StartContainer(c.Request.Context(), getTenantID(c), id)
 	if !ok || err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -266,7 +279,7 @@ func (h *Handler) StartContainer(c *gin.Context) {
 
 func (h *Handler) StopContainer(c *gin.Context) {
 	id := c.Param("id")
-	ok, err := h.Services.StopContainer(id)
+	ok, err := h.Services.StopContainer(c.Request.Context(), getTenantID(c), id)
 	if !ok || err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -276,7 +289,7 @@ func (h *Handler) StopContainer(c *gin.Context) {
 
 func (h *Handler) DeleteContainer(c *gin.Context) {
 	id := c.Param("id")
-	ok, err := h.Services.DeleteContainer(id)
+	ok, err := h.Services.DeleteContainer(c.Request.Context(), getTenantID(c), id)
 	if !ok || err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -284,12 +297,32 @@ func (h *Handler) DeleteContainer(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted", "id": id})
 }
 
+func (h *Handler) SaveSiteDesign(c *gin.Context) {
+	id := c.Param("id")
+	var payload gin.H
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload konfigurasi desain tidak valid"})
+		return
+	}
+
+	err := h.Services.SaveSiteDesign(c.Request.Context(), getTenantID(c), id, payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan konfigurasi situs ke database: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Konfigurasi desain situs berhasil disimpan & disinkronkan ke runtime!",
+		"id":      id,
+	})
+}
+
 // -----------------------------------------------------------------------------
 // Articles
 // -----------------------------------------------------------------------------
 
 func (h *Handler) ListArticles(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"articles": h.Services.GetArticles()})
+	c.JSON(http.StatusOK, gin.H{"articles": h.Services.GetArticles(c.Request.Context(), getTenantID(c))})
 }
 
 // -----------------------------------------------------------------------------
@@ -297,7 +330,7 @@ func (h *Handler) ListArticles(c *gin.Context) {
 // -----------------------------------------------------------------------------
 
 func (h *Handler) ListAssets(c *gin.Context) {
-	c.JSON(http.StatusOK, h.Services.GetAssets())
+	c.JSON(http.StatusOK, h.Services.GetAssets(c.Request.Context(), getTenantID(c)))
 }
 
 // -----------------------------------------------------------------------------
@@ -305,7 +338,7 @@ func (h *Handler) ListAssets(c *gin.Context) {
 // -----------------------------------------------------------------------------
 
 func (h *Handler) ListDomains(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"domains": h.Services.GetDomains()})
+	c.JSON(http.StatusOK, gin.H{"domains": h.Services.GetDomains(c.Request.Context(), getTenantID(c))})
 }
 
 // -----------------------------------------------------------------------------
@@ -313,12 +346,12 @@ func (h *Handler) ListDomains(c *gin.Context) {
 // -----------------------------------------------------------------------------
 
 func (h *Handler) ListTickets(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"tickets": h.Services.GetTickets()})
+	c.JSON(http.StatusOK, gin.H{"tickets": h.Services.GetTickets(c.Request.Context(), getTenantID(c))})
 }
 
 func (h *Handler) GetTicketMessages(c *gin.Context) {
 	id := c.Param("id")
-	c.JSON(http.StatusOK, gin.H{"messages": h.Services.GetTicketMessages(id)})
+	c.JSON(http.StatusOK, gin.H{"messages": h.Services.GetTicketMessages(c.Request.Context(), id)})
 }
 
 // -----------------------------------------------------------------------------
@@ -326,11 +359,11 @@ func (h *Handler) GetTicketMessages(c *gin.Context) {
 // -----------------------------------------------------------------------------
 
 func (h *Handler) ListInvoices(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"invoices": h.Services.GetInvoices()})
+	c.JSON(http.StatusOK, gin.H{"invoices": h.Services.GetInvoices(c.Request.Context(), getTenantID(c))})
 }
 
 func (h *Handler) GetBillingQuota(c *gin.Context) {
-	c.JSON(http.StatusOK, h.Services.GetBillingQuota())
+	c.JSON(http.StatusOK, h.Services.GetBillingQuota(c.Request.Context(), getTenantID(c)))
 }
 
 func (h *Handler) CheckoutPlan(c *gin.Context) {
@@ -339,7 +372,10 @@ func (h *Handler) CheckoutPlan(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format data checkout tidak valid"})
 		return
 	}
-	res, err := h.Services.ProcessCheckout(req)
+	if req.TenantID == "" {
+		req.TenantID = getTenantID(c)
+	}
+	res, err := h.Services.ProcessCheckout(c.Request.Context(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -352,7 +388,7 @@ func (h *Handler) CheckoutPlan(c *gin.Context) {
 // -----------------------------------------------------------------------------
 
 func (h *Handler) ListWebhooks(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"webhooks": h.Services.GetWebhooks()})
+	c.JSON(http.StatusOK, gin.H{"webhooks": h.Services.GetWebhooks(c.Request.Context(), getTenantID(c))})
 }
 
 // -----------------------------------------------------------------------------

@@ -227,19 +227,38 @@ func (s *Services) RevokeSession(ctx context.Context, tokenHash string) error {
 	}
 	return s.Redis.BlacklistToken(ctx, tokenHash, 24*time.Hour)
 }
-
 // -----------------------------------------------------------------------------
 // Container & Sites Service
 // -----------------------------------------------------------------------------
 
-func (s *Services) GetContainers() (gin.H, error) {
+func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, error) {
+	sites, err := s.Repo.GetSites(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	maxQuota := 3
+	quota, err := s.Repo.GetBillingQuota(ctx, tenantID)
+	if err == nil {
+		if qPlan, ok := quota["plan"].(gin.H); ok {
+			if m, ok := qPlan["maxContainers"].(int); ok && m > 0 {
+				maxQuota = m
+			}
+		}
+	}
+
+	freeQuota := maxQuota - len(sites)
+	if freeQuota < 0 {
+		freeQuota = 0
+	}
+
 	return gin.H{
-		"containers": s.Repo.Containers,
+		"containers": sites,
 		"quota": gin.H{
-			"used":  len(s.Repo.Containers),
-			"max":   3,
-			"free":  3 - len(s.Repo.Containers),
-			"isMax": len(s.Repo.Containers) >= 3,
+			"used":  len(sites),
+			"max":   maxQuota,
+			"free":  freeQuota,
+			"isMax": len(sites) >= maxQuota,
 		},
 	}, nil
 }
@@ -251,14 +270,23 @@ type CreateContainerInput struct {
 	Role      string `json:"role"`
 }
 
-func (s *Services) CreateContainer(input CreateContainerInput) (gin.H, error) {
+func (s *Services) CreateContainer(ctx context.Context, tenantID string, input CreateContainerInput) (gin.H, error) {
 	subdomainRegex := regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 	if !subdomainRegex.MatchString(input.Subdomain) {
 		return nil, fmt.Errorf("format subdomain tidak valid (hanya huruf kecil, angka, dan tanda hubung)")
 	}
 
-	if len(s.Repo.Containers) >= 3 {
-		return nil, fmt.Errorf("kuota kontainer penuh (3/3). Harap upgrade paket.")
+	sites, _ := s.Repo.GetSites(ctx, tenantID)
+	quota, _ := s.Repo.GetBillingQuota(ctx, tenantID)
+	maxQuota := 3
+	if qPlan, ok := quota["plan"].(gin.H); ok {
+		if m, ok := qPlan["maxContainers"].(int); ok && m > 0 {
+			maxQuota = m
+		}
+	}
+
+	if len(sites) >= maxQuota {
+		return nil, fmt.Errorf("kuota kontainer penuh (%d/%d). Harap upgrade paket.", len(sites), maxQuota)
 	}
 
 	newID := fmt.Sprintf("hero_tenant_%d", time.Now().Unix()%9000+1000)
@@ -293,7 +321,7 @@ func (s *Services) CreateContainer(input CreateContainerInput) (gin.H, error) {
 	// Trigger Go Provision Orchestrator asynchronously
 	go func() {
 		deployPayload := map[string]string{
-			"tenant_id":    newID,
+			"tenant_id":    tenantID,
 			"site_id":      newID,
 			"subdomain":    input.Subdomain,
 			"version_hash": "v100prod01",
@@ -302,55 +330,65 @@ func (s *Services) CreateContainer(input CreateContainerInput) (gin.H, error) {
 		http.Post(s.Config.OrchestratorURL+"/api/v1/deploy", "application/json", bytes.NewBuffer(pBytes))
 	}()
 
-	s.Repo.Containers = append(s.Repo.Containers, newContainer)
+	err := s.Repo.InsertSite(ctx, tenantID, newContainer)
+	if err != nil {
+		return nil, fmt.Errorf("gagal menyimpan data situs ke database: %w", err)
+	}
+
 	return newContainer, nil
 }
 
-func (s *Services) StartContainer(id string) (bool, error) {
-	for _, c := range s.Repo.Containers {
-		if c["id"] == id {
-			c["status"] = "running"
-			return true, nil
-		}
+func (s *Services) StartContainer(ctx context.Context, tenantID, id string) (bool, error) {
+	err := s.Repo.UpdateSiteStatus(ctx, tenantID, id, "running")
+	if err != nil {
+		return false, err
 	}
-	return false, fmt.Errorf("kontainer #%s tidak ditemukan", id)
+	return true, nil
 }
 
-func (s *Services) StopContainer(id string) (bool, error) {
-	for _, c := range s.Repo.Containers {
-		if c["id"] == id {
-			c["status"] = "stopped"
-			return true, nil
-		}
+func (s *Services) StopContainer(ctx context.Context, tenantID, id string) (bool, error) {
+	err := s.Repo.UpdateSiteStatus(ctx, tenantID, id, "stopped")
+	if err != nil {
+		return false, err
 	}
-	return false, fmt.Errorf("kontainer #%s tidak ditemukan", id)
+	return true, nil
 }
 
-func (s *Services) DeleteContainer(id string) (bool, error) {
-	for i, c := range s.Repo.Containers {
-		if c["id"] == id {
-			s.Repo.Containers = append(s.Repo.Containers[:i], s.Repo.Containers[i+1:]...)
-			return true, nil
-		}
+func (s *Services) DeleteContainer(ctx context.Context, tenantID, id string) (bool, error) {
+	err := s.Repo.DeleteSite(ctx, tenantID, id)
+	if err != nil {
+		return false, err
 	}
-	return false, fmt.Errorf("kontainer #%s tidak ditemukan", id)
+	return true, nil
+}
+
+func (s *Services) SaveSiteDesign(ctx context.Context, tenantID, id string, payload gin.H) error {
+	return s.Repo.UpdateSiteDesign(ctx, tenantID, id, payload)
 }
 
 // -----------------------------------------------------------------------------
 // Articles Service
 // -----------------------------------------------------------------------------
 
-func (s *Services) GetArticles() []gin.H {
-	return s.Repo.Articles
+func (s *Services) GetArticles(ctx context.Context, tenantID string) []gin.H {
+	items, err := s.Repo.GetArticles(ctx, tenantID)
+	if err != nil || items == nil {
+		return []gin.H{}
+	}
+	return items
 }
 
 // -----------------------------------------------------------------------------
 // Assets Service
 // -----------------------------------------------------------------------------
 
-func (s *Services) GetAssets() gin.H {
+func (s *Services) GetAssets(ctx context.Context, tenantID string) gin.H {
+	assets, _ := s.Repo.GetAssets(ctx, tenantID)
+	if assets == nil {
+		assets = []gin.H{}
+	}
 	return gin.H{
-		"assets":      s.Repo.Assets,
+		"assets":      assets,
 		"usedStorage": "120 MB",
 		"maxStorage":  "2048 MB",
 	}
@@ -360,21 +398,29 @@ func (s *Services) GetAssets() gin.H {
 // Custom Domains Service
 // -----------------------------------------------------------------------------
 
-func (s *Services) GetDomains() []gin.H {
-	return s.Repo.Domains
+func (s *Services) GetDomains(ctx context.Context, tenantID string) []gin.H {
+	domains, err := s.Repo.GetDomains(ctx, tenantID)
+	if err != nil || domains == nil {
+		return []gin.H{}
+	}
+	return domains
 }
 
 // -----------------------------------------------------------------------------
 // Support Tickets Service
 // -----------------------------------------------------------------------------
 
-func (s *Services) GetTickets() []gin.H {
-	return s.Repo.Tickets
+func (s *Services) GetTickets(ctx context.Context, tenantID string) []gin.H {
+	tickets, err := s.Repo.GetTickets(ctx, tenantID)
+	if err != nil || tickets == nil {
+		return []gin.H{}
+	}
+	return tickets
 }
 
-func (s *Services) GetTicketMessages(id string) []gin.H {
-	msgs := s.Repo.Messages[id]
-	if msgs == nil {
+func (s *Services) GetTicketMessages(ctx context.Context, id string) []gin.H {
+	msgs, err := s.Repo.GetTicketMessages(ctx, id)
+	if err != nil || msgs == nil {
 		return []gin.H{}
 	}
 	return msgs
@@ -384,24 +430,26 @@ func (s *Services) GetTicketMessages(id string) []gin.H {
 // Invoices & Billing Service
 // -----------------------------------------------------------------------------
 
-func (s *Services) GetInvoices() []gin.H {
-	return s.Repo.Invoices
+func (s *Services) GetInvoices(ctx context.Context, tenantID string) []gin.H {
+	invoices, err := s.Repo.GetInvoices(ctx, tenantID)
+	if err != nil || invoices == nil {
+		return []gin.H{}
+	}
+	return invoices
 }
 
-func (s *Services) GetBillingQuota() gin.H {
-	return gin.H{
-		"plan": gin.H{
-			"name":            "Hero Pro Plan",
-			"price":           "Rp 149.000 / bln",
-			"maxContainers":   3,
-			"usedContainers":  len(s.Repo.Containers),
-			"cpuPerContainer": "0.5 vCPU",
-			"ramPerContainer": "256 MB",
-			"storageQuota":    "2 GB SSD",
-			"usedStorage":     "120 MB",
-			"nextBillingDate": "1 Okt 2026",
-		},
+func (s *Services) GetBillingQuota(ctx context.Context, tenantID string) gin.H {
+	quota, err := s.Repo.GetBillingQuota(ctx, tenantID)
+	if err != nil {
+		return gin.H{
+			"plan": gin.H{
+				"name":          "Hero Pro Plan",
+				"price":         "Rp 149.000 / bln",
+				"maxContainers": 3,
+			},
+		}
 	}
+	return quota
 }
 
 type CheckoutInput struct {
@@ -410,7 +458,7 @@ type CheckoutInput struct {
 	PaymentMethod string `json:"payment_method"`
 }
 
-func (s *Services) ProcessCheckout(input CheckoutInput) (gin.H, error) {
+func (s *Services) ProcessCheckout(ctx context.Context, input CheckoutInput) (gin.H, error) {
 	planName := "Hero Pro Plan"
 	amount := 149000
 	maxContainers := 3
@@ -471,21 +519,28 @@ func (s *Services) ProcessCheckout(input CheckoutInput) (gin.H, error) {
 		"containerQuota": maxContainers,
 	}
 
-	s.Repo.Invoices = append([]gin.H{invoiceObj}, s.Repo.Invoices...)
+	tID := input.TenantID
+	if tID == "" {
+		tID = "99420000-0000-0000-0000-000000009942"
+	}
 
 	if s.Repo != nil && s.Repo.DB != nil {
-		s.Repo.DB.Exec(`
+		_, _ = s.Repo.DB.ExecContext(ctx, `
 			INSERT INTO invoices (tenant_id, invoice_number, plan_name, period, amount, tax, total, date, due_date, status, payment_method, container_quota)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'paid', $10, $11)
 			ON CONFLICT (invoice_number) DO NOTHING
-		`, input.TenantID, invNum, planName, "1 Bulan", amount, tax, total, nowDate, dueDate, payMethodName, maxContainers)
+		`, tID, invNum, planName, "1 Bulan", amount, tax, total, nowDate, dueDate, payMethodName, maxContainers)
 
-		s.Repo.DB.Exec(`
+		_, _ = s.Repo.DB.ExecContext(ctx, `
 			UPDATE tenants 
 			SET plan_tier = $1, max_containers = $2, storage_quota_mb = $3, updated_at = NOW() 
 			WHERE id = $4 OR slug = $4
-		`, input.PlanTier, maxContainers, storageQuota, input.TenantID)
+		`, input.PlanTier, maxContainers, storageQuota, tID)
 	}
+
+	s.Repo.Invoices = append([]gin.H{invoiceObj}, s.Repo.Invoices...)
+
+	sites, _ := s.Repo.GetSites(ctx, tID)
 
 	return gin.H{
 		"invoice": invoiceObj,
@@ -494,7 +549,7 @@ func (s *Services) ProcessCheckout(input CheckoutInput) (gin.H, error) {
 			"tier":            input.PlanTier,
 			"price":           priceText,
 			"maxContainers":   maxContainers,
-			"usedContainers":  len(s.Repo.Containers),
+			"usedContainers":  len(sites),
 			"cpuPerContainer": cpuLimit,
 			"ramPerContainer": fmt.Sprintf("%d MB", ramLimit),
 			"storageQuota":    fmt.Sprintf("%d MB", storageQuota),
@@ -508,8 +563,12 @@ func (s *Services) ProcessCheckout(input CheckoutInput) (gin.H, error) {
 // Webhooks Service
 // -----------------------------------------------------------------------------
 
-func (s *Services) GetWebhooks() []gin.H {
-	return s.Repo.Webhooks
+func (s *Services) GetWebhooks(ctx context.Context, tenantID string) []gin.H {
+	wh, err := s.Repo.GetWebhooks(ctx, tenantID)
+	if err != nil || wh == nil {
+		return []gin.H{}
+	}
+	return wh
 }
 
 // -----------------------------------------------------------------------------

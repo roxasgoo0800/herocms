@@ -77,6 +77,8 @@ export const studioApi = {
   getContainers: () => apiFetch('/containers'),
   createContainer: (payload: { name: string; subdomain: string; category?: string; role?: string }) =>
     apiFetch('/containers', { method: 'POST', body: JSON.stringify(payload) }),
+  saveSiteDesign: (id: string, payload: any) =>
+    apiFetch(`/containers/${id}/design`, { method: 'PUT', body: JSON.stringify(payload) }),
   startContainer: (id: string) => apiFetch(`/containers/${id}/start`, { method: 'POST' }),
   stopContainer: (id: string) => apiFetch(`/containers/${id}/stop`, { method: 'POST' }),
   deleteContainer: (id: string) => apiFetch(`/containers/${id}`, { method: 'DELETE' }),

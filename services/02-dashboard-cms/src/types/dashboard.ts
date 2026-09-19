@@ -41,6 +41,47 @@ export interface ContainerSite {
   bioIntro: string;
   accentColor: string;
   lastDeployed: string;
+  themeConfig?: Record<string, any>;
+}
+
+export interface VisualBlock {
+  id: string;
+  type: 'navbar' | 'hero' | 'features' | 'showcase' | 'pricing' | 'testimonials' | 'cta' | 'contact' | 'footer';
+  name: string;
+  badge?: string;
+  title: string;
+  subtitle?: string;
+  content?: string;
+  buttonText?: string;
+  buttonUrl?: string;
+  secondaryButtonText?: string;
+  secondaryButtonUrl?: string;
+  imageUrl?: string;
+  isVisible: boolean;
+  isLocked: boolean;
+  items?: Array<{
+    id: string;
+    title: string;
+    desc: string;
+    icon?: string;
+    tag?: string;
+    price?: string;
+    period?: string;
+    features?: string[];
+    author?: string;
+    role?: string;
+    avatar?: string;
+  }>;
+  styles?: {
+    paddingY?: number;
+    align?: 'left' | 'center' | 'right';
+    bgMode?: 'transparent' | 'solid' | 'gradient' | 'glass';
+    bgColor?: string;
+    textColor?: string;
+    borderRadius?: number;
+    shadow?: 'none' | 'sm' | 'md' | 'lg' | 'glow';
+    backdropBlur?: number;
+  };
 }
 
 export interface ContentArticle {

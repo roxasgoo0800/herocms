@@ -48,6 +48,7 @@ const router = useRouter();
 
 const {
   activeMenu,
+  isEditorSidebarHidden,
   userEmail,
   userPlan,
   usedContainersCount,
@@ -76,7 +77,7 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden }">
     <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
     <aside class="app-sidebar">
       <!-- Workspace Brand Switcher -->
@@ -535,6 +536,23 @@ const handleLogout = () => {
   min-height: 100vh;
   background: transparent;
   position: relative;
+}
+
+/* Editor Immersive Mode: Hide Sidebar & Top Header for maximum wide workspace */
+.app-shell.editor-immersive-mode .app-sidebar {
+  display: none !important;
+}
+
+.app-shell.editor-immersive-mode .top-nav-header {
+  display: none !important;
+}
+
+.app-shell.editor-immersive-mode .content-scroll-pane {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
 }
 
 /* 1. LEFT SIDEBAR (GLASSMORPHIC & SLEEK) */
