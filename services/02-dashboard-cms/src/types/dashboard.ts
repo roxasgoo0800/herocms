@@ -10,7 +10,8 @@ export type ActiveMenu =
   | 'analytics'
   | 'webhooks'
   | 'billing'
-  | 'invoices';
+  | 'invoices'
+  | 'tickets';
 
 export interface UserPlan {
   name: string;
@@ -103,4 +104,25 @@ export interface InvoiceItem {
 export interface ToastMessage {
   text: string;
   type: 'success' | 'info' | 'error';
+}
+
+export interface TicketMessage {
+  id: string;
+  sender: 'tenant' | 'support';
+  authorName: string;
+  authorRole: string;
+  timestamp: string;
+  message: string;
+}
+
+export interface SupportTicketItem {
+  id: string;
+  subject: string;
+  category: 'Infrastructure & Container' | 'Edge Proxy & DNS' | 'Visual Editor' | 'Billing & Pajak' | 'API & Webhooks' | 'General';
+  priority: 'p1_urgent' | 'p2_high' | 'p3_normal';
+  status: 'open' | 'in_progress' | 'resolved';
+  createdAt: string;
+  lastUpdated: string;
+  assignedEngineer?: string;
+  messages: TicketMessage[];
 }

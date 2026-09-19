@@ -25,7 +25,8 @@ import {
   ShoppingBag,
   Server,
   Terminal,
-  Copy
+  Copy,
+  LifeBuoy
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 
@@ -40,6 +41,7 @@ import AnalyticsTelemetryModule from '../components/dashboard/AnalyticsTelemetry
 import WebhooksApiModule from '../components/dashboard/WebhooksApiModule.vue';
 import BillingPlanModule from '../components/dashboard/BillingPlanModule.vue';
 import InvoicesHistoryModule from '../components/dashboard/InvoicesHistoryModule.vue';
+import SupportTicketingModule from '../components/dashboard/SupportTicketingModule.vue';
 
 const router = useRouter();
 
@@ -194,6 +196,19 @@ const handleLogout = () => {
             <span class="nav-pill-tag green">Lunas</span>
           </button>
         </nav>
+
+        <div class="nav-section-title">BANTUAN & SUPPORT</div>
+        <nav class="sidebar-nav-list">
+          <button
+            class="nav-link"
+            :class="{ active: activeMenu === 'tickets' }"
+            @click="activeMenu = 'tickets'"
+          >
+            <LifeBuoy :size="17" />
+            <span class="nav-link-text">Tiket Support</span>
+            <span class="nav-pill-tag amber">1 Aktif</span>
+          </button>
+        </nav>
       </div>
 
       <!-- Bottom Sidebar: Quota Gauge & User Profile -->
@@ -252,7 +267,8 @@ const handleLogout = () => {
               activeMenu === 'analytics' ? 'Analitik Real-Time (Kafka & Redis)' :
               activeMenu === 'webhooks' ? 'Webhooks & Integrasi API' :
               activeMenu === 'billing' ? 'Kapasitas & Paket Langganan' :
-              'Faktur & Riwayat Invoice Resmi'
+              activeMenu === 'invoices' ? 'Faktur & Riwayat Invoice Resmi' :
+              'Pusat Bantuan & Tiket Support'
             }}
           </span>
         </div>
@@ -292,6 +308,7 @@ const handleLogout = () => {
         <WebhooksApiModule v-else-if="activeMenu === 'webhooks'" />
         <BillingPlanModule v-else-if="activeMenu === 'billing'" />
         <InvoicesHistoryModule v-else-if="activeMenu === 'invoices'" />
+        <SupportTicketingModule v-else-if="activeMenu === 'tickets'" />
       </main>
     </div>
 

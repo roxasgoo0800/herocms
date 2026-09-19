@@ -8,7 +8,9 @@ import type {
   CustomDomainItem,
   WebhookItem,
   InvoiceItem,
-  ToastMessage
+  ToastMessage,
+  SupportTicketItem,
+  TicketMessage
 } from '../types/dashboard';
 
 // Active Menu Navigation
@@ -701,6 +703,215 @@ const testWebhook = (wh: WebhookItem) => {
   }, 1000);
 };
 
+// Support Ticketing State
+const supportTickets = ref<SupportTicketItem[]>([
+  {
+    id: 'TKT-8921',
+    subject: 'Bantuan Penyetelan Custom SSL Wildcard di Edge Traefik v3',
+    category: 'Edge Proxy & DNS',
+    priority: 'p2_high',
+    status: 'in_progress',
+    createdAt: '18 Sep 2026, 14:20',
+    lastUpdated: '10 menit lalu',
+    assignedEngineer: 'Budi Hartono (L2 Cloud DevOps)',
+    messages: [
+      {
+        id: 'msg_1',
+        sender: 'tenant',
+        authorName: 'Rizal Pratama',
+        authorRole: 'Tenant Administrator',
+        timestamp: '18 Sep 2026, 14:20',
+        message: 'Halo tim support HeroCMS, saya baru saja mengarahkan CNAME *.rizalpratama.cloud ke ingress edge Traefik (103.144.20.12). Namun status verifikasi SSL di dashboard masih pending. Mohon bantuan inspeksi log Let\'s Encrypt ALPN challenge.'
+      },
+      {
+        id: 'msg_2',
+        sender: 'support',
+        authorName: 'Budi Hartono',
+        authorRole: 'L2 Cloud DevOps Engineer',
+        timestamp: '18 Sep 2026, 14:35',
+        message: 'Halo Pak Rizal, terima kasih telah menghubungi tim support. Kami sudah melakukan pengecekan pada Traefik dynamic configuration. Propagasi DNS Anda sudah terdeteksi di edge node Jakarta. Sertifikat TLS 1.3 wildcard sedang dalam proses issue otomatis, estimasi selesai dalam 5-10 menit ke depan.'
+      }
+    ]
+  },
+  {
+    id: 'TKT-8410',
+    subject: 'Permintaan Penambahan Kuota MinIO S3 Storage ke 5GB',
+    category: 'Infrastructure & Container',
+    priority: 'p3_normal',
+    status: 'resolved',
+    createdAt: '15 Sep 2026, 09:10',
+    lastUpdated: '15 Sep 2026, 11:30',
+    assignedEngineer: 'Siti Rahma (Storage Infrastructure Admin)',
+    messages: [
+      {
+        id: 'msg_3',
+        sender: 'tenant',
+        authorName: 'Rizal Pratama',
+        authorRole: 'Tenant Administrator',
+        timestamp: '15 Sep 2026, 09:10',
+        message: 'Selamat pagi, media PDF dan dokumen presentasi kami bertambah. Bisakah alokasi MinIO S3 kami dinaikkan dari 2GB ke 5GB?'
+      },
+      {
+        id: 'msg_4',
+        sender: 'support',
+        authorName: 'Siti Rahma',
+        authorRole: 'Storage Infrastructure Admin',
+        timestamp: '15 Sep 2026, 11:30',
+        message: 'Halo Pak Rizal, penambahan kuota bucket S3 MinIO tenant-9942 sebesar 3GB tambahan telah disetujui dan dialokasikan ke storage cluster NVMe. Kuota efektif sekarang 5GB.'
+      }
+    ]
+  },
+  {
+    id: 'TKT-8102',
+    subject: 'Rekonsiliasi Faktur Pajak E-Faktur Masa Agustus 2026',
+    category: 'Billing & Pajak',
+    priority: 'p3_normal',
+    status: 'resolved',
+    createdAt: '16 Agu 2026, 13:00',
+    lastUpdated: '17 Agu 2026, 10:15',
+    assignedEngineer: 'Hendra Wijaya (Finance Compliance)',
+    messages: [
+      {
+        id: 'msg_5',
+        sender: 'tenant',
+        authorName: 'Rizal Pratama',
+        authorRole: 'Tenant Administrator',
+        timestamp: '16 Agu 2026, 13:00',
+        message: 'Mohon konfirmasi e-faktur PPN 11% untuk invoice INV-2026-08-0412 apakah sudah terunggah ke DJP online?'
+      },
+      {
+        id: 'msg_6',
+        sender: 'support',
+        authorName: 'Hendra Wijaya',
+        authorRole: 'Finance Compliance',
+        timestamp: '17 Agu 2026, 10:15',
+        message: 'Faktur pajak elektronik dengan NSFP 010.021-26.9942001 telah berhasil divalidasi oleh sistem DJP. File faktur resmi dapat langsung diunduh pada menu Faktur & Invoice.'
+      }
+    ]
+  },
+  {
+    id: 'TKT-9042',
+    subject: 'Integrasi Webhook Discord Payload dengan Traefik TLS Alerts',
+    category: 'API & Webhooks',
+    priority: 'p2_high',
+    status: 'open',
+    createdAt: 'Hari ini, 09:45',
+    lastUpdated: 'Baru saja',
+    messages: [
+      {
+        id: 'msg_7',
+        sender: 'tenant',
+        authorName: 'Rizal Pratama',
+        authorRole: 'Tenant Administrator',
+        timestamp: 'Hari ini, 09:45',
+        message: 'Kami ingin menambahkan custom bot alert saat SSL mendekati 7 hari sebelum expiry. Apakah signature HMAC-SHA256 mendukung header webhook Discord kustom?'
+      }
+    ]
+  }
+]);
+
+const selectedTicket = ref<SupportTicketItem | null>(null);
+const isCreateTicketModalOpen = ref(false);
+const isTicketDetailModalOpen = ref(false);
+const ticketReplyText = ref('');
+
+const newTicketForm = ref({
+  subject: '',
+  category: 'Infrastructure & Container' as SupportTicketItem['category'],
+  priority: 'p2_high' as SupportTicketItem['priority'],
+  message: ''
+});
+
+const openCreateTicketModal = () => {
+  newTicketForm.value = {
+    subject: '',
+    category: 'Infrastructure & Container',
+    priority: 'p2_high',
+    message: ''
+  };
+  isCreateTicketModalOpen.value = true;
+};
+
+const handleCreateTicket = () => {
+  if (!newTicketForm.value.subject || !newTicketForm.value.message) {
+    showToast('Harap isi judul dan deskripsi tiket bantuan.', 'error');
+    return;
+  }
+
+  const newTicketId = `TKT-${Math.floor(1000 + Math.random() * 9000)}`;
+  const newTicket: SupportTicketItem = {
+    id: newTicketId,
+    subject: newTicketForm.value.subject,
+    category: newTicketForm.value.category,
+    priority: newTicketForm.value.priority,
+    status: 'open',
+    createdAt: 'Baru saja',
+    lastUpdated: 'Baru saja',
+    messages: [
+      {
+        id: `msg_${Date.now()}`,
+        sender: 'tenant',
+        authorName: 'Rizal Pratama',
+        authorRole: 'Tenant Administrator',
+        timestamp: 'Baru saja',
+        message: newTicketForm.value.message
+      }
+    ]
+  };
+
+  supportTickets.value.unshift(newTicket);
+  isCreateTicketModalOpen.value = false;
+  showToast(`Tiket ${newTicketId} berhasil dibuat! Tim DevOps akan merespons dalam < 15 menit.`, 'success');
+};
+
+const openTicketDetail = (ticket: SupportTicketItem) => {
+  selectedTicket.value = ticket;
+  ticketReplyText.value = '';
+  isTicketDetailModalOpen.value = true;
+};
+
+const sendTicketReply = () => {
+  if (!ticketReplyText.value.trim() || !selectedTicket.value) return;
+
+  const newMsg: TicketMessage = {
+    id: `msg_${Date.now()}`,
+    sender: 'tenant',
+    authorName: 'Rizal Pratama',
+    authorRole: 'Tenant Administrator',
+    timestamp: 'Baru saja',
+    message: ticketReplyText.value.trim()
+  };
+
+  selectedTicket.value.messages.push(newMsg);
+  selectedTicket.value.lastUpdated = 'Baru saja';
+  ticketReplyText.value = '';
+  showToast('Balasan terkirim ke tiket support.', 'success');
+
+  if (selectedTicket.value.status === 'open') {
+    setTimeout(() => {
+      if (selectedTicket.value) {
+        selectedTicket.value.status = 'in_progress';
+        selectedTicket.value.assignedEngineer = 'Budi Hartono (L2 Cloud DevOps)';
+        selectedTicket.value.messages.push({
+          id: `msg_${Date.now() + 1}`,
+          sender: 'support',
+          authorName: 'Budi Hartono',
+          authorRole: 'L2 Cloud DevOps Engineer',
+          timestamp: 'Baru saja',
+          message: 'Pesan Anda sudah diterima. Kami sedang menguji replikasi isu pada staging environment.'
+        });
+        showToast('Tim Support merespons tiket Anda!', 'info');
+      }
+    }, 2000);
+  }
+};
+
+const resolveTicket = (ticket: SupportTicketItem) => {
+  ticket.status = 'resolved';
+  ticket.lastUpdated = 'Baru saja';
+  showToast(`Tiket ${ticket.id} ditandai sebagai Selesai / Resolved.`, 'success');
+};
+
 export function useDashboardData() {
   return {
     activeMenu,
@@ -762,6 +973,17 @@ export function useDashboardData() {
     apiKey,
     isApiKeyRevealed,
     copyApiKey,
-    testWebhook
+    testWebhook,
+    supportTickets,
+    selectedTicket,
+    isCreateTicketModalOpen,
+    isTicketDetailModalOpen,
+    ticketReplyText,
+    newTicketForm,
+    openCreateTicketModal,
+    handleCreateTicket,
+    openTicketDetail,
+    sendTicketReply,
+    resolveTicket
   };
 }
