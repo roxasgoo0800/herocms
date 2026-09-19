@@ -61,6 +61,12 @@ Akses layanan pendukung lokal:
 - **Redis:** `localhost:6379` (`secret_redis_password`)
 - **Redpanda (Kafka API):** `localhost:19092`
 
+> **Opsi Ringan (Hanya Database & Redis untuk Development):**
+> Jika Anda hanya ingin menjalankan PostgreSQL dan Redis lokal untuk menjalankan Program 2:
+> ```bash
+> docker compose -f docker-compose.db.yml up -d
+> ```
+
 ---
 
 ### 2. Jalankan Program 2: Dashboard CMS Studio (Single-Binary Mode)
@@ -70,13 +76,32 @@ Aplikasi Dashboard CMS menggabungkan antarmuka Vue 3 SPA dan backend Golang dala
 ```bash
 cd services/02-dashboard-cms
 
+# Salin konfigurasi environment
+cp .env.example .env
+
 # Kompilasi frontend dan binary backend
+npm install
 npm run build
 go build -o dashboard-cms-server ./cmd/server
 
 # Jalankan server
-PORT=8085 ./dashboard-cms-server
+./dashboard-cms-server
 ```
 
-Buka browser di: **[http://localhost:8085](http://localhost:8085)** (atau `http://localhost:5173` jika menggunakan `npm run dev` untuk hot-reload).
+Buka browser di: **[http://localhost:8085](http://localhost:8085)** (atau `http://localhost:5173` jika menggunakan `npm run dev` untuk frontend development).
+
+#### Kredensial Pengujian Development:
+- **Akun Administrator Default**:
+  - Username / Email: `admin` atau `admin@herocms.id`
+  - Kata Sandi: `admin`
+  *(Otomatis di-seed ke database PostgreSQL saat backend startup).*
+
+#### Alur Pendaftaran Pengguna Baru (Customer Onboarding Funnel):
+1. Buka halaman Login di `http://localhost:5173/login`.
+2. Klik tab **"Daftar Akun Baru"**, isi nama, email, dan kata sandi.
+3. Setelah pendaftaran, Anda otomatis diarahkan ke **Wizard Onboarding (`/onboarding`)**:
+   - **Langkah 1**: Pilih paket kuota kontainer (*Starter*, *Pro*, atau *Agency*).
+   - **Langkah 2**: Checkout & Simulasi pembayaran instan (QRIS / Virtual Account) dengan auto-settlement.
+   - **Langkah 3**: Setup identitas situs (kategori & subdomain), provisi otomatis alokasi cgroups v2, dan rute Traefik v3.
+   - **Selesai**: Mendarat di Dashboard Studio dengan kontainer baru yang berstatus *RUNNING* dan faktur tagihan yang lunas tercatat.
 

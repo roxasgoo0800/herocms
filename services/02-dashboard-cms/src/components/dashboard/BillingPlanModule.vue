@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   CreditCard,
   Plus,
@@ -13,6 +14,8 @@ import {
   ChevronRight
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
+
+const router = useRouter();
 
 const {
   userPlan,
@@ -69,6 +72,10 @@ const handleBuyAddon = () => {
             <div class="plan-price-block">
               <div class="plan-rate">{{ userPlan.price }}</div>
               <span class="plan-period">Tagihan berikutnya: 12 Oktober 2026</span>
+              <button @click="router.push('/onboarding')" class="btn-upgrade-action">
+                <Sparkles :size="13" />
+                <span>Upgrade / Ganti Paket</span>
+              </button>
             </div>
           </div>
 

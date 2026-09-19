@@ -422,6 +422,7 @@ const handleRegister = async (e?: Event) => {
           Sudah memiliki akun? 
           <a href="#" @click.prevent="setAuthMode('login')">Masuk ke Studio</a>
         </p>
+      </div>
     </div>
   </div>
 </template>
@@ -506,6 +507,7 @@ const handleRegister = async (e?: Event) => {
 .wordmark-highlight {
   background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

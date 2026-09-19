@@ -85,7 +85,8 @@ func CSRFProtection() gin.HandlerFunc {
 		}
 
 		path := c.Request.URL.Path
-		if path == "/api/auth/login" || strings.HasPrefix(path, "/api/auth/login") {
+		if path == "/api/auth/login" || strings.HasPrefix(path, "/api/auth/login") ||
+			path == "/api/auth/register" || strings.HasPrefix(path, "/api/auth/register") {
 			c.Next()
 			return
 		}
