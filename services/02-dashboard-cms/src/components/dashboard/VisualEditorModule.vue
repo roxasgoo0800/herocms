@@ -1526,8 +1526,7 @@ const copyVsCodeCurrentCode = () => {
         <!-- ----------------------------------------------------------------- -->
         <!-- LEFT STUDIO DOCK (Blocks Library, Layers Tree, Design Tokens, AI) -->
         <!-- ----------------------------------------------------------------- -->
-        <transition name="dock-slide-left">
-          <aside v-if="editorViewMode === 'design'" class="studio-left-dock">
+        <aside class="studio-left-dock" :class="{ 'dock-hidden': editorViewMode !== 'design' }">
           <!-- Dock Tabs Header -->
           <nav class="left-dock-tabs">
             <button
@@ -1770,7 +1769,6 @@ const copyVsCodeCurrentCode = () => {
             </div>
           </div>
         </aside>
-      </transition>
 
         <!-- ----------------------------------------------------------------- -->
         <!-- CENTER: INFINITE CANVAS WORKSPACE & RESIZABLE ARTBOARD             -->
@@ -2377,8 +2375,7 @@ const copyVsCodeCurrentCode = () => {
         <!-- ----------------------------------------------------------------- -->
         <!-- RIGHT STUDIO DOCK: DEEP STYLE INSPECTOR & CONTENT CONTROLS        -->
         <!-- ----------------------------------------------------------------- -->
-        <transition name="dock-slide-right">
-          <aside v-if="editorViewMode === 'design'" class="studio-right-inspector">
+        <aside class="studio-right-inspector" :class="{ 'dock-hidden': editorViewMode !== 'design' }">
           <!-- Inspector Tabs Header -->
           <div class="inspector-tabs-bar">
             <button
@@ -2584,7 +2581,6 @@ const copyVsCodeCurrentCode = () => {
             </div>
           </div>
         </aside>
-      </transition>
       </div>
 
       <!-- =================================================================== -->
@@ -2659,18 +2655,6 @@ const copyVsCodeCurrentCode = () => {
   animation: studioRevealTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.studio-main-frame.is-revealed .studio-left-dock {
-  animation: studioRevealLeft 0.42s 0.04s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.studio-main-frame.is-revealed .studio-viewport-area {
-  animation: studioRevealCanvas 0.48s 0.06s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.studio-main-frame.is-revealed .studio-right-inspector {
-  animation: studioRevealRight 0.42s 0.08s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
 @keyframes studioRevealTop {
   0% {
     opacity: 0;
@@ -2679,39 +2663,6 @@ const copyVsCodeCurrentCode = () => {
   100% {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes studioRevealLeft {
-  0% {
-    opacity: 0;
-    transform: translateX(-16px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes studioRevealCanvas {
-  0% {
-    opacity: 0;
-    transform: scale(0.97) translateY(8px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes studioRevealRight {
-  0% {
-    opacity: 0;
-    transform: translateX(16px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 
@@ -3419,6 +3370,17 @@ const copyVsCodeCurrentCode = () => {
   flex-direction: column;
   flex-shrink: 0;
   z-index: 20;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease;
+  will-change: transform, margin-left, opacity;
+}
+
+.studio-left-dock.dock-hidden {
+  transform: translateX(-100%);
+  margin-left: -290px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .left-dock-tabs {
@@ -4690,6 +4652,17 @@ const copyVsCodeCurrentCode = () => {
   flex-direction: column;
   flex-shrink: 0;
   z-index: 20;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              margin-right 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease;
+  will-change: transform, margin-right, opacity;
+}
+
+.studio-right-inspector.dock-hidden {
+  transform: translateX(100%);
+  margin-right: -320px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .inspector-tabs-bar {
@@ -5341,46 +5314,6 @@ const copyVsCodeCurrentCode = () => {
   background: #fee2e2;
   border-color: #fca5a5;
   color: #ef4444;
-}
-
-/* -----------------------------------------------------------------------------
- * 5. Studio Dock Transitions (Preview / Design Mode Toggle)
- * --------------------------------------------------------------------------- */
-.dock-slide-left-enter-active,
-.dock-slide-left-leave-active {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.28s ease,
-              margin-left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, margin-left, opacity;
-}
-
-.dock-slide-left-enter-active,
-.dock-slide-left-leave-active,
-.dock-slide-right-enter-active,
-.dock-slide-right-leave-active {
-  animation: none !important;
-}
-
-.dock-slide-left-enter-from,
-.dock-slide-left-leave-to {
-  transform: translateX(-100%);
-  opacity: 0;
-  margin-left: -290px;
-}
-
-.dock-slide-right-enter-active,
-.dock-slide-right-leave-active {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.28s ease,
-              margin-right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, margin-right, opacity;
-}
-
-.dock-slide-right-enter-from,
-.dock-slide-right-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
-  margin-right: -320px;
 }
 
 /* -----------------------------------------------------------------------------
