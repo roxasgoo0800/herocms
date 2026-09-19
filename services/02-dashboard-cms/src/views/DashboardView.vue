@@ -1371,27 +1371,37 @@ const handleLogout = () => {
 
         <div class="terminal-container-view">
           <div class="terminal-meta-bar">
-            <div class="terminal-meta-item">
-              <span class="t-meta-lbl">STATUS:</span>
-              <span class="t-meta-val" :class="activeLogContainer.status">{{ activeLogContainer.status.toUpperCase() }}</span>
+            <div class="terminal-meta-left">
+              <div class="terminal-meta-item">
+                <span class="t-meta-lbl">STATUS:</span>
+                <span class="t-meta-val" :class="activeLogContainer.status">{{ activeLogContainer.status.toUpperCase() }}</span>
+              </div>
+              <div class="terminal-meta-item">
+                <span class="t-meta-lbl">CGROUPS:</span>
+                <span class="t-meta-val">{{ activeLogContainer.cpuLimit }} • {{ activeLogContainer.ramUsage }}MB / {{ activeLogContainer.ramLimit }}MB</span>
+              </div>
+              <div class="terminal-meta-item">
+                <span class="t-meta-lbl">ROUTE:</span>
+                <span class="t-meta-val">https://{{ activeLogContainer.subdomain }}</span>
+              </div>
             </div>
-            <div class="terminal-meta-item">
-              <span class="t-meta-lbl">CGROUPS:</span>
-              <span class="t-meta-val">{{ activeLogContainer.cpuLimit }} • {{ activeLogContainer.ramUsage }}MB / {{ activeLogContainer.ramLimit }}MB</span>
-            </div>
-            <div class="terminal-meta-item">
-              <span class="t-meta-lbl">ROUTE:</span>
-              <span class="t-meta-val">{{ activeLogContainer.subdomain }}</span>
+            <div class="terminal-meta-right">
+              <span class="pulse-green-sm"></span>
+              <span class="t-stream-tag">Stream Live (Kafka/Docker)</span>
             </div>
           </div>
 
           <div class="terminal-output-screen">
-            <div class="log-entry"><span class="log-ts">[09:20:12]</span> <span class="log-tag docker">[docker-daemon]</span> Container {{ activeLogContainer.id }} allocated with cgroups v2 limits</div>
-            <div class="log-entry"><span class="log-ts">[09:20:13]</span> <span class="log-tag traefik">[traefik-proxy]</span> Route registered: Host(`{{ activeLogContainer.subdomain }}`) -> port 80</div>
-            <div class="log-entry"><span class="log-ts">[09:20:14]</span> <span class="log-tag tls">[lets-encrypt]</span> Certificate TLS v1.3 challenge verified successfully (Zero-Downtime)</div>
-            <div class="log-entry"><span class="log-ts">[09:20:15]</span> <span class="log-tag nginx">[runtime-engine]</span> HTTP/2 server ready. Ready to receive tenant traffic</div>
-            <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:22:04]</span> <span class="log-tag traffic">[edge-inbound]</span> GET / 200 OK (TTFB: 1.6ms) - Client IP: 103.144.20.12</div>
-            <div class="log-entry" v-if="activeLogContainer.status === 'stopped'"><span class="log-ts">[09:22:30]</span> <span class="log-tag warn">[docker-daemon]</span> SIGTERM received. Container process halted cleanly (Standby)</div>
+            <div class="log-entry"><span class="log-ts">[09:20:11.204]</span> <span class="log-tag system">[system-init]</span> Spawning runtime sandbox for tenant {{ activeLogContainer.id }}</div>
+            <div class="log-entry"><span class="log-ts">[09:20:12.018]</span> <span class="log-tag docker">[docker-daemon]</span> Container {{ activeLogContainer.id }} initialized (cgroups v2: cpu_quota=50000/100000, mem_limit={{ activeLogContainer.ramLimit }}MB)</div>
+            <div class="log-entry"><span class="log-ts">[09:20:13.142]</span> <span class="log-tag traefik">[traefik-proxy]</span> Ingress router attached: Host(`{{ activeLogContainer.subdomain }}`) -> service '{{ activeLogContainer.id }}:80'</div>
+            <div class="log-entry"><span class="log-ts">[09:20:14.055]</span> <span class="log-tag tls">[lets-encrypt]</span> Wildcard challenge ACME TLS-ALPN-01 verified. Certificate auto-renewed</div>
+            <div class="log-entry"><span class="log-ts">[09:20:15.310]</span> <span class="log-tag nginx">[runtime-engine]</span> HTTP/2 & HTTP/3 (QUIC) fast-path listener initialized on 0.0.0.0:80</div>
+            <div class="log-entry"><span class="log-ts">[09:21:02.881]</span> <span class="log-tag health">[healthcheck]</span> Internal probe HTTP 127.0.0.1:80/healthz returned status 200 OK (0.4ms)</div>
+            <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:22:04.119]</span> <span class="log-tag traffic">[edge-inbound]</span> GET / 200 OK (TTFB: 1.6ms, 4.2KB) - Client IP: 103.144.20.12 - SSL TLS 1.3</div>
+            <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:24:18.490]</span> <span class="log-tag traffic">[edge-inbound]</span> GET /api/telemetry 204 No Content - Kafka event published</div>
+            <div class="log-entry" v-if="activeLogContainer.status === 'stopped'"><span class="log-ts">[09:22:30.501]</span> <span class="log-tag warn">[docker-daemon]</span> SIGTERM received from tenant dashboard. Container process halted cleanly (Standby)</div>
+            <div class="log-entry" v-if="activeLogContainer.status === 'provisioning'"><span class="log-ts">[09:25:01.002]</span> <span class="log-tag docker">[docker-daemon]</span> Re-allocating cgroups v2 resource tree and rebuilding Traefik route...</div>
           </div>
         </div>
 
@@ -1401,7 +1411,7 @@ const handleLogout = () => {
             <span>Salin Log</span>
           </button>
           <button type="button" class="btn-modal-confirm" @click="isLogsModalOpen = false">
-            Selesai
+            Tutup Konsol
           </button>
         </div>
       </div>
@@ -3881,15 +3891,16 @@ const handleLogout = () => {
   to { transform: rotate(360deg); }
 }
 
-/* Terminal Logs Dialog */
+/* Terminal Logs Dialog (Enlarged Pro Developer Sizing) */
 .modal-dialog-lg {
-  max-width: 660px;
+  max-width: 880px;
+  width: 100%;
 }
 
 .terminal-container-view {
   background: #09090b;
   border: 1px solid #27272a;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
@@ -3897,57 +3908,85 @@ const handleLogout = () => {
 .terminal-meta-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
-  padding: 10px 14px;
+  padding: 12px 18px;
   background: #18181b;
   border-bottom: 1px solid #27272a;
+  font-size: 0.78rem;
+}
+
+.terminal-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.terminal-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.t-stream-tag {
+  color: #a1a1aa;
   font-size: 0.74rem;
+  font-weight: 500;
 }
 
 .terminal-meta-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
 }
 
 .t-meta-lbl {
   color: #71717a;
   font-weight: 600;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
 }
 
 .t-meta-val {
   color: #e4e4e7;
+  font-weight: 500;
 }
 
 .t-meta-val.running {
   color: #10b981;
+  font-weight: 600;
 }
 
 .t-meta-val.stopped {
   color: #f59e0b;
+  font-weight: 600;
 }
 
 .t-meta-val.provisioning {
   color: #3b82f6;
+  font-weight: 600;
 }
 
 .terminal-output-screen {
-  padding: 14px;
-  max-height: 240px;
+  padding: 18px 20px;
+  min-height: 320px;
+  max-height: 420px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font-size: 0.76rem;
-  line-height: 1.5;
+  gap: 10px;
+  font-size: 0.82rem;
+  line-height: 1.6;
 }
 
 .log-entry {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
   color: #d4d4d8;
+  word-break: break-word;
 }
 
 .log-ts {
@@ -3960,10 +3999,12 @@ const handleLogout = () => {
   flex-shrink: 0;
 }
 
+.log-tag.system { color: #c084fc; }
 .log-tag.docker { color: #60a5fa; }
 .log-tag.traefik { color: #34d399; }
 .log-tag.tls { color: #a78bfa; }
 .log-tag.nginx { color: #f472b6; }
+.log-tag.health { color: #4ade80; }
 .log-tag.traffic { color: #38bdf8; }
 .log-tag.warn { color: #fbbf24; }
 
