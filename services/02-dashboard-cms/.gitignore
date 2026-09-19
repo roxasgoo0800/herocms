@@ -1,0 +1,14 @@
+# Build output & node
+node_modules/
+dist/
+*.local
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Golang binaries
+dashboard-cms-server
+bin/
+*.exe

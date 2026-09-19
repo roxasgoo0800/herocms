@@ -13,9 +13,12 @@ import {
   Clock,
   Zap,
   Flame,
-  Copy
+  Copy,
+  X,
+  BookOpen
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
+import type { ContentArticle } from '../../types/dashboard';
 
 const {
   articles,
@@ -28,6 +31,14 @@ const searchQuery = ref('');
 const selectedCategory = ref('all');
 const selectedStatus = ref('all');
 const viewMode = ref<'grid' | 'table'>('grid');
+
+const isArticleModalOpen = ref(false);
+const selectedArticle = ref<ContentArticle | null>(null);
+
+const openArticleModal = (art: ContentArticle) => {
+  selectedArticle.value = art;
+  isArticleModalOpen.value = true;
+};
 
 const filteredArticles = computed(() => {
   return articles.value.filter(art => {
@@ -296,7 +307,7 @@ const getCategoryColor = (cat: string) => {
           <div class="art-card-actions-bar">
             <button
               class="btn-card-action primary"
-              @click="showToast(`Membuka preview untuk '${art.title}'...`, 'info')"
+              @click="openArticleModal(art)"
             >
               <Eye :size="13" />
               <span>Baca Artikel</span>
@@ -372,7 +383,7 @@ const getCategoryColor = (cat: string) => {
               </td>
               <td style="text-align: right">
                 <div class="row-actions">
-                  <button class="btn-action-icon" @click="showToast(`Membuka preview untuk '${art.title}'...`, 'info')" title="Lihat Artikel">
+                  <button class="btn-action-icon" @click="openArticleModal(art)" title="Lihat Artikel">
                     <Eye :size="13" />
                   </button>
                   <button class="btn-action-icon" @click="copyToClipboard(`https://rizalpratama.cloud/${art.slug}`, art.id)" :title="copiedSubdomain === art.id ? 'Tersalin!' : 'Salin Tautan'">
@@ -386,6 +397,86 @@ const getCategoryColor = (cat: string) => {
         </table>
       </div>
     </div>
+
+    <!-- MODAL: BACA & PRATINJAU ARTIKEL (ENTERPRISE EDITORIAL READER) -->
+    <Teleport to="body">
+      <div v-if="isArticleModalOpen && selectedArticle" class="modal-backdrop" @click.self="isArticleModalOpen = false">
+        <div class="modal-dialog modal-dialog-lg">
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box">
+                <BookOpen :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Pratinjau Artikel Editorial</h3>
+                <p class="modal-subheading">Konten tersinkronisasi di edge routing Traefik v3 dan siap disajikan ke publik.</p>
+              </div>
+            </div>
+            <button class="modal-close-button" @click="isArticleModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
+          </div>
+
+          <div class="article-reader-body">
+            <div class="reader-hero-cover" :class="'cover-' + getCategoryColor(selectedArticle.category)">
+              <div class="reader-meta-pills">
+                <span class="cover-cat-pill">{{ selectedArticle.category.toUpperCase() }}</span>
+                <span class="cover-read-time">{{ getReadTime(selectedArticle.title) }}</span>
+                <span class="seo-score-pill"><Zap :size="11" /> SEO 100/100</span>
+              </div>
+              <h2 class="reader-headline">{{ selectedArticle.title }}</h2>
+              <div class="reader-author-bar">
+                <div class="author-avatar-mini">RP</div>
+                <div class="author-meta">
+                  <span class="author-name">{{ selectedArticle.author }}</span>
+                  <span class="art-date">{{ selectedArticle.publishedAt }} • {{ selectedArticle.siteName }}</span>
+                </div>
+                <div class="reader-views-chip">
+                  <Eye :size="13" />
+                  <span>{{ selectedArticle.views.toLocaleString('id-ID') }} Total Pembaca (Redis ZSET)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="reader-content-prose">
+              <div class="article-slug-callout">
+                <Globe :size="14" />
+                <span>URL Publik: </span>
+                <code>https://rizalpratama.cloud/{{ selectedArticle.slug }}</code>
+              </div>
+
+              <div class="prose-sample-body">
+                <p class="lead-paragraph">
+                  Dalam implementasi arsitektur microservices terdistribusi modern, kecepatan penyajian konten statis di level edge proxy menjadi faktor penentu utama pengalaman pengguna dan skor Core Web Vitals.
+                </p>
+                <h4>1. Isolasi Resource Cgroups v2 & Kontainer Mandiri</h4>
+                <p>
+                  Setiap situs tenant dialokasikan dalam kontainer Docker Alpine Nginx yang terisolasi ketat. Dengan pembatasan 0.5 vCPU dan 256MB RAM melalui kernel Linux cgroups v2, tidak ada ancaman "noisy neighbor" di mana trafik satu tenant membebani resource tenant lain.
+                </p>
+                <h4>2. Telemetri Real-Time dengan Redis Sorted Sets (ZSET)</h4>
+                <p>
+                  Metrik kunjungan artikel ini dihitung secara atomik dan non-blocking melalui Redis Sorted Sets. Setiap pembaca yang mengakses rute <code>/{{ selectedArticle.slug }}</code> memicu perintah <code>ZINCRBY</code> dengan latensi kurang dari 1 milidetik.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer-row">
+            <button type="button" class="btn-modal-ghost" @click="isArticleModalOpen = false">
+              Tutup
+            </button>
+            <button
+              type="button"
+              class="btn-modal-confirm"
+              @click="copyToClipboard(`https://rizalpratama.cloud/${selectedArticle.slug}`, selectedArticle.id)"
+            >
+              <Copy :size="14" />
+              <span>Salin Tautan Publik</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
   </section>
 </template>
@@ -1280,24 +1371,125 @@ const getCategoryColor = (cat: string) => {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 99999;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 .modal-dialog {
   background: #ffffff;
   border-radius: 16px;
   width: 100%;
-  max-width: 540px;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
+  max-width: 580px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
   border: 1px solid #e2e8f0;
   overflow: hidden;
+  position: relative;
+  z-index: 100000;
   animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-dialog-lg {
+  max-width: 780px !important;
+}
+
+/* Reader Modal Body Styles */
+.article-reader-body {
+  overflow-y: auto;
+  max-height: calc(100vh - 170px);
+  padding: 0;
+}
+
+.reader-hero-cover {
+  padding: 24px 28px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.reader-meta-pills {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.reader-headline {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 16px 0;
+  line-height: 1.35;
+}
+
+.reader-author-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reader-views-chip {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.05);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.reader-content-prose {
+  padding: 24px 28px;
+}
+
+.article-slug-callout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.article-slug-callout code {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.prose-sample-body {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #334155;
+}
+
+.lead-paragraph {
+  font-size: 15.5px;
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 18px;
+}
+
+.prose-sample-body h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 20px 0 8px 0;
 }
 
 @keyframes modalScale {

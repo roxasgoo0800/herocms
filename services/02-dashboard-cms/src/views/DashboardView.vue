@@ -315,203 +315,207 @@ const handleLogout = () => {
     <!-- ============================================================= -->
     <!-- MODAL: BUAT SITUS & KONTAINER (HANDCRAFTED MINIMALIST SAAS)  -->
     <!-- ============================================================= -->
-    <div v-if="isCreateModalOpen" class="modal-backdrop" @click.self="isCreateModalOpen = false">
-      <div class="modal-dialog">
-        <!-- Header -->
-        <div class="modal-header">
-          <div class="modal-header-leading">
-            <div class="modal-header-icon-box">
-              <Layers :size="18" />
+    <Teleport to="body">
+      <div v-if="isCreateModalOpen" class="modal-backdrop" @click.self="isCreateModalOpen = false">
+        <div class="modal-dialog">
+          <!-- Header -->
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box">
+                <Layers :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Buat Situs Baru</h3>
+                <p class="modal-subheading">Inisialisasi kontainer Docker mandiri dengan routing Traefik v3.</p>
+              </div>
             </div>
-            <div>
-              <h3 class="modal-heading">Buat Situs Baru</h3>
-              <p class="modal-subheading">Inisialisasi kontainer Docker mandiri dengan routing Traefik v3.</p>
-            </div>
-          </div>
-          <button class="modal-close-button" @click="isCreateModalOpen = false" title="Tutup">
-            <X :size="16" />
-          </button>
-        </div>
-
-        <form @submit.prevent="handleCreateContainer" class="modal-form">
-          <!-- 1. Blueprint Selection -->
-          <div class="form-field-group">
-            <label class="field-title">Pilih Template Awal</label>
-            <div class="template-selector-grid">
-              <button
-                type="button"
-                v-for="tpl in [
-                  { id: 'portfolio', name: 'Portofolio', desc: 'Studi kasus & CV online', icon: Briefcase },
-                  { id: 'blog', name: 'Blog & Media', desc: 'Artikel & publikasi berita', icon: BookOpen },
-                  { id: 'education', name: 'Pusat Edukasi', desc: 'Silabus kursus & LMS', icon: GraduationCap },
-                  { id: 'business', name: 'Bisnis & UMKM', desc: 'Showcase produk & kontak', icon: ShoppingBag }
-                ]"
-                :key="tpl.id"
-                class="template-option"
-                :class="{ active: newSiteForm.category === tpl.id }"
-                @click="newSiteForm.category = tpl.id as any"
-              >
-                <div class="template-option-icon">
-                  <component :is="tpl.icon" :size="15" />
-                </div>
-                <div class="template-option-text">
-                  <div class="template-option-name">{{ tpl.name }}</div>
-                  <div class="template-option-desc">{{ tpl.desc }}</div>
-                </div>
-                <div class="template-option-radio">
-                  <div class="radio-dot"></div>
-                </div>
-              </button>
-            </div>
+            <button class="modal-close-button" @click="isCreateModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
           </div>
 
-          <!-- 2. Nama Website -->
-          <div class="form-field-group">
-            <label class="field-title" for="modal-site-name">
-              Nama Website
-              <span class="field-req-dot">*</span>
-            </label>
-            <input
-              id="modal-site-name"
-              v-model="newSiteForm.name"
-              type="text"
-              placeholder="Contoh: Portofolio Rizal Pratama"
-              class="field-text-input"
-              required
-            />
-          </div>
+          <form @submit.prevent="handleCreateContainer" class="modal-form">
+            <!-- 1. Blueprint Selection -->
+            <div class="form-field-group">
+              <label class="field-title">Pilih Template Awal</label>
+              <div class="template-selector-grid">
+                <button
+                  type="button"
+                  v-for="tpl in [
+                    { id: 'portfolio', name: 'Portofolio', desc: 'Studi kasus & CV online', icon: Briefcase },
+                    { id: 'blog', name: 'Blog & Media', desc: 'Artikel & publikasi berita', icon: BookOpen },
+                    { id: 'education', name: 'Pusat Edukasi', desc: 'Silabus kursus & LMS', icon: GraduationCap },
+                    { id: 'business', name: 'Bisnis & UMKM', desc: 'Showcase produk & kontak', icon: ShoppingBag }
+                  ]"
+                  :key="tpl.id"
+                  class="template-option"
+                  :class="{ active: newSiteForm.category === tpl.id }"
+                  @click="newSiteForm.category = tpl.id as any"
+                >
+                  <div class="template-option-icon">
+                    <component :is="tpl.icon" :size="15" />
+                  </div>
+                  <div class="template-option-text">
+                    <div class="template-option-name">{{ tpl.name }}</div>
+                    <div class="template-option-desc">{{ tpl.desc }}</div>
+                  </div>
+                  <div class="template-option-radio">
+                    <div class="radio-dot"></div>
+                  </div>
+                </button>
+              </div>
+            </div>
 
-          <!-- 3. Subdomain Field -->
-          <div class="form-field-group">
-            <label class="field-title" for="modal-subdomain">
-              Subdomain
-              <span class="field-req-dot">*</span>
-            </label>
-            <div class="url-input-container">
-              <span class="url-addon-prefix">
-                <Globe :size="13" class="url-addon-icon" />
-                https://
-              </span>
+            <!-- 2. Nama Website -->
+            <div class="form-field-group">
+              <label class="field-title" for="modal-site-name">
+                Nama Website
+                <span class="field-req-dot">*</span>
+              </label>
               <input
-                id="modal-subdomain"
-                v-model="newSiteForm.subdomain"
+                id="modal-site-name"
+                v-model="newSiteForm.name"
                 type="text"
-                placeholder="nama-situs"
-                class="url-core-input"
+                placeholder="Contoh: Portofolio Rizal Pratama"
+                class="field-text-input"
                 required
               />
-              <span class="url-addon-suffix">.cloudcms.app</span>
             </div>
-            <p class="field-helper-text">
-              Rute edge Traefik otomatis menerbitkan sertifikat SSL TLS v1.3 Let's Encrypt.
-            </p>
-          </div>
 
-          <!-- 4. Headline / Peran -->
-          <div class="form-field-group">
-            <div class="field-title-flex">
-              <label class="field-title" for="modal-role">Headline atau Peran</label>
-              <span class="field-optional-badge">Opsional</span>
+            <!-- 3. Subdomain Field -->
+            <div class="form-field-group">
+              <label class="field-title" for="modal-subdomain">
+                Subdomain
+                <span class="field-req-dot">*</span>
+              </label>
+              <div class="url-input-container">
+                <span class="url-addon-prefix">
+                  <Globe :size="13" class="url-addon-icon" />
+                  https://
+                </span>
+                <input
+                  id="modal-subdomain"
+                  v-model="newSiteForm.subdomain"
+                  type="text"
+                  placeholder="nama-situs"
+                  class="url-core-input"
+                  required
+                />
+                <span class="url-addon-suffix">.cloudcms.app</span>
+              </div>
+              <p class="field-helper-text">
+                Rute edge Traefik otomatis menerbitkan sertifikat SSL TLS v1.3 Let's Encrypt.
+              </p>
             </div>
-            <input
-              id="modal-role"
-              v-model="newSiteForm.role"
-              type="text"
-              placeholder="e.g. Senior Software & Cloud Architect"
-              class="field-text-input"
-            />
-          </div>
 
-          <!-- 5. Resource Allocation Spec Note -->
-          <div class="resource-spec-callout">
-            <Server :size="13" class="spec-callout-icon" />
-            <div class="spec-callout-text">
-              <span>Alokasi runtime: </span>
-              <strong>0.5 vCPU</strong> • <strong>256 MB RAM</strong> (cgroups v2) • Traefik v3 Proxy
+            <!-- 4. Headline / Peran -->
+            <div class="form-field-group">
+              <div class="field-title-flex">
+                <label class="field-title" for="modal-role">Headline atau Peran</label>
+                <span class="field-optional-badge">Opsional</span>
+              </div>
+              <input
+                id="modal-role"
+                v-model="newSiteForm.role"
+                type="text"
+                placeholder="e.g. Senior Software & Cloud Architect"
+                class="field-text-input"
+              />
             </div>
-          </div>
 
-          <!-- 6. Footer Actions -->
-          <div class="modal-footer-row">
-            <button type="button" class="btn-modal-ghost" @click="isCreateModalOpen = false">
-              Batal
-            </button>
-            <button type="submit" class="btn-modal-confirm">
-              <Plus :size="14" />
-              <span>Deploy Kontainer</span>
-            </button>
-          </div>
-        </form>
+            <!-- 5. Resource Allocation Spec Note -->
+            <div class="resource-spec-callout">
+              <Server :size="13" class="spec-callout-icon" />
+              <div class="spec-callout-text">
+                <span>Alokasi runtime: </span>
+                <strong>0.5 vCPU</strong> • <strong>256 MB RAM</strong> (cgroups v2) • Traefik v3 Proxy
+              </div>
+            </div>
+
+            <!-- 6. Footer Actions -->
+            <div class="modal-footer-row">
+              <button type="button" class="btn-modal-ghost" @click="isCreateModalOpen = false">
+                Batal
+              </button>
+              <button type="submit" class="btn-modal-confirm">
+                <Plus :size="14" />
+                <span>Deploy Kontainer</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </Teleport>
 
     <!-- ============================================================= -->
     <!-- MODAL: DOCKER & TRAEFIK RUNTIME LOGS                          -->
     <!-- ============================================================= -->
-    <div v-if="isLogsModalOpen && activeLogContainer" class="modal-backdrop" @click.self="isLogsModalOpen = false">
-      <div class="modal-dialog modal-dialog-lg">
-        <div class="modal-header">
-          <div class="modal-header-leading">
-            <div class="modal-header-icon-box">
-              <Terminal :size="18" />
-            </div>
-            <div>
-              <h3 class="modal-heading">Log Runtime Kontainer</h3>
-              <p class="modal-subheading">Telemetri Docker container #{{ activeLogContainer.id }} via proxy Traefik v3.</p>
-            </div>
-          </div>
-          <button class="modal-close-button" @click="isLogsModalOpen = false" title="Tutup">
-            <X :size="16" />
-          </button>
-        </div>
-
-        <div class="terminal-container-view">
-          <div class="terminal-meta-bar">
-            <div class="terminal-meta-left">
-              <div class="terminal-meta-item">
-                <span class="t-meta-lbl">STATUS:</span>
-                <span class="t-meta-val" :class="activeLogContainer.status">{{ activeLogContainer.status.toUpperCase() }}</span>
+    <Teleport to="body">
+      <div v-if="isLogsModalOpen && activeLogContainer" class="modal-backdrop" @click.self="isLogsModalOpen = false">
+        <div class="modal-dialog modal-dialog-lg">
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box">
+                <Terminal :size="18" />
               </div>
-              <div class="terminal-meta-item">
-                <span class="t-meta-lbl">CGROUPS:</span>
-                <span class="t-meta-val">{{ activeLogContainer.cpuLimit }} • {{ activeLogContainer.ramUsage }}MB / {{ activeLogContainer.ramLimit }}MB</span>
-              </div>
-              <div class="terminal-meta-item">
-                <span class="t-meta-lbl">ROUTE:</span>
-                <span class="t-meta-val">https://{{ activeLogContainer.subdomain }}</span>
+              <div>
+                <h3 class="modal-heading">Log Runtime Kontainer</h3>
+                <p class="modal-subheading">Telemetri Docker container #{{ activeLogContainer.id }} via proxy Traefik v3.</p>
               </div>
             </div>
-            <div class="terminal-meta-right">
-              <span class="pulse-green-sm"></span>
-              <span class="t-stream-tag">Stream Live (Kafka/Docker)</span>
+            <button class="modal-close-button" @click="isLogsModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
+          </div>
+
+          <div class="terminal-container-view">
+            <div class="terminal-meta-bar">
+              <div class="terminal-meta-left">
+                <div class="terminal-meta-item">
+                  <span class="t-meta-lbl">STATUS:</span>
+                  <span class="t-meta-val" :class="activeLogContainer.status">{{ activeLogContainer.status.toUpperCase() }}</span>
+                </div>
+                <div class="terminal-meta-item">
+                  <span class="t-meta-lbl">CGROUPS:</span>
+                  <span class="t-meta-val">{{ activeLogContainer.cpuLimit }} • {{ activeLogContainer.ramUsage }}MB / {{ activeLogContainer.ramLimit }}MB</span>
+                </div>
+                <div class="terminal-meta-item">
+                  <span class="t-meta-lbl">ROUTE:</span>
+                  <span class="t-meta-val">https://{{ activeLogContainer.subdomain }}</span>
+                </div>
+              </div>
+              <div class="terminal-meta-right">
+                <span class="pulse-green-sm"></span>
+                <span class="t-stream-tag">Stream Live (Kafka/Docker)</span>
+              </div>
+            </div>
+
+            <div class="terminal-output-screen">
+              <div class="log-entry"><span class="log-ts">[09:20:11.204]</span> <span class="log-tag system">[system-init]</span> Spawning runtime sandbox for tenant {{ activeLogContainer.id }}</div>
+              <div class="log-entry"><span class="log-ts">[09:20:12.018]</span> <span class="log-tag docker">[docker-daemon]</span> Container {{ activeLogContainer.id }} initialized (cgroups v2: cpu_quota=50000/100000, mem_limit={{ activeLogContainer.ramLimit }}MB)</div>
+              <div class="log-entry"><span class="log-ts">[09:20:13.142]</span> <span class="log-tag traefik">[traefik-proxy]</span> Ingress router attached: Host(`{{ activeLogContainer.subdomain }}`) -> service '{{ activeLogContainer.id }}:80'</div>
+              <div class="log-entry"><span class="log-ts">[09:20:14.055]</span> <span class="log-tag tls">[lets-encrypt]</span> Wildcard challenge ACME TLS-ALPN-01 verified. Certificate auto-renewed</div>
+              <div class="log-entry"><span class="log-ts">[09:20:15.310]</span> <span class="log-tag nginx">[runtime-engine]</span> HTTP/2 & HTTP/3 (QUIC) fast-path listener initialized on 0.0.0.0:80</div>
+              <div class="log-entry"><span class="log-ts">[09:21:02.881]</span> <span class="log-tag health">[healthcheck]</span> Internal probe HTTP 127.0.0.1:80/healthz returned status 200 OK (0.4ms)</div>
+              <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:22:04.119]</span> <span class="log-tag traffic">[edge-inbound]</span> GET / 200 OK (TTFB: 1.6ms, 4.2KB) - Client IP: 103.144.20.12 - SSL TLS 1.3</div>
+              <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:24:18.490]</span> <span class="log-tag traffic">[edge-inbound]</span> GET /api/telemetry 204 No Content - Kafka event published</div>
+              <div class="log-entry" v-if="activeLogContainer.status === 'stopped'"><span class="log-ts">[09:22:30.501]</span> <span class="log-tag warn">[docker-daemon]</span> SIGTERM received from tenant dashboard. Container process halted cleanly (Standby)</div>
+              <div class="log-entry" v-if="activeLogContainer.status === 'provisioning'"><span class="log-ts">[09:25:01.002]</span> <span class="log-tag docker">[docker-daemon]</span> Re-allocating cgroups v2 resource tree and rebuilding Traefik route...</div>
             </div>
           </div>
 
-          <div class="terminal-output-screen">
-            <div class="log-entry"><span class="log-ts">[09:20:11.204]</span> <span class="log-tag system">[system-init]</span> Spawning runtime sandbox for tenant {{ activeLogContainer.id }}</div>
-            <div class="log-entry"><span class="log-ts">[09:20:12.018]</span> <span class="log-tag docker">[docker-daemon]</span> Container {{ activeLogContainer.id }} initialized (cgroups v2: cpu_quota=50000/100000, mem_limit={{ activeLogContainer.ramLimit }}MB)</div>
-            <div class="log-entry"><span class="log-ts">[09:20:13.142]</span> <span class="log-tag traefik">[traefik-proxy]</span> Ingress router attached: Host(`{{ activeLogContainer.subdomain }}`) -> service '{{ activeLogContainer.id }}:80'</div>
-            <div class="log-entry"><span class="log-ts">[09:20:14.055]</span> <span class="log-tag tls">[lets-encrypt]</span> Wildcard challenge ACME TLS-ALPN-01 verified. Certificate auto-renewed</div>
-            <div class="log-entry"><span class="log-ts">[09:20:15.310]</span> <span class="log-tag nginx">[runtime-engine]</span> HTTP/2 & HTTP/3 (QUIC) fast-path listener initialized on 0.0.0.0:80</div>
-            <div class="log-entry"><span class="log-ts">[09:21:02.881]</span> <span class="log-tag health">[healthcheck]</span> Internal probe HTTP 127.0.0.1:80/healthz returned status 200 OK (0.4ms)</div>
-            <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:22:04.119]</span> <span class="log-tag traffic">[edge-inbound]</span> GET / 200 OK (TTFB: 1.6ms, 4.2KB) - Client IP: 103.144.20.12 - SSL TLS 1.3</div>
-            <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:24:18.490]</span> <span class="log-tag traffic">[edge-inbound]</span> GET /api/telemetry 204 No Content - Kafka event published</div>
-            <div class="log-entry" v-if="activeLogContainer.status === 'stopped'"><span class="log-ts">[09:22:30.501]</span> <span class="log-tag warn">[docker-daemon]</span> SIGTERM received from tenant dashboard. Container process halted cleanly (Standby)</div>
-            <div class="log-entry" v-if="activeLogContainer.status === 'provisioning'"><span class="log-ts">[09:25:01.002]</span> <span class="log-tag docker">[docker-daemon]</span> Re-allocating cgroups v2 resource tree and rebuilding Traefik route...</div>
+          <div class="modal-footer-row">
+            <button type="button" class="btn-modal-ghost" @click="copyContainerLogs">
+              <Copy :size="14" />
+              <span>Salin Log</span>
+            </button>
+            <button type="button" class="btn-modal-confirm" @click="isLogsModalOpen = false">
+              Tutup Konsol
+            </button>
           </div>
-        </div>
-
-        <div class="modal-footer-row">
-          <button type="button" class="btn-modal-ghost" @click="copyContainerLogs">
-            <Copy :size="14" />
-            <span>Salin Log</span>
-          </button>
-          <button type="button" class="btn-modal-confirm" @click="isLogsModalOpen = false">
-            Tutup Konsol
-          </button>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -2554,14 +2558,17 @@ const handleLogout = () => {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 1000;
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  box-sizing: border-box;
   animation: modalFade 0.15s ease-out;
 }
 
@@ -2576,10 +2583,18 @@ const handleLogout = () => {
   border-radius: 14px;
   width: 100%;
   max-width: 580px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   padding: 28px;
   box-sizing: border-box;
-  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.08);
   animation: dialogScale 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 100000;
+}
+
+.modal-dialog-lg {
+  max-width: 820px !important;
 }
 
 @keyframes dialogScale {
