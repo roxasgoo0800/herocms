@@ -1,7 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Layers, Lock, Mail, ArrowRight, ShieldCheck, Eye, EyeOff, Sparkles, CheckCircle2, AlertCircle } from 'lucide-vue-next';
+import {
+  Layers,
+  Lock,
+  Mail,
+  ArrowRight,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle,
+  KeyRound
+} from 'lucide-vue-next';
 
 const router = useRouter();
 
@@ -12,6 +24,7 @@ const rememberMe = ref(true);
 const isLoading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
+const isInputFocused = ref<'email' | 'password' | null>(null);
 
 const handleLogin = async (e?: Event) => {
   if (e) e.preventDefault();
@@ -28,15 +41,14 @@ const handleLogin = async (e?: Event) => {
   // Simulate authentication latency
   setTimeout(() => {
     isLoading.value = false;
-    // Set authentication token
     localStorage.setItem('cloudcms_auth_token', 'token_tenant_' + Date.now());
     localStorage.setItem('cloudcms_user_email', email.value);
-    successMessage.value = 'Login berhasil! Mengalihkan ke Dashboard Studio...';
+    successMessage.value = 'Kredensial terverifikasi! Mengalihkan ke HeroCMS Studio...';
 
     setTimeout(() => {
       router.push('/');
-    }, 600);
-  }, 900);
+    }, 550);
+  }, 850);
 };
 
 const useDemoAccount = () => {
@@ -47,41 +59,58 @@ const useDemoAccount = () => {
 </script>
 
 <template>
-  <div class="login-page">
-    <div class="login-card-wrapper">
-      <!-- Brand Header -->
-      <div class="brand-header">
-        <div class="logo-box">
-          <Layers :size="24" color="#ffffff" />
-        </div>
-        <h1 class="brand-title">HeroCMS <span>Studio</span></h1>
-        <p class="brand-desc">Portal Manajemen Konten & Orkestrasi Kontainer Mandiri</p>
-      </div>
+  <div class="auth-viewport">
+    <!-- Ambient Diffused Lighting Mesh (Soft Glow behind card) -->
+    <div class="ambient-mesh-glow" aria-hidden="true"></div>
 
-      <!-- Main Form Card -->
-      <div class="login-card">
-        <div class="card-header">
-          <h2>Masuk ke Akun Tenant</h2>
-          <p>Kelola situs, artikel, dan terbitkan perubahan ke kontainer Docker secara langsung.</p>
+    <div class="auth-surface-container">
+      <!-- Modern Brand Header -->
+      <header class="auth-brand-badge">
+        <div class="brand-glyph-box">
+          <Layers :size="22" color="#ffffff" />
         </div>
-
-        <!-- Feedback Alerts -->
-        <div v-if="errorMessage" class="alert-box error">
-          <AlertCircle :size="17" />
-          <span>{{ errorMessage }}</span>
+        <div class="brand-title-wrap">
+          <h1 class="brand-wordmark">HeroCMS <span class="wordmark-highlight">Studio</span></h1>
+          <div class="brand-chip-row">
+            <span class="pulse-dot"></span>
+            <span class="chip-text">Multi-Tenant Container Engine</span>
+          </div>
         </div>
+      </header>
 
-        <div v-if="successMessage" class="alert-box success">
-          <CheckCircle2 :size="17" />
-          <span>{{ successMessage }}</span>
+      <!-- Glassmorphic Authentication Card (Custom Bespoke Architecture) -->
+      <div class="auth-panel-glass">
+        <div class="panel-intro">
+          <h2 class="panel-heading">Masuk ke Konsol Tenant</h2>
+          <p class="panel-sub">Akses manajemen situs, orkestrasi kontainer, dan editor visual profesional.</p>
         </div>
 
-        <form @submit="handleLogin" class="login-form">
-          <!-- Email / Tenant ID Field -->
-          <div class="form-group">
-            <label for="email">Alamat Email / Tenant ID</label>
-            <div class="input-wrapper">
-              <span class="input-icon"><Mail :size="17" /></span>
+        <!-- Dynamic Feedback Alert -->
+        <transition name="fade-slide">
+          <div v-if="errorMessage" class="state-alert error-state">
+            <AlertCircle :size="16" class="alert-glyph" />
+            <span>{{ errorMessage }}</span>
+          </div>
+        </transition>
+
+        <transition name="fade-slide">
+          <div v-if="successMessage" class="state-alert success-state">
+            <CheckCircle2 :size="16" class="alert-glyph" />
+            <span>{{ successMessage }}</span>
+          </div>
+        </transition>
+
+        <form @submit="handleLogin" class="auth-fields-stack">
+          <!-- Field 1: Email -->
+          <div class="field-item">
+            <label for="email" class="field-label">Alamat Email / Tenant ID</label>
+            <div
+              class="input-control-shell"
+              :class="{ 'shell-focused': isInputFocused === 'email', 'shell-filled': email.length > 0 }"
+            >
+              <div class="shell-lead-icon">
+                <Mail :size="16" />
+              </div>
               <input
                 id="email"
                 v-model="email"
@@ -89,20 +118,33 @@ const useDemoAccount = () => {
                 placeholder="nama@institusi.com"
                 required
                 autocomplete="email"
+                class="bare-input"
+                @focus="isInputFocused = 'email'"
+                @blur="isInputFocused = null"
               />
             </div>
           </div>
 
-          <!-- Password Field -->
-          <div class="form-group">
-            <div class="label-row">
-              <label for="password">Kata Sandi</label>
-              <a href="#" class="forgot-link" @click.prevent="errorMessage = 'Fitur reset password dapat diakses via SuperAdmin internal.'">
+          <!-- Field 2: Password -->
+          <div class="field-item">
+            <div class="label-split-meta">
+              <label for="password" class="field-label">Kata Sandi</label>
+              <a
+                href="#"
+                class="link-forgot-pass"
+                @click.prevent="errorMessage = 'Reset kata sandi dapat diajukan melalui administrator internal.'"
+              >
                 Lupa sandi?
               </a>
             </div>
-            <div class="input-wrapper">
-              <span class="input-icon"><Lock :size="17" /></span>
+
+            <div
+              class="input-control-shell"
+              :class="{ 'shell-focused': isInputFocused === 'password', 'shell-filled': password.length > 0 }"
+            >
+              <div class="shell-lead-icon">
+                <Lock :size="16" />
+              </div>
               <input
                 id="password"
                 v-model="password"
@@ -110,235 +152,335 @@ const useDemoAccount = () => {
                 placeholder="••••••••••••"
                 required
                 autocomplete="current-password"
+                class="bare-input"
+                @focus="isInputFocused = 'password'"
+                @blur="isInputFocused = null"
               />
               <button
                 type="button"
-                class="btn-toggle-eye"
+                class="btn-eye-toggle"
                 @click="showPassword = !showPassword"
                 tabindex="-1"
                 aria-label="Toggle password visibility"
               >
-                <EyeOff v-if="showPassword" :size="17" />
-                <Eye v-else :size="17" />
+                <EyeOff v-if="showPassword" :size="16" />
+                <Eye v-else :size="16" />
               </button>
             </div>
           </div>
 
-          <!-- Remember Me Checkbox -->
-          <div class="checkbox-row">
-            <label class="custom-checkbox">
-              <input type="checkbox" v-model="rememberMe" />
-              <span class="checkmark"></span>
-              <span class="checkbox-label">Ingat sesi saya selama 30 hari</span>
+          <!-- Modern Custom Switch for Remember Me (No ugly browser checkbox) -->
+          <div class="remember-row">
+            <label class="bespoke-switch" @click.prevent="rememberMe = !rememberMe">
+              <div class="switch-track" :class="{ active: rememberMe }">
+                <div class="switch-thumb"></div>
+              </div>
+              <span class="switch-label">Ingat sesi aktif selama 30 hari</span>
             </label>
           </div>
 
-          <!-- Submit Button -->
-          <button type="submit" class="btn-submit" :disabled="isLoading">
-            <span v-if="isLoading" class="spinner"></span>
-            <span v-if="isLoading">Memverifikasi Kredensial...</span>
-            <span v-else class="btn-text">
-              Masuk ke Studio <ArrowRight :size="17" />
+          <!-- Primary Action CTA Button -->
+          <button type="submit" class="btn-primary-action" :disabled="isLoading">
+            <span v-if="isLoading" class="custom-spinner"></span>
+            <span v-if="isLoading">Memverifikasi Sesi...</span>
+            <span v-else class="cta-inner">
+              <span>Masuk ke Studio</span>
+              <ArrowRight :size="16" class="cta-arrow" />
             </span>
           </button>
         </form>
 
-        <!-- Divider -->
-        <div class="divider">
-          <span>atau gunakan akses cepat</span>
+        <!-- Fast 1-Click Access Card (Bespoke Modern Developer Card) -->
+        <div class="demo-access-strip" @click="useDemoAccount">
+          <div class="demo-badge-icon">
+            <Sparkles :size="15" color="#2563eb" />
+          </div>
+          <div class="demo-info">
+            <div class="demo-title">Login Cepat dengan Akun Demo</div>
+            <div class="demo-subtitle">admin@rizalpratama.cloud • heroCMS2026!</div>
+          </div>
+          <div class="demo-arrow">
+            <KeyRound :size="14" />
+          </div>
         </div>
 
-        <!-- 1-Click Demo Login -->
-        <button type="button" class="btn-demo" @click="useDemoAccount" :disabled="isLoading">
-          <Sparkles :size="16" color="#2563eb" />
-          <span>Login Otomatis dengan Akun Demo</span>
-        </button>
-
-        <!-- Security Badge Footer -->
-        <div class="card-footer-security">
-          <ShieldCheck :size="15" color="#059669" />
-          <span>Koneksi Terenkripsi TLS v1.3 & Alokasi Resource Terisolasi</span>
-        </div>
+        <!-- Security Ingress Guarantee Badge -->
+        <footer class="panel-security-chip">
+          <ShieldCheck :size="14" color="#059669" />
+          <span>Koneksi TLS v1.3 • cgroups v2 Terisolasi</span>
+        </footer>
       </div>
 
-      <!-- Footer Help Note -->
-      <div class="login-subfooter">
-        <p>Butuh bantuan login? Hubungi administrator tenant atau <a href="http://localhost:3000" target="_blank">kembali ke halaman pemasaran</a>.</p>
+      <!-- Out-of-card subfooter -->
+      <div class="auth-subfooter">
+        <p>Butuh bantuan login? Hubungi administrator tenant atau <a href="http://localhost:3000" target="_blank">kembali ke portal pemasaran</a>.</p>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.login-page {
+/* ==========================================================================
+   BESPOKE MODERN SAAS AUTHENTICATION DESIGN SYSTEM (NO BOOTSTRAP / NO MVP)
+   ========================================================================== */
+
+.auth-viewport {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   background: transparent;
-  padding: 40px 20px;
+  padding: 48px 20px;
+  overflow: hidden;
 }
 
-.login-card-wrapper {
+/* Ambient Diffused Glow behind the card */
+.ambient-mesh-glow {
+  position: absolute;
+  width: 540px;
+  height: 400px;
+  background: radial-gradient(
+    circle,
+    rgba(37, 99, 235, 0.08) 0%,
+    rgba(148, 163, 184, 0.05) 50%,
+    transparent 70%
+  );
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.auth-surface-container {
   width: 100%;
-  max-width: 460px;
+  max-width: 440px;
   position: relative;
   z-index: 2;
-}
-
-.brand-header {
-  text-align: center;
-  margin-bottom: 28px;
-}
-
-.logo-box {
-  width: 48px;
-  height: 48px;
-  background: #0f172a;
-  border-radius: 12px;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 14px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
 }
 
-.brand-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.02em;
-  margin-bottom: 6px;
-}
-
-.brand-title span {
-  color: #2563eb;
-}
-
-.brand-desc {
-  font-size: 0.88rem;
-  color: #64748b;
-  line-height: 1.4;
-}
-
-.login-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  padding: 36px 32px;
-  box-shadow: 0 10px 30px -8px rgba(15, 23, 42, 0.07), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
-}
-
-.card-header {
+/* Brand Header */
+.auth-brand-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   margin-bottom: 24px;
 }
 
-.card-header h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 6px;
-}
-
-.card-header p {
-  font-size: 0.86rem;
-  color: #64748b;
-  line-height: 1.5;
-}
-
-.alert-box {
+.brand-glyph-box {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  font-size: 0.84rem;
-  margin-bottom: 20px;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s ease;
 }
 
-.alert-box.error {
+.brand-glyph-box:hover {
+  transform: translateY(-1px);
+}
+
+.brand-wordmark {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.wordmark-highlight {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-chip-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid #e2e8f0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-top: 6px;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.chip-text {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Glassmorphic Panel Surface */
+.auth-panel-glass {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.03),
+    0 16px 36px -8px rgba(15, 23, 42, 0.07),
+    0 2px 6px rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel-intro {
+  margin-bottom: 2px;
+}
+
+.panel-heading {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.panel-sub {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+/* State Alerts */
+.state-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.state-alert.error-state {
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #991b1b;
 }
 
-.alert-box.success {
+.state-alert.success-state {
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
   color: #166534;
 }
 
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+.alert-glyph {
+  flex-shrink: 0;
 }
 
-.form-group {
+/* Form Stack */
+.auth-fields-stack {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 16px;
 }
 
-.form-group label {
-  font-size: 0.84rem;
+.field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #334155;
+  letter-spacing: -0.01em;
 }
 
-.label-row {
+.label-split-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.forgot-link {
-  font-size: 0.8rem;
+.link-forgot-pass {
+  font-size: 0.76rem;
   color: #2563eb;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.forgot-link:hover {
+.link-forgot-pass:hover {
   text-decoration: underline;
 }
 
-.input-wrapper {
+/* Bespoke Input Control Shell */
+.input-control-shell {
   position: relative;
   display: flex;
   align-items: center;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0 12px;
+  height: 42px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.input-icon {
-  position: absolute;
-  left: 14px;
+.input-control-shell:hover {
+  border-color: #94a3b8;
+  background: #ffffff;
+}
+
+.input-control-shell.shell-focused {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.input-control-shell.shell-focused .shell-lead-icon {
+  color: #2563eb;
+}
+
+.shell-lead-icon {
   color: #94a3b8;
   display: flex;
   align-items: center;
+  margin-right: 10px;
   pointer-events: none;
+  transition: color 0.15s ease;
 }
 
-.input-wrapper input {
+.bare-input {
   width: 100%;
-  padding: 11px 14px 11px 42px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 0.92rem;
-  color: #0f172a;
-  background: #ffffff;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.input-wrapper input:focus {
+  border: none;
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+  background: transparent;
+  font-size: 0.88rem;
+  color: #0f172a;
+  font-family: inherit;
 }
 
-.btn-toggle-eye {
-  position: absolute;
-  right: 12px;
+.bare-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.btn-eye-toggle {
   background: transparent;
   border: none;
   color: #94a3b8;
@@ -346,155 +488,227 @@ const useDemoAccount = () => {
   padding: 4px;
   display: flex;
   align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s ease;
 }
 
-.btn-toggle-eye:hover {
-  color: #475569;
+.btn-eye-toggle:hover {
+  color: #334155;
 }
 
-.checkbox-row {
+/* Modern Switch Toggle (No generic checkbox) */
+.remember-row {
   display: flex;
   align-items: center;
+  margin-top: -2px;
 }
 
-.custom-checkbox {
+.bespoke-switch {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
-  font-size: 0.84rem;
-  color: #475569;
   user-select: none;
 }
 
-.custom-checkbox input {
-  accent-color: #2563eb;
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
+.switch-track {
+  width: 32px;
+  height: 18px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  position: relative;
+  transition: background-color 0.2s ease;
 }
 
-.btn-submit {
+.switch-track.active {
+  background: #0f172a;
+}
+
+.switch-thumb {
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.switch-track.active .switch-thumb {
+  transform: translateX(14px);
+}
+
+.switch-label {
+  font-size: 0.78rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+/* Primary CTA Button */
+.btn-primary-action {
   width: 100%;
-  padding: 12px 18px;
+  height: 42px;
   background: #0f172a;
   color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 6px;
-  transition: background 0.15s ease, transform 0.1s ease;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
-}
-
-.btn-submit:hover:not(:disabled) {
-  background: #1e293b;
-  transform: translateY(-1px);
-}
-
-.btn-submit:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-submit:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.btn-text {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 22px 0 16px;
-  color: #94a3b8;
-  font-size: 0.78rem;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.divider span {
-  padding: 0 10px;
-}
-
-.btn-demo {
-  width: 100%;
-  padding: 10px 14px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 8px;
-  color: #1d4ed8;
+  border: 1px solid #0f172a;
+  border-radius: 10px;
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 4px;
+  transition: all 0.15s ease;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    0 4px 10px rgba(15, 23, 42, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.btn-primary-action:hover:not(:disabled) {
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.1),
+    0 8px 18px rgba(15, 23, 42, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.btn-primary-action:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary-action:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.cta-inner {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.btn-demo:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+.cta-arrow {
+  transition: transform 0.15s ease;
 }
 
-.card-footer-security {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+.btn-primary-action:hover .cta-arrow {
+  transform: translateX(2px);
+}
+
+/* Fast 1-Click Demo Card */
+.demo-access-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.demo-access-strip:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  border-style: solid;
+}
+
+.demo-badge-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.demo-info {
+  flex: 1;
+}
+
+.demo-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.demo-subtitle {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-family: monospace;
+}
+
+.demo-arrow {
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+}
+
+.demo-access-strip:hover .demo-arrow {
+  color: #2563eb;
+}
+
+/* Security Chip */
+.panel-security-chip {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
+  color: #64748b;
+  padding-top: 4px;
+}
+
+/* Subfooter */
+.auth-subfooter {
+  margin-top: 20px;
+  font-size: 0.78rem;
   color: #64748b;
   text-align: center;
 }
 
-.login-subfooter {
-  text-align: center;
-  margin-top: 24px;
-  font-size: 0.82rem;
-  color: #64748b;
-}
-
-.login-subfooter a {
+.auth-subfooter a {
   color: #2563eb;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.login-subfooter a:hover {
+.auth-subfooter a:hover {
   text-decoration: underline;
+}
+
+/* Spinner */
+.custom-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 6px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Transitions */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.2s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>
