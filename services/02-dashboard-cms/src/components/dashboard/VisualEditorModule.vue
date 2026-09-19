@@ -114,6 +114,55 @@ const handleSiteDropdownOutsideClick = (e: MouseEvent) => {
   }
 };
 
+// Font Family Dropdown State
+const isFontDropdownOpen = ref(false);
+const fontDropdownRef = ref<HTMLElement | null>(null);
+
+const toggleFontDropdown = () => {
+  isFontDropdownOpen.value = !isFontDropdownOpen.value;
+};
+
+const selectFontFromDropdown = (fontId: string) => {
+  currentFont.value = fontId;
+  isFontDropdownOpen.value = false;
+};
+
+const currentFontLabel = computed(() => {
+  return fontFamilies.find(f => f.id === currentFont.value)?.name || currentFont.value;
+});
+
+// Zoom Dropdown State
+const isZoomDropdownOpen = ref(false);
+const zoomDropdownRef = ref<HTMLElement | null>(null);
+
+const zoomPresets = [
+  { value: 0.5, label: '50%' },
+  { value: 0.75, label: '75%' },
+  { value: 0.85, label: '85%' },
+  { value: 1.0, label: '100%' },
+  { value: 1.25, label: '125%' },
+  { value: 1.5, label: '150%' },
+];
+
+const toggleZoomDropdown = () => {
+  isZoomDropdownOpen.value = !isZoomDropdownOpen.value;
+};
+
+const selectZoomFromDropdown = (val: number) => {
+  setZoom(val);
+  isZoomDropdownOpen.value = false;
+};
+
+// Unified outside-click handler for all custom dropdowns
+const handleAllDropdownOutsideClick = (e: MouseEvent) => {
+  if (fontDropdownRef.value && !fontDropdownRef.value.contains(e.target as Node)) {
+    isFontDropdownOpen.value = false;
+  }
+  if (zoomDropdownRef.value && !zoomDropdownRef.value.contains(e.target as Node)) {
+    isZoomDropdownOpen.value = false;
+  }
+};
+
 // Canvas Zoom & Pan
 const zoom = ref(0.85);
 const panX = ref(0);
@@ -720,6 +769,7 @@ onMounted(async () => {
   window.addEventListener('mouseup', onCanvasMouseUp);
   window.addEventListener('resize', fitToScreen);
   document.addEventListener('click', handleSiteDropdownOutsideClick);
+  document.addEventListener('click', handleAllDropdownOutsideClick);
 
   // Smooth booting transition & dependency/draft load
   isEditorBooting.value = true;
@@ -763,6 +813,7 @@ onUnmounted(() => {
   window.removeEventListener('mouseup', onCanvasMouseUp);
   window.removeEventListener('resize', fitToScreen);
   document.removeEventListener('click', handleSiteDropdownOutsideClick);
+  document.removeEventListener('click', handleAllDropdownOutsideClick);
 });
 
 // -----------------------------------------------------------------------------
@@ -1433,16 +1484,37 @@ const copyVsCodeCurrentCode = () => {
             <button class="btn-zoom-icon" @click="zoomIn" title="Zoom In (+)">
               <ZoomIn :size="13" />
             </button>
-            <div class="zoom-dropdown-pill">
-              <span>{{ Math.round(zoom * 100) }}%</span>
-              <select :value="zoom" @change="setZoom(parseFloat(($event.target as HTMLSelectElement).value))" class="zoom-select-hidden">
-                <option :value="0.5">50%</option>
-                <option :value="0.75">75%</option>
-                <option :value="0.85">85%</option>
-                <option :value="1.0">100%</option>
-                <option :value="1.25">125%</option>
-                <option :value="1.5">150%</option>
-              </select>
+            <div class="zoom-dropdown-pill" ref="zoomDropdownRef">
+              <button
+                class="zoom-pill-trigger"
+                :class="{ 'is-open': isZoomDropdownOpen }"
+                @click.stop="toggleZoomDropdown"
+                type="button"
+                title="Pilih Zoom Level"
+              >
+                <span>{{ Math.round(zoom * 100) }}%</span>
+                <ChevronDown :size="11" class="zoom-chevron-icon" :class="{ 'is-rotated': isZoomDropdownOpen }" />
+              </button>
+              <transition name="dropdown-scale">
+                <div v-if="isZoomDropdownOpen" class="custom-floating-dropdown zoom-floating-dropdown">
+                  <div class="custom-dropdown-header">
+                    <span class="custom-dropdown-title">Zoom Level</span>
+                  </div>
+                  <div class="custom-dropdown-list">
+                    <button
+                      v-for="z in zoomPresets"
+                      :key="z.value"
+                      type="button"
+                      class="custom-dropdown-item"
+                      :class="{ active: zoom === z.value }"
+                      @click="selectZoomFromDropdown(z.value)"
+                    >
+                      <span class="custom-dropdown-item-label">{{ z.label }}</span>
+                      <Check v-if="zoom === z.value" :size="13" class="custom-dropdown-check" />
+                    </button>
+                  </div>
+                </div>
+              </transition>
             </div>
             <div class="zoom-v-sep"></div>
             <button class="btn-zoom-fit" @click="resetView" title="Reset Pandangan (100%)">
@@ -1700,11 +1772,42 @@ const copyVsCodeCurrentCode = () => {
               <!-- Typography -->
               <div class="token-field-box" style="margin-top: 16px;">
                 <label class="token-lbl">Keluarga Tipografi (Font)</label>
-                <select v-model="currentFont" class="token-select-input">
-                  <option v-for="f in fontFamilies" :key="f.id" :value="f.id">
-                    {{ f.name }}
-                  </option>
-                </select>
+                <div class="font-dropdown-wrapper" ref="fontDropdownRef">
+                  <button
+                    class="font-pill-trigger"
+                    :class="{ 'is-open': isFontDropdownOpen }"
+                    @click.stop="toggleFontDropdown"
+                    type="button"
+                    title="Pilih Font Family"
+                  >
+                    <span class="font-pill-label" :style="{ fontFamily: currentFont }">{{ currentFontLabel }}</span>
+                    <ChevronDown :size="12" class="font-chevron-icon" :class="{ 'is-rotated': isFontDropdownOpen }" />
+                  </button>
+                  <transition name="dropdown-scale">
+                    <div v-if="isFontDropdownOpen" class="custom-floating-dropdown font-floating-dropdown">
+                      <div class="custom-dropdown-header">
+                        <span class="custom-dropdown-title">Keluarga Font</span>
+                        <span class="custom-dropdown-count-badge">{{ fontFamilies.length }}</span>
+                      </div>
+                      <div class="custom-dropdown-list">
+                        <button
+                          v-for="f in fontFamilies"
+                          :key="f.id"
+                          type="button"
+                          class="custom-dropdown-item"
+                          :class="{ active: currentFont === f.id }"
+                          @click="selectFontFromDropdown(f.id)"
+                        >
+                          <div class="font-item-info">
+                            <span class="font-item-name" :style="{ fontFamily: f.id }">{{ f.id }}</span>
+                            <span class="font-item-desc">{{ f.name }}</span>
+                          </div>
+                          <Check v-if="currentFont === f.id" :size="13" class="custom-dropdown-check" />
+                        </button>
+                      </div>
+                    </div>
+                  </transition>
+                </div>
               </div>
 
               <!-- Template Badge -->
@@ -3739,6 +3842,230 @@ const copyVsCodeCurrentCode = () => {
   box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
 }
 
+/* ---------------------------------------------------------------------------
+ * Reusable Custom Dropdown System (Font, Zoom, etc.)
+ * --------------------------------------------------------------------------- */
+.custom-floating-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 240px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.12), 0 6px 10px -4px rgba(15, 23, 42, 0.06);
+  padding: 5px;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.custom-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px 6px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 3px;
+}
+
+.custom-dropdown-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.custom-dropdown-count-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+}
+
+.custom-dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.custom-dropdown-item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.custom-dropdown-item:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.custom-dropdown-item.active {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.custom-dropdown-item-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.custom-dropdown-item.active .custom-dropdown-item-label {
+  font-weight: 700;
+}
+
+.custom-dropdown-check {
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+/* Font Family Dropdown */
+.font-dropdown-wrapper {
+  position: relative;
+  margin-top: 6px;
+}
+
+.font-pill-trigger {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.font-pill-trigger:hover {
+  border-color: #94a3b8;
+}
+
+.font-pill-trigger.is-open {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+.font-pill-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.font-chevron-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.font-chevron-icon.is-rotated {
+  transform: rotate(180deg);
+}
+
+.font-floating-dropdown {
+  min-width: 280px;
+  right: 0;
+  left: auto;
+}
+
+.font-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.font-item-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.font-item-desc {
+  font-size: 0.62rem;
+  color: #94a3b8;
+  font-family: inherit;
+}
+
+.custom-dropdown-item.active .font-item-name {
+  font-weight: 700;
+}
+
+/* Zoom Dropdown */
+.zoom-pill-trigger {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  transition: all 0.15s ease;
+}
+
+.zoom-pill-trigger:hover {
+  background: #f1f5f9;
+}
+
+.zoom-pill-trigger.is-open {
+  background: #e2e8f0;
+}
+
+.zoom-chevron-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.zoom-chevron-icon.is-rotated {
+  transform: rotate(180deg);
+}
+
+.zoom-floating-dropdown {
+  min-width: 130px;
+  right: 0;
+  left: auto;
+}
+
+.zoom-floating-dropdown .custom-dropdown-item-label {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.76rem;
+}
 .blueprint-badge-box {
   display: flex;
   align-items: center;
