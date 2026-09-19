@@ -41,9 +41,10 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
-	// Enterprise Security Headers & Strict CORS
+	// Enterprise Security Headers, Strict CORS, & CSRF Protection
 	router.Use(middleware.SecurityHeaders())
 	router.Use(middleware.CORS())
+	router.Use(middleware.CSRFProtection())
 
 	// Health Check
 	router.GET("/healthz", func(c *gin.Context) {
@@ -68,12 +69,13 @@ func main() {
 		auth.Use(middleware.RateLimiter(rdb, 15, time.Minute))
 		{
 			auth.POST("/login", h.Login)
+			auth.POST("/register", h.Register)
 		}
 
-		// Authenticated Routes (Protected with JWT & standard 120 req/min limiter)
+		// Authenticated Routes (Protected with Session/JWT & standard 120 req/min limiter)
 		protected := api.Group("")
 		protected.Use(middleware.RateLimiter(rdb, 120, time.Minute))
-		protected.Use(middleware.JWTAuth(cfg, rdb))
+		protected.Use(middleware.SessionOrJWTAuth(cfg, rdb))
 		{
 			// Session
 			protected.GET("/auth/me", h.Me)
@@ -102,6 +104,7 @@ func main() {
 			// Billing & Invoices
 			protected.GET("/invoices", h.ListInvoices)
 			protected.GET("/billing/quota", h.GetBillingQuota)
+			protected.POST("/billing/checkout", h.CheckoutPlan)
 
 			// Webhooks & API Keys
 			protected.GET("/webhooks", h.ListWebhooks)

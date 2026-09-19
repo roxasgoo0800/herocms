@@ -18,6 +18,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/onboarding',
+      name: 'onboarding',
+      component: () => import('../views/OnboardingView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }

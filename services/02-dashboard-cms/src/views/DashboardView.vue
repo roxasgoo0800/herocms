@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
@@ -59,8 +60,13 @@ const {
   handleCreateContainer,
   isLogsModalOpen,
   activeLogContainer,
-  copyContainerLogs
+  copyContainerLogs,
+  syncWithBackend
 } = useDashboardData();
+
+onMounted(() => {
+  syncWithBackend();
+});
 
 const handleLogout = () => {
   localStorage.removeItem('cloudcms_auth_token');

@@ -4,57 +4,128 @@ import { useRouter } from 'vue-router';
 import {
   Layers,
   Lock,
+  User,
   Mail,
   ArrowRight,
   ShieldCheck,
   Eye,
   EyeOff,
-  Sparkles,
   CheckCircle2,
   AlertCircle,
-  KeyRound
+  Sparkles,
+  UserPlus
 } from 'lucide-vue-next';
+import { studioApi } from '../services/apiClient';
 
 const router = useRouter();
 
+// Auth Mode
+const authMode = ref<'login' | 'register'>('login');
+
+// Login State
 const email = ref('');
 const password = ref('');
 const showPassword = ref(false);
 const rememberMe = ref(true);
+
+// Register State
+const regFullName = ref('');
+const regEmail = ref('');
+const regPassword = ref('');
+const regConfirmPassword = ref('');
+const showRegPassword = ref(false);
+
 const isLoading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
-const isInputFocused = ref<'email' | 'password' | null>(null);
+const isInputFocused = ref<string | null>(null);
+
+const setAuthMode = (mode: 'login' | 'register') => {
+  authMode.value = mode;
+  errorMessage.value = '';
+  successMessage.value = '';
+};
 
 const handleLogin = async (e?: Event) => {
   if (e) e.preventDefault();
   errorMessage.value = '';
   successMessage.value = '';
 
-  if (!email.value.trim() || !password.value.trim()) {
-    errorMessage.value = 'Silakan masukkan email dan kata sandi Anda.';
+  const idVal = email.value.trim();
+  const passVal = password.value.trim();
+
+  if (!idVal || !passVal) {
+    errorMessage.value = 'Silakan masukkan username/email dan kata sandi Anda.';
     return;
   }
 
   isLoading.value = true;
 
-  // Simulate authentication latency
-  setTimeout(() => {
-    isLoading.value = false;
-    localStorage.setItem('cloudcms_auth_token', 'token_tenant_' + Date.now());
-    localStorage.setItem('cloudcms_user_email', email.value);
-    successMessage.value = 'Kredensial terverifikasi! Mengalihkan ke HeroCMS Studio...';
+  try {
+    const res = await studioApi.login(idVal, passVal);
+    if (res?.token) {
+      localStorage.setItem('cloudcms_auth_token', res.token);
+      localStorage.setItem('cloudcms_user_email', res.user?.email || idVal);
+      successMessage.value = 'Kredensial terverifikasi! Mengalihkan ke HeroCMS Studio...';
 
-    setTimeout(() => {
-      router.push('/');
-    }, 550);
-  }, 850);
+      setTimeout(() => {
+        router.push('/');
+      }, 500);
+    } else {
+      throw new Error(res?.error || 'Autentikasi gagal');
+    }
+  } catch (err: any) {
+    errorMessage.value = err?.message || 'Kredensial tidak valid. Silakan periksa kembali akun Anda.';
+  } finally {
+    isLoading.value = false;
+  }
 };
 
-const useDemoAccount = () => {
-  email.value = 'admin@rizalpratama.cloud';
-  password.value = 'heroCMS2026!';
-  handleLogin();
+const handleRegister = async (e?: Event) => {
+  if (e) e.preventDefault();
+  errorMessage.value = '';
+  successMessage.value = '';
+
+  const nameVal = regFullName.value.trim();
+  const emailVal = regEmail.value.trim();
+  const passVal = regPassword.value.trim();
+  const confirmVal = regConfirmPassword.value.trim();
+
+  if (!nameVal || !emailVal || !passVal) {
+    errorMessage.value = 'Semua field wajib diisi.';
+    return;
+  }
+
+  if (passVal.length < 6) {
+    errorMessage.value = 'Kata sandi minimal terdiri dari 6 karakter.';
+    return;
+  }
+
+  if (passVal !== confirmVal) {
+    errorMessage.value = 'Konfirmasi kata sandi tidak cocok.';
+    return;
+  }
+
+  isLoading.value = true;
+
+  try {
+    const res = await studioApi.register(nameVal, emailVal, passVal);
+    if (res?.token) {
+      localStorage.setItem('cloudcms_auth_token', res.token);
+      localStorage.setItem('cloudcms_user_email', res.user?.email || emailVal);
+      successMessage.value = 'Akun berhasil dibuat! Mengalihkan ke pemilihan kuota kontainer...';
+
+      setTimeout(() => {
+        router.push('/onboarding');
+      }, 600);
+    } else {
+      throw new Error(res?.error || 'Pendaftaran gagal');
+    }
+  } catch (err: any) {
+    errorMessage.value = err?.message || 'Gagal mendaftar. Silakan coba username/email lain.';
+  } finally {
+    isLoading.value = false;
+  }
 };
 </script>
 
@@ -74,11 +145,38 @@ const useDemoAccount = () => {
         </div>
       </header>
 
-      <!-- Glassmorphic Authentication Card (Custom Bespoke Architecture) -->
+      <!-- Glassmorphic Authentication Card -->
       <div class="auth-panel-glass">
+        <!-- Tab Pill Switcher -->
+        <div class="auth-tabs-bar">
+          <button
+            type="button"
+            class="tab-pill"
+            :class="{ active: authMode === 'login' }"
+            @click="setAuthMode('login')"
+          >
+            Masuk
+          </button>
+          <button
+            type="button"
+            class="tab-pill"
+            :class="{ active: authMode === 'register' }"
+            @click="setAuthMode('register')"
+          >
+            <Sparkles :size="13" class="pill-spark" />
+            Daftar Akun Baru
+          </button>
+        </div>
+
         <div class="panel-intro">
-          <h2 class="panel-heading">Masuk ke Konsol Tenant</h2>
-          <p class="panel-sub">Akses manajemen situs, orkestrasi kontainer, dan editor visual profesional.</p>
+          <h2 class="panel-heading">
+            {{ authMode === 'login' ? 'Masuk ke Konsol Tenant' : 'Buat Akun Tenant Baru' }}
+          </h2>
+          <p class="panel-sub">
+            {{ authMode === 'login' 
+              ? 'Akses manajemen situs, orkestrasi kontainer, dan editor visual profesional.' 
+              : 'Daftar sekarang untuk meluncurkan kluster kontainer website instan Anda.' }}
+          </p>
         </div>
 
         <!-- Dynamic Feedback Alert -->
@@ -96,24 +194,25 @@ const useDemoAccount = () => {
           </div>
         </transition>
 
-        <form @submit="handleLogin" class="auth-fields-stack">
-          <!-- Field 1: Email -->
+        <!-- FORM: LOGIN -->
+        <form v-if="authMode === 'login'" @submit="handleLogin" class="auth-fields-stack">
+          <!-- Field 1: Username / Email -->
           <div class="field-item">
-            <label for="email" class="field-label">Alamat Email / Tenant ID</label>
+            <label for="email" class="field-label">Username atau Alamat Email</label>
             <div
               class="input-control-shell"
               :class="{ 'shell-focused': isInputFocused === 'email', 'shell-filled': email.length > 0 }"
             >
               <div class="shell-lead-icon">
-                <Mail :size="16" />
+                <User :size="16" />
               </div>
               <input
                 id="email"
                 v-model="email"
-                type="email"
-                placeholder="nama@institusi.com"
+                type="text"
+                placeholder="admin atau nama@institusi.com"
                 required
-                autocomplete="email"
+                autocomplete="username"
                 class="bare-input"
                 @focus="isInputFocused = 'email'"
                 @blur="isInputFocused = null"
@@ -165,7 +264,7 @@ const useDemoAccount = () => {
             </div>
           </div>
 
-          <!-- Modern Custom Switch for Remember Me (No ugly browser checkbox) -->
+          <!-- Remember Me Switch -->
           <div class="remember-row">
             <label class="bespoke-switch" @click.prevent="rememberMe = !rememberMe">
               <div class="switch-track" :class="{ active: rememberMe }">
@@ -186,19 +285,125 @@ const useDemoAccount = () => {
           </button>
         </form>
 
-        <!-- Fast 1-Click Access Card (Bespoke Modern Developer Card) -->
-        <div class="demo-access-strip" @click="useDemoAccount">
-          <div class="demo-badge-icon">
-            <Sparkles :size="15" color="#2563eb" />
+        <!-- FORM: REGISTER -->
+        <form v-else @submit="handleRegister" class="auth-fields-stack">
+          <!-- Field 1: Full Name -->
+          <div class="field-item">
+            <label for="reg-fullname" class="field-label">Nama Lengkap</label>
+            <div
+              class="input-control-shell"
+              :class="{ 'shell-focused': isInputFocused === 'reg-fullname', 'shell-filled': regFullName.length > 0 }"
+            >
+              <div class="shell-lead-icon">
+                <User :size="16" />
+              </div>
+              <input
+                id="reg-fullname"
+                v-model="regFullName"
+                type="text"
+                placeholder="Contoh: Rizal Pratama"
+                required
+                autocomplete="name"
+                class="bare-input"
+                @focus="isInputFocused = 'reg-fullname'"
+                @blur="isInputFocused = null"
+              />
+            </div>
           </div>
-          <div class="demo-info">
-            <div class="demo-title">Login Cepat dengan Akun Demo</div>
-            <div class="demo-subtitle">admin@rizalpratama.cloud • heroCMS2026!</div>
+
+          <!-- Field 2: Email or Username -->
+          <div class="field-item">
+            <label for="reg-email" class="field-label">Alamat Email / Username</label>
+            <div
+              class="input-control-shell"
+              :class="{ 'shell-focused': isInputFocused === 'reg-email', 'shell-filled': regEmail.length > 0 }"
+            >
+              <div class="shell-lead-icon">
+                <Mail :size="16" />
+              </div>
+              <input
+                id="reg-email"
+                v-model="regEmail"
+                type="text"
+                placeholder="nama@perusahaan.com"
+                required
+                autocomplete="username"
+                class="bare-input"
+                @focus="isInputFocused = 'reg-email'"
+                @blur="isInputFocused = null"
+              />
+            </div>
           </div>
-          <div class="demo-arrow">
-            <KeyRound :size="14" />
+
+          <!-- Field 3: Password -->
+          <div class="field-item">
+            <label for="reg-password" class="field-label">Kata Sandi (Min. 6 Karakter)</label>
+            <div
+              class="input-control-shell"
+              :class="{ 'shell-focused': isInputFocused === 'reg-password', 'shell-filled': regPassword.length > 0 }"
+            >
+              <div class="shell-lead-icon">
+                <Lock :size="16" />
+              </div>
+              <input
+                id="reg-password"
+                v-model="regPassword"
+                :type="showRegPassword ? 'text' : 'password'"
+                placeholder="••••••••••••"
+                required
+                autocomplete="new-password"
+                class="bare-input"
+                @focus="isInputFocused = 'reg-password'"
+                @blur="isInputFocused = null"
+              />
+              <button
+                type="button"
+                class="btn-eye-toggle"
+                @click="showRegPassword = !showRegPassword"
+                tabindex="-1"
+                aria-label="Toggle password visibility"
+              >
+                <EyeOff v-if="showRegPassword" :size="16" />
+                <Eye v-else :size="16" />
+              </button>
+            </div>
           </div>
-        </div>
+
+          <!-- Field 4: Confirm Password -->
+          <div class="field-item">
+            <label for="reg-confirm" class="field-label">Konfirmasi Kata Sandi</label>
+            <div
+              class="input-control-shell"
+              :class="{ 'shell-focused': isInputFocused === 'reg-confirm', 'shell-filled': regConfirmPassword.length > 0 }"
+            >
+              <div class="shell-lead-icon">
+                <Lock :size="16" />
+              </div>
+              <input
+                id="reg-confirm"
+                v-model="regConfirmPassword"
+                :type="showRegPassword ? 'text' : 'password'"
+                placeholder="••••••••••••"
+                required
+                autocomplete="new-password"
+                class="bare-input"
+                @focus="isInputFocused = 'reg-confirm'"
+                @blur="isInputFocused = null"
+              />
+            </div>
+          </div>
+
+          <!-- Primary Action CTA Button -->
+          <button type="submit" class="btn-primary-action btn-register-action" :disabled="isLoading">
+            <span v-if="isLoading" class="custom-spinner"></span>
+            <span v-if="isLoading">Mendaftarkan Akun...</span>
+            <span v-else class="cta-inner">
+              <UserPlus :size="16" />
+              <span>Daftar & Lanjut Pilih Paket</span>
+              <ArrowRight :size="16" class="cta-arrow" />
+            </span>
+          </button>
+        </form>
 
         <!-- Security Ingress Guarantee Badge -->
         <footer class="panel-security-chip">
@@ -209,8 +414,14 @@ const useDemoAccount = () => {
 
       <!-- Out-of-card subfooter -->
       <div class="auth-subfooter">
-        <p>Butuh bantuan login? Hubungi administrator tenant atau <a href="http://localhost:3000" target="_blank">kembali ke portal pemasaran</a>.</p>
-      </div>
+        <p v-if="authMode === 'login'">
+          Belum punya akun tenant? 
+          <a href="#" @click.prevent="setAuthMode('register')">Daftar sekarang</a>
+        </p>
+        <p v-else>
+          Sudah memiliki akun? 
+          <a href="#" @click.prevent="setAuthMode('login')">Masuk ke Studio</a>
+        </p>
     </div>
   </div>
 </template>
@@ -340,6 +551,56 @@ const useDemoAccount = () => {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+/* Tab Pill Switcher */
+.auth-tabs-bar {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  gap: 4px;
+}
+
+.tab-pill {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tab-pill:hover {
+  color: #1e293b;
+}
+
+.tab-pill.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.pill-spark {
+  color: #2563eb;
+}
+
+.btn-register-action {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3) !important;
+}
+
+.btn-register-action:hover {
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4) !important;
 }
 
 .panel-intro {

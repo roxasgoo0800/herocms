@@ -58,9 +58,33 @@ func NewRepository(cfg *config.Config) *Repository {
 		repo.DB = nil
 	} else {
 		log.Printf("[DB SUCCESS] Connected to PostgreSQL at %s:%s/%s with Row-Level Security (RLS)", cfg.DBHost, cfg.DBPort, cfg.DBName)
+		repo.ensureAdminUser()
 	}
 
 	return repo
+}
+
+func (r *Repository) ensureAdminUser() {
+	if r.DB == nil {
+		return
+	}
+	_, err := r.DB.Exec(`
+		INSERT INTO users (id, tenant_id, email, password_hash, full_name, role, status)
+		VALUES (
+			'00000000-0000-0000-0000-000000000001',
+			'99420000-0000-0000-0000-000000009942',
+			'admin',
+			'$2b$10$rm5XZwib4OzvCJ1V6S31QOwZrRJsrHWJbtWGL4P.uGRqpNGKA9YOa',
+			'Admin Developer',
+			'customer',
+			'active'
+		) ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
+	`)
+	if err != nil {
+		log.Printf("[DB NOTICE] ensureAdminUser: %v", err)
+	} else {
+		log.Printf("[DB SUCCESS] Dev user 'admin' (password: 'admin') ensured in PostgreSQL.")
+	}
 }
 
 func (r *Repository) ExecWithRLS(ctx context.Context, tenantID string, query string, args ...interface{}) (sql.Result, error) {

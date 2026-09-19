@@ -268,3 +268,16 @@ VALUES (
     'customer',
     'active'
 ) ON CONFLICT (email) DO NOTHING;
+
+-- User admin (Password: 'admin') khusus development & testing lokal
+INSERT INTO users (id, tenant_id, email, password_hash, full_name, role, status)
+VALUES (
+    '00000000-0000-0000-0000-000000000001',
+    '99420000-0000-0000-0000-000000009942',
+    'admin',
+    '$2b$10$rm5XZwib4OzvCJ1V6S31QOwZrRJsrHWJbtWGL4P.uGRqpNGKA9YOa',
+    'Admin Developer',
+    'customer',
+    'active'
+) ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
+

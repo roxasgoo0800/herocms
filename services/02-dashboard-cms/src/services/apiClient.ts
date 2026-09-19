@@ -1,9 +1,16 @@
 /**
  * HeroCMS Studio API Client
  * Berkomunikasi dengan Go Backend & BFF (:8085 / Vite Proxy /api)
+ * Dilengkapi dengan PWA Cookie Support & Proteksi CSRF (Double Submit Cookie)
  */
 
 const API_BASE = '/api';
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+  return match ? decodeURIComponent(match[3]) : null;
+}
 
 export interface ApiResponse<T = any> {
   data?: T;
@@ -13,20 +20,34 @@ export interface ApiResponse<T = any> {
 
 export async function apiFetch<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('cloudcms_auth_token');
+  const csrfToken = getCookie('csrf_token') || localStorage.getItem('cloudcms_csrf_token');
+  const method = (options.method || 'GET').toUpperCase();
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers || {})
+    ...(options.headers as Record<string, string> || {})
   };
 
   if (token) {
-    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Sertakan Header X-CSRF-Token untuk seluruh request mutasi (POST, PUT, DELETE, PATCH)
+  if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+    headers['X-CSRF-Token'] = csrfToken;
   }
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
+    credentials: 'include', // Mengizinkan pengiriman HTTP-Only Session Cookies untuk PWA
     headers
   });
+
+  // Perbarui token CSRF jika server menyertakan header baru
+  const serverCsrf = res.headers.get('X-CSRF-Token');
+  if (serverCsrf) {
+    localStorage.setItem('cloudcms_csrf_token', serverCsrf);
+  }
 
   if (!res.ok) {
     if (res.status === 401) {
@@ -36,13 +57,19 @@ export async function apiFetch<T = any>(endpoint: string, options: RequestInit =
     throw new Error(errJson.error || errJson.message || `HTTP ${res.status}`);
   }
 
-  return res.json();
+  const json = await res.json();
+  if (json?.csrf_token) {
+    localStorage.setItem('cloudcms_csrf_token', json.csrf_token);
+  }
+  return json;
 }
 
 export const studioApi = {
   // Auth
   login: (email: string, password: string) =>
     apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (fullName: string, email: string, password: string) =>
+    apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ full_name: fullName, email, password }) }),
   getMe: () => apiFetch('/auth/me'),
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
 
@@ -70,6 +97,8 @@ export const studioApi = {
   // Invoices & Billing
   getInvoices: () => apiFetch('/invoices'),
   getBillingQuota: () => apiFetch('/billing/quota'),
+  checkoutPlan: (planTier: string, paymentMethod: string) =>
+    apiFetch('/billing/checkout', { method: 'POST', body: JSON.stringify({ plan_tier: planTier, payment_method: paymentMethod }) }),
 
   // Webhooks
   getWebhooks: () => apiFetch('/webhooks'),

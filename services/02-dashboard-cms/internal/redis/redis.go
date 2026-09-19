@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"sync"
@@ -11,12 +12,27 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 )
 
+type SessionData struct {
+	SessionID string    `json:"session_id"`
+	UserID    string    `json:"user_id"`
+	TenantID  string    `json:"tenant_id"`
+	Email     string    `json:"email"`
+	FullName  string    `json:"full_name"`
+	Role      string    `json:"role"`
+	CSRFToken string    `json:"csrf_token"`
+	IP        string    `json:"ip"`
+	UserAgent string    `json:"user_agent"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
 type Client struct {
 	Rdb           *goredis.Client
 	mu            sync.RWMutex
 	memTopViews   map[string]map[string]float64
 	memBlacklist  map[string]time.Time
 	memRateLimits map[string]int
+	memSessions   map[string]*SessionData
 }
 
 type TopItem struct {
@@ -39,6 +55,7 @@ func NewClient(cfg *config.Config) *Client {
 		memTopViews:   make(map[string]map[string]float64),
 		memBlacklist:  make(map[string]time.Time),
 		memRateLimits: make(map[string]int),
+		memSessions:   make(map[string]*SessionData),
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -151,4 +168,52 @@ func (c *Client) AllowRequest(ctx context.Context, key string, maxRequests int, 
 	defer c.mu.Unlock()
 	c.memRateLimits[key]++
 	return c.memRateLimits[key] <= maxRequests
+}
+
+func (c *Client) SaveSession(ctx context.Context, session *SessionData, duration time.Duration) error {
+	bytes, err := json.Marshal(session)
+	if err != nil {
+		return err
+	}
+	if c.Rdb != nil {
+		key := fmt.Sprintf("session:pwa:%s", session.SessionID)
+		return c.Rdb.Set(ctx, key, bytes, duration).Err()
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.memSessions[session.SessionID] = session
+	return nil
+}
+
+func (c *Client) GetSession(ctx context.Context, sessionID string) (*SessionData, error) {
+	if c.Rdb != nil {
+		key := fmt.Sprintf("session:pwa:%s", sessionID)
+		val, err := c.Rdb.Get(ctx, key).Result()
+		if err == nil {
+			var sess SessionData
+			if err := json.Unmarshal([]byte(val), &sess); err == nil {
+				return &sess, nil
+			}
+		}
+	}
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	sess, exists := c.memSessions[sessionID]
+	if exists {
+		if time.Now().Before(sess.ExpiresAt) {
+			return sess, nil
+		}
+	}
+	return nil, fmt.Errorf("session not found or expired")
+}
+
+func (c *Client) DeleteSession(ctx context.Context, sessionID string) error {
+	if c.Rdb != nil {
+		key := fmt.Sprintf("session:pwa:%s", sessionID)
+		c.Rdb.Del(ctx, key)
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.memSessions, sessionID)
+	return nil
 }

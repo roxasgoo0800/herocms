@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue';
+import { studioApi } from '../services/apiClient';
 import type {
   ActiveMenu,
   UserPlan,
@@ -84,9 +85,10 @@ const filteredContainers = computed(() => {
 });
 
 // Container Operations
-const startContainer = (container: ContainerSite) => {
+const startContainer = async (container: ContainerSite) => {
   container.status = 'provisioning';
   showToast(`Menjalankan kontainer ${container.id}...`, 'info');
+  studioApi.startContainer(container.id).catch(err => console.warn('[API] Start container notice:', err));
   setTimeout(() => {
     container.status = 'running';
     container.cpuUsage = 14;
@@ -95,9 +97,10 @@ const startContainer = (container: ContainerSite) => {
   }, 900);
 };
 
-const stopContainer = (container: ContainerSite) => {
+const stopContainer = async (container: ContainerSite) => {
   container.status = 'provisioning';
   showToast(`Menghentikan kontainer ${container.id}...`, 'info');
+  studioApi.stopContainer(container.id).catch(err => console.warn('[API] Stop container notice:', err));
   setTimeout(() => {
     container.status = 'stopped';
     container.cpuUsage = 0;
@@ -106,9 +109,10 @@ const stopContainer = (container: ContainerSite) => {
   }, 800);
 };
 
-const restartContainer = (container: ContainerSite) => {
+const restartContainer = async (container: ContainerSite) => {
   container.status = 'provisioning';
   showToast(`Me-restart kontainer ${container.id}...`, 'info');
+  studioApi.startContainer(container.id).catch(err => console.warn('[API] Restart container notice:', err));
   setTimeout(() => {
     container.status = 'running';
     container.cpuUsage = 15;
@@ -117,15 +121,17 @@ const restartContainer = (container: ContainerSite) => {
   }, 1100);
 };
 
-const deleteContainer = (container: ContainerSite) => {
+const deleteContainer = async (container: ContainerSite) => {
   if (confirm(`Hapus kontainer '${container.name}'? Slot kuota (${containers.value.length}/${userPlan.value.maxContainers}) akan dikembalikan.`)) {
     const idx = containers.value.findIndex(c => c.id === container.id);
     if (idx !== -1) {
+      const deletedId = container.id;
       containers.value.splice(idx, 1);
-      showToast(`Kontainer ${container.id} dihapus. Kuota kini ${containers.value.length}/${userPlan.value.maxContainers}.`, 'info');
+      showToast(`Kontainer ${deletedId} dihapus. Kuota kini ${containers.value.length}/${userPlan.value.maxContainers}.`, 'info');
       if (containers.value.length > 0) {
         activeContainerId.value = containers.value[0].id;
       }
+      studioApi.deleteContainer(deletedId).catch(err => console.warn('[API] Delete container notice:', err));
     }
   }
 };
@@ -191,6 +197,13 @@ const handleCreateContainer = () => {
   isCreateModalOpen.value = false;
   activeMenu.value = 'containers';
   showToast(`Mengalokasikan kontainer ${newId} & mendaftarkan rute Traefik...`, 'info');
+
+  studioApi.createContainer({
+    name: newSiteForm.value.name,
+    subdomain: cleanSubdomain,
+    category: newSiteForm.value.category,
+    role: newSiteForm.value.role
+  }).catch(err => console.warn('[API] Create container backend sync notice:', err));
 
   setTimeout(() => {
     newContainerObj.status = 'running';
@@ -936,8 +949,56 @@ const resolveTicket = (ticket: SupportTicketItem) => {
   showToast(`Tiket ${ticket.id} ditandai sebagai Selesai / Resolved.`, 'success');
 };
 
+// Backend API Synchronization
+const isBackendSyncing = ref(false);
+const syncWithBackend = async () => {
+  try {
+    isBackendSyncing.value = true;
+    const [cRes, aRes, mRes, dRes, tRes, iRes, wRes] = await Promise.allSettled([
+      studioApi.getContainers(),
+      studioApi.getArticles(),
+      studioApi.getAssets(),
+      studioApi.getDomains(),
+      studioApi.getTickets(),
+      studioApi.getInvoices(),
+      studioApi.getWebhooks()
+    ]);
+
+    if (cRes.status === 'fulfilled' && cRes.value?.containers?.length) {
+      containers.value = cRes.value.containers;
+      if (cRes.value.quota?.max) {
+        userPlan.value.maxContainers = cRes.value.quota.max;
+      }
+    }
+    if (aRes.status === 'fulfilled' && aRes.value?.articles?.length) {
+      articles.value = aRes.value.articles;
+    }
+    if (mRes.status === 'fulfilled' && Array.isArray(mRes.value?.assets) && mRes.value.assets.length) {
+      mediaAssets.value = mRes.value.assets;
+    }
+    if (dRes.status === 'fulfilled' && dRes.value?.domains?.length) {
+      customDomains.value = dRes.value.domains;
+    }
+    if (tRes.status === 'fulfilled' && tRes.value?.tickets?.length) {
+      supportTickets.value = tRes.value.tickets;
+    }
+    if (iRes.status === 'fulfilled' && iRes.value?.invoices?.length) {
+      invoices.value = iRes.value.invoices;
+    }
+    if (wRes.status === 'fulfilled' && wRes.value?.webhooks?.length) {
+      webhooks.value = wRes.value.webhooks;
+    }
+  } catch (err) {
+    console.warn('[SYNC NOTICE] Backend sync deferred:', err);
+  } finally {
+    isBackendSyncing.value = false;
+  }
+};
+
 export function useDashboardData() {
   return {
+    isBackendSyncing,
+    syncWithBackend,
     activeMenu,
     userEmail,
     userPlan,
