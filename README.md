@@ -32,7 +32,7 @@ Seluruh dokumen spesifikasi teknis, kebutuhan produk (PRD), pemodelan arsitektur
 | # | Nama Program | Stack Teknologi | Fungsi Utama |
 | :- | :--- | :--- | :--- |
 | **1** | **Admin Console** | **Laravel 11 + Filament (PHP 8.3)** | Panel SuperAdmin internal: kelola tenant, pengawasan utilisasi server/kontainer, kuota resource, dan billing. |
-| **2** | **Dashboard CMS** | **Vue 3 + Vite + Pinia + Tailwind** | Panel studio pelanggan: editor konten visual modular (Tiptap), penyesuai tema, manajemen media S3, dan panel asisten AI. |
+| **2** | **Dashboard CMS & BFF** | **Vue 3 + Golang 1.23 (Gin) Single-Binary** | Panel studio pelanggan: editor visual, manajemen aset S3, telemetri kontainer, PostgreSQL Row-Level Security (RLS), Redis 7 rate-limiting, dan top-views analytics. |
 | **3** | **Orkestrator Provisioning** | **Golang 1.23+ (Gin/Fiber + Docker SDK)** | Pabrik kontainer otonom: deploy website tenant ke kontainer Docker terisolasi, injeksi routing Traefik, dan zero-downtime rolling update. |
 | **4** | **Website Promosi** | **React 19 + TypeScript + Tailwind** | Halaman publik pemasaran berkonversi tinggi, playground demo interaktif, galeri tema, dan artikel blog SEO. |
 | **5** | **Layanan AI Agent** | **Golang 1.23+ + n8n + LLM Engine** | Generator tema dari prompt teks, asisten penulisan & SEO, agregasi metrik Top-Views, serta otomatisasi webhook media sosial via n8n. |
@@ -41,16 +41,67 @@ Seluruh dokumen spesifikasi teknis, kebutuhan produk (PRD), pemodelan arsitektur
 
 ## 🚀 Panduan Memulai Cepat (Quickstart)
 
-Untuk menjalankan seluruh infrastruktur penunjang lokal (Traefik, PostgreSQL, Redis, Redpanda/Kafka, MinIO, n8n):
+### 1. Jalankan Infrastruktur Penunjang Lokal
+Menjalankan Traefik, PostgreSQL 16, Redis 7, Redpanda/Kafka, MinIO, dan n8n:
 
 ```bash
 docker compose -f deploy/docker-compose.infra.yml up -d
 ```
 
-Akses layanan lokal melalui browser:
+Migrasikan skema database dan isolasi Row-Level Security (RLS):
+```bash
+psql -h localhost -p 5432 -U cloudcms_user -d cloudcms_db -f deploy/sql/01_schema_and_rls.sql
+```
+
+Akses layanan pendukung lokal:
 - **Traefik Dashboard:** [http://localhost:8080](http://localhost:8080)
 - **MinIO Object Console:** [http://localhost:9001](http://localhost:9001) *(User: `minioadmin` / Password: `minioadminpassword`)*
 - **n8n Automation Console:** [http://localhost:5678](http://localhost:5678) *(User: `admin` / Password: `adminpassword`)*
 - **PostgreSQL:** `localhost:5432` (`cloudcms_user` / `secret_postgres_password`)
 - **Redis:** `localhost:6379` (`secret_redis_password`)
 - **Redpanda (Kafka API):** `localhost:19092`
+
+> **Opsi Ringan (Hanya Database & Redis untuk Development):**
+> Jika Anda hanya ingin menjalankan PostgreSQL dan Redis lokal untuk menjalankan Program 2:
+> ```bash
+> docker compose -f docker-compose.db.yml up -d
+> ```
+
+---
+
+### 2. Jalankan Program 2: Dashboard CMS Studio (Single-Binary Mode)
+
+Aplikasi Dashboard CMS menggabungkan antarmuka Vue 3 SPA dan backend Golang dalam satu port (8085):
+
+```bash
+cd services/02-dashboard-cms
+
+# Salin konfigurasi environment
+cp .env.example .env
+
+# Kompilasi frontend dan binary backend
+npm install
+npm run build
+go build -o dashboard-cms-server ./cmd/server
+
+# Jalankan server
+./dashboard-cms-server
+```
+
+Buka browser di: **[http://localhost:8085](http://localhost:8085)** (atau `http://localhost:5173` jika menggunakan `npm run dev` untuk frontend development).
+
+#### Kredensial Pengujian Development:
+- **Akun Administrator Default**:
+  - Username / Email: `admin` atau `admin@herocms.id`
+  - Kata Sandi: `admin`
+  *(Otomatis di-seed ke database PostgreSQL saat backend startup).*
+
+#### Alur Pendaftaran Pengguna Baru (Customer Onboarding Funnel):
+1. Buka halaman Login di `http://localhost:5173/login`.
+2. Klik tab **"Daftar Akun Baru"**, isi nama, email, dan kata sandi.
+3. Setelah pendaftaran, Anda otomatis diarahkan ke **Wizard Onboarding (`/onboarding`)**:
+   - **Langkah 1**: Pilih paket kuota kontainer (*Starter*, *Pro*, atau *Agency*).
+   - **Langkah 2**: Checkout & Simulasi pembayaran instan (QRIS / Virtual Account) dengan auto-settlement.
+   - **Langkah 3**: Setup identitas situs (kategori & subdomain), provisi otomatis alokasi cgroups v2, dan rute Traefik v3.
+   - **Selesai**: Mendarat di Dashboard Studio dengan kontainer baru yang berstatus *RUNNING* dan faktur tagihan yang lunas tercatat.
+

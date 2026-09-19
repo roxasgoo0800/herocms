@@ -1,333 +1,73 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
-  Server,
-  Play,
-  Square,
-  RotateCw,
-  Trash2,
   Plus,
   Edit3,
-  Sparkles,
   Globe,
-  ShieldCheck,
   TrendingUp,
   CreditCard,
-  Briefcase,
-  BookOpen,
-  GraduationCap,
-  ShoppingBag,
-  Smartphone,
-  Tablet,
-  Monitor,
   CheckCircle2,
   AlertCircle,
   X,
   User,
   LogOut,
   ChevronRight,
-  Rocket,
-  Search,
-  Copy,
-  Check,
-  Terminal,
-  FolderKanban,
   Palette,
-  Activity,
-  ArrowUpRight
+  FileText,
+  Receipt,
+  HardDrive,
+  Webhook,
+  FolderKanban,
+  Briefcase,
+  BookOpen,
+  GraduationCap,
+  ShoppingBag,
+  Server,
+  Terminal,
+  Copy,
+  LifeBuoy
 } from 'lucide-vue-next';
+import { useDashboardData } from '../composables/useDashboardData';
+
+// Modular View Components
+import ContainersModule from '../components/dashboard/ContainersModule.vue';
+import VisualEditorModule from '../components/dashboard/VisualEditorModule.vue';
+import ContentArticlesModule from '../components/dashboard/ContentArticlesModule.vue';
+import MediaAssetsModule from '../components/dashboard/MediaAssetsModule.vue';
+import TemplatesCatalogModule from '../components/dashboard/TemplatesCatalogModule.vue';
+import CustomDomainsModule from '../components/dashboard/CustomDomainsModule.vue';
+import AnalyticsTelemetryModule from '../components/dashboard/AnalyticsTelemetryModule.vue';
+import WebhooksApiModule from '../components/dashboard/WebhooksApiModule.vue';
+import BillingPlanModule from '../components/dashboard/BillingPlanModule.vue';
+import InvoicesHistoryModule from '../components/dashboard/InvoicesHistoryModule.vue';
+import SupportTicketingModule from '../components/dashboard/SupportTicketingModule.vue';
 
 const router = useRouter();
 
-// Active Navigation Menu
-type ActiveMenu = 'containers' | 'editor' | 'templates' | 'analytics' | 'billing';
-const activeMenu = ref<ActiveMenu>('containers');
+const {
+  activeMenu,
+  isEditorSidebarHidden,
+  userEmail,
+  userPlan,
+  usedContainersCount,
+  containers,
+  articles,
+  openCreateModal,
+  toastMessage,
+  isCreateModalOpen,
+  newSiteForm,
+  handleCreateContainer,
+  isLogsModalOpen,
+  activeLogContainer,
+  copyContainerLogs,
+  syncWithBackend
+} = useDashboardData();
 
-// User & Subscription Quota
-const userEmail = ref(localStorage.getItem('cloudcms_user_email') || 'admin@rizalpratama.cloud');
-const userPlan = ref({
-  name: 'Hero Pro Plan',
-  price: 'Rp 149.000 / bln',
-  maxContainers: 3,
-  cpuPerContainer: '0.5 vCPU',
-  ramPerContainer: '256 MB',
-  storageQuota: '2 GB SSD'
+onMounted(() => {
+  syncWithBackend();
 });
-
-// Container & Site Model
-export interface ContainerSite {
-  id: string;
-  name: string;
-  category: 'portfolio' | 'blog' | 'education' | 'business';
-  templateName: string;
-  subdomain: string;
-  customDomain?: string;
-  status: 'running' | 'stopped' | 'provisioning';
-  cpuUsage: number;
-  ramUsage: number;
-  ramLimit: number;
-  cpuLimit: string;
-  uptime: string;
-  visitsThisWeek: number;
-  ssl: boolean;
-  roleOrHeadline: string;
-  bioIntro: string;
-  accentColor: string;
-  lastDeployed: string;
-}
-
-// Initial customer containers
-const containers = ref<ContainerSite[]>([
-  {
-    id: 'hero_tenant_9942',
-    name: 'Portofolio Rizal Pratama',
-    category: 'portfolio',
-    templateName: 'Portofolio Teknis Engineer',
-    subdomain: 'rizal.cloudcms.app',
-    customDomain: 'rizalpratama.cloud',
-    status: 'running',
-    cpuUsage: 14,
-    ramUsage: 88,
-    ramLimit: 256,
-    cpuLimit: '0.5 vCPU',
-    uptime: '4 hari 12 jam',
-    visitsThisWeek: 3892,
-    ssl: true,
-    roleOrHeadline: 'Senior Cloud & Distributed Systems Engineer',
-    bioIntro: 'Membangun arsitektur microservices terdistribusi, orkestrasi kontainer Docker otonom, dan pipeline telemetri real-time dengan latensi rendah.',
-    accentColor: '#2563eb',
-    lastDeployed: '10 menit lalu'
-  }
-]);
-
-// Search & Filter
-const searchQuery = ref('');
-const statusFilter = ref<'all' | 'running' | 'stopped'>('all');
-
-const filteredContainers = computed(() => {
-  return containers.value.filter(c => {
-    const matchQuery = c.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                       c.subdomain.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const matchStatus = statusFilter.value === 'all' ? true : c.status === statusFilter.value;
-    return matchQuery && matchStatus;
-  });
-});
-
-// Quota calculations
-const usedContainersCount = computed(() => containers.value.length);
-const runningContainersCount = computed(() => containers.value.filter(c => c.status === 'running').length);
-const stoppedContainersCount = computed(() => containers.value.filter(c => c.status === 'stopped').length);
-const isQuotaExceeded = computed(() => containers.value.length >= userPlan.value.maxContainers);
-
-// Active container for Editor
-const activeContainerId = ref<string>('hero_tenant_9942');
-const activeContainer = computed(() => {
-  return containers.value.find(c => c.id === activeContainerId.value) || containers.value[0];
-});
-
-// Toast system
-const toastMessage = ref<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
-const showToast = (text: string, type: 'success' | 'info' | 'error' = 'success') => {
-  toastMessage.value = { text, type };
-  setTimeout(() => {
-    toastMessage.value = null;
-  }, 3500);
-};
-
-// Copy feedback
-const copiedSubdomain = ref<string | null>(null);
-const copyToClipboard = (text: string, id: string) => {
-  navigator.clipboard.writeText(`https://${text}`);
-  copiedSubdomain.value = id;
-  setTimeout(() => {
-    copiedSubdomain.value = null;
-  }, 2000);
-  showToast(`URL disalin ke clipboard: https://${text}`, 'info');
-};
-
-// Container Lifecycle Operations
-const startContainer = (container: ContainerSite) => {
-  container.status = 'provisioning';
-  showToast(`Menjalankan kontainer ${container.id}...`, 'info');
-  setTimeout(() => {
-    container.status = 'running';
-    container.cpuUsage = 14;
-    container.ramUsage = 82;
-    showToast(`Kontainer ${container.name} aktif melayani trafik!`, 'success');
-  }, 900);
-};
-
-const stopContainer = (container: ContainerSite) => {
-  container.status = 'provisioning';
-  showToast(`Menghentikan kontainer ${container.id}...`, 'info');
-  setTimeout(() => {
-    container.status = 'stopped';
-    container.cpuUsage = 0;
-    container.ramUsage = 12;
-    showToast(`Kontainer ${container.name} telah dihentikan (standby).`, 'info');
-  }, 800);
-};
-
-const restartContainer = (container: ContainerSite) => {
-  container.status = 'provisioning';
-  showToast(`Me-restart kontainer ${container.id}...`, 'info');
-  setTimeout(() => {
-    container.status = 'running';
-    container.cpuUsage = 15;
-    container.ramUsage = 86;
-    showToast(`Kontainer ${container.name} sehat setelah reboot!`, 'success');
-  }, 1100);
-};
-
-const deleteContainer = (container: ContainerSite) => {
-  if (confirm(`Hapus kontainer '${container.name}'? Slot kuota (${containers.value.length}/${userPlan.value.maxContainers}) akan dikembalikan.`)) {
-    const idx = containers.value.findIndex(c => c.id === container.id);
-    if (idx !== -1) {
-      containers.value.splice(idx, 1);
-      showToast(`Kontainer ${container.id} dihapus. Kuota kini ${containers.value.length}/${userPlan.value.maxContainers}.`, 'info');
-      if (containers.value.length > 0) {
-        activeContainerId.value = containers.value[0].id;
-      }
-    }
-  }
-};
-
-// Modal: Buat CMS Baru
-const isCreateModalOpen = ref(false);
-const newSiteForm = ref({
-  name: '',
-  subdomain: '',
-  category: 'portfolio' as 'portfolio' | 'blog' | 'education' | 'business',
-  role: ''
-});
-
-const openCreateModal = (category?: 'portfolio' | 'blog' | 'education' | 'business') => {
-  if (isQuotaExceeded.value) {
-    showToast(`Kuota kontainer (${containers.value.length}/${userPlan.value.maxContainers}) penuh. Silakan upgrade atau hapus kontainer lama.`, 'error');
-    activeMenu.value = 'billing';
-    return;
-  }
-  newSiteForm.value.name = '';
-  newSiteForm.value.subdomain = '';
-  newSiteForm.value.role = '';
-  if (category) newSiteForm.value.category = category;
-  isCreateModalOpen.value = true;
-};
-
-const handleCreateContainer = () => {
-  if (!newSiteForm.value.name.trim() || !newSiteForm.value.subdomain.trim()) {
-    showToast('Nama situs dan subdomain wajib diisi.', 'error');
-    return;
-  }
-
-  const cleanSubdomain = newSiteForm.value.subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '');
-  const newId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
-
-  let tplName = 'Portofolio Teknis Engineer';
-  if (newSiteForm.value.category === 'blog') tplName = 'Editorial Media & Blog';
-  if (newSiteForm.value.category === 'education') tplName = 'Pusat Edukasi LMS';
-  if (newSiteForm.value.category === 'business') tplName = 'Showcase Bisnis & UMKM';
-
-  const newContainerObj: ContainerSite = {
-    id: newId,
-    name: newSiteForm.value.name,
-    category: newSiteForm.value.category,
-    templateName: tplName,
-    subdomain: `${cleanSubdomain}.cloudcms.app`,
-    status: 'running',
-    cpuUsage: 12,
-    ramUsage: 74,
-    ramLimit: 256,
-    cpuLimit: '0.5 vCPU',
-    uptime: 'Baru dibuat',
-    visitsThisWeek: 0,
-    ssl: true,
-    roleOrHeadline: newSiteForm.value.role || 'Website Resmi ' + newSiteForm.value.name,
-    bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
-    accentColor: '#2563eb',
-    lastDeployed: 'Baru saja'
-  };
-
-  containers.value.push(newContainerObj);
-  activeContainerId.value = newId;
-  isCreateModalOpen.value = false;
-  showToast(`Situs '${newContainerObj.name}' berhasil dibuat di kontainer ${newId}!`, 'success');
-  activeMenu.value = 'editor';
-};
-
-// Official Templates & Pricelist Catalog
-const officialTemplates = ref([
-  {
-    id: 'tpl_portfolio_pro',
-    title: 'Portofolio Teknis & Engineer',
-    category: 'portfolio' as const,
-    tier: 'Included in Plan',
-    priceText: 'Gratis dalam Kuota',
-    isPro: false,
-    desc: 'Dirancang untuk software engineer, cloud architect, dan desainer. Showcase studi kasus, GitHub telemetry, dan CV direct download.',
-    features: ['Studi Kasus Interaktif', 'Integrasi GitHub Repos', 'Formulir Kontak Webhook', 'Peringkat SEO Optimal']
-  },
-  {
-    id: 'tpl_blog_editorial',
-    title: 'Editorial Media & Tech Blog',
-    category: 'blog' as const,
-    tier: 'Included in Plan',
-    priceText: 'Gratis dalam Kuota',
-    isPro: false,
-    desc: 'Platform publikasi artikel modern dengan editor visual, estimasi waktu baca, dan generator otomatis kartu media sosial OpenGraph.',
-    features: ['Editor Blok Modern', 'Multi-Author Support', 'OpenGraph Generator', 'Redis Top Views Stream']
-  },
-  {
-    id: 'tpl_edu_lms',
-    title: 'Pusat Edukasi & Dokumentasi LMS',
-    category: 'education' as const,
-    tier: 'Pro Template',
-    priceText: 'Termasuk di Paket Pro',
-    isPro: true,
-    desc: 'Silabus modul bertingkat, publikasi materi ajar terstruktur, profil tutor, dan integrasi video tutorial interaktif.',
-    features: ['Silabus Modul Bertingkat', 'Pencarian Dokumentasi Instan', 'Profil Tutor & Dosen', 'Download Materi PDF']
-  },
-  {
-    id: 'tpl_business_catalog',
-    title: 'Showcase Bisnis Mikro & UMKM',
-    category: 'business' as const,
-    tier: 'Pro Template',
-    priceText: 'Termasuk di Paket Pro',
-    isPro: true,
-    desc: 'Toko online mikro dan landing page jasa profesional dengan tombol order direct WhatsApp dan galeri produk responsif.',
-    features: ['Katalog Produk Responsif', 'Direct WhatsApp Ordering', 'Integrasi Payment Link', 'Statistik Konversi Kunjungan']
-  }
-]);
-
-// Visual Editor Simulator State
-const editorDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
-const isPublishing = ref(false);
-
-const handlePublishChanges = () => {
-  if (!activeContainer.value) return;
-  isPublishing.value = true;
-  setTimeout(() => {
-    isPublishing.value = false;
-    activeContainer.value.lastDeployed = 'Baru saja';
-    showToast(`Perubahan '${activeContainer.value.name}' live ke Docker!`, 'success');
-  }, 1200);
-};
-
-// AI Generator Assistant
-const isGeneratingAI = ref(false);
-const aiPromptInput = ref('');
-const handleAiGenerateContent = () => {
-  if (!aiPromptInput.value.trim() || !activeContainer.value) return;
-  isGeneratingAI.value = true;
-  setTimeout(() => {
-    isGeneratingAI.value = false;
-    activeContainer.value.bioIntro = `Solusi komputasi cloud otonom & arsitektur modern berorientasi masa depan yang dirancang berdasarkan kebutuhan: ${aiPromptInput.value}. Memaksimalkan efisiensi kontainer dan skalabilitas tinggi.`;
-    aiPromptInput.value = '';
-    showToast('Asisten AI berhasil menyusun konten baru!', 'success');
-  }, 900);
-};
 
 const handleLogout = () => {
   localStorage.removeItem('cloudcms_auth_token');
@@ -337,7 +77,7 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden }">
     <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
     <aside class="app-sidebar">
       <!-- Workspace Brand Switcher -->
@@ -358,7 +98,7 @@ const handleLogout = () => {
 
       <!-- Navigation Section -->
       <div class="sidebar-nav-sections">
-        <div class="nav-section-title">CORE PLATFORM</div>
+        <div class="nav-section-title">KONTEN & STUDIO</div>
         <nav class="sidebar-nav-list">
           <button
             class="nav-link"
@@ -382,6 +122,26 @@ const handleLogout = () => {
 
           <button
             class="nav-link"
+            :class="{ active: activeMenu === 'content' }"
+            @click="activeMenu = 'content'"
+          >
+            <FileText :size="17" />
+            <span class="nav-link-text">Artikel & Halaman</span>
+            <span class="nav-pill-tag">{{ articles.length }}</span>
+          </button>
+
+          <button
+            class="nav-link"
+            :class="{ active: activeMenu === 'media' }"
+            @click="activeMenu = 'media'"
+          >
+            <HardDrive :size="17" />
+            <span class="nav-link-text">Media Assets (S3)</span>
+            <span class="nav-pill-tag">120MB</span>
+          </button>
+
+          <button
+            class="nav-link"
             :class="{ active: activeMenu === 'templates' }"
             @click="activeMenu = 'templates'"
           >
@@ -391,8 +151,18 @@ const handleLogout = () => {
           </button>
         </nav>
 
-        <div class="nav-section-title">INFRASTRUKTUR & METRIK</div>
+        <div class="nav-section-title">INFRASTRUKTUR & EDGE</div>
         <nav class="sidebar-nav-list">
+          <button
+            class="nav-link"
+            :class="{ active: activeMenu === 'domains' }"
+            @click="activeMenu = 'domains'"
+          >
+            <Globe :size="17" />
+            <span class="nav-link-text">Custom Domain & DNS</span>
+            <span class="nav-pill-tag green">SSL</span>
+          </button>
+
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'analytics' }"
@@ -404,11 +174,46 @@ const handleLogout = () => {
 
           <button
             class="nav-link"
+            :class="{ active: activeMenu === 'webhooks' }"
+            @click="activeMenu = 'webhooks'"
+          >
+            <Webhook :size="17" />
+            <span class="nav-link-text">Webhooks & API</span>
+          </button>
+        </nav>
+
+        <div class="nav-section-title">FINANSIAL & BILLING</div>
+        <nav class="sidebar-nav-list">
+          <button
+            class="nav-link"
             :class="{ active: activeMenu === 'billing' }"
             @click="activeMenu = 'billing'"
           >
             <CreditCard :size="17" />
-            <span class="nav-link-text">Kapasitas & Billing</span>
+            <span class="nav-link-text">Kapasitas & Paket</span>
+          </button>
+
+          <button
+            class="nav-link"
+            :class="{ active: activeMenu === 'invoices' }"
+            @click="activeMenu = 'invoices'"
+          >
+            <Receipt :size="17" />
+            <span class="nav-link-text">Faktur & Invoice</span>
+            <span class="nav-pill-tag green">Lunas</span>
+          </button>
+        </nav>
+
+        <div class="nav-section-title">BANTUAN & SUPPORT</div>
+        <nav class="sidebar-nav-list">
+          <button
+            class="nav-link"
+            :class="{ active: activeMenu === 'tickets' }"
+            @click="activeMenu = 'tickets'"
+          >
+            <LifeBuoy :size="17" />
+            <span class="nav-link-text">Tiket Support</span>
+            <span class="nav-pill-tag amber">1 Aktif</span>
           </button>
         </nav>
       </div>
@@ -445,15 +250,15 @@ const handleLogout = () => {
             <div class="user-email-sub">{{ userEmail }}</div>
           </div>
           <button class="btn-sidebar-logout" @click="handleLogout" title="Keluar">
-            <LogOut :size="15" />
+            <LogOut :size="14" />
           </button>
         </div>
       </div>
     </aside>
 
-    <!-- 2. MAIN CONTENT AREA -->
+    <!-- 2. MAIN APPLICATION WORKSPACE -->
     <div class="app-main-area">
-      <!-- Top Utility Header Bar -->
+      <!-- Sticky Glassmorphism Header -->
       <header class="top-nav-header">
         <div class="breadcrumbs">
           <span>HeroCMS Studio</span>
@@ -462,8 +267,15 @@ const handleLogout = () => {
             {{
               activeMenu === 'containers' ? 'Situs & Kontainer' :
               activeMenu === 'editor' ? 'Editor Visual Studio' :
+              activeMenu === 'content' ? 'Artikel & Halaman CMS' :
+              activeMenu === 'media' ? 'Media Assets & Storage S3' :
               activeMenu === 'templates' ? 'Katalog Template & Pricelist' :
-              activeMenu === 'analytics' ? 'Analitik Real-Time (Redis)' : 'Paket Langganan & Billing'
+              activeMenu === 'domains' ? 'Custom Domain & DNS Traefik' :
+              activeMenu === 'analytics' ? 'Analitik Real-Time (Kafka & Redis)' :
+              activeMenu === 'webhooks' ? 'Webhooks & Integrasi API' :
+              activeMenu === 'billing' ? 'Kapasitas & Paket Langganan' :
+              activeMenu === 'invoices' ? 'Faktur & Riwayat Invoice Resmi' :
+              'Pusat Bantuan & Tiket Support'
             }}
           </span>
         </div>
@@ -491,734 +303,232 @@ const handleLogout = () => {
         <button class="btn-toast-x" @click="toastMessage = null"><X :size="14" /></button>
       </div>
 
-      <!-- Main Dynamic Workspace View -->
+      <!-- Main Dynamic Workspace View (Modular per-menu components) -->
       <main class="content-scroll-pane">
-        <!-- ============================================================= -->
-        <!-- VIEW 1: SITUS & KONTAINER DOCKER (PRO-GRADE MULTI-SITE GRID) -->
-        <!-- ============================================================= -->
-        <section v-if="activeMenu === 'containers'" class="fade-in-section">
-          <!-- Page Title & Quick Summary -->
-          <div class="page-intro-row">
-            <div>
-              <h1 class="page-title">Situs & Kontainer Docker</h1>
-              <p class="page-desc">Kelola runtime mandiri pelanggan, batasan cgroups Linux, dan rute proxy Traefik v3.</p>
-            </div>
-            <div class="quota-quick-pills">
-              <span class="pill-metric">Running: <strong>{{ runningContainersCount }}</strong></span>
-              <span class="pill-metric">Standby: <strong>{{ stoppedContainersCount }}</strong></span>
-              <span class="pill-metric-highlight">Sisa Kuota: <strong>{{ userPlan.maxContainers - usedContainersCount }} Slot</strong></span>
-            </div>
-          </div>
-
-          <!-- High-Density Metric Cards (4 Compact Strips) -->
-          <div class="stats-overview-grid">
-            <div class="stat-box">
-              <div class="stat-box-top">
-                <span class="stat-title">KUOTA KONTAINER</span>
-                <Server :size="16" color="#2563eb" />
-              </div>
-              <div class="stat-box-val">{{ usedContainersCount }} <span class="stat-box-denom">/ {{ userPlan.maxContainers }} Aktif</span></div>
-              <div class="stat-box-sub text-emerald">● {{ userPlan.maxContainers - usedContainersCount }} slot siap dideploy</div>
-            </div>
-
-            <div class="stat-box">
-              <div class="stat-box-top">
-                <span class="stat-title">EDGE ROUTING TRAEFIK</span>
-                <Globe :size="16" color="#059669" />
-              </div>
-              <div class="stat-box-val">v3.1 Online</div>
-              <div class="stat-box-sub">Latensi rerata 1.8ms (Zero-Downtime)</div>
-            </div>
-
-            <div class="stat-box">
-              <div class="stat-box-top">
-                <span class="stat-title">TRAFIK PENGUNJUNG</span>
-                <Activity :size="16" color="#9333ea" />
-              </div>
-              <div class="stat-box-val">3,892 <span class="growth-chip">+28%</span></div>
-              <div class="stat-box-sub">Data dicatat via Kafka stream</div>
-            </div>
-
-            <div class="stat-box">
-              <div class="stat-box-top">
-                <span class="stat-title">KEAMANAN TLS / SSL</span>
-                <ShieldCheck :size="16" color="#2563eb" />
-              </div>
-              <div class="stat-box-val">100% Aktif</div>
-              <div class="stat-box-sub">Let's Encrypt Wildcard Auto-Renew</div>
-            </div>
-          </div>
-
-          <!-- Filter & Search Toolbar -->
-          <div class="filter-toolbar">
-            <div class="search-input-wrap">
-              <Search :size="15" class="search-icon" />
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Cari situs, subdomain, atau container ID..."
-                class="search-field"
-              />
-            </div>
-
-            <div class="filter-chips">
-              <button
-                class="filter-chip"
-                :class="{ active: statusFilter === 'all' }"
-                @click="statusFilter = 'all'"
-              >
-                Semua ({{ containers.length }})
-              </button>
-              <button
-                class="filter-chip"
-                :class="{ active: statusFilter === 'running' }"
-                @click="statusFilter = 'running'"
-              >
-                Running ({{ runningContainersCount }})
-              </button>
-              <button
-                class="filter-chip"
-                :class="{ active: statusFilter === 'stopped' }"
-                @click="statusFilter = 'stopped'"
-              >
-                Standby ({{ stoppedContainersCount }})
-              </button>
-            </div>
-          </div>
-
-          <!-- Professional 2-Column Responsive Grid (No awkward stretched 1-column lines!) -->
-          <div v-if="filteredContainers.length > 0" class="site-cards-grid">
-            <div
-              v-for="c in filteredContainers"
-              :key="c.id"
-              class="pro-site-card"
-              :class="{ 'card-stopped': c.status === 'stopped' }"
-            >
-              <!-- Card Top Header -->
-              <div class="card-head">
-                <div class="site-branding">
-                  <div class="site-icon-box" :style="{ backgroundColor: c.accentColor + '15', color: c.accentColor }">
-                    <Briefcase v-if="c.category === 'portfolio'" :size="18" />
-                    <BookOpen v-else-if="c.category === 'blog'" :size="18" />
-                    <GraduationCap v-else-if="c.category === 'education'" :size="18" />
-                    <ShoppingBag v-else :size="18" />
-                  </div>
-                  <div>
-                    <h3 class="site-title-text">{{ c.name }}</h3>
-                    <span class="site-template-badge">{{ c.templateName }}</span>
-                  </div>
-                </div>
-
-                <!-- Status Pill -->
-                <div
-                  class="pro-status-chip"
-                  :class="{
-                    'status-running': c.status === 'running',
-                    'status-stopped': c.status === 'stopped',
-                    'status-provisioning': c.status === 'provisioning'
-                  }"
-                >
-                  <span class="dot-indicator"></span>
-                  <span v-if="c.status === 'running'">Running</span>
-                  <span v-else-if="c.status === 'stopped'">Standby</span>
-                  <span v-else>Deploying...</span>
-                </div>
-              </div>
-
-              <!-- URL Bar with Copy and Link -->
-              <div class="site-url-box">
-                <div class="url-text-wrap">
-                  <Globe :size="13" color="#2563eb" />
-                  <span class="url-text">https://{{ c.subdomain }}</span>
-                </div>
-                <div class="url-actions">
-                  <button
-                    class="btn-icon-tiny"
-                    @click="copyToClipboard(c.subdomain, c.id)"
-                    :title="copiedSubdomain === c.id ? 'Tersalin!' : 'Salin URL'"
-                  >
-                    <Check v-if="copiedSubdomain === c.id" :size="13" color="#059669" />
-                    <Copy v-else :size="13" />
-                  </button>
-                  <a :href="`https://${c.subdomain}`" target="_blank" class="btn-icon-tiny" title="Kunjungi Situs">
-                    <ArrowUpRight :size="13" />
-                  </a>
-                </div>
-              </div>
-
-              <!-- Compact Resource Meters (Clean 2-Column Gauge) -->
-              <div class="resource-gauges-row">
-                <div class="gauge-col">
-                  <div class="gauge-meta">
-                    <span>CPU: {{ c.cpuUsage }}%</span>
-                    <span class="gauge-limit">Limit: {{ c.cpuLimit }}</span>
-                  </div>
-                  <div class="mini-bar-track">
-                    <div
-                      class="mini-bar-fill"
-                      :style="{
-                        width: `${Math.min(c.cpuUsage * 2.5, 100)}%`,
-                        backgroundColor: c.status === 'running' ? '#2563eb' : '#94a3b8'
-                      }"
-                    ></div>
-                  </div>
-                </div>
-
-                <div class="gauge-col">
-                  <div class="gauge-meta">
-                    <span>RAM: {{ c.ramUsage }}MB</span>
-                    <span class="gauge-limit">Maks: {{ c.ramLimit }}MB</span>
-                  </div>
-                  <div class="mini-bar-track">
-                    <div
-                      class="mini-bar-fill"
-                      :style="{
-                        width: `${(c.ramUsage / c.ramLimit) * 100}%`,
-                        backgroundColor: c.status === 'running' ? '#10b981' : '#94a3b8'
-                      }"
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Card Action Buttons Footer -->
-              <div class="card-action-bar">
-                <button
-                  class="btn-action-primary"
-                  @click="activeContainerId = c.id; activeMenu = 'editor'"
-                >
-                  <Edit3 :size="14" />
-                  <span>Buka Editor</span>
-                </button>
-
-                <!-- Runtime Controls -->
-                <div class="runtime-btn-group">
-                  <button
-                    v-if="c.status === 'stopped'"
-                    class="btn-icon-ctrl btn-play"
-                    @click="startContainer(c)"
-                    title="Jalankan Kontainer (Start)"
-                  >
-                    <Play :size="13" />
-                  </button>
-                  <button
-                    v-if="c.status === 'running'"
-                    class="btn-icon-ctrl btn-pause"
-                    @click="stopContainer(c)"
-                    title="Hentikan Sementara (Stop)"
-                  >
-                    <Square :size="12" />
-                  </button>
-                  <button
-                    class="btn-icon-ctrl"
-                    :disabled="c.status === 'stopped'"
-                    @click="restartContainer(c)"
-                    title="Restart Kontainer"
-                  >
-                    <RotateCw :size="13" />
-                  </button>
-                  <button
-                    class="btn-icon-ctrl btn-del"
-                    @click="deleteContainer(c)"
-                    title="Hapus Kontainer (Kembalikan Kuota)"
-                  >
-                    <Trash2 :size="13" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Empty State -->
-          <div v-else class="empty-state-card">
-            <Server :size="40" color="#94a3b8" />
-            <h3>Tidak ada kontainer ditemukan</h3>
-            <p>Pilih template resmi untuk menerbitkan website mandiri Anda di Docker.</p>
-            <button class="btn-top-create" @click="openCreateModal()">
-              <Plus :size="15" />
-              <span>Buat Website Baru</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- ============================================================= -->
-        <!-- VIEW 2: EDITOR STUDIO VISUAL (PROFESSIONAL 2-PANE BUILDER)    -->
-        <!-- ============================================================= -->
-        <section v-else-if="activeMenu === 'editor'" class="fade-in-section">
-          <div v-if="activeContainer" class="pro-editor-layout">
-            <!-- Top Editor Sub-Toolbar -->
-            <div class="editor-top-strip">
-              <div class="strip-left">
-                <span class="lbl-site">Mengedit:</span>
-                <select v-model="activeContainerId" class="select-site-switch">
-                  <option v-for="c in containers" :key="c.id" :value="c.id">
-                    {{ c.name }} ({{ c.subdomain }})
-                  </option>
-                </select>
-                <span class="badge-saved">Disimpan otomatis</span>
-              </div>
-
-              <!-- Device Switcher + Deploy Button -->
-              <div class="strip-right">
-                <div class="screen-size-switch">
-                  <button
-                    class="btn-screen"
-                    :class="{ active: editorDevice === 'desktop' }"
-                    @click="editorDevice = 'desktop'"
-                  >
-                    <Monitor :size="15" />
-                  </button>
-                  <button
-                    class="btn-screen"
-                    :class="{ active: editorDevice === 'tablet' }"
-                    @click="editorDevice = 'tablet'"
-                  >
-                    <Tablet :size="15" />
-                  </button>
-                  <button
-                    class="btn-screen"
-                    :class="{ active: editorDevice === 'mobile' }"
-                    @click="editorDevice = 'mobile'"
-                  >
-                    <Smartphone :size="15" />
-                  </button>
-                </div>
-
-                <button class="btn-deploy-live" :disabled="isPublishing" @click="handlePublishChanges">
-                  <Rocket v-if="!isPublishing" :size="15" />
-                  <span v-else class="spinner-tiny"></span>
-                  <span>{{ isPublishing ? 'Menerbitkan...' : 'Terbitkan ke Kontainer (Live)' }}</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- 2-Column Split: Controls + Visual Mockup -->
-            <div class="builder-split-body">
-              <!-- Left: Form Controls (360px) -->
-              <div class="builder-controls-panel">
-                <div class="panel-section-title">KONTEN SITUS</div>
-
-                <div class="form-item">
-                  <label>Nama Website / Brand</label>
-                  <input v-model="activeContainer.name" type="text" class="input-pro" />
-                </div>
-
-                <div class="form-item">
-                  <label>Judul Utama (Headline)</label>
-                  <input v-model="activeContainer.roleOrHeadline" type="text" class="input-pro" />
-                </div>
-
-                <div class="form-item">
-                  <label>Bio Singkat / Deskripsi Portofolio</label>
-                  <textarea v-model="activeContainer.bioIntro" rows="3" class="input-pro textarea-pro"></textarea>
-                </div>
-
-                <!-- AI Writing Box -->
-                <div class="ai-generator-box">
-                  <div class="ai-box-title">
-                    <Sparkles :size="14" color="#2563eb" />
-                    <span>Hero AI Copilot</span>
-                  </div>
-                  <input
-                    v-model="aiPromptInput"
-                    type="text"
-                    placeholder="Instruksi AI: 'Tulis intro senior dev'..."
-                    class="input-pro"
-                    @keydown.enter="handleAiGenerateContent"
-                  />
-                  <button class="btn-ai-submit" :disabled="isGeneratingAI || !aiPromptInput.trim()" @click="handleAiGenerateContent">
-                    <Sparkles :size="13" />
-                    <span>{{ isGeneratingAI ? 'Menyusun...' : 'Generate Konten' }}</span>
-                  </button>
-                </div>
-
-                <div class="panel-section-title" style="margin-top: 20px;">DESAIN & GAYA</div>
-
-                <div class="form-item">
-                  <label>Warna Aksen Brand</label>
-                  <div class="colors-row">
-                    <button
-                      v-for="col in ['#2563eb', '#059669', '#7c3aed', '#ea580c', '#0f172a']"
-                      :key="col"
-                      class="color-dot"
-                      :style="{ backgroundColor: col }"
-                      :class="{ selected: activeContainer.accentColor === col }"
-                      @click="activeContainer.accentColor = col"
-                    ></button>
-                  </div>
-                </div>
-
-                <div class="form-item">
-                  <label>Subdomain Terhubung</label>
-                  <input :value="`https://${activeContainer.subdomain}`" readonly class="input-pro input-readonly" />
-                </div>
-              </div>
-
-              <!-- Right: Device Canvas Preview -->
-              <div class="builder-preview-canvas" :class="`device-${editorDevice}`">
-                <div class="browser-mockup">
-                  <div class="browser-mockup-bar">
-                    <div class="browser-circle-dots">
-                      <span></span><span></span><span></span>
-                    </div>
-                    <div class="browser-url-pill">
-                      <ShieldCheck :size="12" color="#059669" />
-                      <span>https://{{ activeContainer.subdomain }}</span>
-                    </div>
-                    <span class="badge-live-tag">● Live Docker</span>
-                  </div>
-
-                  <!-- Rendered Template Mockup -->
-                  <div class="rendered-page">
-                    <header class="page-top-nav">
-                      <div class="site-logo" :style="{ color: activeContainer.accentColor }">
-                        {{ activeContainer.name }}
-                      </div>
-                      <div class="nav-mock-links">
-                        <span>Beranda</span>
-                        <span>Tentang</span>
-                        <span>Proyek</span>
-                        <button class="btn-mock-cta" :style="{ backgroundColor: activeContainer.accentColor }">
-                          Kontak
-                        </button>
-                      </div>
-                    </header>
-
-                    <div class="page-hero-mock">
-                      <span class="hero-tag-badge" :style="{ color: activeContainer.accentColor, borderColor: activeContainer.accentColor + '40', backgroundColor: activeContainer.accentColor + '10' }">
-                        {{ activeContainer.templateName }}
-                      </span>
-                      <h2 class="hero-h2">{{ activeContainer.roleOrHeadline }}</h2>
-                      <p class="hero-p">{{ activeContainer.bioIntro }}</p>
-                      <div class="hero-btns-mock">
-                        <button class="btn-hero-pri" :style="{ backgroundColor: activeContainer.accentColor }">
-                          Lihat Portofolio
-                        </button>
-                        <button class="btn-hero-sec">Dokumentasi</button>
-                      </div>
-                    </div>
-
-                    <div class="page-features-grid">
-                      <div class="feature-mock-card">
-                        <Server :size="18" :style="{ color: activeContainer.accentColor }" />
-                        <h4>Orkestrasi Kontainer Terisolasi</h4>
-                        <p>Berjalan pada runtime Docker Engine mandiri dengan jaminan keamanan cgroups v2.</p>
-                      </div>
-                      <div class="feature-mock-card">
-                        <Globe :size="18" :style="{ color: activeContainer.accentColor }" />
-                        <h4>Edge Routing Traefik v3</h4>
-                        <p>Sertifikat SSL Let's Encrypt TLS v1.3 aktif dan otomatis diperbarui secara berkala.</p>
-                      </div>
-                      <div class="feature-mock-card">
-                        <TrendingUp :size="18" :style="{ color: activeContainer.accentColor }" />
-                        <h4>Telemetri Real-Time</h4>
-                        <p>Pencatatan statistik kunjungan secepat kilat dengan antrean Kafka dan Redis DB.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============================================================= -->
-        <!-- VIEW 3: KATALOG TEMPLATE & PRICELIST STORE                    -->
-        <!-- ============================================================= -->
-        <section v-else-if="activeMenu === 'templates'" class="fade-in-section">
-          <div class="page-intro-row">
-            <div>
-              <h1 class="page-title">Katalog Template & Pricelist</h1>
-              <p class="page-desc">Pilih template resmi siap pakai yang dioptimalkan untuk SEO dan kemudahan editor blok.</p>
-            </div>
-          </div>
-
-          <div class="template-market-grid">
-            <div v-for="tpl in officialTemplates" :key="tpl.id" class="tpl-market-card">
-              <div class="tpl-card-header">
-                <span class="tpl-type-pill">{{ tpl.category.toUpperCase() }}</span>
-                <span class="tpl-tier-pill" :class="{ 'tier-pro': tpl.isPro }">{{ tpl.tier }}</span>
-              </div>
-
-              <div class="tpl-icon-preview">
-                <Briefcase v-if="tpl.category === 'portfolio'" :size="32" color="#2563eb" />
-                <BookOpen v-else-if="tpl.category === 'blog'" :size="32" color="#2563eb" />
-                <GraduationCap v-else-if="tpl.category === 'education'" :size="32" color="#059669" />
-                <ShoppingBag v-else :size="32" color="#d97706" />
-              </div>
-
-              <div class="tpl-card-body">
-                <h3 class="tpl-card-title">{{ tpl.title }}</h3>
-                <p class="tpl-card-desc">{{ tpl.desc }}</p>
-
-                <ul class="tpl-checklist">
-                  <li v-for="(feat, fIdx) in tpl.features" :key="fIdx">
-                    <CheckCircle2 :size="13" color="#059669" />
-                    <span>{{ feat }}</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="tpl-card-bottom">
-                <div class="tpl-cost">
-                  <span>Lisensi:</span>
-                  <strong>{{ tpl.priceText }}</strong>
-                </div>
-                <button class="btn-use-tpl" @click="openCreateModal(tpl.category)">
-                  <span>Pakai Template</span>
-                  <ChevronRight :size="14" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============================================================= -->
-        <!-- VIEW 4: ANALITIK & TELEMETRI REAL-TIME (REDIS SORTED SETS)   -->
-        <!-- ============================================================= -->
-        <section v-else-if="activeMenu === 'analytics'" class="fade-in-section">
-          <div class="page-intro-row">
-            <div>
-              <h1 class="page-title">Telemetri & Analitik Real-Time</h1>
-              <p class="page-desc">Data hit pengunjung dicatat non-blocking melalui event stream Kafka dan dihitung via Redis Sorted Sets.</p>
-            </div>
-          </div>
-
-          <div class="analytics-strip-grid">
-            <div class="analytics-card">
-              <span class="a-label">TOTAL KUNJUNGAN MINGGU INI</span>
-              <div class="a-val">3,892 <span class="a-growth">+28%</span></div>
-              <span class="a-sub">142 IP unik di 12 negara</span>
-            </div>
-            <div class="analytics-card">
-              <span class="a-label">LATENSI EDGE TRAEFIK</span>
-              <div class="a-val">1.8 ms</div>
-              <span class="a-sub">Cache proxy edge aktif</span>
-            </div>
-            <div class="analytics-card">
-              <span class="a-label">KAFKA CONSUMER LAG</span>
-              <div class="a-val text-emerald">0 Pesan</div>
-              <span class="a-sub">Sinkronisasi real-time 100%</span>
-            </div>
-          </div>
-
-          <div class="analytics-two-col">
-            <div class="pro-panel">
-              <div class="panel-head">
-                <h3>Top Halaman & Artikel Terpopuler</h3>
-                <span class="redis-chip">Redis ZREVRANGEBYSCORE</span>
-              </div>
-              <div class="rank-list">
-                <div class="rank-row">
-                  <span class="rank-badge">1</span>
-                  <div class="rank-title-group">
-                    <strong>Arsitektur Multi-Tenant dengan Docker & Go</strong>
-                    <span>/blog/multi-tenant-docker • Skor Telemetri: 98.4</span>
-                  </div>
-                  <span class="rank-hit">1,420 views</span>
-                </div>
-                <div class="rank-row">
-                  <span class="rank-badge">2</span>
-                  <div class="rank-title-group">
-                    <strong>Penyelarasan Telemetri Real-Time dengan Kafka</strong>
-                    <span>/blog/kafka-telemetry • Skor Telemetri: 82.1</span>
-                  </div>
-                  <span class="rank-hit">890 views</span>
-                </div>
-                <div class="rank-row">
-                  <span class="rank-badge">3</span>
-                  <div class="rank-title-group">
-                    <strong>Optimasi TTFB Edge Traefik v3</strong>
-                    <span>/blog/traefik-ttfb • Skor Telemetri: 64.5</span>
-                  </div>
-                  <span class="rank-hit">610 views</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="pro-panel">
-              <div class="panel-head">
-                <h3>Log Telemetri Kafka Ingestion</h3>
-                <Terminal :size="15" color="#64748b" />
-              </div>
-              <div class="terminal-log-window">
-                <div class="t-line"><span>[00:26:12]</span> Traefik: Ingested page_view (200 OK - 1.4ms)</div>
-                <div class="t-line"><span>[00:26:15]</span> Redis: ZINCRBY 'tenant:9942:views' 1 article:1</div>
-                <div class="t-line"><span>[00:26:18]</span> Docker: cgroups v2 resource check healthy</div>
-                <div class="t-line"><span>[00:26:22]</span> Traefik: SSL Let's Encrypt verified</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============================================================= -->
-        <!-- VIEW 5: PAKET LANGGANAN & BILLING                             -->
-        <!-- ============================================================= -->
-        <section v-else-if="activeMenu === 'billing'" class="fade-in-section">
-          <div class="page-intro-row">
-            <div>
-              <h1 class="page-title">Paket Langganan & Billing</h1>
-              <p class="page-desc">Kelola kapasitas kontainer Docker, batas resource CPU/RAM, dan opsi penambahan kuota on-demand.</p>
-            </div>
-          </div>
-
-          <div class="billing-two-col">
-            <div class="pro-panel">
-              <div class="plan-summary-row">
-                <div>
-                  <span class="plan-active-tag">PAKET AKTIF SAAT INI</span>
-                  <h2 class="plan-h2">{{ userPlan.name }}</h2>
-                  <span class="plan-cost">{{ userPlan.price }}</span>
-                </div>
-                <button class="btn-top-create" @click="showToast('Permintaan upgrade telah dicatat!', 'info')">
-                  Upgrade Paket
-                </button>
-              </div>
-
-              <div class="plan-resource-list">
-                <div class="resource-row">
-                  <span>Slot Kontainer Docker</span>
-                  <strong>{{ usedContainersCount }} dari {{ userPlan.maxContainers }} Terpakai</strong>
-                </div>
-                <div class="resource-row">
-                  <span>Batas CPU per Kontainer</span>
-                  <strong>{{ userPlan.cpuPerContainer }} (Dedicated Limit)</strong>
-                </div>
-                <div class="resource-row">
-                  <span>Batas RAM per Kontainer</span>
-                  <strong>{{ userPlan.ramPerContainer }} (cgroups v2)</strong>
-                </div>
-                <div class="resource-row">
-                  <span>Penyimpanan Media S3</span>
-                  <strong>120 MB / {{ userPlan.storageQuota }}</strong>
-                </div>
-              </div>
-            </div>
-
-            <div class="pro-panel addon-panel">
-              <h3>Tambah Slot Kontainer On-Demand</h3>
-              <p>Tambah slot kontainer tanpa mengganti paket utama Anda.</p>
-              <div class="addon-price-tag">
-                <div class="addon-title">+1 Slot Kontainer</div>
-                <div class="addon-sub">Rp 49.000 / bulan</div>
-              </div>
-              <button
-                class="btn-add-slot"
-                @click="userPlan.maxContainers += 1; showToast(`Kuota Anda telah bertambah menjadi ${userPlan.maxContainers} kontainer!`, 'success')"
-              >
-                <Plus :size="15" />
-                <span>Tambah +1 Kontainer Sekarang</span>
-              </button>
-            </div>
-          </div>
-        </section>
+        <ContainersModule v-if="activeMenu === 'containers'" />
+        <VisualEditorModule v-else-if="activeMenu === 'editor'" />
+        <ContentArticlesModule v-else-if="activeMenu === 'content'" />
+        <MediaAssetsModule v-else-if="activeMenu === 'media'" />
+        <TemplatesCatalogModule v-else-if="activeMenu === 'templates'" />
+        <CustomDomainsModule v-else-if="activeMenu === 'domains'" />
+        <AnalyticsTelemetryModule v-else-if="activeMenu === 'analytics'" />
+        <WebhooksApiModule v-else-if="activeMenu === 'webhooks'" />
+        <BillingPlanModule v-else-if="activeMenu === 'billing'" />
+        <InvoicesHistoryModule v-else-if="activeMenu === 'invoices'" />
+        <SupportTicketingModule v-else-if="activeMenu === 'tickets'" />
       </main>
     </div>
 
     <!-- ============================================================= -->
-    <!-- MODAL: BUAT WEBSITE / TAMBAH KONTAINER BARU                  -->
+    <!-- MODAL: BUAT SITUS & KONTAINER (HANDCRAFTED MINIMALIST SAAS)  -->
     <!-- ============================================================= -->
-    <div v-if="isCreateModalOpen" class="modal-scrim">
-      <div class="modal-card">
-        <div class="modal-top">
-          <div>
-            <h3>Buat Website & Deploy Kontainer Baru</h3>
-            <p>Pilih kategori dan tentukan subdomain untuk kontainer baru Anda.</p>
-          </div>
-          <button class="btn-modal-close" @click="isCreateModalOpen = false"><X :size="16" /></button>
-        </div>
-
-        <form @submit.prevent="handleCreateContainer" class="modal-body-form">
-          <div class="modal-form-item">
-            <label>Pilih Kategori Situs</label>
-            <div class="category-grid-selector">
-              <label
-                class="category-option-card"
-                :class="{ active: newSiteForm.category === 'portfolio' }"
-                @click="newSiteForm.category = 'portfolio'"
-              >
-                <Briefcase :size="18" />
-                <span>Portofolio Teknis</span>
-              </label>
-              <label
-                class="category-option-card"
-                :class="{ active: newSiteForm.category === 'blog' }"
-                @click="newSiteForm.category = 'blog'"
-              >
-                <BookOpen :size="18" />
-                <span>Blog & Media</span>
-              </label>
-              <label
-                class="category-option-card"
-                :class="{ active: newSiteForm.category === 'education' }"
-                @click="newSiteForm.category = 'education'"
-              >
-                <GraduationCap :size="18" />
-                <span>Pusat Edukasi</span>
-              </label>
-              <label
-                class="category-option-card"
-                :class="{ active: newSiteForm.category === 'business' }"
-                @click="newSiteForm.category = 'business'"
-              >
-                <ShoppingBag :size="18" />
-                <span>Bisnis & Jasa</span>
-              </label>
+    <Teleport to="body">
+      <div v-if="isCreateModalOpen" class="modal-backdrop" @click.self="isCreateModalOpen = false">
+        <div class="modal-dialog">
+          <!-- Header -->
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box">
+                <Layers :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Buat Situs Baru</h3>
+                <p class="modal-subheading">Inisialisasi kontainer Docker mandiri dengan routing Traefik v3.</p>
+              </div>
             </div>
-          </div>
-
-          <div class="modal-form-item">
-            <label>Nama Website / Brand</label>
-            <input
-              v-model="newSiteForm.name"
-              type="text"
-              placeholder="Contoh: Portofolio Ahmad, Tech Daily Blog..."
-              class="input-pro"
-              required
-            />
-          </div>
-
-          <div class="modal-form-item">
-            <label>Subdomain yang Diinginkan</label>
-            <div class="subdomain-composite-input">
-              <input
-                v-model="newSiteForm.subdomain"
-                type="text"
-                placeholder="nama-situs"
-                class="input-pro input-sub-prefix"
-                required
-              />
-              <span class="sub-suffix">.cloudcms.app</span>
-            </div>
-            <span class="input-note">SSL Let's Encrypt otomatis di-deploy oleh Traefik edge.</span>
-          </div>
-
-          <div class="modal-form-item">
-            <label>Peran / Slogan Pengenal</label>
-            <input
-              v-model="newSiteForm.role"
-              type="text"
-              placeholder="e.g. Senior Software Architect"
-              class="input-pro"
-            />
-          </div>
-
-          <div class="modal-footer-actions">
-            <button type="button" class="btn-modal-cancel" @click="isCreateModalOpen = false">Batal</button>
-            <button type="submit" class="btn-top-create">
-              <Rocket :size="15" />
-              <span>Deploy Kontainer Sekarang</span>
+            <button class="modal-close-button" @click="isCreateModalOpen = false" title="Tutup">
+              <X :size="16" />
             </button>
           </div>
-        </form>
+
+          <form @submit.prevent="handleCreateContainer" class="modal-form">
+            <!-- 1. Blueprint Selection -->
+            <div class="form-field-group">
+              <label class="field-title">Pilih Template Awal</label>
+              <div class="template-selector-grid">
+                <button
+                  type="button"
+                  v-for="tpl in [
+                    { id: 'portfolio', name: 'Portofolio', desc: 'Studi kasus & CV online', icon: Briefcase },
+                    { id: 'blog', name: 'Blog & Media', desc: 'Artikel & publikasi berita', icon: BookOpen },
+                    { id: 'education', name: 'Pusat Edukasi', desc: 'Silabus kursus & LMS', icon: GraduationCap },
+                    { id: 'business', name: 'Bisnis & UMKM', desc: 'Showcase produk & kontak', icon: ShoppingBag }
+                  ]"
+                  :key="tpl.id"
+                  class="template-option"
+                  :class="{ active: newSiteForm.category === tpl.id }"
+                  @click="newSiteForm.category = tpl.id as any"
+                >
+                  <div class="template-option-icon">
+                    <component :is="tpl.icon" :size="15" />
+                  </div>
+                  <div class="template-option-text">
+                    <div class="template-option-name">{{ tpl.name }}</div>
+                    <div class="template-option-desc">{{ tpl.desc }}</div>
+                  </div>
+                  <div class="template-option-radio">
+                    <div class="radio-dot"></div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Nama Website -->
+            <div class="form-field-group">
+              <label class="field-title" for="modal-site-name">
+                Nama Website
+                <span class="field-req-dot">*</span>
+              </label>
+              <input
+                id="modal-site-name"
+                v-model="newSiteForm.name"
+                type="text"
+                placeholder="Contoh: Portofolio Rizal Pratama"
+                class="field-text-input"
+                required
+              />
+            </div>
+
+            <!-- 3. Subdomain Field -->
+            <div class="form-field-group">
+              <label class="field-title" for="modal-subdomain">
+                Subdomain
+                <span class="field-req-dot">*</span>
+              </label>
+              <div class="url-input-container">
+                <span class="url-addon-prefix">
+                  <Globe :size="13" class="url-addon-icon" />
+                  https://
+                </span>
+                <input
+                  id="modal-subdomain"
+                  v-model="newSiteForm.subdomain"
+                  type="text"
+                  placeholder="nama-situs"
+                  class="url-core-input"
+                  required
+                />
+                <span class="url-addon-suffix">.cloudcms.app</span>
+              </div>
+              <p class="field-helper-text">
+                Rute edge Traefik otomatis menerbitkan sertifikat SSL TLS v1.3 Let's Encrypt.
+              </p>
+            </div>
+
+            <!-- 4. Headline / Peran -->
+            <div class="form-field-group">
+              <div class="field-title-flex">
+                <label class="field-title" for="modal-role">Headline atau Peran</label>
+                <span class="field-optional-badge">Opsional</span>
+              </div>
+              <input
+                id="modal-role"
+                v-model="newSiteForm.role"
+                type="text"
+                placeholder="e.g. Senior Software & Cloud Architect"
+                class="field-text-input"
+              />
+            </div>
+
+            <!-- 5. Resource Allocation Spec Note -->
+            <div class="resource-spec-callout">
+              <Server :size="13" class="spec-callout-icon" />
+              <div class="spec-callout-text">
+                <span>Alokasi runtime: </span>
+                <strong>0.5 vCPU</strong> • <strong>256 MB RAM</strong> (cgroups v2) • Traefik v3 Proxy
+              </div>
+            </div>
+
+            <!-- 6. Footer Actions -->
+            <div class="modal-footer-row">
+              <button type="button" class="btn-modal-ghost" @click="isCreateModalOpen = false">
+                Batal
+              </button>
+              <button type="submit" class="btn-modal-confirm">
+                <Plus :size="14" />
+                <span>Deploy Kontainer</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </Teleport>
+
+    <!-- ============================================================= -->
+    <!-- MODAL: DOCKER & TRAEFIK RUNTIME LOGS                          -->
+    <!-- ============================================================= -->
+    <Teleport to="body">
+      <div v-if="isLogsModalOpen && activeLogContainer" class="modal-backdrop" @click.self="isLogsModalOpen = false">
+        <div class="modal-dialog modal-dialog-lg">
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box">
+                <Terminal :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Log Runtime Kontainer</h3>
+                <p class="modal-subheading">Telemetri Docker container #{{ activeLogContainer.id }} via proxy Traefik v3.</p>
+              </div>
+            </div>
+            <button class="modal-close-button" @click="isLogsModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
+          </div>
+
+          <div class="terminal-container-view">
+            <div class="terminal-meta-bar">
+              <div class="terminal-meta-left">
+                <div class="terminal-meta-item">
+                  <span class="t-meta-lbl">STATUS:</span>
+                  <span class="t-meta-val" :class="activeLogContainer.status">{{ activeLogContainer.status.toUpperCase() }}</span>
+                </div>
+                <div class="terminal-meta-item">
+                  <span class="t-meta-lbl">CGROUPS:</span>
+                  <span class="t-meta-val">{{ activeLogContainer.cpuLimit }} • {{ activeLogContainer.ramUsage }}MB / {{ activeLogContainer.ramLimit }}MB</span>
+                </div>
+                <div class="terminal-meta-item">
+                  <span class="t-meta-lbl">ROUTE:</span>
+                  <span class="t-meta-val">https://{{ activeLogContainer.subdomain }}</span>
+                </div>
+              </div>
+              <div class="terminal-meta-right">
+                <span class="pulse-green-sm"></span>
+                <span class="t-stream-tag">Stream Live (Kafka/Docker)</span>
+              </div>
+            </div>
+
+            <div class="terminal-output-screen">
+              <div class="log-entry"><span class="log-ts">[09:20:11.204]</span> <span class="log-tag system">[system-init]</span> Spawning runtime sandbox for tenant {{ activeLogContainer.id }}</div>
+              <div class="log-entry"><span class="log-ts">[09:20:12.018]</span> <span class="log-tag docker">[docker-daemon]</span> Container {{ activeLogContainer.id }} initialized (cgroups v2: cpu_quota=50000/100000, mem_limit={{ activeLogContainer.ramLimit }}MB)</div>
+              <div class="log-entry"><span class="log-ts">[09:20:13.142]</span> <span class="log-tag traefik">[traefik-proxy]</span> Ingress router attached: Host(`{{ activeLogContainer.subdomain }}`) -> service '{{ activeLogContainer.id }}:80'</div>
+              <div class="log-entry"><span class="log-ts">[09:20:14.055]</span> <span class="log-tag tls">[lets-encrypt]</span> Wildcard challenge ACME TLS-ALPN-01 verified. Certificate auto-renewed</div>
+              <div class="log-entry"><span class="log-ts">[09:20:15.310]</span> <span class="log-tag nginx">[runtime-engine]</span> HTTP/2 & HTTP/3 (QUIC) fast-path listener initialized on 0.0.0.0:80</div>
+              <div class="log-entry"><span class="log-ts">[09:21:02.881]</span> <span class="log-tag health">[healthcheck]</span> Internal probe HTTP 127.0.0.1:80/healthz returned status 200 OK (0.4ms)</div>
+              <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:22:04.119]</span> <span class="log-tag traffic">[edge-inbound]</span> GET / 200 OK (TTFB: 1.6ms, 4.2KB) - Client IP: 103.144.20.12 - SSL TLS 1.3</div>
+              <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:24:18.490]</span> <span class="log-tag traffic">[edge-inbound]</span> GET /api/telemetry 204 No Content - Kafka event published</div>
+              <div class="log-entry" v-if="activeLogContainer.status === 'stopped'"><span class="log-ts">[09:22:30.501]</span> <span class="log-tag warn">[docker-daemon]</span> SIGTERM received from tenant dashboard. Container process halted cleanly (Standby)</div>
+              <div class="log-entry" v-if="activeLogContainer.status === 'provisioning'"><span class="log-ts">[09:25:01.002]</span> <span class="log-tag docker">[docker-daemon]</span> Re-allocating cgroups v2 resource tree and rebuilding Traefik route...</div>
+            </div>
+          </div>
+
+          <div class="modal-footer-row">
+            <button type="button" class="btn-modal-ghost" @click="copyContainerLogs">
+              <Copy :size="14" />
+              <span>Salin Log</span>
+            </button>
+            <button type="button" class="btn-modal-confirm" @click="isLogsModalOpen = false">
+              Tutup Konsol
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
-<style scoped>
+<style>
 /* ==========================================================================
-   ENTERPRISE DEVELOPER CLOUD CONSOLE (VERCEL / SUPABASE / RAILWAY GRADE)
+   HEROCMS STUDIO - BESPOKE ENTERPRISE DESIGN SYSTEM (CLEAN & NON-BOOTSTRAP)
    ========================================================================== */
 
 .app-shell {
@@ -1228,14 +538,31 @@ const handleLogout = () => {
   position: relative;
 }
 
-/* 1. LEFT SIDEBAR */
+/* Editor Immersive Mode: Hide Sidebar & Top Header for maximum wide workspace */
+.app-shell.editor-immersive-mode .app-sidebar {
+  display: none !important;
+}
+
+.app-shell.editor-immersive-mode .top-nav-header {
+  display: none !important;
+}
+
+.app-shell.editor-immersive-mode .content-scroll-pane {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+/* 1. LEFT SIDEBAR (GLASSMORPHIC & SLEEK) */
 .app-sidebar {
   width: 256px;
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-right: 1px solid #e2e8f0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(226, 232, 240, 0.9);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1263,12 +590,13 @@ const handleLogout = () => {
 .brand-icon {
   width: 32px;
   height: 32px;
-  background: #0f172a;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 
 .workspace-info {
@@ -1296,6 +624,7 @@ const handleLogout = () => {
   height: 6px;
   background: #10b981;
   border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .sidebar-nav-sections {
@@ -1320,7 +649,7 @@ const handleLogout = () => {
 .sidebar-nav-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .nav-link {
@@ -1337,7 +666,7 @@ const handleLogout = () => {
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: all 0.12s ease;
+  transition: all 0.15s ease;
 }
 
 .nav-link:hover:not(:disabled) {
@@ -1348,6 +677,7 @@ const handleLogout = () => {
 .nav-link.active {
   background: #0f172a;
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
 }
 
 .nav-link:disabled {
@@ -1421,6 +751,7 @@ const handleLogout = () => {
   flex: 1;
   background: #e2e8f0;
   border-radius: 2px;
+  transition: background-color 0.2s ease;
 }
 
 .gauge-seg.filled {
@@ -1455,7 +786,6 @@ const handleLogout = () => {
   gap: 10px;
   padding: 6px 8px;
   border-radius: 8px;
-  background: transparent;
 }
 
 .user-avatar-small {
@@ -1497,6 +827,7 @@ const handleLogout = () => {
   cursor: pointer;
   padding: 4px;
   display: flex;
+  transition: color 0.15s ease;
 }
 
 .btn-sidebar-logout:hover {
@@ -1509,12 +840,15 @@ const handleLogout = () => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .top-nav-header {
   height: 56px;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid #e2e8f0;
   padding: 0 40px;
   display: flex;
@@ -1570,7 +904,7 @@ const handleLogout = () => {
 .btn-top-create {
   background: #0f172a;
   color: #ffffff;
-  border: none;
+  border: 1px solid #0f172a;
   padding: 7px 14px;
   border-radius: 8px;
   font-size: 0.82rem;
@@ -1579,11 +913,13 @@ const handleLogout = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .btn-top-create:hover {
   background: #1e293b;
+  transform: translateY(-1px);
 }
 
 /* Toast */
@@ -1613,7 +949,7 @@ const handleLogout = () => {
   margin-left: 6px;
 }
 
-/* Content View (Full Width) */
+/* Full Width Content View */
 .content-scroll-pane {
   padding: 28px 40px 64px;
   width: 100%;
@@ -1665,12 +1001,15 @@ const handleLogout = () => {
   border-radius: 6px;
 }
 
-/* 4 Compact Stat Strips */
+/* ==========================================================================
+   BESPOKE TELEMETRY CARDS (NO GENERIC STAT BOXES)
+   ========================================================================== */
 .stats-overview-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 24px;
+  width: 100%;
 }
 
 @media (max-width: 1024px) {
@@ -1679,132 +1018,274 @@ const handleLogout = () => {
   }
 }
 
-.stat-box {
+.telemetry-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 4px 12px -2px rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.15s ease;
 }
 
-.stat-box-top {
+.telemetry-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -3px rgba(15, 23, 42, 0.06);
+}
+
+.telemetry-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
 }
 
-.stat-title {
+.telemetry-label {
   font-size: 0.68rem;
   font-weight: 700;
   color: #64748b;
   letter-spacing: 0.06em;
 }
 
-.stat-box-val {
-  font-size: 1.25rem;
-  font-weight: 700;
+.telemetry-glyph {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.telemetry-glyph.blue { background: #eff6ff; color: #2563eb; }
+.telemetry-glyph.emerald { background: #ecfdf5; color: #059669; }
+.telemetry-glyph.purple { background: #faf5ff; color: #9333ea; }
+
+.telemetry-val {
+  font-size: 1.3rem;
+  font-weight: 800;
   color: #0f172a;
+  letter-spacing: -0.02em;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.stat-box-denom {
+.telemetry-denom {
   font-size: 0.78rem;
   font-weight: 500;
   color: #64748b;
 }
 
-.stat-box-sub {
+.telemetry-sub {
   font-size: 0.72rem;
   color: #64748b;
   margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.text-emerald { color: #059669 !important; }
-
-.growth-chip {
-  font-size: 0.7rem;
-  background: #ecfdf5;
+.ready-state {
   color: #059669;
+  font-weight: 500;
+}
+
+.pulse-mini-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+}
+
+.badge-online {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #059669;
+  background: #ecfdf5;
   border: 1px solid #a7f3d0;
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 999px;
 }
 
-/* Search and Filter Toolbar */
+.badge-growth-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+/* ==========================================================================
+   BESPOKE SEARCH COMMAND & SEGMENTED CONTROL BAR (ZERO BOOTSTRAP)
+   ========================================================================== */
 .filter-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
-}
-
-.search-input-wrap {
-  position: relative;
-  width: 320px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94a3b8;
-  pointer-events: none;
-}
-
-.search-field {
+  margin-bottom: 22px;
   width: 100%;
-  padding: 8px 12px 8px 34px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 0.84rem;
-  background: #ffffff;
-  color: #0f172a;
-  outline: none;
 }
 
-.search-field:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.filter-chips {
+.search-command-shell {
+  position: relative;
   display: flex;
-  gap: 6px;
-}
-
-.filter-chip {
+  align-items: center;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 12px;
+  height: 42px;
+  width: 380px;
+  padding: 0 14px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.search-command-shell:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.search-lead-glyph {
+  color: #94a3b8;
+  margin-right: 10px;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.search-command-shell:focus-within .search-lead-glyph {
+  color: #2563eb;
+}
+
+.search-command-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.84rem;
+  color: #0f172a;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+}
+
+.search-command-input::placeholder {
+  color: #94a3b8;
+}
+
+.btn-clear-search {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
   cursor: pointer;
+  padding: 4px;
+  margin-right: 6px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
   transition: all 0.12s ease;
 }
 
-.filter-chip:hover {
-  background: #f8fafc;
+.btn-clear-search:hover {
+  background: #f1f5f9;
   color: #0f172a;
 }
 
-.filter-chip.active {
-  background: #0f172a;
-  border-color: #0f172a;
-  color: #ffffff;
+.shortcut-tag {
+  font-size: 0.7rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
+  flex-shrink: 0;
 }
 
-/* 3-Column Site Cards Grid (Matching 3-Container Quota) */
+/* Bespoke Segmented Pill Bar */
+.segmented-filter-bar {
+  display: inline-flex;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 3px;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.segment-pill {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.segment-pill:hover {
+  color: #0f172a;
+}
+
+.segment-pill.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.mini-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mini-status-dot.running {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.mini-status-dot.stopped {
+  background: #94a3b8;
+}
+
+.pill-count {
+  font-size: 0.7rem;
+  background: rgba(148, 163, 184, 0.18);
+  color: #475569;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+}
+
+.segment-pill.active .pill-count.green {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.segment-pill.active .pill-count.gray {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* ==========================================================================
+   3-COLUMN SITE CARDS GRID & BESPOKE CONTAINER INFRASTRUCTURE CARDS
+   ========================================================================== */
 .site-cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 22px;
   width: 100%;
 }
 
@@ -1822,24 +1303,26 @@ const handleLogout = () => {
 
 .pro-site-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px -4px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 14px;
-  transition: all 0.15s ease;
+  gap: 16px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .pro-site-card:hover {
   border-color: #cbd5e1;
-  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.09), 0 2px 6px rgba(15, 23, 42, 0.04);
+  transform: translateY(-2px);
 }
 
 .pro-site-card.card-stopped {
-  background: #fbfcfd;
+  background: #fbfcfe;
   border-color: #e2e8f0;
 }
 
@@ -1847,198 +1330,173 @@ const handleLogout = () => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .site-branding {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .site-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 9px;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.site-branding-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.site-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .site-title-text {
-  font-size: 0.98rem;
+  font-size: 0.96rem;
   font-weight: 700;
   color: #0f172a;
-  line-height: 1.3;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .site-template-badge {
   font-size: 0.72rem;
   color: #64748b;
+  font-weight: 500;
 }
 
-.pro-status-chip {
+.site-id-tag {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-family: ui-monospace, monospace;
+}
+
+/* Radar Status Pill */
+.radar-status-pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
+  gap: 6px;
+  padding: 4px 9px;
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
 }
 
-.pro-status-chip.status-running {
+.radar-status-pill.status-running {
   background: #ecfdf5;
   color: #059669;
   border: 1px solid #a7f3d0;
 }
 
-.pro-status-chip.status-stopped {
+.radar-status-pill.status-stopped {
   background: #f1f5f9;
   color: #64748b;
   border: 1px solid #e2e8f0;
 }
 
-.pro-status-chip.status-provisioning {
+.radar-status-pill.status-provisioning {
   background: #eff6ff;
   color: #2563eb;
   border: 1px solid #bfdbfe;
 }
 
-.dot-indicator {
+.radar-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
+  position: relative;
+  z-index: 2;
 }
 
-/* URL Bar */
+.radar-ping-ring {
+  position: absolute;
+  left: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  z-index: 1;
+}
+
+@keyframes radar-ping {
+  75%, 100% {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+/* Bespoke Terminal URL Pill */
 .site-url-box {
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: #f8fafc;
-  border: 1px solid #f1f5f9;
-  border-radius: 8px;
-  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 7px 12px;
 }
 
 .url-text-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  min-width: 0;
+}
+
+.url-glyph {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.url-mono {
   font-size: 0.78rem;
   color: #2563eb;
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .url-actions {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 
-.btn-icon-tiny {
+.btn-url-action {
   width: 24px;
   height: 24px;
   border: none;
   background: transparent;
   color: #64748b;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-icon-tiny:hover {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-/* Compact 2-Col Gauges */
-.resource-gauges-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 10px 12px;
-  background: #fafbfc;
-  border-radius: 8px;
-  border: 1px solid #f1f5f9;
-}
-
-.gauge-col {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.gauge-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  color: #475569;
-  font-weight: 600;
-}
-
-.gauge-limit {
-  font-size: 0.68rem;
-  color: #94a3b8;
-  font-weight: 400;
-}
-
-.mini-bar-track {
-  height: 5px;
-  background: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.mini-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.3s ease;
-}
-
-/* Card Actions Footer */
-.card-action-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 10px;
-  border-top: 1px solid #f1f5f9;
-}
-
-.btn-action-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #0f172a;
-  color: #ffffff;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-
-.btn-action-primary:hover {
-  background: #1e293b;
-}
-
-.runtime-btn-group {
-  display: flex;
-  gap: 4px;
-}
-
-.btn-icon-ctrl {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #64748b;
+  border-radius: 5px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -2046,9 +1504,134 @@ const handleLogout = () => {
   transition: all 0.12s ease;
 }
 
+.btn-url-action:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Bespoke Dual Infrastructure Meters */
+.resource-gauges-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 12px 14px;
+  background: #fafbfc;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+}
+
+.gauge-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gauge-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.72rem;
+}
+
+.gauge-title {
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.gauge-val {
+  color: #0f172a;
+  font-size: 0.74rem;
+}
+
+.gauge-sub {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.custom-meter-track {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+
+.custom-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.fill-blue { background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%); }
+.fill-emerald { background: linear-gradient(90deg, #059669 0%, #34d399 100%); }
+
+.meter-glow {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #ffffff;
+  opacity: 0.75;
+  border-radius: 999px;
+}
+
+/* Card Action Buttons */
+.card-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-action-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #09090b;
+  color: #ffffff;
+  border: 1px solid #09090b;
+  padding: 7px 15px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-action-primary:hover {
+  background: #27272a;
+  border-color: #27272a;
+}
+
+.runtime-btn-group {
+  display: flex;
+  gap: 5px;
+}
+
+.btn-icon-ctrl {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.14s ease;
+}
+
 .btn-icon-ctrl:hover:not(:disabled) {
   background: #f8fafc;
   color: #0f172a;
+  border-color: #cbd5e1;
 }
 
 .btn-play {
@@ -2057,14 +1640,126 @@ const handleLogout = () => {
   background: #ecfdf5;
 }
 
+.btn-play:hover {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
 .btn-pause {
   color: #d97706;
+}
+
+.btn-pause:hover {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.btn-term {
+  color: #09090b;
+}
+
+.btn-term:hover {
+  background: #f4f4f5;
+  border-color: #09090b;
 }
 
 .btn-del:hover {
   background: #fef2f2;
   border-color: #fecaca;
   color: #dc2626;
+}
+
+/* Available Slot Placeholder Cards */
+.empty-slot-card {
+  border: 1.5px dashed #d4d4d8;
+  border-radius: 16px;
+  background: #fafafa;
+  min-height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  padding: 24px;
+}
+
+.empty-slot-card:hover {
+  border-color: #09090b;
+  background: #f4f4f5;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.06);
+}
+
+.slot-dashed-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.slot-icon-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #09090b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.empty-slot-card:hover .slot-icon-circle {
+  transform: scale(1.06);
+  border-color: #09090b;
+}
+
+.slot-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.slot-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #71717a;
+  letter-spacing: 0.06em;
+  font-family: ui-monospace, monospace;
+}
+
+.slot-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #09090b;
+}
+
+.slot-specs {
+  font-size: 0.74rem;
+  color: #71717a;
+}
+
+.btn-slot-create {
+  margin-top: 4px;
+  background: #09090b;
+  border: 1px solid #09090b;
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.empty-slot-card:hover .btn-slot-create {
+  background: #27272a;
+  border-color: #27272a;
 }
 
 /* Empty State */
@@ -2166,7 +1861,7 @@ const handleLogout = () => {
 .btn-deploy-live {
   background: #0f172a;
   color: #ffffff;
-  border: none;
+  border: 1px solid #0f172a;
   padding: 7px 14px;
   border-radius: 6px;
   font-size: 0.8rem;
@@ -2175,6 +1870,7 @@ const handleLogout = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .btn-deploy-live:hover:not(:disabled) {
@@ -2235,6 +1931,7 @@ const handleLogout = () => {
 .input-pro:focus {
   outline: none;
   border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .textarea-pro {
@@ -2284,6 +1981,10 @@ const handleLogout = () => {
   gap: 5px;
 }
 
+.btn-ai-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
 .colors-row {
   display: flex;
   gap: 8px;
@@ -2295,6 +1996,7 @@ const handleLogout = () => {
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
+  transition: transform 0.1s ease;
 }
 
 .color-dot.selected {
@@ -2501,6 +2203,13 @@ const handleLogout = () => {
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.15s ease;
+}
+
+.tpl-market-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08);
 }
 
 .tpl-card-header {
@@ -2603,6 +2312,11 @@ const handleLogout = () => {
   font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-use-tpl:hover {
+  background: #1e293b;
 }
 
 /* Analytics */
@@ -2854,147 +2568,451 @@ const handleLogout = () => {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  transition: all 0.15s ease;
 }
 
 .btn-add-slot:hover {
   background: #f8fafc;
+  border-color: #94a3b8;
 }
 
-/* Modal */
-.modal-scrim {
+/* ==========================================================================
+   HANDCRAFTED MINIMALIST SAAS MODAL (LINEAR / VERCEL GRADE)
+   ========================================================================== */
+.modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  box-sizing: border-box;
+  animation: modalFade 0.15s ease-out;
 }
 
-.modal-card {
+@keyframes modalFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-dialog {
   background: #ffffff;
+  border: 1px solid #e4e4e7;
   border-radius: 14px;
   width: 100%;
-  max-width: 480px;
-  padding: 24px;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
+  max-width: 580px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 28px;
+  box-sizing: border-box;
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  animation: dialogScale 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 100000;
 }
 
-.modal-top {
+.modal-dialog-lg {
+  max-width: 820px !important;
+}
+
+@keyframes dialogScale {
+  from { opacity: 0; transform: scale(0.97) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
+  align-items: center;
+  margin-bottom: 22px;
+  width: 100%;
 }
 
-.modal-top h3 {
+.modal-header-leading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-header-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  color: #18181b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-heading {
   font-size: 1.15rem;
-  color: #0f172a;
+  font-weight: 700;
+  color: #09090b;
+  letter-spacing: -0.015em;
 }
 
-.modal-top p {
-  font-size: 0.78rem;
-  color: #64748b;
+.modal-subheading {
+  font-size: 0.8rem;
+  color: #71717a;
   margin-top: 2px;
+  line-height: 1.4;
 }
 
-.btn-modal-close {
+.modal-close-button {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #71717a;
   cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+  margin: 0;
 }
 
-.modal-body-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.modal-close-button:hover {
+  background: #f4f4f5;
+  color: #09090b;
 }
 
-.modal-form-item {
+.modal-form {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.field-title-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.field-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #27272a;
+  letter-spacing: -0.01em;
+}
+
+.field-req-dot {
+  color: #e11d48;
+  margin-left: 2px;
+}
+
+.field-optional-badge {
+  font-size: 0.72rem;
+  color: #a1a1aa;
+  font-weight: 400;
+}
+
+/* Template Selector: Clean Tactile Radio Cards */
+.template-selector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.template-option {
+  padding: 12px 14px;
+  border: 1px solid #e4e4e7;
+  border-radius: 9px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.14s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.template-option:hover {
+  border-color: #a1a1aa;
+  background: #fafafa;
+}
+
+.template-option.active {
+  border-color: #09090b;
+  background: #fafafa;
+  box-shadow: 0 0 0 1px #09090b;
+}
+
+.template-option-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: #f4f4f5;
+  color: #71717a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.14s ease;
+}
+
+.template-option:hover .template-option-icon {
+  background: #e4e4e7;
+  color: #18181b;
+}
+
+.template-option.active .template-option-icon {
+  background: #09090b;
+  color: #ffffff;
+}
+
+.template-option-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid #d4d4d8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: border-color 0.14s ease;
+}
+
+.template-option.active .template-option-radio {
+  border-color: #09090b;
+}
+
+.radio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #09090b;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.14s ease;
+}
+
+.template-option.active .radio-dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.template-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.template-option-name {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #09090b;
+}
+
+.template-option-desc {
+  font-size: 0.72rem;
+  color: #71717a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Handcrafted Input Fields */
+.field-text-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.86rem;
+  color: #09090b;
+  font-family: inherit;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  box-sizing: border-box;
+}
+
+.field-text-input::placeholder {
+  color: #a1a1aa;
+}
+
+.field-text-input:focus {
+  outline: none;
+  border-color: #09090b;
+  box-shadow: 0 0 0 1px #09090b;
+}
+
+/* Subdomain Composite URL */
+.url-input-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  height: 40px;
+  background: #ffffff;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 12px;
+  gap: 6px;
+}
+
+.url-input-container:focus-within {
+  border-color: #09090b;
+  box-shadow: 0 0 0 1px #09090b;
+}
+
+.url-addon-prefix {
+  color: #a1a1aa;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  user-select: none;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
   gap: 5px;
 }
 
-.modal-form-item label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #334155;
+.url-addon-icon {
+  color: #a1a1aa;
+  flex-shrink: 0;
 }
 
-.category-grid-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+.url-core-input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #09090b;
+  min-width: 0;
 }
 
-.category-option-card {
-  padding: 8px 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: #f8fafc;
+.url-core-input::placeholder {
+  color: #a1a1aa;
+  font-weight: 400;
+}
+
+.url-addon-suffix {
+  color: #71717a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  user-select: none;
+  flex-shrink: 0;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+.field-helper-text {
+  font-size: 0.73rem;
+  color: #71717a;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+/* Minimalist Hardware Resource Note */
+.resource-spec-callout {
+  background: #f4f4f5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.75rem;
+  color: #52525b;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.76rem;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.spec-callout-icon {
+  color: #71717a;
+  flex-shrink: 0;
+}
+
+.spec-callout-text strong {
+  color: #18181b;
   font-weight: 600;
-  color: #475569;
-  cursor: pointer;
 }
 
-.category-option-card.active {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
-}
-
-.subdomain-composite-input {
-  display: flex;
-  align-items: center;
-}
-
-.input-sub-prefix {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.sub-suffix {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-left: none;
-  padding: 8px 10px;
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
-  font-size: 0.8rem;
-  color: #64748b;
-  font-family: monospace;
-}
-
-.input-note {
-  font-size: 0.7rem;
-  color: #64748b;
-}
-
-.modal-footer-actions {
+/* Modal Actions */
+.modal-footer-row {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   margin-top: 8px;
-  padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  padding-top: 18px;
+  border-top: 1px solid #f4f4f5;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.btn-modal-cancel {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  padding: 7px 12px;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
+.btn-modal-ghost {
+  background: transparent;
+  border: 1px solid #e4e4e7;
+  color: #52525b;
+  font-size: 0.84rem;
+  font-weight: 500;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-modal-ghost:hover {
+  background: #f4f4f5;
+  color: #09090b;
+  border-color: #d4d4d8;
+}
+
+.btn-modal-confirm {
+  background: #09090b;
+  color: #ffffff;
+  border: 1px solid #09090b;
+  font-size: 0.84rem;
+  font-weight: 500;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.12s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-modal-confirm:hover {
+  background: #27272a;
+  border-color: #27272a;
 }
 
 .spinner-tiny {
@@ -3010,12 +3028,855 @@ const handleLogout = () => {
   to { transform: rotate(360deg); }
 }
 
+/* Terminal Logs Dialog (Enlarged Pro Developer Sizing) */
+.modal-dialog-lg {
+  max-width: 880px;
+  width: 100%;
+}
+
+.terminal-container-view {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.terminal-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  background: #18181b;
+  border-bottom: 1px solid #27272a;
+  font-size: 0.78rem;
+}
+
+.terminal-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.terminal-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.t-stream-tag {
+  color: #a1a1aa;
+  font-size: 0.74rem;
+  font-weight: 500;
+}
+
+.terminal-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.t-meta-lbl {
+  color: #71717a;
+  font-weight: 600;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+}
+
+.t-meta-val {
+  color: #e4e4e7;
+  font-weight: 500;
+}
+
+.t-meta-val.running {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.t-meta-val.stopped {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.t-meta-val.provisioning {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.terminal-output-screen {
+  padding: 18px 20px;
+  min-height: 320px;
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #d4d4d8;
+  word-break: break-word;
+}
+
+.log-ts {
+  color: #71717a;
+  flex-shrink: 0;
+}
+
+.log-tag {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.log-tag.system { color: #c084fc; }
+.log-tag.docker { color: #60a5fa; }
+.log-tag.traefik { color: #34d399; }
+.log-tag.tls { color: #a78bfa; }
+.log-tag.nginx { color: #f472b6; }
+.log-tag.health { color: #4ade80; }
+.log-tag.traffic { color: #38bdf8; }
+.log-tag.warn { color: #fbbf24; }
+
 .fade-in-section {
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.18s ease-out forwards;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   ENTERPRISE SUITE MODULE STYLES (TABLES, MEDIA, DOMAINS, INVOICES, MODALS)
+   ========================================================================== */
+
+/* Pro Table & Layout */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.pro-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.pro-table th {
+  padding: 10px 14px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #71717a;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  white-space: nowrap;
+}
+
+.pro-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f4f4f5;
+  color: #18181b;
+  vertical-align: middle;
+}
+
+.pro-table tbody tr:hover td {
+  background: #fbfbfb;
+}
+
+.pro-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Content Module */
+.article-title-cell strong {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #09090b;
+  display: block;
+}
+
+.article-slug-text {
+  font-size: 0.72rem;
+  color: #71717a;
+  font-family: monospace;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: #f4f4f5;
+  color: #3f3f46;
+  border: 1px solid #e4e4e7;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  letter-spacing: 0.03em;
+}
+
+.status-badge.badge-published {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.status-badge.badge-draft {
+  background: #f4f4f5;
+  color: #71717a;
+  border: 1px solid #e4e4e7;
+}
+
+.views-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #18181b;
+}
+
+.date-cell {
+  font-size: 0.75rem;
+  color: #71717a;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.btn-action-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  color: #71717a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-action-icon:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+.btn-action-icon.danger:hover {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.btn-action-icon.external:hover {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+/* Media Storage Module */
+.storage-metric-panel {
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.storage-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.storage-text-block strong {
+  font-size: 0.92rem;
+  color: #09090b;
+  display: block;
+}
+
+.storage-text-block span {
+  font-size: 0.78rem;
+  color: #71717a;
+}
+
+.storage-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.storage-prog-track {
+  width: 100%;
+  height: 7px;
+  background: #e4e4e7;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.storage-prog-fill {
+  height: 100%;
+  background: #09090b;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.media-assets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.media-card {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.15s ease;
+}
+
+.media-card:hover {
+  border-color: #a1a1aa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.media-thumb-box {
+  height: 130px;
+  background: #f4f4f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.media-thumb-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-meta-box {
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.media-name-txt {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #09090b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  display: block;
+}
+
+.media-detail-txt {
+  font-size: 0.72rem;
+  color: #71717a;
+  display: block;
+  margin-top: 2px;
+}
+
+.media-del-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #a1a1aa;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.media-del-btn:hover {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+/* Custom Domains Module */
+.add-domain-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.domain-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #09090b;
+}
+
+.dns-target-code {
+  font-family: monospace;
+  font-size: 0.74rem;
+  background: #f4f4f5;
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: #3f3f46;
+}
+
+.ssl-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid #a7f3d0;
+}
+
+.dns-records-helper {
+  margin-top: 20px;
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.dns-tip-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.76rem;
+  color: #71717a;
+  background: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e4e4e7;
+}
+
+/* Webhooks & API Module */
+.api-key-box {
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.api-key-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.api-key-header h4 {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #09090b;
+  margin: 0;
+}
+
+.api-key-header p {
+  font-size: 0.75rem;
+  color: #71717a;
+  margin: 3px 0 0 0;
+}
+
+.btn-copy-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #18181b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-copy-token:hover {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+}
+
+.api-token-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.api-token-display code {
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: #09090b;
+}
+
+.btn-reveal-token {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #71717a;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.btn-reveal-token:hover {
+  color: #09090b;
+}
+
+.webhook-url-code {
+  font-family: monospace;
+  font-size: 0.74rem;
+  color: #09090b;
+  background: #f4f4f5;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.event-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.event-badge {
+  font-size: 0.68rem;
+  font-weight: 500;
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #bfdbfe;
+}
+
+.btn-test-webhook {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #18181b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-test-webhook:hover {
+  background: #f4f4f5;
+  border-color: #a1a1aa;
+}
+
+/* Invoices Module */
+.invoice-id-code {
+  font-family: monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #09090b;
+}
+
+.inv-plan-cell strong {
+  font-size: 0.82rem;
+  color: #09090b;
+  display: block;
+}
+
+.inv-period-text {
+  font-size: 0.72rem;
+  color: #71717a;
+}
+
+.payment-method-tag {
+  font-size: 0.74rem;
+  color: #3f3f46;
+}
+
+.total-price-cell {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #09090b;
+}
+
+.btn-invoice-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: #09090b;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-invoice-view:hover {
+  background: #27272a;
+}
+
+.btn-invoice-dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #71717a;
+  border: 1px solid #e4e4e7;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-invoice-dl:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+/* Official Tax Invoice Modal Paper Styling */
+.invoice-doc-body {
+  padding: 20px 24px;
+  background: #fafafa;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.invoice-paper {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  padding: 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.inv-paper-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #f4f4f5;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.inv-company-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.inv-brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #09090b;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.inv-brand-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #09090b;
+  margin: 0 0 2px 0;
+}
+
+.inv-brand-sub {
+  font-size: 0.72rem;
+  color: #71717a;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.inv-badge-block {
+  text-align: right;
+}
+
+.inv-paid-seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid #a7f3d0;
+  letter-spacing: 0.04em;
+}
+
+.inv-number-stamp {
+  font-family: monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #71717a;
+  margin-top: 6px;
+}
+
+.inv-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f4f4f5;
+  margin-bottom: 20px;
+}
+
+.inv-meta-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inv-meta-hdr {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  letter-spacing: 0.05em;
+}
+
+.inv-meta-val {
+  font-size: 0.84rem;
+  color: #09090b;
+  margin-top: 2px;
+}
+
+.inv-meta-sub {
+  font-size: 0.72rem;
+  color: #71717a;
+}
+
+.inv-table-wrap {
+  margin-bottom: 20px;
+}
+
+.inv-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.inv-items-table th {
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+  padding: 8px 12px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #71717a;
+  letter-spacing: 0.04em;
+  text-align: left;
+}
+
+.inv-items-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f4f4f5;
+  color: #18181b;
+}
+
+.inv-item-desc {
+  font-size: 0.7rem;
+  color: #71717a;
+  margin: 2px 0 0 0;
+}
+
+.inv-summary-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+  align-items: flex-start;
+  padding-top: 12px;
+}
+
+.inv-note-box {
+  font-size: 0.72rem;
+  color: #71717a;
+  background: #fafafa;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #f4f4f5;
+}
+
+.inv-note-box strong {
+  color: #09090b;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.inv-note-box p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.inv-calc-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-calc-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #71717a;
+}
+
+.inv-calc-line strong {
+  color: #09090b;
+}
+
+.inv-calc-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #e4e4e7;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #09090b;
 }
 </style>

@@ -117,58 +117,70 @@ graph TD
 * **Model Bisnis (CaaS - Container-as-a-Service CMS):**
   - Pelanggan berlangganan paket yang memberikan kuota kontainer Docker terisolasi (misal: Starter `0/1 Kontainer`, Pro `1/3 Kontainer`, Business `3/5 Kontainer`, Enterprise `10+ Kontainer`).
   - Setiap website berjalan di dalam kontainer Docker terdedikasi miliknya sendiri dengan alokasi cgroups CPU dan memori RAM terisolasi.
-* **Arsitektur Menu & Navigasi HeroCMS Studio (9 Menu Utama):**
-  1. **Ringkasan & Beranda (Overview & Quota):**
+* **Arsitektur Menu & Navigasi HeroCMS Studio (10 Modul Enterprise):**
+  1. **Situs & Kontainer (My Containers & Multi-Site Hub):**
      - Indikator pemakaian kuota kontainer pelanggan (misal: `1/3 Kontainer Digunakan`, `2 Slot Kosong`).
      - Kartu status agregat (Total Kunjungan, Rata-rata Latensi TTFB Edge Traefik, Health Check server).
      - Tombol aksi cepat *"Buat Website Baru (+ Buat Kontainer)"*.
-  2. **Kontainer & Situs Saya (My Containers & Multi-Site Hub):**
-     - Daftar kartu seluruh kontainer milik pelanggan dengan visual status yang jelas:
-       - `● Running (Online)`: Kontainer aktif melayani trafik web via Traefik.
-       - `⏸ Stopped (Paused)`: Kontainer dimatikan sementara (menghemat CPU/RAM, menyajikan halaman pemeliharaan statis).
-       - `⏳ Provisioning (Deploying)`: Proses build atau migrasi rolling-update via Golang orchestrator.
-       - `⚠️ Error / Degraded`: Kontainer mengalami crash loop, dilengkapi log diagnosis instan.
-     - **Kontrol Siklus Hidup Kontainer (CRUD Runtime):**
-       - **Start:** Menghidupkan kembali kontainer yang berstatus stopped.
-       - **Stop:** Menghentikan sementara kontainer tanpa menghapus data volume.
-       - **Restart:** Me-restart kontainer secara graceful untuk menyegarkan cache runtime.
-       - **Hapus (Destroy):** Menghapus kontainer dan volume secara permanen, mengembalikan 1 slot kuota ke pool langganan pelanggan (misal: dari `3/3` kembali menjadi `2/3`).
-     - **Pemantauan Resource Real-Time:** Meter penggunaan CPU (0.5 vCPU limit) dan memori RAM (256MB limit) per kontainer berbasis Linux cgroups v2.
-  3. **Editor Desain & Konten Visual (Studio Visual Page Builder):**
-     - Editor visual profesional tingkat lanjut (mirip Gutenberg / Notion / Webflow modern) untuk menyesuaikan konten dan tata letak secara *live*:
-       - **Header & Hero Section Editor:** Judul, slogan, foto profil, call-to-action, badges.
-       - **Blok Konten Modular:** Blok artikel, showcase proyek, testimoni, silabus materi, galeri media, dan formulir kontak interaktif.
-       - **Pengatur Gaya & Desain Global:** Pilihan palet warna harmonis (Brand Blue, Slate Navy, Emerald), tipografi modern (Plus Jakarta Sans, JetBrains Mono), dan radius kartu.
-       - **Simulator Responsif 3-Perangkat:** Pratinjau langsung untuk mode Desktop, Tablet, dan Mobile.
-       - **Tombol "Terbitkan ke Kontainer (Live)":** Memicu pembaruan instan ke kontainer Docker aktif dalam hitungan detik.
-  4. **Katalog Template & Toko Tema (Curated Template Store):**
-     - Pilihan template resmi berstandar industri dengan pricelist dan tiering:
-       - **Portofolio Teknis:** Untuk software engineer, arsitek cloud, dan desainer (Showcase proyek, riwayat GitHub, CV download, kontak webhook).
-       - **Blog Media & Editorial:** Untuk jurnalis dan penerbit artikel (Multi-author, estimasi waktu baca, SEO OpenGraph, RSS feed).
-       - **Pusat Edukasi & LMS:** Untuk institusi kursus dan akademi (Silabus modul bertingkat, daftar pengajar, materi belajar).
-       - **Showcase Bisnis Mikro & UMKM:** Untuk produk & jasa mandiri (Katalog responsif, tombol order direct WhatsApp, integrasi payment link).
-     - **Tiering Lisensi Template:**
-       - *Standard Template:* Termasuk gratis dalam seluruh paket langganan.
-       - *Pro / Premium Template:* Template dengan animasi interaktif khusus dan layout canggih yang dapat dibuka via add-on atau paket Pro.
-  5. **Domain & Jaringan (Traefik Ingress & Custom Domains):**
-     - Alokasi subdomain otomatis tanpa konfigurasi rumit (misal: `https://<nama-tenant>.cloudcms.app`).
-     - Manajemen Custom Domain (misal: `https://rizalpratama.com`) dengan pengecekan propagasi DNS CNAME otomatis dan penerbitan sertifikat SSL Let's Encrypt TLS v1.3.
-  6. **Analitik Real-Time & Wawasan Pengunjung (Telemetry Insights):**
+     - Daftar kartu seluruh kontainer milik pelanggan dengan visual status yang jelas (`Running`, `Stopped`, `Provisioning`, `Degraded`).
+     - **Kontrol Siklus Hidup Kontainer (CRUD Runtime):** Start, Stop, Restart, Hapus (Destroy) dengan cgroups v2 resource limit (0.5 vCPU, 256MB RAM) dan streaming live logs.
+  2. **Editor Desain & Konten Visual (Studio Visual Page Builder):**
+     - Editor visual tingkat lanjut untuk menyesuaikan konten dan tata letak secara *live*:
+       - Header & Hero Section, Blok Konten Modular, Gaya & Desain Global (Color tokens, typography, border radius).
+       - Simulator Responsif 3-Perangkat: Pratinjau langsung untuk mode Desktop, Tablet, dan Mobile.
+       - Tombol *"Terbitkan ke Kontainer (Live)"*: Memicu pembaruan instan ke kontainer Docker aktif dalam hitungan detik.
+  3. **Pengelola Konten: Artikel & Halaman (Publishing Engine):**
+     - Manajemen artikel blog, studi kasus, dan halaman statis mandiri terpisah dari layout builder.
+     - Status artikel (`Published`, `Draft`), slug URL SEO-friendly otomatis, kategori, penghitung views, dan modal penulisan artikel baru.
+  4. **Media Library & Penyimpanan S3 (Asset Storage Engine):**
+     - Galeri aset gambar terpusat yang terintegrasi dengan S3/MinIO bucket.
+     - Progress meter penggunaan penyimpanan cloud (misal: `120 MB / 2 GB`), filter dimensi/tipe, dan upload instan.
+  5. **Katalog Template & Toko Tema (Curated Template Store):**
+     - Pilihan template resmi berstandar industri: Portofolio Teknis, Blog Media & Editorial, Pusat Edukasi & LMS, Showcase Bisnis Mikro & UMKM.
+     - Tiering Lisensi Template: *Standard Template* gratis dalam paket, *Pro / Premium Template* dengan layout dan micro-animasi eksklusif.
+  6. **Custom Domain & Pengaturan DNS (Traefik Edge Network):**
+     - Alokasi subdomain otomatis (`https://<nama-tenant>.cloudcms.app`).
+     - Pasang Custom Domain pribadi (misal: `https://bisnisku.com`) dengan tabel panduan DNS CNAME & A-Record Traefik.
+     - Pengecekan propagasi DNS dan penerbitan sertifikat SSL otomatis Let's Encrypt TLS v1.3.
+  7. **Analitik Real-Time & Wawasan Pengunjung (Telemetry Insights):**
      - Agregasi data hit pengunjung secepat kilat menggunakan Redis Sorted Sets (`ZSET`) dan bus event Kafka non-blocking.
      - Peringkat artikel/halaman terpopuler secara real-time (*Top 5 Most Viewed*).
-     - Grafik tren kunjungan harian, negara asal pengunjung, dan waktu muat rata-rata (TTFB).
-  7. **Asisten AI & Otomasi Konten (Hero AI Copilot):**
-     - Pembuat draf artikel dan kurikulum otomatis berbasis prompt pengguna.
-     - Generator meta SEO (Title Tag, Meta Description, OpenGraph tags).
-     - Saran optimasi tata letak situs berbasis analisis keterbacaan pengunjung.
-  8. **Paket, Kuota & Penagihan (Billing & Quotas):**
-     - Rincian paket aktif pelanggan, tanggal pembaruan, dan invoice otomatis.
-     - Tambah slot kontainer on-demand (misal: tambah +1 kontainer seharga Rp 49.000/bln tanpa perlu ganti paket utama).
-     - Riwayat transaksi dan metode pembayaran (VA, QRIS, Kartu Kredit via Midtrans/Stripe).
-  9. **Pengaturan Akun & Tim (Security & Workspace Settings):**
-     - Manajemen profil akun, email notifikasi, autentikasi dua faktor (2FA).
-     - Manajemen peran kolaborator (Owner, Editor Konten, Viewer).
-     - Webhook token untuk integrasi eksternal (Telegram, Discord, Slack).
+     - Grafik tren kunjungan harian, negara asal pengunjung, dan waktu muat rata-rata (TTFB 1.8ms).
+  8. **Webhooks & API Keys (Developer & Headless Integrations):**
+     - Pengelolaan token API Tenant (Developer Access) untuk integrasi headless CMS dan CI/CD pipeline via cURL/SDK.
+     - Konfigurasi endpoint Webhook keluar (Discord, Slack, Telegram, WhatsApp gateway) saat event publikasi atau pengiriman formulir pengunjung.
+  9. **Kapasitas & Paket Langganan (Resource Allocation & Plans):**
+     - Rincian alokasi cgroups (CPU, RAM, Bandwidth) paket aktif pelanggan.
+     - Tambah slot kontainer on-demand (+1 kontainer Docker) dan opsi upgrade tiering transparan.
+  10. **Faktur Pajak & Riwayat Tagihan Resmi (SaaS Billing Ledger):**
+      - Riwayat faktur resmi ber-NPWP PT Hero Digital Multitek untuk pembukuan dan pajak perusahaan pelanggan.
+      - Status pembayaran lunas terverifikasi bank, kalkulasi PPN 11% otomatis sesuai regulasi, dan unduh bukti pembayaran faktur teks/PDF.
+
+* **Integrasi Mandatori Progressive Web App (PWA) untuk Seluruh Dashboard:**
+  Semua program dashboard platform (baik **Program 2: Dashboard CMS Studio Pelanggan** maupun **Program 1: SuperAdmin Console**) **wajib mendukung Progressive Web App (PWA)** secara penuh untuk menghadirkan pengalaman aplikasi desktop & mobile natif:
+  1. **Web App Manifest Standar Industri (`manifest.webmanifest`):**
+     - **Identitas Aplikasi:** `name: "HeroCMS Studio"`, `short_name: "HeroStudio"`, `start_url: "/"`.
+     - **Tampilan Standalone:** `display: "standalone"`, `orientation: "any"`, menghilangkan seluruh chrome/address bar browser sehingga terasa 100% seperti aplikasi native desktop (macOS/Windows/Linux) dan mobile (Android/iOS).
+     - **Theming & Palet Warna:** `theme_color: "#09090b"` (menyesuaikan status bar mobile/desktop), `background_color: "#ffffff"`.
+     - **Ikon Adaptif & Maskable:** Menyediakan ikon resolusi tinggi 192x192, 512x512, SVG vektor tajam, dan ikon *maskable* untuk adaptasi bentuk ikon di Android.
+     - **App Shortcuts Launcher:** Shortcut cepat langsung dari ikon aplikasi di taskbar/homescreen:
+       - *"Deploy Baru"* -> mengarah langsung ke modal pembuatan kontainer.
+       - *"Tulis Artikel"* -> mengarah langsung ke modul penulisan artikel.
+       - *"Telemetri"* -> membuka ringkasan analitik real-time.
+  2. **Strategi Caching Multi-Tier via Service Worker (Workbox / Vite PWA):**
+     - **Tier 1 - App Shell Pre-caching (Cache-First):** Bundle HTML, file JS Vue terkompilasi, CSS, font (Plus Jakarta Sans/Inter), dan ikon Lucide di-pre-cache. Hasilnya: aplikasi terbuka seketika (*instant startup < 200ms*) bahkan saat offline atau jaringan lambat.
+     - **Tier 2 - Dynamic Telemetry & Container Control (Network-First with Fallback):** Data kritis seperti streaming log kontainer Docker, metrik Kafka, dan status penagihan menggunakan strategi *Network-First* untuk menjamin data selalu segar dari server origin. Jika koneksi terputus, Service Worker menyajikan state snapshot terakhir dari cache lokal dengan indikator visual *"Mode Offline - Data Terakhir Tersimpan"*.
+     - **Tier 3 - Media Assets & Templates (Stale-While-Revalidate):** Thumbnail gambar S3 dan pratinjau template disimpan dalam cache lokal terpisah dengan batasan ukuran (LRU cache max 50MB) agar galeri media terbuka sangat cepat tanpa menguras kuota bandwidth.
+  3. **Penulisan Konten Offline (Offline Drafting & Background Sync):**
+     - Tenant dapat terus mengetik dan mengedit artikel serta konfigurasi tema meskipun koneksi internet terputus (data tersimpan di IndexedDB browser).
+     - Memanfaatkan **Background Sync API** untuk secara otomatis menyinkronkan draf artikel dan konfigurasi situs ke backend begitu perangkat kembali terhubung ke jaringan internet.
+  4. **Notifikasi Web Push (Web Push Notifications API):**
+     - Pengiriman notifikasi push langsung ke desktop/ponsel tenant (menggunakan kunci VAPID terenkripsi):
+       - Notifikasi saat deployment kontainer selesai (*"Kontainer portofolio Anda telah aktif online di routing Traefik"*).
+       - Peringatan keamanan atau lonjakan trafik (*"Trafik website meningkat 300% dalam 10 menit terakhir"*).
+       - Pengingat siklus penagihan dan konfirmasi pelunasan faktur invoice resmi.
+  5. **Antarmuka Instalasi Natif (In-App Install Prompt Banner):**
+     - Dashboard mendeteksi event browser `beforeinstallprompt` dan menampilkan banner elegan *"Pasang HeroCMS Studio di Perangkat Anda"* yang tidak mengganggu di header dashboard, mempermudah akses sekali-klik bagi pengguna.
 
 ---
 
@@ -236,6 +248,8 @@ graph TD
 | **Ketersediaan (Availability)** | SLA 99.9% uptime untuk seluruh situs publik tenant. |
 | **Kecepatan Deployment** | Waktu dari klik "Terbitkan" hingga situs aktif online < 4.5 detik. |
 | **Waktu Respon (Latency)** | Waktu TTFB (Time to First Byte) cache edge < 80ms; TTFB dinamis origin < 250ms. |
+| **Kepatuhan PWA & Offline** | Skor Google Lighthouse PWA >= 95/100; Startup App Shell < 200ms saat offline. |
+| **Instalabilitas Aplikasi** | Lolos audit Web App Manifest (standalone display, valid icons, service worker registered). |
 | **Skalabilitas Node** | Satu server worker mampu menampung hingga 1.000 kontainer tenant aktif secara efisien. |
 | **Keamanan** | Isolasi kontainer penuh (tanpa eskalasi hak akses); rating SSL A+ di Qualys SSL Labs. |
 | **Integritas Data** | Backup berkala basis data PostgreSQL point-in-time recovery (PITR) dan snapshot media setiap jam. |

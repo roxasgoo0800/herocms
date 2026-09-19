@@ -116,6 +116,33 @@ hostConfig := &container.HostConfig{
   - Alamat IP privat lokal: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`.
   - Endpoint metadata cloud provider: `169.254.169.254` (mencegah pencurian kredensial AWS/GCP).
 
+### 3.5 Arsitektur Stateful Session di Redis & Cookie HTTP-Only untuk PWA
+Penyimpanan kredensial autentikasi semata-mata pada `localStorage` browser sangat rentan terhadap pencurian token melalui eksploitasi Cross-Site Scripting (XSS). Selain itu, untuk mendukung aplikasi Progressive Web App (PWA) dan Service Worker secara optimal, platform menerapkan arsitektur sesi hibrida:
+- **Cookie HTTP-Only (`herocms_session`):**
+  - Diterbitkan saat login dengan atribut `HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000` (30 hari).
+  - Cookie tidak dapat dibaca atau dimanipulasi oleh JavaScript browser, sehingga terlindung dari serangan XSS.
+- **Penyimpanan Sesi Stateful di Redis 7:**
+  - Kunci Redis: `session:pwa:<session_id>` berisi metadata terstruktur: `tenant_id`, `user_id`, `email`, `role`, `csrf_token`, `ip`, `user_agent`, dan `expires_at`.
+  - Pemutusan sesi instan (*revocation*): Logout secara otomatis menghapus record dari Redis dan membersihkan cookie browser, mencegah penggunaan token lama.
+- **Dukungan Headless / API Bearer Token:**
+  - Endpoint API tetap menerima `Authorization: Bearer <JWT>` untuk integrasi CI/CD atau headless SDK dengan pengecekan blacklist token di Redis.
+
+### 3.6 Proteksi Cross-Site Request Forgery (CSRF / XSRF)
+Dengan digunakannya cookie sesi browser, risiko serangan CSRF dicegah menggunakan **Double Submit Cookie Pattern** yang divalidasi di middleware Go backend:
+1. **Penerbitan Token CSRF:**
+   - Server menerbitkan cookie `csrf_token` berkekuatan kriptografis (32-byte hex) dan header respon `X-CSRF-Token`.
+   - Cookie `csrf_token` berstatus non-HttpOnly agar dapat dibaca oleh antarmuka Vue 3 / PWA client.
+2. **Validasi Mutasi Data Ketat:**
+   - Setiap permintaan HTTP yang mengubah status (`POST`, `PUT`, `DELETE`, `PATCH`) **WAJIB** menyertakan header `X-CSRF-Token` yang identik dengan nilai cookie `csrf_token`.
+   - Jika header hilang atau tidak cocok, backend Gin seketika menolak permintaan dengan kode **HTTP 403 Forbidden** (`CSRF_FORBIDDEN`).
+
+### 3.7 Kebijakan Strict Cross-Origin Resource Sharing (CORS)
+- **Whitelist Origin Eksplisit:** Akses lintas domain hanya diizinkan untuk origin terdaftar (`localhost:5173`, `localhost:8085`, `localhost:3000`, `*.cloudcms.app`). Penggunaan wildcard `*` dilarang keras.
+- **Kredensial Aman:** Header `Access-Control-Allow-Credentials: true` diaktifkan secara selektif hanya untuk origin terpercaya.
+- **Header Allowlist & Exposure:**
+  - `Access-Control-Allow-Headers: Authorization, Content-Type, Accept, X-Requested-With, X-CSRF-Token, X-XSRF-Token`
+  - `Access-Control-Expose-Headers: X-CSRF-Token`
+
 ---
 
 ## 4. Keamanan Edge, Domain Kustom & Otomatisasi SSL
