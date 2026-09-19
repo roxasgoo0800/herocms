@@ -1128,30 +1128,25 @@ const copySchemaJson = () => {
 
         <!-- Right: Zoom, Mode Switcher, & Publish Button -->
         <div class="cmd-right-group">
-          <!-- Canvas View Helpers Segment -->
-          <div class="canvas-helpers-segment">
+          <!-- Canvas View & Zoom HUD -->
+          <div class="zoom-controls-cluster">
             <button
-              class="tool-btn"
+              class="btn-zoom-icon"
               :class="{ active: showRulers }"
               @click="showRulers = !showRulers"
               title="Penggaris Piksel (Rulers)"
             >
-              <Ruler :size="14" />
+              <Ruler :size="13" />
             </button>
             <button
-              class="tool-btn"
+              class="btn-zoom-icon"
               :class="{ active: showGrid }"
               @click="showGrid = !showGrid"
               title="Grid Kanvas Dot-Matrix"
             >
-              <Grid :size="14" />
+              <Grid :size="13" />
             </button>
-          </div>
-
-          <div class="v-divider"></div>
-
-          <!-- Zoom HUD -->
-          <div class="zoom-controls-cluster">
+            <div class="zoom-v-sep"></div>
             <button class="btn-zoom-icon" @click="zoomOut" title="Zoom Out (-)">
               <ZoomOut :size="13" />
             </button>
@@ -2252,9 +2247,9 @@ const copySchemaJson = () => {
 }
 
 .btn-toggle-sidebar.active {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
 }
 
 .cmd-left-group {
@@ -2362,9 +2357,9 @@ const copySchemaJson = () => {
 }
 
 .tool-btn.active {
-  background: #2563eb;
+  background: #0f172a;
   color: #ffffff;
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
 }
 
 .tool-btn:disabled {
@@ -2495,8 +2490,8 @@ const copySchemaJson = () => {
 }
 
 .btn-rotate-mini:hover {
-  background: #eff6ff;
-  color: #2563eb;
+  background: #f1f5f9;
+  color: #0f172a;
   transform: rotate(-90deg);
 }
 
@@ -2532,6 +2527,12 @@ const copySchemaJson = () => {
   background: #ffffff;
   color: #0f172a;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.btn-zoom-icon.active {
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
 }
 
 .zoom-v-sep {
