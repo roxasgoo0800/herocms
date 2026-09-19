@@ -1192,9 +1192,14 @@ const handleLogout = () => {
       <div class="modal-dialog">
         <!-- Header -->
         <div class="modal-header">
-          <div>
-            <h3 class="modal-heading">Buat Situs Baru</h3>
-            <p class="modal-subheading">Inisialisasi kontainer Docker mandiri dengan routing Traefik v3.</p>
+          <div class="modal-header-leading">
+            <div class="modal-header-icon-box">
+              <Layers :size="18" />
+            </div>
+            <div>
+              <h3 class="modal-heading">Buat Situs Baru</h3>
+              <p class="modal-subheading">Inisialisasi kontainer Docker mandiri dengan routing Traefik v3.</p>
+            </div>
           </div>
           <button class="modal-close-button" @click="isCreateModalOpen = false" title="Tutup">
             <X :size="16" />
@@ -1209,22 +1214,25 @@ const handleLogout = () => {
               <button
                 type="button"
                 v-for="tpl in [
-                  { id: 'portfolio', name: 'Portofolio', desc: 'Studi kasus & CV online' },
-                  { id: 'blog', name: 'Blog & Media', desc: 'Artikel & publikasi berita' },
-                  { id: 'education', name: 'Pusat Edukasi', desc: 'Silabus kursus & LMS' },
-                  { id: 'business', name: 'Bisnis & UMKM', desc: 'Showcase produk & kontak' }
+                  { id: 'portfolio', name: 'Portofolio', desc: 'Studi kasus & CV online', icon: Briefcase },
+                  { id: 'blog', name: 'Blog & Media', desc: 'Artikel & publikasi berita', icon: BookOpen },
+                  { id: 'education', name: 'Pusat Edukasi', desc: 'Silabus kursus & LMS', icon: GraduationCap },
+                  { id: 'business', name: 'Bisnis & UMKM', desc: 'Showcase produk & kontak', icon: ShoppingBag }
                 ]"
                 :key="tpl.id"
                 class="template-option"
                 :class="{ active: newSiteForm.category === tpl.id }"
                 @click="newSiteForm.category = tpl.id as any"
               >
-                <div class="template-option-radio">
-                  <div class="radio-dot"></div>
+                <div class="template-option-icon">
+                  <component :is="tpl.icon" :size="15" />
                 </div>
                 <div class="template-option-text">
                   <div class="template-option-name">{{ tpl.name }}</div>
                   <div class="template-option-desc">{{ tpl.desc }}</div>
+                </div>
+                <div class="template-option-radio">
+                  <div class="radio-dot"></div>
                 </div>
               </button>
             </div>
@@ -1253,7 +1261,10 @@ const handleLogout = () => {
               <span class="field-req-dot">*</span>
             </label>
             <div class="url-input-container">
-              <span class="url-addon-prefix">https://</span>
+              <span class="url-addon-prefix">
+                <Globe :size="13" class="url-addon-icon" />
+                https://
+              </span>
               <input
                 id="modal-subdomain"
                 v-model="newSiteForm.subdomain"
@@ -1286,6 +1297,7 @@ const handleLogout = () => {
 
           <!-- 5. Resource Allocation Spec Note -->
           <div class="resource-spec-callout">
+            <Server :size="13" class="spec-callout-icon" />
             <div class="spec-callout-text">
               <span>Alokasi runtime: </span>
               <strong>0.5 vCPU</strong> • <strong>256 MB RAM</strong> (cgroups v2) • Traefik v3 Proxy
@@ -1298,7 +1310,8 @@ const handleLogout = () => {
               Batal
             </button>
             <button type="submit" class="btn-modal-confirm">
-              Deploy Kontainer
+              <Plus :size="14" />
+              <span>Deploy Kontainer</span>
             </button>
           </div>
         </form>
@@ -3374,6 +3387,25 @@ const handleLogout = () => {
   margin-bottom: 20px;
 }
 
+.modal-header-leading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-header-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  color: #18181b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .modal-heading {
   font-size: 1.15rem;
   font-weight: 700;
@@ -3384,7 +3416,7 @@ const handleLogout = () => {
 .modal-subheading {
   font-size: 0.8rem;
   color: #71717a;
-  margin-top: 3px;
+  margin-top: 2px;
   line-height: 1.4;
 }
 
@@ -3458,7 +3490,7 @@ const handleLogout = () => {
   border-radius: 9px;
   background: #ffffff;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   cursor: pointer;
   text-align: left;
@@ -3477,16 +3509,39 @@ const handleLogout = () => {
   box-shadow: 0 0 0 1px #09090b;
 }
 
+.template-option-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #f4f4f5;
+  color: #71717a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.14s ease;
+}
+
+.template-option:hover .template-option-icon {
+  background: #e4e4e7;
+  color: #18181b;
+}
+
+.template-option.active .template-option-icon {
+  background: #09090b;
+  color: #ffffff;
+}
+
 .template-option-radio {
   width: 15px;
   height: 15px;
   border-radius: 50%;
   border: 1.5px solid #d4d4d8;
-  margin-top: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-left: auto;
   transition: border-color 0.14s ease;
 }
 
@@ -3514,6 +3569,7 @@ const handleLogout = () => {
   flex-direction: column;
   gap: 1px;
   min-width: 0;
+  flex: 1;
 }
 
 .template-option-name {
@@ -3577,6 +3633,14 @@ const handleLogout = () => {
   font-size: 0.82rem;
   user-select: none;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.url-addon-icon {
+  color: #a1a1aa;
+  flex-shrink: 0;
 }
 
 .url-core-input {
@@ -3622,6 +3686,14 @@ const handleLogout = () => {
   padding: 8px 12px;
   font-size: 0.74rem;
   color: #52525b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spec-callout-icon {
+  color: #71717a;
+  flex-shrink: 0;
 }
 
 .spec-callout-text strong {
@@ -3664,9 +3736,12 @@ const handleLogout = () => {
   border: 1px solid #09090b;
   font-size: 0.84rem;
   font-weight: 500;
-  padding: 7px 18px;
+  padding: 7px 16px;
   border-radius: 7px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   transition: all 0.12s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
