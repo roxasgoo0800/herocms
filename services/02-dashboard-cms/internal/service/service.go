@@ -228,10 +228,27 @@ func (s *Services) RevokeSession(ctx context.Context, tokenHash string) error {
 	return s.Redis.BlacklistToken(ctx, tokenHash, 24*time.Hour)
 }
 // -----------------------------------------------------------------------------
-// Container & Sites Service
+// Cache Utilities & Invalidation
+// -----------------------------------------------------------------------------
+
+func (s *Services) InvalidateTenantCache(ctx context.Context, tenantID string) {
+	if tenantID == "" {
+		tenantID = "99420000-0000-0000-0000-000000009942"
+	}
+	_ = s.Redis.DeleteKeysByPrefix(ctx, fmt.Sprintf("tenant:%s:menu:", tenantID))
+}
+
+// -----------------------------------------------------------------------------
+// Container & Sites Service (With Redis Caching)
 // -----------------------------------------------------------------------------
 
 func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, error) {
+	cacheKey := fmt.Sprintf("tenant:%s:menu:containers", tenantID)
+	var cached gin.H
+	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+		return cached, nil
+	}
+
 	sites, err := s.Repo.GetSites(ctx, tenantID)
 	if err != nil {
 		return nil, err
@@ -252,7 +269,7 @@ func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, e
 		freeQuota = 0
 	}
 
-	return gin.H{
+	result := gin.H{
 		"containers": sites,
 		"quota": gin.H{
 			"used":  len(sites),
@@ -260,7 +277,10 @@ func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, e
 			"free":  freeQuota,
 			"isMax": len(sites) >= maxQuota,
 		},
-	}, nil
+	}
+
+	_ = s.Redis.SetJSON(ctx, cacheKey, result, 30*time.Minute)
+	return result, nil
 }
 
 type CreateContainerInput struct {
@@ -335,6 +355,7 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 		return nil, fmt.Errorf("gagal menyimpan data situs ke database: %w", err)
 	}
 
+	s.InvalidateTenantCache(ctx, tenantID)
 	return newContainer, nil
 }
 
@@ -343,6 +364,7 @@ func (s *Services) StartContainer(ctx context.Context, tenantID, id string) (boo
 	if err != nil {
 		return false, err
 	}
+	s.InvalidateTenantCache(ctx, tenantID)
 	return true, nil
 }
 
@@ -351,6 +373,7 @@ func (s *Services) StopContainer(ctx context.Context, tenantID, id string) (bool
 	if err != nil {
 		return false, err
 	}
+	s.InvalidateTenantCache(ctx, tenantID)
 	return true, nil
 }
 
@@ -359,62 +382,96 @@ func (s *Services) DeleteContainer(ctx context.Context, tenantID, id string) (bo
 	if err != nil {
 		return false, err
 	}
+	s.InvalidateTenantCache(ctx, tenantID)
 	return true, nil
 }
 
 func (s *Services) SaveSiteDesign(ctx context.Context, tenantID, id string, payload gin.H) error {
-	return s.Repo.UpdateSiteDesign(ctx, tenantID, id, payload)
+	err := s.Repo.UpdateSiteDesign(ctx, tenantID, id, payload)
+	if err == nil {
+		s.InvalidateTenantCache(ctx, tenantID)
+	}
+	return err
 }
 
 // -----------------------------------------------------------------------------
-// Articles Service
+// Articles Service (With Redis Caching)
 // -----------------------------------------------------------------------------
 
 func (s *Services) GetArticles(ctx context.Context, tenantID string) []gin.H {
+	cacheKey := fmt.Sprintf("tenant:%s:menu:articles", tenantID)
+	var cached []gin.H
+	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+		return cached
+	}
+
 	items, err := s.Repo.GetArticles(ctx, tenantID)
 	if err != nil || items == nil {
-		return []gin.H{}
+		items = []gin.H{}
 	}
+	_ = s.Redis.SetJSON(ctx, cacheKey, items, 30*time.Minute)
 	return items
 }
 
 // -----------------------------------------------------------------------------
-// Assets Service
+// Assets Service (With Redis Caching)
 // -----------------------------------------------------------------------------
 
 func (s *Services) GetAssets(ctx context.Context, tenantID string) gin.H {
+	cacheKey := fmt.Sprintf("tenant:%s:menu:assets", tenantID)
+	var cached gin.H
+	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+		return cached
+	}
+
 	assets, _ := s.Repo.GetAssets(ctx, tenantID)
 	if assets == nil {
 		assets = []gin.H{}
 	}
-	return gin.H{
+	res := gin.H{
 		"assets":      assets,
 		"usedStorage": "120 MB",
 		"maxStorage":  "2048 MB",
 	}
+	_ = s.Redis.SetJSON(ctx, cacheKey, res, 30*time.Minute)
+	return res
 }
 
 // -----------------------------------------------------------------------------
-// Custom Domains Service
+// Custom Domains Service (With Redis Caching)
 // -----------------------------------------------------------------------------
 
 func (s *Services) GetDomains(ctx context.Context, tenantID string) []gin.H {
+	cacheKey := fmt.Sprintf("tenant:%s:menu:domains", tenantID)
+	var cached []gin.H
+	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+		return cached
+	}
+
 	domains, err := s.Repo.GetDomains(ctx, tenantID)
 	if err != nil || domains == nil {
-		return []gin.H{}
+		domains = []gin.H{}
 	}
+	_ = s.Redis.SetJSON(ctx, cacheKey, domains, 30*time.Minute)
 	return domains
 }
 
 // -----------------------------------------------------------------------------
-// Support Tickets Service
+// Support Tickets Service (With Redis Caching)
 // -----------------------------------------------------------------------------
 
 func (s *Services) GetTickets(ctx context.Context, tenantID string) []gin.H {
+	cacheKey := fmt.Sprintf("tenant:%s:menu:tickets", tenantID)
+	var cached []gin.H
+	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+		return cached
+	}
+
 	tickets, err := s.Repo.GetTickets(ctx, tenantID)
 	if err != nil || tickets == nil {
-		return []gin.H{}
+		tickets = []gin.H{}
 	}
+	_ = s.Redis.SetJSON(ctx, cacheKey, tickets, 30*time.Minute)
 	return tickets
 }
 
@@ -427,21 +484,34 @@ func (s *Services) GetTicketMessages(ctx context.Context, id string) []gin.H {
 }
 
 // -----------------------------------------------------------------------------
-// Invoices & Billing Service
+// Invoices & Billing Service (With Redis Caching)
 // -----------------------------------------------------------------------------
 
 func (s *Services) GetInvoices(ctx context.Context, tenantID string) []gin.H {
+	cacheKey := fmt.Sprintf("tenant:%s:menu:invoices", tenantID)
+	var cached []gin.H
+	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+		return cached
+	}
+
 	invoices, err := s.Repo.GetInvoices(ctx, tenantID)
 	if err != nil || invoices == nil {
-		return []gin.H{}
+		invoices = []gin.H{}
 	}
+	_ = s.Redis.SetJSON(ctx, cacheKey, invoices, 30*time.Minute)
 	return invoices
 }
 
 func (s *Services) GetBillingQuota(ctx context.Context, tenantID string) gin.H {
+	cacheKey := fmt.Sprintf("tenant:%s:menu:quota", tenantID)
+	var cached gin.H
+	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+		return cached
+	}
+
 	quota, err := s.Repo.GetBillingQuota(ctx, tenantID)
-	if err != nil {
-		return gin.H{
+	if err != nil || quota == nil {
+		quota = gin.H{
 			"plan": gin.H{
 				"name":          "Hero Pro Plan",
 				"price":         "Rp 149.000 / bln",
@@ -449,6 +519,7 @@ func (s *Services) GetBillingQuota(ctx context.Context, tenantID string) gin.H {
 			},
 		}
 	}
+	_ = s.Redis.SetJSON(ctx, cacheKey, quota, 30*time.Minute)
 	return quota
 }
 
@@ -541,6 +612,7 @@ func (s *Services) ProcessCheckout(ctx context.Context, input CheckoutInput) (gi
 	s.Repo.Invoices = append([]gin.H{invoiceObj}, s.Repo.Invoices...)
 
 	sites, _ := s.Repo.GetSites(ctx, tID)
+	s.InvalidateTenantCache(ctx, tID)
 
 	return gin.H{
 		"invoice": invoiceObj,
@@ -560,15 +632,69 @@ func (s *Services) ProcessCheckout(ctx context.Context, input CheckoutInput) (gi
 }
 
 // -----------------------------------------------------------------------------
-// Webhooks Service
+// Webhooks Service (With Redis Caching)
 // -----------------------------------------------------------------------------
 
 func (s *Services) GetWebhooks(ctx context.Context, tenantID string) []gin.H {
+	cacheKey := fmt.Sprintf("tenant:%s:menu:webhooks", tenantID)
+	var cached []gin.H
+	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+		return cached
+	}
+
 	wh, err := s.Repo.GetWebhooks(ctx, tenantID)
 	if err != nil || wh == nil {
-		return []gin.H{}
+		wh = []gin.H{}
 	}
+	_ = s.Redis.SetJSON(ctx, cacheKey, wh, 30*time.Minute)
 	return wh
+}
+
+// -----------------------------------------------------------------------------
+// Full Menu Redis Warmup (Ultra-Fast Startup & Seamless Workspace Loading)
+// -----------------------------------------------------------------------------
+
+func (s *Services) WarmAllMenusCache(ctx context.Context, tenantID string) (gin.H, error) {
+	if tenantID == "" {
+		tenantID = "99420000-0000-0000-0000-000000009942"
+	}
+
+	// Invalidate any stale menu keys to ensure 100% fresh data into Redis
+	s.InvalidateTenantCache(ctx, tenantID)
+
+	// Retrieve all menu datasets (each method caches into Redis individually)
+	containers, err := s.GetContainers(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	articles := s.GetArticles(ctx, tenantID)
+	assets := s.GetAssets(ctx, tenantID)
+	domains := s.GetDomains(ctx, tenantID)
+	tickets := s.GetTickets(ctx, tenantID)
+	invoices := s.GetInvoices(ctx, tenantID)
+	quota := s.GetBillingQuota(ctx, tenantID)
+	webhooks := s.GetWebhooks(ctx, tenantID)
+	topViews, _ := s.GetTopViews(ctx, tenantID)
+
+	bundle := gin.H{
+		"containers": containers,
+		"articles":   gin.H{"articles": articles},
+		"assets":     assets,
+		"domains":    gin.H{"domains": domains},
+		"tickets":    gin.H{"tickets": tickets},
+		"invoices":   gin.H{"invoices": invoices},
+		"quota":      quota,
+		"webhooks":   gin.H{"webhooks": webhooks},
+		"top_views":  topViews,
+		"cached_at":  time.Now().UTC().Format(time.RFC3339),
+		"source":     "redis_warmed",
+	}
+
+	// Cache the consolidated bundle for single-shot hydration
+	bundleKey := fmt.Sprintf("tenant:%s:menu:bundle", tenantID)
+	_ = s.Redis.SetJSON(ctx, bundleKey, bundle, 1*time.Hour)
+
+	return bundle, nil
 }
 
 // -----------------------------------------------------------------------------
@@ -582,3 +708,4 @@ func (s *Services) GetTopViews(ctx context.Context, tenantID string) ([]redis.To
 func (s *Services) RecordHit(ctx context.Context, tenantID string, path string) error {
 	return s.Redis.RecordTopView(ctx, tenantID, path)
 }
+

@@ -109,6 +109,9 @@ export const studioApi = {
   getTopViews: () => apiFetch('/analytics/top-views'),
   recordHit: (path: string) => apiFetch('/analytics/hit', { method: 'POST', body: JSON.stringify({ path }) }),
 
+  // Redis Cache Warming & Pre-fetch
+  warmAllMenusCache: () => apiFetch('/cache/warm', { method: 'GET' }),
+
   // System Health
   getHealth: () => apiFetch('/healthz')
 };

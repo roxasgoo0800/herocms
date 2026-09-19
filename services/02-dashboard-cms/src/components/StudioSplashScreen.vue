@@ -31,37 +31,37 @@ onMounted(async () => {
   const { syncWithBackend } = useDashboardData();
 
   // 1. Stage 1: Auth Token & Sesi Validation
-  statusText.value = 'Memverifikasi sesi & token...';
-  progress.value = 25;
+  statusText.value = 'Memverifikasi sesi & kredensial...';
+  progress.value = 20;
 
-  // 2. Stage 2: Background Data Hydration & Font Pre-warming
-  const syncPromise = syncWithBackend().catch(err => console.warn('[Splash Sync]', err));
+  // 2. Stage 2: Background Data Hydration & Redis Cache Pre-warming
+  const syncPromise = syncWithBackend({ forceWarmRedis: true }).catch(err => console.warn('[Splash Sync]', err));
   const fontPromise = document.fonts ? document.fonts.ready : Promise.resolve();
 
-  // Smoothly advance progress while fetching network data
+  // Smoothly advance progress while fetching network data & warming Redis
   stepTimer = window.setTimeout(() => {
     if (!isUnmounted && progress.value < 65) {
-      statusText.value = 'Mengambil data kontainer & telemetri...';
+      statusText.value = 'Memanaskan cache Redis & sinkronisasi menu...';
       progress.value = 65;
     }
-  }, 220);
+  }, 180);
 
   // Await actual network data & font caching
   await Promise.allSettled([syncPromise, fontPromise]);
   if (isUnmounted) return;
 
   // 3. Stage 3: Visual Editor & Local Cache Preparation
-  statusText.value = 'Menyiapkan cache workspace & modul...';
+  statusText.value = 'Menyiapkan cache visual editor & workspace...';
   progress.value = 90;
 
-  // Ensure a smooth, visually pleasant minimum time (~900ms - 1100ms)
+  // Ensure a smooth, visually pleasant minimum time (~850ms - 1050ms)
   const elapsed = Date.now() - startTime;
   const remaining = Math.max(80, props.durationMs - elapsed);
 
   setTimeout(() => {
     if (isUnmounted) return;
     progress.value = 100;
-    statusText.value = 'Workspace studio siap!';
+    statusText.value = 'Workspace teroptimalisasi & siap!';
 
     setTimeout(() => {
       if (isUnmounted) return;

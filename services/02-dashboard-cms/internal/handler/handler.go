@@ -435,3 +435,25 @@ func (h *Handler) RecordHit(c *gin.Context) {
 	h.Services.RecordHit(c.Request.Context(), tIDStr, req.Path)
 	c.JSON(http.StatusOK, gin.H{"status": "recorded", "path": req.Path})
 }
+
+// -----------------------------------------------------------------------------
+// Cache Warmer Endpoint
+// -----------------------------------------------------------------------------
+
+func (h *Handler) WarmCache(c *gin.Context) {
+	tenantID := getTenantID(c)
+	bundle, err := h.Services.WarmAllMenusCache(c.Request.Context(), tenantID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memanaskan cache Redis: " + err.Error()})
+		return
+	}
+
+	c.Header("X-Cache-Engine", "Redis-7")
+	c.Header("X-Cache-Status", "WARMED")
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "warmed",
+		"message": "Seluruh cache data menu studio berhasil dipanaskan ke Redis!",
+		"bundle":  bundle,
+	})
+}
+

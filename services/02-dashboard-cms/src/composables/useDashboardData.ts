@@ -963,11 +963,77 @@ const resolveTicket = (ticket: SupportTicketItem) => {
   showToast(`Tiket ${ticket.id} ditandai sebagai Selesai / Resolved.`, 'success');
 };
 
-// Backend API Synchronization
+// Backend API Synchronization & Redis Warmup
 const isBackendSyncing = ref(false);
-const syncWithBackend = async () => {
+const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
   try {
     isBackendSyncing.value = true;
+
+    // 1. Primary Strategy: Warm all menus in Redis & receive unified bundle
+    try {
+      const warmRes = await studioApi.warmAllMenusCache();
+      if (warmRes?.bundle) {
+        const b = warmRes.bundle;
+        if (b.containers?.containers?.length) {
+          containers.value = b.containers.containers;
+          if (b.containers.quota?.max) {
+            userPlan.value.maxContainers = b.containers.quota.max;
+          }
+        }
+        if (b.articles?.articles?.length) {
+          articles.value = b.articles.articles;
+        }
+        if (Array.isArray(b.assets?.assets) && b.assets.assets.length) {
+          mediaAssets.value = b.assets.assets;
+        }
+        if (b.domains?.domains?.length) {
+          customDomains.value = b.domains.domains;
+        }
+        if (b.tickets?.tickets?.length) {
+          supportTickets.value = b.tickets.tickets;
+        }
+        if (b.invoices?.invoices?.length) {
+          invoices.value = b.invoices.invoices;
+        }
+        if (b.webhooks?.webhooks?.length) {
+          webhooks.value = b.webhooks.webhooks;
+        }
+        if (b.quota?.plan?.name) {
+          userPlan.value = {
+            name: b.quota.plan.name,
+            price: b.quota.plan.price || 'Rp 149.000 / bln',
+            maxContainers: b.quota.plan.maxContainers || 3,
+            cpuPerContainer: '0.5 vCPU',
+            ramPerContainer: '256 MB',
+            storageQuota: '2 GB SSD'
+          };
+        }
+
+        // Persist to local cache for instant zero-latency loads
+        try {
+          localStorage.setItem('herocms_dashboard_cache', JSON.stringify({
+            timestamp: Date.now(),
+            containers: containers.value,
+            articles: articles.value,
+            mediaAssets: mediaAssets.value,
+            customDomains: customDomains.value,
+            supportTickets: supportTickets.value,
+            invoices: invoices.value,
+            webhooks: webhooks.value,
+            userPlan: userPlan.value
+          }));
+        } catch (e) {
+          // Ignored
+        }
+
+        console.info('[CACHE] Redis cache and local state successfully warmed!');
+        return;
+      }
+    } catch (warmErr) {
+      console.warn('[CACHE NOTICE] Single-shot Redis warmup endpoint deferred, falling back to parallel fetch:', warmErr);
+    }
+
+    // 2. Secondary Strategy: Parallel fetch across individual endpoints
     const [cRes, aRes, mRes, dRes, tRes, iRes, wRes] = await Promise.allSettled([
       studioApi.getContainers(),
       studioApi.getArticles(),

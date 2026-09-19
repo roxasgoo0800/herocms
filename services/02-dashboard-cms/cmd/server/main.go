@@ -113,6 +113,10 @@ func main() {
 			// Real-Time Analytics & Top-Views (Redis ZSET)
 			protected.GET("/analytics/top-views", h.GetTopViews)
 			protected.POST("/analytics/hit", h.RecordHit)
+
+			// Redis Cache Warming & Pre-fetch
+			protected.POST("/cache/warm", h.WarmCache)
+			protected.GET("/cache/warm", h.WarmCache)
 		}
 	}
 
