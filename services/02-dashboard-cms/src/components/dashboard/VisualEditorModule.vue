@@ -5,10 +5,10 @@ import {
   Smartphone,
   Rocket,
   Sparkles,
-  ShieldCheck,
   Server,
   Globe,
-  TrendingUp
+  TrendingUp,
+  ShieldCheck
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 
@@ -19,8 +19,8 @@ const {
   editorDevice,
   isPublishing,
   handlePublishChanges,
-  isGeneratingAI,
   aiPromptInput,
+  isGeneratingAI,
   handleAiGenerateContent
 } = useDashboardData();
 </script>

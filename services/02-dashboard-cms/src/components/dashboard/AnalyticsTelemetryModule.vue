@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Terminal } from 'lucide-vue-next';
+import {
+  Terminal
+} from 'lucide-vue-next';
 </script>
 
 <template>
