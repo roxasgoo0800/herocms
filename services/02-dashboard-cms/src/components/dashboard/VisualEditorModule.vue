@@ -88,6 +88,25 @@ const isDraftSaving = ref(false);
 const lastSavedDraftAt = ref('');
 const isDraftRestored = ref(false);
 
+// Site Selector Dropdown State
+const isSiteDropdownOpen = ref(false);
+const siteDropdownRef = ref<HTMLElement | null>(null);
+
+const toggleSiteDropdown = () => {
+  isSiteDropdownOpen.value = !isSiteDropdownOpen.value;
+};
+
+const selectSiteFromDropdown = (id: string) => {
+  activeContainerId.value = id;
+  isSiteDropdownOpen.value = false;
+};
+
+const handleSiteDropdownOutsideClick = (e: MouseEvent) => {
+  if (siteDropdownRef.value && !siteDropdownRef.value.contains(e.target as Node)) {
+    isSiteDropdownOpen.value = false;
+  }
+};
+
 // Canvas Zoom & Pan
 const zoom = ref(0.85);
 const panX = ref(0);
@@ -693,6 +712,7 @@ onMounted(async () => {
   window.addEventListener('mousemove', onCanvasMouseMove);
   window.addEventListener('mouseup', onCanvasMouseUp);
   window.addEventListener('resize', fitToScreen);
+  document.addEventListener('click', handleSiteDropdownOutsideClick);
 
   // Smooth booting transition & dependency/draft load
   isEditorBooting.value = true;
@@ -735,6 +755,7 @@ onUnmounted(() => {
   window.removeEventListener('mousemove', onCanvasMouseMove);
   window.removeEventListener('mouseup', onCanvasMouseUp);
   window.removeEventListener('resize', fitToScreen);
+  document.removeEventListener('click', handleSiteDropdownOutsideClick);
 });
 
 // -----------------------------------------------------------------------------
@@ -1014,14 +1035,58 @@ const copySchemaJson = () => {
 
           <div class="v-divider"></div>
 
-          <div class="site-target-pill">
-            <span class="pulse-status-dot"></span>
-            <span class="pill-label">Situs:</span>
-            <select v-model="activeContainerId" class="select-site-clean">
-              <option v-for="c in containers" :key="c.id" :value="c.id">
-                {{ c.name }} ({{ c.subdomain }})
-              </option>
-            </select>
+          <div class="site-dropdown-wrapper" ref="siteDropdownRef">
+            <button
+              class="site-target-pill"
+              :class="{ 'is-open': isSiteDropdownOpen }"
+              @click.stop="toggleSiteDropdown"
+              type="button"
+              title="Pilih Situs / Kontainer Tenant"
+            >
+              <span class="pulse-status-dot"></span>
+              <span class="pill-label">SITUS:</span>
+              <span class="site-display-name">{{ activeContainer?.name || 'Pilih Situs' }}</span>
+              <span class="site-display-subdomain">({{ activeContainer?.subdomain || '...' }})</span>
+              <ChevronDown :size="13" class="site-chevron-icon" :class="{ 'is-rotated': isSiteDropdownOpen }" />
+            </button>
+
+            <!-- Floating Custom Dropdown -->
+            <transition name="dropdown-scale">
+              <div v-if="isSiteDropdownOpen" class="site-floating-dropdown">
+                <div class="site-dropdown-header">
+                  <div class="site-dropdown-header-left">
+                    <span class="site-dropdown-title">Situs Terpasang</span>
+                    <span class="site-dropdown-subtitle">Daftar container website tenant aktif</span>
+                  </div>
+                  <span class="site-dropdown-count-badge">{{ containers.length }}</span>
+                </div>
+
+                <div class="site-dropdown-list">
+                  <button
+                    v-for="c in containers"
+                    :key="c.id"
+                    type="button"
+                    class="site-item-btn"
+                    :class="{ active: c.id === activeContainerId }"
+                    @click="selectSiteFromDropdown(c.id)"
+                  >
+                    <div class="site-item-icon-box">
+                      <Globe :size="14" />
+                    </div>
+                    <div class="site-item-info">
+                      <div class="site-item-row-top">
+                        <span class="site-item-name">{{ c.name }}</span>
+                        <span v-if="c.id === activeContainerId" class="site-item-active-badge">Aktif</span>
+                      </div>
+                      <span class="site-item-domain">{{ c.subdomain }}</span>
+                    </div>
+                    <div class="site-item-action">
+                      <Check v-if="c.id === activeContainerId" :size="14" class="site-item-check-icon" />
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </transition>
           </div>
 
           <div class="v-divider"></div>
@@ -2290,7 +2355,15 @@ const copySchemaJson = () => {
   flex-shrink: 0;
 }
 
+.site-dropdown-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 60;
+}
+
 .site-target-pill {
+  appearance: none;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -2299,7 +2372,18 @@ const copySchemaJson = () => {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 0 10px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.site-target-pill:hover,
+.site-target-pill.is-open {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.06);
 }
 
 .pulse-status-dot {
@@ -2317,16 +2401,221 @@ const copySchemaJson = () => {
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 
-.select-site-clean {
-  border: none;
-  background: transparent;
+.site-display-name {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #0f172a;
+  max-width: 190px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-display-subdomain {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: #64748b;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-chevron-icon {
+  color: #64748b;
+  transition: transform 0.2s ease, color 0.15s ease;
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
+.site-chevron-icon.is-rotated {
+  transform: rotate(180deg);
+  color: #0f172a;
+}
+
+.site-floating-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 320px;
+  max-width: 380px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.12), 0 8px 12px -6px rgba(15, 23, 42, 0.06);
+  padding: 6px;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.site-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.site-dropdown-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.site-dropdown-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.site-dropdown-subtitle {
+  font-size: 0.65rem;
+  color: #94a3b8;
+}
+
+.site-dropdown-count-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+}
+
+.site-dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.site-item-btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
   cursor: pointer;
-  outline: none;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.site-item-btn:hover {
+  background: #f8fafc;
+  border-color: #f1f5f9;
+}
+
+.site-item-btn.active {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.site-item-icon-box {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.site-item-btn:hover .site-item-icon-box {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.site-item-btn.active .site-item-icon-box {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.site-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.site-item-row-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.site-item-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-item-btn.active .site-item-name {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.site-item-active-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 1px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.site-item-domain {
+  font-size: 0.68rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-item-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.site-item-check-icon {
+  color: #0f172a;
+}
+
+.dropdown-scale-enter-active,
+.dropdown-scale-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform-origin: top left;
+}
+
+.dropdown-scale-enter-from,
+.dropdown-scale-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.97);
 }
 
 .tools-segment,
