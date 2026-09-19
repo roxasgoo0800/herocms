@@ -1771,19 +1771,21 @@ const copyVsCodeCurrentCode = () => {
         </aside>
 
         <!-- ----------------------------------------------------------------- -->
-        <!-- CENTER: INFINITE CANVAS WORKSPACE & RESIZABLE ARTBOARD             -->
+        <!-- CENTER WORKSPACE: DUAL ENGINE (CANVAS & VS CODE WORKSPACE)          -->
         <!-- ----------------------------------------------------------------- -->
-        <main
-          v-if="editorViewMode !== 'code'"
-          class="studio-viewport-area"
-          :class="{
-            'tool-hand-active': activeTool === 'hand' || isSpacePressed,
-            'is-dragging-canvas': isPanning,
-            'grid-dots-visible': showGrid
-          }"
-          @mousedown="onCanvasMouseDown"
-          @wheel="onCanvasWheel"
-        >
+        <div class="studio-center-workspace">
+          <!-- 1. Infinite Canvas Workspace & Resizable Artboard -->
+          <main
+            class="studio-viewport-area"
+            :class="{
+              'is-view-hidden': editorViewMode === 'code',
+              'tool-hand-active': activeTool === 'hand' || isSpacePressed,
+              'is-dragging-canvas': isPanning,
+              'grid-dots-visible': showGrid
+            }"
+            @mousedown="onCanvasMouseDown"
+            @wheel="onCanvasWheel"
+          >
           <!-- Coordinate Rulers (Photoshop Style) -->
           <div v-if="showRulers" class="canvas-ruler-top">
             <div class="ruler-tick-cluster" :style="{ transform: `translateX(${panX}px) scaleX(${zoom})` }">
@@ -2119,10 +2121,11 @@ const copyVsCodeCurrentCode = () => {
           </div>
         </main>
 
-        <!-- ----------------------------------------------------------------- -->
-        <!-- CENTER ALT: VS CODE-STYLE CANVAS CODE EDITOR WORKSPACE             -->
-        <!-- ----------------------------------------------------------------- -->
-        <section v-else class="studio-vscode-workspace">
+        <!-- 2. VS Code-Style Canvas Code Editor Workspace -->
+        <section
+          class="studio-vscode-workspace"
+          :class="{ 'is-view-hidden': editorViewMode !== 'code' }"
+        >
           <!-- 1. VS Code Activity Bar (Far Left Strip) -->
           <aside class="vscode-activity-bar">
             <div class="vscode-act-top">
@@ -2371,6 +2374,7 @@ const copyVsCodeCurrentCode = () => {
             </footer>
           </div>
         </section>
+        </div>
 
         <!-- ----------------------------------------------------------------- -->
         <!-- RIGHT STUDIO DOCK: DEEP STYLE INSPECTOR & CONTENT CONTROLS        -->
@@ -3870,15 +3874,40 @@ const copyVsCodeCurrentCode = () => {
 }
 
 /* -----------------------------------------------------------------------------
- * 3. Infinite Viewport & Artboard Workspace
+ * 3. Center Workspace: Dual Engine (Canvas & VS Code Editor)
  * --------------------------------------------------------------------------- */
-.studio-viewport-area {
+.studio-center-workspace {
   flex: 1;
   height: 100%;
   position: relative;
   overflow: hidden;
+  min-width: 0;
+  display: flex;
+  background: #181818;
+}
+
+.studio-viewport-area {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   background: #f1f5f9;
   user-select: none;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.3s;
+  opacity: 1;
+  transform: scale(1);
+  visibility: visible;
+  z-index: 1;
+}
+
+.studio-viewport-area.is-view-hidden {
+  opacity: 0;
+  transform: scale(0.96) translateY(6px);
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .studio-viewport-area.grid-dots-visible {
@@ -5320,14 +5349,30 @@ const copyVsCodeCurrentCode = () => {
  * 6. VS Code-Style Canvas Workspace Editor
  * --------------------------------------------------------------------------- */
 .studio-vscode-workspace {
-  flex: 1;
-  display: flex;
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
+  display: flex;
   background: #1e1e1e;
   overflow: hidden;
-  position: relative;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: #cccccc;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.3s;
+  opacity: 1;
+  transform: scale(1);
+  visibility: visible;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.studio-vscode-workspace.is-view-hidden {
+  opacity: 0;
+  transform: scale(1.025);
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* 1. Activity Bar */
