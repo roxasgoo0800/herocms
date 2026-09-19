@@ -982,7 +982,7 @@ const copySchemaJson = () => {
       </div>
     </transition>
 
-    <div v-if="activeContainer" class="studio-main-frame">
+    <div v-if="activeContainer" class="studio-main-frame" :class="{ 'is-revealed': !isEditorBooting }">
       <!-- =================================================================== -->
       <!-- 1. TOP STUDIO COMMAND BAR (Photoshop / Canva Toolbar)                -->
       <!-- =================================================================== -->
@@ -2107,6 +2107,80 @@ const copySchemaJson = () => {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  position: relative;
+  transition: opacity 0.3s ease;
+}
+
+.studio-main-frame:not(.is-revealed) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.studio-main-frame.is-revealed {
+  opacity: 1;
+}
+
+/* -----------------------------------------------------------------------------
+ * Seamless Entrance Animations for Studio Sections
+ * --------------------------------------------------------------------------- */
+.studio-main-frame.is-revealed .studio-command-bar {
+  animation: studioRevealTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.studio-main-frame.is-revealed .studio-left-dock {
+  animation: studioRevealLeft 0.42s 0.04s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.studio-main-frame.is-revealed .studio-viewport-area {
+  animation: studioRevealCanvas 0.48s 0.06s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.studio-main-frame.is-revealed .studio-right-inspector {
+  animation: studioRevealRight 0.42s 0.08s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes studioRevealTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes studioRevealLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes studioRevealCanvas {
+  0% {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes studioRevealRight {
+  0% {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* -----------------------------------------------------------------------------
