@@ -60,17 +60,17 @@ onUnmounted(() => {
 <template>
   <transition name="splash-dissolve" appear>
     <div v-if="!isFinished" class="studio-splash-screen" role="status" aria-live="polite">
-      <!-- 1. Identical Dot Grid to preserve theme background uninterrupted -->
+      <!-- 1. Identical Dot Grid to preserve theme background uninterrupted (Solid background prevents dashboard bleed-through) -->
       <div class="base-dot-grid" aria-hidden="true"></div>
 
       <!-- 2. Ambient Soft Glow matching LoginView & BackgroundWave -->
       <div class="ambient-mesh-glow" aria-hidden="true"></div>
 
-      <!-- 3. Glassmorphic Card (100% Theme Match with auth-panel-glass) -->
-      <div class="splash-card-glass">
+      <!-- 3. Minimalist Brand & Loader Pod (Clean, borderless, NO card box) -->
+      <div class="splash-center-pod">
         <!-- Brand Glyph Box -->
         <div class="brand-glyph-box">
-          <Layers :size="22" color="#ffffff" />
+          <Layers :size="24" color="#ffffff" />
         </div>
 
         <!-- Brand Typography -->
@@ -108,14 +108,12 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Fullscreen Backdrop: Translucent so dot grid and wave stay continuous */
+/* Fullscreen Backdrop: OPAQUE #ffffff so dashboard underneath is completely hidden until reveal */
 .studio-splash-screen {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -142,7 +140,7 @@ onUnmounted(() => {
   height: 550px;
   background: radial-gradient(
     circle,
-    rgba(37, 99, 235, 0.07) 0%,
+    rgba(37, 99, 235, 0.08) 0%,
     rgba(148, 163, 184, 0.08) 50%,
     transparent 70%
   );
@@ -150,33 +148,22 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Glassmorphic Card (100% Theme Match with auth-panel-glass) */
-.splash-card-glass {
+/* Minimalist Center Pod (Clean, borderless, NO card box container) */
+.splash-center-pod {
   position: relative;
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  width: 100%;
-  max-width: 380px;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  border-radius: 20px;
-  box-shadow:
-    0 20px 40px -15px rgba(15, 23, 42, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.8);
-  padding: 34px 38px;
-  animation: cardScaleIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: podScaleIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes cardScaleIn {
+@keyframes podScaleIn {
   0% {
     opacity: 0;
-    transform: scale(0.92) translateY(14px);
-    filter: blur(8px);
+    transform: scale(0.9) translateY(14px);
+    filter: blur(6px);
   }
   100% {
     opacity: 1;
@@ -187,16 +174,16 @@ onUnmounted(() => {
 
 /* Brand Glyph Box (100% Theme Match) */
 .brand-glyph-box {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-radius: 12px;
+  border-radius: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
-  box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 14px;
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* Typography (100% Theme Match) */
@@ -208,7 +195,7 @@ onUnmounted(() => {
 }
 
 .brand-wordmark {
-  font-size: 1.45rem;
+  font-size: 1.55rem;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.03em;
@@ -227,11 +214,11 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(248, 250, 252, 0.85);
+  background: rgba(248, 250, 252, 0.9);
   border: 1px solid #e2e8f0;
   padding: 3px 10px;
   border-radius: 999px;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .pulse-dot {
@@ -251,16 +238,14 @@ onUnmounted(() => {
 
 /* Progress Bar (Theme: Slate #0f172a to Blue #2563eb) */
 .minimal-progress-wrap {
-  width: 100%;
-  max-width: 260px;
-  margin-bottom: 14px;
+  width: 200px;
+  margin-bottom: 12px;
 }
 
 .minimal-progress-track {
   width: 100%;
-  height: 4px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  height: 3px;
+  background: #e2e8f0;
   border-radius: 9999px;
   overflow: hidden;
   position: relative;
@@ -271,7 +256,7 @@ onUnmounted(() => {
   background: linear-gradient(90deg, #0f172a 0%, #2563eb 100%);
   border-radius: 9999px;
   transition: width 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.35);
 }
 
 .minimal-progress-fill.is-complete {
