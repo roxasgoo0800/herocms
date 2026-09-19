@@ -3369,8 +3369,9 @@ const handleLogout = () => {
   border: 1px solid #e4e4e7;
   border-radius: 14px;
   width: 100%;
-  max-width: 490px;
-  padding: 24px;
+  max-width: 580px;
+  padding: 28px;
+  box-sizing: border-box;
   box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
   animation: dialogScale 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -3383,8 +3384,9 @@ const handleLogout = () => {
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
+  align-items: center;
+  margin-bottom: 22px;
+  width: 100%;
 }
 
 .modal-header-leading {
@@ -3432,8 +3434,7 @@ const handleLogout = () => {
   align-items: center;
   justify-content: center;
   transition: all 0.12s ease;
-  margin-top: -2px;
-  margin-right: -4px;
+  margin: 0;
 }
 
 .modal-close-button:hover {
@@ -3445,12 +3446,14 @@ const handleLogout = () => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
 .form-field-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
 }
 
 .field-title-flex {
@@ -3481,21 +3484,23 @@ const handleLogout = () => {
 .template-selector-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
+  width: 100%;
 }
 
 .template-option {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid #e4e4e7;
   border-radius: 9px;
   background: #ffffff;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   text-align: left;
   transition: all 0.14s ease;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .template-option:hover {
@@ -3510,8 +3515,8 @@ const handleLogout = () => {
 }
 
 .template-option-icon {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 6px;
   background: #f4f4f5;
   color: #71717a;
@@ -3533,8 +3538,8 @@ const handleLogout = () => {
 }
 
 .template-option-radio {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   border: 1.5px solid #d4d4d8;
   display: flex;
@@ -3550,8 +3555,8 @@ const handleLogout = () => {
 }
 
 .radio-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #09090b;
   opacity: 0;
@@ -3567,13 +3572,13 @@ const handleLogout = () => {
 .template-option-text {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
   flex: 1;
 }
 
 .template-option-name {
-  font-size: 0.82rem;
+  font-size: 0.83rem;
   font-weight: 600;
   color: #09090b;
 }
@@ -3589,7 +3594,7 @@ const handleLogout = () => {
 /* Handcrafted Input Fields */
 .field-text-input {
   width: 100%;
-  height: 38px;
+  height: 40px;
   padding: 0 12px;
   border: 1px solid #d4d4d8;
   border-radius: 8px;
@@ -3598,6 +3603,7 @@ const handleLogout = () => {
   color: #09090b;
   font-family: inherit;
   transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  box-sizing: border-box;
 }
 
 .field-text-input::placeholder {
@@ -3616,9 +3622,13 @@ const handleLogout = () => {
   align-items: center;
   border: 1px solid #d4d4d8;
   border-radius: 8px;
-  height: 38px;
+  height: 40px;
   background: #ffffff;
   transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 12px;
+  gap: 6px;
 }
 
 .url-input-container:focus-within {
@@ -3627,7 +3637,6 @@ const handleLogout = () => {
 }
 
 .url-addon-prefix {
-  padding-left: 10px;
   color: #a1a1aa;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.82rem;
@@ -3663,13 +3672,13 @@ const handleLogout = () => {
 }
 
 .url-addon-suffix {
-  padding-right: 10px;
   color: #71717a;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.82rem;
   user-select: none;
   flex-shrink: 0;
   font-weight: 500;
+  margin-left: auto;
 }
 
 .field-helper-text {
@@ -3682,13 +3691,15 @@ const handleLogout = () => {
 /* Minimalist Hardware Resource Note */
 .resource-spec-callout {
   background: #f4f4f5;
-  border-radius: 7px;
-  padding: 8px 12px;
-  font-size: 0.74rem;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.75rem;
   color: #52525b;
   display: flex;
   align-items: center;
   gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .spec-callout-icon {
@@ -3706,10 +3717,12 @@ const handleLogout = () => {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  padding-top: 14px;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 18px;
   border-top: 1px solid #f4f4f5;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-modal-ghost {
@@ -3718,10 +3731,14 @@ const handleLogout = () => {
   color: #52525b;
   font-size: 0.84rem;
   font-weight: 500;
-  padding: 7px 14px;
-  border-radius: 7px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-modal-ghost:hover {
@@ -3736,11 +3753,13 @@ const handleLogout = () => {
   border: 1px solid #09090b;
   font-size: 0.84rem;
   font-weight: 500;
-  padding: 7px 16px;
-  border-radius: 7px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   transition: all 0.12s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
