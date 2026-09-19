@@ -329,6 +329,44 @@ func (h *Handler) SaveSiteDesign(c *gin.Context) {
 	})
 }
 
+func (h *Handler) GetEditorDraft(c *gin.Context) {
+	id := c.Param("id")
+	draft, err := h.Services.GetEditorDraft(c.Request.Context(), getTenantID(c), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Header("X-Draft-Source", "Redis-Engine")
+	c.JSON(http.StatusOK, gin.H{
+		"draft":  draft,
+		"source": "redis",
+		"id":     id,
+	})
+}
+
+func (h *Handler) SaveEditorDraft(c *gin.Context) {
+	id := c.Param("id")
+	var draft gin.H
+	if err := c.ShouldBindJSON(&draft); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload draf tidak valid"})
+		return
+	}
+
+	err := h.Services.SaveEditorDraft(c.Request.Context(), getTenantID(c), id, draft)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan draf ke Redis: " + err.Error()})
+		return
+	}
+
+	c.Header("X-Draft-Saved", "Redis-Persistent")
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Draf posisi edit berhasil disimpan ke Redis!",
+		"id":      id,
+		"savedAt": time.Now().UTC().Format(time.RFC3339),
+	})
+}
+
 // -----------------------------------------------------------------------------
 // Articles
 // -----------------------------------------------------------------------------

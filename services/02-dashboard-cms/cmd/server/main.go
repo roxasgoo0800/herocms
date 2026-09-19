@@ -85,6 +85,8 @@ func main() {
 			protected.GET("/containers", h.ListContainers)
 			protected.POST("/containers", h.CreateContainer)
 			protected.PUT("/containers/:id/design", h.SaveSiteDesign)
+			protected.GET("/containers/:id/draft", h.GetEditorDraft)
+			protected.PUT("/containers/:id/draft", h.SaveEditorDraft)
 			protected.POST("/containers/:id/start", h.StartContainer)
 			protected.POST("/containers/:id/stop", h.StopContainer)
 			protected.DELETE("/containers/:id", h.DeleteContainer)

@@ -709,3 +709,30 @@ func (s *Services) RecordHit(ctx context.Context, tenantID string, path string) 
 	return s.Redis.RecordTopView(ctx, tenantID, path)
 }
 
+// -----------------------------------------------------------------------------
+// Visual Editor Draft Service (Redis Persistence & Resume)
+// -----------------------------------------------------------------------------
+
+func (s *Services) SaveEditorDraft(ctx context.Context, tenantID, containerID string, draft gin.H) error {
+	if tenantID == "" {
+		tenantID = "99420000-0000-0000-0000-000000009942"
+	}
+	key := fmt.Sprintf("tenant:%s:container:%s:draft", tenantID, containerID)
+	// Persist draft in Redis for 30 days
+	return s.Redis.SetJSON(ctx, key, draft, 30*24*time.Hour)
+}
+
+func (s *Services) GetEditorDraft(ctx context.Context, tenantID, containerID string) (gin.H, error) {
+	if tenantID == "" {
+		tenantID = "99420000-0000-0000-0000-000000009942"
+	}
+	key := fmt.Sprintf("tenant:%s:container:%s:draft", tenantID, containerID)
+	var draft gin.H
+	hit, err := s.Redis.GetJSON(ctx, key, &draft)
+	if err != nil || !hit || draft == nil {
+		return nil, fmt.Errorf("draf belum tersedia")
+	}
+	return draft, nil
+}
+
+

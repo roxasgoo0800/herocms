@@ -43,8 +43,10 @@ import {
   ArrowRight,
   ArrowLeft,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Cloud
 } from 'lucide-vue-next';
+import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { VisualBlock } from '../../types/dashboard';
 
@@ -74,6 +76,14 @@ const activeTool = ref<ActiveTool>('select');
 const editorViewMode = ref<EditorViewMode>('design');
 const activeLeftTab = ref<'blocks' | 'layers' | 'design' | 'ai'>('blocks');
 const activeRightTab = ref<'content' | 'layout' | 'appearance'>('content');
+
+// Studio Booting Transition & Redis Draft State
+const isEditorBooting = ref(true);
+const bootProgress = ref(15);
+const bootStatusText = ref('Menginisialisasi Visual Canvas Engine...');
+const isDraftSaving = ref(false);
+const lastSavedDraftAt = ref('');
+const isDraftRestored = ref(false);
 
 // Canvas Zoom & Pan
 const zoom = ref(0.85);
@@ -314,6 +324,23 @@ const createDefaultBlocks = (): VisualBlock[] => {
 
 const pageBlocks = ref<VisualBlock[]>([]);
 
+interface EditorDraftData {
+  blocks: VisualBlock[];
+  roleOrHeadline?: string;
+  bioIntro?: string;
+  accentColor?: string;
+  selectedBlockId?: string | null;
+  currentDevice?: DevicePreset;
+  zoom?: number;
+  panX?: number;
+  panY?: number;
+  activeLeftTab?: 'blocks' | 'layers' | 'design' | 'ai';
+  activeRightTab?: 'content' | 'layout' | 'appearance';
+  updatedAt: string;
+}
+
+const getDraftStorageKey = (containerId: string) => `herocms_editor_draft_${containerId}`;
+
 // Initialize blocks from activeContainer themeConfig or defaults
 const loadBlocksForActiveContainer = () => {
   if (activeContainer.value?.themeConfig?.blocks && Array.isArray(activeContainer.value.themeConfig.blocks)) {
@@ -326,15 +353,137 @@ const loadBlocksForActiveContainer = () => {
   }
 };
 
+const restoreDraftForActiveContainer = async (containerId: string) => {
+  if (!containerId) return;
+  try {
+    bootStatusText.value = 'Mengecek draf posisi edit terakhir dari Redis...';
+    bootProgress.value = 55;
+
+    let draftData: EditorDraftData | null = null;
+
+    // 1. Coba ambil dari Redis Backend terlebih dahulu
+    try {
+      const res = await studioApi.getEditorDraft(containerId);
+      if (res?.data && res.data.blocks && Array.isArray(res.data.blocks)) {
+        draftData = res.data;
+      }
+    } catch (apiErr) {
+      console.warn('[VisualEditor] Redis draft fetch fallback:', apiErr);
+    }
+
+    // 2. Fallback ke localStorage jika Redis belum ada
+    if (!draftData) {
+      const localStr = localStorage.getItem(getDraftStorageKey(containerId));
+      if (localStr) {
+        try {
+          draftData = JSON.parse(localStr);
+        } catch {}
+      }
+    }
+
+    // 3. Hydrate state
+    if (draftData && Array.isArray(draftData.blocks) && draftData.blocks.length > 0) {
+      pageBlocks.value = draftData.blocks;
+      if (activeContainer.value) {
+        if (draftData.roleOrHeadline !== undefined) activeContainer.value.roleOrHeadline = draftData.roleOrHeadline;
+        if (draftData.bioIntro !== undefined) activeContainer.value.bioIntro = draftData.bioIntro;
+        if (draftData.accentColor !== undefined) activeContainer.value.accentColor = draftData.accentColor;
+        if (!activeContainer.value.themeConfig) activeContainer.value.themeConfig = {};
+        activeContainer.value.themeConfig.blocks = draftData.blocks;
+      }
+      if (draftData.selectedBlockId) selectedBlockId.value = draftData.selectedBlockId;
+      if (draftData.currentDevice) applyDevicePreset(draftData.currentDevice);
+      if (typeof draftData.zoom === 'number') zoom.value = draftData.zoom;
+      if (typeof draftData.panX === 'number') panX.value = draftData.panX;
+      if (typeof draftData.panY === 'number') panY.value = draftData.panY;
+      if (draftData.activeLeftTab) activeLeftTab.value = draftData.activeLeftTab;
+      if (draftData.activeRightTab) activeRightTab.value = draftData.activeRightTab;
+
+      const dateObj = new Date(draftData.updatedAt || Date.now());
+      lastSavedDraftAt.value = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      isDraftRestored.value = true;
+    } else {
+      loadBlocksForActiveContainer();
+    }
+  } catch (err) {
+    console.error('[VisualEditor] Error restoring draft:', err);
+    loadBlocksForActiveContainer();
+  }
+};
+
+let autoSaveTimer: any = null;
+
+const triggerAutoSaveDraft = () => {
+  if (isEditorBooting.value || !activeContainerId.value) return;
+
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  isDraftSaving.value = true;
+
+  autoSaveTimer = setTimeout(async () => {
+    try {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const draftPayload: EditorDraftData = {
+        blocks: pageBlocks.value,
+        roleOrHeadline: activeContainer.value?.roleOrHeadline,
+        bioIntro: activeContainer.value?.bioIntro,
+        accentColor: activeContainer.value?.accentColor,
+        selectedBlockId: selectedBlockId.value,
+        currentDevice: currentDevice.value,
+        zoom: zoom.value,
+        panX: panX.value,
+        panY: panY.value,
+        activeLeftTab: activeLeftTab.value,
+        activeRightTab: activeRightTab.value,
+        updatedAt: now.toISOString()
+      };
+
+      // 1. Simpan di localStorage seketika
+      localStorage.setItem(getDraftStorageKey(activeContainerId.value), JSON.stringify(draftPayload));
+
+      // 2. Persist ke Redis via backend API
+      await studioApi.saveEditorDraft(activeContainerId.value, draftPayload);
+
+      lastSavedDraftAt.value = timeStr;
+    } catch (e) {
+      console.warn('[VisualEditor] Auto-save to Redis failed:', e);
+    } finally {
+      isDraftSaving.value = false;
+    }
+  }, 750);
+};
+
+const resetDraftToDefault = () => {
+  if (!confirm('Apakah Anda yakin ingin membuang draf yang belum terbit dan kembali ke versi awal kontainer?')) return;
+  if (activeContainerId.value) {
+    localStorage.removeItem(getDraftStorageKey(activeContainerId.value));
+  }
+  loadBlocksForActiveContainer();
+  lastSavedDraftAt.value = '';
+  showToast('Draf telah direset ke versi awal kontainer.', 'info');
+  triggerAutoSaveDraft();
+};
+
 watch(
   () => activeContainerId.value,
-  () => {
-    loadBlocksForActiveContainer();
-  },
-  { immediate: true }
+  async (newId, oldId) => {
+    if (newId && oldId) {
+      isEditorBooting.value = true;
+      bootProgress.value = 30;
+      bootStatusText.value = 'Memuat draf kontainer baru dari Redis...';
+      await restoreDraftForActiveContainer(newId);
+      setTimeout(() => {
+        bootProgress.value = 100;
+        bootStatusText.value = 'Siap!';
+        setTimeout(() => {
+          isEditorBooting.value = false;
+        }, 200);
+      }, 250);
+    }
+  }
 );
 
-// Keep activeContainer synced with blocks state
+// Keep activeContainer synced with blocks state & trigger auto-save
 watch(
   pageBlocks,
   (newBlocks) => {
@@ -344,9 +493,25 @@ watch(
       }
       activeContainer.value.themeConfig.blocks = newBlocks;
       recordHistory();
+      triggerAutoSaveDraft();
     }
   },
   { deep: true }
+);
+
+// Watch container metadata and editor viewport to persist last edit position
+watch(
+  [
+    () => activeContainer.value?.roleOrHeadline,
+    () => activeContainer.value?.bioIntro,
+    () => activeContainer.value?.accentColor,
+    selectedBlockId,
+    currentDevice,
+    zoom
+  ],
+  () => {
+    triggerAutoSaveDraft();
+  }
 );
 
 // Computed selected block
@@ -519,16 +684,46 @@ const onKeyUp = (e: KeyboardEvent) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
   window.addEventListener('mousemove', onCanvasMouseMove);
   window.addEventListener('mouseup', onCanvasMouseUp);
   window.addEventListener('resize', fitToScreen);
+
+  // Smooth booting transition & dependency/draft load
+  isEditorBooting.value = true;
+  bootProgress.value = 20;
+  bootStatusText.value = 'Menyiapkan Kanvas Visual Studio...';
+
+  await nextTick();
+  fitToScreen();
+
+  bootProgress.value = 45;
+  bootStatusText.value = 'Memuat dependensi & engine editor...';
+
+  // Load / resume draft from Redis
+  if (activeContainerId.value) {
+    await restoreDraftForActiveContainer(activeContainerId.value);
+  } else {
+    loadBlocksForActiveContainer();
+  }
+
   recordHistory();
-  nextTick(() => {
-    fitToScreen();
-  });
+
+  bootProgress.value = 90;
+  bootStatusText.value = 'Mempersiapkan render kanvas akhir...';
+
+  setTimeout(() => {
+    bootProgress.value = 100;
+    bootStatusText.value = 'Studio siap!';
+    setTimeout(() => {
+      isEditorBooting.value = false;
+      if (isDraftRestored.value) {
+        showToast('Draf posisi edit terakhir berhasil dipulihkan dari Redis', 'success');
+      }
+    }, 350);
+  }, 300);
 });
 
 onUnmounted(() => {
@@ -752,6 +947,34 @@ const copySchemaJson = () => {
 
 <template>
   <section class="visual-studio-root">
+    <!-- Studio Booting Transition Overlay -->
+    <transition name="editor-boot-fade">
+      <div v-if="isEditorBooting" class="studio-boot-overlay">
+        <div class="boot-content">
+          <div class="boot-logo-wrapper">
+            <div class="boot-logo-box">
+              <Layers :size="30" class="boot-icon" />
+              <div class="boot-logo-pulse"></div>
+            </div>
+          </div>
+          <div class="boot-info">
+            <h3 class="boot-title">HeroCMS Studio Visual</h3>
+            <p class="boot-status">{{ bootStatusText }}</p>
+          </div>
+          <div class="boot-progress-track">
+            <div class="boot-progress-fill" :style="{ width: `${bootProgress}%` }"></div>
+          </div>
+          <div class="boot-meta">
+            <span class="boot-badge">
+              <Cloud :size="11" />
+              <span>Redis Draft Sync</span>
+            </span>
+            <span class="boot-pct">{{ bootProgress }}%</span>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <div v-if="activeContainer" class="studio-main-frame">
       <!-- =================================================================== -->
       <!-- 1. TOP STUDIO COMMAND BAR (Photoshop / Canva Toolbar)                -->
@@ -987,6 +1210,30 @@ const copySchemaJson = () => {
               <Code2 :size="13" />
             </button>
           </div>
+
+          <!-- Draft Auto-Save Redis Status & Reset -->
+          <div
+            class="draft-status-badge"
+            :class="{ saving: isDraftSaving }"
+            :title="lastSavedDraftAt ? `Draf tersimpan di Redis & Lokal pada ${lastSavedDraftAt}` : 'Draf otomatis tersimpan ke Redis'"
+          >
+            <Cloud :size="13" class="draft-cloud-icon" />
+            <span class="draft-status-text">
+              <span v-if="isDraftSaving">Menyimpan draf...</span>
+              <span v-else-if="lastSavedDraftAt">Draf Disimpan ({{ lastSavedDraftAt }})</span>
+              <span v-else>Draf Redis Aktif</span>
+            </span>
+          </div>
+
+          <button
+            class="btn-reset-draft"
+            @click="resetDraftToDefault"
+            title="Reset draf ke versi awal kontainer"
+          >
+            <RotateCcw :size="12" />
+          </button>
+
+          <div class="v-divider"></div>
 
           <!-- Publish Button -->
           <button
@@ -1835,6 +2082,7 @@ const copySchemaJson = () => {
  * Visual Studio Main Root & Reset
  * --------------------------------------------------------------------------- */
 .visual-studio-root {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -3886,5 +4134,187 @@ const copySchemaJson = () => {
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* -----------------------------------------------------------------------------
+ * Visual Studio Booting Overlay & Transition
+ * --------------------------------------------------------------------------- */
+.editor-boot-fade-enter-active,
+.editor-boot-fade-leave-active {
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease;
+}
+
+.editor-boot-fade-enter-from,
+.editor-boot-fade-leave-to {
+  opacity: 0;
+  filter: blur(6px);
+}
+
+.studio-boot-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 99999;
+  background: #090d16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.boot-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 320px;
+  max-width: 90%;
+  text-align: center;
+}
+
+.boot-logo-wrapper {
+  margin-bottom: 22px;
+}
+
+.boot-logo-box {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #38bdf8;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.boot-logo-pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 20px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%);
+  animation: boot-pulse-ring 2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes boot-pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 0.25; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.boot-info {
+  margin-bottom: 18px;
+}
+
+.boot-title {
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #f1f5f9;
+}
+
+.boot-status {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.boot-progress-track {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.boot-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #6366f1);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.boot-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.boot-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.boot-pct {
+  font-family: monospace;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* -----------------------------------------------------------------------------
+ * Draft Status Badge & Reset in Command Bar
+ * --------------------------------------------------------------------------- */
+.draft-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.draft-status-badge.saving {
+  color: #2563eb;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.draft-cloud-icon {
+  color: #0284c7;
+}
+
+.draft-status-badge.saving .draft-cloud-icon {
+  animation: pulse-cloud 1s ease-in-out infinite;
+}
+
+@keyframes pulse-cloud {
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.18); opacity: 1; color: #2563eb; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+
+.btn-reset-draft {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-reset-draft:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
 }
 </style>
