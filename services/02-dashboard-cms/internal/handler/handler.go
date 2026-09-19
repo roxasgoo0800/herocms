@@ -367,6 +367,25 @@ func (h *Handler) SaveEditorDraft(c *gin.Context) {
 	})
 }
 
+func (h *Handler) GetUserState(c *gin.Context) {
+	state, err := h.Services.GetUserState(c.Request.Context(), getTenantID(c))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"state": nil})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"state": state})
+}
+
+func (h *Handler) SaveUserState(c *gin.Context) {
+	var state gin.H
+	if err := c.ShouldBindJSON(&state); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload state tidak valid"})
+		return
+	}
+	_ = h.Services.SaveUserState(c.Request.Context(), getTenantID(c), state)
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
 // -----------------------------------------------------------------------------
 // Articles
 // -----------------------------------------------------------------------------

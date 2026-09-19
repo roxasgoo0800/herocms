@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { studioApi } from '../services/apiClient';
 import type {
   ActiveMenu,
@@ -15,8 +15,67 @@ import type {
   VisualBlock
 } from '../types/dashboard';
 
-// Active Menu Navigation
-const activeMenu = ref<ActiveMenu>('containers');
+const VALID_MENUS: ActiveMenu[] = [
+  'containers',
+  'editor',
+  'content',
+  'media',
+  'templates',
+  'domains',
+  'analytics',
+  'webhooks',
+  'billing',
+  'invoices',
+  'tickets'
+];
+
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[2]) : null;
+};
+
+const setCookie = (name: string, value: string, days = 30) => {
+  if (typeof document === 'undefined') return;
+  const maxAge = days * 24 * 60 * 60;
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+};
+
+const resolveInitialMenu = (): ActiveMenu => {
+  if (typeof window !== 'undefined') {
+    const hash = window.location.hash.replace(/^#/, '') as ActiveMenu;
+    if (VALID_MENUS.includes(hash)) {
+      return hash;
+    }
+  }
+
+  const cookieMenu = getCookie('herocms_active_menu') as ActiveMenu;
+  if (cookieMenu && VALID_MENUS.includes(cookieMenu)) {
+    return cookieMenu;
+  }
+
+  if (typeof localStorage !== 'undefined') {
+    const localMenu = localStorage.getItem('herocms_active_menu') as ActiveMenu;
+    if (localMenu && VALID_MENUS.includes(localMenu)) {
+      return localMenu;
+    }
+  }
+
+  return 'containers';
+};
+
+const resolveInitialContainerId = (): string => {
+  const cookieId = getCookie('herocms_active_container_id');
+  if (cookieId) return cookieId;
+  if (typeof localStorage !== 'undefined') {
+    const localId = localStorage.getItem('herocms_active_container_id');
+    if (localId) return localId;
+  }
+  return 'hero_tenant_9942';
+};
+
+// Active Menu Navigation (Persisted via Cookies, LocalStorage, URL Hash, & Redis)
+const activeMenu = ref<ActiveMenu>(resolveInitialMenu());
 const isEditorSidebarHidden = ref(true);
 
 // User & Plan State
@@ -63,10 +122,56 @@ const containers = ref<ContainerSite[]>([
   }
 ]);
 
-const activeContainerId = ref<string>('hero_tenant_9942');
+const activeContainerId = ref<string>(resolveInitialContainerId());
 const activeContainer = computed(() => {
   return containers.value.find(c => c.id === activeContainerId.value) || containers.value[0];
 });
+
+// Watch activeMenu and persist across refresh (Cookies, LocalStorage, URL Hash, & Redis)
+watch(activeMenu, (newMenu) => {
+  if (!VALID_MENUS.includes(newMenu)) return;
+  setCookie('herocms_active_menu', newMenu);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('herocms_active_menu', newMenu);
+  }
+  if (typeof window !== 'undefined' && window.location.hash !== '#' + newMenu) {
+    history.replaceState(null, '', '#' + newMenu);
+  }
+  studioApi.saveUserState({ activeMenu: newMenu, activeContainerId: activeContainerId.value }).catch(() => {});
+}, { immediate: true });
+
+// Watch activeContainerId and persist
+watch(activeContainerId, (newId) => {
+  if (!newId) return;
+  setCookie('herocms_active_container_id', newId);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('herocms_active_container_id', newId);
+  }
+  studioApi.saveUserState({ activeMenu: activeMenu.value, activeContainerId: newId }).catch(() => {});
+});
+
+// Listen to browser hash changes (Back / Forward navigation)
+if (typeof window !== 'undefined') {
+  window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.replace(/^#/, '') as ActiveMenu;
+    if (VALID_MENUS.includes(hash) && activeMenu.value !== hash) {
+      activeMenu.value = hash;
+    }
+  });
+
+  // Background sync with Redis user state
+  studioApi.getUserState().then((res: any) => {
+    if (res?.state?.activeMenu && VALID_MENUS.includes(res.state.activeMenu)) {
+      const currentHash = window.location.hash.replace(/^#/, '');
+      if (!currentHash) {
+        activeMenu.value = res.state.activeMenu;
+      }
+    }
+    if (res?.state?.activeContainerId) {
+      activeContainerId.value = res.state.activeContainerId;
+    }
+  }).catch(() => {});
+}
 
 const usedContainersCount = computed(() => containers.value.length);
 const runningContainersCount = computed(() => containers.value.filter(c => c.status === 'running').length);

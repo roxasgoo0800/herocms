@@ -735,4 +735,26 @@ func (s *Services) GetEditorDraft(ctx context.Context, tenantID, containerID str
 	return draft, nil
 }
 
+func (s *Services) SaveUserState(ctx context.Context, tenantID string, state gin.H) error {
+	if tenantID == "" {
+		tenantID = "99420000-0000-0000-0000-000000009942"
+	}
+	key := fmt.Sprintf("tenant:%s:user_state", tenantID)
+	return s.Redis.SetJSON(ctx, key, state, 30*24*time.Hour)
+}
+
+func (s *Services) GetUserState(ctx context.Context, tenantID string) (gin.H, error) {
+	if tenantID == "" {
+		tenantID = "99420000-0000-0000-0000-000000009942"
+	}
+	key := fmt.Sprintf("tenant:%s:user_state", tenantID)
+	var state gin.H
+	hit, err := s.Redis.GetJSON(ctx, key, &state)
+	if err != nil || !hit || state == nil {
+		return nil, fmt.Errorf("state belum tersedia")
+	}
+	return state, nil
+}
+
+
 

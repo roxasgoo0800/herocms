@@ -77,9 +77,11 @@ func main() {
 		protected.Use(middleware.RateLimiter(rdb, 120, time.Minute))
 		protected.Use(middleware.SessionOrJWTAuth(cfg, rdb))
 		{
-			// Session
+			// Session & State Persistence (Redis)
 			protected.GET("/auth/me", h.Me)
 			protected.POST("/auth/logout", h.Logout)
+			protected.GET("/user/state", h.GetUserState)
+			protected.PUT("/user/state", h.SaveUserState)
 
 			// Containers & Multi-Site Hub
 			protected.GET("/containers", h.ListContainers)

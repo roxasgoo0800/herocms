@@ -72,6 +72,8 @@ export const studioApi = {
     apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ full_name: fullName, email, password }) }),
   getMe: () => apiFetch('/auth/me'),
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
+  getUserState: () => apiFetch('/user/state'),
+  saveUserState: (state: any) => apiFetch('/user/state', { method: 'PUT', body: JSON.stringify(state) }),
 
   // Containers
   getContainers: () => apiFetch('/containers'),
