@@ -77,10 +77,10 @@ const editorViewMode = ref<EditorViewMode>('design');
 const activeLeftTab = ref<'blocks' | 'layers' | 'design' | 'ai'>('blocks');
 const activeRightTab = ref<'content' | 'layout' | 'appearance'>('content');
 
-// Studio Booting Transition & Redis Draft State
+// Studio Booting Transition & Draft State
 const isEditorBooting = ref(true);
 const bootProgress = ref(15);
-const bootStatusText = ref('Menginisialisasi Visual Canvas Engine...');
+const bootStatusText = ref('Menyiapkan kanvas visual...');
 const isDraftSaving = ref(false);
 const lastSavedDraftAt = ref('');
 const isDraftRestored = ref(false);
@@ -356,7 +356,7 @@ const loadBlocksForActiveContainer = () => {
 const restoreDraftForActiveContainer = async (containerId: string) => {
   if (!containerId) return;
   try {
-    bootStatusText.value = 'Mengecek draf posisi edit terakhir dari Redis...';
+    bootStatusText.value = 'Memuat draf posisi edit terakhir...';
     bootProgress.value = 55;
 
     let draftData: EditorDraftData | null = null;
@@ -469,16 +469,16 @@ watch(
   async (newId, oldId) => {
     if (newId && oldId) {
       isEditorBooting.value = true;
-      bootProgress.value = 30;
-      bootStatusText.value = 'Memuat draf kontainer baru dari Redis...';
+      bootProgress.value = 35;
+      bootStatusText.value = 'Memuat draf situs...';
       await restoreDraftForActiveContainer(newId);
       setTimeout(() => {
         bootProgress.value = 100;
-        bootStatusText.value = 'Siap!';
+        bootStatusText.value = 'Draf siap!';
         setTimeout(() => {
           isEditorBooting.value = false;
-        }, 200);
-      }, 250);
+        }, 180);
+      }, 200);
     }
   }
 );
@@ -693,16 +693,16 @@ onMounted(async () => {
 
   // Smooth booting transition & dependency/draft load
   isEditorBooting.value = true;
-  bootProgress.value = 20;
-  bootStatusText.value = 'Menyiapkan Kanvas Visual Studio...';
+  bootProgress.value = 25;
+  bootStatusText.value = 'Menyiapkan kanvas visual...';
 
   await nextTick();
   fitToScreen();
 
-  bootProgress.value = 45;
+  bootProgress.value = 50;
   bootStatusText.value = 'Memuat dependensi & engine editor...';
 
-  // Load / resume draft from Redis
+  // Load / resume draft
   if (activeContainerId.value) {
     await restoreDraftForActiveContainer(activeContainerId.value);
   } else {
@@ -711,19 +711,19 @@ onMounted(async () => {
 
   recordHistory();
 
-  bootProgress.value = 90;
-  bootStatusText.value = 'Mempersiapkan render kanvas akhir...';
+  bootProgress.value = 85;
+  bootStatusText.value = 'Merender komponen & layout...';
 
   setTimeout(() => {
     bootProgress.value = 100;
-    bootStatusText.value = 'Studio siap!';
+    bootStatusText.value = 'Draf siap!';
     setTimeout(() => {
       isEditorBooting.value = false;
       if (isDraftRestored.value) {
-        showToast('Draf posisi edit terakhir berhasil dipulihkan dari Redis', 'success');
+        showToast('Draf posisi edit terakhir berhasil dimuat', 'success');
       }
-    }, 350);
-  }, 300);
+    }, 280);
+  }, 250);
 });
 
 onUnmounted(() => {
@@ -947,30 +947,37 @@ const copySchemaJson = () => {
 
 <template>
   <section class="visual-studio-root">
-    <!-- Studio Booting Transition Overlay -->
-    <transition name="editor-boot-fade">
-      <div v-if="isEditorBooting" class="studio-boot-overlay">
-        <div class="boot-content">
-          <div class="boot-logo-wrapper">
-            <div class="boot-logo-box">
-              <Layers :size="30" class="boot-icon" />
-              <div class="boot-logo-pulse"></div>
-            </div>
+    <!-- Studio Booting Transition Overlay (Themed identically to Splash Screen) -->
+    <transition name="studio-boot-dissolve">
+      <div v-if="isEditorBooting" class="studio-boot-screen" role="status" aria-live="polite">
+        <!-- Theme Base Dot Grid -->
+        <div class="base-dot-grid" aria-hidden="true"></div>
+
+        <!-- Clean Center Pod -->
+        <div class="boot-center-pod">
+          <!-- Logo Emblem matching splashscreen -->
+          <div class="brand-glyph-box">
+            <Layers :size="24" color="#ffffff" />
           </div>
-          <div class="boot-info">
-            <h3 class="boot-title">HeroCMS Studio Visual</h3>
-            <p class="boot-status">{{ bootStatusText }}</p>
-          </div>
+
+          <!-- Brand Wordmark -->
+          <h1 class="brand-wordmark">
+            HeroCMS <span class="wordmark-highlight">Studio</span>
+            <span class="wordmark-editor-tag">Visual Editor</span>
+          </h1>
+
+          <!-- Obsidian Black Loading Bar directly under wordmark -->
           <div class="boot-progress-track">
-            <div class="boot-progress-fill" :style="{ width: `${bootProgress}%` }"></div>
+            <div
+              class="boot-progress-fill"
+              :style="{ width: `${bootProgress}%` }"
+            ></div>
           </div>
-          <div class="boot-meta">
-            <span class="boot-badge">
-              <Cloud :size="11" />
-              <span>Redis Draft Sync</span>
-            </span>
-            <span class="boot-pct">{{ bootProgress }}%</span>
-          </div>
+
+          <!-- Dynamic Real Initialization Status -->
+          <p class="boot-status-text">
+            {{ bootStatusText }}
+          </p>
         </div>
       </div>
     </transition>
@@ -1211,17 +1218,17 @@ const copySchemaJson = () => {
             </button>
           </div>
 
-          <!-- Draft Auto-Save Redis Status & Reset -->
+          <!-- Draft Auto-Save Status & Reset -->
           <div
             class="draft-status-badge"
             :class="{ saving: isDraftSaving }"
-            :title="lastSavedDraftAt ? `Draf tersimpan di Redis & Lokal pada ${lastSavedDraftAt}` : 'Draf otomatis tersimpan ke Redis'"
+            :title="lastSavedDraftAt ? `Draf tersimpan otomatis pada ${lastSavedDraftAt}` : 'Draf otomatis tersimpan'"
           >
             <Cloud :size="13" class="draft-cloud-icon" />
             <span class="draft-status-text">
               <span v-if="isDraftSaving">Menyimpan draf...</span>
               <span v-else-if="lastSavedDraftAt">Draf Disimpan ({{ lastSavedDraftAt }})</span>
-              <span v-else>Draf Redis Aktif</span>
+              <span v-else>Draf Aktif</span>
             </span>
           </div>
 
@@ -4137,127 +4144,146 @@ const copySchemaJson = () => {
 }
 
 /* -----------------------------------------------------------------------------
- * Visual Studio Booting Overlay & Transition
+ * Visual Studio Booting Overlay & Transition (Identical Theme to StudioSplashScreen)
  * --------------------------------------------------------------------------- */
-.editor-boot-fade-enter-active,
-.editor-boot-fade-leave-active {
-  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease;
-}
-
-.editor-boot-fade-enter-from,
-.editor-boot-fade-leave-to {
-  opacity: 0;
-  filter: blur(6px);
-}
-
-.studio-boot-overlay {
+.studio-boot-screen {
   position: absolute;
   inset: 0;
   z-index: 99999;
-  background: #090d16;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  user-select: none;
+  will-change: opacity, transform;
 }
 
-.boot-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 320px;
-  max-width: 90%;
-  text-align: center;
-}
-
-.boot-logo-wrapper {
-  margin-bottom: 22px;
-}
-
-.boot-logo-box {
-  position: relative;
-  width: 58px;
-  height: 58px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #38bdf8;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-.boot-logo-pulse {
+/* Theme Base Dot Grid */
+.base-dot-grid {
   position: absolute;
-  inset: -4px;
-  border-radius: 20px;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%);
-  animation: boot-pulse-ring 2s ease-out infinite;
+  inset: 0;
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+  background-size: 28px 28px;
+  background-position: -14px -14px;
+  opacity: 0.75;
   pointer-events: none;
 }
 
-@keyframes boot-pulse-ring {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.1); opacity: 0.25; }
-  100% { transform: scale(0.95); opacity: 0.8; }
+/* Clean Center Pod */
+.boot-center-pod {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: podEntrance 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.boot-info {
-  margin-bottom: 18px;
+@keyframes podEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-.boot-title {
-  margin: 0 0 6px 0;
-  font-size: 0.95rem;
+/* Brand Glyph Box: Obsidian Black matching theme buttons and badges */
+.brand-glyph-box {
+  width: 50px;
+  height: 50px;
+  background: #0f172a;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Wordmark */
+.brand-wordmark {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wordmark-highlight {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.wordmark-editor-tag {
+  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #f1f5f9;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #2563eb;
+  vertical-align: middle;
 }
 
-.boot-status {
-  margin: 0;
-  font-size: 0.76rem;
-  color: #94a3b8;
-  font-weight: 500;
-}
-
+/* Black Loading Bar (Directly beneath logo & wordmark) */
 .boot-progress-track {
-  width: 100%;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  width: 180px;
+  height: 3.5px;
+  background: #e2e8f0;
+  border-radius: 9999px;
   overflow: hidden;
-  margin-bottom: 12px;
+  position: relative;
+  margin-bottom: 10px;
 }
 
 .boot-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #38bdf8, #6366f1);
-  border-radius: 999px;
-  transition: width 0.25s ease;
+  background: #0f172a; /* Solid Theme Obsidian Black */
+  border-radius: 9999px;
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.boot-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  font-size: 0.7rem;
+/* Clean Status Text */
+.boot-status-text {
+  font-size: 0.78rem;
+  font-weight: 500;
   color: #64748b;
+  letter-spacing: -0.01em;
+  margin: 0;
 }
 
-.boot-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: #38bdf8;
-  font-weight: 600;
+/* Dissolve Transitions */
+.studio-boot-dissolve-enter-active {
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.boot-pct {
-  font-family: monospace;
-  color: #94a3b8;
-  font-weight: 600;
+.studio-boot-dissolve-enter-from {
+  opacity: 0;
+}
+
+.studio-boot-dissolve-leave-active {
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.studio-boot-dissolve-leave-to {
+  opacity: 0;
+  transform: scale(1.03);
+  filter: blur(8px);
 }
 
 /* -----------------------------------------------------------------------------
