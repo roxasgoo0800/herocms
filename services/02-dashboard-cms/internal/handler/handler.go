@@ -86,7 +86,11 @@ func (h *Handler) Login(c *gin.Context) {
 	c.SetCookie("herocms_session", sessionID, 2592000, "/", "", false, true)
 
 	// 2. Set readable Cookie for CSRF Token (Double Submit Pattern)
-	c.SetCookie("csrf_token", csrfToken, 2592000, "/", "", false, false)
+	csrfCookieName := h.Services.Config.CSRFCookieName
+	if csrfCookieName == "" {
+		csrfCookieName = "csrf_token"
+	}
+	c.SetCookie(csrfCookieName, csrfToken, 2592000, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
 
 	// 3. Set response headers & return payload
 	c.Header("X-CSRF-Token", csrfToken)
@@ -152,8 +156,12 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 	h.Services.Redis.SaveSession(c.Request.Context(), sess, 30*24*time.Hour)
 
+	csrfCookieName := h.Services.Config.CSRFCookieName
+	if csrfCookieName == "" {
+		csrfCookieName = "csrf_token"
+	}
 	c.SetCookie("herocms_session", sessionID, 2592000, "/", "", false, true)
-	c.SetCookie("csrf_token", csrfToken, 2592000, "/", "", false, false)
+	c.SetCookie(csrfCookieName, csrfToken, 2592000, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
 	c.Header("X-CSRF-Token", csrfToken)
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -207,8 +215,12 @@ func (h *Handler) Logout(c *gin.Context) {
 	}
 
 	// Clear cookies
+	csrfCookieName := h.Services.Config.CSRFCookieName
+	if csrfCookieName == "" {
+		csrfCookieName = "csrf_token"
+	}
 	c.SetCookie("herocms_session", "", -1, "/", "", false, true)
-	c.SetCookie("csrf_token", "", -1, "/", "", false, false)
+	c.SetCookie(csrfCookieName, "", -1, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logout berhasil, sesi dan cookie telah dibersihkan."})
 }

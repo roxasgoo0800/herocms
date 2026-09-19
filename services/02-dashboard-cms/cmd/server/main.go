@@ -43,8 +43,8 @@ func main() {
 
 	// Enterprise Security Headers, Strict CORS, & CSRF Protection
 	router.Use(middleware.SecurityHeaders())
-	router.Use(middleware.CORS())
-	router.Use(middleware.CSRFProtection())
+	router.Use(middleware.CORS(cfg))
+	router.Use(middleware.CSRFProtection(cfg))
 
 	// Health Check
 	router.GET("/healthz", func(c *gin.Context) {
