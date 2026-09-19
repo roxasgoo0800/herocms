@@ -43,8 +43,10 @@ import WebhooksApiModule from '../components/dashboard/WebhooksApiModule.vue';
 import BillingPlanModule from '../components/dashboard/BillingPlanModule.vue';
 import InvoicesHistoryModule from '../components/dashboard/InvoicesHistoryModule.vue';
 import SupportTicketingModule from '../components/dashboard/SupportTicketingModule.vue';
+import { useSplashTransition } from '../composables/useSplashTransition';
 
 const router = useRouter();
+const { isDashboardEntering } = useSplashTransition();
 
 const {
   activeMenu,
@@ -79,7 +81,13 @@ const handleLogout = () => {
 
 <template>
   <div class="dashboard-root-layout">
-    <div class="app-shell" :class="{ 'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden }">
+    <div
+      class="app-shell"
+      :class="{
+        'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden,
+        'dashboard-choreographed-enter': isDashboardEntering
+      }"
+    >
     <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
     <aside class="app-sidebar">
       <!-- Workspace Brand Switcher -->
@@ -547,6 +555,58 @@ const handleLogout = () => {
   min-height: 100vh;
   background: transparent;
   position: relative;
+}
+
+/* Choreographed Dashboard Entrance from Splash Screen */
+.app-shell.dashboard-choreographed-enter .app-sidebar {
+  animation: sidebarSlideIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.app-shell.dashboard-choreographed-enter .top-nav-header {
+  animation: headerDropIn 0.58s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.app-shell.dashboard-choreographed-enter .content-scroll-pane {
+  animation: contentLiftIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes sidebarSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-40px);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes headerDropIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes contentLiftIn {
+  0% {
+    opacity: 0;
+    transform: translateY(32px) scale(0.98);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 /* Editor Immersive Mode: Hide Sidebar & Top Header for maximum wide workspace */

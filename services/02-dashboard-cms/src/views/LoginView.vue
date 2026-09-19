@@ -70,13 +70,19 @@ const handleLogin = async (e?: Event) => {
       localStorage.setItem('cloudcms_auth_token', res.token);
       localStorage.setItem('cloudcms_user_email', res.user?.email || idVal);
       successMessage.value = 'Kredensial terverifikasi! Mempersiapkan workspace studio...';
+      
+      // Step 1: Trigger login card cinematic drop-down and blur exit
       isTransitioningToDashboard.value = true;
-      triggerSplash(1200);
 
-      // Route transition happens under the splash screen so Dashboard is fully pre-rendered
+      // Step 2: Trigger splash entrance at 160ms so the user sees the card dissolve into the splash
+      setTimeout(() => {
+        triggerSplash(1300);
+      }, 160);
+
+      // Step 3: Route transition to Dashboard happens safely under splash screen at 360ms
       setTimeout(() => {
         router.push('/');
-      }, 160);
+      }, 360);
     } else {
       throw new Error(res?.error || 'Autentikasi gagal');
     }
@@ -488,16 +494,24 @@ const handleRegister = async (e?: Event) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .auth-surface-container.card-leaving-for-splash {
-  opacity: 0;
-  transform: scale(0.95) translateY(-8px);
-  filter: blur(8px);
+  animation: loginCardExit 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   pointer-events: none;
+}
+
+@keyframes loginCardExit {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(24px);
+    filter: blur(14px);
+  }
 }
 
 /* Brand Header */

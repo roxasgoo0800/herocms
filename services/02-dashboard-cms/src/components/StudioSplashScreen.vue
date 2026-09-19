@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Layers } from 'lucide-vue-next';
 
 const props = withDefaults(
@@ -9,7 +9,7 @@ const props = withDefaults(
   }>(),
   {
     targetUrl: '/',
-    durationMs: 1200
+    durationMs: 1300
   }
 );
 
@@ -19,6 +19,12 @@ const emit = defineEmits<{
 
 const progress = ref(0);
 const isFinished = ref(false);
+
+const statusText = computed(() => {
+  if (progress.value < 35) return 'Memverifikasi sesi aman';
+  if (progress.value < 75) return 'Menyiapkan workspace studio';
+  return 'Membuka HeroCMS Studio';
+});
 
 let timer: number | null = null;
 const startTime = Date.now();
@@ -36,7 +42,7 @@ onMounted(() => {
         isFinished.value = true;
         setTimeout(() => {
           emit('complete');
-        }, 360);
+        }, 380);
       }, 160);
     }
   };
@@ -77,14 +83,15 @@ onUnmounted(() => {
           <div class="minimal-progress-track">
             <div
               class="minimal-progress-fill"
+              :class="{ 'is-complete': progress >= 100 }"
               :style="{ width: `${progress}%` }"
             ></div>
           </div>
         </div>
 
-        <!-- Quiet, Human Status Subtext -->
+        <!-- Quiet, Human Status Subtext with dynamic stages -->
         <div class="minimal-status-row">
-          <span class="minimal-status-text">Menyiapkan workspace</span>
+          <span class="minimal-status-text">{{ statusText }}</span>
           <span class="status-dots">
             <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
           </span>
@@ -100,9 +107,9 @@ onUnmounted(() => {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(248, 250, 252, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(248, 250, 252, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,8 +125,8 @@ onUnmounted(() => {
   height: 500px;
   background: radial-gradient(
     circle,
-    rgba(37, 99, 235, 0.08) 0%,
-    rgba(148, 163, 184, 0.04) 50%,
+    rgba(37, 99, 235, 0.1) 0%,
+    rgba(148, 163, 184, 0.05) 50%,
     transparent 70%
   );
   filter: blur(50px);
@@ -132,7 +139,7 @@ onUnmounted(() => {
   100% { transform: scale(1.08); opacity: 1; }
 }
 
-/* Minimalist Pod (No bulky box, no coding vibe) */
+/* Minimalist Pod with Spring/Scale Entrance */
 .splash-minimal-pod {
   position: relative;
   z-index: 10;
@@ -140,6 +147,20 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  animation: podScaleIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes podScaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.86) translateY(18px);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
 }
 
 /* Brand Emblem */
@@ -225,6 +246,11 @@ onUnmounted(() => {
   box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
 }
 
+.minimal-progress-fill.is-complete {
+  background: linear-gradient(90deg, #38bdf8 0%, #60a5fa 100%);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.8), 0 0 24px rgba(37, 99, 235, 0.5);
+}
+
 /* Quiet, Elegant Status Subtext */
 .minimal-status-row {
   display: flex;
@@ -250,26 +276,26 @@ onUnmounted(() => {
 
 /* Seamless Smooth Dissolve In & Out */
 .splash-dissolve-enter-active {
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .splash-dissolve-enter-from {
   opacity: 0;
-  transform: scale(0.98);
-  filter: blur(6px);
+  transform: scale(0.96);
+  filter: blur(8px);
 }
 
 .splash-dissolve-leave-active {
-  transition: opacity 0.34s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .splash-dissolve-leave-to {
   opacity: 0;
-  transform: scale(1.02);
-  filter: blur(6px);
+  transform: scale(1.08);
+  filter: blur(14px);
 }
 </style>
