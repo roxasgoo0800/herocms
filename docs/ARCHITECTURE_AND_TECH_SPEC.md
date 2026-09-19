@@ -97,6 +97,17 @@ flowchart TB
   - `useContentStore`: Pembaruan UI optimistik (*optimistic UI updates*) untuk artikel blog, studi kasus portofolio, dan silabus edukasi.
   - `useDeployStore`: Koneksi WebSocket dua arah ke Go Orchestrator untuk menampilkan progres pembuatan kontainer secara langsung.
   - `useAiStore`: Streaming respon LLM untuk penulisan konten, rekomendasi SEO, dan pratinjau tema dinamis.
+* **Arsitektur Progressive Web App (PWA) Mandatori:**
+  - **Pustaka & Plugin:** `vite-plugin-pwa` berbasis Workbox 7.
+  - **Mode Eksekusi:** `generateSW` dengan strategi caching deklaratif.
+  - **Manifest Web App (`public/manifest.webmanifest`):**
+    - `name: "HeroCMS Studio"`, `short_name: "HeroStudio"`, `start_url: "/"`, `display: "standalone"`, `theme_color: "#09090b"`.
+    - Ikon aplikasi: `icon-192.png`, `icon-512.png`, dan `maskable-icon-512.png`.
+  - **Caching Strategies:**
+    - App Shell (HTML, CSS, JS chunks): *CacheFirst* dengan revving hash file otomatis.
+    - API Telemetri & Docker status: *NetworkFirst* dengan timeout 3 detik dan fallback ke cache offline IndexedDB.
+    - Media CDN/S3: *StaleWhileRevalidate* dengan maxEntries 100 dan maxAge 30 hari.
+  - **Background Sync:** Mengantrekan aksi penulisan artikel dan penyesuaian tema saat offline menggunakan `workbox-background-sync`.
 * **Fitur Utama:**
   - **Dynamic Schema Builder:** Tipe konten yang dapat disesuaikan per kategori (misal: "Studi Kasus Portofolio" dengan kolom: nama klien, teknologi yang digunakan, galeri gambar, link GitHub; atau "Artikel Blog" dengan kolom: waktu baca, markdown, URL kanonikal).
   - **Asset Manager:** Upload langsung ke MinIO / S3 via *presigned URL*, memastikan server aplikasi tidak terbebani pemrosesan file besar.
