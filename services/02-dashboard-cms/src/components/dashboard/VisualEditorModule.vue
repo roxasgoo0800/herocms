@@ -2933,7 +2933,6 @@ const copySchemaJson = () => {
 .palette-card-btn.active {
   border-color: #0f172a;
   background: #f8fafc;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 
 .palette-swatch-dot {
@@ -2944,12 +2943,7 @@ const copySchemaJson = () => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.palette-card-btn.active .palette-swatch-dot {
-  box-shadow: 0 0 0 2px #ffffff, 0 0 0 3.5px #0f172a, inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
 .palette-meta {
