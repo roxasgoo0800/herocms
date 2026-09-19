@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { Layers } from 'lucide-vue-next';
+import { useDashboardData } from '../composables/useDashboardData';
 
 const props = withDefaults(
   defineProps<{
@@ -9,7 +10,7 @@ const props = withDefaults(
   }>(),
   {
     targetUrl: '/',
-    durationMs: 1200
+    durationMs: 1100
   }
 );
 
@@ -18,42 +19,65 @@ const emit = defineEmits<{
   (e: 'complete'): void;
 }>();
 
-const progress = ref(0);
+const progress = ref(8);
 const isFinished = ref(false);
+const statusText = ref('Memverifikasi sesi & token...');
 
-const statusText = computed(() => {
-  if (progress.value < 40) return 'Memverifikasi kredensial...';
-  if (progress.value < 85) return 'Menyiapkan workspace...';
-  return 'Membuka studio...';
-});
+let isUnmounted = false;
+let stepTimer: number | null = null;
 
-let timer: number | null = null;
-const startTime = Date.now();
+onMounted(async () => {
+  const startTime = Date.now();
+  const { syncWithBackend } = useDashboardData();
 
-onMounted(() => {
-  const step = () => {
-    const elapsed = Date.now() - startTime;
-    const rawPct = Math.min(100, (elapsed / props.durationMs) * 100);
-    progress.value = Math.round(rawPct);
+  // 1. Stage 1: Auth Token & Sesi Validation
+  statusText.value = 'Memverifikasi sesi & token...';
+  progress.value = 25;
 
-    if (progress.value < 100) {
-      timer = requestAnimationFrame(step);
-    } else {
-      setTimeout(() => {
-        isFinished.value = true;
-        emit('revealing');
-        setTimeout(() => {
-          emit('complete');
-        }, 340);
-      }, 100);
+  // 2. Stage 2: Background Data Hydration & Font Pre-warming
+  const syncPromise = syncWithBackend().catch(err => console.warn('[Splash Sync]', err));
+  const fontPromise = document.fonts ? document.fonts.ready : Promise.resolve();
+
+  // Smoothly advance progress while fetching network data
+  stepTimer = window.setTimeout(() => {
+    if (!isUnmounted && progress.value < 65) {
+      statusText.value = 'Mengambil data kontainer & telemetri...';
+      progress.value = 65;
     }
-  };
+  }, 220);
 
-  timer = requestAnimationFrame(step);
+  // Await actual network data & font caching
+  await Promise.allSettled([syncPromise, fontPromise]);
+  if (isUnmounted) return;
+
+  // 3. Stage 3: Visual Editor & Local Cache Preparation
+  statusText.value = 'Menyiapkan cache workspace & modul...';
+  progress.value = 90;
+
+  // Ensure a smooth, visually pleasant minimum time (~900ms - 1100ms)
+  const elapsed = Date.now() - startTime;
+  const remaining = Math.max(80, props.durationMs - elapsed);
+
+  setTimeout(() => {
+    if (isUnmounted) return;
+    progress.value = 100;
+    statusText.value = 'Workspace studio siap!';
+
+    setTimeout(() => {
+      if (isUnmounted) return;
+      isFinished.value = true;
+      emit('revealing');
+
+      setTimeout(() => {
+        emit('complete');
+      }, 340);
+    }, 100);
+  }, remaining);
 });
 
 onUnmounted(() => {
-  if (timer) cancelAnimationFrame(timer);
+  isUnmounted = true;
+  if (stepTimer) clearTimeout(stepTimer);
 });
 </script>
 
@@ -83,7 +107,7 @@ onUnmounted(() => {
           ></div>
         </div>
 
-        <!-- Clean Status Text -->
+        <!-- Dynamic Real Initialization Status -->
         <p class="splash-status-text">
           {{ statusText }}
         </p>
@@ -186,7 +210,7 @@ onUnmounted(() => {
   height: 100%;
   background: #0f172a; /* Solid Theme Obsidian Black */
   border-radius: 9999px;
-  transition: width 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Clean Status Text */

@@ -1002,12 +1002,51 @@ const syncWithBackend = async () => {
     if (wRes.status === 'fulfilled' && wRes.value?.webhooks?.length) {
       webhooks.value = wRes.value.webhooks;
     }
+
+    // Persist fresh server state to local cache for instant zero-latency loads
+    try {
+      localStorage.setItem('herocms_dashboard_cache', JSON.stringify({
+        timestamp: Date.now(),
+        containers: containers.value,
+        articles: articles.value,
+        mediaAssets: mediaAssets.value,
+        customDomains: customDomains.value,
+        supportTickets: supportTickets.value,
+        invoices: invoices.value,
+        webhooks: webhooks.value,
+        userPlan: userPlan.value
+      }));
+    } catch (e) {
+      // Ignored
+    }
   } catch (err) {
     console.warn('[SYNC NOTICE] Backend sync deferred:', err);
   } finally {
     isBackendSyncing.value = false;
   }
 };
+
+// Immediate cache hydration for instant zero-latency rendering
+const hydrateFromCache = () => {
+  try {
+    const raw = localStorage.getItem('herocms_dashboard_cache');
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.containers) && data.containers.length) containers.value = data.containers;
+      if (Array.isArray(data.articles) && data.articles.length) articles.value = data.articles;
+      if (Array.isArray(data.mediaAssets) && data.mediaAssets.length) mediaAssets.value = data.mediaAssets;
+      if (Array.isArray(data.customDomains) && data.customDomains.length) customDomains.value = data.customDomains;
+      if (Array.isArray(data.supportTickets) && data.supportTickets.length) supportTickets.value = data.supportTickets;
+      if (Array.isArray(data.invoices) && data.invoices.length) invoices.value = data.invoices;
+      if (Array.isArray(data.webhooks) && data.webhooks.length) webhooks.value = data.webhooks;
+      if (data.userPlan?.name) userPlan.value = data.userPlan;
+    }
+  } catch (e) {
+    // Graceful fallback to default values
+  }
+};
+
+hydrateFromCache();
 
 export function useDashboardData() {
   return {
