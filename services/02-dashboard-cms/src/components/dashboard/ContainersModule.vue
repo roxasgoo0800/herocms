@@ -281,85 +281,84 @@ const selectForEditor = (containerId: string) => {
           </div>
         </div>
 
-        <!-- Card Bottom Operational Actions -->
-        <div class="card-bottom-actions">
-          <div class="actions-left-group">
+        <!-- Card Action Buttons Footer -->
+        <div class="card-action-bar">
+          <button
+            class="btn-action-primary"
+            @click="selectForEditor(c.id)"
+          >
+            <Edit3 :size="14" />
+            <span>Buka Editor Studio</span>
+          </button>
+
+          <!-- Runtime Controls -->
+          <div class="runtime-btn-group">
             <button
               v-if="c.status === 'stopped'"
-              class="btn-ctrl-action play"
+              class="btn-icon-ctrl btn-play"
               @click="startContainer(c)"
-              title="Jalankan Kontainer"
+              title="Jalankan Kontainer (Start)"
             >
               <Play :size="13" />
-              <span>Nyalakan</span>
             </button>
             <button
-              v-else
-              class="btn-ctrl-action stop"
+              v-if="c.status === 'running'"
+              class="btn-icon-ctrl btn-pause"
               @click="stopContainer(c)"
-              title="Hentikan Kontainer"
+              title="Hentikan Sementara (Stop)"
             >
-              <Square :size="13" />
-              <span>Hentikan</span>
+              <Square :size="12" />
             </button>
-
             <button
-              class="btn-ctrl-action restart"
+              class="btn-icon-ctrl"
+              :disabled="c.status === 'stopped'"
               @click="restartContainer(c)"
-              title="Reboot Kontainer"
+              title="Restart Kontainer"
             >
               <RotateCw :size="13" />
             </button>
-
             <button
-              class="btn-ctrl-action logs"
+              class="btn-icon-ctrl btn-term"
               @click="openLogsModal(c)"
-              title="Lihat Log Traefik & Docker"
+              title="Lihat Log Docker & Traefik"
             >
               <Terminal :size="13" />
-              <span>Log</span>
             </button>
-          </div>
-
-          <div class="actions-right-group">
             <button
-              class="btn-ctrl-action delete"
+              class="btn-icon-ctrl btn-del"
               @click="deleteContainer(c)"
               title="Hapus Kontainer"
             >
               <Trash2 :size="13" />
             </button>
-            <button
-              class="btn-action-primary"
-              @click="selectForEditor(c.id)"
-            >
-              <Edit3 :size="13" />
-              <span>Kustomisasi</span>
-            </button>
           </div>
         </div>
       </div>
 
-      <!-- Add New Website / Empty Quota Slot Card -->
-      <div
-        v-if="statusFilter === 'all' && containers.length < userPlan.maxContainers"
-        class="pro-site-card empty-slot-card"
-        @click="openCreateModal()"
-      >
-        <div class="empty-slot-content">
-          <div class="plus-icon-circle">
-            <Plus :size="20" color="#2563eb" />
+      <!-- Quota Available Slot Placeholders (Fills 3-column grid) -->
+      <template v-if="statusFilter === 'all' && containers.length < userPlan.maxContainers">
+        <div
+          v-for="slotNum in (userPlan.maxContainers - containers.length)"
+          :key="'slot-' + slotNum"
+          class="empty-slot-card"
+          @click="openCreateModal()"
+        >
+          <div class="slot-dashed-inner">
+            <div class="slot-icon-circle">
+              <Plus :size="20" />
+            </div>
+            <div class="slot-text-group">
+              <div class="slot-badge">SLOT KONTAINER #{{ containers.length + slotNum }}</div>
+              <h4 class="slot-title">Siap Dideploy</h4>
+              <p class="slot-specs">{{ userPlan.cpuPerContainer }} • {{ userPlan.ramPerContainer }} • Traefik Ready</p>
+            </div>
+            <button class="btn-slot-create" type="button">
+              <Plus :size="13" />
+              <span>Deploy Website Baru</span>
+            </button>
           </div>
-          <h4 class="empty-slot-title">Deploy Website Baru</h4>
-          <p class="empty-slot-desc">
-            Slot kuota {{ containers.length + 1 }} dari {{ userPlan.maxContainers }} siap digunakan. Klik untuk meluncurkan kontainer baru dalam hitungan detik.
-          </p>
-          <span class="btn-slot-create">
-            <Plus :size="13" />
-            <span>Pilih Template</span>
-          </span>
         </div>
-      </div>
+      </template>
     </div>
 
     <!-- Empty State if search finds nothing -->
