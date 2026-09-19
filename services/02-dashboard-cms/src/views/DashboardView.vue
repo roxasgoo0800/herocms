@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
@@ -43,8 +43,16 @@ import WebhooksApiModule from '../components/dashboard/WebhooksApiModule.vue';
 import BillingPlanModule from '../components/dashboard/BillingPlanModule.vue';
 import InvoicesHistoryModule from '../components/dashboard/InvoicesHistoryModule.vue';
 import SupportTicketingModule from '../components/dashboard/SupportTicketingModule.vue';
+import StudioSplashScreen from '../components/StudioSplashScreen.vue';
 
 const router = useRouter();
+
+const isDashboardInitializing = ref(sessionStorage.getItem('herocms_splash_seen') !== 'true');
+
+const onSplashComplete = () => {
+  isDashboardInitializing.value = false;
+  sessionStorage.setItem('herocms_splash_seen', 'true');
+};
 
 const {
   activeMenu,
@@ -65,18 +73,26 @@ const {
   syncWithBackend
 } = useDashboardData();
 
-onMounted(() => {
-  syncWithBackend();
+onMounted(async () => {
+  await syncWithBackend();
 });
 
 const handleLogout = () => {
   localStorage.removeItem('cloudcms_auth_token');
   localStorage.removeItem('cloudcms_user_email');
+  sessionStorage.removeItem('herocms_splash_seen');
   router.push('/login');
 };
 </script>
 
 <template>
+  <!-- Fullscreen Studio Splashscreen Gateway Transition -->
+  <StudioSplashScreen
+    v-if="isDashboardInitializing"
+    :duration-ms="1200"
+    @complete="onSplashComplete"
+  />
+
   <div class="app-shell" :class="{ 'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden }">
     <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
     <aside class="app-sidebar">

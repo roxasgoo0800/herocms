@@ -16,6 +16,7 @@ import {
   UserPlus
 } from 'lucide-vue-next';
 import { studioApi } from '../services/apiClient';
+import StudioSplashScreen from '../components/StudioSplashScreen.vue';
 
 const router = useRouter();
 
@@ -36,6 +37,7 @@ const regConfirmPassword = ref('');
 const showRegPassword = ref(false);
 
 const isLoading = ref(false);
+const isTransitioningToDashboard = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
 const isInputFocused = ref<string | null>(null);
@@ -66,11 +68,9 @@ const handleLogin = async (e?: Event) => {
     if (res?.token) {
       localStorage.setItem('cloudcms_auth_token', res.token);
       localStorage.setItem('cloudcms_user_email', res.user?.email || idVal);
-      successMessage.value = 'Kredensial terverifikasi! Mengalihkan ke HeroCMS Studio...';
-
-      setTimeout(() => {
-        router.push('/');
-      }, 500);
+      sessionStorage.setItem('herocms_splash_seen', 'true');
+      successMessage.value = 'Kredensial terverifikasi! Mempersiapkan workspace studio...';
+      isTransitioningToDashboard.value = true;
     } else {
       throw new Error(res?.error || 'Autentikasi gagal');
     }
@@ -133,6 +133,13 @@ const handleRegister = async (e?: Event) => {
   <div class="auth-viewport">
     <!-- Ambient Diffused Lighting Mesh (Soft Glow behind card) -->
     <div class="ambient-mesh-glow" aria-hidden="true"></div>
+
+    <!-- Cinematic Splash Screen Gateway Transition -->
+    <StudioSplashScreen
+      v-if="isTransitioningToDashboard"
+      :duration-ms="1400"
+      @complete="router.push('/')"
+    />
 
     <div class="auth-surface-container">
       <!-- Modern Brand Header -->
