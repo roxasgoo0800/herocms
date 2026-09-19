@@ -494,7 +494,7 @@ const handleLogout = () => {
       <!-- Main Dynamic Workspace View -->
       <main class="content-scroll-pane">
         <!-- ============================================================= -->
-        <!-- VIEW 1: SITUS & KONTAINER DOCKER (PRO-GRADE MULTI-SITE GRID) -->
+        <!-- VIEW 1: SITUS & KONTAINER DOCKER                              -->
         <!-- ============================================================= -->
         <section v-if="activeMenu === 'containers'" class="fade-in-section">
           <!-- Page Title & Quick Summary -->
@@ -510,84 +510,119 @@ const handleLogout = () => {
             </div>
           </div>
 
-          <!-- High-Density Metric Cards (4 Compact Strips) -->
+          <!-- Bespoke Telemetry Metric Cards (4 Sleek Strips) -->
           <div class="stats-overview-grid">
-            <div class="stat-box">
-              <div class="stat-box-top">
-                <span class="stat-title">KUOTA KONTAINER</span>
-                <Server :size="16" color="#2563eb" />
+            <div class="telemetry-card">
+              <div class="telemetry-top">
+                <span class="telemetry-label">KUOTA KONTAINER</span>
+                <div class="telemetry-glyph blue">
+                  <Server :size="15" />
+                </div>
               </div>
-              <div class="stat-box-val">{{ usedContainersCount }} <span class="stat-box-denom">/ {{ userPlan.maxContainers }} Aktif</span></div>
-              <div class="stat-box-sub text-emerald">● {{ userPlan.maxContainers - usedContainersCount }} slot siap dideploy</div>
+              <div class="telemetry-val">
+                {{ usedContainersCount }} <span class="telemetry-denom">/ {{ userPlan.maxContainers }} Aktif</span>
+              </div>
+              <div class="telemetry-sub ready-state">
+                <span class="pulse-mini-dot"></span>
+                <span>{{ userPlan.maxContainers - usedContainersCount }} slot siap dideploy</span>
+              </div>
             </div>
 
-            <div class="stat-box">
-              <div class="stat-box-top">
-                <span class="stat-title">EDGE ROUTING TRAEFIK</span>
-                <Globe :size="16" color="#059669" />
+            <div class="telemetry-card">
+              <div class="telemetry-top">
+                <span class="telemetry-label">EDGE ROUTING TRAEFIK</span>
+                <div class="telemetry-glyph emerald">
+                  <Globe :size="15" />
+                </div>
               </div>
-              <div class="stat-box-val">v3.1 Online</div>
-              <div class="stat-box-sub">Latensi rerata 1.8ms (Zero-Downtime)</div>
+              <div class="telemetry-val">
+                v3.1 <span class="badge-online">Online</span>
+              </div>
+              <div class="telemetry-sub">
+                <span>Latensi rerata 1.8ms (Zero-Downtime)</span>
+              </div>
             </div>
 
-            <div class="stat-box">
-              <div class="stat-box-top">
-                <span class="stat-title">TRAFIK PENGUNJUNG</span>
-                <Activity :size="16" color="#9333ea" />
+            <div class="telemetry-card">
+              <div class="telemetry-top">
+                <span class="telemetry-label">TRAFIK PENGUNJUNG</span>
+                <div class="telemetry-glyph purple">
+                  <Activity :size="15" />
+                </div>
               </div>
-              <div class="stat-box-val">3,892 <span class="growth-chip">+28%</span></div>
-              <div class="stat-box-sub">Data dicatat via Kafka stream</div>
+              <div class="telemetry-val">
+                3,892 <span class="badge-growth-pill">+28%</span>
+              </div>
+              <div class="telemetry-sub">
+                <span>Data dicatat via Kafka stream</span>
+              </div>
             </div>
 
-            <div class="stat-box">
-              <div class="stat-box-top">
-                <span class="stat-title">KEAMANAN TLS / SSL</span>
-                <ShieldCheck :size="16" color="#2563eb" />
+            <div class="telemetry-card">
+              <div class="telemetry-top">
+                <span class="telemetry-label">KEAMANAN TLS / SSL</span>
+                <div class="telemetry-glyph blue">
+                  <ShieldCheck :size="15" />
+                </div>
               </div>
-              <div class="stat-box-val">100% Aktif</div>
-              <div class="stat-box-sub">Let's Encrypt Wildcard Auto-Renew</div>
+              <div class="telemetry-val">
+                100% <span class="badge-online">Aktif</span>
+              </div>
+              <div class="telemetry-sub">
+                <span>Let's Encrypt Wildcard Auto-Renew</span>
+              </div>
             </div>
           </div>
 
-          <!-- Filter & Search Toolbar -->
+          <!-- Bespoke Search Command & Segmented Filter Bar -->
           <div class="filter-toolbar">
-            <div class="search-input-wrap">
-              <Search :size="15" class="search-icon" />
+            <div class="search-command-shell">
+              <Search :size="15" class="search-lead-glyph" />
               <input
                 v-model="searchQuery"
                 type="text"
                 placeholder="Cari situs, subdomain, atau container ID..."
-                class="search-field"
+                class="search-command-input"
               />
+              <button v-if="searchQuery" class="btn-clear-search" @click="searchQuery = ''" title="Bersihkan">
+                <X :size="13" />
+              </button>
+              <kbd class="shortcut-tag">⌘K</kbd>
             </div>
 
-            <div class="filter-chips">
+            <div class="segmented-filter-bar">
               <button
-                class="filter-chip"
+                class="segment-pill"
                 :class="{ active: statusFilter === 'all' }"
                 @click="statusFilter = 'all'"
               >
-                Semua ({{ containers.length }})
+                <span>Semua</span>
+                <span class="pill-count">{{ containers.length }}</span>
               </button>
               <button
-                class="filter-chip"
+                class="segment-pill"
                 :class="{ active: statusFilter === 'running' }"
                 @click="statusFilter = 'running'"
               >
-                Running ({{ runningContainersCount }})
+                <span class="mini-status-dot running"></span>
+                <span>Running</span>
+                <span class="pill-count green">{{ runningContainersCount }}</span>
               </button>
               <button
-                class="filter-chip"
+                class="segment-pill"
                 :class="{ active: statusFilter === 'stopped' }"
                 @click="statusFilter = 'stopped'"
               >
-                Standby ({{ stoppedContainersCount }})
+                <span class="mini-status-dot stopped"></span>
+                <span>Standby</span>
+                <span class="pill-count gray">{{ stoppedContainersCount }}</span>
               </button>
             </div>
           </div>
 
-          <!-- Professional 2-Column Responsive Grid (No awkward stretched 1-column lines!) -->
-          <div v-if="filteredContainers.length > 0" class="site-cards-grid">
+          <!-- 3-Column Site Cards Grid (Matching 3-Container Subscription Quota) -->
+          <div v-if="filteredContainers.length > 0 || (statusFilter === 'all' && containers.length < userPlan.maxContainers)" class="site-cards-grid">
+            <!-- Active & Existing Container Cards -->
             <div
               v-for="c in filteredContainers"
               :key="c.id"
@@ -597,86 +632,96 @@ const handleLogout = () => {
               <!-- Card Top Header -->
               <div class="card-head">
                 <div class="site-branding">
-                  <div class="site-icon-box" :style="{ backgroundColor: c.accentColor + '15', color: c.accentColor }">
+                  <div class="site-icon-box" :style="{ backgroundColor: c.accentColor + '14', color: c.accentColor }">
                     <Briefcase v-if="c.category === 'portfolio'" :size="18" />
                     <BookOpen v-else-if="c.category === 'blog'" :size="18" />
                     <GraduationCap v-else-if="c.category === 'education'" :size="18" />
                     <ShoppingBag v-else :size="18" />
                   </div>
-                  <div>
-                    <h3 class="site-title-text">{{ c.name }}</h3>
-                    <span class="site-template-badge">{{ c.templateName }}</span>
+                  <div class="site-branding-info">
+                    <div class="site-title-row">
+                      <h3 class="site-title-text">{{ c.name }}</h3>
+                    </div>
+                    <div class="site-sub-row">
+                      <span class="site-template-badge">{{ c.templateName }}</span>
+                      <span class="site-id-tag">#{{ c.id }}</span>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Status Pill -->
+                <!-- Radar Status Chip -->
                 <div
-                  class="pro-status-chip"
+                  class="radar-status-pill"
                   :class="{
                     'status-running': c.status === 'running',
                     'status-stopped': c.status === 'stopped',
                     'status-provisioning': c.status === 'provisioning'
                   }"
                 >
-                  <span class="dot-indicator"></span>
+                  <span class="radar-ping-ring" v-if="c.status === 'running'"></span>
+                  <span class="radar-dot"></span>
                   <span v-if="c.status === 'running'">Running</span>
                   <span v-else-if="c.status === 'stopped'">Standby</span>
                   <span v-else>Deploying...</span>
                 </div>
               </div>
 
-              <!-- URL Bar with Copy and Link -->
+              <!-- Bespoke Terminal URL Pill -->
               <div class="site-url-box">
                 <div class="url-text-wrap">
-                  <Globe :size="13" color="#2563eb" />
-                  <span class="url-text">https://{{ c.subdomain }}</span>
+                  <Globe :size="13" class="url-glyph" />
+                  <span class="url-mono">https://{{ c.subdomain }}</span>
                 </div>
                 <div class="url-actions">
                   <button
-                    class="btn-icon-tiny"
+                    class="btn-url-action"
                     @click="copyToClipboard(c.subdomain, c.id)"
                     :title="copiedSubdomain === c.id ? 'Tersalin!' : 'Salin URL'"
                   >
                     <Check v-if="copiedSubdomain === c.id" :size="13" color="#059669" />
                     <Copy v-else :size="13" />
                   </button>
-                  <a :href="`https://${c.subdomain}`" target="_blank" class="btn-icon-tiny" title="Kunjungi Situs">
+                  <a :href="`https://${c.subdomain}`" target="_blank" class="btn-url-action" title="Buka Situs">
                     <ArrowUpRight :size="13" />
                   </a>
                 </div>
               </div>
 
-              <!-- Compact Resource Meters (Clean 2-Column Gauge) -->
+              <!-- Bespoke Dual Infrastructure Meters -->
               <div class="resource-gauges-row">
                 <div class="gauge-col">
                   <div class="gauge-meta">
-                    <span>CPU: {{ c.cpuUsage }}%</span>
-                    <span class="gauge-limit">Limit: {{ c.cpuLimit }}</span>
+                    <span class="gauge-title">CPU ALLOCATION</span>
+                    <span class="gauge-val">
+                      <strong>{{ c.cpuUsage }}%</strong>
+                      <span class="gauge-sub">/ {{ c.cpuLimit }}</span>
+                    </span>
                   </div>
-                  <div class="mini-bar-track">
+                  <div class="custom-meter-track">
                     <div
-                      class="mini-bar-fill"
-                      :style="{
-                        width: `${Math.min(c.cpuUsage * 2.5, 100)}%`,
-                        backgroundColor: c.status === 'running' ? '#2563eb' : '#94a3b8'
-                      }"
-                    ></div>
+                      class="custom-meter-fill fill-blue"
+                      :style="{ width: `${Math.min(c.cpuUsage * 2.5, 100)}%` }"
+                    >
+                      <span class="meter-glow"></span>
+                    </div>
                   </div>
                 </div>
 
                 <div class="gauge-col">
                   <div class="gauge-meta">
-                    <span>RAM: {{ c.ramUsage }}MB</span>
-                    <span class="gauge-limit">Maks: {{ c.ramLimit }}MB</span>
+                    <span class="gauge-title">RAM MEMORY</span>
+                    <span class="gauge-val">
+                      <strong>{{ c.ramUsage }} MB</strong>
+                      <span class="gauge-sub">/ {{ c.ramLimit }} MB</span>
+                    </span>
                   </div>
-                  <div class="mini-bar-track">
+                  <div class="custom-meter-track">
                     <div
-                      class="mini-bar-fill"
-                      :style="{
-                        width: `${(c.ramUsage / c.ramLimit) * 100}%`,
-                        backgroundColor: c.status === 'running' ? '#10b981' : '#94a3b8'
-                      }"
-                    ></div>
+                      class="custom-meter-fill fill-emerald"
+                      :style="{ width: `${(c.ramUsage / c.ramLimit) * 100}%` }"
+                    >
+                      <span class="meter-glow"></span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -688,7 +733,7 @@ const handleLogout = () => {
                   @click="activeContainerId = c.id; activeMenu = 'editor'"
                 >
                   <Edit3 :size="14" />
-                  <span>Buka Editor</span>
+                  <span>Buka Editor Studio</span>
                 </button>
 
                 <!-- Runtime Controls -->
@@ -720,20 +765,45 @@ const handleLogout = () => {
                   <button
                     class="btn-icon-ctrl btn-del"
                     @click="deleteContainer(c)"
-                    title="Hapus Kontainer (Kembalikan Kuota)"
+                    title="Hapus Kontainer"
                   >
                     <Trash2 :size="13" />
                   </button>
                 </div>
               </div>
             </div>
+
+            <!-- Quota Available Slot Placeholders (Fills 3-column grid) -->
+            <template v-if="statusFilter === 'all' && containers.length < userPlan.maxContainers">
+              <div
+                v-for="slotNum in (userPlan.maxContainers - containers.length)"
+                :key="'slot-' + slotNum"
+                class="empty-slot-card"
+                @click="openCreateModal()"
+              >
+                <div class="slot-dashed-inner">
+                  <div class="slot-icon-circle">
+                    <Plus :size="20" />
+                  </div>
+                  <div class="slot-text-group">
+                    <div class="slot-badge">SLOT KONTAINER #{{ containers.length + slotNum }}</div>
+                    <h4 class="slot-title">Siap Dideploy</h4>
+                    <p class="slot-specs">{{ userPlan.cpuPerContainer }} • {{ userPlan.ramPerContainer }} • Traefik Ready</p>
+                  </div>
+                  <button class="btn-slot-create" type="button">
+                    <Plus :size="13" />
+                    <span>Deploy Website Baru</span>
+                  </button>
+                </div>
+              </div>
+            </template>
           </div>
 
-          <!-- Empty State -->
+          <!-- Empty State (When Filter returns 0 results) -->
           <div v-else class="empty-state-card">
             <Server :size="40" color="#94a3b8" />
-            <h3>Tidak ada kontainer ditemukan</h3>
-            <p>Pilih template resmi untuk menerbitkan website mandiri Anda di Docker.</p>
+            <h3>Tidak ada kontainer dengan status '{{ statusFilter }}'</h3>
+            <p>Ubah filter pencarian atau deploy kontainer baru untuk mengisi kuota website Anda.</p>
             <button class="btn-top-create" @click="openCreateModal()">
               <Plus :size="15" />
               <span>Buat Website Baru</span>
@@ -742,7 +812,7 @@ const handleLogout = () => {
         </section>
 
         <!-- ============================================================= -->
-        <!-- VIEW 2: EDITOR STUDIO VISUAL (PROFESSIONAL 2-PANE BUILDER)    -->
+        <!-- VIEW 2: EDITOR STUDIO VISUAL                                  -->
         <!-- ============================================================= -->
         <section v-else-if="activeMenu === 'editor'" class="fade-in-section">
           <div v-if="activeContainer" class="pro-editor-layout">
@@ -1118,94 +1188,126 @@ const handleLogout = () => {
     <!-- ============================================================= -->
     <!-- MODAL: BUAT WEBSITE / TAMBAH KONTAINER BARU                  -->
     <!-- ============================================================= -->
-    <div v-if="isCreateModalOpen" class="modal-scrim">
+    <div v-if="isCreateModalOpen" class="modal-scrim" @click.self="isCreateModalOpen = false">
       <div class="modal-card">
         <div class="modal-top">
           <div>
-            <h3>Buat Website & Deploy Kontainer Baru</h3>
-            <p>Pilih kategori dan tentukan subdomain untuk kontainer baru Anda.</p>
+            <div class="modal-badge-sup">
+              <span class="pulse-mini-dot"></span>
+              <span>DOCKER RUNTIME ENGINE</span>
+            </div>
+            <h3 class="modal-h3">Deploy Kontainer Website Baru</h3>
+            <p class="modal-p">Inisialisasi kontainer mandiri dengan isolasi cgroups Linux & routing Traefik v3.</p>
           </div>
           <button class="btn-modal-close" @click="isCreateModalOpen = false"><X :size="16" /></button>
         </div>
 
         <form @submit.prevent="handleCreateContainer" class="modal-body-form">
-          <div class="modal-form-item">
-            <label>Pilih Kategori Situs</label>
+          <!-- Custom Category Selector -->
+          <div class="custom-form-field">
+            <label class="field-label">KATEGORI SITUS & TEMPLATE</label>
             <div class="category-grid-selector">
-              <label
+              <div
                 class="category-option-card"
                 :class="{ active: newSiteForm.category === 'portfolio' }"
                 @click="newSiteForm.category = 'portfolio'"
               >
-                <Briefcase :size="18" />
-                <span>Portofolio Teknis</span>
-              </label>
-              <label
+                <div class="cat-icon-wrap blue"><Briefcase :size="16" /></div>
+                <div class="cat-meta">
+                  <span class="cat-name">Portofolio</span>
+                  <span class="cat-desc">Tech & Engineer</span>
+                </div>
+              </div>
+              <div
                 class="category-option-card"
                 :class="{ active: newSiteForm.category === 'blog' }"
                 @click="newSiteForm.category = 'blog'"
               >
-                <BookOpen :size="18" />
-                <span>Blog & Media</span>
-              </label>
-              <label
+                <div class="cat-icon-wrap emerald"><BookOpen :size="16" /></div>
+                <div class="cat-meta">
+                  <span class="cat-name">Blog & Media</span>
+                  <span class="cat-desc">Editorial Artikel</span>
+                </div>
+              </div>
+              <div
                 class="category-option-card"
                 :class="{ active: newSiteForm.category === 'education' }"
                 @click="newSiteForm.category = 'education'"
               >
-                <GraduationCap :size="18" />
-                <span>Pusat Edukasi</span>
-              </label>
-              <label
+                <div class="cat-icon-wrap purple"><GraduationCap :size="16" /></div>
+                <div class="cat-meta">
+                  <span class="cat-name">Pusat Edukasi</span>
+                  <span class="cat-desc">Dokumentasi LMS</span>
+                </div>
+              </div>
+              <div
                 class="category-option-card"
                 :class="{ active: newSiteForm.category === 'business' }"
                 @click="newSiteForm.category = 'business'"
               >
-                <ShoppingBag :size="18" />
-                <span>Bisnis & Jasa</span>
-              </label>
+                <div class="cat-icon-wrap amber"><ShoppingBag :size="16" /></div>
+                <div class="cat-meta">
+                  <span class="cat-name">Bisnis & UMKM</span>
+                  <span class="cat-desc">Showcase & Produk</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="modal-form-item">
-            <label>Nama Website / Brand</label>
-            <input
-              v-model="newSiteForm.name"
-              type="text"
-              placeholder="Contoh: Portofolio Ahmad, Tech Daily Blog..."
-              class="input-pro"
-              required
-            />
+          <!-- Nama Website -->
+          <div class="custom-form-field">
+            <label class="field-label">
+              <span>NAMA WEBSITE / BRAND</span>
+              <span class="field-required">*</span>
+            </label>
+            <div class="custom-input-box">
+              <input
+                v-model="newSiteForm.name"
+                type="text"
+                placeholder="Contoh: Portofolio Ahmad, Tech Daily Blog..."
+                class="input-custom-core"
+                required
+              />
+            </div>
           </div>
 
-          <div class="modal-form-item">
-            <label>Subdomain yang Diinginkan</label>
-            <div class="subdomain-composite-input">
+          <!-- Subdomain with Integrated Chip -->
+          <div class="custom-form-field">
+            <label class="field-label">
+              <span>SUBDOMAIN CLOUDCMS</span>
+              <span class="field-required">*</span>
+            </label>
+            <div class="custom-composite-box">
+              <Globe :size="15" class="composite-lead-icon" />
               <input
                 v-model="newSiteForm.subdomain"
                 type="text"
                 placeholder="nama-situs"
-                class="input-pro input-sub-prefix"
+                class="composite-input-core"
                 required
               />
-              <span class="sub-suffix">.cloudcms.app</span>
+              <span class="composite-domain-tag">.cloudcms.app</span>
             </div>
-            <span class="input-note">SSL Let's Encrypt otomatis di-deploy oleh Traefik edge.</span>
+            <span class="field-helper">Sertifikat SSL Let's Encrypt TLS v1.3 aktif otomatis via Traefik edge routing.</span>
           </div>
 
-          <div class="modal-form-item">
-            <label>Peran / Slogan Pengenal</label>
-            <input
-              v-model="newSiteForm.role"
-              type="text"
-              placeholder="e.g. Senior Software Architect"
-              class="input-pro"
-            />
+          <!-- Headline / Peran -->
+          <div class="custom-form-field">
+            <label class="field-label">PERAN / HEADLINE PEMBUKA (OPSIONAL)</label>
+            <div class="custom-input-box">
+              <input
+                v-model="newSiteForm.role"
+                type="text"
+                placeholder="Contoh: Senior Distributed Systems Architect"
+                class="input-custom-core"
+              />
+            </div>
           </div>
 
+          <!-- Modal Footer -->
           <div class="modal-footer-actions">
-            <button type="button" class="btn-modal-cancel" @click="isCreateModalOpen = false">Batal</button>
-            <button type="submit" class="btn-top-create">
+            <button type="button" class="btn-ghost-cancel" @click="isCreateModalOpen = false">Batal</button>
+            <button type="submit" class="btn-primary-deploy">
               <Rocket :size="15" />
               <span>Deploy Kontainer Sekarang</span>
             </button>
@@ -1218,7 +1320,7 @@ const handleLogout = () => {
 
 <style scoped>
 /* ==========================================================================
-   ENTERPRISE DEVELOPER CLOUD CONSOLE (VERCEL / SUPABASE / RAILWAY GRADE)
+   HEROCMS STUDIO - BESPOKE ENTERPRISE DESIGN SYSTEM (CLEAN & NON-BOOTSTRAP)
    ========================================================================== */
 
 .app-shell {
@@ -1228,14 +1330,14 @@ const handleLogout = () => {
   position: relative;
 }
 
-/* 1. LEFT SIDEBAR */
+/* 1. LEFT SIDEBAR (GLASSMORPHIC & SLEEK) */
 .app-sidebar {
   width: 256px;
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-right: 1px solid #e2e8f0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(226, 232, 240, 0.9);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1263,12 +1365,13 @@ const handleLogout = () => {
 .brand-icon {
   width: 32px;
   height: 32px;
-  background: #0f172a;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 
 .workspace-info {
@@ -1296,6 +1399,7 @@ const handleLogout = () => {
   height: 6px;
   background: #10b981;
   border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .sidebar-nav-sections {
@@ -1320,7 +1424,7 @@ const handleLogout = () => {
 .sidebar-nav-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .nav-link {
@@ -1337,7 +1441,7 @@ const handleLogout = () => {
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: all 0.12s ease;
+  transition: all 0.15s ease;
 }
 
 .nav-link:hover:not(:disabled) {
@@ -1348,6 +1452,7 @@ const handleLogout = () => {
 .nav-link.active {
   background: #0f172a;
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
 }
 
 .nav-link:disabled {
@@ -1421,6 +1526,7 @@ const handleLogout = () => {
   flex: 1;
   background: #e2e8f0;
   border-radius: 2px;
+  transition: background-color 0.2s ease;
 }
 
 .gauge-seg.filled {
@@ -1455,7 +1561,6 @@ const handleLogout = () => {
   gap: 10px;
   padding: 6px 8px;
   border-radius: 8px;
-  background: transparent;
 }
 
 .user-avatar-small {
@@ -1497,6 +1602,7 @@ const handleLogout = () => {
   cursor: pointer;
   padding: 4px;
   display: flex;
+  transition: color 0.15s ease;
 }
 
 .btn-sidebar-logout:hover {
@@ -1515,6 +1621,7 @@ const handleLogout = () => {
   height: 56px;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid #e2e8f0;
   padding: 0 40px;
   display: flex;
@@ -1570,7 +1677,7 @@ const handleLogout = () => {
 .btn-top-create {
   background: #0f172a;
   color: #ffffff;
-  border: none;
+  border: 1px solid #0f172a;
   padding: 7px 14px;
   border-radius: 8px;
   font-size: 0.82rem;
@@ -1579,11 +1686,13 @@ const handleLogout = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .btn-top-create:hover {
   background: #1e293b;
+  transform: translateY(-1px);
 }
 
 /* Toast */
@@ -1613,7 +1722,7 @@ const handleLogout = () => {
   margin-left: 6px;
 }
 
-/* Content View (Full Width) */
+/* Full Width Content View */
 .content-scroll-pane {
   padding: 28px 40px 64px;
   width: 100%;
@@ -1665,12 +1774,15 @@ const handleLogout = () => {
   border-radius: 6px;
 }
 
-/* 4 Compact Stat Strips */
+/* ==========================================================================
+   BESPOKE TELEMETRY CARDS (NO GENERIC STAT BOXES)
+   ========================================================================== */
 .stats-overview-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 24px;
+  width: 100%;
 }
 
 @media (max-width: 1024px) {
@@ -1679,132 +1791,274 @@ const handleLogout = () => {
   }
 }
 
-.stat-box {
+.telemetry-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 4px 12px -2px rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.15s ease;
 }
 
-.stat-box-top {
+.telemetry-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -3px rgba(15, 23, 42, 0.06);
+}
+
+.telemetry-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
 }
 
-.stat-title {
+.telemetry-label {
   font-size: 0.68rem;
   font-weight: 700;
   color: #64748b;
   letter-spacing: 0.06em;
 }
 
-.stat-box-val {
-  font-size: 1.25rem;
-  font-weight: 700;
+.telemetry-glyph {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.telemetry-glyph.blue { background: #eff6ff; color: #2563eb; }
+.telemetry-glyph.emerald { background: #ecfdf5; color: #059669; }
+.telemetry-glyph.purple { background: #faf5ff; color: #9333ea; }
+
+.telemetry-val {
+  font-size: 1.3rem;
+  font-weight: 800;
   color: #0f172a;
+  letter-spacing: -0.02em;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.stat-box-denom {
+.telemetry-denom {
   font-size: 0.78rem;
   font-weight: 500;
   color: #64748b;
 }
 
-.stat-box-sub {
+.telemetry-sub {
   font-size: 0.72rem;
   color: #64748b;
   margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.text-emerald { color: #059669 !important; }
-
-.growth-chip {
-  font-size: 0.7rem;
-  background: #ecfdf5;
+.ready-state {
   color: #059669;
+  font-weight: 500;
+}
+
+.pulse-mini-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+}
+
+.badge-online {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #059669;
+  background: #ecfdf5;
   border: 1px solid #a7f3d0;
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 999px;
 }
 
-/* Search and Filter Toolbar */
+.badge-growth-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+/* ==========================================================================
+   BESPOKE SEARCH COMMAND & SEGMENTED CONTROL BAR (ZERO BOOTSTRAP)
+   ========================================================================== */
 .filter-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
-}
-
-.search-input-wrap {
-  position: relative;
-  width: 320px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94a3b8;
-  pointer-events: none;
-}
-
-.search-field {
+  margin-bottom: 22px;
   width: 100%;
-  padding: 8px 12px 8px 34px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 0.84rem;
-  background: #ffffff;
-  color: #0f172a;
-  outline: none;
 }
 
-.search-field:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.filter-chips {
+.search-command-shell {
+  position: relative;
   display: flex;
-  gap: 6px;
-}
-
-.filter-chip {
+  align-items: center;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 12px;
+  height: 42px;
+  width: 380px;
+  padding: 0 14px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.search-command-shell:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.search-lead-glyph {
+  color: #94a3b8;
+  margin-right: 10px;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.search-command-shell:focus-within .search-lead-glyph {
+  color: #2563eb;
+}
+
+.search-command-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.84rem;
+  color: #0f172a;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+}
+
+.search-command-input::placeholder {
+  color: #94a3b8;
+}
+
+.btn-clear-search {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
   cursor: pointer;
+  padding: 4px;
+  margin-right: 6px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
   transition: all 0.12s ease;
 }
 
-.filter-chip:hover {
-  background: #f8fafc;
+.btn-clear-search:hover {
+  background: #f1f5f9;
   color: #0f172a;
 }
 
-.filter-chip.active {
-  background: #0f172a;
-  border-color: #0f172a;
-  color: #ffffff;
+.shortcut-tag {
+  font-size: 0.7rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
+  flex-shrink: 0;
 }
 
-/* 3-Column Site Cards Grid (Matching 3-Container Quota) */
+/* Bespoke Segmented Pill Bar */
+.segmented-filter-bar {
+  display: inline-flex;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 3px;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.segment-pill {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.segment-pill:hover {
+  color: #0f172a;
+}
+
+.segment-pill.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.mini-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mini-status-dot.running {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.mini-status-dot.stopped {
+  background: #94a3b8;
+}
+
+.pill-count {
+  font-size: 0.7rem;
+  background: rgba(148, 163, 184, 0.18);
+  color: #475569;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+}
+
+.segment-pill.active .pill-count.green {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.segment-pill.active .pill-count.gray {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* ==========================================================================
+   3-COLUMN SITE CARDS GRID & BESPOKE CONTAINER INFRASTRUCTURE CARDS
+   ========================================================================== */
 .site-cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 22px;
   width: 100%;
 }
 
@@ -1822,24 +2076,26 @@ const handleLogout = () => {
 
 .pro-site-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px -4px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 14px;
-  transition: all 0.15s ease;
+  gap: 16px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .pro-site-card:hover {
   border-color: #cbd5e1;
-  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.09), 0 2px 6px rgba(15, 23, 42, 0.04);
+  transform: translateY(-2px);
 }
 
 .pro-site-card.card-stopped {
-  background: #fbfcfd;
+  background: #fbfcfe;
   border-color: #e2e8f0;
 }
 
@@ -1847,198 +2103,173 @@ const handleLogout = () => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .site-branding {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .site-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 9px;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.site-branding-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.site-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .site-title-text {
-  font-size: 0.98rem;
+  font-size: 0.96rem;
   font-weight: 700;
   color: #0f172a;
-  line-height: 1.3;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .site-template-badge {
   font-size: 0.72rem;
   color: #64748b;
+  font-weight: 500;
 }
 
-.pro-status-chip {
+.site-id-tag {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-family: ui-monospace, monospace;
+}
+
+/* Radar Status Pill */
+.radar-status-pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
+  gap: 6px;
+  padding: 4px 9px;
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
 }
 
-.pro-status-chip.status-running {
+.radar-status-pill.status-running {
   background: #ecfdf5;
   color: #059669;
   border: 1px solid #a7f3d0;
 }
 
-.pro-status-chip.status-stopped {
+.radar-status-pill.status-stopped {
   background: #f1f5f9;
   color: #64748b;
   border: 1px solid #e2e8f0;
 }
 
-.pro-status-chip.status-provisioning {
+.radar-status-pill.status-provisioning {
   background: #eff6ff;
   color: #2563eb;
   border: 1px solid #bfdbfe;
 }
 
-.dot-indicator {
+.radar-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
+  position: relative;
+  z-index: 2;
 }
 
-/* URL Bar */
+.radar-ping-ring {
+  position: absolute;
+  left: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  z-index: 1;
+}
+
+@keyframes radar-ping {
+  75%, 100% {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+/* Bespoke Terminal URL Pill */
 .site-url-box {
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: #f8fafc;
-  border: 1px solid #f1f5f9;
-  border-radius: 8px;
-  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 7px 12px;
 }
 
 .url-text-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  min-width: 0;
+}
+
+.url-glyph {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.url-mono {
   font-size: 0.78rem;
   color: #2563eb;
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .url-actions {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 
-.btn-icon-tiny {
+.btn-url-action {
   width: 24px;
   height: 24px;
   border: none;
   background: transparent;
   color: #64748b;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-icon-tiny:hover {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-/* Compact 2-Col Gauges */
-.resource-gauges-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 10px 12px;
-  background: #fafbfc;
-  border-radius: 8px;
-  border: 1px solid #f1f5f9;
-}
-
-.gauge-col {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.gauge-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  color: #475569;
-  font-weight: 600;
-}
-
-.gauge-limit {
-  font-size: 0.68rem;
-  color: #94a3b8;
-  font-weight: 400;
-}
-
-.mini-bar-track {
-  height: 5px;
-  background: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.mini-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.3s ease;
-}
-
-/* Card Actions Footer */
-.card-action-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 10px;
-  border-top: 1px solid #f1f5f9;
-}
-
-.btn-action-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #0f172a;
-  color: #ffffff;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-
-.btn-action-primary:hover {
-  background: #1e293b;
-}
-
-.runtime-btn-group {
-  display: flex;
-  gap: 4px;
-}
-
-.btn-icon-ctrl {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #64748b;
+  border-radius: 5px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -2046,9 +2277,135 @@ const handleLogout = () => {
   transition: all 0.12s ease;
 }
 
+.btn-url-action:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Bespoke Dual Infrastructure Meters */
+.resource-gauges-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 12px 14px;
+  background: #fafbfc;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+}
+
+.gauge-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gauge-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.72rem;
+}
+
+.gauge-title {
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.gauge-val {
+  color: #0f172a;
+  font-size: 0.74rem;
+}
+
+.gauge-sub {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.custom-meter-track {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+
+.custom-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.fill-blue { background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%); }
+.fill-emerald { background: linear-gradient(90deg, #059669 0%, #34d399 100%); }
+
+.meter-glow {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #ffffff;
+  opacity: 0.75;
+  border-radius: 999px;
+}
+
+/* Card Action Buttons */
+.card-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-action-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  border: 1px solid #0f172a;
+  padding: 7px 15px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.btn-action-primary:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.runtime-btn-group {
+  display: flex;
+  gap: 5px;
+}
+
+.btn-icon-ctrl {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.14s ease;
+}
+
 .btn-icon-ctrl:hover:not(:disabled) {
   background: #f8fafc;
   color: #0f172a;
+  border-color: #cbd5e1;
 }
 
 .btn-play {
@@ -2057,14 +2414,116 @@ const handleLogout = () => {
   background: #ecfdf5;
 }
 
+.btn-play:hover {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
 .btn-pause {
   color: #d97706;
+}
+
+.btn-pause:hover {
+  background: #fffbeb;
+  border-color: #fde68a;
 }
 
 .btn-del:hover {
   background: #fef2f2;
   border-color: #fecaca;
   color: #dc2626;
+}
+
+/* Available Slot Placeholder Cards */
+.empty-slot-card {
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.5);
+  min-height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 20px;
+}
+
+.empty-slot-card:hover {
+  border-color: #3b82f6;
+  background: rgba(239, 246, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.08);
+}
+
+.slot-dashed-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.slot-icon-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.empty-slot-card:hover .slot-icon-circle {
+  transform: scale(1.08);
+}
+
+.slot-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.slot-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.08em;
+  font-family: ui-monospace, monospace;
+}
+
+.slot-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.slot-specs {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.btn-slot-create {
+  margin-top: 4px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.empty-slot-card:hover .btn-slot-create {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
 }
 
 /* Empty State */
@@ -2166,7 +2625,7 @@ const handleLogout = () => {
 .btn-deploy-live {
   background: #0f172a;
   color: #ffffff;
-  border: none;
+  border: 1px solid #0f172a;
   padding: 7px 14px;
   border-radius: 6px;
   font-size: 0.8rem;
@@ -2175,6 +2634,7 @@ const handleLogout = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .btn-deploy-live:hover:not(:disabled) {
@@ -2235,6 +2695,7 @@ const handleLogout = () => {
 .input-pro:focus {
   outline: none;
   border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .textarea-pro {
@@ -2284,6 +2745,10 @@ const handleLogout = () => {
   gap: 5px;
 }
 
+.btn-ai-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
 .colors-row {
   display: flex;
   gap: 8px;
@@ -2295,6 +2760,7 @@ const handleLogout = () => {
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
+  transition: transform 0.1s ease;
 }
 
 .color-dot.selected {
@@ -2501,6 +2967,13 @@ const handleLogout = () => {
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.15s ease;
+}
+
+.tpl-market-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08);
 }
 
 .tpl-card-header {
@@ -2603,6 +3076,11 @@ const handleLogout = () => {
   font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-use-tpl:hover {
+  background: #1e293b;
 }
 
 /* Analytics */
@@ -2854,18 +3332,23 @@ const handleLogout = () => {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  transition: all 0.15s ease;
 }
 
 .btn-add-slot:hover {
   background: #f8fafc;
+  border-color: #94a3b8;
 }
 
-/* Modal */
+/* ==========================================================================
+   BESPOKE GLASSMORPHIC MODAL & CUSTOM FORM SYSTEM (ZERO BOOTSTRAP)
+   ========================================================================== */
 .modal-scrim {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -2875,126 +3358,287 @@ const handleLogout = () => {
 
 .modal-card {
   background: #ffffff;
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 20px;
   width: 100%;
-  max-width: 480px;
-  padding: 24px;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
+  max-width: 520px;
+  padding: 28px 30px;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.05);
 }
 
 .modal-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
-.modal-top h3 {
-  font-size: 1.15rem;
+.modal-badge-sup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #2563eb;
+  margin-bottom: 4px;
+}
+
+.modal-h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
   color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
-.modal-top p {
-  font-size: 0.78rem;
+.modal-p {
+  font-size: 0.8rem;
   color: #64748b;
-  margin-top: 2px;
+  margin-top: 3px;
+  line-height: 1.4;
 }
 
 .btn-modal-close {
-  background: transparent;
+  background: #f1f5f9;
   border: none;
-  color: #94a3b8;
+  color: #64748b;
   cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+
+.btn-modal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .modal-body-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
-.modal-form-item {
+.custom-form-field {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
-.modal-form-item label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #334155;
+.field-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
+.field-required {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* Category Grid Selector */
 .category-grid-selector {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 8px;
 }
 
 .category-option-card {
-  padding: 8px 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: #f8fafc;
+  padding: 10px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #475569;
+  gap: 10px;
   cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.category-option-card:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
 }
 
 .category-option-card.active {
   background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px #2563eb;
 }
 
-.subdomain-composite-input {
+.cat-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cat-icon-wrap.blue { background: #eff6ff; color: #2563eb; }
+.cat-icon-wrap.emerald { background: #ecfdf5; color: #059669; }
+.cat-icon-wrap.purple { background: #faf5ff; color: #9333ea; }
+.cat-icon-wrap.amber { background: #fffbeb; color: #d97706; }
+
+.cat-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.cat-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cat-desc {
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+/* Bespoke Input Box */
+.custom-input-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
 }
 
-.input-sub-prefix {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+.custom-input-box:focus-within {
+  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
-.sub-suffix {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-left: none;
-  padding: 8px 10px;
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
-  font-size: 0.8rem;
-  color: #64748b;
-  font-family: monospace;
+.input-custom-core {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: none;
+  background: transparent;
+  font-size: 0.86rem;
+  color: #0f172a;
+  outline: none;
+  font-family: inherit;
 }
 
-.input-note {
-  font-size: 0.7rem;
+.input-custom-core::placeholder {
+  color: #94a3b8;
+}
+
+/* Bespoke Composite Box */
+.custom-composite-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px 0 14px;
+  height: 42px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 8px;
+}
+
+.custom-composite-box:focus-within {
+  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.composite-lead-icon {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.composite-input-core {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.86rem;
+  color: #0f172a;
+  outline: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.composite-input-core::placeholder {
+  color: #94a3b8;
+}
+
+.composite-domain-tag {
+  background: #e2e8f0;
+  color: #475569;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.field-helper {
+  font-size: 0.72rem;
   color: #64748b;
+  margin-top: 1px;
 }
 
 .modal-footer-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
-  padding-top: 12px;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 16px;
   border-top: 1px solid #f1f5f9;
 }
 
-.btn-modal-cancel {
+.btn-ghost-cancel {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  padding: 7px 12px;
-  border-radius: 6px;
-  font-size: 0.78rem;
+  color: #475569;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-ghost-cancel:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.btn-primary-deploy {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  border: 1px solid #0f172a;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: all 0.15s ease;
+}
+
+.btn-primary-deploy:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .spinner-tiny {
@@ -3011,7 +3655,7 @@ const handleLogout = () => {
 }
 
 .fade-in-section {
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.18s ease-out;
 }
 
 @keyframes fadeIn {
