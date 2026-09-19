@@ -1222,13 +1222,11 @@ const copySchemaJson = () => {
           <div
             class="draft-status-badge"
             :class="{ saving: isDraftSaving }"
-            :title="lastSavedDraftAt ? `Draf tersimpan otomatis pada ${lastSavedDraftAt}` : 'Draf otomatis tersimpan'"
+            :title="lastSavedDraftAt ? `Draf tersimpan otomatis (${lastSavedDraftAt})` : 'Draf otomatis tersimpan'"
           >
             <Cloud :size="13" class="draft-cloud-icon" />
             <span class="draft-status-text">
-              <span v-if="isDraftSaving">Menyimpan...</span>
-              <span v-else-if="lastSavedDraftAt">Tersimpan {{ lastSavedDraftAt }}</span>
-              <span v-else>Draf Tersimpan</span>
+              {{ isDraftSaving ? 'Menyimpan...' : 'Tersimpan' }}
             </span>
           </div>
 
@@ -1247,10 +1245,11 @@ const copySchemaJson = () => {
             class="btn-publish-live"
             :disabled="isPublishing"
             @click="handlePublishChanges"
+            title="Terbitkan perubahan ke kontainer langsung"
           >
             <Rocket v-if="!isPublishing" :size="14" />
             <span v-else class="spin-ring-sm"></span>
-            <span>{{ isPublishing ? 'Menyimpan...' : 'Terbitkan ke Kontainer' }}</span>
+            <span>{{ isPublishing ? 'Menerbitkan...' : 'Terbitkan' }}</span>
           </button>
         </div>
       </header>
@@ -2258,12 +2257,28 @@ const copySchemaJson = () => {
   color: #2563eb;
 }
 
-.cmd-left-group,
-.cmd-center-group,
+.cmd-left-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cmd-center-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .cmd-right-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0 !important;
+  margin-left: auto;
 }
 
 .v-divider {
@@ -2446,11 +2461,16 @@ const copySchemaJson = () => {
   margin: 0 1px;
 }
 
-.dim-unit {
-  font-size: 0.66rem;
-  font-weight: 600;
-  color: #94a3b8;
-  margin-right: 1px;
+@media (max-width: 1380px) {
+  .dimension-hud {
+    display: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .dev-dock-btn span {
+    display: none;
+  }
 }
 
 .dim-sep {
@@ -2522,18 +2542,7 @@ const copySchemaJson = () => {
 }
 
 .zoom-slider-wrap {
-  width: 56px;
-  display: flex;
-  align-items: center;
-  padding: 0 2px;
-}
-
-.zoom-slider-input {
-  width: 100%;
-  height: 4px;
-  border-radius: 2px;
-  accent-color: #2563eb;
-  cursor: pointer;
+  display: none;
 }
 
 .zoom-dropdown-pill {
@@ -2596,22 +2605,25 @@ const copySchemaJson = () => {
   align-items: center;
   gap: 6px;
   height: 32px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: #0f172a;
   color: #ffffff;
-  border: none;
+  border: 1px solid #1e293b;
   padding: 0 14px;
   border-radius: 8px;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
   transition: all 0.15s ease;
-  flex-shrink: 0;
+  flex-shrink: 0 !important;
+  white-space: nowrap;
 }
 
 .btn-publish-live:hover:not(:disabled) {
+  background: #1e293b;
+  border-color: #334155;
   transform: translateY(-0.5px);
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.28);
 }
 
 .spin-ring-sm {
