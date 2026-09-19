@@ -1,0 +1,697 @@
+import { ref, computed } from 'vue';
+import type {
+  ActiveMenu,
+  UserPlan,
+  ContainerSite,
+  ContentArticle,
+  MediaAssetItem,
+  CustomDomainItem,
+  WebhookItem,
+  InvoiceItem,
+  ToastMessage
+} from '../types/dashboard';
+
+// Active Menu Navigation
+const activeMenu = ref<ActiveMenu>('containers');
+
+// User & Plan State
+const userEmail = ref(localStorage.getItem('cloudcms_user_email') || 'admin@rizalpratama.cloud');
+const userPlan = ref<UserPlan>({
+  name: 'Hero Pro Plan',
+  price: 'Rp 149.000 / bln',
+  maxContainers: 3,
+  cpuPerContainer: '0.5 vCPU',
+  ramPerContainer: '256 MB',
+  storageQuota: '2 GB SSD'
+});
+
+// Toast System
+const toastMessage = ref<ToastMessage | null>(null);
+const showToast = (text: string, type: 'success' | 'info' | 'error' = 'success') => {
+  toastMessage.value = { text, type };
+  setTimeout(() => {
+    toastMessage.value = null;
+  }, 3500);
+};
+
+// Containers State
+const containers = ref<ContainerSite[]>([
+  {
+    id: 'hero_tenant_9942',
+    name: 'Portofolio Rizal Pratama',
+    category: 'portfolio',
+    templateName: 'Portofolio Teknis Engineer',
+    subdomain: 'rizal.cloudcms.app',
+    customDomain: 'rizalpratama.cloud',
+    status: 'running',
+    cpuUsage: 14,
+    ramUsage: 88,
+    ramLimit: 256,
+    cpuLimit: '0.5 vCPU',
+    uptime: '4 hari 12 jam',
+    visitsThisWeek: 3892,
+    ssl: true,
+    roleOrHeadline: 'Senior Cloud & Distributed Systems Engineer',
+    bioIntro: 'Membangun arsitektur microservices terdistribusi, orkestrasi kontainer Docker otonom, dan pipeline telemetri real-time dengan latensi rendah.',
+    accentColor: '#2563eb',
+    lastDeployed: '10 menit lalu'
+  }
+]);
+
+const activeContainerId = ref<string>('hero_tenant_9942');
+const activeContainer = computed(() => {
+  return containers.value.find(c => c.id === activeContainerId.value) || containers.value[0];
+});
+
+const usedContainersCount = computed(() => containers.value.length);
+const runningContainersCount = computed(() => containers.value.filter(c => c.status === 'running').length);
+const stoppedContainersCount = computed(() => containers.value.filter(c => c.status === 'stopped').length);
+const isQuotaExceeded = computed(() => containers.value.length >= userPlan.value.maxContainers);
+
+// Search & Filter
+const searchQuery = ref('');
+const statusFilter = ref<'all' | 'running' | 'stopped'>('all');
+
+const filteredContainers = computed(() => {
+  return containers.value.filter(c => {
+    const matchQuery = c.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                       c.subdomain.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchStatus = statusFilter.value === 'all' ? true : c.status === statusFilter.value;
+    return matchQuery && matchStatus;
+  });
+});
+
+// Container Operations
+const startContainer = (container: ContainerSite) => {
+  container.status = 'provisioning';
+  showToast(`Menjalankan kontainer ${container.id}...`, 'info');
+  setTimeout(() => {
+    container.status = 'running';
+    container.cpuUsage = 14;
+    container.ramUsage = 82;
+    showToast(`Kontainer ${container.name} aktif melayani trafik!`, 'success');
+  }, 900);
+};
+
+const stopContainer = (container: ContainerSite) => {
+  container.status = 'provisioning';
+  showToast(`Menghentikan kontainer ${container.id}...`, 'info');
+  setTimeout(() => {
+    container.status = 'stopped';
+    container.cpuUsage = 0;
+    container.ramUsage = 12;
+    showToast(`Kontainer ${container.name} telah dihentikan (standby).`, 'info');
+  }, 800);
+};
+
+const restartContainer = (container: ContainerSite) => {
+  container.status = 'provisioning';
+  showToast(`Me-restart kontainer ${container.id}...`, 'info');
+  setTimeout(() => {
+    container.status = 'running';
+    container.cpuUsage = 15;
+    container.ramUsage = 86;
+    showToast(`Kontainer ${container.name} sehat setelah reboot!`, 'success');
+  }, 1100);
+};
+
+const deleteContainer = (container: ContainerSite) => {
+  if (confirm(`Hapus kontainer '${container.name}'? Slot kuota (${containers.value.length}/${userPlan.value.maxContainers}) akan dikembalikan.`)) {
+    const idx = containers.value.findIndex(c => c.id === container.id);
+    if (idx !== -1) {
+      containers.value.splice(idx, 1);
+      showToast(`Kontainer ${container.id} dihapus. Kuota kini ${containers.value.length}/${userPlan.value.maxContainers}.`, 'info');
+      if (containers.value.length > 0) {
+        activeContainerId.value = containers.value[0].id;
+      }
+    }
+  }
+};
+
+// Modals for Containers
+const isCreateModalOpen = ref(false);
+const newSiteForm = ref({
+  name: '',
+  subdomain: '',
+  category: 'portfolio' as 'portfolio' | 'blog' | 'education' | 'business',
+  role: ''
+});
+
+const openCreateModal = (category?: 'portfolio' | 'blog' | 'education' | 'business') => {
+  if (isQuotaExceeded.value) {
+    showToast(`Kuota kontainer (${containers.value.length}/${userPlan.value.maxContainers}) penuh. Silakan upgrade atau hapus kontainer lama.`, 'error');
+    activeMenu.value = 'billing';
+    return;
+  }
+  newSiteForm.value.name = '';
+  newSiteForm.value.subdomain = '';
+  newSiteForm.value.role = '';
+  if (category) newSiteForm.value.category = category;
+  isCreateModalOpen.value = true;
+};
+
+const handleCreateContainer = () => {
+  if (!newSiteForm.value.name.trim() || !newSiteForm.value.subdomain.trim()) {
+    showToast('Nama situs dan subdomain wajib diisi.', 'error');
+    return;
+  }
+
+  const cleanSubdomain = newSiteForm.value.subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '');
+  const newId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
+
+  let tplName = 'Portofolio Teknis Engineer';
+  if (newSiteForm.value.category === 'blog') tplName = 'Editorial Media & Blog';
+  if (newSiteForm.value.category === 'education') tplName = 'Pusat Edukasi LMS';
+  if (newSiteForm.value.category === 'business') tplName = 'Showcase Bisnis & UMKM';
+
+  const newContainerObj: ContainerSite = {
+    id: newId,
+    name: newSiteForm.value.name,
+    category: newSiteForm.value.category,
+    templateName: tplName,
+    subdomain: `${cleanSubdomain}.cloudcms.app`,
+    status: 'provisioning',
+    cpuUsage: 4,
+    ramUsage: 36,
+    ramLimit: 256,
+    cpuLimit: '0.5 vCPU',
+    uptime: 'Inisialisasi...',
+    visitsThisWeek: 0,
+    ssl: true,
+    roleOrHeadline: newSiteForm.value.role || 'Website Resmi ' + newSiteForm.value.name,
+    bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
+    accentColor: '#2563eb',
+    lastDeployed: 'Baru saja'
+  };
+
+  containers.value.push(newContainerObj);
+  activeContainerId.value = newId;
+  isCreateModalOpen.value = false;
+  activeMenu.value = 'containers';
+  showToast(`Mengalokasikan kontainer ${newId} & mendaftarkan rute Traefik...`, 'info');
+
+  setTimeout(() => {
+    newContainerObj.status = 'running';
+    newContainerObj.cpuUsage = 14;
+    newContainerObj.ramUsage = 72;
+    newContainerObj.uptime = 'Baru saja running';
+    showToast(`Kontainer '${newContainerObj.name}' aktif! Rute siap di https://${newContainerObj.subdomain}`, 'success');
+  }, 1400);
+};
+
+// Runtime Logs Modal
+const isLogsModalOpen = ref(false);
+const activeLogContainer = ref<ContainerSite | null>(null);
+
+const openLogsModal = (container: ContainerSite) => {
+  activeLogContainer.value = container;
+  isLogsModalOpen.value = true;
+};
+
+const copyContainerLogs = () => {
+  if (!activeLogContainer.value) return;
+  const logText = `[docker-cgroups] Container ${activeLogContainer.value.id} (${activeLogContainer.value.subdomain})\nStatus: ${activeLogContainer.value.status}\nTraefik v3 Edge Proxy: Online TLS 1.3\nCPU: ${activeLogContainer.value.cpuUsage}% / ${activeLogContainer.value.cpuLimit}\nRAM: ${activeLogContainer.value.ramUsage} MB / ${activeLogContainer.value.ramLimit} MB`;
+  navigator.clipboard.writeText(logText);
+  showToast('Log kontainer disalin ke clipboard!', 'info');
+};
+
+// Copy feedback
+const copiedSubdomain = ref<string | null>(null);
+const copyToClipboard = (text: string, id: string) => {
+  navigator.clipboard.writeText(`https://${text}`);
+  copiedSubdomain.value = id;
+  setTimeout(() => {
+    copiedSubdomain.value = null;
+  }, 2000);
+  showToast(`URL disalin ke clipboard: https://${text}`, 'info');
+};
+
+// Official Templates & Pricelist Catalog
+const officialTemplates = ref([
+  {
+    id: 'tpl_portfolio_pro',
+    title: 'Portofolio Teknis & Engineer',
+    category: 'portfolio' as const,
+    tier: 'Included in Plan',
+    priceText: 'Gratis dalam Kuota',
+    isPro: false,
+    desc: 'Dirancang untuk software engineer, cloud architect, dan desainer. Showcase studi kasus, GitHub telemetry, dan CV direct download.',
+    features: ['Studi Kasus Interaktif', 'Integrasi GitHub Repos', 'Formulir Kontak Webhook', 'Peringkat SEO Optimal']
+  },
+  {
+    id: 'tpl_blog_editorial',
+    title: 'Editorial Media & Tech Blog',
+    category: 'blog' as const,
+    tier: 'Included in Plan',
+    priceText: 'Gratis dalam Kuota',
+    isPro: false,
+    desc: 'Platform publikasi artikel modern dengan editor visual, estimasi waktu baca, dan generator otomatis kartu media sosial OpenGraph.',
+    features: ['Editor Blok Modern', 'Multi-Author Support', 'OpenGraph Generator', 'Redis Top Views Stream']
+  },
+  {
+    id: 'tpl_edu_lms',
+    title: 'Pusat Edukasi & Dokumentasi LMS',
+    category: 'education' as const,
+    tier: 'Pro Template',
+    priceText: 'Termasuk di Paket Pro',
+    isPro: true,
+    desc: 'Silabus modul bertingkat, publikasi materi ajar terstruktur, profil tutor, dan integrasi video tutorial interaktif.',
+    features: ['Silabus Modul Bertingkat', 'Pencarian Dokumentasi Instan', 'Profil Tutor & Dosen', 'Download Materi PDF']
+  },
+  {
+    id: 'tpl_business_catalog',
+    title: 'Showcase Bisnis Mikro & UMKM',
+    category: 'business' as const,
+    tier: 'Pro Template',
+    priceText: 'Termasuk di Paket Pro',
+    isPro: true,
+    desc: 'Toko online mikro dan landing page jasa profesional dengan tombol order direct WhatsApp dan galeri produk responsif.',
+    features: ['Katalog Produk Responsif', 'Direct WhatsApp Ordering', 'Integrasi Payment Link', 'Statistik Konversi Kunjungan']
+  }
+]);
+
+// Visual Editor Simulator State
+const editorDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
+const isPublishing = ref(false);
+
+const handlePublishChanges = () => {
+  if (!activeContainer.value) return;
+  isPublishing.value = true;
+  setTimeout(() => {
+    isPublishing.value = false;
+    activeContainer.value.lastDeployed = 'Baru saja';
+    showToast(`Perubahan '${activeContainer.value.name}' live ke Docker!`, 'success');
+  }, 1200);
+};
+
+// AI Generator Assistant
+const isGeneratingAI = ref(false);
+const aiPromptInput = ref('');
+const handleAiGenerateContent = () => {
+  if (!aiPromptInput.value.trim() || !activeContainer.value) return;
+  isGeneratingAI.value = true;
+  setTimeout(() => {
+    isGeneratingAI.value = false;
+    activeContainer.value.bioIntro = `Solusi komputasi cloud otonom & arsitektur modern berorientasi masa depan yang dirancang berdasarkan kebutuhan: ${aiPromptInput.value}. Memaksimalkan efisiensi kontainer dan skalabilitas tinggi.`;
+    aiPromptInput.value = '';
+    showToast('Asisten AI berhasil menyusun konten baru!', 'success');
+  }, 900);
+};
+
+// Invoices State
+const invoices = ref<InvoiceItem[]>([
+  {
+    id: 'INV-2026-09-0891',
+    date: '15 Sep 2026',
+    dueDate: '22 Sep 2026',
+    planName: 'Hero Pro Plan (Multi-Tenant Docker)',
+    period: '15 Sep 2026 - 15 Okt 2026',
+    amount: 149000,
+    tax: 16390,
+    total: 165390,
+    status: 'paid',
+    paymentMethod: 'BCA Virtual Account (Auto-Debit)',
+    containerQuota: 3
+  },
+  {
+    id: 'INV-2026-08-0412',
+    date: '15 Agu 2026',
+    dueDate: '22 Agu 2026',
+    planName: 'Hero Pro Plan (Multi-Tenant Docker)',
+    period: '15 Agu 2026 - 15 Sep 2026',
+    amount: 149000,
+    tax: 16390,
+    total: 165390,
+    status: 'paid',
+    paymentMethod: 'QRIS Gopay / ShopeePay',
+    containerQuota: 3
+  },
+  {
+    id: 'INV-2026-07-0098',
+    date: '15 Jul 2026',
+    dueDate: '22 Jul 2026',
+    planName: 'Hero Starter Plan (Single Container)',
+    period: '15 Jul 2026 - 15 Agu 2026',
+    amount: 69000,
+    tax: 7590,
+    total: 76590,
+    status: 'paid',
+    paymentMethod: 'Kartu Kredit Mandiri Visa',
+    containerQuota: 1
+  }
+]);
+
+const selectedInvoice = ref<InvoiceItem | null>(null);
+const isInvoiceDetailModalOpen = ref(false);
+
+const openInvoiceDetail = (inv: InvoiceItem) => {
+  selectedInvoice.value = inv;
+  isInvoiceDetailModalOpen.value = true;
+};
+
+const downloadInvoiceReceipt = (inv: InvoiceItem) => {
+  const invoiceText = `=======================================================
+           HEROCMS CLOUD PLATFORM PT
+     FAKTUR TAGIHAN RESMI (OFFICIAL TAX INVOICE)
+=======================================================
+No. Faktur     : ${inv.id}
+Tanggal        : ${inv.date}
+Jatuh Tempo    : ${inv.dueDate}
+Pelanggan      : Rizal Pratama (${userEmail.value})
+Status         : LUNAS / PAID (Terverifikasi Bank)
+Metode Bayar   : ${inv.paymentMethod}
+-------------------------------------------------------
+RINCIAN LAYANAN:
+1. ${inv.planName}
+   Periode: ${inv.period}
+   Kapasitas: ${inv.containerQuota} Kontainer Docker (cgroups v2)
+   Harga Dasar     : Rp ${inv.amount.toLocaleString('id-ID')}
+   PPN (11%)       : Rp ${inv.tax.toLocaleString('id-ID')}
+-------------------------------------------------------
+TOTAL DIBAYAR      : Rp ${inv.total.toLocaleString('id-ID')}
+=======================================================
+Dokumen ini sah dan diterbitkan secara digital oleh
+sistem penagihan otomatis HeroCMS Cloud Platform.`;
+
+  const blob = new Blob([invoiceText], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `Faktur-HeroCMS-${inv.id}.txt`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast(`Faktur ${inv.id} berhasil diunduh!`, 'success');
+};
+
+// Custom Domains State
+const customDomains = ref<CustomDomainItem[]>([
+  {
+    id: 'dom_1',
+    domain: 'rizalpratama.cloud',
+    targetContainer: 'Portofolio Rizal Pratama',
+    containerId: 'hero_tenant_9942',
+    status: 'active',
+    sslStatus: 'issued',
+    cnameRecord: 'edge.cloudcms.app',
+    aRecord: '103.144.20.1',
+    addedDate: '12 Sep 2026'
+  }
+]);
+
+const newDomainInput = ref('');
+const targetContainerForDomain = ref('hero_tenant_9942');
+
+const handleAddDomain = () => {
+  if (!newDomainInput.value.trim()) {
+    showToast('Masukkan nama domain Anda (misal: perusahaan.id)', 'error');
+    return;
+  }
+  const cleanDom = newDomainInput.value.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  const matched = containers.value.find(c => c.id === targetContainerForDomain.value);
+  const newDomObj: CustomDomainItem = {
+    id: `dom_${Date.now()}`,
+    domain: cleanDom,
+    targetContainer: matched ? matched.name : 'Portofolio Rizal Pratama',
+    containerId: targetContainerForDomain.value,
+    status: 'verifying',
+    sslStatus: 'pending',
+    cnameRecord: 'edge.cloudcms.app',
+    aRecord: '103.144.20.1',
+    addedDate: 'Baru saja'
+  };
+  customDomains.value.push(newDomObj);
+  newDomainInput.value = '';
+  showToast(`Domain ${cleanDom} didaftarkan! Menguji propagasi DNS Traefik...`, 'info');
+  setTimeout(() => {
+    newDomObj.status = 'active';
+    newDomObj.sslStatus = 'issued';
+    showToast(`Domain ${cleanDom} terverifikasi & SSL TLS 1.3 Let's Encrypt aktif!`, 'success');
+  }, 1600);
+};
+
+const deleteDomain = (dom: CustomDomainItem) => {
+  if (confirm(`Putuskan tautan domain '${dom.domain}' dari kontainer?`)) {
+    const idx = customDomains.value.findIndex(d => d.id === dom.id);
+    if (idx !== -1) {
+      customDomains.value.splice(idx, 1);
+      showToast(`Domain ${dom.domain} telah dilepas dari routing Traefik.`, 'info');
+    }
+  }
+};
+
+// Content Articles State
+const articles = ref<ContentArticle[]>([
+  {
+    id: 'art_1',
+    title: 'Arsitektur Multi-Tenant dengan Docker & Go',
+    slug: 'arsitektur-multi-tenant-docker-go',
+    siteName: 'Portofolio Rizal Pratama',
+    containerId: 'hero_tenant_9942',
+    category: 'Engineering',
+    author: 'Rizal Pratama',
+    views: 1420,
+    status: 'published',
+    publishedAt: '16 Sep 2026'
+  },
+  {
+    id: 'art_2',
+    title: 'Penyelarasan Telemetri Real-Time dengan Kafka',
+    slug: 'telemetri-real-time-kafka',
+    siteName: 'Portofolio Rizal Pratama',
+    containerId: 'hero_tenant_9942',
+    category: 'Distributed Systems',
+    author: 'Rizal Pratama',
+    views: 890,
+    status: 'published',
+    publishedAt: '14 Sep 2026'
+  },
+  {
+    id: 'art_3',
+    title: 'Mengoptimalkan TTFB Edge Traefik v3 hingga Sub-2ms',
+    slug: 'optimasi-ttfb-edge-traefik',
+    siteName: 'Portofolio Rizal Pratama',
+    containerId: 'hero_tenant_9942',
+    category: 'DevOps',
+    author: 'Rizal Pratama',
+    views: 610,
+    status: 'published',
+    publishedAt: '10 Sep 2026'
+  },
+  {
+    id: 'art_4',
+    title: 'Panduan Membangun Website Portfolio Modern dengan Headless CMS',
+    slug: 'panduan-portfolio-headless-cms',
+    siteName: 'Portofolio Rizal Pratama',
+    containerId: 'hero_tenant_9942',
+    category: 'Tutorial',
+    author: 'Rizal Pratama',
+    views: 0,
+    status: 'draft',
+    publishedAt: 'Draft'
+  }
+]);
+
+const isCreateArticleModalOpen = ref(false);
+const newArticleForm = ref({
+  title: '',
+  category: 'Engineering',
+  status: 'published' as 'published' | 'draft'
+});
+
+const handleCreateArticle = () => {
+  if (!newArticleForm.value.title.trim()) {
+    showToast('Judul artikel wajib diisi.', 'error');
+    return;
+  }
+  const slug = newArticleForm.value.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const newArt: ContentArticle = {
+    id: `art_${Date.now()}`,
+    title: newArticleForm.value.title,
+    slug,
+    siteName: activeContainer.value ? activeContainer.value.name : 'Portofolio Rizal Pratama',
+    containerId: activeContainer.value ? activeContainer.value.id : 'hero_tenant_9942',
+    category: newArticleForm.value.category,
+    author: 'Rizal Pratama',
+    views: 0,
+    status: newArticleForm.value.status,
+    publishedAt: newArticleForm.value.status === 'published' ? 'Baru saja' : 'Draft'
+  };
+  articles.value.unshift(newArt);
+  isCreateArticleModalOpen.value = false;
+  newArticleForm.value.title = '';
+  showToast(`Artikel '${newArt.title}' berhasil disimpan!`, 'success');
+};
+
+const deleteArticle = (art: ContentArticle) => {
+  if (confirm(`Hapus artikel '${art.title}'?`)) {
+    const idx = articles.value.findIndex(a => a.id === art.id);
+    if (idx !== -1) {
+      articles.value.splice(idx, 1);
+      showToast(`Artikel '${art.title}' dihapus.`, 'info');
+    }
+  }
+};
+
+// Media Assets State
+const mediaAssets = ref<MediaAssetItem[]>([
+  {
+    id: 'med_1',
+    name: 'hero-banner-developer.webp',
+    size: '84 KB',
+    type: 'WEBP',
+    dimensions: '1920x1080',
+    uploadedAt: '18 Sep 2026',
+    url: 'https://cdn.cloudcms.app/assets/hero-banner.webp'
+  },
+  {
+    id: 'med_2',
+    name: 'avatar-profile-rizal.jpg',
+    size: '42 KB',
+    type: 'JPEG',
+    dimensions: '800x800',
+    uploadedAt: '16 Sep 2026',
+    url: 'https://cdn.cloudcms.app/assets/avatar.jpg'
+  },
+  {
+    id: 'med_3',
+    name: 'traefik-architecture-diagram.png',
+    size: '156 KB',
+    type: 'PNG',
+    dimensions: '1440x900',
+    uploadedAt: '12 Sep 2026',
+    url: 'https://cdn.cloudcms.app/assets/diagram.png'
+  },
+  {
+    id: 'med_4',
+    name: 'brand-logo-white.svg',
+    size: '8 KB',
+    type: 'SVG',
+    dimensions: 'Vector',
+    uploadedAt: '10 Sep 2026',
+    url: 'https://cdn.cloudcms.app/assets/logo.svg'
+  }
+]);
+
+const uploadMediaDemo = () => {
+  const fakeNames = ['product-showcase-preview.webp', 'article-featured-header.png', 'company-profile-team.jpg'];
+  const picked = fakeNames[Math.floor(Math.random() * fakeNames.length)];
+  const newAsset: MediaAssetItem = {
+    id: `med_${Date.now()}`,
+    name: picked,
+    size: '112 KB',
+    type: picked.split('.').pop()?.toUpperCase() || 'FILE',
+    dimensions: '1200x630',
+    uploadedAt: 'Baru saja',
+    url: `https://cdn.cloudcms.app/assets/${picked}`
+  };
+  mediaAssets.value.unshift(newAsset);
+  showToast(`File ${picked} terunggah ke S3 bucket & di-cache di Traefik CDN!`, 'success');
+};
+
+const deleteMedia = (med: MediaAssetItem) => {
+  const idx = mediaAssets.value.findIndex(m => m.id === med.id);
+  if (idx !== -1) {
+    mediaAssets.value.splice(idx, 1);
+    showToast(`Media ${med.name} dihapus dari S3 bucket.`, 'info');
+  }
+};
+
+// Webhooks & API Keys State
+const webhooks = ref<WebhookItem[]>([
+  {
+    id: 'wh_1',
+    name: 'Discord Notification Bot',
+    url: 'https://discord.com/api/webhooks/12894.../hero-alerts',
+    events: ['site.deployed', 'form.submitted'],
+    status: 'active',
+    lastTriggered: '10 menit lalu'
+  },
+  {
+    id: 'wh_2',
+    name: 'Slack Dev Channel Ingress',
+    url: 'https://hooks.slack.com/services/T00/B00/XXXXX',
+    events: ['site.deployed', 'traffic.anomaly'],
+    status: 'active',
+    lastTriggered: '1 jam lalu'
+  }
+]);
+
+const apiKey = ref('hero_sec_live_9942a8b9c1d2e3f4g5h6');
+const isApiKeyRevealed = ref(false);
+
+const copyApiKey = () => {
+  navigator.clipboard.writeText(apiKey.value);
+  showToast('API Key disalin ke clipboard!', 'info');
+};
+
+const testWebhook = (wh: WebhookItem) => {
+  showToast(`Mengirim ping uji coba ke ${wh.name}...`, 'info');
+  setTimeout(() => {
+    wh.lastTriggered = 'Baru saja';
+    showToast(`Webhook ${wh.name} sukses merespon HTTP 200 OK!`, 'success');
+  }, 1000);
+};
+
+export function useDashboardData() {
+  return {
+    activeMenu,
+    userEmail,
+    userPlan,
+    toastMessage,
+    showToast,
+    containers,
+    activeContainerId,
+    activeContainer,
+    usedContainersCount,
+    runningContainersCount,
+    stoppedContainersCount,
+    isQuotaExceeded,
+    searchQuery,
+    statusFilter,
+    filteredContainers,
+    startContainer,
+    stopContainer,
+    restartContainer,
+    deleteContainer,
+    isCreateModalOpen,
+    newSiteForm,
+    openCreateModal,
+    handleCreateContainer,
+    isLogsModalOpen,
+    activeLogContainer,
+    openLogsModal,
+    copyContainerLogs,
+    copiedSubdomain,
+    copyToClipboard,
+    officialTemplates,
+    editorDevice,
+    isPublishing,
+    handlePublishChanges,
+    isGeneratingAI,
+    aiPromptInput,
+    handleAiGenerateContent,
+    invoices,
+    selectedInvoice,
+    isInvoiceDetailModalOpen,
+    openInvoiceDetail,
+    downloadInvoiceReceipt,
+    customDomains,
+    newDomainInput,
+    targetContainerForDomain,
+    handleAddDomain,
+    deleteDomain,
+    articles,
+    isCreateArticleModalOpen,
+    newArticleForm,
+    handleCreateArticle,
+    deleteArticle,
+    mediaAssets,
+    uploadMediaDemo,
+    deleteMedia,
+    webhooks,
+    apiKey,
+    isApiKeyRevealed,
+    copyApiKey,
+    testWebhook
+  };
+}
