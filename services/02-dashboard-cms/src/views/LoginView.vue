@@ -141,7 +141,10 @@ const handleRegister = async (e?: Event) => {
       @complete="router.push('/')"
     />
 
-    <div class="auth-surface-container">
+    <div
+      class="auth-surface-container"
+      :class="{ 'card-leaving-for-splash': isTransitioningToDashboard }"
+    >
       <!-- Modern Brand Header -->
       <header class="auth-brand-badge">
         <div class="brand-glyph-box">
@@ -486,6 +489,16 @@ const handleRegister = async (e?: Event) => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-surface-container.card-leaving-for-splash {
+  opacity: 0;
+  transform: scale(0.95) translateY(-8px);
+  filter: blur(8px);
+  pointer-events: none;
 }
 
 /* Brand Header */

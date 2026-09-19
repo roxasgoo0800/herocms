@@ -36,8 +36,8 @@ onMounted(() => {
         isFinished.value = true;
         setTimeout(() => {
           emit('complete');
-        }, 300);
-      }, 150);
+        }, 360);
+      }, 160);
     }
   };
 
@@ -247,16 +247,28 @@ onUnmounted(() => {
   40% { opacity: 1; }
 }
 
-/* Smooth Dissolve Out */
+/* Seamless Smooth Dissolve In & Out */
+.splash-dissolve-enter-active {
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.splash-dissolve-enter-from {
+  opacity: 0;
+  transform: scale(0.97);
+  filter: blur(6px);
+}
+
 .splash-dissolve-leave-active {
-  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .splash-dissolve-leave-to {
   opacity: 0;
-  transform: scale(1.02);
-  filter: blur(6px);
+  transform: scale(1.03);
+  filter: blur(8px);
 }
 </style>

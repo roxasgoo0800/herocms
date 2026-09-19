@@ -86,14 +86,15 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <!-- Fullscreen Studio Splashscreen Gateway Transition -->
-  <StudioSplashScreen
-    v-if="isDashboardInitializing"
-    :duration-ms="1200"
-    @complete="onSplashComplete"
-  />
+  <div class="dashboard-root-layout">
+    <!-- Fullscreen Studio Splashscreen Gateway Transition -->
+    <StudioSplashScreen
+      v-if="isDashboardInitializing"
+      :duration-ms="1200"
+      @complete="onSplashComplete"
+    />
 
-  <div class="app-shell" :class="{ 'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden }">
+    <div class="app-shell" :class="{ 'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden }">
     <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
     <aside class="app-sidebar">
       <!-- Workspace Brand Switcher -->
@@ -539,6 +540,7 @@ const handleLogout = () => {
         </div>
       </div>
     </Teleport>
+    </div>
   </div>
 </template>
 
@@ -547,11 +549,33 @@ const handleLogout = () => {
    HEROCMS STUDIO - BESPOKE ENTERPRISE DESIGN SYSTEM (CLEAN & NON-BOOTSTRAP)
    ========================================================================== */
 
+.dashboard-root-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+}
+
 .app-shell {
   display: flex;
   min-height: 100vh;
   background: transparent;
   position: relative;
+  animation: appShellBloom 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes appShellBloom {
+  0% {
+    opacity: 0;
+    transform: scale(0.994);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
 }
 
 /* Editor Immersive Mode: Hide Sidebar & Top Header for maximum wide workspace */

@@ -8,7 +8,11 @@ import BackgroundWave from './components/BackgroundWave.vue';
     <!-- Unified Interactive Background Wave from Marketing Site -->
     <BackgroundWave />
     <div style="position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column;">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <transition name="app-route-fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </RouterView>
     </div>
   </div>
 </template>
@@ -50,5 +54,25 @@ html, body {
 
 button, input {
   font-family: inherit;
+}
+
+/* Seamless Route Transitions */
+.app-route-fade-enter-active,
+.app-route-fade-leave-active {
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-route-fade-enter-from {
+  opacity: 0;
+  transform: scale(0.995);
+  filter: blur(3px);
+}
+
+.app-route-fade-leave-to {
+  opacity: 0;
+  transform: scale(1.005);
+  filter: blur(3px);
 }
 </style>
