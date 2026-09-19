@@ -2,12 +2,8 @@
 import { ref, computed } from 'vue';
 import {
   FileText,
-  Plus,
   Check,
-  Edit3,
   Activity,
-  X,
-  Sparkles,
   Search,
   Eye,
   Calendar,
@@ -23,9 +19,6 @@ import { useDashboardData } from '../../composables/useDashboardData';
 
 const {
   articles,
-  isCreateArticleModalOpen,
-  newArticleForm,
-  handleCreateArticle,
   showToast,
   copyToClipboard,
   copiedSubdomain
@@ -72,14 +65,8 @@ const getCategoryColor = (cat: string) => {
     <!-- Header Intro -->
     <div class="page-intro-row">
       <div>
-        <h1 class="page-title">Manajemen Artikel & Editorial Studio</h1>
-        <p class="page-desc">Kelola publikasi konten, postingan editorial teknis, dan landing page untuk setiap kontainer tenant dengan sinkronisasi CDN Traefik dan OpenGraph otomatis.</p>
-      </div>
-      <div class="header-action-group">
-        <button class="btn-primary-gradient" @click="isCreateArticleModalOpen = true">
-          <Plus :size="15" />
-          <span>Tulis Artikel Baru</span>
-        </button>
+        <h1 class="page-title">Konten & Editorial Studio</h1>
+        <p class="page-desc">Jelajahi publikasi konten, postingan editorial teknis, dan landing page kontainer tenant Anda dengan sinkronisasi CDN Traefik dan OpenGraph otomatis.</p>
       </div>
     </div>
 
@@ -329,11 +316,7 @@ const getCategoryColor = (cat: string) => {
       <div v-if="filteredArticles.length === 0" class="empty-state-box">
         <FileText :size="38" class="empty-icon" />
         <h4>Tidak ada artikel yang cocok dengan filter</h4>
-        <p>Sesuaikan kata kunci pencarian atau buat publikasi editorial baru.</p>
-        <button class="btn-primary-gradient" @click="isCreateArticleModalOpen = true">
-          <Plus :size="14" />
-          <span>Tulis Artikel Baru</span>
-        </button>
+        <p>Sesuaikan kata kunci pencarian atau filter kategori Anda.</p>
       </div>
     </div>
 
@@ -404,91 +387,6 @@ const getCategoryColor = (cat: string) => {
       </div>
     </div>
 
-    <!-- MODAL: TULIS ARTIKEL BARU -->
-    <div v-if="isCreateArticleModalOpen" class="modal-backdrop" @click.self="isCreateArticleModalOpen = false">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <div class="modal-header-leading">
-            <div class="modal-header-icon-box">
-              <FileText :size="18" />
-            </div>
-            <div>
-              <h3 class="modal-heading">Tulis Artikel Baru</h3>
-              <p class="modal-subheading">Publikasikan konten editorial langsung ke runtime engine kontainer Anda.</p>
-            </div>
-          </div>
-          <button class="modal-close-button" @click="isCreateArticleModalOpen = false" title="Tutup">
-            <X :size="16" />
-          </button>
-        </div>
-
-        <form @submit.prevent="handleCreateArticle" class="modal-form-body">
-          <div class="form-group-block">
-            <label class="input-label-row">
-              <span class="label-text">Judul Artikel / Post</span>
-              <span class="label-badge-optional">Wajib</span>
-            </label>
-            <div class="input-field-wrapper">
-              <input
-                v-model="newArticleForm.title"
-                type="text"
-                class="form-text-input"
-                placeholder="Contoh: Panduan Mengoptimasi CDN & Caching HeroCMS"
-                required
-                autofocus
-              />
-            </div>
-          </div>
-
-          <div class="form-row-duo">
-            <div class="form-group-block">
-              <label class="input-label-row">
-                <span class="label-text">Kategori Topik</span>
-              </label>
-              <div class="input-field-wrapper">
-                <select v-model="newArticleForm.category" class="form-text-input form-select-input">
-                  <option value="Engineering">Engineering</option>
-                  <option value="Distributed Systems">Distributed Systems</option>
-                  <option value="DevOps">DevOps</option>
-                  <option value="Security">Security</option>
-                  <option value="Tutorial">Tutorial</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group-block">
-              <label class="input-label-row">
-                <span class="label-text">Status Penerbitan</span>
-              </label>
-              <div class="input-field-wrapper">
-                <select v-model="newArticleForm.status" class="form-text-input form-select-input">
-                  <option value="published">Langsung Publish (Live)</option>
-                  <option value="draft">Simpan sebagai Draft</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="resource-spec-callout">
-            <Sparkles :size="14" class="spec-callout-icon" />
-            <div class="spec-callout-text">
-              <span>Optimasi Otomatis: </span>
-              Slug URL ramah SEO otomatis, kartu OpenGraph Twitter/FB, dan sinkronisasi CDN instan ke edge Traefik v3.
-            </div>
-          </div>
-
-          <div class="modal-footer-row">
-            <button type="button" class="btn-modal-ghost" @click="isCreateArticleModalOpen = false">
-              Batal
-            </button>
-            <button type="submit" class="btn-modal-confirm">
-              <Plus :size="14" />
-              <span>Simpan & Publikasikan</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   </section>
 </template>
 

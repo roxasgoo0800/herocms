@@ -5,7 +5,6 @@ import {
   Search,
   Copy,
   Check,
-  Trash2,
   Layers,
   Zap,
   Globe,
@@ -25,7 +24,6 @@ const {
   mediaAssets,
   uploadMediaDemo,
   uploadMediaFiles,
-  deleteMedia,
   copyToClipboard,
   copiedSubdomain,
   showToast
@@ -388,13 +386,6 @@ const downloadMediaFile = (item: MediaAssetItem) => {
               title="Rincian & Preview"
             >
               <Eye :size="14" />
-            </button>
-            <button
-              class="overlay-btn danger"
-              @click.stop="deleteMedia(med)"
-              title="Hapus File"
-            >
-              <Trash2 :size="14" />
             </button>
           </div>
         </div>
