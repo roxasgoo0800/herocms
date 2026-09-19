@@ -236,12 +236,12 @@ const handleCreateContainer = () => {
     category: newSiteForm.value.category,
     templateName: tplName,
     subdomain: `${cleanSubdomain}.cloudcms.app`,
-    status: 'running',
-    cpuUsage: 12,
-    ramUsage: 74,
+    status: 'provisioning',
+    cpuUsage: 4,
+    ramUsage: 36,
     ramLimit: 256,
     cpuLimit: '0.5 vCPU',
-    uptime: 'Baru dibuat',
+    uptime: 'Inisialisasi...',
     visitsThisWeek: 0,
     ssl: true,
     roleOrHeadline: newSiteForm.value.role || 'Website Resmi ' + newSiteForm.value.name,
@@ -253,8 +253,32 @@ const handleCreateContainer = () => {
   containers.value.push(newContainerObj);
   activeContainerId.value = newId;
   isCreateModalOpen.value = false;
-  showToast(`Situs '${newContainerObj.name}' berhasil dibuat di kontainer ${newId}!`, 'success');
-  activeMenu.value = 'editor';
+  activeMenu.value = 'containers';
+  showToast(`Mengalokasikan kontainer ${newId} & mendaftarkan rute Traefik...`, 'info');
+
+  setTimeout(() => {
+    newContainerObj.status = 'running';
+    newContainerObj.cpuUsage = 14;
+    newContainerObj.ramUsage = 72;
+    newContainerObj.uptime = 'Baru saja running';
+    showToast(`Kontainer '${newContainerObj.name}' aktif! Rute siap di https://${newContainerObj.subdomain}`, 'success');
+  }, 1400);
+};
+
+// Runtime Logs Modal
+const isLogsModalOpen = ref(false);
+const activeLogContainer = ref<ContainerSite | null>(null);
+
+const openLogsModal = (container: ContainerSite) => {
+  activeLogContainer.value = container;
+  isLogsModalOpen.value = true;
+};
+
+const copyContainerLogs = () => {
+  if (!activeLogContainer.value) return;
+  const logText = `[docker-cgroups] Container ${activeLogContainer.value.id} (${activeLogContainer.value.subdomain})\nStatus: ${activeLogContainer.value.status}\nTraefik v3 Edge Proxy: Online TLS 1.3\nCPU: ${activeLogContainer.value.cpuUsage}% / ${activeLogContainer.value.cpuLimit}\nRAM: ${activeLogContainer.value.ramUsage} MB / ${activeLogContainer.value.ramLimit} MB`;
+  navigator.clipboard.writeText(logText);
+  showToast('Log kontainer disalin ke clipboard!', 'info');
 };
 
 // Official Templates & Pricelist Catalog
@@ -761,6 +785,13 @@ const handleLogout = () => {
                     title="Restart Kontainer"
                   >
                     <RotateCw :size="13" />
+                  </button>
+                  <button
+                    class="btn-icon-ctrl btn-term"
+                    @click="openLogsModal(c)"
+                    title="Lihat Log Docker & Traefik"
+                  >
+                    <Terminal :size="13" />
                   </button>
                   <button
                     class="btn-icon-ctrl btn-del"
@@ -1315,6 +1346,64 @@ const handleLogout = () => {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- MODAL: DOCKER & TRAEFIK RUNTIME LOGS                          -->
+    <!-- ============================================================= -->
+    <div v-if="isLogsModalOpen && activeLogContainer" class="modal-backdrop" @click.self="isLogsModalOpen = false">
+      <div class="modal-dialog modal-dialog-lg">
+        <div class="modal-header">
+          <div class="modal-header-leading">
+            <div class="modal-header-icon-box">
+              <Terminal :size="18" />
+            </div>
+            <div>
+              <h3 class="modal-heading">Log Runtime Kontainer</h3>
+              <p class="modal-subheading">Telemetri Docker container #{{ activeLogContainer.id }} via proxy Traefik v3.</p>
+            </div>
+          </div>
+          <button class="modal-close-button" @click="isLogsModalOpen = false" title="Tutup">
+            <X :size="16" />
+          </button>
+        </div>
+
+        <div class="terminal-container-view">
+          <div class="terminal-meta-bar">
+            <div class="terminal-meta-item">
+              <span class="t-meta-lbl">STATUS:</span>
+              <span class="t-meta-val" :class="activeLogContainer.status">{{ activeLogContainer.status.toUpperCase() }}</span>
+            </div>
+            <div class="terminal-meta-item">
+              <span class="t-meta-lbl">CGROUPS:</span>
+              <span class="t-meta-val">{{ activeLogContainer.cpuLimit }} • {{ activeLogContainer.ramUsage }}MB / {{ activeLogContainer.ramLimit }}MB</span>
+            </div>
+            <div class="terminal-meta-item">
+              <span class="t-meta-lbl">ROUTE:</span>
+              <span class="t-meta-val">{{ activeLogContainer.subdomain }}</span>
+            </div>
+          </div>
+
+          <div class="terminal-output-screen">
+            <div class="log-entry"><span class="log-ts">[09:20:12]</span> <span class="log-tag docker">[docker-daemon]</span> Container {{ activeLogContainer.id }} allocated with cgroups v2 limits</div>
+            <div class="log-entry"><span class="log-ts">[09:20:13]</span> <span class="log-tag traefik">[traefik-proxy]</span> Route registered: Host(`{{ activeLogContainer.subdomain }}`) -> port 80</div>
+            <div class="log-entry"><span class="log-ts">[09:20:14]</span> <span class="log-tag tls">[lets-encrypt]</span> Certificate TLS v1.3 challenge verified successfully (Zero-Downtime)</div>
+            <div class="log-entry"><span class="log-ts">[09:20:15]</span> <span class="log-tag nginx">[runtime-engine]</span> HTTP/2 server ready. Ready to receive tenant traffic</div>
+            <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:22:04]</span> <span class="log-tag traffic">[edge-inbound]</span> GET / 200 OK (TTFB: 1.6ms) - Client IP: 103.144.20.12</div>
+            <div class="log-entry" v-if="activeLogContainer.status === 'stopped'"><span class="log-ts">[09:22:30]</span> <span class="log-tag warn">[docker-daemon]</span> SIGTERM received. Container process halted cleanly (Standby)</div>
+          </div>
+        </div>
+
+        <div class="modal-footer-row">
+          <button type="button" class="btn-modal-ghost" @click="copyContainerLogs">
+            <Copy :size="14" />
+            <span>Salin Log</span>
+          </button>
+          <button type="button" class="btn-modal-confirm" @click="isLogsModalOpen = false">
+            Selesai
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -2367,22 +2456,21 @@ const handleLogout = () => {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  background: #09090b;
   color: #ffffff;
-  border: 1px solid #0f172a;
+  border: 1px solid #09090b;
   padding: 7px 15px;
   border-radius: 8px;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.12s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-action-primary:hover {
-  background: #1e293b;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: #27272a;
+  border-color: #27272a;
 }
 
 .runtime-btn-group {
@@ -2430,6 +2518,15 @@ const handleLogout = () => {
   border-color: #fde68a;
 }
 
+.btn-term {
+  color: #09090b;
+}
+
+.btn-term:hover {
+  background: #f4f4f5;
+  border-color: #09090b;
+}
+
 .btn-del:hover {
   background: #fef2f2;
   border-color: #fecaca;
@@ -2438,23 +2535,23 @@ const handleLogout = () => {
 
 /* Available Slot Placeholder Cards */
 .empty-slot-card {
-  border: 1.5px dashed #cbd5e1;
+  border: 1.5px dashed #d4d4d8;
   border-radius: 16px;
-  background: rgba(248, 250, 252, 0.5);
+  background: #fafafa;
   min-height: 230px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  padding: 20px;
+  transition: all 0.16s ease;
+  padding: 24px;
 }
 
 .empty-slot-card:hover {
-  border-color: #3b82f6;
-  background: rgba(239, 246, 255, 0.4);
+  border-color: #09090b;
+  background: #f4f4f5;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.08);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.06);
 }
 
 .slot-dashed-inner {
@@ -2466,19 +2563,21 @@ const handleLogout = () => {
 }
 
 .slot-icon-circle {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: #eff6ff;
-  color: #2563eb;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #09090b;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .empty-slot-card:hover .slot-icon-circle {
-  transform: scale(1.08);
+  transform: scale(1.06);
+  border-color: #09090b;
 }
 
 .slot-text-group {
@@ -2488,44 +2587,43 @@ const handleLogout = () => {
 }
 
 .slot-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #2563eb;
-  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #71717a;
+  letter-spacing: 0.06em;
   font-family: ui-monospace, monospace;
 }
 
 .slot-title {
   font-size: 0.95rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 600;
+  color: #09090b;
 }
 
 .slot-specs {
   font-size: 0.74rem;
-  color: #64748b;
+  color: #71717a;
 }
 
 .btn-slot-create {
   margin-top: 4px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
+  background: #09090b;
+  border: 1px solid #09090b;
+  color: #ffffff;
   padding: 6px 14px;
   border-radius: 7px;
-  font-size: 0.76rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .empty-slot-card:hover .btn-slot-create {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #ffffff;
+  background: #27272a;
+  border-color: #27272a;
 }
 
 /* Empty State */
@@ -3782,6 +3880,92 @@ const handleLogout = () => {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Terminal Logs Dialog */
+.modal-dialog-lg {
+  max-width: 660px;
+}
+
+.terminal-container-view {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.terminal-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  background: #18181b;
+  border-bottom: 1px solid #27272a;
+  font-size: 0.74rem;
+}
+
+.terminal-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.t-meta-lbl {
+  color: #71717a;
+  font-weight: 600;
+  font-size: 0.68rem;
+}
+
+.t-meta-val {
+  color: #e4e4e7;
+}
+
+.t-meta-val.running {
+  color: #10b981;
+}
+
+.t-meta-val.stopped {
+  color: #f59e0b;
+}
+
+.t-meta-val.provisioning {
+  color: #3b82f6;
+}
+
+.terminal-output-screen {
+  padding: 14px;
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #d4d4d8;
+}
+
+.log-ts {
+  color: #71717a;
+  flex-shrink: 0;
+}
+
+.log-tag {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.log-tag.docker { color: #60a5fa; }
+.log-tag.traefik { color: #34d399; }
+.log-tag.tls { color: #a78bfa; }
+.log-tag.nginx { color: #f472b6; }
+.log-tag.traffic { color: #38bdf8; }
+.log-tag.warn { color: #fbbf24; }
 
 .fade-in-section {
   animation: fadeIn 0.18s ease-out;
