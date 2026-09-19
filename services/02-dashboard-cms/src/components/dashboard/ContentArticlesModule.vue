@@ -6,7 +6,6 @@ import {
   Check,
   Edit3,
   Activity,
-  Trash2,
   X,
   Sparkles,
   Search,
@@ -27,7 +26,6 @@ const {
   isCreateArticleModalOpen,
   newArticleForm,
   handleCreateArticle,
-  deleteArticle,
   showToast,
   copyToClipboard,
   copiedSubdomain
@@ -166,10 +164,10 @@ const getCategoryColor = (cat: string) => {
           <div class="spotlight-actions">
             <button
               class="btn-spotlight-edit"
-              @click="showToast(`Membuka editor untuk '${trendingArticle.title}'...`, 'info')"
+              @click="showToast(`Membuka preview untuk '${trendingArticle.title}'...`, 'info')"
             >
-              <Edit3 :size="14" />
-              <span>Edit di Visual Editor</span>
+              <Eye :size="14" />
+              <span>Lihat Artikel</span>
             </button>
             <button
               class="btn-spotlight-copy"
@@ -311,10 +309,10 @@ const getCategoryColor = (cat: string) => {
           <div class="art-card-actions-bar">
             <button
               class="btn-card-action primary"
-              @click="showToast(`Membuka Visual Studio untuk '${art.title}'...`, 'info')"
+              @click="showToast(`Membuka preview untuk '${art.title}'...`, 'info')"
             >
-              <Edit3 :size="13" />
-              <span>Edit Konten</span>
+              <Eye :size="13" />
+              <span>Baca Artikel</span>
             </button>
             <button
               class="btn-card-action"
@@ -323,13 +321,6 @@ const getCategoryColor = (cat: string) => {
             >
               <Check v-if="copiedSubdomain === art.id" :size="13" class="text-green" />
               <Copy v-else :size="13" />
-            </button>
-            <button
-              class="btn-card-action danger"
-              @click="deleteArticle(art)"
-              title="Hapus Artikel"
-            >
-              <Trash2 :size="13" />
             </button>
           </div>
         </div>
@@ -398,11 +389,12 @@ const getCategoryColor = (cat: string) => {
               </td>
               <td style="text-align: right">
                 <div class="row-actions">
-                  <button class="btn-action-icon" @click="showToast(`Membuka Visual Editor untuk '${art.title}'...`, 'info')" title="Buka di Editor">
-                    <Edit3 :size="13" />
+                  <button class="btn-action-icon" @click="showToast(`Membuka preview untuk '${art.title}'...`, 'info')" title="Lihat Artikel">
+                    <Eye :size="13" />
                   </button>
-                  <button class="btn-action-icon danger" @click="deleteArticle(art)" title="Hapus Artikel">
-                    <Trash2 :size="13" />
+                  <button class="btn-action-icon" @click="copyToClipboard(`https://rizalpratama.cloud/${art.slug}`, art.id)" :title="copiedSubdomain === art.id ? 'Tersalin!' : 'Salin Tautan'">
+                    <Check v-if="copiedSubdomain === art.id" :size="13" class="text-green" />
+                    <Copy v-else :size="13" />
                   </button>
                 </div>
               </td>
