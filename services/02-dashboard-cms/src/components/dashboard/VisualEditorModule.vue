@@ -2910,28 +2910,29 @@ const copySchemaJson = () => {
 }
 
 .palette-card-btn {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 7px 9px;
-  border-radius: 7px;
-  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
   background: #ffffff;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
   text-align: left;
+  outline: none;
 }
 
 .palette-card-btn:hover {
-  border-color: #0f172a;
+  border-color: #94a3b8;
   background: #f8fafc;
-  transform: translateY(-1px);
 }
 
 .palette-card-btn.active {
   border-color: #0f172a;
   background: #f8fafc;
-  box-shadow: 0 0 0 1.5px #0f172a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 
 .palette-swatch-dot {
@@ -2942,7 +2943,12 @@ const copySchemaJson = () => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.palette-card-btn.active .palette-swatch-dot {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 3.5px #0f172a, inset 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
 .palette-meta {
@@ -2953,12 +2959,18 @@ const copySchemaJson = () => {
 
 .palette-name {
   font-size: 0.7rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 600;
+  color: #334155;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
+  transition: color 0.15s ease;
+}
+
+.palette-card-btn.active .palette-name {
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .palette-hex {
@@ -2966,6 +2978,10 @@ const copySchemaJson = () => {
   font-family: ui-monospace, SFMono-Regular, monospace;
   color: #64748b;
   line-height: 1.2;
+}
+
+.palette-card-btn.active .palette-hex {
+  color: #475569;
 }
 
 .token-lbl {
