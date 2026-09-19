@@ -490,6 +490,30 @@ const articles = ref<ContentArticle[]>([
     views: 0,
     status: 'draft',
     publishedAt: 'Draft'
+  },
+  {
+    id: 'art_5',
+    title: 'Isolasi Resource cgroups v2 Kernel Linux untuk Multi-Tenant',
+    slug: 'isolasi-resource-cgroups-v2',
+    siteName: 'Portofolio Rizal Pratama',
+    containerId: 'hero_tenant_9942',
+    category: 'Engineering',
+    author: 'Rizal Pratama',
+    views: 420,
+    status: 'published',
+    publishedAt: '08 Sep 2026'
+  },
+  {
+    id: 'art_6',
+    title: 'Pencegahan DDoS & Rate Limiting dengan Traefik Middleware',
+    slug: 'pencegahan-ddos-rate-limiting-traefik',
+    siteName: 'Portofolio Rizal Pratama',
+    containerId: 'hero_tenant_9942',
+    category: 'Security',
+    author: 'Rizal Pratama',
+    views: 350,
+    status: 'published',
+    publishedAt: '05 Sep 2026'
   }
 ]);
 
