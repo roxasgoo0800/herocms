@@ -5,7 +5,7 @@ import BackgroundWave from './components/BackgroundWave.vue';
 import StudioSplashScreen from './components/StudioSplashScreen.vue';
 import { useSplashTransition } from './composables/useSplashTransition';
 
-const { isSplashActive, splashDuration, completeSplash, triggerSplash } = useSplashTransition();
+const { isSplashActive, splashDuration, revealDashboard, completeSplash, triggerSplash } = useSplashTransition();
 
 onMounted(() => {
   // Cold start splash on direct dashboard visit if authenticated
@@ -31,6 +31,7 @@ onMounted(() => {
     <StudioSplashScreen
       v-if="isSplashActive"
       :duration-ms="splashDuration"
+      @revealing="revealDashboard"
       @complete="completeSplash"
     />
   </div>

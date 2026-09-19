@@ -14,6 +14,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
+  (e: 'revealing'): void;
   (e: 'complete'): void;
 }>();
 
@@ -40,10 +41,11 @@ onMounted(() => {
     } else {
       setTimeout(() => {
         isFinished.value = true;
+        emit('revealing');
         setTimeout(() => {
           emit('complete');
-        }, 380);
-      }, 160);
+        }, 340);
+      }, 100);
     }
   };
 
@@ -310,14 +312,14 @@ onUnmounted(() => {
 }
 
 .splash-dissolve-leave-active {
-  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.34s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .splash-dissolve-leave-to {
   opacity: 0;
-  transform: scale(1.05);
-  filter: blur(10px);
+  transform: scale(1.04);
+  filter: blur(8px);
 }
 </style>

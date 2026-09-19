@@ -11,15 +11,19 @@ export function useSplashTransition() {
     isDashboardEntering.value = false;
   };
 
+  // Triggered in unison as splash screen begins dissolving out
+  const revealDashboard = () => {
+    isDashboardEntering.value = true;
+  };
+
+  // Triggered when splash screen has fully faded out
   const completeSplash = () => {
     isSplashActive.value = false;
-    isDashboardEntering.value = true;
     sessionStorage.setItem('herocms_splash_seen', 'true');
 
-    // Keep choreographed entrance active during transition, then reset
     setTimeout(() => {
       isDashboardEntering.value = false;
-    }, 800);
+    }, 600);
   };
 
   return {
@@ -27,6 +31,7 @@ export function useSplashTransition() {
     splashDuration,
     isDashboardEntering,
     triggerSplash,
+    revealDashboard,
     completeSplash
   };
 }

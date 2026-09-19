@@ -557,24 +557,24 @@ const handleLogout = () => {
   position: relative;
 }
 
-/* Choreographed Dashboard Entrance from Splash Screen */
+/* Choreographed Dashboard Entrance synchronized with splash dissolution */
 .app-shell.dashboard-choreographed-enter .app-sidebar {
-  animation: sidebarSlideIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: sidebarSlideIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .app-shell.dashboard-choreographed-enter .top-nav-header {
-  animation: headerDropIn 0.58s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: headerDropIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .app-shell.dashboard-choreographed-enter .content-scroll-pane {
-  animation: contentLiftIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: contentLiftIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes sidebarSlideIn {
   0% {
     opacity: 0;
-    transform: translateX(-40px);
-    filter: blur(8px);
+    transform: translateX(-16px);
+    filter: blur(3px);
   }
   100% {
     opacity: 1;
@@ -586,8 +586,8 @@ const handleLogout = () => {
 @keyframes headerDropIn {
   0% {
     opacity: 0;
-    transform: translateY(-24px);
-    filter: blur(6px);
+    transform: translateY(-10px);
+    filter: blur(2px);
   }
   100% {
     opacity: 1;
@@ -599,8 +599,8 @@ const handleLogout = () => {
 @keyframes contentLiftIn {
   0% {
     opacity: 0;
-    transform: translateY(32px) scale(0.98);
-    filter: blur(8px);
+    transform: translateY(14px) scale(0.99);
+    filter: blur(3px);
   }
   100% {
     opacity: 1;
