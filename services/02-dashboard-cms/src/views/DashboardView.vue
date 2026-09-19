@@ -92,15 +92,17 @@ const handleLogout = () => {
     <aside class="app-sidebar">
       <!-- Workspace Brand Switcher -->
       <div class="sidebar-header">
-        <div class="workspace-card">
-          <div class="brand-icon">
+        <div class="workspace-brand-header">
+          <div class="brand-glyph">
             <Layers :size="18" color="#ffffff" />
           </div>
-          <div class="workspace-info">
-            <div class="workspace-name">HeroCMS Studio</div>
-            <div class="workspace-badge">
+          <div class="brand-meta">
+            <div class="brand-title">
+              HeroCMS <span class="brand-gradient">Studio</span>
+            </div>
+            <div class="brand-plan-row">
               <span class="pulse-green"></span>
-              {{ userPlan.name }}
+              <span class="plan-name">{{ userPlan.name }}</span>
             </div>
           </div>
         </div>
@@ -644,50 +646,61 @@ const handleLogout = () => {
 }
 
 .sidebar-header {
-  padding: 16px;
+  padding: 16px 16px 14px;
   border-bottom: 1px solid #f1f5f9;
 }
 
-.workspace-card {
+.workspace-brand-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  gap: 11px;
+  padding: 2px;
 }
 
-.brand-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-radius: 8px;
+.brand-glyph {
+  width: 36px;
+  height: 36px;
+  background: #0f172a;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.workspace-info {
+.brand-meta {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
-.workspace-name {
-  font-size: 0.88rem;
-  font-weight: 700;
+.brand-title {
+  font-size: 0.94rem;
+  font-weight: 800;
   color: #0f172a;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
-.workspace-badge {
-  font-size: 0.72rem;
-  color: #64748b;
+.brand-gradient {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-plan-row {
   display: flex;
   align-items: center;
   gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 2.5px;
+  white-space: nowrap;
 }
 
 .pulse-green {
@@ -696,6 +709,7 @@ const handleLogout = () => {
   background: #10b981;
   border-radius: 50%;
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  flex-shrink: 0;
 }
 
 .sidebar-nav-sections {
