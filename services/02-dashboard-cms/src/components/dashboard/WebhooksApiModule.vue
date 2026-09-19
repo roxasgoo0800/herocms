@@ -334,94 +334,96 @@ for c in containers:
     </div>
 
     <!-- MODAL: TAMBAH WEBHOOK BARU -->
-    <div v-if="isAddWebhookModalOpen" class="modal-backdrop" @click.self="isAddWebhookModalOpen = false">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <div class="modal-header-leading">
-            <div class="modal-header-icon-box">
-              <Webhook :size="18" />
-            </div>
-            <div>
-              <h3 class="modal-heading">Tambah Webhook Endpoint</h3>
-              <p class="modal-subheading">Konfigurasikan URL target penerima event webhook berformat JSON.</p>
-            </div>
-          </div>
-          <button class="modal-close-button" @click="isAddWebhookModalOpen = false" title="Tutup">
-            <X :size="16" />
-          </button>
-        </div>
-
-        <form @submit.prevent="handleAddWebhook" class="modal-form-body">
-          <div class="form-group-block">
-            <label class="input-label-row">
-              <span class="label-text">Nama Integrasi</span>
-              <span class="label-badge-optional">Wajib</span>
-            </label>
-            <div class="input-field-wrapper">
-              <input
-                v-model="newWebhookForm.name"
-                type="text"
-                class="form-text-input"
-                placeholder="Contoh: Discord Server Alur Notifikasi"
-                required
-                autofocus
-              />
-            </div>
-          </div>
-
-          <div class="form-group-block">
-            <label class="input-label-row">
-              <span class="label-text">Target URL Endpoint (HTTPS)</span>
-              <span class="label-badge-optional">Wajib</span>
-            </label>
-            <div class="input-field-wrapper">
-              <input
-                v-model="newWebhookForm.url"
-                type="url"
-                class="form-text-input"
-                placeholder="https://discord.com/api/webhooks/... atau https://api.anda.com/hook"
-                required
-              />
-            </div>
-          </div>
-
-          <div class="form-group-block">
-            <label class="input-label-row">
-              <span class="label-text">Pilih Events Yang Dikirim</span>
-              <span class="label-badge-optional">{{ newWebhookForm.events.length }} dipilih</span>
-            </label>
-            <div class="events-checklist-grid">
-              <div
-                v-for="ev in availableEvents"
-                :key="ev.id"
-                class="event-check-box"
-                :class="{ active: newWebhookForm.events.includes(ev.id) }"
-                @click="toggleEvent(ev.id)"
-              >
-                <div class="event-check-box-top">
-                  <strong>{{ ev.id }}</strong>
-                  <div class="custom-checkbox" :class="{ checked: newWebhookForm.events.includes(ev.id) }">
-                    <Check v-if="newWebhookForm.events.includes(ev.id)" :size="12" />
-                  </div>
-                </div>
-                <div class="event-check-title">{{ ev.label }}</div>
-                <div class="event-check-desc">{{ ev.desc }}</div>
+    <Teleport to="body">
+      <div v-if="isAddWebhookModalOpen" class="modal-backdrop" @click.self="isAddWebhookModalOpen = false">
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box">
+                <Webhook :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Tambah Webhook Endpoint</h3>
+                <p class="modal-subheading">Konfigurasikan URL target penerima event webhook berformat JSON.</p>
               </div>
             </div>
+            <button class="modal-close-button" @click="isAddWebhookModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
           </div>
 
-          <div class="modal-footer-row">
-            <button type="button" class="btn-modal-ghost" @click="isAddWebhookModalOpen = false">
-              Batal
-            </button>
-            <button type="submit" class="btn-modal-confirm">
-              <Plus :size="14" />
-              <span>Simpan Webhook</span>
-            </button>
-          </div>
-        </form>
+          <form @submit.prevent="handleAddWebhook" class="modal-form-body">
+            <div class="form-group-block">
+              <label class="input-label-row">
+                <span class="label-text">Nama Integrasi</span>
+                <span class="label-badge-optional">Wajib</span>
+              </label>
+              <div class="input-field-wrapper">
+                <input
+                  v-model="newWebhookForm.name"
+                  type="text"
+                  class="form-text-input"
+                  placeholder="Contoh: Discord Server Alur Notifikasi"
+                  required
+                  autofocus
+                />
+              </div>
+            </div>
+
+            <div class="form-group-block">
+              <label class="input-label-row">
+                <span class="label-text">Target URL Endpoint (HTTPS)</span>
+                <span class="label-badge-optional">Wajib</span>
+              </label>
+              <div class="input-field-wrapper">
+                <input
+                  v-model="newWebhookForm.url"
+                  type="url"
+                  class="form-text-input"
+                  placeholder="https://discord.com/api/webhooks/... atau https://api.anda.com/hook"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="form-group-block">
+              <label class="input-label-row">
+                <span class="label-text">Pilih Events Yang Dikirim</span>
+                <span class="label-badge-optional">{{ newWebhookForm.events.length }} dipilih</span>
+              </label>
+              <div class="events-checklist-grid">
+                <div
+                  v-for="ev in availableEvents"
+                  :key="ev.id"
+                  class="event-check-box"
+                  :class="{ active: newWebhookForm.events.includes(ev.id) }"
+                  @click="toggleEvent(ev.id)"
+                >
+                  <div class="event-check-box-top">
+                    <strong>{{ ev.id }}</strong>
+                    <div class="custom-checkbox" :class="{ checked: newWebhookForm.events.includes(ev.id) }">
+                      <Check v-if="newWebhookForm.events.includes(ev.id)" :size="12" />
+                    </div>
+                  </div>
+                  <div class="event-check-title">{{ ev.label }}</div>
+                  <div class="event-check-desc">{{ ev.desc }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer-row">
+              <button type="button" class="btn-modal-ghost" @click="isAddWebhookModalOpen = false">
+                Batal
+              </button>
+              <button type="submit" class="btn-modal-confirm">
+                <Plus :size="14" />
+                <span>Simpan Webhook</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </Teleport>
   </section>
 </template>
 
@@ -1009,13 +1011,13 @@ for c in containers:
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  padding: 20px;
+  z-index: 99999;
+  padding: 24px;
 }
 
 .modal-dialog {
@@ -1023,7 +1025,10 @@ for c in containers:
   border-radius: 16px;
   width: 100%;
   max-width: 580px;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
   border: 1px solid #e2e8f0;
   overflow: hidden;
   animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1037,14 +1042,17 @@ for c in containers:
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+  flex-shrink: 0;
 }
 
 .modal-header-leading {
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
 .modal-header-icon-box {
@@ -1063,31 +1071,40 @@ for c in containers:
   font-size: 16px;
   font-weight: 700;
   color: #0f172a;
-  margin: 0 0 3px 0;
+  margin: 0 0 2px 0;
 }
 
 .modal-subheading {
-  font-size: 12.5px;
+  font-size: 12px;
   color: #64748b;
   margin: 0;
 }
 
 .modal-close-button {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.15s ease;
 }
 
 .modal-close-button:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
 }
 
 .modal-form-body {
   padding: 20px 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .form-group-block {

@@ -415,77 +415,79 @@ const downloadMediaFile = (item: MediaAssetItem) => {
     </div>
 
     <!-- MODAL: PREVIEW & DETAIL BERKAS S3 -->
-    <div v-if="isPreviewModalOpen && selectedMediaForPreview" class="modal-backdrop" @click.self="isPreviewModalOpen = false">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <div class="modal-header-leading">
-            <div class="modal-header-icon-box" :class="'type-' + selectedMediaForPreview.type.toLowerCase()">
-              <FileSpreadsheet v-if="['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type)" :size="18" />
-              <FileText v-else-if="selectedMediaForPreview.type === 'PDF'" :size="18" />
-              <File v-else-if="['DOCX', 'DOC'].includes(selectedMediaForPreview.type)" :size="18" />
-              <FileCode v-else :size="18" />
-            </div>
-            <div>
-              <h3 class="modal-heading">{{ selectedMediaForPreview.name }}</h3>
-              <p class="modal-subheading">Aset tersimpan di S3 MinIO dengan proteksi TLS dan CDN Edge Caching.</p>
-            </div>
-          </div>
-          <button class="modal-close-button" @click="isPreviewModalOpen = false" title="Tutup">
-            <X :size="16" />
-          </button>
-        </div>
-
-        <div class="preview-modal-body">
-          <!-- Visual Header -->
-          <div class="preview-visual-box" :class="'box-' + selectedMediaForPreview.type.toLowerCase()">
-            <div class="preview-visual-inner">
-              <span class="preview-type-pill">{{ selectedMediaForPreview.type }}</span>
-              <h4>{{ selectedMediaForPreview.name }}</h4>
-              <p>{{ selectedMediaForPreview.dimensions }} • {{ selectedMediaForPreview.size }}</p>
-            </div>
-          </div>
-
-          <!-- Metadata Spec List -->
-          <div class="file-specs-list">
-            <div class="spec-row">
-              <span class="spec-lbl">S3 Bucket URI:</span>
-              <code>s3://tenant-9942-media/assets/{{ selectedMediaForPreview.name }}</code>
-            </div>
-            <div class="spec-row">
-              <span class="spec-lbl">Edge CDN URL:</span>
-              <div class="spec-copyable">
-                <code>{{ selectedMediaForPreview.url }}</code>
-                <button
-                  class="btn-spec-copy"
-                  @click="copyToClipboard(selectedMediaForPreview.url, selectedMediaForPreview.id)"
-                >
-                  <Check v-if="copiedSubdomain === selectedMediaForPreview.id" :size="13" class="text-green" />
-                  <Copy v-else :size="13" />
-                </button>
+    <Teleport to="body">
+      <div v-if="isPreviewModalOpen && selectedMediaForPreview" class="modal-backdrop" @click.self="isPreviewModalOpen = false">
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box" :class="'type-' + selectedMediaForPreview.type.toLowerCase()">
+                <FileSpreadsheet v-if="['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type)" :size="18" />
+                <FileText v-else-if="selectedMediaForPreview.type === 'PDF'" :size="18" />
+                <File v-else-if="['DOCX', 'DOC'].includes(selectedMediaForPreview.type)" :size="18" />
+                <FileCode v-else :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">{{ selectedMediaForPreview.name }}</h3>
+                <p class="modal-subheading">Aset tersimpan di S3 MinIO dengan proteksi TLS dan CDN Edge Caching.</p>
               </div>
             </div>
-            <div class="spec-row">
-              <span class="spec-lbl">Tanggal Diunggah:</span>
-              <span>{{ selectedMediaForPreview.uploadedAt }}</span>
+            <button class="modal-close-button" @click="isPreviewModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
+          </div>
+
+          <div class="preview-modal-body">
+            <!-- Visual Header -->
+            <div class="preview-visual-box" :class="'box-' + selectedMediaForPreview.type.toLowerCase()">
+              <div class="preview-visual-inner">
+                <span class="preview-type-pill">{{ selectedMediaForPreview.type }}</span>
+                <h4>{{ selectedMediaForPreview.name }}</h4>
+                <p>{{ selectedMediaForPreview.dimensions }} • {{ selectedMediaForPreview.size }}</p>
+              </div>
             </div>
-            <div class="spec-row">
-              <span class="spec-lbl">Status Edge:</span>
-              <span class="badge-online">Cached on Traefik v3 (1.2ms TTFB)</span>
+
+            <!-- Metadata Spec List -->
+            <div class="file-specs-list">
+              <div class="spec-row">
+                <span class="spec-lbl">S3 Bucket URI:</span>
+                <code>s3://tenant-9942-media/assets/{{ selectedMediaForPreview.name }}</code>
+              </div>
+              <div class="spec-row">
+                <span class="spec-lbl">Edge CDN URL:</span>
+                <div class="spec-copyable">
+                  <code>{{ selectedMediaForPreview.url }}</code>
+                  <button
+                    class="btn-spec-copy"
+                    @click="copyToClipboard(selectedMediaForPreview.url, selectedMediaForPreview.id)"
+                  >
+                    <Check v-if="copiedSubdomain === selectedMediaForPreview.id" :size="13" class="text-green" />
+                    <Copy v-else :size="13" />
+                  </button>
+                </div>
+              </div>
+              <div class="spec-row">
+                <span class="spec-lbl">Tanggal Diunggah:</span>
+                <span>{{ selectedMediaForPreview.uploadedAt }}</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-lbl">Status Edge:</span>
+                <span class="badge-online">Cached on Traefik v3 (1.2ms TTFB)</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="modal-footer-row">
-          <button type="button" class="btn-modal-ghost" @click="isPreviewModalOpen = false">
-            Tutup
-          </button>
-          <button type="button" class="btn-modal-confirm" @click="downloadMediaFile(selectedMediaForPreview)">
-            <Download :size="14" />
-            <span>Unduh Berkas</span>
-          </button>
+          <div class="modal-footer-row">
+            <button type="button" class="btn-modal-ghost" @click="isPreviewModalOpen = false">
+              Tutup
+            </button>
+            <button type="button" class="btn-modal-confirm" @click="downloadMediaFile(selectedMediaForPreview)">
+              <Download :size="14" />
+              <span>Unduh Berkas</span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </section>
 </template>
 
@@ -1330,13 +1332,13 @@ const downloadMediaFile = (item: MediaAssetItem) => {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  padding: 20px;
+  z-index: 99999;
+  padding: 24px;
 }
 
 .modal-dialog {
@@ -1344,7 +1346,10 @@ const downloadMediaFile = (item: MediaAssetItem) => {
   border-radius: 16px;
   width: 100%;
   max-width: 540px;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
   border: 1px solid #e2e8f0;
   overflow: hidden;
   animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1358,9 +1363,11 @@ const downloadMediaFile = (item: MediaAssetItem) => {
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   padding: 18px 24px;
   border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+  flex-shrink: 0;
 }
 
 .modal-header-leading {
@@ -1399,21 +1406,30 @@ const downloadMediaFile = (item: MediaAssetItem) => {
 }
 
 .modal-close-button {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.15s ease;
 }
 
 .modal-close-button:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
 }
 
 .preview-modal-body {
   padding: 20px 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .preview-visual-box {
@@ -1512,6 +1528,8 @@ const downloadMediaFile = (item: MediaAssetItem) => {
   gap: 10px;
   padding: 16px 24px;
   border-top: 1px solid #f1f5f9;
+  background: #ffffff;
+  flex-shrink: 0;
 }
 
 .btn-modal-ghost {

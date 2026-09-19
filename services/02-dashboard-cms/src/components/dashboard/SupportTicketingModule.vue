@@ -261,216 +261,220 @@ const getStatusLabel = (status: SupportTicketItem['status']) => {
     </div>
 
     <!-- MODAL 1: BUAT TIKET BANTUAN BARU -->
-    <div v-if="isCreateTicketModalOpen" class="modal-backdrop" @click.self="isCreateTicketModalOpen = false">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <div class="modal-header-leading">
-            <div class="modal-header-icon-box">
-              <LifeBuoy :size="18" />
+    <Teleport to="body">
+      <div v-if="isCreateTicketModalOpen" class="modal-backdrop" @click.self="isCreateTicketModalOpen = false">
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box">
+                <LifeBuoy :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Buat Tiket Bantuan Baru</h3>
+                <p class="modal-subheading">Tim DevOps & Cloud Engineer siap membantu penyelesaian kendala teknis Anda.</p>
+              </div>
             </div>
-            <div>
-              <h3 class="modal-heading">Buat Tiket Bantuan Baru</h3>
-              <p class="modal-subheading">Tim DevOps & Cloud Engineer siap membantu penyelesaian kendala teknis Anda.</p>
-            </div>
+            <button class="modal-close-button" @click="isCreateTicketModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
           </div>
-          <button class="modal-close-button" @click="isCreateTicketModalOpen = false" title="Tutup">
-            <X :size="16" />
-          </button>
+
+          <form @submit.prevent="handleCreateTicket" class="modal-form-body">
+            <div class="form-group-block">
+              <label class="input-label-row">
+                <span class="label-text">Judul Kendala / Subject Masalah</span>
+                <span class="label-badge-optional">Wajib</span>
+              </label>
+              <div class="input-field-wrapper">
+                <input
+                  v-model="newTicketForm.subject"
+                  type="text"
+                  class="form-text-input"
+                  placeholder="Contoh: Traefik mengembalikan 502 Bad Gateway saat traffic spike"
+                  required
+                  autofocus
+                />
+              </div>
+            </div>
+
+            <div class="form-row-duo">
+              <div class="form-group-block">
+                <label class="input-label-row">
+                  <span class="label-text">Kategori Kendala</span>
+                </label>
+                <div class="input-field-wrapper">
+                  <select v-model="newTicketForm.category" class="form-text-input form-select-input">
+                    <option value="Infrastructure & Container">Infrastructure & Container</option>
+                    <option value="Edge Proxy & DNS">Edge Proxy & DNS</option>
+                    <option value="Visual Editor">Visual Editor & Template</option>
+                    <option value="Billing & Pajak">Billing & Pajak (E-Faktur)</option>
+                    <option value="API & Webhooks">API & Webhooks</option>
+                    <option value="General">Pertanyaan Umum</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group-block">
+                <label class="input-label-row">
+                  <span class="label-text">Tingkat Urgensi (Priority)</span>
+                </label>
+                <div class="input-field-wrapper">
+                  <select v-model="newTicketForm.priority" class="form-text-input form-select-input">
+                    <option value="p1_urgent">P1 - Kritis (Situs / Server Down)</option>
+                    <option value="p2_high">P2 - Tinggi (Fitur / SSL Terganggu)</option>
+                    <option value="p3_normal">P3 - Normal (Pertanyaan / Kuota)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group-block">
+              <label class="input-label-row">
+                <span class="label-text">Rincian Kendala & Langkah Reproduksi</span>
+                <span class="label-badge-optional">Wajib</span>
+              </label>
+              <div class="input-field-wrapper">
+                <textarea
+                  v-model="newTicketForm.message"
+                  rows="4"
+                  class="form-text-input textarea-input"
+                  placeholder="Jelaskan secara spesifik apa yang terjadi, subdomain yang terpengaruh, pesan error di konsol, atau waktu terjadinya kendala..."
+                  required
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="resource-spec-callout">
+              <Sparkles :size="14" class="spec-callout-icon" />
+              <div class="spec-callout-text">
+                <span>Dedicated Support SLA: </span>
+                Tiket Anda otomatis dialirkan ke queue engineer HeroCMS dengan target respons pertama di bawah 15 menit.
+              </div>
+            </div>
+
+            <div class="modal-footer-row">
+              <button type="button" class="btn-modal-ghost" @click="isCreateTicketModalOpen = false">
+                Batal
+              </button>
+              <button type="submit" class="btn-modal-confirm">
+                <Send :size="14" />
+                <span>Kirim Tiket Bantuan</span>
+              </button>
+            </div>
+          </form>
         </div>
-
-        <form @submit.prevent="handleCreateTicket" class="modal-form-body">
-          <div class="form-group-block">
-            <label class="input-label-row">
-              <span class="label-text">Judul Kendala / Subject Masalah</span>
-              <span class="label-badge-optional">Wajib</span>
-            </label>
-            <div class="input-field-wrapper">
-              <input
-                v-model="newTicketForm.subject"
-                type="text"
-                class="form-text-input"
-                placeholder="Contoh: Traefik mengembalikan 502 Bad Gateway saat traffic spike"
-                required
-                autofocus
-              />
-            </div>
-          </div>
-
-          <div class="form-row-duo">
-            <div class="form-group-block">
-              <label class="input-label-row">
-                <span class="label-text">Kategori Kendala</span>
-              </label>
-              <div class="input-field-wrapper">
-                <select v-model="newTicketForm.category" class="form-text-input form-select-input">
-                  <option value="Infrastructure & Container">Infrastructure & Container</option>
-                  <option value="Edge Proxy & DNS">Edge Proxy & DNS</option>
-                  <option value="Visual Editor">Visual Editor & Template</option>
-                  <option value="Billing & Pajak">Billing & Pajak (E-Faktur)</option>
-                  <option value="API & Webhooks">API & Webhooks</option>
-                  <option value="General">Pertanyaan Umum</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group-block">
-              <label class="input-label-row">
-                <span class="label-text">Tingkat Urgensi (Priority)</span>
-              </label>
-              <div class="input-field-wrapper">
-                <select v-model="newTicketForm.priority" class="form-text-input form-select-input">
-                  <option value="p1_urgent">P1 - Kritis (Situs / Server Down)</option>
-                  <option value="p2_high">P2 - Tinggi (Fitur / SSL Terganggu)</option>
-                  <option value="p3_normal">P3 - Normal (Pertanyaan / Kuota)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group-block">
-            <label class="input-label-row">
-              <span class="label-text">Rincian Kendala & Langkah Reproduksi</span>
-              <span class="label-badge-optional">Wajib</span>
-            </label>
-            <div class="input-field-wrapper">
-              <textarea
-                v-model="newTicketForm.message"
-                rows="4"
-                class="form-text-input textarea-input"
-                placeholder="Jelaskan secara spesifik apa yang terjadi, subdomain yang terpengaruh, pesan error di konsol, atau waktu terjadinya kendala..."
-                required
-              ></textarea>
-            </div>
-          </div>
-
-          <div class="resource-spec-callout">
-            <Sparkles :size="14" class="spec-callout-icon" />
-            <div class="spec-callout-text">
-              <span>Dedicated Support SLA: </span>
-              Tiket Anda otomatis dialirkan ke queue engineer HeroCMS dengan target respons pertama di bawah 15 menit.
-            </div>
-          </div>
-
-          <div class="modal-footer-row">
-            <button type="button" class="btn-modal-ghost" @click="isCreateTicketModalOpen = false">
-              Batal
-            </button>
-            <button type="submit" class="btn-modal-confirm">
-              <Send :size="14" />
-              <span>Kirim Tiket Bantuan</span>
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+    </Teleport>
 
     <!-- MODAL 2: DETAIL PERCAKAPAN THREAD TIKET -->
-    <div v-if="isTicketDetailModalOpen && selectedTicket" class="modal-backdrop" @click.self="isTicketDetailModalOpen = false">
-      <div class="modal-dialog modal-dialog-lg">
-        <div class="modal-header">
-          <div class="modal-header-leading">
-            <div class="modal-header-icon-box">
-              <MessageSquare :size="18" />
-            </div>
-            <div>
-              <div class="thread-header-meta">
-                <span class="thread-id">{{ selectedTicket.id }}</span>
-                <span class="priority-pill" :class="'prio-' + selectedTicket.priority">
-                  {{ getPriorityLabel(selectedTicket.priority) }}
-                </span>
-                <span class="status-chip" :class="'chip-' + selectedTicket.status">
-                  <span class="status-dot"></span>
-                  {{ getStatusLabel(selectedTicket.status) }}
-                </span>
+    <Teleport to="body">
+      <div v-if="isTicketDetailModalOpen && selectedTicket" class="modal-backdrop" @click.self="isTicketDetailModalOpen = false">
+        <div class="modal-dialog modal-dialog-lg">
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box">
+                <MessageSquare :size="18" />
               </div>
-              <h3 class="modal-heading thread-title">{{ selectedTicket.subject }}</h3>
+              <div>
+                <div class="thread-header-meta">
+                  <span class="thread-id">{{ selectedTicket.id }}</span>
+                  <span class="priority-pill" :class="'prio-' + selectedTicket.priority">
+                    {{ getPriorityLabel(selectedTicket.priority) }}
+                  </span>
+                  <span class="status-chip" :class="'chip-' + selectedTicket.status">
+                    <span class="status-dot"></span>
+                    {{ getStatusLabel(selectedTicket.status) }}
+                  </span>
+                </div>
+                <h3 class="modal-heading thread-title">{{ selectedTicket.subject }}</h3>
+              </div>
             </div>
-          </div>
-          <button class="modal-close-button" @click="isTicketDetailModalOpen = false" title="Tutup">
-            <X :size="16" />
-          </button>
-        </div>
-
-        <!-- Thread Messages List -->
-        <div class="ticket-thread-scroll">
-          <div class="thread-meta-banner">
-            <div class="meta-banner-item">
-              <span class="lbl">Kategori:</span>
-              <strong>{{ selectedTicket.category }}</strong>
-            </div>
-            <div class="meta-banner-item">
-              <span class="lbl">Dibuat:</span>
-              <strong>{{ selectedTicket.createdAt }}</strong>
-            </div>
-            <div v-if="selectedTicket.assignedEngineer" class="meta-banner-item">
-              <span class="lbl">Assigned DevOps:</span>
-              <strong class="text-blue">{{ selectedTicket.assignedEngineer }}</strong>
-            </div>
+            <button class="modal-close-button" @click="isTicketDetailModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
           </div>
 
-          <div class="conversation-stream">
-            <div
-              v-for="msg in selectedTicket.messages"
-              :key="msg.id"
-              class="message-bubble-wrapper"
-              :class="'sender-' + msg.sender"
-            >
-              <div class="msg-avatar-icon">
-                <ShieldCheck v-if="msg.sender === 'support'" :size="15" />
-                <User v-else :size="15" />
+          <!-- Thread Messages List -->
+          <div class="ticket-thread-scroll">
+            <div class="thread-meta-banner">
+              <div class="meta-banner-item">
+                <span class="lbl">Kategori:</span>
+                <strong>{{ selectedTicket.category }}</strong>
               </div>
-              <div class="msg-bubble-card">
-                <div class="msg-header">
-                  <div class="msg-author-group">
-                    <strong class="msg-author-name">{{ msg.authorName }}</strong>
-                    <span class="msg-author-role">{{ msg.authorRole }}</span>
+              <div class="meta-banner-item">
+                <span class="lbl">Dibuat:</span>
+                <strong>{{ selectedTicket.createdAt }}</strong>
+              </div>
+              <div v-if="selectedTicket.assignedEngineer" class="meta-banner-item">
+                <span class="lbl">Assigned DevOps:</span>
+                <strong class="text-blue">{{ selectedTicket.assignedEngineer }}</strong>
+              </div>
+            </div>
+
+            <div class="conversation-stream">
+              <div
+                v-for="msg in selectedTicket.messages"
+                :key="msg.id"
+                class="message-bubble-wrapper"
+                :class="'sender-' + msg.sender"
+              >
+                <div class="msg-avatar-icon">
+                  <ShieldCheck v-if="msg.sender === 'support'" :size="15" />
+                  <User v-else :size="15" />
+                </div>
+                <div class="msg-bubble-card">
+                  <div class="msg-header">
+                    <div class="msg-author-group">
+                      <strong class="msg-author-name">{{ msg.authorName }}</strong>
+                      <span class="msg-author-role">{{ msg.authorRole }}</span>
+                    </div>
+                    <span class="msg-time">{{ msg.timestamp }}</span>
                   </div>
-                  <span class="msg-time">{{ msg.timestamp }}</span>
-                </div>
-                <div class="msg-text-content">
-                  {{ msg.message }}
+                  <div class="msg-text-content">
+                    {{ msg.message }}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Reply Box Footer -->
-        <div class="thread-reply-area">
-          <div v-if="selectedTicket.status !== 'resolved'" class="reply-input-wrap">
-            <textarea
-              v-model="ticketReplyText"
-              rows="2"
-              placeholder="Tulis balasan pesan atau info tambahan untuk engineer..."
-              class="reply-textarea"
-              @keydown.enter.ctrl.prevent="sendTicketReply"
-            ></textarea>
-            <div class="reply-actions-row">
-              <button
-                class="btn-resolve-in-modal"
-                @click="resolveTicket(selectedTicket)"
-                title="Tandai Tiket Selesai"
-              >
-                <CheckCircle2 :size="14" />
-                <span>Tandai Selesai</span>
-              </button>
-              <button
-                class="btn-send-reply"
-                :disabled="!ticketReplyText.trim()"
-                @click="sendTicketReply"
-              >
-                <Send :size="13" />
-                <span>Kirim Balasan</span>
-              </button>
+          <!-- Reply Box Footer -->
+          <div class="thread-reply-area">
+            <div v-if="selectedTicket.status !== 'resolved'" class="reply-input-wrap">
+              <textarea
+                v-model="ticketReplyText"
+                rows="2"
+                placeholder="Tulis balasan pesan atau info tambahan untuk engineer..."
+                class="reply-textarea"
+                @keydown.enter.ctrl.prevent="sendTicketReply"
+              ></textarea>
+              <div class="reply-actions-row">
+                <button
+                  class="btn-resolve-in-modal"
+                  @click="resolveTicket(selectedTicket)"
+                  title="Tandai Tiket Selesai"
+                >
+                  <CheckCircle2 :size="14" />
+                  <span>Tandai Selesai</span>
+                </button>
+                <button
+                  class="btn-send-reply"
+                  :disabled="!ticketReplyText.trim()"
+                  @click="sendTicketReply"
+                >
+                  <Send :size="13" />
+                  <span>Kirim Balasan</span>
+                </button>
+              </div>
             </div>
-          </div>
-          <div v-else class="resolved-callout-banner">
-            <CheckCircle2 :size="16" class="text-green" />
-            <span>Tiket ini telah ditandai <strong>Selesai (Resolved)</strong>. Butuh bantuan lain? Silakan buka tiket baru.</span>
+            <div v-else class="resolved-callout-banner">
+              <CheckCircle2 :size="16" class="text-green" />
+              <span>Tiket ini telah ditandai <strong>Selesai (Resolved)</strong>. Butuh bantuan lain? Silakan buka tiket baru.</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </section>
 </template>
 
@@ -923,13 +927,13 @@ const getStatusLabel = (status: SupportTicketItem['status']) => {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  padding: 20px;
+  z-index: 99999;
+  padding: 24px;
 }
 
 .modal-dialog-lg {
@@ -941,7 +945,10 @@ const getStatusLabel = (status: SupportTicketItem['status']) => {
   border-radius: 16px;
   width: 100%;
   max-width: 580px;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
   border: 1px solid #e2e8f0;
   overflow: hidden;
   animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -955,14 +962,17 @@ const getStatusLabel = (status: SupportTicketItem['status']) => {
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   padding: 18px 24px;
   border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+  flex-shrink: 0;
 }
 
 .modal-header-leading {
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
 .modal-header-icon-box {
@@ -981,7 +991,7 @@ const getStatusLabel = (status: SupportTicketItem['status']) => {
   font-size: 16px;
   font-weight: 700;
   color: #0f172a;
-  margin: 0 0 3px 0;
+  margin: 0 0 2px 0;
 }
 
 .thread-title {
@@ -1003,27 +1013,36 @@ const getStatusLabel = (status: SupportTicketItem['status']) => {
 }
 
 .modal-subheading {
-  font-size: 12.5px;
+  font-size: 12px;
   color: #64748b;
   margin: 0;
 }
 
 .modal-close-button {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.15s ease;
 }
 
 .modal-close-button:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
 }
 
 .modal-form-body {
   padding: 20px 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .form-group-block {
