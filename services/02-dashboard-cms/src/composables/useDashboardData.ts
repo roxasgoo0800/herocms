@@ -545,15 +545,42 @@ const mediaAssets = ref<MediaAssetItem[]>([
   },
   {
     id: 'med_2',
+    name: 'laporan-keuangan-q3-2026.xlsx',
+    size: '245 KB',
+    type: 'XLSX',
+    dimensions: 'Spreadsheet (14 Kolom)',
+    uploadedAt: '17 Sep 2026',
+    url: 'https://cdn.cloudcms.app/assets/laporan-keuangan-q3-2026.xlsx'
+  },
+  {
+    id: 'med_3',
+    name: 'arsitektur-sistem-cloudcms.pdf',
+    size: '1.4 MB',
+    type: 'PDF',
+    dimensions: 'Dokumen PDF (18 Hal)',
+    uploadedAt: '16 Sep 2026',
+    url: 'https://cdn.cloudcms.app/assets/arsitektur-sistem-cloudcms.pdf'
+  },
+  {
+    id: 'med_4',
     name: 'avatar-profile-rizal.jpg',
     size: '42 KB',
     type: 'JPEG',
     dimensions: '800x800',
-    uploadedAt: '16 Sep 2026',
+    uploadedAt: '15 Sep 2026',
     url: 'https://cdn.cloudcms.app/assets/avatar.jpg'
   },
   {
-    id: 'med_3',
+    id: 'med_5',
+    name: 'sop-deployment-kontainer.docx',
+    size: '88 KB',
+    type: 'DOCX',
+    dimensions: 'Dokumen Word (6 Hal)',
+    uploadedAt: '14 Sep 2026',
+    url: 'https://cdn.cloudcms.app/assets/sop-deployment-kontainer.docx'
+  },
+  {
+    id: 'med_6',
     name: 'traefik-architecture-diagram.png',
     size: '156 KB',
     type: 'PNG',
@@ -562,7 +589,7 @@ const mediaAssets = ref<MediaAssetItem[]>([
     url: 'https://cdn.cloudcms.app/assets/diagram.png'
   },
   {
-    id: 'med_4',
+    id: 'med_7',
     name: 'brand-logo-white.svg',
     size: '8 KB',
     type: 'SVG',
@@ -572,20 +599,62 @@ const mediaAssets = ref<MediaAssetItem[]>([
   }
 ]);
 
+const uploadMediaFiles = (files: FileList | File[]) => {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const ext = file.name.split('.').pop()?.toUpperCase() || 'FILE';
+    let sizeStr = `${(file.size / 1024).toFixed(0)} KB`;
+    if (file.size > 1024 * 1024) {
+      sizeStr = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    let dimensionStr = 'Dokumen S3';
+    if (['PNG', 'JPG', 'JPEG', 'WEBP', 'AVIF'].includes(ext)) {
+      dimensionStr = 'Raster Image';
+    } else if (ext === 'SVG') {
+      dimensionStr = 'Vector';
+    } else if (ext === 'PDF') {
+      dimensionStr = 'Dokumen PDF';
+    } else if (['XLSX', 'XLS', 'CSV'].includes(ext)) {
+      dimensionStr = 'Spreadsheet Excel';
+    } else if (['DOCX', 'DOC'].includes(ext)) {
+      dimensionStr = 'Dokumen Word';
+    }
+
+    const newAsset: MediaAssetItem = {
+      id: `med_${Date.now()}_${i}`,
+      name: file.name,
+      size: sizeStr,
+      type: ext,
+      dimensions: dimensionStr,
+      uploadedAt: 'Baru saja',
+      url: `https://cdn.cloudcms.app/assets/${encodeURIComponent(file.name)}`
+    };
+    mediaAssets.value.unshift(newAsset);
+  }
+  showToast(`${files.length} file berhasil diunggah ke S3 MinIO & di-cache di Traefik edge!`, 'success');
+};
+
 const uploadMediaDemo = () => {
-  const fakeNames = ['product-showcase-preview.webp', 'article-featured-header.png', 'company-profile-team.jpg'];
-  const picked = fakeNames[Math.floor(Math.random() * fakeNames.length)];
+  const fakeFiles = [
+    { name: 'laporan-performa-q4.xlsx', size: '310 KB', type: 'XLSX', dim: 'Spreadsheet Excel (8 Sheet)' },
+    { name: 'whitepaper-edge-architecture.pdf', size: '2.1 MB', type: 'PDF', dim: 'Dokumen PDF (32 Hal)' },
+    { name: 'spesifikasi-kebutuhan-software.docx', size: '142 KB', type: 'DOCX', dim: 'Dokumen Word (12 Hal)' },
+    { name: 'diagram-topologi-jaringan.png', size: '420 KB', type: 'PNG', dim: '1920x1080' },
+    { name: 'banner-event-tech-summit.webp', size: '94 KB', type: 'WEBP', dim: '1200x630' }
+  ];
+  const picked = fakeFiles[Math.floor(Math.random() * fakeFiles.length)];
   const newAsset: MediaAssetItem = {
     id: `med_${Date.now()}`,
-    name: picked,
-    size: '112 KB',
-    type: picked.split('.').pop()?.toUpperCase() || 'FILE',
-    dimensions: '1200x630',
+    name: picked.name,
+    size: picked.size,
+    type: picked.type,
+    dimensions: picked.dim,
     uploadedAt: 'Baru saja',
-    url: `https://cdn.cloudcms.app/assets/${picked}`
+    url: `https://cdn.cloudcms.app/assets/${picked.name}`
   };
   mediaAssets.value.unshift(newAsset);
-  showToast(`File ${picked} terunggah ke S3 bucket & di-cache di Traefik CDN!`, 'success');
+  showToast(`File ${picked.name} (${picked.type}) terunggah ke S3 bucket & terindeks!`, 'success');
 };
 
 const deleteMedia = (med: MediaAssetItem) => {
@@ -687,6 +756,7 @@ export function useDashboardData() {
     deleteArticle,
     mediaAssets,
     uploadMediaDemo,
+    uploadMediaFiles,
     deleteMedia,
     webhooks,
     apiKey,
