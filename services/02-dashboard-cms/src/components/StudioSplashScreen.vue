@@ -58,27 +58,31 @@ onUnmounted(() => {
 <template>
   <transition name="splash-dissolve" appear>
     <div v-if="!isFinished" class="studio-splash-screen" role="status" aria-live="polite">
-      <!-- Subtle Radial Ambient Light (Seamless & feathered) -->
-      <div class="splash-ambient-glow" aria-hidden="true"></div>
+      <!-- 1. Identical Dot Grid to preserve theme background uninterrupted -->
+      <div class="base-dot-grid" aria-hidden="true"></div>
 
-      <!-- Minimalist Brand & Progress Pod (Linear / Apple style) -->
-      <div class="splash-minimal-pod">
-        <!-- Floating Brand Glyph Emblem -->
-        <div class="splash-emblem-wrap">
-          <div class="splash-glow-aura" aria-hidden="true"></div>
-          <div class="brand-glyph-box">
-            <Layers :size="24" color="#ffffff" />
-          </div>
+      <!-- 2. Ambient Soft Glow matching LoginView & BackgroundWave -->
+      <div class="ambient-mesh-glow" aria-hidden="true"></div>
+
+      <!-- 3. Glassmorphic Card (100% Theme Match with auth-panel-glass) -->
+      <div class="splash-card-glass">
+        <!-- Brand Glyph Box -->
+        <div class="brand-glyph-box">
+          <Layers :size="22" color="#ffffff" />
         </div>
 
-        <!-- Typography -->
+        <!-- Brand Typography -->
         <div class="brand-title-wrap">
           <h1 class="brand-wordmark">
             HeroCMS <span class="wordmark-highlight">Studio</span>
           </h1>
+          <div class="brand-chip-row">
+            <span class="pulse-dot"></span>
+            <span class="chip-text">v2.4 Enterprise Studio</span>
+          </div>
         </div>
 
-        <!-- Slim Minimalist Progress Bar -->
+        <!-- Progress Bar: Theme Matched (Obsidian #0f172a to Royal Blue #2563eb) -->
         <div class="minimal-progress-wrap">
           <div class="minimal-progress-track">
             <div
@@ -89,7 +93,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Quiet, Human Status Subtext with dynamic stages -->
+        <!-- Status Row matching theme font & color -->
         <div class="minimal-status-row">
           <span class="minimal-status-text">{{ statusText }}</span>
           <span class="status-dots">
@@ -102,14 +106,14 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Fullscreen Backdrop (Translucent Glass preserving the Background Wave) */
+/* Fullscreen Backdrop: Translucent so dot grid and wave stay continuous */
 .studio-splash-screen {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(248, 250, 252, 0.94);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,42 +122,58 @@ onUnmounted(() => {
   will-change: opacity, transform;
 }
 
-/* Feathered Ambient Soft Light */
-.splash-ambient-glow {
+/* Exact Theme Base Dot Grid */
+.base-dot-grid {
   position: absolute;
-  width: 500px;
-  height: 500px;
+  inset: 0;
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+  background-size: 28px 28px;
+  background-position: -14px -14px;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* Ambient Soft Glow matching LoginView & BackgroundWave */
+.ambient-mesh-glow {
+  position: absolute;
+  width: 550px;
+  height: 550px;
   background: radial-gradient(
     circle,
-    rgba(37, 99, 235, 0.1) 0%,
-    rgba(148, 163, 184, 0.05) 50%,
+    rgba(37, 99, 235, 0.07) 0%,
+    rgba(148, 163, 184, 0.08) 50%,
     transparent 70%
   );
   filter: blur(50px);
   pointer-events: none;
-  animation: auraFloat 4s ease-in-out infinite alternate;
 }
 
-@keyframes auraFloat {
-  0% { transform: scale(0.95); opacity: 0.7; }
-  100% { transform: scale(1.08); opacity: 1; }
-}
-
-/* Minimalist Pod with Spring/Scale Entrance */
-.splash-minimal-pod {
+/* Glassmorphic Card (100% Theme Match with auth-panel-glass) */
+.splash-card-glass {
   position: relative;
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  animation: podScaleIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  width: 100%;
+  max-width: 380px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 40px -15px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
+  padding: 34px 38px;
+  animation: cardScaleIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes podScaleIn {
+@keyframes cardScaleIn {
   0% {
     opacity: 0;
-    transform: scale(0.86) translateY(18px);
+    transform: scale(0.92) translateY(14px);
     filter: blur(8px);
   }
   100% {
@@ -163,48 +183,26 @@ onUnmounted(() => {
   }
 }
 
-/* Brand Emblem */
-.splash-emblem-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-.splash-glow-aura {
-  position: absolute;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: rgba(37, 99, 235, 0.2);
-  filter: blur(14px);
-  animation: pulseAura 2.4s ease-in-out infinite alternate;
-}
-
-@keyframes pulseAura {
-  0% { transform: scale(0.9); opacity: 0.5; }
-  100% { transform: scale(1.15); opacity: 0.9; }
-}
-
+/* Brand Glyph Box (100% Theme Match) */
 .brand-glyph-box {
-  position: relative;
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-radius: 14px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow:
-    0 10px 24px -4px rgba(15, 23, 42, 0.18),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 12px;
+  box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Wordmark */
+/* Typography (100% Theme Match) */
 .brand-title-wrap {
-  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
 }
 
 .brand-wordmark {
@@ -223,16 +221,44 @@ onUnmounted(() => {
   -webkit-text-fill-color: transparent;
 }
 
-/* Slim Minimal Progress Bar (Linear style) */
+.brand-chip-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid #e2e8f0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-top: 6px;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.chip-text {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Progress Bar (Theme: Slate #0f172a to Blue #2563eb) */
 .minimal-progress-wrap {
-  width: 170px;
-  margin-bottom: 12px;
+  width: 100%;
+  max-width: 260px;
+  margin-bottom: 14px;
 }
 
 .minimal-progress-track {
   width: 100%;
-  height: 3px;
-  background: #e2e8f0;
+  height: 4px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
   border-radius: 9999px;
   overflow: hidden;
   position: relative;
@@ -240,22 +266,22 @@ onUnmounted(() => {
 
 .minimal-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
+  background: linear-gradient(90deg, #0f172a 0%, #2563eb 100%);
   border-radius: 9999px;
   transition: width 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
 }
 
 .minimal-progress-fill.is-complete {
-  background: linear-gradient(90deg, #38bdf8 0%, #60a5fa 100%);
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.8), 0 0 24px rgba(37, 99, 235, 0.5);
+  background: linear-gradient(90deg, #0f172a 0%, #2563eb 60%, #10b981 100%);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
 }
 
-/* Quiet, Elegant Status Subtext */
+/* Status Subtext */
 .minimal-status-row {
   display: flex;
   align-items: center;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: #64748b;
   letter-spacing: -0.01em;
@@ -274,28 +300,24 @@ onUnmounted(() => {
   40% { opacity: 1; }
 }
 
-/* Seamless Smooth Dissolve In & Out */
+/* Dissolve in & out for the whole overlay */
 .splash-dissolve-enter-active {
-  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .splash-dissolve-enter-from {
   opacity: 0;
-  transform: scale(0.96);
-  filter: blur(8px);
 }
 
 .splash-dissolve-leave-active {
-  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .splash-dissolve-leave-to {
   opacity: 0;
-  transform: scale(1.08);
-  filter: blur(14px);
+  transform: scale(1.05);
+  filter: blur(10px);
 }
 </style>
