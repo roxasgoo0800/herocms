@@ -3894,27 +3894,17 @@ const copyVsCodeCurrentCode = () => {
   overflow: hidden;
   background: #f1f5f9;
   user-select: none;
-  transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-              filter 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-              visibility 0s linear 0s;
+  transition: opacity 0.35s ease, visibility 0s linear 0s;
   opacity: 1;
-  transform: translateY(0);
-  filter: blur(0);
   visibility: visible;
   z-index: 1;
 }
 
 .studio-viewport-area.is-view-hidden {
   opacity: 0;
-  transform: translateY(-30px);
-  filter: blur(6px);
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-              filter 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-              visibility 0s linear 0.35s;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
 }
 
 .studio-viewport-area.grid-dots-visible {
@@ -5365,11 +5355,8 @@ const copyVsCodeCurrentCode = () => {
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: #cccccc;
-  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-              visibility 0s linear 0s;
+  transition: opacity 0.4s ease, visibility 0s linear 0s;
   opacity: 1;
-  transform: translateY(0);
   visibility: visible;
   pointer-events: auto;
   z-index: 2;
@@ -5377,12 +5364,9 @@ const copyVsCodeCurrentCode = () => {
 
 .studio-vscode-workspace.is-view-hidden {
   opacity: 0;
-  transform: translateY(100%);
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-              visibility 0s linear 0.3s;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
 }
 
 /* 1. Activity Bar */
