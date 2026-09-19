@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { Layers, ShieldCheck, Server, Globe, Cpu } from 'lucide-vue-next';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { Layers } from 'lucide-vue-next';
 
 const props = withDefaults(
   defineProps<{
@@ -9,7 +9,7 @@ const props = withDefaults(
   }>(),
   {
     targetUrl: '/',
-    durationMs: 1400
+    durationMs: 1200
   }
 );
 
@@ -19,23 +19,6 @@ const emit = defineEmits<{
 
 const progress = ref(0);
 const isFinished = ref(false);
-
-const stages = [
-  { at: 15, text: 'Menginisialisasi sesi terenkripsi TLS v1.3...' },
-  { at: 45, text: 'Menghubungkan ke backend Go & database PostgreSQL...' },
-  { at: 75, text: 'Memuat modul studio visual, stylesheet CSS & telemetri...' },
-  { at: 95, text: 'Menyiapkan workspace konsol tenant...' },
-  { at: 100, text: 'Selesai! Membuka HeroCMS Studio...' }
-];
-
-const currentStageText = computed(() => {
-  for (let i = stages.length - 1; i >= 0; i--) {
-    if (progress.value >= stages[i].at) {
-      return stages[i].text;
-    }
-  }
-  return 'Mempersiapkan lingkungan studio...';
-});
 
 let timer: number | null = null;
 const startTime = Date.now();
@@ -53,8 +36,8 @@ onMounted(() => {
         isFinished.value = true;
         setTimeout(() => {
           emit('complete');
-        }, 350);
-      }, 200);
+        }, 300);
+      }, 150);
     }
   };
 
@@ -69,81 +52,42 @@ onUnmounted(() => {
 <template>
   <transition name="splash-dissolve">
     <div v-if="!isFinished" class="studio-splash-screen" role="status" aria-live="polite">
-      <!-- 1. Base Subtle Dot Matrix Grid (Exact match with HeroCMS BackgroundWave) -->
-      <div class="base-dot-grid" aria-hidden="true"></div>
+      <!-- Subtle Radial Ambient Light (Seamless & feathered) -->
+      <div class="splash-ambient-glow" aria-hidden="true"></div>
 
-      <!-- 2. Ambient Mesh Diffused Glow -->
-      <div class="ambient-mesh-glow" aria-hidden="true"></div>
-
-      <!-- 3. Central Cohesive Surface Container -->
-      <div class="auth-surface-container">
-        <!-- Modern Brand Header (Exact match with LoginView) -->
-        <header class="auth-brand-badge">
+      <!-- Minimalist Brand & Progress Pod (Linear / Apple style) -->
+      <div class="splash-minimal-pod">
+        <!-- Floating Brand Glyph Emblem -->
+        <div class="splash-emblem-wrap">
+          <div class="splash-glow-aura" aria-hidden="true"></div>
           <div class="brand-glyph-box">
-            <Layers :size="22" color="#ffffff" />
+            <Layers :size="24" color="#ffffff" />
           </div>
-          <div class="brand-title-wrap">
-            <h1 class="brand-wordmark">HeroCMS <span class="wordmark-highlight">Studio</span></h1>
+        </div>
+
+        <!-- Typography -->
+        <div class="brand-title-wrap">
+          <h1 class="brand-wordmark">
+            HeroCMS <span class="wordmark-highlight">Studio</span>
+          </h1>
+        </div>
+
+        <!-- Slim Minimalist Progress Bar -->
+        <div class="minimal-progress-wrap">
+          <div class="minimal-progress-track">
+            <div
+              class="minimal-progress-fill"
+              :style="{ width: `${progress}%` }"
+            ></div>
           </div>
-        </header>
+        </div>
 
-        <!-- Glassmorphic Card (Exact match with LoginView auth-panel-glass) -->
-        <div class="auth-panel-glass splash-card">
-          <!-- Card Heading Intro -->
-          <div class="panel-intro">
-            <div class="splash-badge-row">
-              <span class="pulse-live-dot"></span>
-              <span class="splash-mode-badge">WORKSPACE INITIALIZATION</span>
-            </div>
-            <h2 class="panel-heading">Mempersiapkan Konsol Studio</h2>
-            <p class="panel-sub">
-              Menyinkronkan sesi kredensial, runtime kontainer, dan aset visual...
-            </p>
-          </div>
-
-          <!-- Progress Console Zone -->
-          <div class="splash-progress-zone">
-            <div class="progress-meta-row">
-              <span class="meta-stage-text">{{ currentStageText }}</span>
-              <span class="meta-percent-number">{{ progress }}%</span>
-            </div>
-
-            <!-- Progress Track Shell -->
-            <div class="progress-track-shell">
-              <div
-                class="progress-fill-glow"
-                :style="{ width: `${progress}%` }"
-              >
-                <div class="fill-glimmer"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Infrastructure Telemetry Badges -->
-          <div class="telemetry-badges-row">
-            <div class="tele-chip">
-              <ShieldCheck :size="12" color="#059669" />
-              <span>TLS v1.3</span>
-            </div>
-            <div class="tele-chip">
-              <Server :size="12" color="#2563eb" />
-              <span>cgroups v2</span>
-            </div>
-            <div class="tele-chip">
-              <Globe :size="12" color="#7c3aed" />
-              <span>Traefik v3</span>
-            </div>
-            <div class="tele-chip">
-              <Cpu :size="12" color="#0891b2" />
-              <span>PostgreSQL RLS</span>
-            </div>
-          </div>
-
-          <!-- Security Ingress Guarantee Badge (Exact match with LoginView) -->
-          <footer class="panel-security-chip">
-            <ShieldCheck :size="14" color="#059669" />
-            <span>Koneksi TLS v1.3 • cgroups v2 Terisolasi</span>
-          </footer>
+        <!-- Quiet, Human Status Subtext -->
+        <div class="minimal-status-row">
+          <span class="minimal-status-text">Menyiapkan workspace</span>
+          <span class="status-dots">
+            <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+          </span>
         </div>
       </div>
     </div>
@@ -151,99 +95,103 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Fullscreen Backdrop */
+/* Fullscreen Backdrop (Translucent Glass preserving the Background Wave) */
 .studio-splash-screen {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background-color: #f8fafc;
+  background: rgba(248, 250, 252, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 20px;
   overflow: hidden;
   user-select: none;
 }
 
-/* 1. Base Subtle Dot Matrix Grid (Exact match with HeroCMS BackgroundWave) */
-.base-dot-grid {
+/* Feathered Ambient Soft Light */
+.splash-ambient-glow {
   position: absolute;
-  inset: 0;
-  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
-  background-size: 28px 28px;
-  background-position: -14px -14px;
-  opacity: 0.85;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* 2. Ambient Diffused Glow */
-.ambient-mesh-glow {
-  position: absolute;
-  width: 580px;
-  height: 440px;
+  width: 500px;
+  height: 500px;
   background: radial-gradient(
     circle,
-    rgba(37, 99, 235, 0.12) 0%,
-    rgba(148, 163, 184, 0.08) 50%,
+    rgba(37, 99, 235, 0.08) 0%,
+    rgba(148, 163, 184, 0.04) 50%,
     transparent 70%
   );
   filter: blur(50px);
   pointer-events: none;
-  z-index: 2;
-  animation: meshBreath 3.5s ease-in-out infinite alternate;
+  animation: auraFloat 4s ease-in-out infinite alternate;
 }
 
-@keyframes meshBreath {
-  0% { transform: scale(0.96); opacity: 0.8; }
+@keyframes auraFloat {
+  0% { transform: scale(0.95); opacity: 0.7; }
   100% { transform: scale(1.08); opacity: 1; }
 }
 
-/* 3. Surface Container */
-.auth-surface-container {
-  width: 100%;
-  max-width: 440px;
+/* Minimalist Pod (No bulky box, no coding vibe) */
+.splash-minimal-pod {
   position: relative;
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-/* Brand Header (Identical to LoginView) */
-.auth-brand-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   text-align: center;
-  margin-bottom: 24px;
 }
 
-.brand-glyph-box {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-radius: 12px;
+/* Brand Emblem */
+.splash-emblem-wrap {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
-  box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  animation: logoPulse 2s ease-in-out infinite alternate;
+  margin-bottom: 16px;
 }
 
-@keyframes logoPulse {
-  0% { transform: scale(1); box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.2); }
-  100% { transform: scale(1.04); box-shadow: 0 10px 24px -2px rgba(37, 99, 235, 0.25); }
+.splash-glow-aura {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.2);
+  filter: blur(14px);
+  animation: pulseAura 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes pulseAura {
+  0% { transform: scale(0.9); opacity: 0.5; }
+  100% { transform: scale(1.15); opacity: 0.9; }
+}
+
+.brand-glyph-box {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 10px 24px -4px rgba(15, 23, 42, 0.18),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Wordmark */
+.brand-title-wrap {
+  margin-bottom: 22px;
 }
 
 .brand-wordmark {
-  font-size: 1.55rem;
+  font-size: 1.45rem;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.03em;
   line-height: 1.2;
+  margin: 0;
 }
 
 .wordmark-highlight {
@@ -253,190 +201,57 @@ onUnmounted(() => {
   -webkit-text-fill-color: transparent;
 }
 
-/* Glassmorphic Panel (Identical to LoginView auth-panel-glass) */
-.auth-panel-glass.splash-card {
+/* Slim Minimal Progress Bar (Linear style) */
+.minimal-progress-wrap {
+  width: 170px;
+  margin-bottom: 12px;
+}
+
+.minimal-progress-track {
   width: 100%;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 20px;
-  padding: 32px 28px;
-  box-shadow:
-    0 0 0 1px rgba(15, 23, 42, 0.03),
-    0 16px 36px -8px rgba(15, 23, 42, 0.07),
-    0 2px 6px rgba(15, 23, 42, 0.02);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Heading Intro */
-.panel-intro {
-  margin-bottom: 2px;
-}
-
-.splash-badge-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  padding: 3px 9px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-}
-
-.pulse-live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
-  animation: liveDotPulse 1.4s infinite;
-}
-
-@keyframes liveDotPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
-}
-
-.splash-mode-badge {
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #1d4ed8;
-  letter-spacing: 0.06em;
-}
-
-.panel-heading {
-  font-size: 1.18rem;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.01em;
-  margin-bottom: 4px;
-}
-
-.panel-sub {
-  font-size: 0.82rem;
-  color: #64748b;
-  line-height: 1.45;
-  margin: 0;
-}
-
-/* Progress Zone */
-.splash-progress-zone {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-}
-
-.progress-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.meta-stage-text {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #334155;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.meta-percent-number {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #2563eb;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  flex-shrink: 0;
-}
-
-/* Progress Track */
-.progress-track-shell {
-  position: relative;
-  width: 100%;
-  height: 6px;
+  height: 3px;
   background: #e2e8f0;
   border-radius: 9999px;
   overflow: hidden;
+  position: relative;
 }
 
-.progress-fill-glow {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 50%, #2563eb 100%);
+.minimal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
   border-radius: 9999px;
   transition: width 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
 }
 
-.fill-glimmer {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
-  animation: shimmerMove 1.5s infinite;
-}
-
-@keyframes shimmerMove {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* Telemetry Badges */
-.telemetry-badges-row {
+/* Quiet, Elegant Status Subtext */
+.minimal-status-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.tele-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #475569;
-}
-
-/* Security Guarantee Chip (Exact match with LoginView) */
-.panel-security-chip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
+  font-weight: 500;
   color: #64748b;
-  padding-top: 4px;
+  letter-spacing: -0.01em;
 }
 
-/* Exit Transition */
+.status-dots .dot {
+  animation: blinkDot 1.4s infinite both;
+}
+
+.status-dots .dot:nth-child(1) { animation-delay: 0s; }
+.status-dots .dot:nth-child(2) { animation-delay: 0.2s; }
+.status-dots .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blinkDot {
+  0%, 80%, 100% { opacity: 0.2; }
+  40% { opacity: 1; }
+}
+
+/* Smooth Dissolve Out */
 .splash-dissolve-leave-active {
-  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .splash-dissolve-leave-to {
