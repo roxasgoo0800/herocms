@@ -2914,14 +2914,16 @@ const copySchemaJson = () => {
   grid-template-columns: repeat(2, 1fr);
   gap: 6px;
   margin-top: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .palette-card-btn {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 9px;
+  gap: 6px;
+  padding: 8px 6px;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   background: #ffffff;
@@ -2929,6 +2931,9 @@ const copySchemaJson = () => {
   transition: all 0.15s ease;
   text-align: left;
   outline: none;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
 }
 
 .palette-card-btn:hover {
