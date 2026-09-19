@@ -9,7 +9,7 @@ const props = withDefaults(
   }>(),
   {
     targetUrl: '/',
-    durationMs: 1300
+    durationMs: 1200
   }
 );
 
@@ -21,15 +21,10 @@ const emit = defineEmits<{
 const progress = ref(0);
 const isFinished = ref(false);
 
-const ringCircumference = 289; // 2 * Math.PI * 46
-const ringOffset = computed(() => {
-  return ringCircumference - (progress.value / 100) * ringCircumference;
-});
-
 const statusText = computed(() => {
-  if (progress.value < 40) return 'Menyiapkan workspace';
-  if (progress.value < 85) return 'Memuat modul studio';
-  return 'Membuka dashboard';
+  if (progress.value < 40) return 'Memverifikasi kredensial...';
+  if (progress.value < 85) return 'Menyiapkan workspace...';
+  return 'Membuka studio...';
 });
 
 let timer: number | null = null;
@@ -68,70 +63,30 @@ onUnmounted(() => {
       <!-- 1. Background Theme Dot Grid (Solid white canvas ensures dashboard is completely hidden) -->
       <div class="base-dot-grid" aria-hidden="true"></div>
 
-      <!-- 2. Ambient Soft Center Light -->
-      <div class="ambient-mesh-glow" aria-hidden="true"></div>
-
-      <!-- 3. Iconic Center Piece: Circular Halo Ring + Emblem -->
+      <!-- 2. Clean Center Content: Logo -> Black Loading Bar -> Status -->
       <div class="splash-center-pod">
-        <!-- Circular Progress Halo with Centered Brand Emblem -->
-        <div class="halo-emblem-container">
-          <!-- Concentric Ambient Aura -->
-          <div class="halo-ambient-aura" :class="{ 'is-complete': progress >= 100 }" aria-hidden="true"></div>
-
-          <!-- SVG Circular Progress Ring -->
-          <svg class="halo-svg-ring" width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
-            <defs>
-              <linearGradient id="heroHaloGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#0f172a" />
-                <stop offset="60%" stop-color="#2563eb" />
-                <stop offset="100%" stop-color="#38bdf8" />
-              </linearGradient>
-            </defs>
-
-            <!-- Background subtle track -->
-            <circle
-              class="halo-track"
-              cx="52"
-              cy="52"
-              r="46"
-              stroke="#e2e8f0"
-              stroke-width="2.5"
-              fill="none"
-            />
-
-            <!-- Active animated progress stroke -->
-            <circle
-              class="halo-fill"
-              cx="52"
-              cy="52"
-              r="46"
-              stroke="url(#heroHaloGrad)"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              fill="none"
-              :stroke-dasharray="ringCircumference"
-              :stroke-dashoffset="ringOffset"
-            />
-          </svg>
-
-          <!-- Floating Core Brand Glyph Box -->
-          <div class="brand-glyph-box" :class="{ 'glyph-pulse': progress >= 100 }">
-            <Layers :size="26" color="#ffffff" />
-          </div>
+        <!-- Logo Emblem -->
+        <div class="brand-glyph-box">
+          <Layers :size="24" color="#ffffff" />
         </div>
 
-        <!-- Cohesive Typography & Monospace Progress Stream -->
-        <div class="brand-title-wrap">
-          <h1 class="brand-wordmark">
-            HeroCMS <span class="wordmark-highlight">Studio</span>
-          </h1>
+        <!-- Brand Wordmark -->
+        <h1 class="brand-wordmark">
+          HeroCMS <span class="wordmark-highlight">Studio</span>
+        </h1>
 
-          <div class="status-stream-row">
-            <span class="status-stream-text">{{ statusText }}</span>
-            <span class="status-dot-sep">•</span>
-            <span class="status-stream-pct">{{ progress }}%</span>
-          </div>
+        <!-- Black Loading Bar directly under Logo -->
+        <div class="splash-progress-track">
+          <div
+            class="splash-progress-fill"
+            :style="{ width: `${progress}%` }"
+          ></div>
         </div>
+
+        <!-- Clean Status Text -->
+        <p class="splash-status-text">
+          {{ statusText }}
+        </p>
       </div>
     </div>
   </transition>
@@ -152,7 +107,7 @@ onUnmounted(() => {
   will-change: opacity, transform;
 }
 
-/* Exact Theme Base Dot Grid */
+/* Theme Base Dot Grid */
 .base-dot-grid {
   position: absolute;
   inset: 0;
@@ -163,22 +118,7 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Ambient Soft Glow matching LoginView & BackgroundWave */
-.ambient-mesh-glow {
-  position: absolute;
-  width: 550px;
-  height: 550px;
-  background: radial-gradient(
-    circle,
-    rgba(37, 99, 235, 0.08) 0%,
-    rgba(148, 163, 184, 0.08) 50%,
-    transparent 70%
-  );
-  filter: blur(50px);
-  pointer-events: none;
-}
-
-/* Minimalist Center Pod */
+/* Clean Center Pod */
 .splash-center-pod {
   position: relative;
   z-index: 10;
@@ -186,105 +126,42 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  animation: podScaleIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: podEntrance 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes podScaleIn {
+@keyframes podEntrance {
   0% {
     opacity: 0;
-    transform: scale(0.9) translateY(14px);
-    filter: blur(6px);
+    transform: scale(0.92) translateY(12px);
   }
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
-    filter: blur(0);
   }
 }
 
-/* Circular Halo Ring Container */
-.halo-emblem-container {
-  position: relative;
-  width: 104px;
-  height: 104px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 22px;
-}
-
-.halo-ambient-aura {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, rgba(148, 163, 184, 0.05) 60%, transparent 75%);
-  filter: blur(16px);
-  transition: all 0.4s ease;
-  pointer-events: none;
-}
-
-.halo-ambient-aura.is-complete {
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(37, 99, 235, 0.12) 60%, transparent 75%);
-  transform: scale(1.2);
-}
-
-.halo-svg-ring {
-  position: absolute;
-  inset: 0;
-  transform: rotate(-90deg);
-  pointer-events: none;
-}
-
-.halo-track {
-  opacity: 0.8;
-}
-
-.halo-fill {
-  transition: stroke-dashoffset 0.12s linear;
-  filter: drop-shadow(0 0 4px rgba(37, 99, 235, 0.4));
-}
-
-/* Brand Glyph Box Centered Inside the Halo */
+/* Brand Glyph Box: Obsidian Black matching theme buttons and badges */
 .brand-glyph-box {
-  position: relative;
-  z-index: 2;
-  width: 54px;
-  height: 54px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-radius: 15px;
+  width: 50px;
+  height: 50px;
+  background: #0f172a;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow:
-    0 12px 28px -4px rgba(15, 23, 42, 0.25),
-    inset 0 1px 1px rgba(255, 255, 255, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 14px;
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.brand-glyph-box.glyph-pulse {
-  transform: scale(1.04);
-  box-shadow:
-    0 14px 32px -4px rgba(37, 99, 235, 0.3),
-    inset 0 1px 1px rgba(255, 255, 255, 0.35);
-}
-
-/* Typography & Status Stream */
-.brand-title-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
+/* Wordmark */
 .brand-wordmark {
   font-size: 1.55rem;
   font-weight: 800;
   color: #0f172a;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
   line-height: 1.2;
-  margin: 0 0 8px 0;
+  margin: 0 0 20px 0;
 }
 
 .wordmark-highlight {
@@ -294,30 +171,34 @@ onUnmounted(() => {
   -webkit-text-fill-color: transparent;
 }
 
-.status-stream-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.84rem;
+/* Black Loading Bar (Directly beneath logo & wordmark) */
+.splash-progress-track {
+  width: 180px;
+  height: 3.5px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.splash-progress-fill {
+  height: 100%;
+  background: #0f172a; /* Solid Theme Obsidian Black */
+  border-radius: 9999px;
+  transition: width 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Clean Status Text */
+.splash-status-text {
+  font-size: 0.78rem;
   font-weight: 500;
   color: #64748b;
   letter-spacing: -0.01em;
+  margin: 0;
 }
 
-.status-dot-sep {
-  opacity: 0.5;
-  font-size: 0.75rem;
-}
-
-.status-stream-pct {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: #0f172a;
-  min-width: 32px;
-  text-align: left;
-}
-
-/* Dissolve in & out for the whole overlay */
+/* Dissolve Transitions */
 .splash-dissolve-enter-active {
   transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
