@@ -896,14 +896,14 @@ const addBlockFromLibrary = (type: VisualBlock['type']) => {
 
 // Brand Color Palettes
 const colorPalettes = [
-  { name: 'Electric Indigo', hex: '#2563eb' },
-  { name: 'Cyber Emerald', hex: '#059669' },
-  { name: 'Hyper Purple', hex: '#7c3aed' },
-  { name: 'Solar Orange', hex: '#ea580c' },
   { name: 'Obsidian Noir', hex: '#0f172a' },
-  { name: 'Neon Cyan', hex: '#06b6d4' },
-  { name: 'Rose Glow', hex: '#e11d48' },
-  { name: 'Amber Gold', hex: '#d97706' }
+  { name: 'Midnight Slate', hex: '#1e293b' },
+  { name: 'Deep Sapphire', hex: '#1e3a8a' },
+  { name: 'Forest Emerald', hex: '#064e3b' },
+  { name: 'Titanium Steel', hex: '#334155' },
+  { name: 'Muted Bordeaux', hex: '#881337' },
+  { name: 'Warm Terracotta', hex: '#7c2d12' },
+  { name: 'Dark Amber', hex: '#78350f' }
 ];
 
 const fontFamilies = [
@@ -1413,23 +1413,28 @@ const copySchemaJson = () => {
               <!-- Accent Color -->
               <div class="token-field-box">
                 <label class="token-lbl">Warna Utama (Aksen Brand)</label>
-                <div class="color-swatches-matrix">
+                <div class="color-palette-cards">
                   <button
                     v-for="pal in colorPalettes"
                     :key="pal.hex"
-                    class="swatch-btn"
+                    class="palette-card-btn"
                     :class="{ active: activeContainer.accentColor === pal.hex }"
-                    :style="{ backgroundColor: pal.hex }"
                     @click="activeContainer.accentColor = pal.hex"
                     :title="pal.name"
                   >
-                    <Check v-if="activeContainer.accentColor === pal.hex" :size="12" color="#fff" />
+                    <span class="palette-swatch-dot" :style="{ backgroundColor: pal.hex }">
+                      <Check v-if="activeContainer.accentColor === pal.hex" :size="10" color="#fff" />
+                    </span>
+                    <div class="palette-meta">
+                      <span class="palette-name">{{ pal.name }}</span>
+                      <span class="palette-hex">{{ pal.hex }}</span>
+                    </div>
                   </button>
                 </div>
               </div>
 
               <!-- Typography -->
-              <div class="token-field-box" style="margin-top: 18px;">
+              <div class="token-field-box" style="margin-top: 16px;">
                 <label class="token-lbl">Keluarga Tipografi (Font)</label>
                 <select v-model="currentFont" class="token-select-input">
                   <option v-for="f in fontFamilies" :key="f.id" :value="f.id">
@@ -1439,11 +1444,13 @@ const copySchemaJson = () => {
               </div>
 
               <!-- Template Badge -->
-              <div class="token-field-box" style="margin-top: 18px;">
+              <div class="token-field-box" style="margin-top: 16px;">
                 <label class="token-lbl">Blueprint Terpasang</label>
                 <div class="blueprint-badge-box">
-                  <Layers :size="15" color="#2563eb" />
-                  <div>
+                  <div class="blueprint-icon-box">
+                    <Layers :size="14" color="#ffffff" />
+                  </div>
+                  <div class="blueprint-meta">
                     <strong>{{ activeContainer.templateName }}</strong>
                     <span>Dockerized cgroups runtime</span>
                   </div>
@@ -2752,7 +2759,7 @@ const copySchemaJson = () => {
 
 .block-add-card:hover .card-icon-bubble {
   background: #1e293b;
-  color: #38bdf8;
+  color: #ffffff;
 }
 
 .card-meta {
@@ -2785,7 +2792,7 @@ const copySchemaJson = () => {
   transform: scale(1.15);
 }
 
-/* Layers List */
+/* Layers List - Theme Harmonized */
 .layers-list-tree {
   display: flex;
   flex-direction: column;
@@ -2795,9 +2802,9 @@ const copySchemaJson = () => {
 .layer-row-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: #f8fafc;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   cursor: pointer;
@@ -2808,23 +2815,32 @@ const copySchemaJson = () => {
 }
 
 .layer-row-item:hover {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
+  border-color: #0f172a;
+  background: #f8fafc;
 }
 
 .layer-row-item.selected {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
-  font-weight: 700;
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 2px 8px -1px rgba(15, 23, 42, 0.25);
+}
+
+.layer-row-item.selected .layer-name-text {
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .layer-type-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #2563eb;
+  background: #94a3b8;
   flex-shrink: 0;
+}
+
+.layer-row-item.selected .layer-type-dot {
+  background: #ffffff;
 }
 
 .layer-name-text {
@@ -2860,35 +2876,84 @@ const copySchemaJson = () => {
 }
 
 .icon-layer-btn:hover {
-  background: #ffffff;
+  background: #f1f5f9;
   color: #0f172a;
 }
 
-/* Design Tokens */
-.color-swatches-matrix {
+.layer-row-item.selected .icon-layer-btn {
+  color: #94a3b8;
+}
+
+.layer-row-item.selected .icon-layer-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+/* Design Tokens - Curated Palette Grid */
+.color-palette-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
   margin-top: 8px;
 }
 
-.swatch-btn {
-  height: 32px;
+.palette-card-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
   border-radius: 7px;
-  border: 2px solid transparent;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.palette-card-btn:hover {
+  border-color: #0f172a;
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.palette-card-btn.active {
+  border-color: #0f172a;
+  background: #f8fafc;
+  box-shadow: 0 0 0 1.5px #0f172a;
+}
+
+.palette-swatch-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.swatch-btn:hover {
-  transform: scale(1.08);
+.palette-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.swatch-btn.active {
-  border-color: #0f172a;
+.palette-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.palette-hex {
+  font-size: 0.62rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: #64748b;
+  line-height: 1.2;
 }
 
 .token-lbl {
@@ -2902,56 +2967,80 @@ const copySchemaJson = () => {
 
 .token-select-input {
   width: 100%;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #0f172a;
   margin-top: 6px;
   outline: none;
+  transition: all 0.15s ease;
+}
+
+.token-select-input:hover {
+  border-color: #94a3b8;
+}
+
+.token-select-input:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
 }
 
 .blueprint-badge-box {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px;
-  background: #f8fafc;
+  padding: 8px 10px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 9px;
+  border-radius: 7px;
   margin-top: 6px;
 }
 
-.blueprint-badge-box strong {
+.blueprint-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.blueprint-meta strong {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
+  font-weight: 700;
   color: #0f172a;
 }
 
-.blueprint-badge-box span {
-  font-size: 0.68rem;
+.blueprint-meta span {
+  font-size: 0.66rem;
   color: #64748b;
 }
 
-/* AI Copilot */
+/* AI Copilot - Refined Obsidian Theme */
 .ai-prompt-area {
   width: 100%;
-  padding: 10px 12px;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 8px;
+  padding: 9px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
   background: #ffffff;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #0f172a;
   resize: vertical;
-  min-height: 80px;
+  min-height: 76px;
   margin-bottom: 10px;
   outline: none;
   font-family: inherit;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1.45;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: all 0.15s ease;
   box-sizing: border-box;
 }
 
@@ -2960,9 +3049,9 @@ const copySchemaJson = () => {
 }
 
 .ai-prompt-area:focus {
-  border-color: #7c3aed;
+  border-color: #0f172a;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.14);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
 }
 
 .btn-generate-ai {
@@ -2973,53 +3062,65 @@ const copySchemaJson = () => {
   gap: 6px;
   height: 34px;
   padding: 0 14px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border-radius: 6px;
+  border: 1px solid #0f172a;
+  background: #0f172a;
   color: #ffffff;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(124, 58, 237, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  margin-bottom: 14px;
   transition: all 0.15s ease;
 }
 
 .btn-generate-ai:hover:not(:disabled) {
-  transform: translateY(-0.5px);
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
+  background: #1e293b;
+  border-color: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+}
+
+.btn-generate-ai:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .prompt-presets-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .preset-title {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
 }
 
 .preset-chip {
   text-align: left;
   border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  padding: 6px 9px;
+  background: #ffffff;
+  padding: 8px 10px;
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #334155;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .preset-chip:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: #f8fafc;
+  border-color: #0f172a;
   color: #0f172a;
+  transform: translateX(2px);
 }
 
 /* -----------------------------------------------------------------------------
