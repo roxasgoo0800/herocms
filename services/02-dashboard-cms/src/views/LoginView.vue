@@ -71,10 +71,6 @@ const useDemoAccount = () => {
         </div>
         <div class="brand-title-wrap">
           <h1 class="brand-wordmark">HeroCMS <span class="wordmark-highlight">Studio</span></h1>
-          <div class="brand-chip-row">
-            <span class="pulse-dot"></span>
-            <span class="chip-text">Multi-Tenant Container Engine</span>
-          </div>
         </div>
       </header>
 
