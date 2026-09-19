@@ -1,6 +1,22 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import BackgroundWave from './components/BackgroundWave.vue';
+import StudioSplashScreen from './components/StudioSplashScreen.vue';
+import { useSplashTransition } from './composables/useSplashTransition';
+
+const { isSplashActive, splashDuration, completeSplash, triggerSplash } = useSplashTransition();
+
+onMounted(() => {
+  // Cold start splash on direct dashboard visit if authenticated
+  const isDirectDashboardVisit = window.location.pathname === '/' || window.location.pathname === '';
+  const hasSeenSplash = sessionStorage.getItem('herocms_splash_seen') === 'true';
+  const hasToken = localStorage.getItem('cloudcms_auth_token');
+
+  if (isDirectDashboardVisit && hasToken && !hasSeenSplash) {
+    triggerSplash(1000);
+  }
+});
 </script>
 
 <template>
@@ -8,12 +24,15 @@ import BackgroundWave from './components/BackgroundWave.vue';
     <!-- Unified Interactive Background Wave from Marketing Site -->
     <BackgroundWave />
     <div style="position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column;">
-      <RouterView v-slot="{ Component }">
-        <transition name="app-route-fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </RouterView>
+      <RouterView />
     </div>
+
+    <!-- Centralized Studio Gateway Splash Screen -->
+    <StudioSplashScreen
+      v-if="isSplashActive"
+      :duration-ms="splashDuration"
+      @complete="completeSplash"
+    />
   </div>
 </template>
 

@@ -16,9 +16,10 @@ import {
   UserPlus
 } from 'lucide-vue-next';
 import { studioApi } from '../services/apiClient';
-import StudioSplashScreen from '../components/StudioSplashScreen.vue';
+import { useSplashTransition } from '../composables/useSplashTransition';
 
 const router = useRouter();
+const { triggerSplash } = useSplashTransition();
 
 // Auth Mode
 const authMode = ref<'login' | 'register'>('login');
@@ -68,9 +69,14 @@ const handleLogin = async (e?: Event) => {
     if (res?.token) {
       localStorage.setItem('cloudcms_auth_token', res.token);
       localStorage.setItem('cloudcms_user_email', res.user?.email || idVal);
-      sessionStorage.setItem('herocms_splash_seen', 'true');
       successMessage.value = 'Kredensial terverifikasi! Mempersiapkan workspace studio...';
       isTransitioningToDashboard.value = true;
+      triggerSplash(1200);
+
+      // Route transition happens under the splash screen so Dashboard is fully pre-rendered
+      setTimeout(() => {
+        router.push('/');
+      }, 160);
     } else {
       throw new Error(res?.error || 'Autentikasi gagal');
     }
@@ -133,13 +139,6 @@ const handleRegister = async (e?: Event) => {
   <div class="auth-viewport">
     <!-- Ambient Diffused Lighting Mesh (Soft Glow behind card) -->
     <div class="ambient-mesh-glow" aria-hidden="true"></div>
-
-    <!-- Cinematic Splash Screen Gateway Transition -->
-    <StudioSplashScreen
-      v-if="isTransitioningToDashboard"
-      :duration-ms="1400"
-      @complete="router.push('/')"
-    />
 
     <div
       class="auth-surface-container"

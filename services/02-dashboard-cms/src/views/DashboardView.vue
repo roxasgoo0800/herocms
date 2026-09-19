@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
@@ -43,16 +43,8 @@ import WebhooksApiModule from '../components/dashboard/WebhooksApiModule.vue';
 import BillingPlanModule from '../components/dashboard/BillingPlanModule.vue';
 import InvoicesHistoryModule from '../components/dashboard/InvoicesHistoryModule.vue';
 import SupportTicketingModule from '../components/dashboard/SupportTicketingModule.vue';
-import StudioSplashScreen from '../components/StudioSplashScreen.vue';
 
 const router = useRouter();
-
-const isDashboardInitializing = ref(sessionStorage.getItem('herocms_splash_seen') !== 'true');
-
-const onSplashComplete = () => {
-  isDashboardInitializing.value = false;
-  sessionStorage.setItem('herocms_splash_seen', 'true');
-};
 
 const {
   activeMenu,
@@ -87,13 +79,6 @@ const handleLogout = () => {
 
 <template>
   <div class="dashboard-root-layout">
-    <!-- Fullscreen Studio Splashscreen Gateway Transition -->
-    <StudioSplashScreen
-      v-if="isDashboardInitializing"
-      :duration-ms="1200"
-      @complete="onSplashComplete"
-    />
-
     <div class="app-shell" :class="{ 'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden }">
     <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
     <aside class="app-sidebar">
@@ -562,20 +547,6 @@ const handleLogout = () => {
   min-height: 100vh;
   background: transparent;
   position: relative;
-  animation: appShellBloom 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes appShellBloom {
-  0% {
-    opacity: 0;
-    transform: scale(0.994);
-    filter: blur(4px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-    filter: blur(0);
-  }
 }
 
 /* Editor Immersive Mode: Hide Sidebar & Top Header for maximum wide workspace */

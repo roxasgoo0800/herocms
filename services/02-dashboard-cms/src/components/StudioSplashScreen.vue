@@ -50,7 +50,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <transition name="splash-dissolve">
+  <transition name="splash-dissolve" appear>
     <div v-if="!isFinished" class="studio-splash-screen" role="status" aria-live="polite">
       <!-- Subtle Radial Ambient Light (Seamless & feathered) -->
       <div class="splash-ambient-glow" aria-hidden="true"></div>
@@ -100,7 +100,7 @@ onUnmounted(() => {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(248, 250, 252, 0.88);
+  background: rgba(248, 250, 252, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   display: flex;
@@ -108,6 +108,7 @@ onUnmounted(() => {
   justify-content: center;
   overflow: hidden;
   user-select: none;
+  will-change: opacity, transform;
 }
 
 /* Feathered Ambient Soft Light */
@@ -249,26 +250,26 @@ onUnmounted(() => {
 
 /* Seamless Smooth Dissolve In & Out */
 .splash-dissolve-enter-active {
-  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .splash-dissolve-enter-from {
   opacity: 0;
-  transform: scale(0.97);
+  transform: scale(0.98);
   filter: blur(6px);
 }
 
 .splash-dissolve-leave-active {
-  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.34s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .splash-dissolve-leave-to {
   opacity: 0;
-  transform: scale(1.03);
-  filter: blur(8px);
+  transform: scale(1.02);
+  filter: blur(6px);
 }
 </style>
