@@ -44,7 +44,10 @@ import {
   ArrowLeft,
   PanelLeftClose,
   PanelLeftOpen,
-  Cloud
+  Cloud,
+  AlignLeft,
+  AlignCenter,
+  AlignRight
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
@@ -1989,21 +1992,24 @@ const copySchemaJson = () => {
                       :class="{ active: selectedBlock.styles?.align === 'left' }"
                       @click="selectedBlock.styles ? (selectedBlock.styles.align = 'left') : null"
                     >
-                      Kiri
+                      <AlignLeft :size="13" />
+                      <span>Kiri</span>
                     </button>
                     <button
                       class="align-btn"
                       :class="{ active: selectedBlock.styles?.align === 'center' || !selectedBlock.styles?.align }"
                       @click="selectedBlock.styles ? (selectedBlock.styles.align = 'center') : null"
                     >
-                      Tengah
+                      <AlignCenter :size="13" />
+                      <span>Tengah</span>
                     </button>
                     <button
                       class="align-btn"
                       :class="{ active: selectedBlock.styles?.align === 'right' }"
                       @click="selectedBlock.styles ? (selectedBlock.styles.align = 'right') : null"
                     >
-                      Kanan
+                      <AlignRight :size="13" />
+                      <span>Kanan</span>
                     </button>
                   </div>
                 </div>
@@ -3943,15 +3949,15 @@ const copySchemaJson = () => {
 
 .insp-tab-btn {
   flex: 1;
-  height: 28px;
+  height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
   border: none;
   background: transparent;
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #64748b;
   cursor: pointer;
@@ -3963,10 +3969,10 @@ const copySchemaJson = () => {
 }
 
 .insp-tab-btn.active {
-  background: #ffffff;
-  color: #0f172a;
-  font-weight: 700;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
 }
 
 .inspector-scroll-area {
@@ -3977,11 +3983,11 @@ const copySchemaJson = () => {
 
 /* Selected Block Card - Refined HeroCMS Obsidian */
 .selected-block-card {
-  padding: 10px 12px;
-  margin-bottom: 14px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
@@ -3989,18 +3995,18 @@ const copySchemaJson = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .badge-block-type {
-  font-size: 0.64rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  color: #0f172a;
-  background: #e2e8f0;
-  border: 1px solid #cbd5e1;
-  padding: 1px 6px;
+  color: #ffffff;
+  background: #0f172a;
+  border: 1px solid #0f172a;
+  padding: 2px 7px;
   border-radius: 4px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .badge-block-status {
@@ -4010,6 +4016,10 @@ const copySchemaJson = () => {
   font-size: 0.68rem;
   font-weight: 600;
   color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  padding: 1px 7px;
+  border-radius: 9999px;
 }
 
 .status-indicator-dot {
@@ -4021,40 +4031,42 @@ const copySchemaJson = () => {
 }
 
 .block-card-title {
-  font-size: 0.86rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
   line-height: 1.35;
+  letter-spacing: -0.01em;
 }
 
 /* Form Fields & High-Fidelity Inputs */
 .field-item {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .field-label {
   display: block;
   font-size: 0.72rem;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 5px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
 }
 
 .field-label-split {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
 .field-val-badge {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: #0f172a;
   background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  padding: 1px 6px;
+  border: 1px solid #cbd5e1;
+  padding: 2px 7px;
   border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, monospace;
 }
@@ -4066,16 +4078,16 @@ const copySchemaJson = () => {
 
 .field-input {
   width: 100%;
-  height: 34px;
-  padding: 0 10px;
+  height: 36px;
+  padding: 0 11px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 500;
   color: #0f172a;
   font-family: inherit;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
   transition: all 0.15s ease;
   outline: none;
   box-sizing: border-box;
@@ -4093,23 +4105,23 @@ const copySchemaJson = () => {
 .field-input:focus {
   border-color: #0f172a;
   background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
 }
 
 .field-textarea {
   width: 100%;
-  min-height: 72px;
-  padding: 8px 10px;
+  min-height: 76px;
+  padding: 9px 11px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 500;
   color: #0f172a;
   font-family: inherit;
   line-height: 1.45;
   resize: vertical;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
   transition: all 0.15s ease;
   outline: none;
   box-sizing: border-box;
@@ -4122,7 +4134,7 @@ const copySchemaJson = () => {
 .field-textarea:focus {
   border-color: #0f172a;
   background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
 }
 
 .field-textarea::placeholder {
@@ -4149,15 +4161,16 @@ const copySchemaJson = () => {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #2563eb;
+  background: #0f172a;
   border: 2px solid #ffffff;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
   cursor: pointer;
-  transition: transform 0.1s ease;
+  transition: transform 0.1s ease, background 0.15s ease;
 }
 
 .range-slider::-webkit-slider-thumb:hover {
   transform: scale(1.15);
+  background: #1e293b;
 }
 
 /* Alignment & Background Selector Groups */
@@ -4174,7 +4187,8 @@ const copySchemaJson = () => {
 .align-btn,
 .bgmode-btn {
   flex: 1;
-  height: 30px;
+  height: 32px;
+  gap: 5px;
   border: none;
   background: transparent;
   border-radius: 6px;
@@ -4195,10 +4209,10 @@ const copySchemaJson = () => {
 
 .align-btn.active,
 .bgmode-btn.active {
-  background: #ffffff;
-  color: #2563eb;
-  font-weight: 700;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
 }
 
 .block-quick-actions {
@@ -4211,8 +4225,8 @@ const copySchemaJson = () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 34px;
+  gap: 7px;
+  height: 36px;
   padding: 0 12px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
@@ -4222,19 +4236,25 @@ const copySchemaJson = () => {
   color: #334155;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .btn-quick-outline:hover {
   background: #f8fafc;
-  border-color: #94a3b8;
+  border-color: #0f172a;
   color: #0f172a;
 }
 
 .btn-quick-outline.danger {
-  color: #dc2626;
+  color: #ef4444;
   border-color: #fecaca;
-  background: #fffafa;
+  background: #ffffff;
+}
+
+.btn-quick-outline.danger:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+  color: #b91c1c;
 }
 
 .btn-quick-outline.danger:hover {
