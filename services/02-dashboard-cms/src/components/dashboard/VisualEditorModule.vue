@@ -47,7 +47,14 @@ import {
   Cloud,
   AlignLeft,
   AlignCenter,
-  AlignRight
+  AlignRight,
+  Files,
+  Search,
+  GitBranch,
+  Settings,
+  Terminal,
+  Play,
+  RefreshCw
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
@@ -967,6 +974,201 @@ const copySchemaJson = () => {
   navigator.clipboard.writeText(schemaJsonText.value);
   showToast('Schema JSON website berhasil disalin ke clipboard!', 'success');
 };
+
+// -----------------------------------------------------------------------------
+// VS Code-style Code Editor Engine
+// -----------------------------------------------------------------------------
+type VsCodeTab = 'blocks.json' | 'index.html' | 'theme.css' | 'docker-compose.yml';
+
+const activeVsCodeTab = ref<VsCodeTab>('blocks.json');
+const isVsCodeExplorerOpen = ref(true);
+const vsCodeBlocksCode = ref('');
+const isVsCodeCodeDirty = ref(false);
+
+// Sync code whenever switching into 'code' mode
+watch(
+  () => editorViewMode.value,
+  (mode) => {
+    if (mode === 'code') {
+      vsCodeBlocksCode.value = schemaJsonText.value;
+      isVsCodeCodeDirty.value = false;
+    }
+  },
+  { immediate: true }
+);
+
+// Keep vsCodeBlocksCode updated if schemaJsonText changes and user hasn't typed unapplied changes
+watch(schemaJsonText, (newVal) => {
+  if (editorViewMode.value === 'code' && !isVsCodeCodeDirty.value) {
+    vsCodeBlocksCode.value = newVal;
+  }
+});
+
+const generatedHtmlCode = computed(() => {
+  const containerName = activeContainer.value?.name || 'Website Tenant';
+  const domain = activeContainer.value?.subdomain || 'tenant.cloudcms.app';
+  const blocks = pageBlocks.value;
+
+  const blocksHtml = blocks
+    .map((b) => {
+      return `    <!-- Block: ${b.name} (${b.type}) -->\n    <section class="section-${b.type}" id="block-${b.id}">\n      <div class="container">\n        <h2>${b.name}</h2>\n      </div>\n    </section>`;
+    })
+    .join('\n\n');
+
+  return `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${containerName} | HeroCMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(currentFont.value)}:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="./theme.css">
+</head>
+<body class="theme-modern">
+  <!-- HeroCMS Edge Runtime Generated Page -->
+  <!-- Domain: ${domain} -->
+  <main class="page-wrapper">
+${blocksHtml || '    <!-- Belum ada blok ditambahkan -->'}
+  </main>
+</body>
+</html>`;
+});
+
+const generatedCssCode = computed(() => {
+  const accent = activeContainer.value?.accentColor || '#0f172a';
+  return `/**
+ * HeroCMS Design System Tokens & Generated Styles
+ * Tenant Subdomain: ${activeContainer.value?.subdomain || 'tenant.cloudcms.app'}
+ */
+
+:root {
+  /* Brand Tokens */
+  --brand-primary: ${accent};
+  --font-family-base: '${currentFont.value}', sans-serif;
+  
+  /* Canvas Dimensions */
+  --artboard-width: ${artboardWidth.value}px;
+  --artboard-height: ${artboardHeight.value}px;
+  
+  /* Layout Spacing */
+  --container-max-width: 1440px;
+  --radius-card: 16px;
+  --radius-pill: 9999px;
+  
+  /* Slate & Neutral Colors */
+  --bg-canvas: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-subtle: #e2e8f0;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  color: var(--text-main);
+  background: var(--bg-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}`;
+});
+
+const generatedDockerCode = computed(() => {
+  const sub = activeContainer.value?.subdomain || 'tenant.cloudcms.app';
+  const name = activeContainer.value?.name || 'Tenant App';
+  const safeName = sub.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+  return `# HeroCMS Docker Cgroups Microservice Runtime
+# Target Container: ${sub}
+version: '3.8'
+
+services:
+  web-runtime:
+    image: herocms/runtime-edge:v3.4-alpine
+    container_name: ${safeName}
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.50
+    environment:
+      - NODE_ENV=production
+      - TENANT_SUBDOMAIN=${sub}
+      - TENANT_NAME=${name}
+      - CACHE_TTL=3600
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${safeName}.rule=Host(\`${sub}\`)"
+      - "traefik.http.routers.${safeName}.entrypoints=websecure"
+      - "traefik.http.routers.${safeName}.tls.certresolver=letsencrypt"
+      - "herocms.tenant.active=true"`;
+});
+
+const currentVsCodeContent = computed(() => {
+  if (activeVsCodeTab.value === 'blocks.json') return vsCodeBlocksCode.value || schemaJsonText.value;
+  if (activeVsCodeTab.value === 'index.html') return generatedHtmlCode.value;
+  if (activeVsCodeTab.value === 'theme.css') return generatedCssCode.value;
+  return generatedDockerCode.value;
+});
+
+const vsCodeLineCount = computed(() => {
+  const lines = currentVsCodeContent.value.split('\n').length;
+  return Math.max(lines, 24);
+});
+
+const onVsCodeKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const target = e.target as HTMLTextAreaElement;
+    const start = target.selectionStart;
+    const end = target.selectionEnd;
+    vsCodeBlocksCode.value =
+      vsCodeBlocksCode.value.substring(0, start) + '  ' + vsCodeBlocksCode.value.substring(end);
+    isVsCodeCodeDirty.value = true;
+    nextTick(() => {
+      target.selectionStart = target.selectionEnd = start + 2;
+    });
+  }
+};
+
+const applyVsCodeChangesToCanvas = () => {
+  try {
+    const parsed = JSON.parse(vsCodeBlocksCode.value);
+    if (parsed.blocks && Array.isArray(parsed.blocks)) {
+      pageBlocks.value = parsed.blocks;
+    } else if (Array.isArray(parsed)) {
+      pageBlocks.value = parsed;
+    }
+    if (parsed.container?.accentColor && activeContainer.value) {
+      activeContainer.value.accentColor = parsed.container.accentColor;
+    }
+    isVsCodeCodeDirty.value = false;
+    recordHistory();
+    triggerAutoSaveDraft();
+    showToast('Perubahan kode JSON berhasil disinkronkan ke kanvas!', 'success');
+  } catch (err: any) {
+    showToast('Gagal menerapkan JSON: ' + (err?.message || 'Format tidak valid'), 'error');
+  }
+};
+
+const formatVsCodeJson = () => {
+  try {
+    const parsed = JSON.parse(vsCodeBlocksCode.value);
+    vsCodeBlocksCode.value = JSON.stringify(parsed, null, 2);
+    showToast('Kode blocks.json berhasil dirapikan (Prettified)!', 'info');
+  } catch (e: any) {
+    showToast('JSON tidak valid, gagal memformat: ' + e?.message, 'error');
+  }
+};
+
+const copyVsCodeCurrentCode = () => {
+  navigator.clipboard.writeText(currentVsCodeContent.value);
+  showToast(`Kode file ${activeVsCodeTab.value} berhasil disalin ke clipboard!`, 'success');
+};
 </script>
 
 <template>
@@ -1274,8 +1476,8 @@ const copySchemaJson = () => {
             <button
               class="vmode-btn"
               :class="{ active: editorViewMode === 'code' }"
-              @click="isCodeModalOpen = true"
-              title="Lihat Schema JSON"
+              @click="editorViewMode = 'code'"
+              title="Mode Editor Kode (VS Code Style)"
             >
               <Code2 :size="13" />
             </button>
@@ -1324,7 +1526,8 @@ const copySchemaJson = () => {
         <!-- ----------------------------------------------------------------- -->
         <!-- LEFT STUDIO DOCK (Blocks Library, Layers Tree, Design Tokens, AI) -->
         <!-- ----------------------------------------------------------------- -->
-        <aside v-if="editorViewMode === 'design'" class="studio-left-dock">
+        <transition name="dock-slide-left">
+          <aside v-if="editorViewMode === 'design'" class="studio-left-dock">
           <!-- Dock Tabs Header -->
           <nav class="left-dock-tabs">
             <button
@@ -1567,11 +1770,13 @@ const copySchemaJson = () => {
             </div>
           </div>
         </aside>
+      </transition>
 
         <!-- ----------------------------------------------------------------- -->
         <!-- CENTER: INFINITE CANVAS WORKSPACE & RESIZABLE ARTBOARD             -->
         <!-- ----------------------------------------------------------------- -->
         <main
+          v-if="editorViewMode !== 'code'"
           class="studio-viewport-area"
           :class="{
             'tool-hand-active': activeTool === 'hand' || isSpacePressed,
@@ -1917,9 +2122,263 @@ const copySchemaJson = () => {
         </main>
 
         <!-- ----------------------------------------------------------------- -->
+        <!-- CENTER ALT: VS CODE-STYLE CANVAS CODE EDITOR WORKSPACE             -->
+        <!-- ----------------------------------------------------------------- -->
+        <section v-else class="studio-vscode-workspace">
+          <!-- 1. VS Code Activity Bar (Far Left Strip) -->
+          <aside class="vscode-activity-bar">
+            <div class="vscode-act-top">
+              <button
+                class="vscode-act-btn"
+                :class="{ active: isVsCodeExplorerOpen }"
+                @click="isVsCodeExplorerOpen = !isVsCodeExplorerOpen"
+                title="Penjelajah File (Ctrl+Shift+E)"
+              >
+                <Files :size="18" />
+              </button>
+              <button class="vscode-act-btn" title="Pencarian (Ctrl+Shift+F)">
+                <Search :size="17" />
+              </button>
+              <button class="vscode-act-btn" title="Kontrol Sumber (Git)">
+                <GitBranch :size="17" />
+              </button>
+            </div>
+            <div class="vscode-act-bottom">
+              <button class="vscode-act-btn" title="Terminal Live">
+                <Terminal :size="17" />
+              </button>
+              <button class="vscode-act-btn" title="Pengaturan Editor">
+                <Settings :size="17" />
+              </button>
+            </div>
+          </aside>
+
+          <!-- 2. VS Code File Explorer Sidebar -->
+          <transition name="vscode-explorer-slide">
+            <aside v-if="isVsCodeExplorerOpen" class="vscode-explorer-sidebar">
+              <div class="vscode-explorer-header">
+                <span class="vscode-explorer-title">PENJELAJAH</span>
+                <span class="vscode-explorer-badge">HEROCMS</span>
+              </div>
+              <div class="vscode-file-tree">
+                <div class="vscode-tree-section">
+                  <div class="vscode-section-head">
+                    <ChevronDown :size="12" />
+                    <span>HEROCMS-WORKSPACE</span>
+                  </div>
+
+                  <div class="vscode-tree-items">
+                    <!-- Config folder -->
+                    <div class="vscode-folder-row">
+                      <ChevronDown :size="11" />
+                      <span class="folder-name">config</span>
+                    </div>
+                    <button
+                      class="vscode-file-item indent"
+                      :class="{ active: activeVsCodeTab === 'docker-compose.yml' }"
+                      @click="activeVsCodeTab = 'docker-compose.yml'"
+                    >
+                      <span class="file-icon docker">🐳</span>
+                      <span class="file-name">docker-compose.yml</span>
+                    </button>
+
+                    <!-- Src folder -->
+                    <div class="vscode-folder-row">
+                      <ChevronDown :size="11" />
+                      <span class="folder-name">src</span>
+                    </div>
+                    <button
+                      class="vscode-file-item indent"
+                      :class="{ active: activeVsCodeTab === 'blocks.json' }"
+                      @click="activeVsCodeTab = 'blocks.json'"
+                    >
+                      <span class="file-icon json">{ }</span>
+                      <span class="file-name">blocks.json</span>
+                    </button>
+                    <button
+                      class="vscode-file-item indent"
+                      :class="{ active: activeVsCodeTab === 'index.html' }"
+                      @click="activeVsCodeTab = 'index.html'"
+                    >
+                      <span class="file-icon html">&lt;&gt;</span>
+                      <span class="file-name">index.html</span>
+                    </button>
+                    <button
+                      class="vscode-file-item indent"
+                      :class="{ active: activeVsCodeTab === 'theme.css' }"
+                      @click="activeVsCodeTab = 'theme.css'"
+                    >
+                      <span class="file-icon css">#</span>
+                      <span class="file-name">theme.css</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </transition>
+
+          <!-- 3. VS Code Main Code Editor Pane -->
+          <div class="vscode-editor-main">
+            <!-- Tabs Bar -->
+            <div class="vscode-tabs-bar">
+              <div class="vscode-tabs-scroll">
+                <button
+                  class="vscode-tab-btn"
+                  :class="{ active: activeVsCodeTab === 'blocks.json' }"
+                  @click="activeVsCodeTab = 'blocks.json'"
+                >
+                  <span class="tab-icon json">{ }</span>
+                  <span class="tab-label">blocks.json</span>
+                  <span class="tab-unsaved-dot" v-if="isVsCodeCodeDirty">●</span>
+                  <span class="tab-close-icon"><X :size="11" /></span>
+                </button>
+                <button
+                  class="vscode-tab-btn"
+                  :class="{ active: activeVsCodeTab === 'index.html' }"
+                  @click="activeVsCodeTab = 'index.html'"
+                >
+                  <span class="tab-icon html">&lt;&gt;</span>
+                  <span class="tab-label">index.html</span>
+                  <span class="tab-close-icon"><X :size="11" /></span>
+                </button>
+                <button
+                  class="vscode-tab-btn"
+                  :class="{ active: activeVsCodeTab === 'theme.css' }"
+                  @click="activeVsCodeTab = 'theme.css'"
+                >
+                  <span class="tab-icon css">#</span>
+                  <span class="tab-label">theme.css</span>
+                  <span class="tab-close-icon"><X :size="11" /></span>
+                </button>
+                <button
+                  class="vscode-tab-btn"
+                  :class="{ active: activeVsCodeTab === 'docker-compose.yml' }"
+                  @click="activeVsCodeTab = 'docker-compose.yml'"
+                >
+                  <span class="tab-icon docker">🐳</span>
+                  <span class="tab-label">docker-compose.yml</span>
+                  <span class="tab-close-icon"><X :size="11" /></span>
+                </button>
+              </div>
+
+              <!-- Top Actions Bar -->
+              <div class="vscode-editor-actions">
+                <button
+                  v-if="activeVsCodeTab === 'blocks.json'"
+                  class="vscode-action-btn primary"
+                  @click="applyVsCodeChangesToCanvas"
+                  title="Sinkronkan & Terapkan Perubahan JSON ke Kanvas Studio"
+                >
+                  <Play :size="12" />
+                  <span>Terapkan ke Kanvas</span>
+                </button>
+                <button
+                  v-if="activeVsCodeTab === 'blocks.json'"
+                  class="vscode-action-btn"
+                  @click="formatVsCodeJson"
+                  title="Format JSON (Prettier)"
+                >
+                  <Sparkles :size="12" />
+                  <span>Prettify</span>
+                </button>
+                <button
+                  class="vscode-action-btn"
+                  @click="copyVsCodeCurrentCode"
+                  title="Salin Isi File Ini"
+                >
+                  <Copy :size="12" />
+                  <span>Salin</span>
+                </button>
+                <button
+                  class="vscode-action-btn exit"
+                  @click="editorViewMode = 'design'"
+                  title="Kembali ke Mode Desain Kanvas"
+                >
+                  <ArrowLeft :size="12" />
+                  <span>Kembali ke Kanvas</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Breadcrumbs -->
+            <div class="vscode-breadcrumbs-bar">
+              <span class="crumb">herocms</span>
+              <span class="crumb-sep">&gt;</span>
+              <span class="crumb">src</span>
+              <span class="crumb-sep">&gt;</span>
+              <span class="crumb active">{{ activeVsCodeTab }}</span>
+              <span v-if="activeVsCodeTab === 'blocks.json'" class="crumb-tip">
+                (Edit JSON di sini lalu klik "Terapkan ke Kanvas")
+              </span>
+            </div>
+
+            <!-- Code Editor Workspace (Lines + Code Area) -->
+            <div class="vscode-code-viewport">
+              <!-- Line Numbers Gutter -->
+              <div class="vscode-gutter">
+                <div
+                  v-for="line in vsCodeLineCount"
+                  :key="line"
+                  class="vscode-line-number"
+                >
+                  <span class="line-num-text">{{ line }}</span>
+                </div>
+              </div>
+
+              <!-- Code Content Surface -->
+              <div class="vscode-text-surface">
+                <!-- If blocks.json, provide interactive editable textarea -->
+                <textarea
+                  v-if="activeVsCodeTab === 'blocks.json'"
+                  v-model="vsCodeBlocksCode"
+                  @keydown="onVsCodeKeydown"
+                  @input="isVsCodeCodeDirty = true"
+                  class="vscode-code-textarea"
+                  spellcheck="false"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                ></textarea>
+
+                <!-- If read-only generated code (index.html, theme.css, docker-compose.yml) -->
+                <pre v-else class="vscode-code-pre">{{ currentVsCodeContent }}</pre>
+              </div>
+            </div>
+
+            <!-- 4. VS Code Status Bar (Bottom Strip) -->
+            <footer class="vscode-status-bar">
+              <div class="vscode-status-left">
+                <span class="status-item git">
+                  <GitBranch :size="12" />
+                  <span>main*</span>
+                </span>
+                <span class="status-item">
+                  <RefreshCw :size="11" />
+                  <span>0 ⨉ 0 ⚠</span>
+                </span>
+                <span class="status-item highlight">HeroCMS Runtime Edge v3.4</span>
+              </div>
+              <div class="vscode-status-right">
+                <span class="status-item">Spasi: 2</span>
+                <span class="status-item">UTF-8</span>
+                <span class="status-item lang">
+                  {{
+                    activeVsCodeTab === 'blocks.json' ? 'JSON' :
+                    activeVsCodeTab === 'index.html' ? 'HTML' :
+                    activeVsCodeTab === 'theme.css' ? 'CSS' : 'YAML'
+                  }}
+                </span>
+                <span class="status-item">Prettier: ✓</span>
+              </div>
+            </footer>
+          </div>
+        </section>
+
+        <!-- ----------------------------------------------------------------- -->
         <!-- RIGHT STUDIO DOCK: DEEP STYLE INSPECTOR & CONTENT CONTROLS        -->
         <!-- ----------------------------------------------------------------- -->
-        <aside v-if="editorViewMode === 'design'" class="studio-right-inspector">
+        <transition name="dock-slide-right">
+          <aside v-if="editorViewMode === 'design'" class="studio-right-inspector">
           <!-- Inspector Tabs Header -->
           <div class="inspector-tabs-bar">
             <button
@@ -2125,6 +2584,7 @@ const copySchemaJson = () => {
             </div>
           </div>
         </aside>
+      </transition>
       </div>
 
       <!-- =================================================================== -->
@@ -4881,5 +5341,527 @@ const copySchemaJson = () => {
   background: #fee2e2;
   border-color: #fca5a5;
   color: #ef4444;
+}
+
+/* -----------------------------------------------------------------------------
+ * 5. Studio Dock Transitions (Preview / Design Mode Toggle)
+ * --------------------------------------------------------------------------- */
+.dock-slide-left-enter-active,
+.dock-slide-left-leave-active {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.28s ease,
+              margin-left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, margin-left, opacity;
+}
+
+.dock-slide-left-enter-active,
+.dock-slide-left-leave-active,
+.dock-slide-right-enter-active,
+.dock-slide-right-leave-active {
+  animation: none !important;
+}
+
+.dock-slide-left-enter-from,
+.dock-slide-left-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+  margin-left: -290px;
+}
+
+.dock-slide-right-enter-active,
+.dock-slide-right-leave-active {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.28s ease,
+              margin-right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, margin-right, opacity;
+}
+
+.dock-slide-right-enter-from,
+.dock-slide-right-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+  margin-right: -320px;
+}
+
+/* -----------------------------------------------------------------------------
+ * 6. VS Code-Style Canvas Workspace Editor
+ * --------------------------------------------------------------------------- */
+.studio-vscode-workspace {
+  flex: 1;
+  display: flex;
+  height: 100%;
+  background: #1e1e1e;
+  overflow: hidden;
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #cccccc;
+}
+
+/* 1. Activity Bar */
+.vscode-activity-bar {
+  width: 48px;
+  background: #181818;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-right: 1px solid #282828;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.vscode-act-top,
+.vscode-act-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.vscode-act-btn {
+  width: 48px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #858585;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.vscode-act-btn:hover {
+  color: #ffffff;
+}
+
+.vscode-act-btn.active {
+  color: #ffffff;
+}
+
+.vscode-act-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: #007acc;
+  border-radius: 0 2px 2px 0;
+}
+
+/* 2. File Explorer Sidebar */
+.vscode-explorer-sidebar {
+  width: 220px;
+  background: #1f1f1f;
+  border-right: 1px solid #282828;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.vscode-explorer-slide-enter-active,
+.vscode-explorer-slide-leave-active {
+  transition: width 0.25s ease, opacity 0.2s ease;
+}
+
+.vscode-explorer-slide-enter-from,
+.vscode-explorer-slide-leave-to {
+  width: 0;
+  opacity: 0;
+}
+
+.vscode-explorer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #999999;
+  border-bottom: 1px solid #262626;
+}
+
+.vscode-explorer-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  background: #2d2d2d;
+  color: #007acc;
+  border-radius: 4px;
+}
+
+.vscode-file-tree {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.vscode-tree-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.vscode-section-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #bbbbbb;
+  cursor: default;
+  user-select: none;
+}
+
+.vscode-tree-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.vscode-folder-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 16px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: #cccccc;
+  cursor: pointer;
+  user-select: none;
+}
+
+.vscode-folder-row .folder-name {
+  color: #e2e8f0;
+}
+
+.vscode-file-item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 16px 5px 28px;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-size: 0.74rem;
+  color: #999999;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  font-family: inherit;
+}
+
+.vscode-file-item:hover {
+  background: #2a2d2e;
+  color: #ffffff;
+}
+
+.vscode-file-item.active {
+  background: #37373d;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.vscode-file-item .file-icon {
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+}
+
+.file-icon.json { color: #f1c40f; }
+.file-icon.html { color: #e44d26; }
+.file-icon.css { color: #42a5f5; }
+.file-icon.docker { font-size: 0.75rem; }
+
+/* 3. Main Editor Pane */
+.vscode-editor-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1e1e1e;
+  overflow: hidden;
+}
+
+/* Tabs Bar */
+.vscode-tabs-bar {
+  height: 36px;
+  background: #181818;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #282828;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.vscode-tabs-scroll {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.vscode-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.vscode-tab-btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  background: #181818;
+  border: none;
+  border-right: 1px solid #242424;
+  color: #8c8c8c;
+  font-size: 0.73rem;
+  font-family: inherit;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+
+.vscode-tab-btn:hover {
+  background: #1f1f1f;
+  color: #cccccc;
+}
+
+.vscode-tab-btn.active {
+  background: #1e1e1e;
+  color: #ffffff;
+  border-top: 2px solid #0078d4;
+}
+
+.vscode-tab-btn .tab-unsaved-dot {
+  font-size: 0.55rem;
+  color: #e2e8f0;
+}
+
+.vscode-tab-btn .tab-close-icon {
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 3px;
+  transition: opacity 0.15s ease;
+}
+
+.vscode-tab-btn:hover .tab-close-icon,
+.vscode-tab-btn.active .tab-close-icon {
+  opacity: 0.7;
+}
+
+.vscode-tab-btn .tab-close-icon:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Actions in Tab Bar */
+.vscode-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+
+.vscode-action-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 25px;
+  padding: 0 9px;
+  border-radius: 4px;
+  border: 1px solid #3c3c3c;
+  background: #2a2a2a;
+  color: #cccccc;
+  font-size: 0.69rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.vscode-action-btn:hover {
+  background: #333333;
+  color: #ffffff;
+  border-color: #4a4a4a;
+}
+
+.vscode-action-btn.primary {
+  background: #007acc;
+  border-color: #008be5;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.vscode-action-btn.primary:hover {
+  background: #0069b4;
+  box-shadow: 0 0 10px rgba(0, 122, 204, 0.4);
+}
+
+.vscode-action-btn.exit {
+  background: #252526;
+  border-color: #3e3e42;
+  color: #9cdcfe;
+}
+
+.vscode-action-btn.exit:hover {
+  background: #2d2d30;
+  color: #ffffff;
+}
+
+/* Breadcrumbs */
+.vscode-breadcrumbs-bar {
+  height: 23px;
+  background: #1e1e1e;
+  border-bottom: 1px solid #282828;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 16px;
+  font-size: 0.68rem;
+  color: #777777;
+  flex-shrink: 0;
+}
+
+.vscode-breadcrumbs-bar .crumb-sep {
+  font-size: 0.6rem;
+  color: #555555;
+}
+
+.vscode-breadcrumbs-bar .crumb.active {
+  color: #cccccc;
+}
+
+.vscode-breadcrumbs-bar .crumb-tip {
+  color: #007acc;
+  font-size: 0.65rem;
+  margin-left: 10px;
+}
+
+/* Code Viewport (Gutter + Surface) */
+.vscode-code-viewport {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  background: #1e1e1e;
+}
+
+.vscode-gutter {
+  width: 48px;
+  padding: 12px 10px 12px 0;
+  background: #1e1e1e;
+  border-right: 1px solid #282828;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.vscode-line-number {
+  height: 21px;
+  line-height: 21px;
+  text-align: right;
+  font-size: 0.74rem;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+  color: #6e7681;
+}
+
+.vscode-text-surface {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  overflow: auto;
+}
+
+.vscode-code-textarea {
+  width: 100%;
+  height: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: #d4d4d4;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+  font-size: 0.8rem;
+  line-height: 21px;
+  resize: none;
+  outline: none;
+  tab-size: 2;
+  white-space: pre;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.vscode-code-pre {
+  margin: 0;
+  padding: 12px 16px;
+  color: #9cdcfe;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+  font-size: 0.8rem;
+  line-height: 21px;
+  tab-size: 2;
+  white-space: pre;
+  box-sizing: border-box;
+}
+
+/* 4. VS Code Status Bar */
+.vscode-status-bar {
+  height: 22px;
+  background: #007acc;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.vscode-status-left,
+.vscode-status-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vscode-status-bar .status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  opacity: 0.92;
+  transition: opacity 0.15s ease;
+}
+
+.vscode-status-bar .status-item:hover {
+  opacity: 1;
+}
+
+.vscode-status-bar .status-item.highlight {
+  background: rgba(0, 0, 0, 0.15);
+  padding: 1px 6px;
+  border-radius: 3px;
 }
 </style>
