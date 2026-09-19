@@ -36,9 +36,7 @@ import {
   FolderKanban,
   Palette,
   Activity,
-  ArrowUpRight,
-  Lock,
-  Cpu
+  ArrowUpRight
 } from 'lucide-vue-next';
 
 const router = useRouter();
@@ -1188,204 +1186,119 @@ const handleLogout = () => {
     </div>
 
     <!-- ============================================================= -->
-    <!-- MODAL: BUAT WEBSITE / TAMBAH KONTAINER BARU (BESPOKE V3)      -->
+    <!-- MODAL: BUAT SITUS & KONTAINER (HANDCRAFTED MINIMALIST SAAS)  -->
     <!-- ============================================================= -->
-    <div v-if="isCreateModalOpen" class="modal-scrim" @click.self="isCreateModalOpen = false">
-      <div class="modal-card">
-        <!-- Top Gradient Glow Accent Strip -->
-        <div class="modal-top-accent-bar"></div>
-
-        <!-- Modal Top Header with Icon & Tech Badge -->
-        <div class="modal-top">
-          <div class="modal-top-left">
-            <div class="modal-header-icon-box">
-              <Layers :size="20" color="#2563eb" />
-            </div>
-            <div class="modal-header-text">
-              <div class="modal-badge-sup">
-                <span class="pulse-mini-dot"></span>
-                <span>DOCKER ENGINE ORCHESTRATOR</span>
-                <span class="badge-mini-mono">cgroups v2</span>
-              </div>
-              <h3 class="modal-h3">Deploy Kontainer Website Baru</h3>
-              <p class="modal-p">Inisialisasi runtime terisolasi dengan auto-SSL Let's Encrypt & rute proxy Traefik v3.</p>
-            </div>
+    <div v-if="isCreateModalOpen" class="modal-backdrop" @click.self="isCreateModalOpen = false">
+      <div class="modal-dialog">
+        <!-- Header -->
+        <div class="modal-header">
+          <div>
+            <h3 class="modal-heading">Buat Situs Baru</h3>
+            <p class="modal-subheading">Inisialisasi kontainer Docker mandiri dengan routing Traefik v3.</p>
           </div>
-          <button class="btn-modal-close" @click="isCreateModalOpen = false" title="Tutup Modal"><X :size="16" /></button>
+          <button class="modal-close-button" @click="isCreateModalOpen = false" title="Tutup">
+            <X :size="16" />
+          </button>
         </div>
 
-        <form @submit.prevent="handleCreateContainer" class="modal-body-form">
-          <!-- 1. Kategori Selektor Interaktif dengan Badge Status -->
-          <div class="custom-form-field">
-            <div class="field-label-row">
-              <label class="field-label">KATEGORI SITUS & TEMPLATE</label>
-              <span class="field-label-hint">Pilih blueprint awal</span>
-            </div>
-            <div class="category-grid-selector">
-              <div
-                class="category-option-card"
-                :class="{ active: newSiteForm.category === 'portfolio' }"
-                @click="newSiteForm.category = 'portfolio'"
+        <form @submit.prevent="handleCreateContainer" class="modal-form">
+          <!-- 1. Blueprint Selection -->
+          <div class="form-field-group">
+            <label class="field-title">Pilih Template Awal</label>
+            <div class="template-selector-grid">
+              <button
+                type="button"
+                v-for="tpl in [
+                  { id: 'portfolio', name: 'Portofolio', desc: 'Studi kasus & CV online' },
+                  { id: 'blog', name: 'Blog & Media', desc: 'Artikel & publikasi berita' },
+                  { id: 'education', name: 'Pusat Edukasi', desc: 'Silabus kursus & LMS' },
+                  { id: 'business', name: 'Bisnis & UMKM', desc: 'Showcase produk & kontak' }
+                ]"
+                :key="tpl.id"
+                class="template-option"
+                :class="{ active: newSiteForm.category === tpl.id }"
+                @click="newSiteForm.category = tpl.id as any"
               >
-                <div class="cat-icon-wrap blue"><Briefcase :size="17" /></div>
-                <div class="cat-meta">
-                  <div class="cat-title-row">
-                    <span class="cat-name">Portofolio</span>
-                    <span v-if="newSiteForm.category === 'portfolio'" class="cat-check-badge"><Check :size="10" /></span>
-                  </div>
-                  <span class="cat-desc">Tech & Engineer</span>
+                <div class="template-option-radio">
+                  <div class="radio-dot"></div>
                 </div>
-              </div>
-
-              <div
-                class="category-option-card"
-                :class="{ active: newSiteForm.category === 'blog' }"
-                @click="newSiteForm.category = 'blog'"
-              >
-                <div class="cat-icon-wrap emerald"><BookOpen :size="17" /></div>
-                <div class="cat-meta">
-                  <div class="cat-title-row">
-                    <span class="cat-name">Blog & Media</span>
-                    <span v-if="newSiteForm.category === 'blog'" class="cat-check-badge"><Check :size="10" /></span>
-                  </div>
-                  <span class="cat-desc">Editorial Artikel</span>
+                <div class="template-option-text">
+                  <div class="template-option-name">{{ tpl.name }}</div>
+                  <div class="template-option-desc">{{ tpl.desc }}</div>
                 </div>
-              </div>
-
-              <div
-                class="category-option-card"
-                :class="{ active: newSiteForm.category === 'education' }"
-                @click="newSiteForm.category = 'education'"
-              >
-                <div class="cat-icon-wrap purple"><GraduationCap :size="17" /></div>
-                <div class="cat-meta">
-                  <div class="cat-title-row">
-                    <span class="cat-name">Pusat Edukasi</span>
-                    <span v-if="newSiteForm.category === 'education'" class="cat-check-badge"><Check :size="10" /></span>
-                  </div>
-                  <span class="cat-desc">Dokumentasi LMS</span>
-                </div>
-              </div>
-
-              <div
-                class="category-option-card"
-                :class="{ active: newSiteForm.category === 'business' }"
-                @click="newSiteForm.category = 'business'"
-              >
-                <div class="cat-icon-wrap amber"><ShoppingBag :size="17" /></div>
-                <div class="cat-meta">
-                  <div class="cat-title-row">
-                    <span class="cat-name">Bisnis & UMKM</span>
-                    <span v-if="newSiteForm.category === 'business'" class="cat-check-badge"><Check :size="10" /></span>
-                  </div>
-                  <span class="cat-desc">Showcase & Produk</span>
-                </div>
-              </div>
+              </button>
             </div>
           </div>
 
-          <!-- 2. Nama Website / Brand -->
-          <div class="custom-form-field">
-            <div class="field-label-row">
-              <label class="field-label">
-                <span>NAMA WEBSITE / BRAND</span>
-                <span class="field-required">*</span>
-              </label>
-            </div>
-            <div class="custom-input-box">
-              <Sparkles :size="16" class="field-glyph-lead" />
-              <input
-                v-model="newSiteForm.name"
-                type="text"
-                placeholder="e.g. Portofolio Rizal Pratama, Tech Journal..."
-                class="input-custom-core"
-                required
-              />
-            </div>
+          <!-- 2. Nama Website -->
+          <div class="form-field-group">
+            <label class="field-title" for="modal-site-name">
+              Nama Website
+              <span class="field-req-dot">*</span>
+            </label>
+            <input
+              id="modal-site-name"
+              v-model="newSiteForm.name"
+              type="text"
+              placeholder="Contoh: Portofolio Rizal Pratama"
+              class="field-text-input"
+              required
+            />
           </div>
 
-          <!-- 3. Subdomain with Live Domain Badge & Live Preview Chip -->
-          <div class="custom-form-field">
-            <div class="field-label-row">
-              <label class="field-label">
-                <span>SUBDOMAIN CLOUDCMS</span>
-                <span class="field-required">*</span>
-              </label>
-              <span class="field-label-hint">Routing Traefik v3</span>
-            </div>
-            <div class="custom-composite-box">
-              <Globe :size="16" class="composite-lead-icon" />
-              <span class="composite-protocol">https://</span>
+          <!-- 3. Subdomain Field -->
+          <div class="form-field-group">
+            <label class="field-title" for="modal-subdomain">
+              Subdomain
+              <span class="field-req-dot">*</span>
+            </label>
+            <div class="url-input-container">
+              <span class="url-addon-prefix">https://</span>
               <input
+                id="modal-subdomain"
                 v-model="newSiteForm.subdomain"
                 type="text"
                 placeholder="nama-situs"
-                class="composite-input-core"
+                class="url-core-input"
                 required
               />
-              <span class="composite-domain-tag">
-                <Lock :size="11" class="lock-icon" />
-                <span>.cloudcms.app</span>
-              </span>
+              <span class="url-addon-suffix">.cloudcms.app</span>
             </div>
+            <p class="field-helper-text">
+              Rute edge Traefik otomatis menerbitkan sertifikat SSL TLS v1.3 Let's Encrypt.
+            </p>
+          </div>
 
-            <!-- Live URL Preview Pill -->
-            <div class="live-url-preview-pill">
-              <span class="preview-dot"></span>
-              <span class="preview-lbl">LIVE PREVIEW:</span>
-              <span class="preview-url">
-                https://{{ newSiteForm.subdomain ? newSiteForm.subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '') : 'nama-situs' }}.cloudcms.app
-              </span>
-              <span class="preview-ssl-badge">Auto TLS 1.3</span>
+          <!-- 4. Headline / Peran -->
+          <div class="form-field-group">
+            <div class="field-title-flex">
+              <label class="field-title" for="modal-role">Headline atau Peran</label>
+              <span class="field-optional-badge">Opsional</span>
+            </div>
+            <input
+              id="modal-role"
+              v-model="newSiteForm.role"
+              type="text"
+              placeholder="e.g. Senior Software & Cloud Architect"
+              class="field-text-input"
+            />
+          </div>
+
+          <!-- 5. Resource Allocation Spec Note -->
+          <div class="resource-spec-callout">
+            <div class="spec-callout-text">
+              <span>Alokasi runtime: </span>
+              <strong>0.5 vCPU</strong> • <strong>256 MB RAM</strong> (cgroups v2) • Traefik v3 Proxy
             </div>
           </div>
 
-          <!-- 4. Peran / Headline -->
-          <div class="custom-form-field">
-            <div class="field-label-row">
-              <label class="field-label">PERAN / HEADLINE PEMBUKA</label>
-              <span class="field-label-hint">Opsional</span>
-            </div>
-            <div class="custom-input-box">
-              <User :size="16" class="field-glyph-lead" />
-              <input
-                v-model="newSiteForm.role"
-                type="text"
-                placeholder="e.g. Senior Distributed Systems Architect"
-                class="input-custom-core"
-              />
-            </div>
-          </div>
-
-          <!-- 5. Mini Infrastructure Resource Strip -->
-          <div class="modal-infra-preview-strip">
-            <div class="infra-stat">
-              <Cpu :size="13" class="stat-icon blue" />
-              <span>0.5 vCPU</span>
-            </div>
-            <span class="infra-dot">•</span>
-            <div class="infra-stat">
-              <Server :size="13" class="stat-icon emerald" />
-              <span>256 MB RAM</span>
-            </div>
-            <span class="infra-dot">•</span>
-            <div class="infra-stat">
-              <Globe :size="13" class="stat-icon purple" />
-              <span>Traefik Proxy</span>
-            </div>
-            <span class="infra-dot">•</span>
-            <div class="infra-stat">
-              <ShieldCheck :size="13" class="stat-icon green" />
-              <span>Let's Encrypt SSL</span>
-            </div>
-          </div>
-
-          <!-- 6. Modal Footer Actions -->
-          <div class="modal-footer-actions">
-            <button type="button" class="btn-ghost-cancel" @click="isCreateModalOpen = false">Batal</button>
-            <button type="submit" class="btn-primary-deploy">
-              <Rocket :size="15" class="rocket-glyph" />
-              <span>Deploy Kontainer Sekarang</span>
+          <!-- 6. Footer Actions -->
+          <div class="modal-footer-row">
+            <button type="button" class="btn-modal-ghost" @click="isCreateModalOpen = false">
+              Batal
+            </button>
+            <button type="submit" class="btn-modal-confirm">
+              Deploy Kontainer
             </button>
           </div>
         </form>
@@ -3417,519 +3330,350 @@ const handleLogout = () => {
 }
 
 /* ==========================================================================
-   BESPOKE GLASSMORPHIC MODAL & CUSTOM FORM SYSTEM (ZERO BOOTSTRAP - V3)
+   HANDCRAFTED MINIMALIST SAAS MODAL (LINEAR / VERCEL GRADE)
    ========================================================================== */
-.modal-scrim {
+.modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.58);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  animation: modalFadeIn 0.2s ease-out;
+  animation: modalFade 0.15s ease-out;
 }
 
-@keyframes modalFadeIn {
+@keyframes modalFade {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-.modal-card {
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 22px;
+.modal-dialog {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 14px;
   width: 100%;
-  max-width: 535px;
-  padding: 26px 30px 28px;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06), 0 25px 65px -12px rgba(15, 23, 42, 0.28), 0 0 80px -20px rgba(37, 99, 235, 0.15);
-  position: relative;
-  overflow: hidden;
-  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 490px;
+  padding: 24px;
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  animation: dialogScale 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes modalPopIn {
-  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+@keyframes dialogScale {
+  from { opacity: 0; transform: scale(0.97) translateY(4px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Top Gradient Accent Bar */
-.modal-top-accent-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 50%, #06b6d4 100%);
-}
-
-.modal-top {
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 20px;
-  gap: 16px;
 }
 
-.modal-top-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.modal-header-icon-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border: 1px solid #bfdbfe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
-}
-
-.modal-header-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-badge-sup {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.68rem;
+.modal-heading {
+  font-size: 1.15rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #2563eb;
-  margin-bottom: 3px;
+  color: #09090b;
+  letter-spacing: -0.015em;
 }
 
-.badge-mini-mono {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-family: ui-monospace, monospace;
-  font-size: 0.64rem;
-  letter-spacing: 0;
-}
-
-.modal-h3 {
-  font-size: 1.22rem;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-}
-
-.modal-p {
-  font-size: 0.78rem;
-  color: #64748b;
+.modal-subheading {
+  font-size: 0.8rem;
+  color: #71717a;
   margin-top: 3px;
   line-height: 1.4;
 }
 
-.btn-modal-close {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+.modal-close-button {
+  background: transparent;
+  border: none;
+  color: #71717a;
   cursor: pointer;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.14s ease;
-  flex-shrink: 0;
+  transition: all 0.12s ease;
+  margin-top: -2px;
+  margin-right: -4px;
 }
 
-.btn-modal-close:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+.modal-close-button:hover {
+  background: #f4f4f5;
+  color: #09090b;
 }
 
-.modal-body-form {
+.modal-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.custom-form-field {
+.form-field-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.field-label-row {
+.field-title-flex {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-}
-
-.field-label {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #475569;
-  letter-spacing: 0.04em;
-  display: flex;
   align-items: center;
-  gap: 3px;
 }
 
-.field-label-hint {
-  font-size: 0.68rem;
-  color: #94a3b8;
-  font-weight: 500;
+.field-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #27272a;
+  letter-spacing: -0.01em;
 }
 
-.field-required {
-  color: #ef4444;
-  font-weight: 700;
+.field-req-dot {
+  color: #e11d48;
+  margin-left: 2px;
 }
 
-/* Category Grid Selector with Tactile SaaS Cards */
-.category-grid-selector {
+.field-optional-badge {
+  font-size: 0.72rem;
+  color: #a1a1aa;
+  font-weight: 400;
+}
+
+/* Template Selector: Clean Tactile Radio Cards */
+.template-selector-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
-.category-option-card {
+.template-option {
   padding: 10px 12px;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 9px;
   background: #ffffff;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
+  text-align: left;
+  transition: all 0.14s ease;
+  width: 100%;
 }
 
-.category-option-card:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+.template-option:hover {
+  border-color: #a1a1aa;
+  background: #fafafa;
 }
 
-.category-option-card.active {
-  background: linear-gradient(135deg, #eff6ff 0%, #fbfdff 100%);
-  border-color: #2563eb;
-  box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.2), 0 0 0 1px #2563eb;
+.template-option.active {
+  border-color: #09090b;
+  background: #fafafa;
+  box-shadow: 0 0 0 1px #09090b;
 }
 
-.cat-icon-wrap {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-}
-
-.cat-icon-wrap.blue { background: #eff6ff; color: #2563eb; }
-.cat-icon-wrap.emerald { background: #ecfdf5; color: #059669; }
-.cat-icon-wrap.purple { background: #faf5ff; color: #9333ea; }
-.cat-icon-wrap.amber { background: #fffbeb; color: #d97706; }
-
-.cat-meta {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-}
-
-.cat-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-}
-
-.cat-name {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.cat-check-badge {
+.template-option-radio {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: #2563eb;
-  color: #ffffff;
-  display: inline-flex;
+  border: 1.5px solid #d4d4d8;
+  margin-top: 2px;
+  display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.4);
+  transition: border-color 0.14s ease;
 }
 
-.cat-desc {
-  font-size: 0.68rem;
-  color: #64748b;
+.template-option.active .template-option-radio {
+  border-color: #09090b;
 }
 
-/* Bespoke Input Box with Lead Glyphs */
-.custom-input-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  height: 44px;
+.radio-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #09090b;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.14s ease;
+}
+
+.template-option.active .radio-dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.template-option-text {
   display: flex;
-  align-items: center;
-  padding: 0 14px;
-  gap: 10px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
-.field-glyph-lead {
-  color: #94a3b8;
-  flex-shrink: 0;
-  transition: color 0.15s ease;
-}
-
-.custom-input-box:focus-within {
-  background: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14), 0 2px 4px rgba(15, 23, 42, 0.05);
-}
-
-.custom-input-box:focus-within .field-glyph-lead {
-  color: #2563eb;
-}
-
-.input-custom-core {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: transparent;
-  font-size: 0.86rem;
-  color: #0f172a;
-  outline: none;
-  font-family: inherit;
-}
-
-.input-custom-core::placeholder {
-  color: #94a3b8;
-}
-
-/* Bespoke Composite Subdomain Box */
-.custom-composite-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  padding: 0 10px 0 14px;
-  height: 44px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  gap: 6px;
-}
-
-.custom-composite-box:focus-within {
-  background: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14), 0 2px 4px rgba(15, 23, 42, 0.05);
-}
-
-.composite-lead-icon {
-  color: #2563eb;
-  flex-shrink: 0;
-}
-
-.composite-protocol {
-  color: #94a3b8;
+.template-option-name {
   font-size: 0.82rem;
+  font-weight: 600;
+  color: #09090b;
+}
+
+.template-option-desc {
+  font-size: 0.72rem;
+  color: #71717a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Handcrafted Input Fields */
+.field-text-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.86rem;
+  color: #09090b;
+  font-family: inherit;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.field-text-input::placeholder {
+  color: #a1a1aa;
+}
+
+.field-text-input:focus {
+  outline: none;
+  border-color: #09090b;
+  box-shadow: 0 0 0 1px #09090b;
+}
+
+/* Subdomain Composite URL */
+.url-input-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  height: 38px;
+  background: #ffffff;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.url-input-container:focus-within {
+  border-color: #09090b;
+  box-shadow: 0 0 0 1px #09090b;
+}
+
+.url-addon-prefix {
+  padding-left: 10px;
+  color: #a1a1aa;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
   user-select: none;
   flex-shrink: 0;
 }
 
-.composite-input-core {
+.url-core-input {
   flex: 1;
   height: 100%;
   border: none;
-  background: transparent;
-  font-size: 0.86rem;
-  color: #0f172a;
   outline: none;
+  background: transparent;
+  padding: 0 2px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #09090b;
+  min-width: 0;
+}
+
+.url-core-input::placeholder {
+  color: #a1a1aa;
+  font-weight: 400;
+}
+
+.url-addon-suffix {
+  padding-right: 10px;
+  color: #71717a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  user-select: none;
+  flex-shrink: 0;
   font-weight: 500;
 }
 
-.composite-input-core::placeholder {
-  color: #94a3b8;
-}
-
-.composite-domain-tag {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.76rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 7px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-
-.lock-icon {
-  color: #2563eb;
-}
-
-/* Live URL Preview Pill */
-.live-url-preview-pill {
-  background: #fafbfc;
-  border: 1px dashed #cbd5e1;
-  border-radius: 8px;
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.72rem;
-  margin-top: 3px;
-}
-
-.preview-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
-  flex-shrink: 0;
-}
-
-.preview-lbl {
-  color: #64748b;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  font-size: 0.65rem;
-}
-
-.preview-url {
-  color: #2563eb;
-  font-family: ui-monospace, monospace;
-  font-weight: 600;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.preview-ssl-badge {
-  background: #ecfdf5;
-  color: #059669;
-  border: 1px solid #a7f3d0;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-/* Mini Infrastructure Resource Strip */
-.modal-infra-preview-strip {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 8px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.field-helper-text {
   font-size: 0.73rem;
-  color: #475569;
+  color: #71717a;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+/* Minimalist Hardware Resource Note */
+.resource-spec-callout {
+  background: #f4f4f5;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 0.74rem;
+  color: #52525b;
+}
+
+.spec-callout-text strong {
+  color: #18181b;
   font-weight: 600;
-  margin-top: 2px;
 }
 
-.infra-stat {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.stat-icon.blue { color: #2563eb; }
-.stat-icon.emerald { color: #059669; }
-.stat-icon.purple { color: #9333ea; }
-.stat-icon.green { color: #10b981; }
-
-.infra-dot {
-  color: #cbd5e1;
-  font-size: 0.8rem;
-}
-
-.modal-footer-actions {
+/* Modal Actions */
+.modal-footer-row {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
-}
-
-.btn-ghost-cancel {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #475569;
-  padding: 9px 18px;
-  border-radius: 9px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-ghost-cancel:hover {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
-}
-
-.btn-primary-deploy {
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  color: #ffffff;
-  border: 1px solid #0f172a;
-  padding: 9px 22px;
-  border-radius: 9px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid #f4f4f5;
 }
 
-.btn-primary-deploy:hover {
-  background: #1e293b;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+.btn-modal-ghost {
+  background: transparent;
+  border: 1px solid #e4e4e7;
+  color: #52525b;
+  font-size: 0.84rem;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.12s ease;
 }
 
-.btn-primary-deploy:hover .rocket-glyph {
-  transform: translate(1px, -1px);
+.btn-modal-ghost:hover {
+  background: #f4f4f5;
+  color: #09090b;
+  border-color: #d4d4d8;
 }
 
-.rocket-glyph {
-  transition: transform 0.18s ease;
+.btn-modal-confirm {
+  background: #09090b;
+  color: #ffffff;
+  border: 1px solid #09090b;
+  font-size: 0.84rem;
+  font-weight: 500;
+  padding: 7px 18px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-modal-confirm:hover {
+  background: #27272a;
+  border-color: #27272a;
 }
 
 .spinner-tiny {
