@@ -36,7 +36,9 @@ import {
   FolderKanban,
   Palette,
   Activity,
-  ArrowUpRight
+  ArrowUpRight,
+  Lock,
+  Cpu
 } from 'lucide-vue-next';
 
 const router = useRouter();
@@ -1186,99 +1188,134 @@ const handleLogout = () => {
     </div>
 
     <!-- ============================================================= -->
-    <!-- MODAL: BUAT WEBSITE / TAMBAH KONTAINER BARU                  -->
+    <!-- MODAL: BUAT WEBSITE / TAMBAH KONTAINER BARU (BESPOKE V3)      -->
     <!-- ============================================================= -->
     <div v-if="isCreateModalOpen" class="modal-scrim" @click.self="isCreateModalOpen = false">
       <div class="modal-card">
+        <!-- Top Gradient Glow Accent Strip -->
+        <div class="modal-top-accent-bar"></div>
+
+        <!-- Modal Top Header with Icon & Tech Badge -->
         <div class="modal-top">
-          <div>
-            <div class="modal-badge-sup">
-              <span class="pulse-mini-dot"></span>
-              <span>DOCKER RUNTIME ENGINE</span>
+          <div class="modal-top-left">
+            <div class="modal-header-icon-box">
+              <Layers :size="20" color="#2563eb" />
             </div>
-            <h3 class="modal-h3">Deploy Kontainer Website Baru</h3>
-            <p class="modal-p">Inisialisasi kontainer mandiri dengan isolasi cgroups Linux & routing Traefik v3.</p>
+            <div class="modal-header-text">
+              <div class="modal-badge-sup">
+                <span class="pulse-mini-dot"></span>
+                <span>DOCKER ENGINE ORCHESTRATOR</span>
+                <span class="badge-mini-mono">cgroups v2</span>
+              </div>
+              <h3 class="modal-h3">Deploy Kontainer Website Baru</h3>
+              <p class="modal-p">Inisialisasi runtime terisolasi dengan auto-SSL Let's Encrypt & rute proxy Traefik v3.</p>
+            </div>
           </div>
-          <button class="btn-modal-close" @click="isCreateModalOpen = false"><X :size="16" /></button>
+          <button class="btn-modal-close" @click="isCreateModalOpen = false" title="Tutup Modal"><X :size="16" /></button>
         </div>
 
         <form @submit.prevent="handleCreateContainer" class="modal-body-form">
-          <!-- Custom Category Selector -->
+          <!-- 1. Kategori Selektor Interaktif dengan Badge Status -->
           <div class="custom-form-field">
-            <label class="field-label">KATEGORI SITUS & TEMPLATE</label>
+            <div class="field-label-row">
+              <label class="field-label">KATEGORI SITUS & TEMPLATE</label>
+              <span class="field-label-hint">Pilih blueprint awal</span>
+            </div>
             <div class="category-grid-selector">
               <div
                 class="category-option-card"
                 :class="{ active: newSiteForm.category === 'portfolio' }"
                 @click="newSiteForm.category = 'portfolio'"
               >
-                <div class="cat-icon-wrap blue"><Briefcase :size="16" /></div>
+                <div class="cat-icon-wrap blue"><Briefcase :size="17" /></div>
                 <div class="cat-meta">
-                  <span class="cat-name">Portofolio</span>
+                  <div class="cat-title-row">
+                    <span class="cat-name">Portofolio</span>
+                    <span v-if="newSiteForm.category === 'portfolio'" class="cat-check-badge"><Check :size="10" /></span>
+                  </div>
                   <span class="cat-desc">Tech & Engineer</span>
                 </div>
               </div>
+
               <div
                 class="category-option-card"
                 :class="{ active: newSiteForm.category === 'blog' }"
                 @click="newSiteForm.category = 'blog'"
               >
-                <div class="cat-icon-wrap emerald"><BookOpen :size="16" /></div>
+                <div class="cat-icon-wrap emerald"><BookOpen :size="17" /></div>
                 <div class="cat-meta">
-                  <span class="cat-name">Blog & Media</span>
+                  <div class="cat-title-row">
+                    <span class="cat-name">Blog & Media</span>
+                    <span v-if="newSiteForm.category === 'blog'" class="cat-check-badge"><Check :size="10" /></span>
+                  </div>
                   <span class="cat-desc">Editorial Artikel</span>
                 </div>
               </div>
+
               <div
                 class="category-option-card"
                 :class="{ active: newSiteForm.category === 'education' }"
                 @click="newSiteForm.category = 'education'"
               >
-                <div class="cat-icon-wrap purple"><GraduationCap :size="16" /></div>
+                <div class="cat-icon-wrap purple"><GraduationCap :size="17" /></div>
                 <div class="cat-meta">
-                  <span class="cat-name">Pusat Edukasi</span>
+                  <div class="cat-title-row">
+                    <span class="cat-name">Pusat Edukasi</span>
+                    <span v-if="newSiteForm.category === 'education'" class="cat-check-badge"><Check :size="10" /></span>
+                  </div>
                   <span class="cat-desc">Dokumentasi LMS</span>
                 </div>
               </div>
+
               <div
                 class="category-option-card"
                 :class="{ active: newSiteForm.category === 'business' }"
                 @click="newSiteForm.category = 'business'"
               >
-                <div class="cat-icon-wrap amber"><ShoppingBag :size="16" /></div>
+                <div class="cat-icon-wrap amber"><ShoppingBag :size="17" /></div>
                 <div class="cat-meta">
-                  <span class="cat-name">Bisnis & UMKM</span>
+                  <div class="cat-title-row">
+                    <span class="cat-name">Bisnis & UMKM</span>
+                    <span v-if="newSiteForm.category === 'business'" class="cat-check-badge"><Check :size="10" /></span>
+                  </div>
                   <span class="cat-desc">Showcase & Produk</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Nama Website -->
+          <!-- 2. Nama Website / Brand -->
           <div class="custom-form-field">
-            <label class="field-label">
-              <span>NAMA WEBSITE / BRAND</span>
-              <span class="field-required">*</span>
-            </label>
+            <div class="field-label-row">
+              <label class="field-label">
+                <span>NAMA WEBSITE / BRAND</span>
+                <span class="field-required">*</span>
+              </label>
+            </div>
             <div class="custom-input-box">
+              <Sparkles :size="16" class="field-glyph-lead" />
               <input
                 v-model="newSiteForm.name"
                 type="text"
-                placeholder="Contoh: Portofolio Ahmad, Tech Daily Blog..."
+                placeholder="e.g. Portofolio Rizal Pratama, Tech Journal..."
                 class="input-custom-core"
                 required
               />
             </div>
           </div>
 
-          <!-- Subdomain with Integrated Chip -->
+          <!-- 3. Subdomain with Live Domain Badge & Live Preview Chip -->
           <div class="custom-form-field">
-            <label class="field-label">
-              <span>SUBDOMAIN CLOUDCMS</span>
-              <span class="field-required">*</span>
-            </label>
+            <div class="field-label-row">
+              <label class="field-label">
+                <span>SUBDOMAIN CLOUDCMS</span>
+                <span class="field-required">*</span>
+              </label>
+              <span class="field-label-hint">Routing Traefik v3</span>
+            </div>
             <div class="custom-composite-box">
-              <Globe :size="15" class="composite-lead-icon" />
+              <Globe :size="16" class="composite-lead-icon" />
+              <span class="composite-protocol">https://</span>
               <input
                 v-model="newSiteForm.subdomain"
                 type="text"
@@ -1286,29 +1323,68 @@ const handleLogout = () => {
                 class="composite-input-core"
                 required
               />
-              <span class="composite-domain-tag">.cloudcms.app</span>
+              <span class="composite-domain-tag">
+                <Lock :size="11" class="lock-icon" />
+                <span>.cloudcms.app</span>
+              </span>
             </div>
-            <span class="field-helper">Sertifikat SSL Let's Encrypt TLS v1.3 aktif otomatis via Traefik edge routing.</span>
+
+            <!-- Live URL Preview Pill -->
+            <div class="live-url-preview-pill">
+              <span class="preview-dot"></span>
+              <span class="preview-lbl">LIVE PREVIEW:</span>
+              <span class="preview-url">
+                https://{{ newSiteForm.subdomain ? newSiteForm.subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '') : 'nama-situs' }}.cloudcms.app
+              </span>
+              <span class="preview-ssl-badge">Auto TLS 1.3</span>
+            </div>
           </div>
 
-          <!-- Headline / Peran -->
+          <!-- 4. Peran / Headline -->
           <div class="custom-form-field">
-            <label class="field-label">PERAN / HEADLINE PEMBUKA (OPSIONAL)</label>
+            <div class="field-label-row">
+              <label class="field-label">PERAN / HEADLINE PEMBUKA</label>
+              <span class="field-label-hint">Opsional</span>
+            </div>
             <div class="custom-input-box">
+              <User :size="16" class="field-glyph-lead" />
               <input
                 v-model="newSiteForm.role"
                 type="text"
-                placeholder="Contoh: Senior Distributed Systems Architect"
+                placeholder="e.g. Senior Distributed Systems Architect"
                 class="input-custom-core"
               />
             </div>
           </div>
 
-          <!-- Modal Footer -->
+          <!-- 5. Mini Infrastructure Resource Strip -->
+          <div class="modal-infra-preview-strip">
+            <div class="infra-stat">
+              <Cpu :size="13" class="stat-icon blue" />
+              <span>0.5 vCPU</span>
+            </div>
+            <span class="infra-dot">•</span>
+            <div class="infra-stat">
+              <Server :size="13" class="stat-icon emerald" />
+              <span>256 MB RAM</span>
+            </div>
+            <span class="infra-dot">•</span>
+            <div class="infra-stat">
+              <Globe :size="13" class="stat-icon purple" />
+              <span>Traefik Proxy</span>
+            </div>
+            <span class="infra-dot">•</span>
+            <div class="infra-stat">
+              <ShieldCheck :size="13" class="stat-icon green" />
+              <span>Let's Encrypt SSL</span>
+            </div>
+          </div>
+
+          <!-- 6. Modal Footer Actions -->
           <div class="modal-footer-actions">
             <button type="button" class="btn-ghost-cancel" @click="isCreateModalOpen = false">Batal</button>
             <button type="submit" class="btn-primary-deploy">
-              <Rocket :size="15" />
+              <Rocket :size="15" class="rocket-glyph" />
               <span>Deploy Kontainer Sekarang</span>
             </button>
           </div>
@@ -3341,29 +3417,55 @@ const handleLogout = () => {
 }
 
 /* ==========================================================================
-   BESPOKE GLASSMORPHIC MODAL & CUSTOM FORM SYSTEM (ZERO BOOTSTRAP)
+   BESPOKE GLASSMORPHIC MODAL & CUSTOM FORM SYSTEM (ZERO BOOTSTRAP - V3)
    ========================================================================== */
 .modal-scrim {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-card {
-  background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 22px;
   width: 100%;
-  max-width: 520px;
-  padding: 28px 30px;
-  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  max-width: 535px;
+  padding: 26px 30px 28px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06), 0 25px 65px -12px rgba(15, 23, 42, 0.28), 0 0 80px -20px rgba(37, 99, 235, 0.15);
+  position: relative;
+  overflow: hidden;
+  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPopIn {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Top Gradient Accent Bar */
+.modal-top-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 50%, #06b6d4 100%);
 }
 
 .modal-top {
@@ -3371,6 +3473,31 @@ const handleLogout = () => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 20px;
+  gap: 16px;
+}
+
+.modal-top-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.modal-header-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+}
+
+.modal-header-text {
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-badge-sup {
@@ -3381,18 +3508,30 @@ const handleLogout = () => {
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #2563eb;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
+}
+
+.badge-mini-mono {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0;
 }
 
 .modal-h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.22rem;
+  font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 .modal-p {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #64748b;
   margin-top: 3px;
   line-height: 1.4;
@@ -3400,7 +3539,7 @@ const handleLogout = () => {
 
 .btn-modal-close {
   background: #f1f5f9;
-  border: none;
+  border: 1px solid #e2e8f0;
   color: #64748b;
   cursor: pointer;
   width: 32px;
@@ -3409,7 +3548,8 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.12s ease;
+  transition: all 0.14s ease;
+  flex-shrink: 0;
 }
 
 .btn-modal-close:hover {
@@ -3429,6 +3569,12 @@ const handleLogout = () => {
   gap: 6px;
 }
 
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .field-label {
   font-size: 0.74rem;
   font-weight: 700;
@@ -3439,12 +3585,18 @@ const handleLogout = () => {
   gap: 3px;
 }
 
+.field-label-hint {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
 .field-required {
   color: #ef4444;
   font-weight: 700;
 }
 
-/* Category Grid Selector */
+/* Category Grid Selector with Tactile SaaS Cards */
 .category-grid-selector {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3460,29 +3612,32 @@ const handleLogout = () => {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .category-option-card:hover {
   background: #f8fafc;
   border-color: #cbd5e1;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
 }
 
 .category-option-card.active {
-  background: #eff6ff;
+  background: linear-gradient(135deg, #eff6ff 0%, #fbfdff 100%);
   border-color: #2563eb;
-  box-shadow: 0 0 0 1px #2563eb;
+  box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.2), 0 0 0 1px #2563eb;
 }
 
 .cat-icon-wrap {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .cat-icon-wrap.blue { background: #eff6ff; color: #2563eb; }
@@ -3493,6 +3648,15 @@ const handleLogout = () => {
 .cat-meta {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.cat-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
 }
 
 .cat-name {
@@ -3501,31 +3665,56 @@ const handleLogout = () => {
   color: #0f172a;
 }
 
+.cat-check-badge {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.4);
+}
+
 .cat-desc {
   font-size: 0.68rem;
   color: #64748b;
 }
 
-/* Bespoke Input Box */
+/* Bespoke Input Box with Lead Glyphs */
 .custom-input-box {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 12px;
+  height: 44px;
   display: flex;
   align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.field-glyph-lead {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
 }
 
 .custom-input-box:focus-within {
   background: #ffffff;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 1px 2px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14), 0 2px 4px rgba(15, 23, 42, 0.05);
+}
+
+.custom-input-box:focus-within .field-glyph-lead {
+  color: #2563eb;
 }
 
 .input-custom-core {
   width: 100%;
-  height: 42px;
-  padding: 0 14px;
+  height: 100%;
   border: none;
   background: transparent;
   font-size: 0.86rem;
@@ -3538,23 +3727,23 @@ const handleLogout = () => {
   color: #94a3b8;
 }
 
-/* Bespoke Composite Box */
+/* Bespoke Composite Subdomain Box */
 .custom-composite-box {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   padding: 0 10px 0 14px;
-  height: 42px;
+  height: 44px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  gap: 8px;
+  gap: 6px;
 }
 
 .custom-composite-box:focus-within {
   background: #ffffff;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 1px 2px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14), 0 2px 4px rgba(15, 23, 42, 0.05);
 }
 
 .composite-lead-icon {
@@ -3562,14 +3751,24 @@ const handleLogout = () => {
   flex-shrink: 0;
 }
 
+.composite-protocol {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  user-select: none;
+  flex-shrink: 0;
+}
+
 .composite-input-core {
   flex: 1;
+  height: 100%;
   border: none;
   background: transparent;
   font-size: 0.86rem;
   color: #0f172a;
   outline: none;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 500;
 }
 
 .composite-input-core::placeholder {
@@ -3577,27 +3776,110 @@ const handleLogout = () => {
 }
 
 .composite-domain-tag {
-  background: #e2e8f0;
-  color: #475569;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.76rem;
+  font-weight: 700;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   flex-shrink: 0;
 }
 
-.field-helper {
+.lock-icon {
+  color: #2563eb;
+}
+
+/* Live URL Preview Pill */
+.live-url-preview-pill {
+  background: #fafbfc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 0.72rem;
+  margin-top: 3px;
+}
+
+.preview-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+  flex-shrink: 0;
+}
+
+.preview-lbl {
   color: #64748b;
-  margin-top: 1px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: 0.65rem;
+}
+
+.preview-url {
+  color: #2563eb;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-ssl-badge {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* Mini Infrastructure Resource Strip */
+.modal-infra-preview-strip {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.73rem;
+  color: #475569;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.infra-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-icon.blue { color: #2563eb; }
+.stat-icon.emerald { color: #059669; }
+.stat-icon.purple { color: #9333ea; }
+.stat-icon.green { color: #10b981; }
+
+.infra-dot {
+  color: #cbd5e1;
+  font-size: 0.8rem;
 }
 
 .modal-footer-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 8px;
   padding-top: 16px;
   border-top: 1px solid #f1f5f9;
 }
@@ -3607,7 +3889,7 @@ const handleLogout = () => {
   border: 1px solid #e2e8f0;
   color: #475569;
   padding: 9px 18px;
-  border-radius: 8px;
+  border-radius: 9px;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
@@ -3617,28 +3899,37 @@ const handleLogout = () => {
 .btn-ghost-cancel:hover {
   background: #f8fafc;
   color: #0f172a;
+  border-color: #cbd5e1;
 }
 
 .btn-primary-deploy {
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
   color: #ffffff;
   border: 1px solid #0f172a;
-  padding: 9px 20px;
-  border-radius: 8px;
+  padding: 9px 22px;
+  border-radius: 9px;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  transition: all 0.15s ease;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-primary-deploy:hover {
   background: #1e293b;
   transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.btn-primary-deploy:hover .rocket-glyph {
+  transform: translate(1px, -1px);
+}
+
+.rocket-glyph {
+  transition: transform 0.18s ease;
 }
 
 .spinner-tiny {
