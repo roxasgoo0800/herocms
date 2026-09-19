@@ -400,7 +400,7 @@ const restoreDraftForActiveContainer = async (containerId: string) => {
       if (draftData.activeRightTab) activeRightTab.value = draftData.activeRightTab;
 
       const dateObj = new Date(draftData.updatedAt || Date.now());
-      lastSavedDraftAt.value = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      lastSavedDraftAt.value = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
       isDraftRestored.value = true;
     } else {
       loadBlocksForActiveContainer();
@@ -422,7 +422,7 @@ const triggerAutoSaveDraft = () => {
   autoSaveTimer = setTimeout(async () => {
     try {
       const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
       const draftPayload: EditorDraftData = {
         blocks: pageBlocks.value,
         roleOrHeadline: activeContainer.value?.roleOrHeadline,
@@ -1226,9 +1226,9 @@ const copySchemaJson = () => {
           >
             <Cloud :size="13" class="draft-cloud-icon" />
             <span class="draft-status-text">
-              <span v-if="isDraftSaving">Menyimpan draf...</span>
-              <span v-else-if="lastSavedDraftAt">Draf Disimpan ({{ lastSavedDraftAt }})</span>
-              <span v-else>Draf Aktif</span>
+              <span v-if="isDraftSaving">Menyimpan...</span>
+              <span v-else-if="lastSavedDraftAt">Tersimpan {{ lastSavedDraftAt }}</span>
+              <span v-else>Draf Tersimpan</span>
             </span>
           </div>
 
@@ -2648,17 +2648,17 @@ const copySchemaJson = () => {
 
 .left-dock-tabs {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   padding: 3px;
-  margin: 10px 12px 6px;
+  margin: 10px 12px 10px;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
-  border-radius: 9px;
+  border-radius: 8px;
 }
 
 .dock-tab-item {
   flex: 1;
-  height: 30px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2666,7 +2666,7 @@ const copySchemaJson = () => {
   border: none;
   background: transparent;
   border-radius: 6px;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #64748b;
   cursor: pointer;
@@ -2681,24 +2681,25 @@ const copySchemaJson = () => {
   background: #ffffff;
   color: #0f172a;
   font-weight: 700;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .dock-tab-body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 12px 14px 20px;
 }
 
 .dock-section-head {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .dock-section-head h4 {
-  font-size: 0.84rem;
-  font-weight: 800;
+  font-size: 0.82rem;
+  font-weight: 700;
   color: #0f172a;
   margin: 0 0 3px;
+  letter-spacing: -0.01em;
 }
 
 .dock-section-head p {
@@ -2708,42 +2709,50 @@ const copySchemaJson = () => {
   line-height: 1.4;
 }
 
-/* Block Cards Grid */
+/* Block Cards Grid - Obsidian HeroCMS Theme */
 .block-cards-grid {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .block-add-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px;
-  background: #f8fafc;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .block-add-card:hover {
-  border-color: #2563eb;
-  background: #eff6ff;
+  border-color: #0f172a;
+  background: #f8fafc;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
 }
 
 .card-icon-bubble {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 6px -1px rgba(15, 23, 42, 0.2);
   flex-shrink: 0;
+}
+
+.block-add-card:hover .card-icon-bubble {
+  background: #1e293b;
+  color: #38bdf8;
 }
 
 .card-meta {
@@ -2756,20 +2765,24 @@ const copySchemaJson = () => {
   font-size: 0.78rem;
   font-weight: 700;
   color: #0f172a;
+  line-height: 1.25;
 }
 
 .card-meta span {
   font-size: 0.68rem;
   color: #64748b;
-  line-height: 1.3;
+  line-height: 1.35;
+  margin-top: 2px;
 }
 
 .icon-add-plus {
   color: #94a3b8;
+  transition: all 0.15s ease;
 }
 
 .block-add-card:hover .icon-add-plus {
-  color: #2563eb;
+  color: #0f172a;
+  transform: scale(1.15);
 }
 
 /* Layers List */
@@ -3796,25 +3809,25 @@ const copySchemaJson = () => {
 
 .inspector-tabs-bar {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   padding: 3px;
-  margin: 12px 14px 6px;
+  margin: 10px 14px 10px;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
-  border-radius: 9px;
+  border-radius: 8px;
 }
 
 .insp-tab-btn {
   flex: 1;
-  height: 30px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   border: none;
   background: transparent;
   border-radius: 6px;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #64748b;
   cursor: pointer;
@@ -3829,40 +3842,41 @@ const copySchemaJson = () => {
   background: #ffffff;
   color: #0f172a;
   font-weight: 700;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .inspector-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px 20px;
+  padding: 10px 14px 20px;
 }
 
-/* Selected Block Card */
+/* Selected Block Card - Refined HeroCMS Obsidian */
 .selected-block-card {
-  padding: 12px 14px;
-  margin-bottom: 16px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .block-card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .badge-block-type {
-  font-size: 0.62rem;
-  font-weight: 800;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  padding: 2px 7px;
-  border-radius: 5px;
-  letter-spacing: 0.05em;
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
 }
 
 .badge-block-status {
@@ -3883,7 +3897,7 @@ const copySchemaJson = () => {
 }
 
 .block-card-title {
-  font-size: 0.92rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
@@ -3892,33 +3906,32 @@ const copySchemaJson = () => {
 
 /* Form Fields & High-Fidelity Inputs */
 .field-item {
-  margin-bottom: 15px;
+  margin-bottom: 14px;
 }
 
 .field-label {
   display: block;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  color: #334155;
-  margin-bottom: 6px;
-  letter-spacing: -0.01em;
+  color: #475569;
+  margin-bottom: 5px;
 }
 
 .field-label-split {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .field-val-badge {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
+  color: #0f172a;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
   padding: 1px 6px;
-  border-radius: 5px;
+  border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -3929,17 +3942,17 @@ const copySchemaJson = () => {
 
 .field-input {
   width: 100%;
-  height: 38px;
-  padding: 0 12px;
+  height: 34px;
+  padding: 0 10px;
   background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 0.82rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #0f172a;
   font-family: inherit;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: all 0.15s ease;
   outline: none;
   box-sizing: border-box;
 }
@@ -3954,33 +3967,28 @@ const copySchemaJson = () => {
 }
 
 .field-input:focus {
-  border-color: #2563eb;
+  border-color: #0f172a;
   background: #ffffff;
-  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.14);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
 }
 
 .field-textarea {
   width: 100%;
-  min-height: 84px;
-  padding: 9px 12px;
+  min-height: 72px;
+  padding: 8px 10px;
   background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 0.82rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #0f172a;
   font-family: inherit;
-  line-height: 1.5;
+  line-height: 1.45;
   resize: vertical;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: all 0.15s ease;
   outline: none;
   box-sizing: border-box;
-}
-
-.field-textarea::placeholder {
-  color: #94a3b8;
-  font-weight: 400;
 }
 
 .field-textarea:hover {
@@ -3988,9 +3996,14 @@ const copySchemaJson = () => {
 }
 
 .field-textarea:focus {
-  border-color: #2563eb;
+  border-color: #0f172a;
   background: #ffffff;
-  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.14);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+}
+
+.field-textarea::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
 }
 
 /* Range Slider */
@@ -4361,21 +4374,31 @@ const copySchemaJson = () => {
 }
 
 /* -----------------------------------------------------------------------------
- * Draft Status Badge & Reset in Command Bar
+ * Draft Status Badge & Reset in Command Bar (Fixed Height & Non-wrapping)
  * --------------------------------------------------------------------------- */
 .draft-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px;
-  border-radius: 6px;
-  background: #f1f5f9;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
   font-size: 0.72rem;
   font-weight: 600;
-  color: #475569;
+  color: #334155;
   transition: all 0.2s ease;
   user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.draft-status-text {
+  white-space: nowrap;
+  display: inline-block;
+  line-height: 1;
 }
 
 .draft-status-badge.saving {
@@ -4386,6 +4409,7 @@ const copySchemaJson = () => {
 
 .draft-cloud-icon {
   color: #0284c7;
+  flex-shrink: 0;
 }
 
 .draft-status-badge.saving .draft-cloud-icon {
@@ -4399,17 +4423,19 @@ const copySchemaJson = () => {
 }
 
 .btn-reset-draft {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: 1px solid #e2e8f0;
   background: #ffffff;
   color: #64748b;
   cursor: pointer;
   transition: all 0.15s ease;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .btn-reset-draft:hover {
