@@ -1,13 +1,15 @@
 # ==============================================================================
-# HeroCMS Full-Stack Demo Infrastructure (Zero Nginx, Native Golang Architecture)
+# HeroCMS Full-Stack Infrastructure with Traefik Edge Routing (Zero Nginx)
 # Services: 02-dashboard-cms & 04-marketing-site + PostgreSQL 16 + Redis 7
 #
 # Jalankan Demo:
 #   docker compose up --build -d
 #
 # Akses Demo:
-#   - Dashboard CMS Studio : http://localhost:8085
-#   - Marketing Site       : http://localhost:8084
+#   - Marketing Site       : http://herocms.stackbyte.id (atau http://localhost:8084)
+#   - Dashboard Studio     : http://config-herocms.stackbyte.id
+#                            http://studio.herocms.stackbyte.id (opsi rekomendasi)
+#                            http://localhost:8085
 # ==============================================================================
 
 services:
@@ -18,6 +20,8 @@ services:
     image: postgres:16-alpine
     container_name: herocms_postgres
     restart: unless-stopped
+    networks:
+      - herocms_internal
     environment:
       POSTGRES_DB: ${DB_DATABASE:-cloudcms_db}
       POSTGRES_USER: ${DB_USERNAME:-cloudcms_user}
@@ -40,6 +44,8 @@ services:
     image: redis:7.2-alpine
     container_name: herocms_redis
     restart: unless-stopped
+    networks:
+      - herocms_internal
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-secret_redis_password}", "--appendonly", "yes"]
     ports:
       - "${REDIS_PORT:-6379}:6379"
@@ -60,6 +66,9 @@ services:
       dockerfile: Dockerfile
     container_name: herocms_dashboard_cms
     restart: unless-stopped
+    networks:
+      - traefik_network
+      - herocms_internal
     ports:
       - "8085:8085"
     environment:
@@ -81,6 +90,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_network"
+      - "traefik.http.routers.herocms-dashboard.rule=Host(`config-herocms.stackbyte.id`) || Host(`studio.herocms.stackbyte.id`) || Host(`dashboard.herocms.stackbyte.id`)"
+      - "traefik.http.routers.herocms-dashboard.entrypoints=web"
+      - "traefik.http.routers.herocms-dashboard.middlewares=security-headers@file,gzip-compress@file"
+      - "traefik.http.routers.herocms-dashboard.service=herocms-dashboard-svc"
+      - "traefik.http.services.herocms-dashboard-svc.loadbalancer.server.port=8085"
 
   # ---------------------------------------------------------------------------
   # 4. Service 04: Marketing Landing Site (Native Golang Host + React SPA)
@@ -91,14 +108,31 @@ services:
       dockerfile: Dockerfile
     container_name: herocms_marketing_site
     restart: unless-stopped
+    networks:
+      - traefik_network
+      - herocms_internal
     ports:
       - "8084:8084"
     environment:
       PORT: 8084
       DIST_DIR: /app/dist
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_network"
+      - "traefik.http.routers.herocms-marketing.rule=Host(`herocms.stackbyte.id`) || Host(`www.herocms.stackbyte.id`)"
+      - "traefik.http.routers.herocms-marketing.entrypoints=web"
+      - "traefik.http.routers.herocms-marketing.middlewares=security-headers@file,gzip-compress@file"
+      - "traefik.http.routers.herocms-marketing.service=herocms-marketing-svc"
+      - "traefik.http.services.herocms-marketing-svc.loadbalancer.server.port=8084"
 
 volumes:
   postgres_data:
     name: herocms_postgres_data
   redis_data:
     name: herocms_redis_data
+
+networks:
+  traefik_network:
+    external: true
+  herocms_internal:
+    name: herocms_internal
