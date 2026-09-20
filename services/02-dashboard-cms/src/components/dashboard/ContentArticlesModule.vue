@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import {
   FileText,
   Check,
@@ -33,6 +33,21 @@ const {
 } = useDashboardData();
 
 const searchQuery = ref('');
+const debouncedQuery = ref('');
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(searchQuery, (val) => {
+  if (!val.trim()) {
+    debouncedQuery.value = '';
+    if (searchTimer) clearTimeout(searchTimer);
+    return;
+  }
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    debouncedQuery.value = val;
+  }, 120);
+});
+
 const selectedCategory = ref('all');
 const selectedStatus = ref('all');
 const viewMode = ref<'grid' | 'table'>('grid');
@@ -72,7 +87,7 @@ const nextArticle = computed(() => {
 
 const filteredArticles = computed(() => {
   return articles.value.filter(art => {
-    const q = searchQuery.value.toLowerCase().trim();
+    const q = debouncedQuery.value.toLowerCase().trim();
     const matchesSearch = !q ||
       art.title.toLowerCase().includes(q) ||
       art.slug.toLowerCase().includes(q) ||
