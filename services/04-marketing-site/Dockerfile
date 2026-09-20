@@ -3,19 +3,24 @@
 # ==============================================================================
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
+
 COPY package*.json ./
 RUN npm install
+
 COPY . .
 RUN npm run build
 
 # ==============================================================================
-# Stage 2: Compile Native Go Static Host (Zero Nginx, Production Ready)
+# Stage 2: Compile Native Go Static Host (Latest Golang, Zero Nginx)
 # ==============================================================================
-FROM golang:1.23-alpine AS backend-builder
+FROM golang:alpine AS backend-builder
 WORKDIR /app
-COPY server.go ./
-RUN go mod init marketing-server && \
-    CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o marketing-server server.go
+
+ENV GOTOOLCHAIN=local \
+    CGO_ENABLED=0
+
+COPY go.mod server.go ./
+RUN GOOS=linux go build -ldflags="-s -w" -o marketing-server server.go
 
 # ==============================================================================
 # Stage 3: Minimalist Production Runner
@@ -28,9 +33,9 @@ RUN apk --no-cache add ca-certificates tzdata
 COPY --from=backend-builder /app/marketing-server /app/marketing-server
 COPY --from=frontend-builder /app/dist /app/dist
 
-ENV PORT=8084 \
+ENV PORT=80 \
     DIST_DIR=/app/dist
 
-EXPOSE 8084
+EXPOSE 80
 
 CMD ["/app/marketing-server"]
