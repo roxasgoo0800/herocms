@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import {
   FileText,
   Check,
@@ -15,7 +15,9 @@ import {
   Flame,
   Copy,
   X,
-  BookOpen
+  BookOpen,
+  Edit3,
+  ChevronDown
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { ContentArticle } from '../../types/dashboard';
@@ -63,12 +65,56 @@ const getReadTime = (title: string) => {
 };
 
 const getCategoryColor = (cat: string) => {
-  if (cat === 'Engineering') return 'blue';
+  if (cat === 'Engineering') return 'cyan';
   if (cat === 'Distributed Systems') return 'purple';
   if (cat === 'DevOps') return 'emerald';
-  if (cat === 'Security') return 'rose';
-  return 'amber';
+  if (cat === 'Security') return 'sapphire';
+  if (cat === 'Tutorial') return 'amber';
+  return 'slate';
 };
+
+const getCategoryTags = (cat: string) => {
+  if (cat === 'Engineering') return ['#GO-SDK', '#DOCKER', '#CGROUPS-V2'];
+  if (cat === 'Distributed Systems') return ['#KAFKA', '#REDIS-ZSET', '#EVENT-STREAM'];
+  if (cat === 'DevOps') return ['#TRAEFIK-V3', '#EDGE-PROXY', '#1.8MS-TTFB'];
+  if (cat === 'Security') return ['#RATE-LIMIT', '#DDOS-WAF', '#TLS-ALPN'];
+  if (cat === 'Tutorial') return ['#HEADLESS-CMS', '#VUE3', '#LIGHTHOUSE'];
+  return ['#HEROCMS', '#CLOUD-NATIVE', '#EDGE'];
+};
+
+const isCategoryDropdownOpen = ref(false);
+const isStatusDropdownOpen = ref(false);
+
+const categoryOptions = [
+  { value: 'all', label: 'Semua Kategori' },
+  { value: 'Engineering', label: 'Engineering' },
+  { value: 'Distributed Systems', label: 'Distributed Systems' },
+  { value: 'DevOps', label: 'DevOps' },
+  { value: 'Security', label: 'Security' },
+  { value: 'Tutorial', label: 'Tutorial' }
+];
+
+const statusOptions = [
+  { value: 'all', label: 'Semua Status' },
+  { value: 'published', label: 'Published (Live)' },
+  { value: 'draft', label: 'Draft (WIP)' }
+];
+
+const handleContentDropdownOutsideClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement;
+  if (!target.closest('.custom-filter-dropdown-wrap')) {
+    isCategoryDropdownOpen.value = false;
+    isStatusDropdownOpen.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleContentDropdownOutsideClick);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleContentDropdownOutsideClick);
+});
 </script>
 
 <template>
@@ -195,22 +241,57 @@ const getCategoryColor = (cat: string) => {
       </div>
 
       <div class="toolbar-controls-right">
-        <!-- Category Filter -->
-        <select v-model="selectedCategory" class="filter-dropdown">
-          <option value="all">Semua Kategori ({{ articles.length }})</option>
-          <option value="Engineering">Engineering</option>
-          <option value="Distributed Systems">Distributed Systems</option>
-          <option value="DevOps">DevOps</option>
-          <option value="Security">Security</option>
-          <option value="Tutorial">Tutorial</option>
-        </select>
+        <!-- Custom Category Dropdown -->
+        <div class="custom-filter-dropdown-wrap">
+          <button
+            type="button"
+            class="custom-filter-trigger-btn"
+            @click.stop="isCategoryDropdownOpen = !isCategoryDropdownOpen; isStatusDropdownOpen = false"
+            title="Filter Kategori"
+          >
+            <span>{{ categoryOptions.find(o => o.value === selectedCategory)?.label || 'Semua Kategori' }}</span>
+            <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isCategoryDropdownOpen }" />
+          </button>
+          <div v-if="isCategoryDropdownOpen" class="custom-filter-dropdown-menu">
+            <button
+              v-for="opt in categoryOptions"
+              :key="opt.value"
+              type="button"
+              class="custom-filter-dropdown-item"
+              :class="{ active: selectedCategory === opt.value }"
+              @click="selectedCategory = opt.value; isCategoryDropdownOpen = false"
+            >
+              <span>{{ opt.label }}</span>
+              <Check v-if="selectedCategory === opt.value" :size="12" class="dropdown-check-icon" />
+            </button>
+          </div>
+        </div>
 
-        <!-- Status Filter -->
-        <select v-model="selectedStatus" class="filter-dropdown">
-          <option value="all">Semua Status</option>
-          <option value="published">Published (Live)</option>
-          <option value="draft">Draft (WIP)</option>
-        </select>
+        <!-- Custom Status Dropdown -->
+        <div class="custom-filter-dropdown-wrap">
+          <button
+            type="button"
+            class="custom-filter-trigger-btn"
+            @click.stop="isStatusDropdownOpen = !isStatusDropdownOpen; isCategoryDropdownOpen = false"
+            title="Filter Status Publikasi"
+          >
+            <span>{{ statusOptions.find(o => o.value === selectedStatus)?.label || 'Semua Status' }}</span>
+            <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isStatusDropdownOpen }" />
+          </button>
+          <div v-if="isStatusDropdownOpen" class="custom-filter-dropdown-menu">
+            <button
+              v-for="opt in statusOptions"
+              :key="opt.value"
+              type="button"
+              class="custom-filter-dropdown-item"
+              :class="{ active: selectedStatus === opt.value }"
+              @click="selectedStatus = opt.value; isStatusDropdownOpen = false"
+            >
+              <span>{{ opt.label }}</span>
+              <Check v-if="selectedStatus === opt.value" :size="12" class="dropdown-check-icon" />
+            </button>
+          </div>
+        </div>
 
         <!-- View Mode Switcher -->
         <div class="view-mode-toggle">
@@ -248,19 +329,23 @@ const getCategoryColor = (cat: string) => {
           </div>
 
           <div class="cover-top-tags">
-            <span class="cover-cat-pill">{{ art.category.toUpperCase() }}</span>
-            <span class="cover-read-time">{{ getReadTime(art.title) }}</span>
+            <span class="cover-cat-pill" :class="'pill-' + getCategoryColor(art.category)">
+              {{ art.category.toUpperCase() }}
+            </span>
+            <div class="cover-top-meta">
+              <span class="cover-read-time">
+                <Clock :size="10" />
+                <span>{{ getReadTime(art.title) }}</span>
+              </span>
+              <span class="cover-seo-tag">
+                <Zap :size="10" /> 100/100
+              </span>
+            </div>
           </div>
 
           <div class="cover-tech-tags">
-            <span>#TECH</span>
-            <span>#TRAEFIK</span>
-            <span>#DOCKER</span>
+            <span v-for="tag in getCategoryTags(art.category)" :key="tag">{{ tag }}</span>
           </div>
-
-          <span class="cover-seo-tag">
-            <Zap :size="10" /> 100/100
-          </span>
         </div>
 
         <!-- Card Body -->
@@ -420,8 +505,13 @@ const getCategoryColor = (cat: string) => {
           <div class="article-reader-body">
             <div class="reader-hero-cover" :class="'cover-' + getCategoryColor(selectedArticle.category)">
               <div class="reader-meta-pills">
-                <span class="cover-cat-pill">{{ selectedArticle.category.toUpperCase() }}</span>
-                <span class="cover-read-time">{{ getReadTime(selectedArticle.title) }}</span>
+                <span class="cover-cat-pill" :class="'pill-' + getCategoryColor(selectedArticle.category)">
+                  {{ selectedArticle.category.toUpperCase() }}
+                </span>
+                <span class="cover-read-time">
+                  <Clock :size="11" />
+                  <span>{{ getReadTime(selectedArticle.title) }}</span>
+                </span>
                 <span class="seo-score-pill"><Zap :size="11" /> SEO 100/100</span>
               </div>
               <h2 class="reader-headline">{{ selectedArticle.title }}</h2>
@@ -834,14 +924,93 @@ const getCategoryColor = (cat: string) => {
   gap: 10px;
 }
 
-.filter-dropdown {
-  padding: 7px 12px;
+/* Custom Floating Filter Dropdowns */
+.custom-filter-dropdown-wrap {
+  position: relative;
+}
+
+.custom-filter-trigger-btn {
+  height: 35px;
+  padding: 0 13px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   font-size: 12.5px;
+  font-weight: 600;
   color: #334155;
   background: #ffffff;
-  outline: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.custom-filter-trigger-btn:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.12);
+}
+
+.filter-chevron {
+  color: #64748b;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.filter-chevron.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.custom-filter-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  min-width: 195px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.16), 0 4px 10px -2px rgba(15, 23, 42, 0.08);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: fadeIn 0.15s ease-out forwards;
+}
+
+.custom-filter-dropdown-item {
+  appearance: none;
+  background: transparent;
+  border: none;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  text-align: left;
+}
+
+.custom-filter-dropdown-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.custom-filter-dropdown-item.active {
+  background: #f0f9ff;
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.dropdown-check-icon {
+  color: #0284c7;
+  flex-shrink: 0;
 }
 
 .view-mode-toggle {
@@ -892,41 +1061,67 @@ const getCategoryColor = (cat: string) => {
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .article-magazine-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
   border-color: #cbd5e1;
-  box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.1);
 }
 
-/* Card Cover Themes */
+/* Card Cover Themes (Obsidian Slate + Cyan / Emerald / Purple / Sapphire / Amber) */
 .art-card-cover {
-  height: 120px;
+  height: 125px;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
   overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.cover-blue { background: linear-gradient(135deg, #0f172a, #1e3a8a); }
-.cover-purple { background: linear-gradient(135deg, #090d16, #4c1d95); }
-.cover-emerald { background: linear-gradient(135deg, #064e3b, #022c22); }
-.cover-rose { background: linear-gradient(135deg, #4c0519, #881337); }
-.cover-amber { background: linear-gradient(135deg, #451a03, #78350f); }
+.cover-cyan {
+  background: linear-gradient(135deg, #070c18 0%, #032b49 55%, #0284c7 100%);
+  border-top: 2px solid #00e5ff;
+}
+
+.cover-purple {
+  background: linear-gradient(135deg, #090a1a 0%, #1e1145 55%, #4f46e5 100%);
+  border-top: 2px solid #a855f7;
+}
+
+.cover-emerald {
+  background: linear-gradient(135deg, #03130e 0%, #04412c 55%, #059669 100%);
+  border-top: 2px solid #10b981;
+}
+
+.cover-sapphire {
+  background: linear-gradient(135deg, #070d1d 0%, #0f2757 55%, #2563eb 100%);
+  border-top: 2px solid #38bdf8;
+}
+
+.cover-amber {
+  background: linear-gradient(135deg, #140d04 0%, #431f05 55%, #d97706 100%);
+  border-top: 2px solid #f59e0b;
+}
+
+.cover-slate {
+  background: linear-gradient(135deg, #0b0f19 0%, #1e293b 55%, #475569 100%);
+  border-top: 2px solid #94a3b8;
+}
 
 .cover-watermark {
   position: absolute;
   right: -5px;
-  bottom: 5px;
-  opacity: 0.15;
+  bottom: 4px;
+  opacity: 0.12;
+  pointer-events: none;
 }
 
 .cover-watermark code {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   color: #ffffff;
   font-family: ui-monospace, monospace;
@@ -940,52 +1135,105 @@ const getCategoryColor = (cat: string) => {
   z-index: 1;
 }
 
+.cover-top-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .cover-cat-pill {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 800;
-  color: #f8fafc;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(4px);
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 4px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(6px);
+  text-transform: uppercase;
+}
+
+.pill-cyan {
+  background: rgba(0, 229, 255, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(0, 229, 255, 0.35);
+}
+
+.pill-purple {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+.pill-emerald {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.pill-sapphire {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.pill-amber {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.pill-slate {
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.35);
 }
 
 .cover-read-time {
-  font-size: 10.5px;
+  font-size: 10px;
   color: #e2e8f0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 2px 7px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cover-seo-tag {
+  font-size: 9px;
+  font-weight: 800;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.22);
+  border: 1px solid rgba(16, 185, 129, 0.32);
   padding: 2px 6px;
   border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  backdrop-filter: blur(4px);
 }
 
 .cover-tech-tags {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   position: relative;
   z-index: 1;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .cover-tech-tags span {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: 0.05em;
-}
-
-.cover-seo-tag {
-  position: absolute;
-  right: 12px;
-  top: 14px;
-  font-size: 9.5px;
-  font-weight: 800;
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.2);
-  padding: 2px 6px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 3px;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.03em;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1px 6px;
+  border-radius: 3px;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
 }
 
 /* Card Body */
@@ -1413,22 +1661,25 @@ const getCategoryColor = (cat: string) => {
 
 .reader-hero-cover {
   padding: 24px 28px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
 }
 
 .reader-meta-pills {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .reader-headline {
-  font-size: 20px;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff !important;
   margin: 0 0 16px 0;
   line-height: 1.35;
+  letter-spacing: -0.015em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 .reader-author-bar {
@@ -1437,17 +1688,36 @@ const getCategoryColor = (cat: string) => {
   gap: 12px;
 }
 
+.reader-hero-cover .author-name {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+.reader-hero-cover .art-date {
+  color: rgba(226, 232, 240, 0.85);
+  font-size: 11.5px;
+}
+
 .reader-views-chip {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(15, 23, 42, 0.05);
-  padding: 4px 10px;
-  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 5px 12px;
+  border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  color: #0f172a;
+  color: #f8fafc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.reader-views-chip svg {
+  color: #38bdf8;
 }
 
 .reader-content-prose {
