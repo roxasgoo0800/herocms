@@ -2,14 +2,23 @@
 # HeroCMS Full-Stack Infrastructure with Traefik Edge Routing (Zero Nginx)
 # Services: 02-dashboard-cms & 04-marketing-site + PostgreSQL 16 + Redis 7
 #
+# Networks:
+#   - app-network     : Bridge internal network untuk service HeroCMS
+#   - redis-net       : External network (redis-net-local) untuk integrasi Redis
+#   - traefik_network : External network untuk membaca Traefik labels & routing
+#
+# Pastikan external network sudah siap sebelum up:
+#   docker network create traefik_network 2>/dev/null || true
+#   docker network create redis-net-local 2>/dev/null || true
+#
 # Jalankan Demo:
 #   docker compose up --build -d
 #
 # Akses Demo:
-#   - Marketing Site       : http://herocms.stackbyte.id (atau http://localhost:8084)
-#   - Dashboard Studio     : http://config-herocms.stackbyte.id
-#                            http://studio.herocms.stackbyte.id (opsi rekomendasi)
-#                            http://localhost:8085
+#   - Marketing Site   : http://herocms.stackbyte.id (atau http://localhost:8084)
+#   - Dashboard Studio : http://config-herocms.stackbyte.id
+#                        http://studio.herocms.stackbyte.id
+#                        http://localhost:8085
 # ==============================================================================
 
 services:
@@ -21,7 +30,7 @@ services:
     container_name: herocms_postgres
     restart: unless-stopped
     networks:
-      - herocms_internal
+      - app-network
     environment:
       POSTGRES_DB: ${DB_DATABASE:-cloudcms_db}
       POSTGRES_USER: ${DB_USERNAME:-cloudcms_user}
@@ -45,7 +54,8 @@ services:
     container_name: herocms_redis
     restart: unless-stopped
     networks:
-      - herocms_internal
+      - app-network
+      - redis-net
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-secret_redis_password}", "--appendonly", "yes"]
     ports:
       - "${REDIS_PORT:-6379}:6379"
@@ -67,8 +77,9 @@ services:
     container_name: herocms_dashboard_cms
     restart: unless-stopped
     networks:
+      - app-network
+      - redis-net
       - traefik_network
-      - herocms_internal
     ports:
       - "8085:8085"
     environment:
@@ -109,8 +120,8 @@ services:
     container_name: herocms_marketing_site
     restart: unless-stopped
     networks:
+      - app-network
       - traefik_network
-      - herocms_internal
     ports:
       - "8084:8084"
     environment:
@@ -132,7 +143,12 @@ volumes:
     name: herocms_redis_data
 
 networks:
+  app-network:
+    driver: bridge
+
+  redis-net:
+    external: true
+    name: redis-net-local
+
   traefik_network:
     external: true
-  herocms_internal:
-    name: herocms_internal
