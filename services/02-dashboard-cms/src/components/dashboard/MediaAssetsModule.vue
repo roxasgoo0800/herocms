@@ -501,28 +501,7 @@ const downloadMediaFile = (item: MediaAssetItem) => {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.page-intro-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.02em;
-  margin: 0 0 6px 0;
-}
-
-.page-desc {
-  font-size: 13.5px;
-  color: #64748b;
-  margin: 0;
-  max-width: 720px;
-  line-height: 1.5;
-}
+/* Media specific styles */
 
 .quota-quick-pills {
   display: flex;

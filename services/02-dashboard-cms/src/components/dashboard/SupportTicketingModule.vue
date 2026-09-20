@@ -489,50 +489,7 @@ const getStatusLabel = (status: SupportTicketItem['status']) => {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.page-intro-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.02em;
-  margin: 0 0 6px 0;
-}
-
-.page-desc {
-  font-size: 13.5px;
-  color: #64748b;
-  margin: 0;
-  max-width: 720px;
-  line-height: 1.5;
-}
-
-.btn-primary-gradient {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #0f172a;
-  color: #ffffff;
-  border: 1px solid #0f172a;
-  padding: 9px 18px;
-  border-radius: 9px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
-}
-
-.btn-primary-gradient:hover {
-  background: #1e293b;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-}
+/* Support specific styles */
 
 /* 4 Metrics Strip */
 .stats-overview-grid {
