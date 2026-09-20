@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, defineAsyncComponent } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
@@ -36,18 +36,18 @@ import {
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 
-// Modular View Components
-import ContainersModule from '../components/dashboard/ContainersModule.vue';
-import VisualEditorModule from '../components/dashboard/VisualEditorModule.vue';
-import ContentArticlesModule from '../components/dashboard/ContentArticlesModule.vue';
-import MediaAssetsModule from '../components/dashboard/MediaAssetsModule.vue';
-import TemplatesCatalogModule from '../components/dashboard/TemplatesCatalogModule.vue';
-import CustomDomainsModule from '../components/dashboard/CustomDomainsModule.vue';
-import AnalyticsTelemetryModule from '../components/dashboard/AnalyticsTelemetryModule.vue';
-import WebhooksApiModule from '../components/dashboard/WebhooksApiModule.vue';
-import BillingPlanModule from '../components/dashboard/BillingPlanModule.vue';
-import InvoicesHistoryModule from '../components/dashboard/InvoicesHistoryModule.vue';
-import SupportTicketingModule from '../components/dashboard/SupportTicketingModule.vue';
+// Modular View Components (Lazy Loaded On-Demand for Maximum Speed & Lean Memory)
+const ContainersModule = defineAsyncComponent(() => import('../components/dashboard/ContainersModule.vue'));
+const VisualEditorModule = defineAsyncComponent(() => import('../components/dashboard/VisualEditorModule.vue'));
+const ContentArticlesModule = defineAsyncComponent(() => import('../components/dashboard/ContentArticlesModule.vue'));
+const MediaAssetsModule = defineAsyncComponent(() => import('../components/dashboard/MediaAssetsModule.vue'));
+const TemplatesCatalogModule = defineAsyncComponent(() => import('../components/dashboard/TemplatesCatalogModule.vue'));
+const CustomDomainsModule = defineAsyncComponent(() => import('../components/dashboard/CustomDomainsModule.vue'));
+const AnalyticsTelemetryModule = defineAsyncComponent(() => import('../components/dashboard/AnalyticsTelemetryModule.vue'));
+const WebhooksApiModule = defineAsyncComponent(() => import('../components/dashboard/WebhooksApiModule.vue'));
+const BillingPlanModule = defineAsyncComponent(() => import('../components/dashboard/BillingPlanModule.vue'));
+const InvoicesHistoryModule = defineAsyncComponent(() => import('../components/dashboard/InvoicesHistoryModule.vue'));
+const SupportTicketingModule = defineAsyncComponent(() => import('../components/dashboard/SupportTicketingModule.vue'));
 import { useSplashTransition } from '../composables/useSplashTransition';
 
 const router = useRouter();

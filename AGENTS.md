@@ -1,0 +1,38 @@
+# HeroCMS Studio - Developer & AI Coding Standards
+
+Dokumen standar arsitektur dan konvensi pengembangan frontend untuk HeroCMS Studio (`services/02-dashboard-cms`). Setiap AI agent maupun developer yang bekerja di repositori ini **WAJIB** mematuhi standar berikut:
+
+---
+
+## 1. Arsitektur Master CSS Terpusat (`src/assets/studio-master.css`)
+- **Induk CSS Seluruh Menu**: Seluruh styling bersama, sistem grid, typography, tombol (`.btn-primary-gradient`, `.btn-outline-action`), kartu telemetri (`.stats-overview-grid`, `.telemetry-card`), tabel (`.ledger-table`, `.pro-table`), bar pencarian (`.search-box`), tab segmen (`.year-toggle-group`), badges, dan sistem modal dialog (`.modal-backdrop`, `.modal-dialog`) **HARUS** berada di [`services/02-dashboard-cms/src/assets/studio-master.css`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/assets/studio-master.css).
+- **Zero-CSS New Menu Creation**: Saat membuat menu/fitur baru, gunakan class-class yang sudah tersedia di `studio-master.css`. DILARANG membuat CSS duplikat untuk elemen-elemen yang sudah ada di master CSS.
+- **Bespoke Scoped Styles Only**: Tag `<style scoped>` di komponen `.vue` hanya diperbolehkan jika ada kebutuhan visual yang benar-benar spesifik/tambahan unik untuk komponen tersebut (contoh: kertas faktur fisik `.invoice-paper`, cover reader mode artikel).
+
+---
+
+## 2. Pemisahan Data & Preset JS Statis (`src/assets/*.ts`)
+- **No Heavy Static Arrays in `.vue`**: Jangan menaruh ribuan baris data statis, generator mockups, daftar font, palet warna, atau konstanta template di dalam file Single File Component (`.vue`).
+- **Isolasi Modul Aset**: Pindahkan konstanta dan generator statis ke dalam file TypeScript terpisah di `src/assets/` (seperti [`src/assets/editor-presets.ts`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/assets/editor-presets.ts)) lalu diimpor secara modular.
+- **Tujuan**: Menjaga file `.vue` tetap ramping (di bawah 500-800 baris) agar pemindaian IDE (Volar/VS Code language server) instan dan hot-reloading (HMR) tidak lag.
+
+---
+
+## 3. Lazy Loading Modul Antar-Menu (`defineAsyncComponent`)
+- **On-Demand Chunking**: Di [`DashboardView.vue`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/views/DashboardView.vue), semua modul menu **WAJIB** dimuat menggunakan `defineAsyncComponent`:
+  ```typescript
+  const MenuModule = defineAsyncComponent(() => import('../components/dashboard/MenuModule.vue'));
+  ```
+- **Dampak**: Initial bundle JS hanya berkisar ~67 kB. Pengguna hanya mendownload kode modul saat menu tersebut aktif diklik.
+
+---
+
+## 4. Vendor Code-Splitting di `vite.config.ts`
+- **Manual Chunks**: Pertahankan pemisahan vendor di `vite.config.ts`:
+  ```typescript
+  manualChunks: {
+    'vue-vendor': ['vue', 'vue-router', 'pinia'],
+    'lucide-icons': ['lucide-vue-next']
+  }
+  ```
+- **Dampak**: Library inti di-cache secara permanen oleh browser (*long-term HTTP caching*).
