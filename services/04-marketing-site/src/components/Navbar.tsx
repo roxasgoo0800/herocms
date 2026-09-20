@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layers, ArrowRight, Terminal, Menu, X } from 'lucide-react';
+import { appConfig } from '../config';
 
 export const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -82,7 +83,7 @@ export const Navbar: React.FC = () => {
         {/* Action CTAs */}
         <div style={{ display: 'none', alignItems: 'center', gap: '12px' }} className="desktop-nav">
           <a
-            href="http://localhost:5173"
+            href={appConfig.studioUrl}
             target="_blank"
             rel="noreferrer"
             className="btn btn-secondary"
@@ -133,7 +134,7 @@ export const Navbar: React.FC = () => {
           <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: '#0f172a', textDecoration: 'none', fontWeight: 600 }}>Paket & Biaya</a>
           <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ color: '#0f172a', textDecoration: 'none', fontWeight: 600 }}>FAQ</a>
           <div style={{ paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '8px' }}>
-            <a href="http://localhost:5173" className="btn btn-secondary" style={{ flex: 1, textAlign: 'center' }}>Masuk Studio</a>
+            <a href={appConfig.studioUrl} className="btn btn-secondary" style={{ flex: 1, textAlign: 'center' }}>Masuk Studio</a>
             <a href="#demo" className="btn btn-primary" style={{ flex: 1, textAlign: 'center' }}>Mulai Gratis</a>
           </div>
         </div>
