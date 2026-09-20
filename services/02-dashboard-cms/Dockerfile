@@ -11,17 +11,22 @@ COPY . .
 RUN npm run build
 
 # ==============================================================================
-# Stage 2: Compile Native Go Backend BFF & Static Server (Zero Nginx)
+# Stage 2: Compile Native Go Backend BFF & Static Server (Latest Golang, Zero Nginx)
 # ==============================================================================
-FROM golang:1.23-alpine AS backend-builder
+FROM golang:alpine AS backend-builder
 WORKDIR /app
+
+ENV GOTOOLCHAIN=local \
+    CGO_ENABLED=0
+
+RUN apk add --no-cache git ca-certificates
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o dashboard-cms-server ./cmd/server/main.go
+RUN GOOS=linux go build -ldflags="-s -w" -o dashboard-cms-server ./cmd/server/main.go
 
 # ==============================================================================
 # Stage 3: Ultra-Lightweight Production Runtime (Pure Alpine, No Nginx)
