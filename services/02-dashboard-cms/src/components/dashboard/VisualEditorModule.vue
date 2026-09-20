@@ -27,6 +27,7 @@ import {
   Copy,
   ChevronUp,
   ChevronDown,
+  ChevronRight,
   Eye,
   EyeOff,
   Lock,
@@ -51,8 +52,6 @@ import {
   Files,
   Search,
   GitBranch,
-  Settings,
-  Terminal,
   Play,
   RefreshCw
 } from 'lucide-vue-next';
@@ -752,6 +751,23 @@ const onKeyDown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
     handleRedo();
   }
+  if (editorViewMode.value === 'code') {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      activeVsCodeSidebar.value = 'search';
+      nextTick(() => {
+        vsCodeSearchInputRef.value?.focus();
+        vsCodeSearchInputRef.value?.select();
+      });
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+      e.preventDefault();
+      activeVsCodeSidebar.value = 'explorer';
+      return;
+    }
+  }
+
   if (e.key === 'v' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
     activeTool.value = 'select';
   }
@@ -1039,11 +1055,44 @@ const copySchemaJson = () => {
 // VS Code-style Code Editor Engine
 // -----------------------------------------------------------------------------
 type VsCodeTab = 'blocks.json' | 'index.html' | 'theme.css' | 'docker-compose.yml';
+type VsCodeSidebarMode = 'explorer' | 'search';
 
 const activeVsCodeTab = ref<VsCodeTab>('blocks.json');
-const isVsCodeExplorerOpen = ref(true);
+const activeVsCodeSidebar = ref<VsCodeSidebarMode | null>('explorer');
 const vsCodeBlocksCode = ref('');
 const isVsCodeCodeDirty = ref(false);
+
+// VS Code Search & Replace Engine
+const vsCodeSearchQuery = ref('');
+const vsCodeReplaceQuery = ref('');
+const isVsCodeReplaceOpen = ref(false);
+const vsCodeSearchCaseSensitive = ref(false);
+const vsCodeSearchWholeWord = ref(false);
+const vsCodeSearchInputRef = ref<HTMLInputElement | null>(null);
+const vsCodeTextareaRef = ref<HTMLTextAreaElement | null>(null);
+const vsCodePreRef = ref<HTMLElement | null>(null);
+const vsCodeGutterRef = ref<HTMLElement | null>(null);
+
+const toggleVsCodeSidebar = (mode: VsCodeSidebarMode) => {
+  if (activeVsCodeSidebar.value === mode) {
+    activeVsCodeSidebar.value = null;
+  } else {
+    activeVsCodeSidebar.value = mode;
+    if (mode === 'search') {
+      nextTick(() => {
+        vsCodeSearchInputRef.value?.focus();
+        vsCodeSearchInputRef.value?.select();
+      });
+    }
+  }
+};
+
+const syncGutterScroll = (e: Event) => {
+  const target = e.target as HTMLElement;
+  if (vsCodeGutterRef.value) {
+    vsCodeGutterRef.value.scrollTop = target.scrollTop;
+  }
+};
 
 // Sync code whenever switching into 'code' mode
 watch(
@@ -1228,6 +1277,163 @@ const formatVsCodeJson = () => {
 const copyVsCodeCurrentCode = () => {
   navigator.clipboard.writeText(currentVsCodeContent.value);
   showToast(`Kode file ${activeVsCodeTab.value} berhasil disalin ke clipboard!`, 'success');
+};
+
+interface VsCodeSearchMatch {
+  line: number;
+  col: number;
+  before: string;
+  highlight: string;
+  after: string;
+  fullLine: string;
+}
+
+interface VsCodeSearchGroup {
+  filename: VsCodeTab;
+  fileType: string;
+  icon: string;
+  isCollapsed: boolean;
+  matches: VsCodeSearchMatch[];
+}
+
+const vsCodeSearchResults = computed<VsCodeSearchGroup[]>(() => {
+  const q = vsCodeSearchQuery.value.trim();
+  if (!q) return [];
+
+  const files: { name: VsCodeTab; content: string; type: string; icon: string }[] = [
+    { name: 'blocks.json', content: vsCodeBlocksCode.value || schemaJsonText.value, type: 'json', icon: '{ }' },
+    { name: 'index.html', content: generatedHtmlCode.value, type: 'html', icon: '<>' },
+    { name: 'theme.css', content: generatedCssCode.value, type: 'css', icon: '#' },
+    { name: 'docker-compose.yml', content: generatedDockerCode.value, type: 'docker', icon: '🐳' }
+  ];
+
+  const results: VsCodeSearchGroup[] = [];
+
+  for (const file of files) {
+    const lines = file.content.split('\n');
+    const matches: VsCodeSearchMatch[] = [];
+
+    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      const lineStr = lines[lineIdx];
+
+      if (vsCodeSearchWholeWord.value) {
+        const flags = vsCodeSearchCaseSensitive.value ? 'g' : 'gi';
+        const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escaped}\\b`, flags);
+        let regexResult: RegExpExecArray | null;
+        while ((regexResult = regex.exec(lineStr)) !== null) {
+          const idx = regexResult.index;
+          const matchedText = regexResult[0];
+          const before = lineStr.substring(Math.max(0, idx - 20), idx);
+          const after = lineStr.substring(idx + matchedText.length, Math.min(lineStr.length, idx + matchedText.length + 25));
+          matches.push({
+            line: lineIdx + 1,
+            col: idx + 1,
+            before: idx > 20 ? '...' + before : before,
+            highlight: matchedText,
+            after: (idx + matchedText.length + 25) < lineStr.length ? after + '...' : after,
+            fullLine: lineStr.trim()
+          });
+        }
+      } else {
+        const searchTarget = vsCodeSearchCaseSensitive.value ? lineStr : lineStr.toLowerCase();
+        const searchPattern = vsCodeSearchCaseSensitive.value ? q : q.toLowerCase();
+
+        let startPos = 0;
+        let matchIdx = -1;
+        while ((matchIdx = searchTarget.indexOf(searchPattern, startPos)) !== -1) {
+          const matchedText = lineStr.substring(matchIdx, matchIdx + q.length);
+          const before = lineStr.substring(Math.max(0, matchIdx - 20), matchIdx);
+          const after = lineStr.substring(matchIdx + q.length, Math.min(lineStr.length, matchIdx + q.length + 25));
+          matches.push({
+            line: lineIdx + 1,
+            col: matchIdx + 1,
+            before: matchIdx > 20 ? '...' + before : before,
+            highlight: matchedText,
+            after: (matchIdx + q.length + 25) < lineStr.length ? after + '...' : after,
+            fullLine: lineStr.trim()
+          });
+          startPos = matchIdx + Math.max(1, q.length);
+        }
+      }
+    }
+
+    if (matches.length > 0) {
+      results.push({
+        filename: file.name,
+        fileType: file.type,
+        icon: file.icon,
+        isCollapsed: false,
+        matches
+      });
+    }
+  }
+
+  return results;
+});
+
+const totalVsCodeSearchResults = computed(() => {
+  return vsCodeSearchResults.value.reduce((acc, g) => acc + g.matches.length, 0);
+});
+
+const jumpToSearchResult = (filename: VsCodeTab, match: VsCodeSearchMatch) => {
+  activeVsCodeTab.value = filename;
+
+  nextTick(() => {
+    const lineHeight = 21;
+    const targetScroll = Math.max(0, (match.line - 6) * lineHeight);
+
+    if (filename === 'blocks.json' && vsCodeTextareaRef.value) {
+      const textarea = vsCodeTextareaRef.value;
+      const content = textarea.value;
+      const lines = content.split('\n');
+      let charPos = 0;
+      for (let i = 0; i < match.line - 1 && i < lines.length; i++) {
+        charPos += lines[i].length + 1;
+      }
+      charPos += Math.max(0, match.col - 1);
+
+      textarea.focus();
+      textarea.setSelectionRange(charPos, charPos + match.highlight.length);
+      textarea.scrollTop = targetScroll;
+      if (vsCodeGutterRef.value) {
+        vsCodeGutterRef.value.scrollTop = targetScroll;
+      }
+    } else if (vsCodePreRef.value) {
+      vsCodePreRef.value.scrollTop = targetScroll;
+      if (vsCodeGutterRef.value) {
+        vsCodeGutterRef.value.scrollTop = targetScroll;
+      }
+    }
+  });
+};
+
+const executeVsCodeReplaceAll = () => {
+  const q = vsCodeSearchQuery.value;
+  if (!q) return;
+
+  const replaceWith = vsCodeReplaceQuery.value;
+
+  if (activeVsCodeTab.value === 'blocks.json') {
+    const flags = vsCodeSearchCaseSensitive.value ? 'g' : 'gi';
+    const escaped = vsCodeSearchWholeWord.value
+      ? `\\b${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`
+      : q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, flags);
+
+    const matches = vsCodeBlocksCode.value.match(regex);
+    const count = matches ? matches.length : 0;
+
+    if (count > 0) {
+      vsCodeBlocksCode.value = vsCodeBlocksCode.value.replace(regex, replaceWith);
+      isVsCodeCodeDirty.value = true;
+      showToast(`Berhasil mengganti ${count} teks di blocks.json!`, 'success');
+    } else {
+      showToast('Tidak ada kecocokan ditemukan untuk diganti di blocks.json.', 'info');
+    }
+  } else {
+    showToast('File ini read-only. Penggantian hanya didukung di blocks.json.', 'info');
+  }
 };
 </script>
 
@@ -2243,87 +2449,224 @@ const copyVsCodeCurrentCode = () => {
             <div class="vscode-act-top">
               <button
                 class="vscode-act-btn"
-                :class="{ active: isVsCodeExplorerOpen }"
-                @click="isVsCodeExplorerOpen = !isVsCodeExplorerOpen"
+                :class="{ active: activeVsCodeSidebar === 'explorer' }"
+                @click="toggleVsCodeSidebar('explorer')"
                 title="Penjelajah File (Ctrl+Shift+E)"
               >
                 <Files :size="18" />
               </button>
-              <button class="vscode-act-btn" title="Pencarian (Ctrl+Shift+F)">
+              <button
+                class="vscode-act-btn"
+                :class="{ active: activeVsCodeSidebar === 'search' }"
+                @click="toggleVsCodeSidebar('search')"
+                title="Pencarian di Workspace (Ctrl+Shift+F)"
+              >
                 <Search :size="17" />
-              </button>
-              <button class="vscode-act-btn" title="Kontrol Sumber (Git)">
-                <GitBranch :size="17" />
-              </button>
-            </div>
-            <div class="vscode-act-bottom">
-              <button class="vscode-act-btn" title="Terminal Live">
-                <Terminal :size="17" />
-              </button>
-              <button class="vscode-act-btn" title="Pengaturan Editor">
-                <Settings :size="17" />
+                <span v-if="totalVsCodeSearchResults > 0" class="vscode-act-badge">
+                  {{ totalVsCodeSearchResults > 99 ? '99+' : totalVsCodeSearchResults }}
+                </span>
               </button>
             </div>
           </aside>
 
-          <!-- 2. VS Code File Explorer Sidebar -->
+          <!-- 2. VS Code Primary Sidebar (Explorer or Search) -->
           <transition name="vscode-explorer-slide">
-            <aside v-if="isVsCodeExplorerOpen" class="vscode-explorer-sidebar">
-              <div class="vscode-explorer-header">
-                <span class="vscode-explorer-title">PENJELAJAH</span>
-                <span class="vscode-explorer-badge">HEROCMS</span>
+            <aside v-if="activeVsCodeSidebar" class="vscode-explorer-sidebar">
+              <!-- A. Explorer View -->
+              <div v-if="activeVsCodeSidebar === 'explorer'" class="vscode-sidebar-inner">
+                <div class="vscode-explorer-header">
+                  <span class="vscode-explorer-title">PENJELAJAH</span>
+                  <span class="vscode-explorer-badge">HEROCMS</span>
+                </div>
+                <div class="vscode-file-tree">
+                  <div class="vscode-tree-section">
+                    <div class="vscode-section-head">
+                      <ChevronDown :size="12" />
+                      <span>HEROCMS-WORKSPACE</span>
+                    </div>
+
+                    <div class="vscode-tree-items">
+                      <!-- Config folder -->
+                      <div class="vscode-folder-row">
+                        <ChevronDown :size="11" />
+                        <span class="folder-name">config</span>
+                      </div>
+                      <button
+                        class="vscode-file-item indent"
+                        :class="{ active: activeVsCodeTab === 'docker-compose.yml' }"
+                        @click="activeVsCodeTab = 'docker-compose.yml'"
+                      >
+                        <span class="file-icon docker">🐳</span>
+                        <span class="file-name">docker-compose.yml</span>
+                      </button>
+
+                      <!-- Src folder -->
+                      <div class="vscode-folder-row">
+                        <ChevronDown :size="11" />
+                        <span class="folder-name">src</span>
+                      </div>
+                      <button
+                        class="vscode-file-item indent"
+                        :class="{ active: activeVsCodeTab === 'blocks.json' }"
+                        @click="activeVsCodeTab = 'blocks.json'"
+                      >
+                        <span class="file-icon json">{ }</span>
+                        <span class="file-name">blocks.json</span>
+                      </button>
+                      <button
+                        class="vscode-file-item indent"
+                        :class="{ active: activeVsCodeTab === 'index.html' }"
+                        @click="activeVsCodeTab = 'index.html'"
+                      >
+                        <span class="file-icon html">&lt;&gt;</span>
+                        <span class="file-name">index.html</span>
+                      </button>
+                      <button
+                        class="vscode-file-item indent"
+                        :class="{ active: activeVsCodeTab === 'theme.css' }"
+                        @click="activeVsCodeTab = 'theme.css'"
+                      >
+                        <span class="file-icon css">#</span>
+                        <span class="file-name">theme.css</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="vscode-file-tree">
-                <div class="vscode-tree-section">
-                  <div class="vscode-section-head">
-                    <ChevronDown :size="12" />
-                    <span>HEROCMS-WORKSPACE</span>
+
+              <!-- B. Search View -->
+              <div v-else-if="activeVsCodeSidebar === 'search'" class="vscode-sidebar-inner vscode-search-panel">
+                <div class="vscode-explorer-header">
+                  <span class="vscode-explorer-title">PENCARIAN</span>
+                  <span v-if="totalVsCodeSearchResults > 0" class="vscode-explorer-badge">
+                    {{ totalVsCodeSearchResults }} hasil
+                  </span>
+                </div>
+
+                <!-- Search Input Controls -->
+                <div class="vscode-search-controls">
+                  <div class="vscode-search-row">
+                    <div class="vscode-input-with-tools">
+                      <input
+                        ref="vsCodeSearchInputRef"
+                        v-model="vsCodeSearchQuery"
+                        type="text"
+                        placeholder="Cari kata kunci..."
+                        class="vscode-tool-input"
+                        spellcheck="false"
+                      />
+                      <button
+                        v-if="vsCodeSearchQuery"
+                        class="vscode-input-clear-btn"
+                        @click="vsCodeSearchQuery = ''"
+                        title="Bersihkan"
+                      >
+                        <X :size="12" />
+                      </button>
+                      <div class="vscode-input-modifiers">
+                        <button
+                          class="vscode-modifier-btn"
+                          :class="{ active: vsCodeSearchCaseSensitive }"
+                          @click="vsCodeSearchCaseSensitive = !vsCodeSearchCaseSensitive"
+                          title="Cocokkan Besar/Kecil (Match Case)"
+                        >
+                          Aa
+                        </button>
+                        <button
+                          class="vscode-modifier-btn"
+                          :class="{ active: vsCodeSearchWholeWord }"
+                          @click="vsCodeSearchWholeWord = !vsCodeSearchWholeWord"
+                          title="Cocokkan Seluruh Kata (Match Whole Word)"
+                        >
+                          ab
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  <div class="vscode-tree-items">
-                    <!-- Config folder -->
-                    <div class="vscode-folder-row">
-                      <ChevronDown :size="11" />
-                      <span class="folder-name">config</span>
-                    </div>
+                  <!-- Replace Input Toggle -->
+                  <div class="vscode-replace-box">
                     <button
-                      class="vscode-file-item indent"
-                      :class="{ active: activeVsCodeTab === 'docker-compose.yml' }"
-                      @click="activeVsCodeTab = 'docker-compose.yml'"
+                      class="vscode-replace-collapse-btn"
+                      :class="{ expanded: isVsCodeReplaceOpen }"
+                      @click="isVsCodeReplaceOpen = !isVsCodeReplaceOpen"
+                      title="Alihkan Ganti Teks"
                     >
-                      <span class="file-icon docker">🐳</span>
-                      <span class="file-name">docker-compose.yml</span>
+                      <ChevronRight :size="12" />
                     </button>
+                    <div v-if="isVsCodeReplaceOpen" class="vscode-replace-fields">
+                      <div class="vscode-input-with-tools">
+                        <input
+                          v-model="vsCodeReplaceQuery"
+                          type="text"
+                          placeholder="Ganti dengan..."
+                          class="vscode-tool-input"
+                          spellcheck="false"
+                        />
+                      </div>
+                      <button
+                        class="vscode-replace-exec-btn"
+                        :disabled="!vsCodeSearchQuery"
+                        @click="executeVsCodeReplaceAll"
+                        title="Ganti Semua di blocks.json"
+                      >
+                        Ganti Semua
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-                    <!-- Src folder -->
-                    <div class="vscode-folder-row">
-                      <ChevronDown :size="11" />
-                      <span class="folder-name">src</span>
+                <!-- Search Results Tree -->
+                <div class="vscode-search-results">
+                  <div v-if="!vsCodeSearchQuery" class="vscode-search-prompt">
+                    <Search :size="22" class="search-prompt-icon" />
+                    <p class="search-prompt-title">Cari di Seluruh Workspace</p>
+                    <p class="search-prompt-sub">Ketik kata untuk menemukan teks di blocks.json, index.html, theme.css, dan docker-compose.yml</p>
+                    <div class="search-sample-tags">
+                      <button class="sample-tag" @click="vsCodeSearchQuery = 'navbar'">navbar</button>
+                      <button class="sample-tag" @click="vsCodeSearchQuery = 'hero'">hero</button>
+                      <button class="sample-tag" @click="vsCodeSearchQuery = 'accentColor'">accentColor</button>
+                      <button class="sample-tag" @click="vsCodeSearchQuery = 'subdomain'">subdomain</button>
                     </div>
-                    <button
-                      class="vscode-file-item indent"
-                      :class="{ active: activeVsCodeTab === 'blocks.json' }"
-                      @click="activeVsCodeTab = 'blocks.json'"
+                  </div>
+
+                  <div v-else-if="totalVsCodeSearchResults === 0" class="vscode-search-none">
+                    <p>Tidak ada hasil untuk "{{ vsCodeSearchQuery }}"</p>
+                  </div>
+
+                  <div v-else class="vscode-search-group-list">
+                    <div
+                      v-for="group in vsCodeSearchResults"
+                      :key="group.filename"
+                      class="vscode-search-file-block"
                     >
-                      <span class="file-icon json">{ }</span>
-                      <span class="file-name">blocks.json</span>
-                    </button>
-                    <button
-                      class="vscode-file-item indent"
-                      :class="{ active: activeVsCodeTab === 'index.html' }"
-                      @click="activeVsCodeTab = 'index.html'"
-                    >
-                      <span class="file-icon html">&lt;&gt;</span>
-                      <span class="file-name">index.html</span>
-                    </button>
-                    <button
-                      class="vscode-file-item indent"
-                      :class="{ active: activeVsCodeTab === 'theme.css' }"
-                      @click="activeVsCodeTab = 'theme.css'"
-                    >
-                      <span class="file-icon css">#</span>
-                      <span class="file-name">theme.css</span>
-                    </button>
+                      <div
+                        class="vscode-search-file-title"
+                        @click="group.isCollapsed = !group.isCollapsed"
+                      >
+                        <ChevronDown v-if="!group.isCollapsed" :size="12" />
+                        <ChevronRight v-else :size="12" />
+                        <span class="file-icon" :class="group.fileType">{{ group.icon }}</span>
+                        <span class="file-name">{{ group.filename }}</span>
+                        <span class="match-count-pill">{{ group.matches.length }}</span>
+                      </div>
+
+                      <div v-if="!group.isCollapsed" class="vscode-search-match-items">
+                        <button
+                          v-for="match in group.matches"
+                          :key="match.line + '-' + match.col"
+                          class="vscode-search-hit-row"
+                          @click="jumpToSearchResult(group.filename, match)"
+                        >
+                          <span class="hit-line-num">{{ match.line }}</span>
+                          <span class="hit-snippet">
+                            <span>{{ match.before }}</span>
+                            <mark class="hit-mark">{{ match.highlight }}</mark>
+                            <span>{{ match.after }}</span>
+                          </span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2427,8 +2770,8 @@ const copyVsCodeCurrentCode = () => {
 
             <!-- Code Editor Workspace (Lines + Code Area) -->
             <div class="vscode-code-viewport">
-              <!-- Line Numbers Gutter -->
-              <div class="vscode-gutter">
+              <!-- Line Numbers Gutter (Synced with editor scroll) -->
+              <div ref="vsCodeGutterRef" class="vscode-gutter">
                 <div
                   v-for="line in vsCodeLineCount"
                   :key="line"
@@ -2443,9 +2786,11 @@ const copyVsCodeCurrentCode = () => {
                 <!-- If blocks.json, provide interactive editable textarea -->
                 <textarea
                   v-if="activeVsCodeTab === 'blocks.json'"
+                  ref="vsCodeTextareaRef"
                   v-model="vsCodeBlocksCode"
                   @keydown="onVsCodeKeydown"
                   @input="isVsCodeCodeDirty = true"
+                  @scroll="syncGutterScroll"
                   class="vscode-code-textarea"
                   spellcheck="false"
                   autocomplete="off"
@@ -2454,7 +2799,12 @@ const copyVsCodeCurrentCode = () => {
                 ></textarea>
 
                 <!-- If read-only generated code (index.html, theme.css, docker-compose.yml) -->
-                <pre v-else class="vscode-code-pre">{{ currentVsCodeContent }}</pre>
+                <pre
+                  v-else
+                  ref="vsCodePreRef"
+                  @scroll="syncGutterScroll"
+                  class="vscode-code-pre"
+                >{{ currentVsCodeContent }}</pre>
               </div>
             </div>
 
@@ -5713,7 +6063,7 @@ const copyVsCodeCurrentCode = () => {
   background: #181818;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   padding: 8px 0;
   border-right: 1px solid #282828;
@@ -5721,18 +6071,17 @@ const copyVsCodeCurrentCode = () => {
   z-index: 10;
 }
 
-.vscode-act-top,
-.vscode-act-bottom {
+.vscode-act-top {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
 .vscode-act-btn {
   width: 48px;
-  height: 40px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5763,14 +6112,38 @@ const copyVsCodeCurrentCode = () => {
   border-radius: 0 2px 2px 0;
 }
 
-/* 2. File Explorer Sidebar */
+.vscode-act-badge {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: #007acc;
+  color: #ffffff;
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 0 4px;
+  min-width: 14px;
+  height: 14px;
+  line-height: 14px;
+  text-align: center;
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+/* 2. Primary Sidebar (Explorer & Search) */
 .vscode-explorer-sidebar {
-  width: 220px;
+  width: 260px;
   background: #1f1f1f;
   border-right: 1px solid #282828;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.vscode-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -6102,7 +6475,9 @@ const copyVsCodeCurrentCode = () => {
   min-width: 0;
   height: 100%;
   position: relative;
-  overflow: auto;
+  overflow: hidden; /* Ensures ONLY ONE scrollbar inside the editor */
+  display: flex;
+  flex-direction: column;
 }
 
 .vscode-code-textarea {
@@ -6125,6 +6500,8 @@ const copyVsCodeCurrentCode = () => {
 
 .vscode-code-pre {
   margin: 0;
+  width: 100%;
+  height: 100%;
   padding: 12px 16px;
   color: #9cdcfe;
   font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
@@ -6132,7 +6509,389 @@ const copyVsCodeCurrentCode = () => {
   line-height: 21px;
   tab-size: 2;
   white-space: pre;
+  overflow: auto;
   box-sizing: border-box;
+}
+
+/* =============================================================================
+ * VS Code Custom Sleek Dark Scrollbar (Obsidian / Slate Minimalist)
+ * =========================================================================== */
+.vscode-code-textarea,
+.vscode-code-pre,
+.vscode-file-tree,
+.vscode-search-results {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) #1e1e1e;
+}
+
+.vscode-code-textarea::-webkit-scrollbar,
+.vscode-code-pre::-webkit-scrollbar,
+.vscode-file-tree::-webkit-scrollbar,
+.vscode-search-results::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.vscode-code-textarea::-webkit-scrollbar-track,
+.vscode-code-pre::-webkit-scrollbar-track,
+.vscode-file-tree::-webkit-scrollbar-track,
+.vscode-search-results::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.vscode-code-textarea::-webkit-scrollbar-thumb,
+.vscode-code-pre::-webkit-scrollbar-thumb,
+.vscode-file-tree::-webkit-scrollbar-thumb,
+.vscode-search-results::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  border: 2px solid #1e1e1e;
+  transition: background 0.2s ease;
+}
+
+.vscode-code-textarea::-webkit-scrollbar-thumb:hover,
+.vscode-code-pre::-webkit-scrollbar-thumb:hover,
+.vscode-file-tree::-webkit-scrollbar-thumb:hover,
+.vscode-search-results::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.vscode-code-textarea::-webkit-scrollbar-corner,
+.vscode-code-pre::-webkit-scrollbar-corner {
+  background: #1e1e1e;
+}
+
+/* =============================================================================
+ * VS Code Search Panel Styles
+ * =========================================================================== */
+.vscode-search-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #1f1f1f;
+}
+
+.vscode-search-controls {
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid #282828;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #1f1f1f;
+}
+
+.vscode-search-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.vscode-input-with-tools {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: #252526;
+  border: 1px solid #3c3c3c;
+  border-radius: 3px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vscode-input-with-tools:focus-within {
+  border-color: #007acc;
+  box-shadow: 0 0 0 1px #007acc;
+}
+
+.vscode-tool-input {
+  flex: 1;
+  min-width: 0;
+  height: 25px;
+  padding: 0 54px 0 8px;
+  background: transparent;
+  border: none;
+  color: #cccccc;
+  font-size: 0.72rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.vscode-tool-input::placeholder {
+  color: #6e7681;
+}
+
+.vscode-input-clear-btn {
+  position: absolute;
+  right: 48px;
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: #858585;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 0.12s ease;
+}
+
+.vscode-input-clear-btn:hover {
+  color: #ffffff;
+}
+
+.vscode-input-modifiers {
+  position: absolute;
+  right: 3px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.vscode-modifier-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #777777;
+  font-size: 0.64rem;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-weight: 700;
+  padding: 1px 4px;
+  height: 18px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.vscode-modifier-btn:hover {
+  background: #333333;
+  color: #ffffff;
+}
+
+.vscode-modifier-btn.active {
+  background: #007acc;
+  color: #ffffff;
+}
+
+.vscode-replace-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.vscode-replace-collapse-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #858585;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 25px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: transform 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.vscode-replace-collapse-btn:hover {
+  color: #ffffff;
+}
+
+.vscode-replace-collapse-btn.expanded {
+  transform: rotate(90deg);
+}
+
+.vscode-replace-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.vscode-replace-exec-btn {
+  appearance: none;
+  align-self: flex-start;
+  height: 22px;
+  padding: 0 8px;
+  background: #2a2a2a;
+  border: 1px solid #3c3c3c;
+  color: #cccccc;
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vscode-replace-exec-btn:hover:not(:disabled) {
+  background: #007acc;
+  border-color: #008be5;
+  color: #ffffff;
+}
+
+.vscode-replace-exec-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.vscode-search-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.vscode-search-prompt {
+  padding: 24px 16px;
+  text-align: center;
+  color: #858585;
+}
+
+.search-prompt-icon {
+  margin: 0 auto 10px;
+  color: #555555;
+}
+
+.search-prompt-title {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #cccccc;
+  margin: 0 0 6px;
+}
+
+.search-prompt-sub {
+  font-size: 0.67rem;
+  line-height: 1.4;
+  color: #777777;
+  margin: 0 0 14px;
+}
+
+.search-sample-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+}
+
+.sample-tag {
+  appearance: none;
+  background: #252526;
+  border: 1px solid #383838;
+  color: #9cdcfe;
+  font-size: 0.65rem;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  padding: 2px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.sample-tag:hover {
+  background: #333333;
+  border-color: #007acc;
+  color: #ffffff;
+}
+
+.vscode-search-none {
+  padding: 20px 14px;
+  font-size: 0.72rem;
+  color: #858585;
+  text-align: center;
+}
+
+.vscode-search-group-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.vscode-search-file-block {
+  margin-bottom: 2px;
+}
+
+.vscode-search-file-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #cccccc;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s ease;
+}
+
+.vscode-search-file-title:hover {
+  background: #2a2d2e;
+}
+
+.vscode-search-file-title .file-name {
+  color: #e2e8f0;
+}
+
+.match-count-pill {
+  margin-left: auto;
+  background: #2d2d2d;
+  color: #007acc;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.vscode-search-match-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.vscode-search-hit-row {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 24px;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-size: 0.71rem;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  color: #999999;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.vscode-search-hit-row:hover {
+  background: #2a2d2e;
+  color: #ffffff;
+}
+
+.hit-line-num {
+  font-size: 0.65rem;
+  color: #555555;
+  min-width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.hit-snippet {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hit-mark {
+  background: rgba(234, 179, 8, 0.45);
+  color: #ffffff;
+  font-weight: 700;
+  padding: 0 2px;
+  border-radius: 2px;
 }
 
 /* 4. VS Code Status Bar */
