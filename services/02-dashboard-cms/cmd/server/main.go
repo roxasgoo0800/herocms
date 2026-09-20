@@ -129,6 +129,13 @@ func main() {
 	if distDir != "" {
 		assetsDir := filepath.Join(distDir, "assets")
 		if _, err := os.Stat(assetsDir); err == nil {
+			// Immutable long-term caching for hashed static assets (JS, CSS, icons)
+			router.Use(func(c *gin.Context) {
+				if strings.HasPrefix(c.Request.URL.Path, "/assets/") {
+					c.Header("Cache-Control", "public, max-age=31536000, immutable")
+				}
+				c.Next()
+			})
 			router.Static("/assets", assetsDir)
 		}
 

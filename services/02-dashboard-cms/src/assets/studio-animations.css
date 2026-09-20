@@ -1,0 +1,163 @@
+/* ==========================================================================
+   HEROCMS STUDIO - ANIMATIONS & BACKGROUND GRAPHICS
+   ========================================================================== */
+
+/* 1. Background Wave & Dot Grid (BackgroundWave.vue) */
+.background-wave-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.base-dot-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+  background-size: 28px 28px;
+  background-position: -14px -14px;
+  opacity: 0.75;
+}
+
+.ambient-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(148, 163, 184, 0.18) 0%, rgba(203, 213, 225, 0.08) 50%, transparent 70%);
+  filter: blur(40px);
+  transition: opacity 0.4s ease;
+  will-change: transform, opacity;
+}
+
+.contrast-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#475569 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+  background-position: -14px -14px;
+  transition: opacity 0.4s ease;
+  will-change: mask-image, -webkit-mask-image;
+}
+
+/* 2. Interactive Canvas Dot Wave (InteractiveDotWave.vue) */
+.interactive-dot-wave-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  background-color: #f8fafc;
+}
+
+/* 3. Centralized Studio Splash Screen (StudioSplashScreen.vue) */
+.studio-splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+  will-change: opacity, transform;
+}
+
+.splash-center-pod {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: podEntrance 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes podEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.brand-glyph-box {
+  width: 50px;
+  height: 50px;
+  background: #0f172a;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand-wordmark {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0 0 20px 0;
+}
+
+.wordmark-highlight {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.splash-progress-track {
+  width: 180px;
+  height: 3.5px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.splash-progress-fill {
+  height: 100%;
+  background: #0f172a;
+  border-radius: 9999px;
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.splash-status-text {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #64748b;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.splash-dissolve-enter-active {
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.splash-dissolve-enter-from {
+  opacity: 0;
+}
+
+.splash-dissolve-leave-active {
+  transition: opacity 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.splash-dissolve-leave-to {
+  opacity: 0;
+  transform: scale(1.04);
+  filter: blur(8px);
+}
