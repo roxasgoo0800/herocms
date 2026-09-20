@@ -33,8 +33,6 @@ services:
       POSTGRES_DB: ${DB_DATABASE:-cloudcms_db}
       POSTGRES_USER: ${DB_USERNAME:-cloudcms_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-secret_postgres_password}
-    ports:
-      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./deploy/sql/01_schema_and_rls.sql:/docker-entrypoint-initdb.d/01_schema_and_rls.sql:ro
@@ -55,8 +53,6 @@ services:
       - app-network
       - redis-net
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-secret_redis_password}", "--appendonly", "yes"]
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -78,8 +74,6 @@ services:
       - app-network
       - redis-net
       - traefik_network
-    ports:
-      - "${DASHBOARD_PORT:-8085}:8085"
     environment:
       PORT: 8085
       DIST_DIR: /app/dist
@@ -102,7 +96,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_network"
-      - "traefik.http.routers.herocms-studio.rule=Host(`studio.herocms.stackbyte.id`)"
+      - "traefik.http.routers.herocms-studio.rule=Host(`studio-herocms.stackbyte.id`) || Host(`studio.herocms.stackbyte.id`)"
       - "traefik.http.routers.herocms-studio.entrypoints=web"
       - "traefik.http.routers.herocms-studio.middlewares=security-headers@file,gzip-compress@file"
       - "traefik.http.routers.herocms-studio.service=herocms-studio-svc"
@@ -120,8 +114,6 @@ services:
     networks:
       - app-network
       - traefik_network
-    ports:
-      - "${MARKETING_PORT:-8084}:80"
     environment:
       PORT: 80
       DIST_DIR: /app/dist

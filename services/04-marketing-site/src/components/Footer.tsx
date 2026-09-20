@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Layers, ArrowRight, Github, Twitter, Linkedin, MessageSquare, Check, Sparkles, Send, Terminal } from 'lucide-react';
 import { MotionReveal } from './MotionReveal';
+import { appConfig } from '../config';
 
 export const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -102,7 +103,7 @@ export const Footer: React.FC = () => {
                   Coba Demo Hero CMS <ArrowRight size={17} />
                 </a>
                 <a
-                  href="http://localhost:5173"
+                  href={appConfig.studioUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="btn btn-secondary"
@@ -205,7 +206,7 @@ export const Footer: React.FC = () => {
             </h4>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
               <li><a href="#features" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.15s' }}>01. Admin Console (Laravel)</a></li>
-              <li><a href="http://localhost:5173" target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.15s' }}>02. Dashboard Studio (Vue 3)</a></li>
+              <li><a href={appConfig.studioUrl} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.15s' }}>02. Dashboard Studio (Vue 3)</a></li>
               <li><a href="#features" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.15s' }}>03. Orchestrator API (Golang)</a></li>
               <li><a href="#demo" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.15s' }}>04. Marketing Website (React)</a></li>
               <li><a href="#features" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.15s' }}>05. AI Agent Service (Golang)</a></li>
