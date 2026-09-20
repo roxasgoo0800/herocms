@@ -669,6 +669,7 @@ const onCanvasMouseMove = (e: MouseEvent) => {
   if (isPanning.value) {
     panX.value = e.clientX - panStart.value.x;
     panY.value = e.clientY - panStart.value.y;
+    clampPan();
     return;
   }
 
@@ -701,6 +702,13 @@ const onCanvasMouseUp = () => {
   resizeDirection.value = null;
 };
 
+// Clamp pan values to prevent infinite scrolling
+const PAN_LIMIT = 4000;
+const clampPan = () => {
+  panX.value = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panX.value));
+  panY.value = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panY.value));
+};
+
 const onCanvasWheel = (e: WheelEvent) => {
   e.preventDefault();
   if (e.ctrlKey || e.metaKey) {
@@ -712,6 +720,7 @@ const onCanvasWheel = (e: WheelEvent) => {
     // Normal scroll down / up moves canvas smoothly!
     panY.value -= e.deltaY * 0.85;
   }
+  clampPan();
 };
 
 // Start Resizing Artboard
@@ -3477,17 +3486,18 @@ const copyVsCodeCurrentCode = () => {
   flex-direction: column;
   flex-shrink: 0;
   z-index: 20;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.25s ease;
-  will-change: transform, margin-left, opacity;
+  transition: opacity 0.15s ease, visibility 0s linear 0s;
+  will-change: opacity;
 }
 
 .studio-left-dock.dock-hidden {
-  transform: translateX(-100%);
-  margin-left: -290px;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
+  width: 0;
+  overflow: hidden;
+  border-right: none;
+  transition: opacity 0.15s ease, visibility 0s linear 0.15s, width 0s linear 0.15s, border 0s linear 0.15s, overflow 0s linear 0.15s;
 }
 
 .left-dock-tabs {
@@ -5005,17 +5015,18 @@ const copyVsCodeCurrentCode = () => {
   flex-direction: column;
   flex-shrink: 0;
   z-index: 20;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              margin-right 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.25s ease;
-  will-change: transform, margin-right, opacity;
+  transition: opacity 0.15s ease, visibility 0s linear 0s;
+  will-change: opacity;
 }
 
 .studio-right-inspector.dock-hidden {
-  transform: translateX(100%);
-  margin-right: -320px;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
+  width: 0;
+  overflow: hidden;
+  border-left: none;
+  transition: opacity 0.15s ease, visibility 0s linear 0.15s, width 0s linear 0.15s, border 0s linear 0.15s, overflow 0s linear 0.15s;
 }
 
 .inspector-tabs-bar {
