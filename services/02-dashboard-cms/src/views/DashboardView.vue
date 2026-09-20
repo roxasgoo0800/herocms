@@ -56,6 +56,7 @@ const {
   usedContainersCount,
   containers,
   articles,
+  activeArticleForReader,
   openCreateModal,
   toastMessage,
   isCreateModalOpen,
@@ -274,7 +275,11 @@ const handleLogout = () => {
         <div class="breadcrumbs">
           <span>HeroCMS Studio</span>
           <ChevronRight :size="14" class="crumb-sep" />
-          <span class="crumb-current">
+          <span
+            :class="activeMenu === 'content' && activeArticleForReader ? 'crumb-link' : 'crumb-current'"
+            @click="activeMenu === 'content' && activeArticleForReader ? (activeArticleForReader = null) : null"
+            :title="activeMenu === 'content' && activeArticleForReader ? 'Kembali ke Daftar Artikel' : undefined"
+          >
             {{
               activeMenu === 'containers' ? 'Situs & Kontainer' :
               activeMenu === 'editor' ? 'Editor Visual Studio' :
@@ -289,6 +294,12 @@ const handleLogout = () => {
               'Pusat Bantuan & Tiket Support'
             }}
           </span>
+          <template v-if="activeMenu === 'content' && activeArticleForReader">
+            <ChevronRight :size="14" class="crumb-sep" />
+            <span class="crumb-current crumb-article-title" :title="activeArticleForReader.title">
+              {{ activeArticleForReader.title }}
+            </span>
+          </template>
         </div>
 
         <div class="top-actions">
@@ -1009,6 +1020,27 @@ const handleLogout = () => {
 .crumb-current {
   color: #0f172a;
   font-weight: 600;
+}
+
+.crumb-link {
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  font-weight: 500;
+}
+
+.crumb-link:hover {
+  color: #0284c7;
+  text-decoration: underline;
+}
+
+.crumb-article-title {
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .top-actions {

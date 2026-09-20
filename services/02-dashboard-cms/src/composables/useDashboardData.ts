@@ -127,9 +127,14 @@ const activeContainer = computed(() => {
   return containers.value.find(c => c.id === activeContainerId.value) || containers.value[0];
 });
 
+const activeArticleForReader = ref<ContentArticle | null>(null);
+
 // Watch activeMenu and persist across refresh (Cookies, LocalStorage, URL Hash, & Redis)
 watch(activeMenu, (newMenu) => {
   if (!VALID_MENUS.includes(newMenu)) return;
+  if (newMenu !== 'content') {
+    activeArticleForReader.value = null;
+  }
   setCookie('herocms_active_menu', newMenu);
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem('herocms_active_menu', newMenu);
@@ -1271,6 +1276,7 @@ export function useDashboardData() {
     handleAddDomain,
     deleteDomain,
     articles,
+    activeArticleForReader,
     isCreateArticleModalOpen,
     newArticleForm,
     handleCreateArticle,

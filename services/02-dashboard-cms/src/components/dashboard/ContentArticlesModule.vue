@@ -17,14 +17,18 @@ import {
   X,
   BookOpen,
   Edit3,
-  ChevronDown
+  ChevronDown,
+  ArrowLeft,
+  ExternalLink,
+  ChevronRight,
+  Server
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { ContentArticle } from '../../types/dashboard';
 
 const {
   articles,
-  showToast,
+  activeArticleForReader,
   copyToClipboard,
   copiedSubdomain
 } = useDashboardData();
@@ -33,20 +37,49 @@ const searchQuery = ref('');
 const selectedCategory = ref('all');
 const selectedStatus = ref('all');
 const viewMode = ref<'grid' | 'table'>('grid');
+const searchInputRef = ref<HTMLInputElement | null>(null);
 
-const isArticleModalOpen = ref(false);
-const selectedArticle = ref<ContentArticle | null>(null);
-
-const openArticleModal = (art: ContentArticle) => {
-  selectedArticle.value = art;
-  isArticleModalOpen.value = true;
+const openArticleReader = (art: ContentArticle) => {
+  activeArticleForReader.value = art;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+
+const closeArticleReader = () => {
+  activeArticleForReader.value = null;
+};
+
+const copyCodeSnippet = () => {
+  const snippet = `func RecordArticleHit(ctx context.Context, slug string) error {
+    // Atomic increment via Redis Sorted Set (ZSET) - Sub-millisecond latency
+    return redisClient.ZIncrBy(ctx, "herocms:articles:views", 1.0, slug).Err()
+}`;
+  copyToClipboard(snippet, 'code_snippet');
+};
+
+const currentArticleIndex = computed(() => {
+  if (!activeArticleForReader.value) return -1;
+  return articles.value.findIndex(a => a.id === activeArticleForReader.value?.id);
+});
+
+const prevArticle = computed(() => {
+  if (currentArticleIndex.value <= 0) return null;
+  return articles.value[currentArticleIndex.value - 1];
+});
+
+const nextArticle = computed(() => {
+  if (currentArticleIndex.value === -1 || currentArticleIndex.value >= articles.value.length - 1) return null;
+  return articles.value[currentArticleIndex.value + 1];
+});
 
 const filteredArticles = computed(() => {
   return articles.value.filter(art => {
-    const matchesSearch = art.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                          art.slug.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                          art.siteName.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const q = searchQuery.value.toLowerCase().trim();
+    const matchesSearch = !q ||
+      art.title.toLowerCase().includes(q) ||
+      art.slug.toLowerCase().includes(q) ||
+      art.category.toLowerCase().includes(q) ||
+      art.author.toLowerCase().includes(q) ||
+      art.siteName.toLowerCase().includes(q);
     if (!matchesSearch) return false;
     if (selectedCategory.value !== 'all' && art.category !== selectedCategory.value) return false;
     if (selectedStatus.value !== 'all' && art.status !== selectedStatus.value) return false;
@@ -108,465 +141,718 @@ const handleContentDropdownOutsideClick = (e: MouseEvent) => {
   }
 };
 
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    if (activeArticleForReader.value) {
+      activeArticleForReader.value = null;
+    }
+    setTimeout(() => {
+      searchInputRef.value?.focus();
+    }, 50);
+  } else if (e.key === 'Escape' && activeArticleForReader.value) {
+    closeArticleReader();
+  }
+};
+
 onMounted(() => {
   document.addEventListener('click', handleContentDropdownOutsideClick);
+  window.addEventListener('keydown', handleGlobalKeydown);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleContentDropdownOutsideClick);
+  window.removeEventListener('keydown', handleGlobalKeydown);
 });
 </script>
 
 <template>
   <section class="fade-in-section">
-    <!-- Header Intro -->
-    <div class="page-intro-row">
-      <div>
-        <h1 class="page-title">Konten & Editorial Studio</h1>
-        <p class="page-desc">Jelajahi publikasi konten, postingan editorial teknis, dan landing page kontainer tenant Anda dengan sinkronisasi CDN Traefik dan OpenGraph otomatis.</p>
-      </div>
-    </div>
-
-    <!-- 4 Content Telemetry Cards -->
-    <div class="stats-overview-grid">
-      <div class="telemetry-card">
-        <div class="telemetry-top">
-          <span class="telemetry-label">TOTAL ARTIKEL</span>
-          <div class="telemetry-glyph blue"><FileText :size="15" /></div>
-        </div>
-        <div class="telemetry-val">{{ articles.length }} <span class="telemetry-denom">Artikel</span></div>
-        <div class="telemetry-sub"><span>8,450 kata terindeks di edge</span></div>
-      </div>
-
-      <div class="telemetry-card">
-        <div class="telemetry-top">
-          <span class="telemetry-label">TERPUBLIKASI (LIVE)</span>
-          <div class="telemetry-glyph emerald"><Check :size="15" /></div>
-        </div>
-        <div class="telemetry-val">{{ articles.filter(a => a.status === 'published').length }} <span class="badge-online">Live CDN</span></div>
-        <div class="telemetry-sub"><span>Lighthouse 100/100 SEO ready</span></div>
-      </div>
-
-      <div class="telemetry-card">
-        <div class="telemetry-top">
-          <span class="telemetry-label">DRAFT PENULISAN</span>
-          <div class="telemetry-glyph purple"><Edit3 :size="15" /></div>
-        </div>
-        <div class="telemetry-val">{{ articles.filter(a => a.status === 'draft').length }} <span class="badge-growth-pill">WIP</span></div>
-        <div class="telemetry-sub"><span>Belum dipublikasikan ke publik</span></div>
-      </div>
-
-      <div class="telemetry-card">
-        <div class="telemetry-top">
-          <span class="telemetry-label">TOTAL PEMBACA (VIEWS)</span>
-          <div class="telemetry-glyph blue"><Activity :size="15" /></div>
-        </div>
-        <div class="telemetry-val">{{ articles.reduce((acc, a) => acc + a.views, 0).toLocaleString('id-ID') }} <span class="badge-online">+24%</span></div>
-        <div class="telemetry-sub"><span>Dihitung non-blocking via Redis ZSET</span></div>
-      </div>
-    </div>
-
-    <!-- Featured Post Spotlight Card (Top Trending Post on Redis) -->
-    <div v-if="trendingArticle" class="spotlight-post-card">
-      <div class="spotlight-glow-layer"></div>
-      <div class="spotlight-content">
-        <div class="spotlight-tag-row">
-          <span class="spotlight-fire-pill">
-            <Flame :size="13" />
-            <span>#1 POPULER DI REDIS STREAM</span>
+    <!-- ============================================================= -->
+    <!-- 1. DEDICATED FULL-PAGE ARTICLE READER VIEW (THEMED STUDIO)   -->
+    <!-- ============================================================= -->
+    <div v-if="activeArticleForReader" class="article-reader-page">
+      <!-- Breadcrumb & Back Action Bar -->
+      <div class="reader-top-action-bar">
+        <div class="reader-breadcrumb-nav">
+          <button class="btn-reader-back" @click="closeArticleReader()">
+            <ArrowLeft :size="14" />
+            <span>Kembali ke Daftar</span>
+          </button>
+          <span class="reader-crumb-divider">/</span>
+          <span class="reader-crumb-module" @click="closeArticleReader()">Artikel & Halaman CMS</span>
+          <span class="reader-crumb-divider">/</span>
+          <span class="reader-crumb-active" :title="activeArticleForReader.title">
+            {{ activeArticleForReader.title }}
           </span>
-          <span class="spotlight-site-tag">{{ trendingArticle.siteName }}</span>
         </div>
 
-        <div class="spotlight-main-row">
-          <div class="spotlight-info">
-            <h2 class="spotlight-title">{{ trendingArticle.title }}</h2>
-            <p class="spotlight-excerpt">
-              Eksplorasi mendalam mengenai arsitektur sistem otonom, isolasi resource CPU cgroups v2, integrasi event stream Kafka, dan latensi proxy Traefik v3 sub-2ms.
-            </p>
+        <div class="reader-quick-actions">
+          <button
+            class="btn-reader-action"
+            @click="copyToClipboard(`https://rizalpratama.cloud/${activeArticleForReader.slug}`, activeArticleForReader.id)"
+            :title="copiedSubdomain === activeArticleForReader.id ? 'Tautan Tersalin!' : 'Salin Tautan Publik'"
+          >
+            <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
+            <Copy v-else :size="13" />
+            <span>{{ copiedSubdomain === activeArticleForReader.id ? 'Tautan Tersalin' : 'Salin Tautan' }}</span>
+          </button>
 
-            <div class="spotlight-meta-strip">
-              <span class="s-meta-item">
-                <Eye :size="13" class="text-blue" />
-                <strong>{{ trendingArticle.views.toLocaleString('id-ID') }}</strong> Views
-              </span>
-              <span class="s-meta-item">
-                <Clock :size="13" />
-                {{ getReadTime(trendingArticle.title) }}
-              </span>
-              <span class="s-meta-item seo-score-pill">
-                <Zap :size="11" />
-                SEO 99/100
-              </span>
-              <span class="s-meta-item">
-                <Calendar :size="13" />
-                {{ trendingArticle.publishedAt }}
-              </span>
-            </div>
-          </div>
-
-          <div class="spotlight-actions">
-            <button
-              class="btn-spotlight-edit"
-              @click="showToast(`Membuka preview untuk '${trendingArticle.title}'...`, 'info')"
-            >
-              <Eye :size="14" />
-              <span>Lihat Artikel</span>
-            </button>
-            <button
-              class="btn-spotlight-copy"
-              @click="copyToClipboard(`https://rizalpratama.cloud/${trendingArticle.slug}`, trendingArticle.id)"
-              :title="copiedSubdomain === trendingArticle.id ? 'Tersalin!' : 'Salin URL Artikel'"
-            >
-              <Check v-if="copiedSubdomain === trendingArticle.id" :size="14" class="text-green" />
-              <Copy v-else :size="14" />
-              <span>{{ copiedSubdomain === trendingArticle.id ? 'URL Tersalin' : 'Salin URL' }}</span>
-            </button>
-          </div>
+          <a
+            :href="`https://rizalpratama.cloud/${activeArticleForReader.slug}`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-reader-action"
+            title="Buka Halaman di Tab Baru"
+          >
+            <ExternalLink :size="13" />
+            <span>Buka URL Publik</span>
+          </a>
         </div>
       </div>
-    </div>
 
-    <!-- Toolbar Filters & View Switcher -->
-    <div class="editorial-toolbar">
-      <div class="search-command-shell">
-        <Search :size="15" class="search-lead-glyph" />
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Cari judul artikel, slug URL, kata kunci, topik..."
-          class="search-command-input"
-        />
-        <kbd class="shortcut-tag">⌘K</kbd>
-      </div>
-
-      <div class="toolbar-controls-right">
-        <!-- Custom Category Dropdown -->
-        <div class="custom-filter-dropdown-wrap">
-          <button
-            type="button"
-            class="custom-filter-trigger-btn"
-            @click.stop="isCategoryDropdownOpen = !isCategoryDropdownOpen; isStatusDropdownOpen = false"
-            title="Filter Kategori"
-          >
-            <span>{{ categoryOptions.find(o => o.value === selectedCategory)?.label || 'Semua Kategori' }}</span>
-            <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isCategoryDropdownOpen }" />
-          </button>
-          <div v-if="isCategoryDropdownOpen" class="custom-filter-dropdown-menu">
-            <button
-              v-for="opt in categoryOptions"
-              :key="opt.value"
-              type="button"
-              class="custom-filter-dropdown-item"
-              :class="{ active: selectedCategory === opt.value }"
-              @click="selectedCategory = opt.value; isCategoryDropdownOpen = false"
-            >
-              <span>{{ opt.label }}</span>
-              <Check v-if="selectedCategory === opt.value" :size="12" class="dropdown-check-icon" />
-            </button>
-          </div>
-        </div>
-
-        <!-- Custom Status Dropdown -->
-        <div class="custom-filter-dropdown-wrap">
-          <button
-            type="button"
-            class="custom-filter-trigger-btn"
-            @click.stop="isStatusDropdownOpen = !isStatusDropdownOpen; isCategoryDropdownOpen = false"
-            title="Filter Status Publikasi"
-          >
-            <span>{{ statusOptions.find(o => o.value === selectedStatus)?.label || 'Semua Status' }}</span>
-            <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isStatusDropdownOpen }" />
-          </button>
-          <div v-if="isStatusDropdownOpen" class="custom-filter-dropdown-menu">
-            <button
-              v-for="opt in statusOptions"
-              :key="opt.value"
-              type="button"
-              class="custom-filter-dropdown-item"
-              :class="{ active: selectedStatus === opt.value }"
-              @click="selectedStatus = opt.value; isStatusDropdownOpen = false"
-            >
-              <span>{{ opt.label }}</span>
-              <Check v-if="selectedStatus === opt.value" :size="12" class="dropdown-check-icon" />
-            </button>
-          </div>
-        </div>
-
-        <!-- View Mode Switcher -->
-        <div class="view-mode-toggle">
-          <button
-            class="btn-view-mode"
-            :class="{ active: viewMode === 'grid' }"
-            @click="viewMode = 'grid'"
-            title="Tampilan Visual Card"
-          >
-            <LayoutGrid :size="15" />
-          </button>
-          <button
-            class="btn-view-mode"
-            :class="{ active: viewMode === 'table' }"
-            @click="viewMode = 'table'"
-            title="Tampilan Tabel Data"
-          >
-            <List :size="15" />
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 1. VISUAL MAGAZINE CARDS GRID (DEFAULT) -->
-    <div v-if="viewMode === 'grid'" class="articles-magazine-grid">
-      <div
-        v-for="art in filteredArticles"
-        :key="art.id"
-        class="article-magazine-card"
-      >
-        <!-- Card Header Banner -->
-        <div class="art-card-cover" :class="'cover-' + getCategoryColor(art.category)">
-          <div class="cover-watermark">
-            <code>/{{ art.slug }}</code>
-          </div>
-
-          <div class="cover-top-tags">
-            <span class="cover-cat-pill" :class="'pill-' + getCategoryColor(art.category)">
-              {{ art.category.toUpperCase() }}
+      <!-- Hero Header (Themed with Obsidian + Category Accent Gradient) -->
+      <div class="reader-page-hero" :class="'cover-' + getCategoryColor(activeArticleForReader.category)">
+        <div class="reader-hero-decor-grid"></div>
+        <div class="reader-hero-inner">
+          <div class="reader-hero-badges">
+            <span class="cover-cat-pill" :class="'pill-' + getCategoryColor(activeArticleForReader.category)">
+              {{ activeArticleForReader.category.toUpperCase() }}
             </span>
-            <div class="cover-top-meta">
-              <span class="cover-read-time">
-                <Clock :size="10" />
-                <span>{{ getReadTime(art.title) }}</span>
-              </span>
-              <span class="cover-seo-tag">
-                <Zap :size="10" /> 100/100
-              </span>
-            </div>
+            <span class="cover-read-time">
+              <Clock :size="12" />
+              <span>{{ getReadTime(activeArticleForReader.title) }}</span>
+            </span>
+            <span class="seo-score-pill">
+              <Zap :size="12" />
+              <span>SEO 100/100</span>
+            </span>
+            <span class="art-status-chip chip-live">
+              <span class="dot"></span>
+              {{ activeArticleForReader.status === 'published' ? 'Edge Live' : 'Draft' }}
+            </span>
           </div>
 
-          <div class="cover-tech-tags">
-            <span v-for="tag in getCategoryTags(art.category)" :key="tag">{{ tag }}</span>
+          <h1 class="reader-page-title">{{ activeArticleForReader.title }}</h1>
+
+          <div class="reader-hero-meta-row">
+            <div class="reader-author-profile">
+              <div class="author-avatar-large">RP</div>
+              <div class="author-info-group">
+                <div class="author-primary-name">{{ activeArticleForReader.author }}</div>
+                <div class="author-secondary-sub">
+                  <span>{{ activeArticleForReader.publishedAt }}</span>
+                  <span class="sub-sep">•</span>
+                  <span>{{ activeArticleForReader.siteName }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="reader-hero-metrics-strip">
+              <div class="hero-metric-item">
+                <Eye :size="14" class="text-cyan" />
+                <span class="metric-num">{{ activeArticleForReader.views.toLocaleString('id-ID') }}</span>
+                <span class="metric-label">Redis Views</span>
+              </div>
+              <div class="hero-metric-item">
+                <Activity :size="14" class="text-green" />
+                <span class="metric-num">1.8ms</span>
+                <span class="metric-label">TTFB Traefik</span>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Card Body -->
-        <div class="art-card-body">
-          <div class="art-card-site-name">
-            <Globe :size="12" />
-            <span>{{ art.siteName }}</span>
-          </div>
-
-          <h3 class="art-card-title" :title="art.title">
-            {{ art.title }}
-          </h3>
-
-          <div class="art-card-slug-line">
-            <code>/{{ art.slug }}</code>
-          </div>
-
-          <!-- Footer Metadata -->
-          <div class="art-card-footer">
-            <div class="art-author-info">
-              <div class="author-avatar-mini">RP</div>
-              <div class="author-details">
-                <span class="author-name">{{ art.author }}</span>
-                <span class="art-date">{{ art.publishedAt }}</span>
-              </div>
+      <!-- Main Reader Layout: 2 Columns -->
+      <div class="reader-layout-grid">
+        <!-- Content Column (Left, 72%) -->
+        <article class="reader-main-content">
+          <!-- Edge URL Callout -->
+          <div class="reader-edge-callout">
+            <div class="callout-icon-box">
+              <Globe :size="16" />
             </div>
-
-            <div class="art-metrics-col">
-              <div class="art-views-badge">
-                <Eye :size="12" class="view-glyph" />
-                <span>{{ art.views.toLocaleString('id-ID') }}</span>
-              </div>
-              <span
-                class="art-status-chip"
-                :class="art.status === 'published' ? 'chip-live' : 'chip-draft'"
-              >
-                <span class="dot"></span>
-                {{ art.status === 'published' ? 'Live' : 'Draft' }}
-              </span>
+            <div class="callout-text-box">
+              <span class="callout-title">Edge URL Publikasi Live:</span>
+              <code class="callout-url">https://rizalpratama.cloud/{{ activeArticleForReader.slug }}</code>
             </div>
-          </div>
-
-          <!-- Card Hover Action Overlay -->
-          <div class="art-card-actions-bar">
             <button
-              class="btn-card-action primary"
-              @click="openArticleModal(art)"
+              class="btn-copy-callout"
+              @click="copyToClipboard(`https://rizalpratama.cloud/${activeArticleForReader.slug}`, activeArticleForReader.id)"
+              :title="copiedSubdomain === activeArticleForReader.id ? 'Tersalin!' : 'Salin URL'"
             >
-              <Eye :size="13" />
-              <span>Baca Artikel</span>
-            </button>
-            <button
-              class="btn-card-action"
-              @click="copyToClipboard(`https://rizalpratama.cloud/${art.slug}`, art.id)"
-              :title="copiedSubdomain === art.id ? 'Tersalin!' : 'Salin Tautan'"
-            >
-              <Check v-if="copiedSubdomain === art.id" :size="13" class="text-green" />
+              <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
               <Copy v-else :size="13" />
             </button>
           </div>
+
+          <!-- Dynamic Editorial Body -->
+          <div class="reader-prose-body">
+            <p class="reader-lead-paragraph">
+              Dalam implementasi arsitektur cloud-native modern, kecepatan penyajian konten statis dan dinamis di level reverse proxy edge Traefik v3 menjadi faktor penentu utama pengalaman pengguna, ranking SEO Google Core Web Vitals, serta efisiensi penggunaan memori server.
+            </p>
+
+            <h2 id="section-1">1. Isolasi Resource Kernel Linux cgroups v2</h2>
+            <p>
+              Setiap tenant situs pada HeroCMS dialokasikan di dalam kontainer Docker Alpine Nginx mandiri yang terisolasi ketat. Menggunakan subsistem <strong>cgroups v2</strong> pada kernel Linux, sistem menerapkan batas memori hard-limit sebesar <code>256 MB</code> dan pembatasan alokasi CPU maksimum <code>0.5 vCPU</code>.
+            </p>
+            <p>
+              Dengan arsitektur ini, lonjakan trafik tiba-tiba pada satu tenant tidak akan pernah menyebabkan degradasi kinerja atau kondisi <em>out-of-memory (OOM)</em> pada tenant lainnya dalam kluster yang sama.
+            </p>
+
+            <div class="reader-info-callout">
+              <div class="info-callout-icon"><Zap :size="16" /></div>
+              <div class="info-callout-body">
+                <strong>Catatan Arsitektur:</strong> Traefik v3 membaca label Docker secara dinamis melalui socket <code>/var/run/docker.sock</code>. Begitu kontainer tenant di-deploy, routing otomatis dibuat dalam hitungan milidetik tanpa perlu reload Nginx master.
+              </div>
+            </div>
+
+            <h2 id="section-2">2. Telemetri Real-Time Non-Blocking dengan Redis Sorted Sets (ZSET)</h2>
+            <p>
+              Setiap kali rute artikel ini diakses oleh browser pengunjung, edge middleware Traefik secara asinkron meneruskan sinyal telemetry ke antrian Kafka, yang kemudian diakumulasikan ke Redis Sorted Sets (<code>ZSET</code>) menggunakan perintah atomik:
+            </p>
+
+            <!-- Code Block Demonstration -->
+            <div class="reader-code-card">
+              <div class="code-card-header">
+                <div class="code-header-left">
+                  <span class="code-dot red"></span>
+                  <span class="code-dot yellow"></span>
+                  <span class="code-dot green"></span>
+                  <span class="code-filename">internal/telemetry/redis_counter.go</span>
+                </div>
+                <button
+                  class="btn-code-copy"
+                  @click="copyCodeSnippet()"
+                >
+                  <Check v-if="copiedSubdomain === 'code_snippet'" :size="12" class="text-green" />
+                  <Copy v-else :size="12" />
+                  <span>{{ copiedSubdomain === 'code_snippet' ? 'Tersalin' : 'Salin Kode' }}</span>
+                </button>
+              </div>
+              <pre class="code-pre"><code><span class="token-keyword">func</span> <span class="token-function">RecordArticleHit</span>(ctx context.Context, slug <span class="token-type">string</span>) <span class="token-type">error</span> {
+    <span class="token-comment">// Atomic increment via Redis Sorted Set (ZSET) - Sub-millisecond latency</span>
+    <span class="token-keyword">return</span> redisClient.<span class="token-function">ZIncrBy</span>(ctx, <span class="token-string">"herocms:articles:views"</span>, <span class="token-number">1.0</span>, slug).<span class="token-function">Err</span>()
+}</code></pre>
+            </div>
+
+            <h2 id="section-3">3. Optimasi Cache Header & TLS ALPN Passthrough</h2>
+            <p>
+              Header <code>Cache-Control: public, max-age=31536000, immutable</code> secara otomatis diinjeksi pada file statis CSS, JS, dan gambar WebP. Sementara dokumen HTML halaman di-cache di level edge Traefik dengan strategi <code>stale-while-revalidate</code>, memastikan latensi <em>Time To First Byte (TTFB)</em> konsisten di bawah <strong>2ms</strong> bagi pengunjung global.
+            </p>
+
+            <!-- Tech Tags Cloud -->
+            <div class="reader-article-tags">
+              <span class="tag-lead">Topik Terkait:</span>
+              <span
+                v-for="tag in getCategoryTags(activeArticleForReader.category)"
+                :key="tag"
+                class="reader-tag-chip"
+              >
+                {{ tag }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Bottom Navigation Pagination -->
+          <div class="reader-pagination-bar">
+            <button
+              v-if="prevArticle"
+              class="btn-pagination-nav prev"
+              @click="openArticleReader(prevArticle)"
+            >
+              <ArrowLeft :size="14" />
+              <div class="nav-text">
+                <span class="nav-dir">Artikel Sebelumnya</span>
+                <span class="nav-title">{{ prevArticle.title }}</span>
+              </div>
+            </button>
+            <div v-else class="pagination-spacer"></div>
+
+            <button
+              v-if="nextArticle"
+              class="btn-pagination-nav next"
+              @click="openArticleReader(nextArticle)"
+            >
+              <div class="nav-text">
+                <span class="nav-dir">Artikel Selanjutnya</span>
+                <span class="nav-title">{{ nextArticle.title }}</span>
+              </div>
+              <ChevronRight :size="14" />
+            </button>
+          </div>
+        </article>
+
+        <!-- Sidebar Inspector (Right, 28%) -->
+        <aside class="reader-sidebar-inspector">
+          <!-- Metadata Inspector Card -->
+          <div class="inspector-card">
+            <h4 class="inspector-title">
+              <Server :size="14" />
+              <span>Spesifikasi Deployment</span>
+            </h4>
+            <div class="inspector-specs-list">
+              <div class="spec-row">
+                <span class="spec-k">Target Kontainer</span>
+                <span class="spec-v">{{ activeArticleForReader.siteName }}</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-k">Container ID</span>
+                <code class="spec-code">{{ activeArticleForReader.containerId }}</code>
+              </div>
+              <div class="spec-row">
+                <span class="spec-k">Slug URL</span>
+                <code class="spec-code">/{{ activeArticleForReader.slug }}</code>
+              </div>
+              <div class="spec-row">
+                <span class="spec-k">Status Routing</span>
+                <span class="spec-live-pill"><span class="dot"></span> Active in Traefik</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-k">Auto-SSL</span>
+                <span class="spec-v">Let's Encrypt TLS v1.3</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-k">Tanggal Rilis</span>
+                <span class="spec-v">{{ activeArticleForReader.publishedAt }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Edge Telemetry Card -->
+          <div class="inspector-card">
+            <h4 class="inspector-title">
+              <Activity :size="14" />
+              <span>Metrik Edge Real-Time</span>
+            </h4>
+            <div class="telemetry-compact-grid">
+              <div class="tc-metric">
+                <span class="tc-val">{{ activeArticleForReader.views.toLocaleString('id-ID') }}</span>
+                <span class="tc-lbl">Redis Views</span>
+              </div>
+              <div class="tc-metric">
+                <span class="tc-val text-green">1.8 ms</span>
+                <span class="tc-lbl">Edge TTFB</span>
+              </div>
+              <div class="tc-metric">
+                <span class="tc-val text-cyan">99.4%</span>
+                <span class="tc-lbl">Cache Hit</span>
+              </div>
+              <div class="tc-metric">
+                <span class="tc-val text-purple">0.5 vCPU</span>
+                <span class="tc-lbl">cgroups v2</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Return Button -->
+          <button class="btn-sidebar-back-list" @click="closeArticleReader()">
+            <ArrowLeft :size="14" />
+            <span>Kembali ke Daftar Artikel</span>
+          </button>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- 2. DEFAULT ARTICLES & PAGES LIST VIEW (WHEN NOT IN READER)     -->
+    <!-- ============================================================= -->
+    <div v-else>
+      <!-- Header Intro -->
+      <div class="page-intro-row">
+        <div>
+          <h1 class="page-title">Konten & Editorial Studio</h1>
+          <p class="page-desc">Jelajahi publikasi konten, postingan editorial teknis, dan landing page kontainer tenant Anda dengan sinkronisasi CDN Traefik dan OpenGraph otomatis.</p>
         </div>
       </div>
 
-      <div v-if="filteredArticles.length === 0" class="empty-state-box">
-        <FileText :size="38" class="empty-icon" />
-        <h4>Tidak ada artikel yang cocok dengan filter</h4>
-        <p>Sesuaikan kata kunci pencarian atau filter kategori Anda.</p>
-      </div>
-    </div>
+      <!-- 4 Content Telemetry Cards -->
+      <div class="stats-overview-grid">
+        <div class="telemetry-card">
+          <div class="telemetry-top">
+            <span class="telemetry-label">TOTAL ARTIKEL</span>
+            <div class="telemetry-glyph blue"><FileText :size="15" /></div>
+          </div>
+          <div class="telemetry-val">{{ articles.length }} <span class="telemetry-denom">Artikel</span></div>
+          <div class="telemetry-sub"><span>8,450 kata terindeks di edge</span></div>
+        </div>
 
-    <!-- 2. DATA TABLE VIEW (WHEN TOGGLED) -->
-    <div v-else class="articles-panel">
-      <div class="table-responsive">
-        <table class="articles-table">
-          <thead>
-            <tr>
-              <th>JUDUL ARTIKEL & SLUG</th>
-              <th>TARGET SITUS</th>
-              <th>KATEGORI</th>
-              <th>STATUS</th>
-              <th>VIEWS (REDIS)</th>
-              <th>TANGGAL RILIS</th>
-              <th style="text-align: right">AKSI</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="art in filteredArticles" :key="art.id">
-              <td>
-                <div class="article-title-cell">
-                  <strong class="art-title-text">{{ art.title }}</strong>
-                  <div class="art-slug-box">
-                    <Globe :size="11" />
-                    <code>/{{ art.slug }}</code>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span class="site-tag">{{ art.siteName }}</span>
-              </td>
-              <td>
-                <span class="category-pill">{{ art.category }}</span>
-              </td>
-              <td>
-                <span class="status-badge" :class="art.status === 'published' ? 'badge-published' : 'badge-draft'">
-                  <span class="status-dot"></span>
-                  {{ art.status === 'published' ? 'Published' : 'Draft' }}
-                </span>
-              </td>
-              <td>
-                <div class="views-cell">
-                  <Eye :size="12" class="view-icon" />
-                  <span>{{ art.views.toLocaleString('id-ID') }}</span>
-                </div>
-              </td>
-              <td>
-                <div class="date-cell">
-                  <Calendar :size="12" />
-                  <span>{{ art.publishedAt }}</span>
-                </div>
-              </td>
-              <td style="text-align: right">
-                <div class="row-actions">
-                  <button class="btn-action-icon" @click="openArticleModal(art)" title="Lihat Artikel">
-                    <Eye :size="13" />
-                  </button>
-                  <button class="btn-action-icon" @click="copyToClipboard(`https://rizalpratama.cloud/${art.slug}`, art.id)" :title="copiedSubdomain === art.id ? 'Tersalin!' : 'Salin Tautan'">
-                    <Check v-if="copiedSubdomain === art.id" :size="13" class="text-green" />
-                    <Copy v-else :size="13" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+        <div class="telemetry-card">
+          <div class="telemetry-top">
+            <span class="telemetry-label">TERPUBLIKASI (LIVE)</span>
+            <div class="telemetry-glyph emerald"><Check :size="15" /></div>
+          </div>
+          <div class="telemetry-val">{{ articles.filter(a => a.status === 'published').length }} <span class="badge-online">Live CDN</span></div>
+          <div class="telemetry-sub"><span>Lighthouse 100/100 SEO ready</span></div>
+        </div>
 
-    <!-- MODAL: BACA & PRATINJAU ARTIKEL (ENTERPRISE EDITORIAL READER) -->
-    <Teleport to="body">
-      <div v-if="isArticleModalOpen && selectedArticle" class="modal-backdrop" @click.self="isArticleModalOpen = false">
-        <div class="modal-dialog modal-dialog-lg">
-          <div class="modal-header">
-            <div class="modal-header-leading">
-              <div class="modal-header-icon-box">
-                <BookOpen :size="18" />
-              </div>
-              <div>
-                <h3 class="modal-heading">Pratinjau Artikel Editorial</h3>
-                <p class="modal-subheading">Konten tersinkronisasi di edge routing Traefik v3 dan siap disajikan ke publik.</p>
-              </div>
-            </div>
-            <button class="modal-close-button" @click="isArticleModalOpen = false" title="Tutup">
-              <X :size="16" />
-            </button>
+        <div class="telemetry-card">
+          <div class="telemetry-top">
+            <span class="telemetry-label">DRAFT PENULISAN</span>
+            <div class="telemetry-glyph purple"><Edit3 :size="15" /></div>
+          </div>
+          <div class="telemetry-val">{{ articles.filter(a => a.status === 'draft').length }} <span class="badge-growth-pill">WIP</span></div>
+          <div class="telemetry-sub"><span>Belum dipublikasikan ke publik</span></div>
+        </div>
+
+        <div class="telemetry-card">
+          <div class="telemetry-top">
+            <span class="telemetry-label">TOTAL PEMBACA (VIEWS)</span>
+            <div class="telemetry-glyph blue"><Activity :size="15" /></div>
+          </div>
+          <div class="telemetry-val">{{ articles.reduce((acc, a) => acc + a.views, 0).toLocaleString('id-ID') }} <span class="badge-online">+24%</span></div>
+          <div class="telemetry-sub"><span>Dihitung non-blocking via Redis ZSET</span></div>
+        </div>
+      </div>
+
+      <!-- Featured Post Spotlight Card (Top Trending Post on Redis) -->
+      <div v-if="trendingArticle" class="spotlight-post-card">
+        <div class="spotlight-glow-layer"></div>
+        <div class="spotlight-content">
+          <div class="spotlight-tag-row">
+            <span class="spotlight-fire-pill">
+              <Flame :size="13" />
+              <span>#1 POPULER DI REDIS STREAM</span>
+            </span>
+            <span class="spotlight-site-tag">{{ trendingArticle.siteName }}</span>
           </div>
 
-          <div class="article-reader-body">
-            <div class="reader-hero-cover" :class="'cover-' + getCategoryColor(selectedArticle.category)">
-              <div class="reader-meta-pills">
-                <span class="cover-cat-pill" :class="'pill-' + getCategoryColor(selectedArticle.category)">
-                  {{ selectedArticle.category.toUpperCase() }}
+          <div class="spotlight-main-row">
+            <div class="spotlight-info">
+              <h2 class="spotlight-title" @click="openArticleReader(trendingArticle)" style="cursor: pointer;">
+                {{ trendingArticle.title }}
+              </h2>
+              <p class="spotlight-excerpt">
+                Eksplorasi mendalam mengenai arsitektur sistem otonom, isolasi resource CPU cgroups v2, integrasi event stream Kafka, dan latensi proxy Traefik v3 sub-2ms.
+              </p>
+
+              <div class="spotlight-meta-strip">
+                <span class="s-meta-item">
+                  <Eye :size="13" class="text-blue" />
+                  <strong>{{ trendingArticle.views.toLocaleString('id-ID') }}</strong> Views
                 </span>
-                <span class="cover-read-time">
-                  <Clock :size="11" />
-                  <span>{{ getReadTime(selectedArticle.title) }}</span>
+                <span class="s-meta-item">
+                  <Clock :size="13" />
+                  {{ getReadTime(trendingArticle.title) }}
                 </span>
-                <span class="seo-score-pill"><Zap :size="11" /> SEO 100/100</span>
-              </div>
-              <h2 class="reader-headline">{{ selectedArticle.title }}</h2>
-              <div class="reader-author-bar">
-                <div class="author-avatar-mini">RP</div>
-                <div class="author-meta">
-                  <span class="author-name">{{ selectedArticle.author }}</span>
-                  <span class="art-date">{{ selectedArticle.publishedAt }} • {{ selectedArticle.siteName }}</span>
-                </div>
-                <div class="reader-views-chip">
-                  <Eye :size="13" />
-                  <span>{{ selectedArticle.views.toLocaleString('id-ID') }} Total Pembaca (Redis ZSET)</span>
-                </div>
+                <span class="s-meta-item seo-score-pill">
+                  <Zap :size="11" />
+                  SEO 99/100
+                </span>
+                <span class="s-meta-item">
+                  <Calendar :size="13" />
+                  {{ trendingArticle.publishedAt }}
+                </span>
               </div>
             </div>
 
-            <div class="reader-content-prose">
-              <div class="article-slug-callout">
-                <Globe :size="14" />
-                <span>URL Publik: </span>
-                <code>https://rizalpratama.cloud/{{ selectedArticle.slug }}</code>
-              </div>
-
-              <div class="prose-sample-body">
-                <p class="lead-paragraph">
-                  Dalam implementasi arsitektur microservices terdistribusi modern, kecepatan penyajian konten statis di level edge proxy menjadi faktor penentu utama pengalaman pengguna dan skor Core Web Vitals.
-                </p>
-                <h4>1. Isolasi Resource Cgroups v2 & Kontainer Mandiri</h4>
-                <p>
-                  Setiap situs tenant dialokasikan dalam kontainer Docker Alpine Nginx yang terisolasi ketat. Dengan pembatasan 0.5 vCPU dan 256MB RAM melalui kernel Linux cgroups v2, tidak ada ancaman "noisy neighbor" di mana trafik satu tenant membebani resource tenant lain.
-                </p>
-                <h4>2. Telemetri Real-Time dengan Redis Sorted Sets (ZSET)</h4>
-                <p>
-                  Metrik kunjungan artikel ini dihitung secara atomik dan non-blocking melalui Redis Sorted Sets. Setiap pembaca yang mengakses rute <code>/{{ selectedArticle.slug }}</code> memicu perintah <code>ZINCRBY</code> dengan latensi kurang dari 1 milidetik.
-                </p>
-              </div>
+            <div class="spotlight-actions">
+              <button
+                class="btn-spotlight-edit"
+                @click="openArticleReader(trendingArticle)"
+              >
+                <Eye :size="14" />
+                <span>Baca Artikel Lengkap</span>
+              </button>
+              <button
+                class="btn-spotlight-copy"
+                @click="copyToClipboard(`https://rizalpratama.cloud/${trendingArticle.slug}`, trendingArticle.id)"
+                :title="copiedSubdomain === trendingArticle.id ? 'Tersalin!' : 'Salin URL Artikel'"
+              >
+                <Check v-if="copiedSubdomain === trendingArticle.id" :size="14" class="text-green" />
+                <Copy v-else :size="14" />
+                <span>{{ copiedSubdomain === trendingArticle.id ? 'URL Tersalin' : 'Salin URL' }}</span>
+              </button>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="modal-footer-row">
-            <button type="button" class="btn-modal-ghost" @click="isArticleModalOpen = false">
-              Tutup
-            </button>
+      <!-- Toolbar Filters & View Switcher -->
+      <div class="editorial-toolbar">
+        <!-- Custom Clean Search Bar (Obsidian/Cyan Themed, No Collisions) -->
+        <div class="articles-search-bar">
+          <Search :size="15" class="articles-search-icon" />
+          <input
+            ref="searchInputRef"
+            v-model="searchQuery"
+            type="text"
+            placeholder="Cari judul artikel, slug URL, kata kunci, topik..."
+            class="articles-search-input"
+          />
+          <button
+            v-if="searchQuery"
+            type="button"
+            class="articles-search-clear"
+            @click="searchQuery = ''; searchInputRef?.focus()"
+            title="Hapus pencarian"
+          >
+            <X :size="13" />
+          </button>
+          <kbd class="articles-search-shortcut" @click="searchInputRef?.focus()">⌘K</kbd>
+        </div>
+
+        <div class="toolbar-controls-right">
+          <!-- Custom Category Dropdown -->
+          <div class="custom-filter-dropdown-wrap">
             <button
               type="button"
-              class="btn-modal-confirm"
-              @click="copyToClipboard(`https://rizalpratama.cloud/${selectedArticle.slug}`, selectedArticle.id)"
+              class="custom-filter-trigger-btn"
+              @click.stop="isCategoryDropdownOpen = !isCategoryDropdownOpen; isStatusDropdownOpen = false"
+              title="Filter Kategori"
             >
-              <Copy :size="14" />
-              <span>Salin Tautan Publik</span>
+              <span>{{ categoryOptions.find(o => o.value === selectedCategory)?.label || 'Semua Kategori' }}</span>
+              <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isCategoryDropdownOpen }" />
+            </button>
+            <div v-if="isCategoryDropdownOpen" class="custom-filter-dropdown-menu">
+              <button
+                v-for="opt in categoryOptions"
+                :key="opt.value"
+                type="button"
+                class="custom-filter-dropdown-item"
+                :class="{ active: selectedCategory === opt.value }"
+                @click="selectedCategory = opt.value; isCategoryDropdownOpen = false"
+              >
+                <span>{{ opt.label }}</span>
+                <Check v-if="selectedCategory === opt.value" :size="13" class="dropdown-check-icon" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom Status Dropdown -->
+          <div class="custom-filter-dropdown-wrap">
+            <button
+              type="button"
+              class="custom-filter-trigger-btn"
+              @click.stop="isStatusDropdownOpen = !isStatusDropdownOpen; isCategoryDropdownOpen = false"
+              title="Filter Status"
+            >
+              <span>{{ statusOptions.find(o => o.value === selectedStatus)?.label || 'Semua Status' }}</span>
+              <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isStatusDropdownOpen }" />
+            </button>
+            <div v-if="isStatusDropdownOpen" class="custom-filter-dropdown-menu">
+              <button
+                v-for="opt in statusOptions"
+                :key="opt.value"
+                type="button"
+                class="custom-filter-dropdown-item"
+                :class="{ active: selectedStatus === opt.value }"
+                @click="selectedStatus = opt.value; isStatusDropdownOpen = false"
+              >
+                <span>{{ opt.label }}</span>
+                <Check v-if="selectedStatus === opt.value" :size="13" class="dropdown-check-icon" />
+              </button>
+            </div>
+          </div>
+
+          <!-- View Mode Toggle -->
+          <div class="view-mode-toggle">
+            <button
+              class="btn-view-mode"
+              :class="{ active: viewMode === 'grid' }"
+              @click="viewMode = 'grid'"
+              title="Tampilan Grid Kartu"
+            >
+              <LayoutGrid :size="14" />
+            </button>
+            <button
+              class="btn-view-mode"
+              :class="{ active: viewMode === 'table' }"
+              @click="viewMode = 'table'"
+              title="Tampilan Tabel Data"
+            >
+              <List :size="14" />
             </button>
           </div>
         </div>
       </div>
-    </Teleport>
+
+      <!-- 1. GRID OF VISUAL ARTICLE CARDS -->
+      <div v-if="viewMode === 'grid'">
+        <div class="articles-card-grid">
+          <div
+            v-for="art in filteredArticles"
+            :key="art.id"
+            class="article-visual-card"
+          >
+            <!-- Visual Hero Cover with Theme Accent Gradient -->
+            <div
+              class="art-card-cover"
+              :class="'cover-' + getCategoryColor(art.category)"
+              @click="openArticleReader(art)"
+              style="cursor: pointer;"
+            >
+              <div class="art-cover-glow"></div>
+              
+              <!-- Top Metadata Strip inside Cover -->
+              <div class="cover-top-meta">
+                <span class="cover-cat-pill" :class="'pill-' + getCategoryColor(art.category)">
+                  {{ art.category.toUpperCase() }}
+                </span>
+                <div class="cover-top-right">
+                  <span class="cover-read-time">
+                    <Clock :size="11" />
+                    <span>{{ getReadTime(art.title) }}</span>
+                  </span>
+                  <span class="seo-score-pill">
+                    <Zap :size="11" />
+                    <span>SEO 100</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Cover Center Tech Visual -->
+              <div class="art-cover-center">
+                <div class="art-floating-icon">
+                  <BookOpen :size="26" />
+                </div>
+                <div class="cover-dynamic-tags">
+                  <span
+                    v-for="tag in getCategoryTags(art.category)"
+                    :key="tag"
+                    class="tag-micro-badge"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Target Site Chip on Cover Bottom -->
+              <div class="cover-bottom-bar">
+                <span class="cover-site-badge">
+                  <Globe :size="11" />
+                  <span>{{ art.siteName }}</span>
+                </span>
+                <span class="cover-slug-chip">/{{ art.slug }}</span>
+              </div>
+            </div>
+
+            <!-- Card Body Content -->
+            <div class="art-card-content">
+              <h3 class="art-card-title" @click="openArticleReader(art)" style="cursor: pointer;">
+                {{ art.title }}
+              </h3>
+
+              <div class="art-card-footer">
+                <div class="art-author-row">
+                  <div class="author-avatar-mini">RP</div>
+                  <div class="author-details">
+                    <span class="author-name">{{ art.author }}</span>
+                    <span class="art-date">{{ art.publishedAt }}</span>
+                  </div>
+                </div>
+
+                <div class="art-metrics-col">
+                  <div class="art-views-badge">
+                    <Eye :size="12" class="text-blue" />
+                    <span>{{ art.views.toLocaleString('id-ID') }}</span>
+                  </div>
+                  <span
+                    class="art-status-chip"
+                    :class="art.status === 'published' ? 'chip-live' : 'chip-draft'"
+                  >
+                    <span class="dot"></span>
+                    {{ art.status === 'published' ? 'Live' : 'Draft' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Card Action Bar -->
+              <div class="art-card-actions-bar">
+                <button
+                  class="btn-card-action primary"
+                  @click="openArticleReader(art)"
+                >
+                  <Eye :size="13" />
+                  <span>Baca Artikel</span>
+                </button>
+                <button
+                  class="btn-card-action"
+                  @click="copyToClipboard(`https://rizalpratama.cloud/${art.slug}`, art.id)"
+                  :title="copiedSubdomain === art.id ? 'Tersalin!' : 'Salin Tautan'"
+                >
+                  <Check v-if="copiedSubdomain === art.id" :size="13" class="text-green" />
+                  <Copy v-else :size="13" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="filteredArticles.length === 0" class="empty-state-box">
+          <FileText :size="38" class="empty-icon" />
+          <h4>Tidak ada artikel yang cocok dengan filter</h4>
+          <p>Sesuaikan kata kunci pencarian atau filter kategori Anda.</p>
+        </div>
+      </div>
+
+      <!-- 2. DATA TABLE VIEW (WHEN TOGGLED) -->
+      <div v-else class="articles-panel">
+        <div class="table-responsive">
+          <table class="articles-table">
+            <thead>
+              <tr>
+                <th>JUDUL ARTIKEL & SLUG</th>
+                <th>TARGET SITUS</th>
+                <th>KATEGORI</th>
+                <th>STATUS</th>
+                <th>VIEWS (REDIS)</th>
+                <th>TANGGAL RILIS</th>
+                <th style="text-align: right">AKSI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="art in filteredArticles" :key="art.id">
+                <td>
+                  <div class="art-title-cell" @click="openArticleReader(art)" style="cursor: pointer;">
+                    <div class="art-title-text">{{ art.title }}</div>
+                    <div class="art-slug-box">
+                      <code>/{{ art.slug }}</code>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="site-tag">{{ art.siteName }}</span>
+                </td>
+                <td>
+                  <span class="category-pill">{{ art.category }}</span>
+                </td>
+                <td>
+                  <span class="status-badge" :class="art.status === 'published' ? 'badge-published' : 'badge-draft'">
+                    <span class="status-dot"></span>
+                    {{ art.status === 'published' ? 'Published' : 'Draft' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="views-cell">
+                    <Eye :size="12" class="view-icon" />
+                    <span>{{ art.views.toLocaleString('id-ID') }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="date-cell">
+                    <Calendar :size="12" />
+                    <span>{{ art.publishedAt }}</span>
+                  </div>
+                </td>
+                <td style="text-align: right">
+                  <div class="row-actions">
+                    <button class="btn-action-icon" @click="openArticleReader(art)" title="Baca Artikel">
+                      <Eye :size="13" />
+                    </button>
+                    <button class="btn-action-icon" @click="copyToClipboard(`https://rizalpratama.cloud/${art.slug}`, art.id)" :title="copiedSubdomain === art.id ? 'Tersalin!' : 'Salin Tautan'">
+                      <Check v-if="copiedSubdomain === art.id" :size="13" class="text-green" />
+                      <Copy v-else :size="13" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
   </section>
 </template>
@@ -874,48 +1160,89 @@ onUnmounted(() => {
   flex-wrap: wrap;
 }
 
-.search-command-shell {
+/* Custom Single-Container Search Bar (Obsidian / Studio Themed) */
+.articles-search-bar {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0 12px;
+  height: 38px;
   flex: 1;
-  max-width: 420px;
+  max-width: 440px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
-.search-lead-glyph {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+.articles-search-bar:focus-within {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12), 0 2px 5px rgba(15, 23, 42, 0.05);
+}
+
+.articles-search-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.articles-search-bar:focus-within .articles-search-icon {
+  color: #0284c7;
+}
+
+.articles-search-input {
+  flex: 1;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  font-size: 13px;
+  color: #0f172a;
+  padding: 0;
+  font-family: inherit;
+  box-shadow: none !important;
+}
+
+.articles-search-input::placeholder {
   color: #94a3b8;
 }
 
-.search-command-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 45px 8px 36px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 12.5px;
-  color: #0f172a;
-  outline: none;
-  background: #ffffff;
-}
-
-.search-command-input:focus {
-  border-color: #0f172a;
-  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.06);
-}
-
-.shortcut-tag {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  padding: 1px 5px;
+.articles-search-clear {
+  background: transparent;
+  border: none;
+  padding: 2px;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.articles-search-clear:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.articles-search-shortcut {
+  font-size: 10.5px;
+  font-weight: 600;
   color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.articles-search-shortcut:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .toolbar-controls-right {
@@ -1615,92 +1942,213 @@ onUnmounted(() => {
   color: #dc2626;
 }
 
-/* Modal */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-  padding: 20px;
-  box-sizing: border-box;
+/* ==========================================================================
+   DEDICATED FULL-PAGE ARTICLE READER STYLES (OBSIDIAN STUDIO THEME)
+   ========================================================================== */
+.article-reader-page {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.modal-dialog {
+/* Top Action & Breadcrumb Navigation Bar */
+.reader-top-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
   background: #ffffff;
-  border-radius: 16px;
-  width: 100%;
-  max-width: 580px;
-  max-height: calc(100vh - 40px);
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
   border: 1px solid #e2e8f0;
-  overflow: hidden;
-  position: relative;
-  z-index: 100000;
-  animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 12px;
+  padding: 10px 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  flex-wrap: wrap;
 }
 
-.modal-dialog-lg {
-  max-width: 780px !important;
-}
-
-/* Reader Modal Body Styles */
-.article-reader-body {
-  overflow-y: auto;
-  max-height: calc(100vh - 170px);
-  padding: 0;
-}
-
-.reader-hero-cover {
-  padding: 24px 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  position: relative;
-}
-
-.reader-meta-pills {
+.reader-breadcrumb-nav {
   display: flex;
-  gap: 8px;
   align-items: center;
-  margin-bottom: 14px;
+  gap: 10px;
+  font-size: 12.5px;
 }
 
-.reader-headline {
-  font-size: 22px;
+.btn-reader-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-reader-back:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.reader-crumb-divider {
+  color: #cbd5e1;
+  font-weight: 400;
+}
+
+.reader-crumb-module {
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.reader-crumb-module:hover {
+  color: #0284c7;
+  text-decoration: underline;
+}
+
+.reader-crumb-active {
+  color: #0f172a;
+  font-weight: 700;
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+.reader-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-reader-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-reader-action:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+/* Reader Page Hero (Cover Palette) */
+.reader-page-hero {
+  position: relative;
+  border-radius: 16px;
+  padding: 34px 38px;
+  margin-bottom: 26px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12);
+}
+
+.reader-hero-decor-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.reader-hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.reader-hero-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.reader-page-title {
+  font-size: 28px;
   font-weight: 800;
   color: #ffffff !important;
-  margin: 0 0 16px 0;
-  line-height: 1.35;
-  letter-spacing: -0.015em;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin: 0 0 20px 0;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 
-.reader-author-bar {
+.reader-hero-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.reader-author-profile {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.reader-hero-cover .author-name {
+.author-avatar-large {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8, #0284c7);
   color: #ffffff;
-  font-weight: 600;
-  font-size: 12.5px;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
-.reader-hero-cover .art-date {
+.author-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.author-primary-name {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.author-secondary-sub {
   color: rgba(226, 232, 240, 0.85);
-  font-size: 11.5px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.reader-views-chip {
-  margin-left: auto;
+.sub-sep {
+  opacity: 0.6;
+}
+
+.reader-hero-metrics-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hero-metric-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1708,226 +2156,468 @@ onUnmounted(() => {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
   color: #f8fafc;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.reader-views-chip svg {
-  color: #38bdf8;
+.metric-num {
+  font-weight: 700;
 }
 
-.reader-content-prose {
-  padding: 24px 28px;
+.metric-label {
+  color: rgba(226, 232, 240, 0.75);
+  font-size: 11px;
 }
 
-.article-slug-callout {
+/* 2-Column Reader Layout Grid */
+.reader-layout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .reader-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Main Content Prose */
+.reader-main-content {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 32px 36px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.reader-edge-callout {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  padding: 10px 14px;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 28px;
+}
+
+.callout-icon-box {
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
-  font-size: 13px;
-  color: #64748b;
-  margin-bottom: 20px;
-}
-
-.article-slug-callout code {
-  color: #2563eb;
-  font-weight: 600;
-}
-
-.prose-sample-body {
-  font-size: 14.5px;
-  line-height: 1.7;
-  color: #334155;
-}
-
-.lead-paragraph {
-  font-size: 15.5px;
-  font-weight: 500;
-  color: #1e293b;
-  margin-bottom: 18px;
-}
-
-.prose-sample-body h4 {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 20px 0 8px 0;
-}
-
-@keyframes modalScale {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 18px 24px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.modal-header-leading {
-  display: flex;
-  gap: 12px;
-}
-
-.modal-header-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 9px;
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #e0f2fe;
+  color: #0284c7;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.modal-heading {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 3px 0;
+.callout-text-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
-.modal-subheading {
-  font-size: 12.5px;
+.callout-title {
+  font-size: 11px;
+  font-weight: 600;
   color: #64748b;
-  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.modal-close-button {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
+.callout-url {
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-weight: 600;
+  color: #0284c7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-copy-callout {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-.modal-close-button:hover {
+.btn-copy-callout:hover {
   background: #f1f5f9;
   color: #0f172a;
 }
 
-.modal-form-body {
-  padding: 20px 24px;
+/* Prose Body Typography */
+.reader-prose-body {
+  color: #334155;
+  font-size: 14.5px;
+  line-height: 1.75;
 }
 
-.form-group-block {
-  margin-bottom: 18px;
+.reader-lead-paragraph {
+  font-size: 16px;
+  line-height: 1.75;
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 24px;
 }
 
-.input-label-row {
+.reader-prose-body h2 {
+  font-size: 19px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 32px 0 14px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.reader-prose-body p {
+  margin: 0 0 16px 0;
+}
+
+.reader-prose-body code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  background: #f1f5f9;
+  color: #0284c7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12.5px;
+}
+
+.reader-info-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 4px solid #16a34a;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin: 24px 0;
+  font-size: 13.5px;
+  color: #166534;
+  line-height: 1.6;
+}
+
+.info-callout-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Code Card */
+.reader-code-card {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 24px 0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.code-card-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 6px;
+  align-items: center;
+  padding: 10px 14px;
+  background: #1e293b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.code-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.code-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.code-dot.red { background: #ef4444; }
+.code-dot.yellow { background: #f59e0b; }
+.code-dot.green { background: #10b981; }
+
+.code-filename {
+  font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 12px;
-  font-weight: 600;
-  color: #334155;
+  color: #94a3b8;
+  margin-left: 8px;
 }
 
-.label-badge-optional {
-  color: #64748b;
+.btn-code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
   font-size: 11px;
-}
-
-.form-text-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 9px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 13px;
-  color: #0f172a;
-  outline: none;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.form-text-input:focus {
-  border-color: #0f172a;
-  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+.btn-code-copy:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
 }
 
-.form-row-duo {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+.code-pre {
+  margin: 0;
+  padding: 18px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #e2e8f0;
+  overflow-x: auto;
+  background: transparent;
 }
 
-.resource-spec-callout {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  padding: 10px 12px;
+.token-keyword { color: #c084fc; font-weight: 600; }
+.token-function { color: #38bdf8; font-weight: 600; }
+.token-string { color: #4ade80; }
+.token-type { color: #fbbf24; }
+.token-comment { color: #64748b; font-style: italic; }
+.token-number { color: #f472b6; }
+
+/* Article Tags Row */
+.reader-article-tags {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
 }
 
-.spec-callout-icon {
-  color: #16a34a;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.spec-callout-text {
+.tag-lead {
   font-size: 12px;
-  color: #166534;
-  line-height: 1.4;
+  font-weight: 600;
+  color: #64748b;
 }
 
-.spec-callout-text span {
-  font-weight: 700;
+.reader-tag-chip {
+  background: #f1f5f9;
+  color: #0284c7;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
 }
 
-.modal-footer-row {
+/* Bottom Pagination Navigation */
+.reader-pagination-bar {
   display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.pagination-spacer {
+  flex: 1;
+}
+
+.btn-pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+  flex: 1;
+  max-width: 48%;
+}
+
+.btn-pagination-nav.next {
+  text-align: right;
   justify-content: flex-end;
+}
+
+.btn-pagination-nav:hover {
+  background: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.1);
+  transform: translateY(-2px);
+}
+
+.nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nav-dir {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nav-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* Sidebar Inspector */
+.reader-sidebar-inspector {
+  position: sticky;
+  top: 85px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.inspector-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.inspector-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 14px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.inspector-specs-list {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.btn-modal-ghost {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-  padding: 9px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
 }
 
-.btn-modal-ghost:hover {
+.spec-k {
+  color: #64748b;
+}
+
+.spec-v {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.spec-code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #0284c7;
+  font-size: 11.5px;
+}
+
+.spec-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #059669;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.spec-live-pill .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.telemetry-compact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tc-metric {
   background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tc-val {
+  font-size: 15px;
+  font-weight: 800;
   color: #0f172a;
 }
 
-.btn-modal-confirm {
-  display: inline-flex;
+.tc-lbl {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.btn-sidebar-back-list {
+  display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
   background: #0f172a;
-  border: 1px solid #0f172a;
   color: #ffffff;
-  padding: 9px 18px;
-  border-radius: 8px;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 16px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
 }
 
-.btn-modal-confirm:hover {
+.btn-sidebar-back-list:hover {
   background: #1e293b;
 }
 </style>
