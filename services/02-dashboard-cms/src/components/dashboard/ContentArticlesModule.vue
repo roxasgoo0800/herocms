@@ -1365,48 +1365,60 @@ onUnmounted(() => {
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
-/* 1. VISUAL MAGAZINE CARDS GRID */
+/* 1. VISUAL ARTICLE CARDS GRID (2 COLUMNS PER ROW) */
+.articles-card-grid,
 .articles-magazine-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
+  width: 100%;
 }
 
-@media (max-width: 1180px) {
-  .articles-magazine-grid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 768px) {
+  .articles-card-grid,
+  .articles-magazine-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-@media (max-width: 680px) {
-  .articles-magazine-grid { grid-template-columns: 1fr; }
-}
-
+.article-visual-card,
 .article-magazine-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   display: flex;
   flex-direction: column;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
+.article-visual-card:hover,
 .article-magazine-card:hover {
-  transform: translateY(-4px);
-  border-color: #cbd5e1;
-  box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.1);
+  transform: translateY(-3px);
+  border-color: #38bdf8;
+  box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.08);
 }
 
 /* Card Cover Themes (Obsidian Slate + Cyan / Emerald / Purple / Sapphire / Amber) */
 .art-card-cover {
-  height: 125px;
+  height: 135px;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
   overflow: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+.art-cover-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.16) 0%, transparent 60%);
+  pointer-events: none;
 }
 
 .cover-cyan {
@@ -1439,30 +1451,16 @@ onUnmounted(() => {
   border-top: 2px solid #94a3b8;
 }
 
-.cover-watermark {
-  position: absolute;
-  right: -5px;
-  bottom: 4px;
-  opacity: 0.12;
-  pointer-events: none;
-}
-
-.cover-watermark code {
-  font-size: 22px;
-  font-weight: 800;
-  color: #ffffff;
-  font-family: ui-monospace, monospace;
-}
-
-.cover-top-tags {
+.cover-top-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  gap: 8px;
 }
 
-.cover-top-meta {
+.cover-top-right {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1527,7 +1525,7 @@ onUnmounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.cover-seo-tag {
+.seo-score-pill {
   font-size: 9px;
   font-weight: 800;
   color: #10b981;
@@ -1541,50 +1539,93 @@ onUnmounted(() => {
   backdrop-filter: blur(4px);
 }
 
-.cover-tech-tags {
+/* Cover Center Floating Tech Visual */
+.art-cover-center {
   display: flex;
-  gap: 5px;
+  align-items: center;
+  gap: 12px;
   position: relative;
-  z-index: 1;
-  flex-wrap: nowrap;
-  overflow: hidden;
+  z-index: 2;
+  margin: 6px 0;
 }
 
-.cover-tech-tags span {
-  font-size: 8.5px;
+.art-floating-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  backdrop-filter: blur(6px);
+}
+
+.cover-dynamic-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tag-micro-badge {
+  font-size: 9px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 0.03em;
+  color: #ffffff;
   background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 1px 6px;
-  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
   backdrop-filter: blur(4px);
-  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* Cover Bottom Bar */
+.cover-bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  font-size: 11px;
+}
+
+.cover-site-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.cover-slug-chip {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: #38bdf8;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Card Body */
+.art-card-content,
 .art-card-body {
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
   flex: 1;
-}
-
-.art-card-site-name {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: #64748b;
-  margin-bottom: 6px;
+  background: #ffffff;
 }
 
 .art-card-title {
   font-size: 14.5px;
   font-weight: 700;
   color: #0f172a;
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   line-height: 1.4;
   height: 40px;
   display: -webkit-box;
@@ -1592,19 +1633,12 @@ onUnmounted(() => {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  cursor: pointer;
+  transition: color 0.15s ease;
 }
 
-.art-card-slug-line {
-  margin-bottom: 16px;
-}
-
-.art-card-slug-line code {
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
+.art-card-title:hover {
   color: #0284c7;
-  background: #f0f9ff;
-  padding: 2px 6px;
-  border-radius: 4px;
 }
 
 .art-card-footer {
@@ -1616,6 +1650,7 @@ onUnmounted(() => {
   border-top: 1px solid #f1f5f9;
 }
 
+.art-author-row,
 .art-author-info {
   display: flex;
   align-items: center;
@@ -1633,11 +1668,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .author-details {
   display: flex;
   flex-direction: column;
+  gap: 1px;
 }
 
 .author-name {
@@ -1665,10 +1702,6 @@ onUnmounted(() => {
   font-size: 11px;
   font-weight: 700;
   color: #0f172a;
-}
-
-.view-glyph {
-  color: #0284c7;
 }
 
 .art-status-chip {
@@ -1737,12 +1770,6 @@ onUnmounted(() => {
 
 .btn-card-action.primary:hover {
   background: #1e293b;
-}
-
-.btn-card-action.danger:hover {
-  background: #fee2e2;
-  border-color: #fecaca;
-  color: #dc2626;
 }
 
 .empty-state-box {
