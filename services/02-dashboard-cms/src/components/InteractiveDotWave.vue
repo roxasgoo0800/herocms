@@ -149,15 +149,3 @@ onUnmounted(() => {
     aria-hidden="true"
   ></canvas>
 </template>
-
-<style scoped>
-.interactive-dot-wave-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 0;
-  background-color: #f8fafc;
-}
-</style>

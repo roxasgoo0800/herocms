@@ -3,6 +3,8 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
 import './assets/studio-master.css';
+import './assets/visual-editor.css';
+import './assets/studio-animations.css';
 
 const app = createApp(App);
 app.use(createPinia());
