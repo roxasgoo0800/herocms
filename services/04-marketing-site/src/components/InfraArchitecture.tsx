@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Zap, HardDrive, Cpu } from 'lucide-react';
-import infraDiagram from '../../../../docs/assets/infra_flow_diagram.jpg';
+import infraDiagram from '/images/infra_flow_diagram.jpg';
 import { MotionReveal } from './MotionReveal';
 
 export const InfraArchitecture: React.FC = () => {
