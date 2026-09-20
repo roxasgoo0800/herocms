@@ -39,10 +39,12 @@ Aturan ini tidak hanya berlaku untuk Dashboard CMS, tetapi berlaku untuk **selur
 
 ---
 
-## 4. Pemisahan Data Statis & Mock Seeds (`src/assets/*.ts`)
-- **No Heavy Static Arrays in `.vue` or Logic Composables**: Dilarang menaruh ratusan baris data statis, seed mock arrays, generator mockups, daftar font, palet warna, atau konstanta template di dalam file Single File Component (`.vue`) maupun composables logika.
-- **Isolasi Modul Aset**: Pindahkan konstanta, seed awal, dan generator statis ke dalam file TypeScript terpisah di `src/assets/` (seperti [`src/assets/dashboard-seeds.ts`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/assets/dashboard-seeds.ts) dan [`src/assets/editor-presets.ts`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/assets/editor-presets.ts)) lalu diimpor secara modular.
-- **Tujuan**: Menjaga file `.vue` dan composable tetap ramping (<500 baris jika memungkinkan) agar pemindaian IDE (Volar/VS Code Language Server) instan, konsumsi RAM hemat, dan hot-reloading (HMR) tidak lag.
+## 4. Pemisahan Folder Data Statis (`src/data/*.ts`) vs Styling (`src/assets/*.css`)
+- **Pemisahan Sumber Daya Bersih (Clean Resource Separation)**:
+  - **`src/assets/`**: Khusus file visual, stylesheet CSS (`studio-master.css`, `visual-editor.css`), icon, font, dan gambar. DILARANG mencampur file data TypeScript ke dalam folder assets.
+  - **`src/data/`**: Khusus file TypeScript berisi mock seeds, konstanta template, generator mockup, daftar font, dan preset desain (seperti [`src/data/dashboard-seeds.ts`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/data/dashboard-seeds.ts) dan [`src/data/editor-presets.ts`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/data/editor-presets.ts)).
+- **No Heavy Static Arrays in `.vue` or Logic Composables**: Dilarang menaruh ratusan baris data statis di dalam file Single File Component (`.vue`) maupun composables logika. Wajib diimpor secara modular dari `src/data/*.ts`.
+- **Tujuan**: Menjaga file `.vue` dan composable tetap ramping (<500 baris) agar pemindaian IDE (Volar/VS Code Language Server) instan, konsumsi RAM hemat, dan hot-reloading (HMR) tidak lag.
 
 ---
 

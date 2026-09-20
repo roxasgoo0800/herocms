@@ -24,7 +24,7 @@ import {
   initialMediaAssets,
   initialWebhooks,
   initialSupportTickets
-} from '../assets/dashboard-seeds';
+} from '../data/dashboard-seeds';
 
 const VALID_MENUS: ActiveMenu[] = [
   'containers',

@@ -66,7 +66,7 @@ import {
   createDefaultBlocks,
   createLibraryBlock,
   type DevicePreset
-} from '../../assets/editor-presets';
+} from '../../data/editor-presets';
 
 const {
   activeMenu,
