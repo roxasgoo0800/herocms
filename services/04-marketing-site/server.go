@@ -11,7 +11,7 @@ import (
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8084"
+		port = "80"
 	}
 	distDir := os.Getenv("DIST_DIR")
 	if distDir == "" {

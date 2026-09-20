@@ -121,9 +121,9 @@ services:
       - app-network
       - traefik_network
     ports:
-      - "${MARKETING_PORT:-8084}:8084"
+      - "${MARKETING_PORT:-8084}:80"
     environment:
-      PORT: 8084
+      PORT: 80
       DIST_DIR: /app/dist
     labels:
       - "traefik.enable=true"
@@ -132,7 +132,7 @@ services:
       - "traefik.http.routers.herocms-marketing.entrypoints=web"
       - "traefik.http.routers.herocms-marketing.middlewares=security-headers@file,gzip-compress@file"
       - "traefik.http.routers.herocms-marketing.service=herocms-marketing-svc"
-      - "traefik.http.services.herocms-marketing-svc.loadbalancer.server.port=8084"
+      - "traefik.http.services.herocms-marketing-svc.loadbalancer.server.port=80"
 
 volumes:
   postgres_data:

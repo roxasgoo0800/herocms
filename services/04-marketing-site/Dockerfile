@@ -33,9 +33,9 @@ RUN apk --no-cache add ca-certificates tzdata
 COPY --from=backend-builder /app/marketing-server /app/marketing-server
 COPY --from=frontend-builder /app/dist /app/dist
 
-ENV PORT=8084 \
+ENV PORT=80 \
     DIST_DIR=/app/dist
 
-EXPOSE 8084
+EXPOSE 80
 
 CMD ["/app/marketing-server"]
