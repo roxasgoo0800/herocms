@@ -27,7 +27,12 @@ import {
   Server,
   Terminal,
   Copy,
-  LifeBuoy
+  LifeBuoy,
+  ArrowLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
+  ExternalLink,
+  Check
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 
@@ -51,12 +56,15 @@ const { isDashboardEntering } = useSplashTransition();
 const {
   activeMenu,
   isEditorSidebarHidden,
+  isReaderSidebarHidden,
   userEmail,
   userPlan,
   usedContainersCount,
   containers,
   articles,
   activeArticleForReader,
+  copyToClipboard,
+  copiedSubdomain,
   openCreateModal,
   toastMessage,
   isCreateModalOpen,
@@ -86,6 +94,7 @@ const handleLogout = () => {
       class="app-shell"
       :class="{
         'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden,
+        'reader-immersive-mode': activeMenu === 'content' && activeArticleForReader && isReaderSidebarHidden,
         'dashboard-choreographed-enter': isDashboardEntering
       }"
     >
@@ -273,6 +282,18 @@ const handleLogout = () => {
       <!-- Sticky Glassmorphism Header -->
       <header class="top-nav-header">
         <div class="breadcrumbs">
+          <!-- Back button if in reader mode -->
+          <button
+            v-if="activeMenu === 'content' && activeArticleForReader"
+            class="btn-top-back-reader"
+            @click="activeArticleForReader = null"
+            title="Kembali ke Daftar Artikel"
+          >
+            <ArrowLeft :size="13" />
+            <span>Kembali ke Daftar</span>
+          </button>
+          <span v-if="activeMenu === 'content' && activeArticleForReader" class="crumb-sep">/</span>
+
           <span>HeroCMS Studio</span>
           <ChevronRight :size="14" class="crumb-sep" />
           <span
@@ -302,7 +323,44 @@ const handleLogout = () => {
           </template>
         </div>
 
-        <div class="top-actions">
+        <!-- Top Actions -->
+        <div v-if="activeMenu === 'content' && activeArticleForReader" class="top-actions">
+          <!-- Toggle Sidebar Menu (Mode Fokus Membaca) -->
+          <button
+            class="btn-top-reader-toggle"
+            @click="isReaderSidebarHidden = !isReaderSidebarHidden"
+            :title="isReaderSidebarHidden ? 'Tampilkan Menu Navigasi' : 'Sembunyikan Menu Navigasi (Mode Fokus)'"
+          >
+            <PanelLeftOpen v-if="isReaderSidebarHidden" :size="14" />
+            <PanelLeftClose v-else :size="14" />
+            <span>{{ isReaderSidebarHidden ? 'Tampilkan Menu' : 'Sembunyikan Menu' }}</span>
+          </button>
+
+          <!-- Copy Link -->
+          <button
+            class="btn-top-reader-action"
+            @click="copyToClipboard(`https://rizalpratama.cloud/${activeArticleForReader.slug}`, activeArticleForReader.id)"
+            :title="copiedSubdomain === activeArticleForReader.id ? 'Tersalin!' : 'Salin URL Publik'"
+          >
+            <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
+            <Copy v-else :size="13" />
+            <span>{{ copiedSubdomain === activeArticleForReader.id ? 'Tersalin' : 'Salin Tautan' }}</span>
+          </button>
+
+          <!-- Open Live URL -->
+          <a
+            :href="`https://rizalpratama.cloud/${activeArticleForReader.slug}`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-top-reader-action"
+            title="Buka Halaman di Tab Baru"
+          >
+            <ExternalLink :size="13" />
+            <span>Buka URL Publik</span>
+          </a>
+        </div>
+
+        <div v-else class="top-actions">
           <!-- Engine Health Tag -->
           <div class="edge-status-tag">
             <span class="pulse-green-sm"></span>
@@ -636,6 +694,11 @@ const handleLogout = () => {
   width: 100vw !important;
   height: 100vh !important;
   overflow: hidden !important;
+}
+
+/* Reader Immersive Mode: Hide Sidebar to provide distraction-free reading space */
+.app-shell.reader-immersive-mode .app-sidebar {
+  display: none !important;
 }
 
 /* 1. LEFT SIDEBAR (GLASSMORPHIC & SLEEK) */
@@ -1041,6 +1104,70 @@ const handleLogout = () => {
   text-overflow: ellipsis;
   display: inline-block;
   vertical-align: middle;
+}
+
+.btn-top-back-reader {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-top-back-reader:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.btn-top-reader-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-top-reader-toggle:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.btn-top-reader-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-top-reader-action:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
 }
 
 .top-actions {

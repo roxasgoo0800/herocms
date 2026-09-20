@@ -19,7 +19,6 @@ import {
   Edit3,
   ChevronDown,
   ArrowLeft,
-  ExternalLink,
   ChevronRight,
   Server
 } from 'lucide-vue-next';
@@ -172,45 +171,6 @@ onUnmounted(() => {
     <!-- 1. DEDICATED FULL-PAGE ARTICLE READER VIEW (THEMED STUDIO)   -->
     <!-- ============================================================= -->
     <div v-if="activeArticleForReader" class="article-reader-page">
-      <!-- Breadcrumb & Back Action Bar -->
-      <div class="reader-top-action-bar">
-        <div class="reader-breadcrumb-nav">
-          <button class="btn-reader-back" @click="closeArticleReader()">
-            <ArrowLeft :size="14" />
-            <span>Kembali ke Daftar</span>
-          </button>
-          <span class="reader-crumb-divider">/</span>
-          <span class="reader-crumb-module" @click="closeArticleReader()">Artikel & Halaman CMS</span>
-          <span class="reader-crumb-divider">/</span>
-          <span class="reader-crumb-active" :title="activeArticleForReader.title">
-            {{ activeArticleForReader.title }}
-          </span>
-        </div>
-
-        <div class="reader-quick-actions">
-          <button
-            class="btn-reader-action"
-            @click="copyToClipboard(`https://rizalpratama.cloud/${activeArticleForReader.slug}`, activeArticleForReader.id)"
-            :title="copiedSubdomain === activeArticleForReader.id ? 'Tautan Tersalin!' : 'Salin Tautan Publik'"
-          >
-            <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
-            <Copy v-else :size="13" />
-            <span>{{ copiedSubdomain === activeArticleForReader.id ? 'Tautan Tersalin' : 'Salin Tautan' }}</span>
-          </button>
-
-          <a
-            :href="`https://rizalpratama.cloud/${activeArticleForReader.slug}`"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn-reader-action"
-            title="Buka Halaman di Tab Baru"
-          >
-            <ExternalLink :size="13" />
-            <span>Buka URL Publik</span>
-          </a>
-        </div>
-      </div>
-
       <!-- Hero Header (Themed with Obsidian + Category Accent Gradient) -->
       <div class="reader-page-hero" :class="'cover-' + getCategoryColor(activeArticleForReader.category)">
         <div class="reader-hero-decor-grid"></div>

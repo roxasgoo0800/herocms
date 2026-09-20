@@ -128,6 +128,13 @@ const activeContainer = computed(() => {
 });
 
 const activeArticleForReader = ref<ContentArticle | null>(null);
+const isReaderSidebarHidden = ref(true);
+
+watch(activeArticleForReader, (newArt) => {
+  if (newArt) {
+    isReaderSidebarHidden.value = true;
+  }
+});
 
 // Watch activeMenu and persist across refresh (Cookies, LocalStorage, URL Hash, & Redis)
 watch(activeMenu, (newMenu) => {
@@ -1277,6 +1284,7 @@ export function useDashboardData() {
     deleteDomain,
     articles,
     activeArticleForReader,
+    isReaderSidebarHidden,
     isCreateArticleModalOpen,
     newArticleForm,
     handleCreateArticle,
