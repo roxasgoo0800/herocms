@@ -43,8 +43,10 @@ import WebhooksApiModule from '../components/dashboard/WebhooksApiModule.vue';
 import BillingPlanModule from '../components/dashboard/BillingPlanModule.vue';
 import InvoicesHistoryModule from '../components/dashboard/InvoicesHistoryModule.vue';
 import SupportTicketingModule from '../components/dashboard/SupportTicketingModule.vue';
+import { useSplashTransition } from '../composables/useSplashTransition';
 
 const router = useRouter();
+const { isDashboardEntering } = useSplashTransition();
 
 const {
   activeMenu,
@@ -65,32 +67,42 @@ const {
   syncWithBackend
 } = useDashboardData();
 
-onMounted(() => {
-  syncWithBackend();
+onMounted(async () => {
+  await syncWithBackend();
 });
 
 const handleLogout = () => {
   localStorage.removeItem('cloudcms_auth_token');
   localStorage.removeItem('cloudcms_user_email');
+  sessionStorage.removeItem('herocms_splash_seen');
   router.push('/login');
 };
 </script>
 
 <template>
-  <div class="app-shell" :class="{ 'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden }">
+  <div class="dashboard-root-layout">
+    <div
+      class="app-shell"
+      :class="{
+        'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden,
+        'dashboard-choreographed-enter': isDashboardEntering
+      }"
+    >
     <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
     <aside class="app-sidebar">
       <!-- Workspace Brand Switcher -->
       <div class="sidebar-header">
-        <div class="workspace-card">
-          <div class="brand-icon">
+        <div class="workspace-brand-header">
+          <div class="brand-glyph">
             <Layers :size="18" color="#ffffff" />
           </div>
-          <div class="workspace-info">
-            <div class="workspace-name">HeroCMS Studio</div>
-            <div class="workspace-badge">
+          <div class="brand-meta">
+            <div class="brand-title">
+              HeroCMS <span class="brand-gradient">Studio</span>
+            </div>
+            <div class="brand-plan-row">
               <span class="pulse-green"></span>
-              {{ userPlan.name }}
+              <span class="plan-name">{{ userPlan.name }}</span>
             </div>
           </div>
         </div>
@@ -107,7 +119,7 @@ const handleLogout = () => {
           >
             <FolderKanban :size="17" />
             <span class="nav-link-text">Situs & Kontainer</span>
-            <span class="nav-count-badge">{{ usedContainersCount }}/{{ userPlan.maxContainers }}</span>
+            <span class="nav-badge">{{ usedContainersCount }}/{{ userPlan.maxContainers }}</span>
           </button>
 
           <button
@@ -127,7 +139,7 @@ const handleLogout = () => {
           >
             <FileText :size="17" />
             <span class="nav-link-text">Artikel & Halaman</span>
-            <span class="nav-pill-tag">{{ articles.length }}</span>
+            <span class="nav-badge">{{ articles.length }}</span>
           </button>
 
           <button
@@ -137,7 +149,7 @@ const handleLogout = () => {
           >
             <HardDrive :size="17" />
             <span class="nav-link-text">Media Assets (S3)</span>
-            <span class="nav-pill-tag">120MB</span>
+            <span class="nav-badge">120MB</span>
           </button>
 
           <button
@@ -147,7 +159,6 @@ const handleLogout = () => {
           >
             <Palette :size="17" />
             <span class="nav-link-text">Katalog Template</span>
-            <span class="nav-pill-tag">Store</span>
           </button>
         </nav>
 
@@ -160,7 +171,7 @@ const handleLogout = () => {
           >
             <Globe :size="17" />
             <span class="nav-link-text">Custom Domain & DNS</span>
-            <span class="nav-pill-tag green">SSL</span>
+            <span class="nav-badge badge-success">SSL</span>
           </button>
 
           <button
@@ -200,7 +211,7 @@ const handleLogout = () => {
           >
             <Receipt :size="17" />
             <span class="nav-link-text">Faktur & Invoice</span>
-            <span class="nav-pill-tag green">Lunas</span>
+            <span class="nav-badge badge-success">Lunas</span>
           </button>
         </nav>
 
@@ -213,7 +224,7 @@ const handleLogout = () => {
           >
             <LifeBuoy :size="17" />
             <span class="nav-link-text">Tiket Support</span>
-            <span class="nav-pill-tag amber">1 Aktif</span>
+            <span class="nav-badge badge-warning">1 Aktif</span>
           </button>
         </nav>
       </div>
@@ -523,6 +534,7 @@ const handleLogout = () => {
         </div>
       </div>
     </Teleport>
+    </div>
   </div>
 </template>
 
@@ -531,11 +543,71 @@ const handleLogout = () => {
    HEROCMS STUDIO - BESPOKE ENTERPRISE DESIGN SYSTEM (CLEAN & NON-BOOTSTRAP)
    ========================================================================== */
 
+.dashboard-root-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+}
+
 .app-shell {
   display: flex;
   min-height: 100vh;
   background: transparent;
   position: relative;
+}
+
+/* Choreographed Dashboard Entrance synchronized with splash dissolution */
+.app-shell.dashboard-choreographed-enter .app-sidebar {
+  animation: sidebarSlideIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.app-shell.dashboard-choreographed-enter .top-nav-header {
+  animation: headerDropIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.app-shell.dashboard-choreographed-enter .content-scroll-pane {
+  animation: contentLiftIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes sidebarSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-16px);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes headerDropIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes contentLiftIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 /* Editor Immersive Mode: Hide Sidebar & Top Header for maximum wide workspace */
@@ -557,9 +629,10 @@ const handleLogout = () => {
 
 /* 1. LEFT SIDEBAR (GLASSMORPHIC & SLEEK) */
 .app-sidebar {
-  width: 256px;
+  width: 272px;
+  min-width: 272px;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid rgba(226, 232, 240, 0.9);
@@ -573,50 +646,61 @@ const handleLogout = () => {
 }
 
 .sidebar-header {
-  padding: 16px;
+  padding: 16px 16px 14px;
   border-bottom: 1px solid #f1f5f9;
 }
 
-.workspace-card {
+.workspace-brand-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  gap: 11px;
+  padding: 2px;
 }
 
-.brand-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-radius: 8px;
+.brand-glyph {
+  width: 36px;
+  height: 36px;
+  background: #0f172a;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.workspace-info {
+.brand-meta {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
-.workspace-name {
-  font-size: 0.88rem;
-  font-weight: 700;
+.brand-title {
+  font-size: 0.94rem;
+  font-weight: 800;
   color: #0f172a;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
-.workspace-badge {
-  font-size: 0.72rem;
-  color: #64748b;
+.brand-gradient {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-plan-row {
   display: flex;
   align-items: center;
   gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 2.5px;
+  white-space: nowrap;
 }
 
 .pulse-green {
@@ -625,6 +709,7 @@ const handleLogout = () => {
   background: #10b981;
   border-radius: 50%;
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  flex-shrink: 0;
 }
 
 .sidebar-nav-sections {
@@ -656,17 +741,18 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 7px 10px;
   border-radius: 8px;
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-size: 0.835rem;
+  font-weight: 500;
   color: #475569;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: all 0.15s ease;
+  white-space: nowrap;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-link:hover:not(:disabled) {
@@ -677,7 +763,8 @@ const handleLogout = () => {
 .nav-link.active {
   background: #0f172a;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16);
 }
 
 .nav-link:disabled {
@@ -687,29 +774,77 @@ const handleLogout = () => {
 
 .nav-link-text {
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.835rem;
+  letter-spacing: -0.01em;
 }
 
-.nav-count-badge {
-  font-size: 0.7rem;
-  background: rgba(148, 163, 184, 0.2);
-  color: inherit;
-  padding: 1px 6px;
-  border-radius: 999px;
-  font-family: monospace;
-}
-
-.nav-link.active .nav-count-badge {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-}
-
-.nav-pill-tag {
+/* Revamped Unified Nav Badge System: 100% Theme-Aligned */
+.nav-badge {
   font-size: 0.68rem;
-  background: #eff6ff;
-  color: #2563eb;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-weight: 700;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2.5px 7px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.nav-link:hover:not(:disabled) .nav-badge {
+  background: #e2e8f0;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+.nav-link.active .nav-badge {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Subtle Semantic Status Variants */
+.nav-badge.badge-success {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+.nav-link:hover:not(:disabled) .nav-badge.badge-success {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+.nav-link.active .nav-badge.badge-success {
+  background: rgba(16, 185, 129, 0.25);
+  color: #a7f3d0;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.nav-badge.badge-warning {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+.nav-link:hover:not(:disabled) .nav-badge.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.nav-link.active .nav-badge.badge-warning {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fde68a;
+  border-color: rgba(245, 158, 11, 0.4);
 }
 
 .sidebar-footer {

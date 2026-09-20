@@ -86,7 +86,11 @@ func (h *Handler) Login(c *gin.Context) {
 	c.SetCookie("herocms_session", sessionID, 2592000, "/", "", false, true)
 
 	// 2. Set readable Cookie for CSRF Token (Double Submit Pattern)
-	c.SetCookie("csrf_token", csrfToken, 2592000, "/", "", false, false)
+	csrfCookieName := h.Services.Config.CSRFCookieName
+	if csrfCookieName == "" {
+		csrfCookieName = "csrf_token"
+	}
+	c.SetCookie(csrfCookieName, csrfToken, 2592000, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
 
 	// 3. Set response headers & return payload
 	c.Header("X-CSRF-Token", csrfToken)
@@ -152,8 +156,12 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 	h.Services.Redis.SaveSession(c.Request.Context(), sess, 30*24*time.Hour)
 
+	csrfCookieName := h.Services.Config.CSRFCookieName
+	if csrfCookieName == "" {
+		csrfCookieName = "csrf_token"
+	}
 	c.SetCookie("herocms_session", sessionID, 2592000, "/", "", false, true)
-	c.SetCookie("csrf_token", csrfToken, 2592000, "/", "", false, false)
+	c.SetCookie(csrfCookieName, csrfToken, 2592000, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
 	c.Header("X-CSRF-Token", csrfToken)
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -207,8 +215,12 @@ func (h *Handler) Logout(c *gin.Context) {
 	}
 
 	// Clear cookies
+	csrfCookieName := h.Services.Config.CSRFCookieName
+	if csrfCookieName == "" {
+		csrfCookieName = "csrf_token"
+	}
 	c.SetCookie("herocms_session", "", -1, "/", "", false, true)
-	c.SetCookie("csrf_token", "", -1, "/", "", false, false)
+	c.SetCookie(csrfCookieName, "", -1, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logout berhasil, sesi dan cookie telah dibersihkan."})
 }
@@ -315,6 +327,63 @@ func (h *Handler) SaveSiteDesign(c *gin.Context) {
 		"message": "Konfigurasi desain situs berhasil disimpan & disinkronkan ke runtime!",
 		"id":      id,
 	})
+}
+
+func (h *Handler) GetEditorDraft(c *gin.Context) {
+	id := c.Param("id")
+	draft, err := h.Services.GetEditorDraft(c.Request.Context(), getTenantID(c), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Header("X-Draft-Source", "Redis-Engine")
+	c.JSON(http.StatusOK, gin.H{
+		"draft":  draft,
+		"source": "redis",
+		"id":     id,
+	})
+}
+
+func (h *Handler) SaveEditorDraft(c *gin.Context) {
+	id := c.Param("id")
+	var draft gin.H
+	if err := c.ShouldBindJSON(&draft); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload draf tidak valid"})
+		return
+	}
+
+	err := h.Services.SaveEditorDraft(c.Request.Context(), getTenantID(c), id, draft)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan draf ke Redis: " + err.Error()})
+		return
+	}
+
+	c.Header("X-Draft-Saved", "Redis-Persistent")
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Draf posisi edit berhasil disimpan ke Redis!",
+		"id":      id,
+		"savedAt": time.Now().UTC().Format(time.RFC3339),
+	})
+}
+
+func (h *Handler) GetUserState(c *gin.Context) {
+	state, err := h.Services.GetUserState(c.Request.Context(), getTenantID(c))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"state": nil})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"state": state})
+}
+
+func (h *Handler) SaveUserState(c *gin.Context) {
+	var state gin.H
+	if err := c.ShouldBindJSON(&state); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload state tidak valid"})
+		return
+	}
+	_ = h.Services.SaveUserState(c.Request.Context(), getTenantID(c), state)
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
 // -----------------------------------------------------------------------------
@@ -435,3 +504,25 @@ func (h *Handler) RecordHit(c *gin.Context) {
 	h.Services.RecordHit(c.Request.Context(), tIDStr, req.Path)
 	c.JSON(http.StatusOK, gin.H{"status": "recorded", "path": req.Path})
 }
+
+// -----------------------------------------------------------------------------
+// Cache Warmer Endpoint
+// -----------------------------------------------------------------------------
+
+func (h *Handler) WarmCache(c *gin.Context) {
+	tenantID := getTenantID(c)
+	bundle, err := h.Services.WarmAllMenusCache(c.Request.Context(), tenantID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memanaskan cache Redis: " + err.Error()})
+		return
+	}
+
+	c.Header("X-Cache-Engine", "Redis-7")
+	c.Header("X-Cache-Status", "WARMED")
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "warmed",
+		"message": "Seluruh cache data menu studio berhasil dipanaskan ke Redis!",
+		"bundle":  bundle,
+	})
+}
+

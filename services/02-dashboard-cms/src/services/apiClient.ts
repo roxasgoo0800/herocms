@@ -72,6 +72,8 @@ export const studioApi = {
     apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ full_name: fullName, email, password }) }),
   getMe: () => apiFetch('/auth/me'),
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
+  getUserState: () => apiFetch('/user/state'),
+  saveUserState: (state: any) => apiFetch('/user/state', { method: 'PUT', body: JSON.stringify(state) }),
 
   // Containers
   getContainers: () => apiFetch('/containers'),
@@ -79,6 +81,9 @@ export const studioApi = {
     apiFetch('/containers', { method: 'POST', body: JSON.stringify(payload) }),
   saveSiteDesign: (id: string, payload: any) =>
     apiFetch(`/containers/${id}/design`, { method: 'PUT', body: JSON.stringify(payload) }),
+  getEditorDraft: (id: string) => apiFetch(`/containers/${id}/draft`),
+  saveEditorDraft: (id: string, draft: any) =>
+    apiFetch(`/containers/${id}/draft`, { method: 'PUT', body: JSON.stringify(draft) }),
   startContainer: (id: string) => apiFetch(`/containers/${id}/start`, { method: 'POST' }),
   stopContainer: (id: string) => apiFetch(`/containers/${id}/stop`, { method: 'POST' }),
   deleteContainer: (id: string) => apiFetch(`/containers/${id}`, { method: 'DELETE' }),
@@ -108,6 +113,9 @@ export const studioApi = {
   // Real-time Analytics (Redis ZSET)
   getTopViews: () => apiFetch('/analytics/top-views'),
   recordHit: (path: string) => apiFetch('/analytics/hit', { method: 'POST', body: JSON.stringify({ path }) }),
+
+  // Redis Cache Warming & Pre-fetch
+  warmAllMenusCache: () => apiFetch('/cache/warm', { method: 'GET' }),
 
   // System Health
   getHealth: () => apiFetch('/healthz')

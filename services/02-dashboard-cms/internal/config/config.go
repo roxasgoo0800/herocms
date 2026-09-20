@@ -21,6 +21,16 @@ type Config struct {
 	RedisPass       string
 	OrchestratorURL string
 	DistDir         string
+
+	// CORS Configuration
+	CORSAllowedOrigins   []string
+	CORSAllowCredentials bool
+
+	// CSRF Configuration
+	CSRFEnabled      bool
+	CSRFCookieName   string
+	CSRFCookieDomain string
+	CSRFCookieSecure bool
 }
 
 func loadEnvFile() {
@@ -115,18 +125,60 @@ func LoadConfig() *Config {
 		log.Println("[CONFIG NOTICE] JWT_SECRET not found in env. Generated ephemeral crypto/rand secret.")
 	}
 
+	// CORS Environment Parsing
+	corsOriginsStr := os.Getenv("CORS_ALLOWED_ORIGINS")
+	var corsOrigins []string
+	if corsOriginsStr != "" {
+		for _, o := range strings.Split(corsOriginsStr, ",") {
+			trimmed := strings.TrimSpace(o)
+			if trimmed != "" {
+				corsOrigins = append(corsOrigins, trimmed)
+			}
+		}
+	}
+	if len(corsOrigins) == 0 {
+		corsOrigins = []string{
+			"http://localhost:5173",
+			"http://127.0.0.1:5173",
+			"http://localhost:3000",
+			"http://127.0.0.1:3000",
+			"http://localhost:8080",
+			"http://localhost:8081",
+			"http://localhost:8085",
+			"http://127.0.0.1:8085",
+			"https://cloudcms.app",
+		}
+	}
+
+	corsCreds := strings.ToLower(os.Getenv("CORS_ALLOW_CREDENTIALS")) != "false"
+
+	// CSRF Environment Parsing
+	csrfEnabled := strings.ToLower(os.Getenv("CSRF_ENABLED")) != "false"
+	csrfCookieName := os.Getenv("CSRF_COOKIE_NAME")
+	if csrfCookieName == "" {
+		csrfCookieName = "csrf_token"
+	}
+	csrfCookieDomain := os.Getenv("CSRF_COOKIE_DOMAIN")
+	csrfCookieSecure := strings.ToLower(os.Getenv("CSRF_COOKIE_SECURE")) == "true"
+
 	return &Config{
-		Port:            port,
-		JWTSecret:       jwtSecret,
-		DBHost:          dbHost,
-		DBPort:          dbPort,
-		DBUser:          dbUser,
-		DBPass:          dbPass,
-		DBName:          dbName,
-		RedisHost:       redisHost,
-		RedisPort:       redisPort,
-		RedisPass:       redisPass,
-		OrchestratorURL: orchURL,
-		DistDir:         distDir,
+		Port:                 port,
+		JWTSecret:            jwtSecret,
+		DBHost:               dbHost,
+		DBPort:               dbPort,
+		DBUser:               dbUser,
+		DBPass:               dbPass,
+		DBName:               dbName,
+		RedisHost:            redisHost,
+		RedisPort:            redisPort,
+		RedisPass:            redisPass,
+		OrchestratorURL:      orchURL,
+		DistDir:              distDir,
+		CORSAllowedOrigins:   corsOrigins,
+		CORSAllowCredentials: corsCreds,
+		CSRFEnabled:          csrfEnabled,
+		CSRFCookieName:       csrfCookieName,
+		CSRFCookieDomain:     csrfCookieDomain,
+		CSRFCookieSecure:     csrfCookieSecure,
 	}
 }

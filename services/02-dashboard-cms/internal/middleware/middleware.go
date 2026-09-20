@@ -29,26 +29,28 @@ func SecurityHeaders() gin.HandlerFunc {
 	}
 }
 
-func CORS() gin.HandlerFunc {
+func CORS(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 		allowed := false
 
-		if origin == "http://localhost:5173" ||
-			origin == "http://127.0.0.1:5173" ||
-			origin == "http://localhost:3000" ||
-			origin == "http://127.0.0.1:3000" ||
-			origin == "http://localhost:8080" ||
-			origin == "http://localhost:8081" ||
-			origin == "http://localhost:8085" ||
-			origin == "http://127.0.0.1:8085" ||
-			strings.HasSuffix(origin, ".cloudcms.app") {
-			allowed = true
+		if origin != "" {
+			for _, o := range cfg.CORSAllowedOrigins {
+				if o == "*" || o == origin || strings.HasSuffix(origin, o) || (strings.HasPrefix(o, "*.") && strings.HasSuffix(origin, o[1:])) {
+					allowed = true
+					break
+				}
+			}
+			if !allowed && strings.HasSuffix(origin, ".cloudcms.app") {
+				allowed = true
+			}
 		}
 
 		if allowed {
 			c.Header("Access-Control-Allow-Origin", origin)
-			c.Header("Access-Control-Allow-Credentials", "true")
+			if cfg.CORSAllowCredentials {
+				c.Header("Access-Control-Allow-Credentials", "true")
+			}
 			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 			c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept, X-Requested-With, X-CSRF-Token, X-XSRF-Token")
 			c.Header("Access-Control-Expose-Headers", "X-CSRF-Token")
@@ -64,16 +66,26 @@ func CORS() gin.HandlerFunc {
 }
 
 // CSRFProtection implements the Double Submit Cookie pattern + Redis session check
-func CSRFProtection() gin.HandlerFunc {
+func CSRFProtection(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if !cfg.CSRFEnabled {
+			c.Next()
+			return
+		}
+
+		cookieName := cfg.CSRFCookieName
+		if cookieName == "" {
+			cookieName = "csrf_token"
+		}
+
 		// Ensure a CSRF cookie exists for safe methods
-		csrfCookie, err := c.Cookie("csrf_token")
+		csrfCookie, err := c.Cookie(cookieName)
 		if err != nil || csrfCookie == "" {
 			tokenBytes := make([]byte, 16)
 			rand.Read(tokenBytes)
 			csrfCookie = hex.EncodeToString(tokenBytes)
 			// Non-HttpOnly cookie so PWA / JavaScript client can read it and send as header
-			c.SetCookie("csrf_token", csrfCookie, 2592000, "/", "", false, false)
+			c.SetCookie(cookieName, csrfCookie, 2592000, "/", cfg.CSRFCookieDomain, cfg.CSRFCookieSecure, false)
 		}
 		c.Header("X-CSRF-Token", csrfCookie)
 

@@ -1,6 +1,22 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import BackgroundWave from './components/BackgroundWave.vue';
+import StudioSplashScreen from './components/StudioSplashScreen.vue';
+import { useSplashTransition } from './composables/useSplashTransition';
+
+const { isSplashActive, splashDuration, revealDashboard, completeSplash, triggerSplash } = useSplashTransition();
+
+onMounted(() => {
+  // Cold start splash on direct dashboard visit if authenticated
+  const isDirectDashboardVisit = window.location.pathname === '/' || window.location.pathname === '';
+  const hasSeenSplash = sessionStorage.getItem('herocms_splash_seen') === 'true';
+  const hasToken = localStorage.getItem('cloudcms_auth_token');
+
+  if (isDirectDashboardVisit && hasToken && !hasSeenSplash) {
+    triggerSplash(1000);
+  }
+});
 </script>
 
 <template>
@@ -10,6 +26,14 @@ import BackgroundWave from './components/BackgroundWave.vue';
     <div style="position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column;">
       <RouterView />
     </div>
+
+    <!-- Centralized Studio Gateway Splash Screen -->
+    <StudioSplashScreen
+      v-if="isSplashActive"
+      :duration-ms="splashDuration"
+      @revealing="revealDashboard"
+      @complete="completeSplash"
+    />
   </div>
 </template>
 
@@ -50,5 +74,25 @@ html, body {
 
 button, input {
   font-family: inherit;
+}
+
+/* Seamless Route Transitions */
+.app-route-fade-enter-active,
+.app-route-fade-leave-active {
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-route-fade-enter-from {
+  opacity: 0;
+  transform: scale(0.995);
+  filter: blur(3px);
+}
+
+.app-route-fade-leave-to {
+  opacity: 0;
+  transform: scale(1.005);
+  filter: blur(3px);
 }
 </style>

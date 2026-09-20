@@ -43,8 +43,8 @@ func main() {
 
 	// Enterprise Security Headers, Strict CORS, & CSRF Protection
 	router.Use(middleware.SecurityHeaders())
-	router.Use(middleware.CORS())
-	router.Use(middleware.CSRFProtection())
+	router.Use(middleware.CORS(cfg))
+	router.Use(middleware.CSRFProtection(cfg))
 
 	// Health Check
 	router.GET("/healthz", func(c *gin.Context) {
@@ -77,14 +77,18 @@ func main() {
 		protected.Use(middleware.RateLimiter(rdb, 120, time.Minute))
 		protected.Use(middleware.SessionOrJWTAuth(cfg, rdb))
 		{
-			// Session
+			// Session & State Persistence (Redis)
 			protected.GET("/auth/me", h.Me)
 			protected.POST("/auth/logout", h.Logout)
+			protected.GET("/user/state", h.GetUserState)
+			protected.PUT("/user/state", h.SaveUserState)
 
 			// Containers & Multi-Site Hub
 			protected.GET("/containers", h.ListContainers)
 			protected.POST("/containers", h.CreateContainer)
 			protected.PUT("/containers/:id/design", h.SaveSiteDesign)
+			protected.GET("/containers/:id/draft", h.GetEditorDraft)
+			protected.PUT("/containers/:id/draft", h.SaveEditorDraft)
 			protected.POST("/containers/:id/start", h.StartContainer)
 			protected.POST("/containers/:id/stop", h.StopContainer)
 			protected.DELETE("/containers/:id", h.DeleteContainer)
@@ -113,6 +117,10 @@ func main() {
 			// Real-Time Analytics & Top-Views (Redis ZSET)
 			protected.GET("/analytics/top-views", h.GetTopViews)
 			protected.POST("/analytics/hit", h.RecordHit)
+
+			// Redis Cache Warming & Pre-fetch
+			protected.POST("/cache/warm", h.WarmCache)
+			protected.GET("/cache/warm", h.WarmCache)
 		}
 	}
 

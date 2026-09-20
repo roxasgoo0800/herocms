@@ -43,8 +43,20 @@ import {
   ArrowRight,
   ArrowLeft,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Cloud,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Files,
+  Search,
+  GitBranch,
+  Settings,
+  Terminal,
+  Play,
+  RefreshCw
 } from 'lucide-vue-next';
+import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { VisualBlock } from '../../types/dashboard';
 
@@ -74,6 +86,82 @@ const activeTool = ref<ActiveTool>('select');
 const editorViewMode = ref<EditorViewMode>('design');
 const activeLeftTab = ref<'blocks' | 'layers' | 'design' | 'ai'>('blocks');
 const activeRightTab = ref<'content' | 'layout' | 'appearance'>('content');
+
+// Studio Booting Transition & Draft State
+const isEditorBooting = ref(true);
+const bootProgress = ref(15);
+const bootStatusText = ref('Menyiapkan kanvas visual...');
+const isDraftSaving = ref(false);
+const lastSavedDraftAt = ref('');
+const isDraftRestored = ref(false);
+
+// Site Selector Dropdown State
+const isSiteDropdownOpen = ref(false);
+const siteDropdownRef = ref<HTMLElement | null>(null);
+
+const toggleSiteDropdown = () => {
+  isSiteDropdownOpen.value = !isSiteDropdownOpen.value;
+};
+
+const selectSiteFromDropdown = (id: string) => {
+  activeContainerId.value = id;
+  isSiteDropdownOpen.value = false;
+};
+
+const handleSiteDropdownOutsideClick = (e: MouseEvent) => {
+  if (siteDropdownRef.value && !siteDropdownRef.value.contains(e.target as Node)) {
+    isSiteDropdownOpen.value = false;
+  }
+};
+
+// Font Family Dropdown State
+const isFontDropdownOpen = ref(false);
+const fontDropdownRef = ref<HTMLElement | null>(null);
+
+const toggleFontDropdown = () => {
+  isFontDropdownOpen.value = !isFontDropdownOpen.value;
+};
+
+const selectFontFromDropdown = (fontId: string) => {
+  currentFont.value = fontId;
+  isFontDropdownOpen.value = false;
+};
+
+const currentFontLabel = computed(() => {
+  return fontFamilies.find(f => f.id === currentFont.value)?.name || currentFont.value;
+});
+
+// Zoom Dropdown State
+const isZoomDropdownOpen = ref(false);
+const zoomDropdownRef = ref<HTMLElement | null>(null);
+
+const zoomPresets = [
+  { value: 0.5, label: '50%' },
+  { value: 0.75, label: '75%' },
+  { value: 0.85, label: '85%' },
+  { value: 1.0, label: '100%' },
+  { value: 1.25, label: '125%' },
+  { value: 1.5, label: '150%' },
+];
+
+const toggleZoomDropdown = () => {
+  isZoomDropdownOpen.value = !isZoomDropdownOpen.value;
+};
+
+const selectZoomFromDropdown = (val: number) => {
+  setZoom(val);
+  isZoomDropdownOpen.value = false;
+};
+
+// Unified outside-click handler for all custom dropdowns
+const handleAllDropdownOutsideClick = (e: MouseEvent) => {
+  if (fontDropdownRef.value && !fontDropdownRef.value.contains(e.target as Node)) {
+    isFontDropdownOpen.value = false;
+  }
+  if (zoomDropdownRef.value && !zoomDropdownRef.value.contains(e.target as Node)) {
+    isZoomDropdownOpen.value = false;
+  }
+};
 
 // Canvas Zoom & Pan
 const zoom = ref(0.85);
@@ -314,6 +402,23 @@ const createDefaultBlocks = (): VisualBlock[] => {
 
 const pageBlocks = ref<VisualBlock[]>([]);
 
+interface EditorDraftData {
+  blocks: VisualBlock[];
+  roleOrHeadline?: string;
+  bioIntro?: string;
+  accentColor?: string;
+  selectedBlockId?: string | null;
+  currentDevice?: DevicePreset;
+  zoom?: number;
+  panX?: number;
+  panY?: number;
+  activeLeftTab?: 'blocks' | 'layers' | 'design' | 'ai';
+  activeRightTab?: 'content' | 'layout' | 'appearance';
+  updatedAt: string;
+}
+
+const getDraftStorageKey = (containerId: string) => `herocms_editor_draft_${containerId}`;
+
 // Initialize blocks from activeContainer themeConfig or defaults
 const loadBlocksForActiveContainer = () => {
   if (activeContainer.value?.themeConfig?.blocks && Array.isArray(activeContainer.value.themeConfig.blocks)) {
@@ -326,15 +431,137 @@ const loadBlocksForActiveContainer = () => {
   }
 };
 
+const restoreDraftForActiveContainer = async (containerId: string) => {
+  if (!containerId) return;
+  try {
+    bootStatusText.value = 'Memuat draf posisi edit terakhir...';
+    bootProgress.value = 55;
+
+    let draftData: EditorDraftData | null = null;
+
+    // 1. Coba ambil dari Redis Backend terlebih dahulu
+    try {
+      const res = await studioApi.getEditorDraft(containerId);
+      if (res?.data && res.data.blocks && Array.isArray(res.data.blocks)) {
+        draftData = res.data;
+      }
+    } catch (apiErr) {
+      console.warn('[VisualEditor] Redis draft fetch fallback:', apiErr);
+    }
+
+    // 2. Fallback ke localStorage jika Redis belum ada
+    if (!draftData) {
+      const localStr = localStorage.getItem(getDraftStorageKey(containerId));
+      if (localStr) {
+        try {
+          draftData = JSON.parse(localStr);
+        } catch {}
+      }
+    }
+
+    // 3. Hydrate state
+    if (draftData && Array.isArray(draftData.blocks) && draftData.blocks.length > 0) {
+      pageBlocks.value = draftData.blocks;
+      if (activeContainer.value) {
+        if (draftData.roleOrHeadline !== undefined) activeContainer.value.roleOrHeadline = draftData.roleOrHeadline;
+        if (draftData.bioIntro !== undefined) activeContainer.value.bioIntro = draftData.bioIntro;
+        if (draftData.accentColor !== undefined) activeContainer.value.accentColor = draftData.accentColor;
+        if (!activeContainer.value.themeConfig) activeContainer.value.themeConfig = {};
+        activeContainer.value.themeConfig.blocks = draftData.blocks;
+      }
+      if (draftData.selectedBlockId) selectedBlockId.value = draftData.selectedBlockId;
+      if (draftData.currentDevice) applyDevicePreset(draftData.currentDevice);
+      if (typeof draftData.zoom === 'number') zoom.value = draftData.zoom;
+      if (typeof draftData.panX === 'number') panX.value = draftData.panX;
+      if (typeof draftData.panY === 'number') panY.value = draftData.panY;
+      if (draftData.activeLeftTab) activeLeftTab.value = draftData.activeLeftTab;
+      if (draftData.activeRightTab) activeRightTab.value = draftData.activeRightTab;
+
+      const dateObj = new Date(draftData.updatedAt || Date.now());
+      lastSavedDraftAt.value = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      isDraftRestored.value = true;
+    } else {
+      loadBlocksForActiveContainer();
+    }
+  } catch (err) {
+    console.error('[VisualEditor] Error restoring draft:', err);
+    loadBlocksForActiveContainer();
+  }
+};
+
+let autoSaveTimer: any = null;
+
+const triggerAutoSaveDraft = () => {
+  if (isEditorBooting.value || !activeContainerId.value) return;
+
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  isDraftSaving.value = true;
+
+  autoSaveTimer = setTimeout(async () => {
+    try {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      const draftPayload: EditorDraftData = {
+        blocks: pageBlocks.value,
+        roleOrHeadline: activeContainer.value?.roleOrHeadline,
+        bioIntro: activeContainer.value?.bioIntro,
+        accentColor: activeContainer.value?.accentColor,
+        selectedBlockId: selectedBlockId.value,
+        currentDevice: currentDevice.value,
+        zoom: zoom.value,
+        panX: panX.value,
+        panY: panY.value,
+        activeLeftTab: activeLeftTab.value,
+        activeRightTab: activeRightTab.value,
+        updatedAt: now.toISOString()
+      };
+
+      // 1. Simpan di localStorage seketika
+      localStorage.setItem(getDraftStorageKey(activeContainerId.value), JSON.stringify(draftPayload));
+
+      // 2. Persist ke Redis via backend API
+      await studioApi.saveEditorDraft(activeContainerId.value, draftPayload);
+
+      lastSavedDraftAt.value = timeStr;
+    } catch (e) {
+      console.warn('[VisualEditor] Auto-save to Redis failed:', e);
+    } finally {
+      isDraftSaving.value = false;
+    }
+  }, 750);
+};
+
+const resetDraftToDefault = () => {
+  if (!confirm('Apakah Anda yakin ingin membuang draf yang belum terbit dan kembali ke versi awal kontainer?')) return;
+  if (activeContainerId.value) {
+    localStorage.removeItem(getDraftStorageKey(activeContainerId.value));
+  }
+  loadBlocksForActiveContainer();
+  lastSavedDraftAt.value = '';
+  showToast('Draf telah direset ke versi awal kontainer.', 'info');
+  triggerAutoSaveDraft();
+};
+
 watch(
   () => activeContainerId.value,
-  () => {
-    loadBlocksForActiveContainer();
-  },
-  { immediate: true }
+  async (newId, oldId) => {
+    if (newId && oldId) {
+      isEditorBooting.value = true;
+      bootProgress.value = 35;
+      bootStatusText.value = 'Memuat draf situs...';
+      await restoreDraftForActiveContainer(newId);
+      setTimeout(() => {
+        bootProgress.value = 100;
+        bootStatusText.value = 'Draf siap!';
+        setTimeout(() => {
+          isEditorBooting.value = false;
+        }, 180);
+      }, 200);
+    }
+  }
 );
 
-// Keep activeContainer synced with blocks state
+// Keep activeContainer synced with blocks state & trigger auto-save
 watch(
   pageBlocks,
   (newBlocks) => {
@@ -344,9 +571,25 @@ watch(
       }
       activeContainer.value.themeConfig.blocks = newBlocks;
       recordHistory();
+      triggerAutoSaveDraft();
     }
   },
   { deep: true }
+);
+
+// Watch container metadata and editor viewport to persist last edit position
+watch(
+  [
+    () => activeContainer.value?.roleOrHeadline,
+    () => activeContainer.value?.bioIntro,
+    () => activeContainer.value?.accentColor,
+    selectedBlockId,
+    currentDevice,
+    zoom
+  ],
+  () => {
+    triggerAutoSaveDraft();
+  }
 );
 
 // Computed selected block
@@ -426,6 +669,7 @@ const onCanvasMouseMove = (e: MouseEvent) => {
   if (isPanning.value) {
     panX.value = e.clientX - panStart.value.x;
     panY.value = e.clientY - panStart.value.y;
+    clampPan();
     return;
   }
 
@@ -458,6 +702,13 @@ const onCanvasMouseUp = () => {
   resizeDirection.value = null;
 };
 
+// Clamp pan values to prevent infinite scrolling
+const PAN_LIMIT = 4000;
+const clampPan = () => {
+  panX.value = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panX.value));
+  panY.value = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panY.value));
+};
+
 const onCanvasWheel = (e: WheelEvent) => {
   e.preventDefault();
   if (e.ctrlKey || e.metaKey) {
@@ -469,6 +720,7 @@ const onCanvasWheel = (e: WheelEvent) => {
     // Normal scroll down / up moves canvas smoothly!
     panY.value -= e.deltaY * 0.85;
   }
+  clampPan();
 };
 
 // Start Resizing Artboard
@@ -519,16 +771,48 @@ const onKeyUp = (e: KeyboardEvent) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
   window.addEventListener('mousemove', onCanvasMouseMove);
   window.addEventListener('mouseup', onCanvasMouseUp);
   window.addEventListener('resize', fitToScreen);
+  document.addEventListener('click', handleSiteDropdownOutsideClick);
+  document.addEventListener('click', handleAllDropdownOutsideClick);
+
+  // Smooth booting transition & dependency/draft load
+  isEditorBooting.value = true;
+  bootProgress.value = 25;
+  bootStatusText.value = 'Menyiapkan kanvas visual...';
+
+  await nextTick();
+  fitToScreen();
+
+  bootProgress.value = 50;
+  bootStatusText.value = 'Memuat dependensi & engine editor...';
+
+  // Load / resume draft
+  if (activeContainerId.value) {
+    await restoreDraftForActiveContainer(activeContainerId.value);
+  } else {
+    loadBlocksForActiveContainer();
+  }
+
   recordHistory();
-  nextTick(() => {
-    fitToScreen();
-  });
+
+  bootProgress.value = 85;
+  bootStatusText.value = 'Merender komponen & layout...';
+
+  setTimeout(() => {
+    bootProgress.value = 100;
+    bootStatusText.value = 'Draf siap!';
+    setTimeout(() => {
+      isEditorBooting.value = false;
+      if (isDraftRestored.value) {
+        showToast('Draf posisi edit terakhir berhasil dimuat', 'success');
+      }
+    }, 280);
+  }, 250);
 });
 
 onUnmounted(() => {
@@ -537,6 +821,8 @@ onUnmounted(() => {
   window.removeEventListener('mousemove', onCanvasMouseMove);
   window.removeEventListener('mouseup', onCanvasMouseUp);
   window.removeEventListener('resize', fitToScreen);
+  document.removeEventListener('click', handleSiteDropdownOutsideClick);
+  document.removeEventListener('click', handleAllDropdownOutsideClick);
 });
 
 // -----------------------------------------------------------------------------
@@ -701,14 +987,14 @@ const addBlockFromLibrary = (type: VisualBlock['type']) => {
 
 // Brand Color Palettes
 const colorPalettes = [
-  { name: 'Electric Indigo', hex: '#2563eb' },
-  { name: 'Cyber Emerald', hex: '#059669' },
-  { name: 'Hyper Purple', hex: '#7c3aed' },
-  { name: 'Solar Orange', hex: '#ea580c' },
   { name: 'Obsidian Noir', hex: '#0f172a' },
-  { name: 'Neon Cyan', hex: '#06b6d4' },
-  { name: 'Rose Glow', hex: '#e11d48' },
-  { name: 'Amber Gold', hex: '#d97706' }
+  { name: 'Midnight Slate', hex: '#1e293b' },
+  { name: 'Deep Sapphire', hex: '#1e3a8a' },
+  { name: 'Forest Emerald', hex: '#064e3b' },
+  { name: 'Titanium Steel', hex: '#334155' },
+  { name: 'Muted Bordeaux', hex: '#881337' },
+  { name: 'Warm Terracotta', hex: '#7c2d12' },
+  { name: 'Dark Amber', hex: '#78350f' }
 ];
 
 const fontFamilies = [
@@ -748,11 +1034,241 @@ const copySchemaJson = () => {
   navigator.clipboard.writeText(schemaJsonText.value);
   showToast('Schema JSON website berhasil disalin ke clipboard!', 'success');
 };
+
+// -----------------------------------------------------------------------------
+// VS Code-style Code Editor Engine
+// -----------------------------------------------------------------------------
+type VsCodeTab = 'blocks.json' | 'index.html' | 'theme.css' | 'docker-compose.yml';
+
+const activeVsCodeTab = ref<VsCodeTab>('blocks.json');
+const isVsCodeExplorerOpen = ref(true);
+const vsCodeBlocksCode = ref('');
+const isVsCodeCodeDirty = ref(false);
+
+// Sync code whenever switching into 'code' mode
+watch(
+  () => editorViewMode.value,
+  (mode) => {
+    if (mode === 'code') {
+      vsCodeBlocksCode.value = schemaJsonText.value;
+      isVsCodeCodeDirty.value = false;
+    }
+  },
+  { immediate: true }
+);
+
+// Keep vsCodeBlocksCode updated if schemaJsonText changes and user hasn't typed unapplied changes
+watch(schemaJsonText, (newVal) => {
+  if (editorViewMode.value === 'code' && !isVsCodeCodeDirty.value) {
+    vsCodeBlocksCode.value = newVal;
+  }
+});
+
+const generatedHtmlCode = computed(() => {
+  const containerName = activeContainer.value?.name || 'Website Tenant';
+  const domain = activeContainer.value?.subdomain || 'tenant.cloudcms.app';
+  const blocks = pageBlocks.value;
+
+  const blocksHtml = blocks
+    .map((b) => {
+      return `    <!-- Block: ${b.name} (${b.type}) -->\n    <section class="section-${b.type}" id="block-${b.id}">\n      <div class="container">\n        <h2>${b.name}</h2>\n      </div>\n    </section>`;
+    })
+    .join('\n\n');
+
+  return `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${containerName} | HeroCMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(currentFont.value)}:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="./theme.css">
+</head>
+<body class="theme-modern">
+  <!-- HeroCMS Edge Runtime Generated Page -->
+  <!-- Domain: ${domain} -->
+  <main class="page-wrapper">
+${blocksHtml || '    <!-- Belum ada blok ditambahkan -->'}
+  </main>
+</body>
+</html>`;
+});
+
+const generatedCssCode = computed(() => {
+  const accent = activeContainer.value?.accentColor || '#0f172a';
+  return `/**
+ * HeroCMS Design System Tokens & Generated Styles
+ * Tenant Subdomain: ${activeContainer.value?.subdomain || 'tenant.cloudcms.app'}
+ */
+
+:root {
+  /* Brand Tokens */
+  --brand-primary: ${accent};
+  --font-family-base: '${currentFont.value}', sans-serif;
+  
+  /* Canvas Dimensions */
+  --artboard-width: ${artboardWidth.value}px;
+  --artboard-height: ${artboardHeight.value}px;
+  
+  /* Layout Spacing */
+  --container-max-width: 1440px;
+  --radius-card: 16px;
+  --radius-pill: 9999px;
+  
+  /* Slate & Neutral Colors */
+  --bg-canvas: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-subtle: #e2e8f0;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  color: var(--text-main);
+  background: var(--bg-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}`;
+});
+
+const generatedDockerCode = computed(() => {
+  const sub = activeContainer.value?.subdomain || 'tenant.cloudcms.app';
+  const name = activeContainer.value?.name || 'Tenant App';
+  const safeName = sub.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+  return `# HeroCMS Docker Cgroups Microservice Runtime
+# Target Container: ${sub}
+version: '3.8'
+
+services:
+  web-runtime:
+    image: herocms/runtime-edge:v3.4-alpine
+    container_name: ${safeName}
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.50
+    environment:
+      - NODE_ENV=production
+      - TENANT_SUBDOMAIN=${sub}
+      - TENANT_NAME=${name}
+      - CACHE_TTL=3600
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${safeName}.rule=Host(\`${sub}\`)"
+      - "traefik.http.routers.${safeName}.entrypoints=websecure"
+      - "traefik.http.routers.${safeName}.tls.certresolver=letsencrypt"
+      - "herocms.tenant.active=true"`;
+});
+
+const currentVsCodeContent = computed(() => {
+  if (activeVsCodeTab.value === 'blocks.json') return vsCodeBlocksCode.value || schemaJsonText.value;
+  if (activeVsCodeTab.value === 'index.html') return generatedHtmlCode.value;
+  if (activeVsCodeTab.value === 'theme.css') return generatedCssCode.value;
+  return generatedDockerCode.value;
+});
+
+const vsCodeLineCount = computed(() => {
+  const lines = currentVsCodeContent.value.split('\n').length;
+  return Math.max(lines, 24);
+});
+
+const onVsCodeKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const target = e.target as HTMLTextAreaElement;
+    const start = target.selectionStart;
+    const end = target.selectionEnd;
+    vsCodeBlocksCode.value =
+      vsCodeBlocksCode.value.substring(0, start) + '  ' + vsCodeBlocksCode.value.substring(end);
+    isVsCodeCodeDirty.value = true;
+    nextTick(() => {
+      target.selectionStart = target.selectionEnd = start + 2;
+    });
+  }
+};
+
+const applyVsCodeChangesToCanvas = () => {
+  try {
+    const parsed = JSON.parse(vsCodeBlocksCode.value);
+    if (parsed.blocks && Array.isArray(parsed.blocks)) {
+      pageBlocks.value = parsed.blocks;
+    } else if (Array.isArray(parsed)) {
+      pageBlocks.value = parsed;
+    }
+    if (parsed.container?.accentColor && activeContainer.value) {
+      activeContainer.value.accentColor = parsed.container.accentColor;
+    }
+    isVsCodeCodeDirty.value = false;
+    recordHistory();
+    triggerAutoSaveDraft();
+    showToast('Perubahan kode JSON berhasil disinkronkan ke kanvas!', 'success');
+  } catch (err: any) {
+    showToast('Gagal menerapkan JSON: ' + (err?.message || 'Format tidak valid'), 'error');
+  }
+};
+
+const formatVsCodeJson = () => {
+  try {
+    const parsed = JSON.parse(vsCodeBlocksCode.value);
+    vsCodeBlocksCode.value = JSON.stringify(parsed, null, 2);
+    showToast('Kode blocks.json berhasil dirapikan (Prettified)!', 'info');
+  } catch (e: any) {
+    showToast('JSON tidak valid, gagal memformat: ' + e?.message, 'error');
+  }
+};
+
+const copyVsCodeCurrentCode = () => {
+  navigator.clipboard.writeText(currentVsCodeContent.value);
+  showToast(`Kode file ${activeVsCodeTab.value} berhasil disalin ke clipboard!`, 'success');
+};
 </script>
 
 <template>
   <section class="visual-studio-root">
-    <div v-if="activeContainer" class="studio-main-frame">
+    <!-- Studio Booting Transition Overlay (Themed identically to Splash Screen) -->
+    <transition name="studio-boot-dissolve">
+      <div v-if="isEditorBooting" class="studio-boot-screen" role="status" aria-live="polite">
+        <!-- Theme Base Dot Grid -->
+        <div class="base-dot-grid" aria-hidden="true"></div>
+
+        <!-- Clean Center Pod -->
+        <div class="boot-center-pod">
+          <!-- Logo Emblem matching splashscreen -->
+          <div class="brand-glyph-box">
+            <Layers :size="24" color="#ffffff" />
+          </div>
+
+          <!-- Brand Wordmark -->
+          <h1 class="brand-wordmark">
+            HeroCMS <span class="wordmark-highlight">Studio</span>
+            <span class="wordmark-editor-tag">Visual Editor</span>
+          </h1>
+
+          <!-- Obsidian Black Loading Bar directly under wordmark -->
+          <div class="boot-progress-track">
+            <div
+              class="boot-progress-fill"
+              :style="{ width: `${bootProgress}%` }"
+            ></div>
+          </div>
+
+          <!-- Dynamic Real Initialization Status -->
+          <p class="boot-status-text">
+            {{ bootStatusText }}
+          </p>
+        </div>
+      </div>
+    </transition>
+
+    <div v-if="activeContainer" class="studio-main-frame" :class="{ 'is-revealed': !isEditorBooting }">
       <!-- =================================================================== -->
       <!-- 1. TOP STUDIO COMMAND BAR (Photoshop / Canva Toolbar)                -->
       <!-- =================================================================== -->
@@ -781,14 +1297,58 @@ const copySchemaJson = () => {
 
           <div class="v-divider"></div>
 
-          <div class="site-target-pill">
-            <span class="pulse-status-dot"></span>
-            <span class="pill-label">Situs:</span>
-            <select v-model="activeContainerId" class="select-site-clean">
-              <option v-for="c in containers" :key="c.id" :value="c.id">
-                {{ c.name }} ({{ c.subdomain }})
-              </option>
-            </select>
+          <div class="site-dropdown-wrapper" ref="siteDropdownRef">
+            <button
+              class="site-target-pill"
+              :class="{ 'is-open': isSiteDropdownOpen }"
+              @click.stop="toggleSiteDropdown"
+              type="button"
+              title="Pilih Situs / Kontainer Tenant"
+            >
+              <span class="pulse-status-dot"></span>
+              <span class="pill-label">SITUS:</span>
+              <span class="site-display-name">{{ activeContainer?.name || 'Pilih Situs' }}</span>
+              <span class="site-display-subdomain">({{ activeContainer?.subdomain || '...' }})</span>
+              <ChevronDown :size="13" class="site-chevron-icon" :class="{ 'is-rotated': isSiteDropdownOpen }" />
+            </button>
+
+            <!-- Floating Custom Dropdown -->
+            <transition name="dropdown-scale">
+              <div v-if="isSiteDropdownOpen" class="site-floating-dropdown">
+                <div class="site-dropdown-header">
+                  <div class="site-dropdown-header-left">
+                    <span class="site-dropdown-title">Situs Terpasang</span>
+                    <span class="site-dropdown-subtitle">Daftar container website tenant aktif</span>
+                  </div>
+                  <span class="site-dropdown-count-badge">{{ containers.length }}</span>
+                </div>
+
+                <div class="site-dropdown-list">
+                  <button
+                    v-for="c in containers"
+                    :key="c.id"
+                    type="button"
+                    class="site-item-btn"
+                    :class="{ active: c.id === activeContainerId }"
+                    @click="selectSiteFromDropdown(c.id)"
+                  >
+                    <div class="site-item-icon-box">
+                      <Globe :size="14" />
+                    </div>
+                    <div class="site-item-info">
+                      <div class="site-item-row-top">
+                        <span class="site-item-name">{{ c.name }}</span>
+                        <span v-if="c.id === activeContainerId" class="site-item-active-badge">Aktif</span>
+                      </div>
+                      <span class="site-item-domain">{{ c.subdomain }}</span>
+                    </div>
+                    <div class="site-item-action">
+                      <Check v-if="c.id === activeContainerId" :size="14" class="site-item-check-icon" />
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </transition>
           </div>
 
           <div class="v-divider"></div>
@@ -898,30 +1458,25 @@ const copySchemaJson = () => {
 
         <!-- Right: Zoom, Mode Switcher, & Publish Button -->
         <div class="cmd-right-group">
-          <!-- Canvas View Helpers Segment -->
-          <div class="canvas-helpers-segment">
+          <!-- Canvas View & Zoom HUD -->
+          <div class="zoom-controls-cluster">
             <button
-              class="tool-btn"
+              class="btn-zoom-icon"
               :class="{ active: showRulers }"
               @click="showRulers = !showRulers"
               title="Penggaris Piksel (Rulers)"
             >
-              <Ruler :size="14" />
+              <Ruler :size="13" />
             </button>
             <button
-              class="tool-btn"
+              class="btn-zoom-icon"
               :class="{ active: showGrid }"
               @click="showGrid = !showGrid"
               title="Grid Kanvas Dot-Matrix"
             >
-              <Grid :size="14" />
+              <Grid :size="13" />
             </button>
-          </div>
-
-          <div class="v-divider"></div>
-
-          <!-- Zoom HUD -->
-          <div class="zoom-controls-cluster">
+            <div class="zoom-v-sep"></div>
             <button class="btn-zoom-icon" @click="zoomOut" title="Zoom Out (-)">
               <ZoomOut :size="13" />
             </button>
@@ -938,16 +1493,37 @@ const copySchemaJson = () => {
             <button class="btn-zoom-icon" @click="zoomIn" title="Zoom In (+)">
               <ZoomIn :size="13" />
             </button>
-            <div class="zoom-dropdown-pill">
-              <span>{{ Math.round(zoom * 100) }}%</span>
-              <select :value="zoom" @change="setZoom(parseFloat(($event.target as HTMLSelectElement).value))" class="zoom-select-hidden">
-                <option :value="0.5">50%</option>
-                <option :value="0.75">75%</option>
-                <option :value="0.85">85%</option>
-                <option :value="1.0">100%</option>
-                <option :value="1.25">125%</option>
-                <option :value="1.5">150%</option>
-              </select>
+            <div class="zoom-dropdown-pill" ref="zoomDropdownRef">
+              <button
+                class="zoom-pill-trigger"
+                :class="{ 'is-open': isZoomDropdownOpen }"
+                @click.stop="toggleZoomDropdown"
+                type="button"
+                title="Pilih Zoom Level"
+              >
+                <span>{{ Math.round(zoom * 100) }}%</span>
+                <ChevronDown :size="11" class="zoom-chevron-icon" :class="{ 'is-rotated': isZoomDropdownOpen }" />
+              </button>
+              <transition name="dropdown-scale">
+                <div v-if="isZoomDropdownOpen" class="custom-floating-dropdown zoom-floating-dropdown">
+                  <div class="custom-dropdown-header">
+                    <span class="custom-dropdown-title">Zoom Level</span>
+                  </div>
+                  <div class="custom-dropdown-list">
+                    <button
+                      v-for="z in zoomPresets"
+                      :key="z.value"
+                      type="button"
+                      class="custom-dropdown-item"
+                      :class="{ active: zoom === z.value }"
+                      @click="selectZoomFromDropdown(z.value)"
+                    >
+                      <span class="custom-dropdown-item-label">{{ z.label }}</span>
+                      <Check v-if="zoom === z.value" :size="13" class="custom-dropdown-check" />
+                    </button>
+                  </div>
+                </div>
+              </transition>
             </div>
             <div class="zoom-v-sep"></div>
             <button class="btn-zoom-fit" @click="resetView" title="Reset Pandangan (100%)">
@@ -981,22 +1557,45 @@ const copySchemaJson = () => {
             <button
               class="vmode-btn"
               :class="{ active: editorViewMode === 'code' }"
-              @click="isCodeModalOpen = true"
-              title="Lihat Schema JSON"
+              @click="editorViewMode = 'code'"
+              title="Mode Editor Kode (VS Code Style)"
             >
               <Code2 :size="13" />
             </button>
           </div>
+
+          <!-- Draft Auto-Save Status & Reset -->
+          <div
+            class="draft-status-badge"
+            :class="{ saving: isDraftSaving }"
+            :title="lastSavedDraftAt ? `Draf tersimpan otomatis (${lastSavedDraftAt})` : 'Draf otomatis tersimpan'"
+          >
+            <Cloud :size="13" class="draft-cloud-icon" />
+            <span class="draft-status-text">
+              {{ isDraftSaving ? 'Menyimpan...' : 'Tersimpan' }}
+            </span>
+          </div>
+
+          <button
+            class="btn-reset-draft"
+            @click="resetDraftToDefault"
+            title="Reset draf ke versi awal kontainer"
+          >
+            <RotateCcw :size="12" />
+          </button>
+
+          <div class="v-divider"></div>
 
           <!-- Publish Button -->
           <button
             class="btn-publish-live"
             :disabled="isPublishing"
             @click="handlePublishChanges"
+            title="Terbitkan perubahan ke kontainer langsung"
           >
             <Rocket v-if="!isPublishing" :size="14" />
             <span v-else class="spin-ring-sm"></span>
-            <span>{{ isPublishing ? 'Menyimpan...' : 'Terbitkan ke Kontainer' }}</span>
+            <span>{{ isPublishing ? 'Menerbitkan...' : 'Terbitkan' }}</span>
           </button>
         </div>
       </header>
@@ -1008,7 +1607,7 @@ const copySchemaJson = () => {
         <!-- ----------------------------------------------------------------- -->
         <!-- LEFT STUDIO DOCK (Blocks Library, Layers Tree, Design Tokens, AI) -->
         <!-- ----------------------------------------------------------------- -->
-        <aside v-if="editorViewMode === 'design'" class="studio-left-dock">
+        <aside class="studio-left-dock" :class="{ 'dock-hidden': editorViewMode !== 'design' }">
           <!-- Dock Tabs Header -->
           <nav class="left-dock-tabs">
             <button
@@ -1159,37 +1758,75 @@ const copySchemaJson = () => {
               <!-- Accent Color -->
               <div class="token-field-box">
                 <label class="token-lbl">Warna Utama (Aksen Brand)</label>
-                <div class="color-swatches-matrix">
+                <div class="color-palette-cards">
                   <button
                     v-for="pal in colorPalettes"
                     :key="pal.hex"
-                    class="swatch-btn"
+                    class="palette-card-btn"
                     :class="{ active: activeContainer.accentColor === pal.hex }"
-                    :style="{ backgroundColor: pal.hex }"
                     @click="activeContainer.accentColor = pal.hex"
                     :title="pal.name"
                   >
-                    <Check v-if="activeContainer.accentColor === pal.hex" :size="12" color="#fff" />
+                    <span class="palette-swatch-dot" :style="{ backgroundColor: pal.hex }">
+                      <Check v-if="activeContainer.accentColor === pal.hex" :size="10" color="#fff" />
+                    </span>
+                    <div class="palette-meta">
+                      <span class="palette-name">{{ pal.name }}</span>
+                      <span class="palette-hex">{{ pal.hex }}</span>
+                    </div>
                   </button>
                 </div>
               </div>
 
               <!-- Typography -->
-              <div class="token-field-box" style="margin-top: 18px;">
+              <div class="token-field-box" style="margin-top: 16px;">
                 <label class="token-lbl">Keluarga Tipografi (Font)</label>
-                <select v-model="currentFont" class="token-select-input">
-                  <option v-for="f in fontFamilies" :key="f.id" :value="f.id">
-                    {{ f.name }}
-                  </option>
-                </select>
+                <div class="font-dropdown-wrapper" ref="fontDropdownRef">
+                  <button
+                    class="font-pill-trigger"
+                    :class="{ 'is-open': isFontDropdownOpen }"
+                    @click.stop="toggleFontDropdown"
+                    type="button"
+                    title="Pilih Font Family"
+                  >
+                    <span class="font-pill-label" :style="{ fontFamily: currentFont }">{{ currentFontLabel }}</span>
+                    <ChevronDown :size="12" class="font-chevron-icon" :class="{ 'is-rotated': isFontDropdownOpen }" />
+                  </button>
+                  <transition name="dropdown-scale">
+                    <div v-if="isFontDropdownOpen" class="custom-floating-dropdown font-floating-dropdown">
+                      <div class="custom-dropdown-header">
+                        <span class="custom-dropdown-title">Keluarga Font</span>
+                        <span class="custom-dropdown-count-badge">{{ fontFamilies.length }}</span>
+                      </div>
+                      <div class="custom-dropdown-list">
+                        <button
+                          v-for="f in fontFamilies"
+                          :key="f.id"
+                          type="button"
+                          class="custom-dropdown-item"
+                          :class="{ active: currentFont === f.id }"
+                          @click="selectFontFromDropdown(f.id)"
+                        >
+                          <div class="font-item-info">
+                            <span class="font-item-name" :style="{ fontFamily: f.id }">{{ f.id }}</span>
+                            <span class="font-item-desc">{{ f.name }}</span>
+                          </div>
+                          <Check v-if="currentFont === f.id" :size="13" class="custom-dropdown-check" />
+                        </button>
+                      </div>
+                    </div>
+                  </transition>
+                </div>
               </div>
 
               <!-- Template Badge -->
-              <div class="token-field-box" style="margin-top: 18px;">
+              <div class="token-field-box" style="margin-top: 16px;">
                 <label class="token-lbl">Blueprint Terpasang</label>
                 <div class="blueprint-badge-box">
-                  <Layers :size="15" color="#2563eb" />
-                  <div>
+                  <div class="blueprint-icon-box">
+                    <Layers :size="14" color="#ffffff" />
+                  </div>
+                  <div class="blueprint-meta">
                     <strong>{{ activeContainer.templateName }}</strong>
                     <span>Dockerized cgroups runtime</span>
                   </div>
@@ -1246,18 +1883,21 @@ const copySchemaJson = () => {
         </aside>
 
         <!-- ----------------------------------------------------------------- -->
-        <!-- CENTER: INFINITE CANVAS WORKSPACE & RESIZABLE ARTBOARD             -->
+        <!-- CENTER WORKSPACE: DUAL ENGINE (CANVAS & VS CODE WORKSPACE)          -->
         <!-- ----------------------------------------------------------------- -->
-        <main
-          class="studio-viewport-area"
-          :class="{
-            'tool-hand-active': activeTool === 'hand' || isSpacePressed,
-            'is-dragging-canvas': isPanning,
-            'grid-dots-visible': showGrid
-          }"
-          @mousedown="onCanvasMouseDown"
-          @wheel="onCanvasWheel"
-        >
+        <div class="studio-center-workspace">
+          <!-- 1. Infinite Canvas Workspace & Resizable Artboard -->
+          <main
+            class="studio-viewport-area"
+            :class="{
+              'is-view-hidden': editorViewMode === 'code',
+              'tool-hand-active': activeTool === 'hand' || isSpacePressed,
+              'is-dragging-canvas': isPanning,
+              'grid-dots-visible': showGrid
+            }"
+            @mousedown="onCanvasMouseDown"
+            @wheel="onCanvasWheel"
+          >
           <!-- Coordinate Rulers (Photoshop Style) -->
           <div v-if="showRulers" class="canvas-ruler-top">
             <div class="ruler-tick-cluster" :style="{ transform: `translateX(${panX}px) scaleX(${zoom})` }">
@@ -1593,10 +2233,265 @@ const copySchemaJson = () => {
           </div>
         </main>
 
+        <!-- 2. VS Code-Style Canvas Code Editor Workspace -->
+        <section
+          class="studio-vscode-workspace"
+          :class="{ 'is-view-hidden': editorViewMode !== 'code' }"
+        >
+          <!-- 1. VS Code Activity Bar (Far Left Strip) -->
+          <aside class="vscode-activity-bar">
+            <div class="vscode-act-top">
+              <button
+                class="vscode-act-btn"
+                :class="{ active: isVsCodeExplorerOpen }"
+                @click="isVsCodeExplorerOpen = !isVsCodeExplorerOpen"
+                title="Penjelajah File (Ctrl+Shift+E)"
+              >
+                <Files :size="18" />
+              </button>
+              <button class="vscode-act-btn" title="Pencarian (Ctrl+Shift+F)">
+                <Search :size="17" />
+              </button>
+              <button class="vscode-act-btn" title="Kontrol Sumber (Git)">
+                <GitBranch :size="17" />
+              </button>
+            </div>
+            <div class="vscode-act-bottom">
+              <button class="vscode-act-btn" title="Terminal Live">
+                <Terminal :size="17" />
+              </button>
+              <button class="vscode-act-btn" title="Pengaturan Editor">
+                <Settings :size="17" />
+              </button>
+            </div>
+          </aside>
+
+          <!-- 2. VS Code File Explorer Sidebar -->
+          <transition name="vscode-explorer-slide">
+            <aside v-if="isVsCodeExplorerOpen" class="vscode-explorer-sidebar">
+              <div class="vscode-explorer-header">
+                <span class="vscode-explorer-title">PENJELAJAH</span>
+                <span class="vscode-explorer-badge">HEROCMS</span>
+              </div>
+              <div class="vscode-file-tree">
+                <div class="vscode-tree-section">
+                  <div class="vscode-section-head">
+                    <ChevronDown :size="12" />
+                    <span>HEROCMS-WORKSPACE</span>
+                  </div>
+
+                  <div class="vscode-tree-items">
+                    <!-- Config folder -->
+                    <div class="vscode-folder-row">
+                      <ChevronDown :size="11" />
+                      <span class="folder-name">config</span>
+                    </div>
+                    <button
+                      class="vscode-file-item indent"
+                      :class="{ active: activeVsCodeTab === 'docker-compose.yml' }"
+                      @click="activeVsCodeTab = 'docker-compose.yml'"
+                    >
+                      <span class="file-icon docker">🐳</span>
+                      <span class="file-name">docker-compose.yml</span>
+                    </button>
+
+                    <!-- Src folder -->
+                    <div class="vscode-folder-row">
+                      <ChevronDown :size="11" />
+                      <span class="folder-name">src</span>
+                    </div>
+                    <button
+                      class="vscode-file-item indent"
+                      :class="{ active: activeVsCodeTab === 'blocks.json' }"
+                      @click="activeVsCodeTab = 'blocks.json'"
+                    >
+                      <span class="file-icon json">{ }</span>
+                      <span class="file-name">blocks.json</span>
+                    </button>
+                    <button
+                      class="vscode-file-item indent"
+                      :class="{ active: activeVsCodeTab === 'index.html' }"
+                      @click="activeVsCodeTab = 'index.html'"
+                    >
+                      <span class="file-icon html">&lt;&gt;</span>
+                      <span class="file-name">index.html</span>
+                    </button>
+                    <button
+                      class="vscode-file-item indent"
+                      :class="{ active: activeVsCodeTab === 'theme.css' }"
+                      @click="activeVsCodeTab = 'theme.css'"
+                    >
+                      <span class="file-icon css">#</span>
+                      <span class="file-name">theme.css</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </transition>
+
+          <!-- 3. VS Code Main Code Editor Pane -->
+          <div class="vscode-editor-main">
+            <!-- Tabs Bar -->
+            <div class="vscode-tabs-bar">
+              <div class="vscode-tabs-scroll">
+                <button
+                  class="vscode-tab-btn"
+                  :class="{ active: activeVsCodeTab === 'blocks.json' }"
+                  @click="activeVsCodeTab = 'blocks.json'"
+                >
+                  <span class="tab-icon json">{ }</span>
+                  <span class="tab-label">blocks.json</span>
+                  <span class="tab-unsaved-dot" v-if="isVsCodeCodeDirty">●</span>
+                  <span class="tab-close-icon"><X :size="11" /></span>
+                </button>
+                <button
+                  class="vscode-tab-btn"
+                  :class="{ active: activeVsCodeTab === 'index.html' }"
+                  @click="activeVsCodeTab = 'index.html'"
+                >
+                  <span class="tab-icon html">&lt;&gt;</span>
+                  <span class="tab-label">index.html</span>
+                  <span class="tab-close-icon"><X :size="11" /></span>
+                </button>
+                <button
+                  class="vscode-tab-btn"
+                  :class="{ active: activeVsCodeTab === 'theme.css' }"
+                  @click="activeVsCodeTab = 'theme.css'"
+                >
+                  <span class="tab-icon css">#</span>
+                  <span class="tab-label">theme.css</span>
+                  <span class="tab-close-icon"><X :size="11" /></span>
+                </button>
+                <button
+                  class="vscode-tab-btn"
+                  :class="{ active: activeVsCodeTab === 'docker-compose.yml' }"
+                  @click="activeVsCodeTab = 'docker-compose.yml'"
+                >
+                  <span class="tab-icon docker">🐳</span>
+                  <span class="tab-label">docker-compose.yml</span>
+                  <span class="tab-close-icon"><X :size="11" /></span>
+                </button>
+              </div>
+
+              <!-- Top Actions Bar -->
+              <div class="vscode-editor-actions">
+                <button
+                  v-if="activeVsCodeTab === 'blocks.json'"
+                  class="vscode-action-btn primary"
+                  @click="applyVsCodeChangesToCanvas"
+                  title="Sinkronkan & Terapkan Perubahan JSON ke Kanvas Studio"
+                >
+                  <Play :size="12" />
+                  <span>Terapkan ke Kanvas</span>
+                </button>
+                <button
+                  v-if="activeVsCodeTab === 'blocks.json'"
+                  class="vscode-action-btn"
+                  @click="formatVsCodeJson"
+                  title="Format JSON (Prettier)"
+                >
+                  <Sparkles :size="12" />
+                  <span>Prettify</span>
+                </button>
+                <button
+                  class="vscode-action-btn"
+                  @click="copyVsCodeCurrentCode"
+                  title="Salin Isi File Ini"
+                >
+                  <Copy :size="12" />
+                  <span>Salin</span>
+                </button>
+                <button
+                  class="vscode-action-btn exit"
+                  @click="editorViewMode = 'design'"
+                  title="Kembali ke Mode Desain Kanvas"
+                >
+                  <ArrowLeft :size="12" />
+                  <span>Kembali ke Kanvas</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Breadcrumbs -->
+            <div class="vscode-breadcrumbs-bar">
+              <span class="crumb">herocms</span>
+              <span class="crumb-sep">&gt;</span>
+              <span class="crumb">src</span>
+              <span class="crumb-sep">&gt;</span>
+              <span class="crumb active">{{ activeVsCodeTab }}</span>
+              <span v-if="activeVsCodeTab === 'blocks.json'" class="crumb-tip">
+                (Edit JSON di sini lalu klik "Terapkan ke Kanvas")
+              </span>
+            </div>
+
+            <!-- Code Editor Workspace (Lines + Code Area) -->
+            <div class="vscode-code-viewport">
+              <!-- Line Numbers Gutter -->
+              <div class="vscode-gutter">
+                <div
+                  v-for="line in vsCodeLineCount"
+                  :key="line"
+                  class="vscode-line-number"
+                >
+                  <span class="line-num-text">{{ line }}</span>
+                </div>
+              </div>
+
+              <!-- Code Content Surface -->
+              <div class="vscode-text-surface">
+                <!-- If blocks.json, provide interactive editable textarea -->
+                <textarea
+                  v-if="activeVsCodeTab === 'blocks.json'"
+                  v-model="vsCodeBlocksCode"
+                  @keydown="onVsCodeKeydown"
+                  @input="isVsCodeCodeDirty = true"
+                  class="vscode-code-textarea"
+                  spellcheck="false"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                ></textarea>
+
+                <!-- If read-only generated code (index.html, theme.css, docker-compose.yml) -->
+                <pre v-else class="vscode-code-pre">{{ currentVsCodeContent }}</pre>
+              </div>
+            </div>
+
+            <!-- 4. VS Code Status Bar (Bottom Strip) -->
+            <footer class="vscode-status-bar">
+              <div class="vscode-status-left">
+                <span class="status-item git">
+                  <GitBranch :size="12" />
+                  <span>main*</span>
+                </span>
+                <span class="status-item">
+                  <RefreshCw :size="11" />
+                  <span>0 ⨉ 0 ⚠</span>
+                </span>
+                <span class="status-item highlight">HeroCMS Runtime Edge v3.4</span>
+              </div>
+              <div class="vscode-status-right">
+                <span class="status-item">Spasi: 2</span>
+                <span class="status-item">UTF-8</span>
+                <span class="status-item lang">
+                  {{
+                    activeVsCodeTab === 'blocks.json' ? 'JSON' :
+                    activeVsCodeTab === 'index.html' ? 'HTML' :
+                    activeVsCodeTab === 'theme.css' ? 'CSS' : 'YAML'
+                  }}
+                </span>
+                <span class="status-item">Prettier: ✓</span>
+              </div>
+            </footer>
+          </div>
+        </section>
+        </div>
+
         <!-- ----------------------------------------------------------------- -->
         <!-- RIGHT STUDIO DOCK: DEEP STYLE INSPECTOR & CONTENT CONTROLS        -->
         <!-- ----------------------------------------------------------------- -->
-        <aside v-if="editorViewMode === 'design'" class="studio-right-inspector">
+        <aside class="studio-right-inspector" :class="{ 'dock-hidden': editorViewMode !== 'design' }">
           <!-- Inspector Tabs Header -->
           <div class="inspector-tabs-bar">
             <button
@@ -1734,21 +2629,24 @@ const copySchemaJson = () => {
                       :class="{ active: selectedBlock.styles?.align === 'left' }"
                       @click="selectedBlock.styles ? (selectedBlock.styles.align = 'left') : null"
                     >
-                      Kiri
+                      <AlignLeft :size="13" />
+                      <span>Kiri</span>
                     </button>
                     <button
                       class="align-btn"
                       :class="{ active: selectedBlock.styles?.align === 'center' || !selectedBlock.styles?.align }"
                       @click="selectedBlock.styles ? (selectedBlock.styles.align = 'center') : null"
                     >
-                      Tengah
+                      <AlignCenter :size="13" />
+                      <span>Tengah</span>
                     </button>
                     <button
                       class="align-btn"
                       :class="{ active: selectedBlock.styles?.align === 'right' }"
                       @click="selectedBlock.styles ? (selectedBlock.styles.align = 'right') : null"
                     >
-                      Kanan
+                      <AlignRight :size="13" />
+                      <span>Kanan</span>
                     </button>
                   </div>
                 </div>
@@ -1835,6 +2733,7 @@ const copySchemaJson = () => {
  * Visual Studio Main Root & Reset
  * --------------------------------------------------------------------------- */
 .visual-studio-root {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -1852,6 +2751,35 @@ const copySchemaJson = () => {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  position: relative;
+  transition: opacity 0.3s ease;
+}
+
+.studio-main-frame:not(.is-revealed) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.studio-main-frame.is-revealed {
+  opacity: 1;
+}
+
+/* -----------------------------------------------------------------------------
+ * Seamless Entrance Animations for Studio Sections
+ * --------------------------------------------------------------------------- */
+.studio-main-frame.is-revealed .studio-command-bar {
+  animation: studioRevealTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes studioRevealTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* -----------------------------------------------------------------------------
@@ -1917,17 +2845,33 @@ const copySchemaJson = () => {
 }
 
 .btn-toggle-sidebar.active {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
 }
 
-.cmd-left-group,
-.cmd-center-group,
+.cmd-left-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cmd-center-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .cmd-right-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0 !important;
+  margin-left: auto;
 }
 
 .v-divider {
@@ -1938,7 +2882,15 @@ const copySchemaJson = () => {
   flex-shrink: 0;
 }
 
+.site-dropdown-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 60;
+}
+
 .site-target-pill {
+  appearance: none;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -1947,7 +2899,18 @@ const copySchemaJson = () => {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 0 10px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.site-target-pill:hover,
+.site-target-pill.is-open {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.06);
 }
 
 .pulse-status-dot {
@@ -1965,16 +2928,221 @@ const copySchemaJson = () => {
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 
-.select-site-clean {
-  border: none;
-  background: transparent;
+.site-display-name {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #0f172a;
+  max-width: 190px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-display-subdomain {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: #64748b;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-chevron-icon {
+  color: #64748b;
+  transition: transform 0.2s ease, color 0.15s ease;
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
+.site-chevron-icon.is-rotated {
+  transform: rotate(180deg);
+  color: #0f172a;
+}
+
+.site-floating-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 320px;
+  max-width: 380px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.12), 0 8px 12px -6px rgba(15, 23, 42, 0.06);
+  padding: 6px;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.site-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.site-dropdown-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.site-dropdown-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.site-dropdown-subtitle {
+  font-size: 0.65rem;
+  color: #94a3b8;
+}
+
+.site-dropdown-count-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+}
+
+.site-dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.site-item-btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
   cursor: pointer;
-  outline: none;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.site-item-btn:hover {
+  background: #f8fafc;
+  border-color: #f1f5f9;
+}
+
+.site-item-btn.active {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.site-item-icon-box {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.site-item-btn:hover .site-item-icon-box {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.site-item-btn.active .site-item-icon-box {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.site-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.site-item-row-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.site-item-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-item-btn.active .site-item-name {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.site-item-active-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 1px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.site-item-domain {
+  font-size: 0.68rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-item-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.site-item-check-icon {
+  color: #0f172a;
+}
+
+.dropdown-scale-enter-active,
+.dropdown-scale-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform-origin: top left;
+}
+
+.dropdown-scale-enter-from,
+.dropdown-scale-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.97);
 }
 
 .tools-segment,
@@ -2011,9 +3179,9 @@ const copySchemaJson = () => {
 }
 
 .tool-btn.active {
-  background: #2563eb;
+  background: #0f172a;
   color: #ffffff;
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
 }
 
 .tool-btn:disabled {
@@ -2110,11 +3278,16 @@ const copySchemaJson = () => {
   margin: 0 1px;
 }
 
-.dim-unit {
-  font-size: 0.66rem;
-  font-weight: 600;
-  color: #94a3b8;
-  margin-right: 1px;
+@media (max-width: 1380px) {
+  .dimension-hud {
+    display: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .dev-dock-btn span {
+    display: none;
+  }
 }
 
 .dim-sep {
@@ -2139,8 +3312,8 @@ const copySchemaJson = () => {
 }
 
 .btn-rotate-mini:hover {
-  background: #eff6ff;
-  color: #2563eb;
+  background: #f1f5f9;
+  color: #0f172a;
   transform: rotate(-90deg);
 }
 
@@ -2178,6 +3351,12 @@ const copySchemaJson = () => {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+.btn-zoom-icon.active {
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+}
+
 .zoom-v-sep {
   width: 1px;
   height: 14px;
@@ -2186,18 +3365,7 @@ const copySchemaJson = () => {
 }
 
 .zoom-slider-wrap {
-  width: 56px;
-  display: flex;
-  align-items: center;
-  padding: 0 2px;
-}
-
-.zoom-slider-input {
-  width: 100%;
-  height: 4px;
-  border-radius: 2px;
-  accent-color: #2563eb;
-  cursor: pointer;
+  display: none;
 }
 
 .zoom-dropdown-pill {
@@ -2260,22 +3428,25 @@ const copySchemaJson = () => {
   align-items: center;
   gap: 6px;
   height: 32px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: #0f172a;
   color: #ffffff;
-  border: none;
+  border: 1px solid #1e293b;
   padding: 0 14px;
   border-radius: 8px;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
   transition: all 0.15s ease;
-  flex-shrink: 0;
+  flex-shrink: 0 !important;
+  white-space: nowrap;
 }
 
 .btn-publish-live:hover:not(:disabled) {
+  background: #1e293b;
+  border-color: #334155;
   transform: translateY(-0.5px);
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.28);
 }
 
 .spin-ring-sm {
@@ -2315,21 +3486,33 @@ const copySchemaJson = () => {
   flex-direction: column;
   flex-shrink: 0;
   z-index: 20;
+  transition: opacity 0.15s ease, visibility 0s linear 0s;
+  will-change: opacity;
+}
+
+.studio-left-dock.dock-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  width: 0;
+  overflow: hidden;
+  border-right: none;
+  transition: opacity 0.15s ease, visibility 0s linear 0.15s, width 0s linear 0.15s, border 0s linear 0.15s, overflow 0s linear 0.15s;
 }
 
 .left-dock-tabs {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   padding: 3px;
-  margin: 10px 12px 6px;
+  margin: 10px 12px 10px;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
-  border-radius: 9px;
+  border-radius: 8px;
 }
 
 .dock-tab-item {
   flex: 1;
-  height: 30px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2337,7 +3520,7 @@ const copySchemaJson = () => {
   border: none;
   background: transparent;
   border-radius: 6px;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #64748b;
   cursor: pointer;
@@ -2352,24 +3535,25 @@ const copySchemaJson = () => {
   background: #ffffff;
   color: #0f172a;
   font-weight: 700;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .dock-tab-body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 12px 14px 20px;
 }
 
 .dock-section-head {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .dock-section-head h4 {
-  font-size: 0.84rem;
-  font-weight: 800;
+  font-size: 0.82rem;
+  font-weight: 700;
   color: #0f172a;
   margin: 0 0 3px;
+  letter-spacing: -0.01em;
 }
 
 .dock-section-head p {
@@ -2379,42 +3563,50 @@ const copySchemaJson = () => {
   line-height: 1.4;
 }
 
-/* Block Cards Grid */
+/* Block Cards Grid - Obsidian HeroCMS Theme */
 .block-cards-grid {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .block-add-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px;
-  background: #f8fafc;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .block-add-card:hover {
-  border-color: #2563eb;
-  background: #eff6ff;
+  border-color: #0f172a;
+  background: #f8fafc;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
 }
 
 .card-icon-bubble {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 6px -1px rgba(15, 23, 42, 0.2);
   flex-shrink: 0;
+}
+
+.block-add-card:hover .card-icon-bubble {
+  background: #1e293b;
+  color: #ffffff;
 }
 
 .card-meta {
@@ -2427,23 +3619,27 @@ const copySchemaJson = () => {
   font-size: 0.78rem;
   font-weight: 700;
   color: #0f172a;
+  line-height: 1.25;
 }
 
 .card-meta span {
   font-size: 0.68rem;
   color: #64748b;
-  line-height: 1.3;
+  line-height: 1.35;
+  margin-top: 2px;
 }
 
 .icon-add-plus {
   color: #94a3b8;
+  transition: all 0.15s ease;
 }
 
 .block-add-card:hover .icon-add-plus {
-  color: #2563eb;
+  color: #0f172a;
+  transform: scale(1.15);
 }
 
-/* Layers List */
+/* Layers List - Theme Harmonized */
 .layers-list-tree {
   display: flex;
   flex-direction: column;
@@ -2453,9 +3649,9 @@ const copySchemaJson = () => {
 .layer-row-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: #f8fafc;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   cursor: pointer;
@@ -2466,23 +3662,32 @@ const copySchemaJson = () => {
 }
 
 .layer-row-item:hover {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
+  border-color: #0f172a;
+  background: #f8fafc;
 }
 
 .layer-row-item.selected {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
-  font-weight: 700;
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 2px 8px -1px rgba(15, 23, 42, 0.25);
+}
+
+.layer-row-item.selected .layer-name-text {
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .layer-type-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #2563eb;
+  background: #94a3b8;
   flex-shrink: 0;
+}
+
+.layer-row-item.selected .layer-type-dot {
+  background: #ffffff;
 }
 
 .layer-name-text {
@@ -2518,35 +3723,100 @@ const copySchemaJson = () => {
 }
 
 .icon-layer-btn:hover {
-  background: #ffffff;
+  background: #f1f5f9;
   color: #0f172a;
 }
 
-/* Design Tokens */
-.color-swatches-matrix {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-top: 8px;
+.layer-row-item.selected .icon-layer-btn {
+  color: #94a3b8;
 }
 
-.swatch-btn {
-  height: 32px;
-  border-radius: 7px;
-  border: 2px solid transparent;
+.layer-row-item.selected .icon-layer-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+/* Design Tokens - Curated Palette Grid */
+.color-palette-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.palette-card-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  outline: none;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+
+.palette-card-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.palette-card-btn.active {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.palette-swatch-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
-.swatch-btn:hover {
-  transform: scale(1.08);
+.palette-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.swatch-btn.active {
-  border-color: #0f172a;
+.palette-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  transition: color 0.15s ease;
+}
+
+.palette-card-btn.active .palette-name {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.palette-hex {
+  font-size: 0.62rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+.palette-card-btn.active .palette-hex {
+  color: #475569;
 }
 
 .token-lbl {
@@ -2560,56 +3830,304 @@ const copySchemaJson = () => {
 
 .token-select-input {
   width: 100%;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #0f172a;
   margin-top: 6px;
   outline: none;
+  transition: all 0.15s ease;
 }
 
+.token-select-input:hover {
+  border-color: #94a3b8;
+}
+
+.token-select-input:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+}
+
+/* ---------------------------------------------------------------------------
+ * Reusable Custom Dropdown System (Font, Zoom, etc.)
+ * --------------------------------------------------------------------------- */
+.custom-floating-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 240px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.12), 0 6px 10px -4px rgba(15, 23, 42, 0.06);
+  padding: 5px;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.custom-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px 6px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 3px;
+}
+
+.custom-dropdown-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.custom-dropdown-count-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+}
+
+.custom-dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.custom-dropdown-item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.custom-dropdown-item:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.custom-dropdown-item.active {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.custom-dropdown-item-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.custom-dropdown-item.active .custom-dropdown-item-label {
+  font-weight: 700;
+}
+
+.custom-dropdown-check {
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+/* Font Family Dropdown */
+.font-dropdown-wrapper {
+  position: relative;
+  margin-top: 6px;
+}
+
+.font-pill-trigger {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.font-pill-trigger:hover {
+  border-color: #94a3b8;
+}
+
+.font-pill-trigger.is-open {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+.font-pill-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.font-chevron-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.font-chevron-icon.is-rotated {
+  transform: rotate(180deg);
+}
+
+.font-floating-dropdown {
+  min-width: 280px;
+  right: 0;
+  left: auto;
+}
+
+.font-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.font-item-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.font-item-desc {
+  font-size: 0.62rem;
+  color: #94a3b8;
+  font-family: inherit;
+}
+
+.custom-dropdown-item.active .font-item-name {
+  font-weight: 700;
+}
+
+/* Zoom Dropdown */
+.zoom-pill-trigger {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  transition: all 0.15s ease;
+}
+
+.zoom-pill-trigger:hover {
+  background: #f1f5f9;
+}
+
+.zoom-pill-trigger.is-open {
+  background: #e2e8f0;
+}
+
+.zoom-chevron-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.zoom-chevron-icon.is-rotated {
+  transform: rotate(180deg);
+}
+
+.zoom-floating-dropdown {
+  min-width: 130px;
+  right: 0;
+  left: auto;
+}
+
+.zoom-floating-dropdown .custom-dropdown-item-label {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.76rem;
+}
 .blueprint-badge-box {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px;
-  background: #f8fafc;
+  padding: 8px 10px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 9px;
+  border-radius: 7px;
   margin-top: 6px;
 }
 
-.blueprint-badge-box strong {
+.blueprint-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.blueprint-meta strong {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
+  font-weight: 700;
   color: #0f172a;
 }
 
-.blueprint-badge-box span {
-  font-size: 0.68rem;
+.blueprint-meta span {
+  font-size: 0.66rem;
   color: #64748b;
 }
 
-/* AI Copilot */
+/* AI Copilot - Refined Obsidian Theme */
 .ai-prompt-area {
   width: 100%;
-  padding: 10px 12px;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 8px;
+  padding: 9px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
   background: #ffffff;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #0f172a;
   resize: vertical;
-  min-height: 80px;
+  min-height: 76px;
   margin-bottom: 10px;
   outline: none;
   font-family: inherit;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1.45;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: all 0.15s ease;
   box-sizing: border-box;
 }
 
@@ -2618,9 +4136,9 @@ const copySchemaJson = () => {
 }
 
 .ai-prompt-area:focus {
-  border-color: #7c3aed;
+  border-color: #0f172a;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.14);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
 }
 
 .btn-generate-ai {
@@ -2631,65 +4149,99 @@ const copySchemaJson = () => {
   gap: 6px;
   height: 34px;
   padding: 0 14px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border-radius: 6px;
+  border: 1px solid #0f172a;
+  background: #0f172a;
   color: #ffffff;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(124, 58, 237, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  margin-bottom: 14px;
   transition: all 0.15s ease;
 }
 
 .btn-generate-ai:hover:not(:disabled) {
-  transform: translateY(-0.5px);
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
+  background: #1e293b;
+  border-color: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+}
+
+.btn-generate-ai:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .prompt-presets-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .preset-title {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
 }
 
 .preset-chip {
   text-align: left;
   border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  padding: 6px 9px;
+  background: #ffffff;
+  padding: 8px 10px;
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #334155;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .preset-chip:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: #f8fafc;
+  border-color: #0f172a;
   color: #0f172a;
+  transform: translateX(2px);
 }
 
 /* -----------------------------------------------------------------------------
- * 3. Infinite Viewport & Artboard Workspace
+ * 3. Center Workspace: Dual Engine (Canvas & VS Code Editor)
  * --------------------------------------------------------------------------- */
-.studio-viewport-area {
+.studio-center-workspace {
   flex: 1;
   height: 100%;
   position: relative;
   overflow: hidden;
+  min-width: 0;
+  display: flex;
+  background: #181818;
+}
+
+.studio-viewport-area {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   background: #f1f5f9;
   user-select: none;
+  transition: opacity 0.35s ease, visibility 0s linear 0s;
+  opacity: 1;
+  visibility: visible;
+  z-index: 1;
+}
+
+.studio-viewport-area.is-view-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
 }
 
 .studio-viewport-area.grid-dots-visible {
@@ -3463,16 +5015,28 @@ const copySchemaJson = () => {
   flex-direction: column;
   flex-shrink: 0;
   z-index: 20;
+  transition: opacity 0.15s ease, visibility 0s linear 0s;
+  will-change: opacity;
+}
+
+.studio-right-inspector.dock-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  width: 0;
+  overflow: hidden;
+  border-left: none;
+  transition: opacity 0.15s ease, visibility 0s linear 0.15s, width 0s linear 0.15s, border 0s linear 0.15s, overflow 0s linear 0.15s;
 }
 
 .inspector-tabs-bar {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   padding: 3px;
-  margin: 12px 14px 6px;
+  margin: 10px 14px 10px;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
-  border-radius: 9px;
+  border-radius: 8px;
 }
 
 .insp-tab-btn {
@@ -3497,43 +5061,44 @@ const copySchemaJson = () => {
 }
 
 .insp-tab-btn.active {
-  background: #ffffff;
-  color: #0f172a;
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
 }
 
 .inspector-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px 20px;
+  padding: 10px 14px 20px;
 }
 
-/* Selected Block Card */
+/* Selected Block Card - Refined HeroCMS Obsidian */
 .selected-block-card {
   padding: 12px 14px;
   margin-bottom: 16px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .block-card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .badge-block-type {
   font-size: 0.62rem;
-  font-weight: 800;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  font-weight: 700;
+  color: #ffffff;
+  background: #0f172a;
+  border: 1px solid #0f172a;
   padding: 2px 7px;
-  border-radius: 5px;
-  letter-spacing: 0.05em;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
 }
 
 .badge-block-status {
@@ -3543,6 +5108,10 @@ const copySchemaJson = () => {
   font-size: 0.68rem;
   font-weight: 600;
   color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  padding: 1px 7px;
+  border-radius: 9999px;
 }
 
 .status-indicator-dot {
@@ -3559,20 +5128,21 @@ const copySchemaJson = () => {
   color: #0f172a;
   margin: 0;
   line-height: 1.35;
+  letter-spacing: -0.01em;
 }
 
 /* Form Fields & High-Fidelity Inputs */
 .field-item {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
 }
 
 .field-label {
   display: block;
-  font-size: 0.74rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: #334155;
   margin-bottom: 6px;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
 }
 
 .field-label-split {
@@ -3583,13 +5153,13 @@ const copySchemaJson = () => {
 }
 
 .field-val-badge {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  padding: 1px 6px;
-  border-radius: 5px;
+  color: #0f172a;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 2px 7px;
+  border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -3600,17 +5170,17 @@ const copySchemaJson = () => {
 
 .field-input {
   width: 100%;
-  height: 38px;
-  padding: 0 12px;
+  height: 36px;
+  padding: 0 11px;
   background: #ffffff;
-  border: 1.5px solid #cbd5e1;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #0f172a;
   font-family: inherit;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  transition: all 0.15s ease;
   outline: none;
   box-sizing: border-box;
 }
@@ -3625,33 +5195,28 @@ const copySchemaJson = () => {
 }
 
 .field-input:focus {
-  border-color: #2563eb;
+  border-color: #0f172a;
   background: #ffffff;
-  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.14);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
 }
 
 .field-textarea {
   width: 100%;
-  min-height: 84px;
-  padding: 9px 12px;
+  min-height: 76px;
+  padding: 9px 11px;
   background: #ffffff;
-  border: 1.5px solid #cbd5e1;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #0f172a;
   font-family: inherit;
-  line-height: 1.5;
+  line-height: 1.45;
   resize: vertical;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  transition: all 0.15s ease;
   outline: none;
   box-sizing: border-box;
-}
-
-.field-textarea::placeholder {
-  color: #94a3b8;
-  font-weight: 400;
 }
 
 .field-textarea:hover {
@@ -3659,9 +5224,14 @@ const copySchemaJson = () => {
 }
 
 .field-textarea:focus {
-  border-color: #2563eb;
+  border-color: #0f172a;
   background: #ffffff;
-  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.14);
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+.field-textarea::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
 }
 
 /* Range Slider */
@@ -3683,15 +5253,16 @@ const copySchemaJson = () => {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #2563eb;
+  background: #0f172a;
   border: 2px solid #ffffff;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
   cursor: pointer;
-  transition: transform 0.1s ease;
+  transition: transform 0.1s ease, background 0.15s ease;
 }
 
 .range-slider::-webkit-slider-thumb:hover {
   transform: scale(1.15);
+  background: #1e293b;
 }
 
 /* Alignment & Background Selector Groups */
@@ -3708,7 +5279,8 @@ const copySchemaJson = () => {
 .align-btn,
 .bgmode-btn {
   flex: 1;
-  height: 30px;
+  height: 32px;
+  gap: 5px;
   border: none;
   background: transparent;
   border-radius: 6px;
@@ -3729,10 +5301,10 @@ const copySchemaJson = () => {
 
 .align-btn.active,
 .bgmode-btn.active {
-  background: #ffffff;
-  color: #2563eb;
-  font-weight: 700;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
 }
 
 .block-quick-actions {
@@ -3745,8 +5317,8 @@ const copySchemaJson = () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 34px;
+  gap: 7px;
+  height: 36px;
   padding: 0 12px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
@@ -3756,19 +5328,25 @@ const copySchemaJson = () => {
   color: #334155;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .btn-quick-outline:hover {
   background: #f8fafc;
-  border-color: #94a3b8;
+  border-color: #0f172a;
   color: #0f172a;
 }
 
 .btn-quick-outline.danger {
-  color: #dc2626;
+  color: #ef4444;
   border-color: #fecaca;
-  background: #fffafa;
+  background: #ffffff;
+}
+
+.btn-quick-outline.danger:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+  color: #b91c1c;
 }
 
 .btn-quick-outline.danger:hover {
@@ -3886,5 +5464,714 @@ const copySchemaJson = () => {
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* -----------------------------------------------------------------------------
+ * Visual Studio Booting Overlay & Transition (Identical Theme to StudioSplashScreen)
+ * --------------------------------------------------------------------------- */
+.studio-boot-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 99999;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+  will-change: opacity, transform;
+}
+
+/* Theme Base Dot Grid */
+.base-dot-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+  background-size: 28px 28px;
+  background-position: -14px -14px;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* Clean Center Pod */
+.boot-center-pod {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: podEntrance 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes podEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Brand Glyph Box: Obsidian Black matching theme buttons and badges */
+.brand-glyph-box {
+  width: 50px;
+  height: 50px;
+  background: #0f172a;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Wordmark */
+.brand-wordmark {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wordmark-highlight {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.wordmark-editor-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #2563eb;
+  vertical-align: middle;
+}
+
+/* Black Loading Bar (Directly beneath logo & wordmark) */
+.boot-progress-track {
+  width: 180px;
+  height: 3.5px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.boot-progress-fill {
+  height: 100%;
+  background: #0f172a; /* Solid Theme Obsidian Black */
+  border-radius: 9999px;
+  transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Clean Status Text */
+.boot-status-text {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #64748b;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* Dissolve Transitions */
+.studio-boot-dissolve-enter-active {
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.studio-boot-dissolve-enter-from {
+  opacity: 0;
+}
+
+.studio-boot-dissolve-leave-active {
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.studio-boot-dissolve-leave-to {
+  opacity: 0;
+  transform: scale(1.03);
+  filter: blur(8px);
+}
+
+/* -----------------------------------------------------------------------------
+ * Draft Status Badge & Reset in Command Bar (Fixed Height & Non-wrapping)
+ * --------------------------------------------------------------------------- */
+.draft-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #334155;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.draft-status-text {
+  white-space: nowrap;
+  display: inline-block;
+  line-height: 1;
+}
+
+.draft-status-badge.saving {
+  color: #2563eb;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.draft-cloud-icon {
+  color: #0284c7;
+  flex-shrink: 0;
+}
+
+.draft-status-badge.saving .draft-cloud-icon {
+  animation: pulse-cloud 1s ease-in-out infinite;
+}
+
+@keyframes pulse-cloud {
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.18); opacity: 1; color: #2563eb; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+
+.btn-reset-draft {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.btn-reset-draft:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+/* -----------------------------------------------------------------------------
+ * 6. VS Code-Style Canvas Workspace Editor
+ * --------------------------------------------------------------------------- */
+.studio-vscode-workspace {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  background: #1e1e1e;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #cccccc;
+  transition: opacity 0.4s ease, visibility 0s linear 0s;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.studio-vscode-workspace.is-view-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+
+/* 1. Activity Bar */
+.vscode-activity-bar {
+  width: 48px;
+  background: #181818;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-right: 1px solid #282828;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.vscode-act-top,
+.vscode-act-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.vscode-act-btn {
+  width: 48px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #858585;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.vscode-act-btn:hover {
+  color: #ffffff;
+}
+
+.vscode-act-btn.active {
+  color: #ffffff;
+}
+
+.vscode-act-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: #007acc;
+  border-radius: 0 2px 2px 0;
+}
+
+/* 2. File Explorer Sidebar */
+.vscode-explorer-sidebar {
+  width: 220px;
+  background: #1f1f1f;
+  border-right: 1px solid #282828;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.vscode-explorer-slide-enter-active,
+.vscode-explorer-slide-leave-active {
+  transition: width 0.25s ease, opacity 0.2s ease;
+}
+
+.vscode-explorer-slide-enter-from,
+.vscode-explorer-slide-leave-to {
+  width: 0;
+  opacity: 0;
+}
+
+.vscode-explorer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #999999;
+  border-bottom: 1px solid #262626;
+}
+
+.vscode-explorer-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  background: #2d2d2d;
+  color: #007acc;
+  border-radius: 4px;
+}
+
+.vscode-file-tree {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.vscode-tree-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.vscode-section-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #bbbbbb;
+  cursor: default;
+  user-select: none;
+}
+
+.vscode-tree-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.vscode-folder-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 16px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: #cccccc;
+  cursor: pointer;
+  user-select: none;
+}
+
+.vscode-folder-row .folder-name {
+  color: #e2e8f0;
+}
+
+.vscode-file-item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 16px 5px 28px;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-size: 0.74rem;
+  color: #999999;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  font-family: inherit;
+}
+
+.vscode-file-item:hover {
+  background: #2a2d2e;
+  color: #ffffff;
+}
+
+.vscode-file-item.active {
+  background: #37373d;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.vscode-file-item .file-icon {
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+}
+
+.file-icon.json { color: #f1c40f; }
+.file-icon.html { color: #e44d26; }
+.file-icon.css { color: #42a5f5; }
+.file-icon.docker { font-size: 0.75rem; }
+
+/* 3. Main Editor Pane */
+.vscode-editor-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1e1e1e;
+  overflow: hidden;
+}
+
+/* Tabs Bar */
+.vscode-tabs-bar {
+  height: 36px;
+  background: #181818;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #282828;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.vscode-tabs-scroll {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.vscode-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.vscode-tab-btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  background: #181818;
+  border: none;
+  border-right: 1px solid #242424;
+  color: #8c8c8c;
+  font-size: 0.73rem;
+  font-family: inherit;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+
+.vscode-tab-btn:hover {
+  background: #1f1f1f;
+  color: #cccccc;
+}
+
+.vscode-tab-btn.active {
+  background: #1e1e1e;
+  color: #ffffff;
+  border-top: 2px solid #0078d4;
+}
+
+.vscode-tab-btn .tab-unsaved-dot {
+  font-size: 0.55rem;
+  color: #e2e8f0;
+}
+
+.vscode-tab-btn .tab-close-icon {
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 3px;
+  transition: opacity 0.15s ease;
+}
+
+.vscode-tab-btn:hover .tab-close-icon,
+.vscode-tab-btn.active .tab-close-icon {
+  opacity: 0.7;
+}
+
+.vscode-tab-btn .tab-close-icon:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Actions in Tab Bar */
+.vscode-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+
+.vscode-action-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 25px;
+  padding: 0 9px;
+  border-radius: 4px;
+  border: 1px solid #3c3c3c;
+  background: #2a2a2a;
+  color: #cccccc;
+  font-size: 0.69rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.vscode-action-btn:hover {
+  background: #333333;
+  color: #ffffff;
+  border-color: #4a4a4a;
+}
+
+.vscode-action-btn.primary {
+  background: #007acc;
+  border-color: #008be5;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.vscode-action-btn.primary:hover {
+  background: #0069b4;
+  box-shadow: 0 0 10px rgba(0, 122, 204, 0.4);
+}
+
+.vscode-action-btn.exit {
+  background: #252526;
+  border-color: #3e3e42;
+  color: #9cdcfe;
+}
+
+.vscode-action-btn.exit:hover {
+  background: #2d2d30;
+  color: #ffffff;
+}
+
+/* Breadcrumbs */
+.vscode-breadcrumbs-bar {
+  height: 23px;
+  background: #1e1e1e;
+  border-bottom: 1px solid #282828;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 16px;
+  font-size: 0.68rem;
+  color: #777777;
+  flex-shrink: 0;
+}
+
+.vscode-breadcrumbs-bar .crumb-sep {
+  font-size: 0.6rem;
+  color: #555555;
+}
+
+.vscode-breadcrumbs-bar .crumb.active {
+  color: #cccccc;
+}
+
+.vscode-breadcrumbs-bar .crumb-tip {
+  color: #007acc;
+  font-size: 0.65rem;
+  margin-left: 10px;
+}
+
+/* Code Viewport (Gutter + Surface) */
+.vscode-code-viewport {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  background: #1e1e1e;
+}
+
+.vscode-gutter {
+  width: 48px;
+  padding: 12px 10px 12px 0;
+  background: #1e1e1e;
+  border-right: 1px solid #282828;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.vscode-line-number {
+  height: 21px;
+  line-height: 21px;
+  text-align: right;
+  font-size: 0.74rem;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+  color: #6e7681;
+}
+
+.vscode-text-surface {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  overflow: auto;
+}
+
+.vscode-code-textarea {
+  width: 100%;
+  height: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: #d4d4d4;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+  font-size: 0.8rem;
+  line-height: 21px;
+  resize: none;
+  outline: none;
+  tab-size: 2;
+  white-space: pre;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.vscode-code-pre {
+  margin: 0;
+  padding: 12px 16px;
+  color: #9cdcfe;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+  font-size: 0.8rem;
+  line-height: 21px;
+  tab-size: 2;
+  white-space: pre;
+  box-sizing: border-box;
+}
+
+/* 4. VS Code Status Bar */
+.vscode-status-bar {
+  height: 22px;
+  background: #007acc;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.vscode-status-left,
+.vscode-status-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vscode-status-bar .status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  opacity: 0.92;
+  transition: opacity 0.15s ease;
+}
+
+.vscode-status-bar .status-item:hover {
+  opacity: 1;
+}
+
+.vscode-status-bar .status-item.highlight {
+  background: rgba(0, 0, 0, 0.15);
+  padding: 1px 6px;
+  border-radius: 3px;
 }
 </style>

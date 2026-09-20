@@ -26,6 +26,11 @@ type SessionData struct {
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
+type cacheItem struct {
+	value     []byte
+	expiresAt time.Time
+}
+
 type Client struct {
 	Rdb           *goredis.Client
 	mu            sync.RWMutex
@@ -33,6 +38,7 @@ type Client struct {
 	memBlacklist  map[string]time.Time
 	memRateLimits map[string]int
 	memSessions   map[string]*SessionData
+	memCache      map[string]cacheItem
 }
 
 type TopItem struct {
@@ -56,6 +62,7 @@ func NewClient(cfg *config.Config) *Client {
 		memBlacklist:  make(map[string]time.Time),
 		memRateLimits: make(map[string]int),
 		memSessions:   make(map[string]*SessionData),
+		memCache:      make(map[string]cacheItem),
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -217,3 +224,82 @@ func (c *Client) DeleteSession(ctx context.Context, sessionID string) error {
 	delete(c.memSessions, sessionID)
 	return nil
 }
+
+// -----------------------------------------------------------------------------
+// General Menu & Workspace JSON Cache (Redis & In-Memory Fallback)
+// -----------------------------------------------------------------------------
+
+func (c *Client) SetJSON(ctx context.Context, key string, val interface{}, ttl time.Duration) error {
+	data, err := json.Marshal(val)
+	if err != nil {
+		return fmt.Errorf("failed to marshal cache object: %w", err)
+	}
+
+	if c.Rdb != nil {
+		if err := c.Rdb.Set(ctx, key, data, ttl).Err(); err != nil {
+			log.Printf("[REDIS CACHE ERROR] Set %s: %v", key, err)
+		}
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.memCache[key] = cacheItem{
+		value:     data,
+		expiresAt: time.Now().Add(ttl),
+	}
+	return nil
+}
+
+func (c *Client) GetJSON(ctx context.Context, key string, target interface{}) (bool, error) {
+	if c.Rdb != nil {
+		val, err := c.Rdb.Get(ctx, key).Result()
+		if err == nil && val != "" {
+			if err := json.Unmarshal([]byte(val), target); err == nil {
+				return true, nil
+			}
+		}
+	}
+
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	item, exists := c.memCache[key]
+	if exists {
+		if time.Now().Before(item.expiresAt) {
+			if err := json.Unmarshal(item.value, target); err == nil {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (c *Client) DeleteKey(ctx context.Context, key string) error {
+	if c.Rdb != nil {
+		c.Rdb.Del(ctx, key)
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.memCache, key)
+	return nil
+}
+
+func (c *Client) DeleteKeysByPrefix(ctx context.Context, prefix string) error {
+	if c.Rdb != nil {
+		iter := c.Rdb.Scan(ctx, 0, prefix+"*", 0).Iterator()
+		for iter.Next(ctx) {
+			c.Rdb.Del(ctx, iter.Val())
+		}
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for k := range c.memCache {
+		if len(k) >= len(prefix) && k[:len(prefix)] == prefix {
+			delete(c.memCache, k)
+		}
+	}
+	return nil
+}
+

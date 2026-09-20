@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { studioApi } from '../services/apiClient';
 import type {
   ActiveMenu,
@@ -15,8 +15,67 @@ import type {
   VisualBlock
 } from '../types/dashboard';
 
-// Active Menu Navigation
-const activeMenu = ref<ActiveMenu>('containers');
+const VALID_MENUS: ActiveMenu[] = [
+  'containers',
+  'editor',
+  'content',
+  'media',
+  'templates',
+  'domains',
+  'analytics',
+  'webhooks',
+  'billing',
+  'invoices',
+  'tickets'
+];
+
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[2]) : null;
+};
+
+const setCookie = (name: string, value: string, days = 30) => {
+  if (typeof document === 'undefined') return;
+  const maxAge = days * 24 * 60 * 60;
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+};
+
+const resolveInitialMenu = (): ActiveMenu => {
+  if (typeof window !== 'undefined') {
+    const hash = window.location.hash.replace(/^#/, '') as ActiveMenu;
+    if (VALID_MENUS.includes(hash)) {
+      return hash;
+    }
+  }
+
+  const cookieMenu = getCookie('herocms_active_menu') as ActiveMenu;
+  if (cookieMenu && VALID_MENUS.includes(cookieMenu)) {
+    return cookieMenu;
+  }
+
+  if (typeof localStorage !== 'undefined') {
+    const localMenu = localStorage.getItem('herocms_active_menu') as ActiveMenu;
+    if (localMenu && VALID_MENUS.includes(localMenu)) {
+      return localMenu;
+    }
+  }
+
+  return 'containers';
+};
+
+const resolveInitialContainerId = (): string => {
+  const cookieId = getCookie('herocms_active_container_id');
+  if (cookieId) return cookieId;
+  if (typeof localStorage !== 'undefined') {
+    const localId = localStorage.getItem('herocms_active_container_id');
+    if (localId) return localId;
+  }
+  return 'hero_tenant_9942';
+};
+
+// Active Menu Navigation (Persisted via Cookies, LocalStorage, URL Hash, & Redis)
+const activeMenu = ref<ActiveMenu>(resolveInitialMenu());
 const isEditorSidebarHidden = ref(true);
 
 // User & Plan State
@@ -63,10 +122,56 @@ const containers = ref<ContainerSite[]>([
   }
 ]);
 
-const activeContainerId = ref<string>('hero_tenant_9942');
+const activeContainerId = ref<string>(resolveInitialContainerId());
 const activeContainer = computed(() => {
   return containers.value.find(c => c.id === activeContainerId.value) || containers.value[0];
 });
+
+// Watch activeMenu and persist across refresh (Cookies, LocalStorage, URL Hash, & Redis)
+watch(activeMenu, (newMenu) => {
+  if (!VALID_MENUS.includes(newMenu)) return;
+  setCookie('herocms_active_menu', newMenu);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('herocms_active_menu', newMenu);
+  }
+  if (typeof window !== 'undefined' && window.location.hash !== '#' + newMenu) {
+    history.replaceState(null, '', '#' + newMenu);
+  }
+  studioApi.saveUserState({ activeMenu: newMenu, activeContainerId: activeContainerId.value }).catch(() => {});
+}, { immediate: true });
+
+// Watch activeContainerId and persist
+watch(activeContainerId, (newId) => {
+  if (!newId) return;
+  setCookie('herocms_active_container_id', newId);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('herocms_active_container_id', newId);
+  }
+  studioApi.saveUserState({ activeMenu: activeMenu.value, activeContainerId: newId }).catch(() => {});
+});
+
+// Listen to browser hash changes (Back / Forward navigation)
+if (typeof window !== 'undefined') {
+  window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.replace(/^#/, '') as ActiveMenu;
+    if (VALID_MENUS.includes(hash) && activeMenu.value !== hash) {
+      activeMenu.value = hash;
+    }
+  });
+
+  // Background sync with Redis user state
+  studioApi.getUserState().then((res: any) => {
+    if (res?.state?.activeMenu && VALID_MENUS.includes(res.state.activeMenu)) {
+      const currentHash = window.location.hash.replace(/^#/, '');
+      if (!currentHash) {
+        activeMenu.value = res.state.activeMenu;
+      }
+    }
+    if (res?.state?.activeContainerId) {
+      activeContainerId.value = res.state.activeContainerId;
+    }
+  }).catch(() => {});
+}
 
 const usedContainersCount = computed(() => containers.value.length);
 const runningContainersCount = computed(() => containers.value.filter(c => c.status === 'running').length);
@@ -963,11 +1068,77 @@ const resolveTicket = (ticket: SupportTicketItem) => {
   showToast(`Tiket ${ticket.id} ditandai sebagai Selesai / Resolved.`, 'success');
 };
 
-// Backend API Synchronization
+// Backend API Synchronization & Redis Warmup
 const isBackendSyncing = ref(false);
-const syncWithBackend = async () => {
+const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
   try {
     isBackendSyncing.value = true;
+
+    // 1. Primary Strategy: Warm all menus in Redis & receive unified bundle
+    try {
+      const warmRes = await studioApi.warmAllMenusCache();
+      if (warmRes?.bundle) {
+        const b = warmRes.bundle;
+        if (b.containers?.containers?.length) {
+          containers.value = b.containers.containers;
+          if (b.containers.quota?.max) {
+            userPlan.value.maxContainers = b.containers.quota.max;
+          }
+        }
+        if (b.articles?.articles?.length) {
+          articles.value = b.articles.articles;
+        }
+        if (Array.isArray(b.assets?.assets) && b.assets.assets.length) {
+          mediaAssets.value = b.assets.assets;
+        }
+        if (b.domains?.domains?.length) {
+          customDomains.value = b.domains.domains;
+        }
+        if (b.tickets?.tickets?.length) {
+          supportTickets.value = b.tickets.tickets;
+        }
+        if (b.invoices?.invoices?.length) {
+          invoices.value = b.invoices.invoices;
+        }
+        if (b.webhooks?.webhooks?.length) {
+          webhooks.value = b.webhooks.webhooks;
+        }
+        if (b.quota?.plan?.name) {
+          userPlan.value = {
+            name: b.quota.plan.name,
+            price: b.quota.plan.price || 'Rp 149.000 / bln',
+            maxContainers: b.quota.plan.maxContainers || 3,
+            cpuPerContainer: '0.5 vCPU',
+            ramPerContainer: '256 MB',
+            storageQuota: '2 GB SSD'
+          };
+        }
+
+        // Persist to local cache for instant zero-latency loads
+        try {
+          localStorage.setItem('herocms_dashboard_cache', JSON.stringify({
+            timestamp: Date.now(),
+            containers: containers.value,
+            articles: articles.value,
+            mediaAssets: mediaAssets.value,
+            customDomains: customDomains.value,
+            supportTickets: supportTickets.value,
+            invoices: invoices.value,
+            webhooks: webhooks.value,
+            userPlan: userPlan.value
+          }));
+        } catch (e) {
+          // Ignored
+        }
+
+        console.info('[CACHE] Redis cache and local state successfully warmed!');
+        return;
+      }
+    } catch (warmErr) {
+      console.warn('[CACHE NOTICE] Single-shot Redis warmup endpoint deferred, falling back to parallel fetch:', warmErr);
+    }
+
+    // 2. Secondary Strategy: Parallel fetch across individual endpoints
     const [cRes, aRes, mRes, dRes, tRes, iRes, wRes] = await Promise.allSettled([
       studioApi.getContainers(),
       studioApi.getArticles(),
@@ -1002,12 +1173,51 @@ const syncWithBackend = async () => {
     if (wRes.status === 'fulfilled' && wRes.value?.webhooks?.length) {
       webhooks.value = wRes.value.webhooks;
     }
+
+    // Persist fresh server state to local cache for instant zero-latency loads
+    try {
+      localStorage.setItem('herocms_dashboard_cache', JSON.stringify({
+        timestamp: Date.now(),
+        containers: containers.value,
+        articles: articles.value,
+        mediaAssets: mediaAssets.value,
+        customDomains: customDomains.value,
+        supportTickets: supportTickets.value,
+        invoices: invoices.value,
+        webhooks: webhooks.value,
+        userPlan: userPlan.value
+      }));
+    } catch (e) {
+      // Ignored
+    }
   } catch (err) {
     console.warn('[SYNC NOTICE] Backend sync deferred:', err);
   } finally {
     isBackendSyncing.value = false;
   }
 };
+
+// Immediate cache hydration for instant zero-latency rendering
+const hydrateFromCache = () => {
+  try {
+    const raw = localStorage.getItem('herocms_dashboard_cache');
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.containers) && data.containers.length) containers.value = data.containers;
+      if (Array.isArray(data.articles) && data.articles.length) articles.value = data.articles;
+      if (Array.isArray(data.mediaAssets) && data.mediaAssets.length) mediaAssets.value = data.mediaAssets;
+      if (Array.isArray(data.customDomains) && data.customDomains.length) customDomains.value = data.customDomains;
+      if (Array.isArray(data.supportTickets) && data.supportTickets.length) supportTickets.value = data.supportTickets;
+      if (Array.isArray(data.invoices) && data.invoices.length) invoices.value = data.invoices;
+      if (Array.isArray(data.webhooks) && data.webhooks.length) webhooks.value = data.webhooks;
+      if (data.userPlan?.name) userPlan.value = data.userPlan;
+    }
+  } catch (e) {
+    // Graceful fallback to default values
+  }
+};
+
+hydrateFromCache();
 
 export function useDashboardData() {
   return {

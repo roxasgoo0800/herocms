@@ -16,8 +16,10 @@ import {
   UserPlus
 } from 'lucide-vue-next';
 import { studioApi } from '../services/apiClient';
+import { useSplashTransition } from '../composables/useSplashTransition';
 
 const router = useRouter();
+const { triggerSplash } = useSplashTransition();
 
 // Auth Mode
 const authMode = ref<'login' | 'register'>('login');
@@ -36,6 +38,7 @@ const regConfirmPassword = ref('');
 const showRegPassword = ref(false);
 
 const isLoading = ref(false);
+const isTransitioningToDashboard = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
 const isInputFocused = ref<string | null>(null);
@@ -66,11 +69,20 @@ const handleLogin = async (e?: Event) => {
     if (res?.token) {
       localStorage.setItem('cloudcms_auth_token', res.token);
       localStorage.setItem('cloudcms_user_email', res.user?.email || idVal);
-      successMessage.value = 'Kredensial terverifikasi! Mengalihkan ke HeroCMS Studio...';
+      successMessage.value = 'Kredensial terverifikasi! Mempersiapkan workspace studio...';
+      
+      // Step 1: Trigger login card cinematic drop-down and blur exit
+      isTransitioningToDashboard.value = true;
 
+      // Step 2: Trigger splash entrance at 160ms so the user sees the card dissolve into the splash
+      setTimeout(() => {
+        triggerSplash(1300);
+      }, 160);
+
+      // Step 3: Route transition to Dashboard happens safely under splash screen at 360ms
       setTimeout(() => {
         router.push('/');
-      }, 500);
+      }, 360);
     } else {
       throw new Error(res?.error || 'Autentikasi gagal');
     }
@@ -134,7 +146,10 @@ const handleRegister = async (e?: Event) => {
     <!-- Ambient Diffused Lighting Mesh (Soft Glow behind card) -->
     <div class="ambient-mesh-glow" aria-hidden="true"></div>
 
-    <div class="auth-surface-container">
+    <div
+      class="auth-surface-container"
+      :class="{ 'card-leaving-for-splash': isTransitioningToDashboard }"
+    >
       <!-- Modern Brand Header -->
       <header class="auth-brand-badge">
         <div class="brand-glyph-box">
@@ -147,8 +162,13 @@ const handleRegister = async (e?: Event) => {
 
       <!-- Glassmorphic Authentication Card -->
       <div class="auth-panel-glass">
-        <!-- Tab Pill Switcher -->
+        <!-- Tab Pill Switcher with Animated Sliding Glider -->
         <div class="auth-tabs-bar">
+          <div
+            class="tab-glider-track"
+            :class="{ 'glider-register': authMode === 'register' }"
+            aria-hidden="true"
+          ></div>
           <button
             type="button"
             class="tab-pill"
@@ -168,16 +188,18 @@ const handleRegister = async (e?: Event) => {
           </button>
         </div>
 
-        <div class="panel-intro">
-          <h2 class="panel-heading">
-            {{ authMode === 'login' ? 'Masuk ke Konsol Tenant' : 'Buat Akun Tenant Baru' }}
-          </h2>
-          <p class="panel-sub">
-            {{ authMode === 'login' 
-              ? 'Akses manajemen situs, orkestrasi kontainer, dan editor visual profesional.' 
-              : 'Daftar sekarang untuk meluncurkan kluster kontainer website instan Anda.' }}
-          </p>
-        </div>
+        <transition name="auth-text-swap" mode="out-in">
+          <div :key="authMode" class="panel-intro">
+            <h2 class="panel-heading">
+              {{ authMode === 'login' ? 'Masuk ke Konsol Tenant' : 'Buat Akun Tenant Baru' }}
+            </h2>
+            <p class="panel-sub">
+              {{ authMode === 'login' 
+                ? 'Akses manajemen situs, orkestrasi kontainer, dan editor visual profesional.' 
+                : 'Daftar sekarang untuk meluncurkan kluster kontainer website instan Anda.' }}
+            </p>
+          </div>
+        </transition>
 
         <!-- Dynamic Feedback Alert -->
         <transition name="fade-slide">
@@ -194,15 +216,17 @@ const handleRegister = async (e?: Event) => {
           </div>
         </transition>
 
-        <!-- FORM: LOGIN -->
-        <form v-if="authMode === 'login'" @submit="handleLogin" class="auth-fields-stack">
-          <!-- Field 1: Username / Email -->
-          <div class="field-item">
-            <label for="email" class="field-label">Username atau Alamat Email</label>
-            <div
-              class="input-control-shell"
-              :class="{ 'shell-focused': isInputFocused === 'email', 'shell-filled': email.length > 0 }"
-            >
+        <!-- Animated Form Switcher -->
+        <transition name="auth-form-swap" mode="out-in">
+          <!-- FORM: LOGIN -->
+          <form v-if="authMode === 'login'" key="login-form" @submit="handleLogin" class="auth-fields-stack">
+            <!-- Field 1: Username / Email -->
+            <div class="field-item">
+              <label for="email" class="field-label">Username atau Alamat Email</label>
+              <div
+                class="input-control-shell"
+                :class="{ 'shell-focused': isInputFocused === 'email', 'shell-filled': email.length > 0 }"
+              >
               <div class="shell-lead-icon">
                 <User :size="16" />
               </div>
@@ -286,7 +310,7 @@ const handleRegister = async (e?: Event) => {
         </form>
 
         <!-- FORM: REGISTER -->
-        <form v-else @submit="handleRegister" class="auth-fields-stack">
+        <form v-else key="register-form" @submit="handleRegister" class="auth-fields-stack">
           <!-- Field 1: Full Name -->
           <div class="field-item">
             <label for="reg-fullname" class="field-label">Nama Lengkap</label>
@@ -404,6 +428,7 @@ const handleRegister = async (e?: Event) => {
             </span>
           </button>
         </form>
+        </transition>
 
         <!-- Security Ingress Guarantee Badge -->
         <footer class="panel-security-chip">
@@ -414,14 +439,16 @@ const handleRegister = async (e?: Event) => {
 
       <!-- Out-of-card subfooter -->
       <div class="auth-subfooter">
-        <p v-if="authMode === 'login'">
-          Belum punya akun tenant? 
-          <a href="#" @click.prevent="setAuthMode('register')">Daftar sekarang</a>
-        </p>
-        <p v-else>
-          Sudah memiliki akun? 
-          <a href="#" @click.prevent="setAuthMode('login')">Masuk ke Studio</a>
-        </p>
+        <transition name="auth-text-swap" mode="out-in">
+          <p v-if="authMode === 'login'" key="login-subfooter">
+            Belum punya akun tenant? 
+            <a href="#" @click.prevent="setAuthMode('register')">Daftar sekarang</a>
+          </p>
+          <p v-else key="register-subfooter">
+            Sudah memiliki akun? 
+            <a href="#" @click.prevent="setAuthMode('login')">Masuk ke Studio</a>
+          </p>
+        </transition>
       </div>
     </div>
   </div>
@@ -467,6 +494,24 @@ const handleRegister = async (e?: Event) => {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.auth-surface-container.card-leaving-for-splash {
+  animation: loginCardExit 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes loginCardExit {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(24px);
+    filter: blur(14px);
+  }
 }
 
 /* Brand Header */
@@ -555,17 +600,38 @@ const handleRegister = async (e?: Event) => {
   gap: 20px;
 }
 
-/* Tab Pill Switcher */
+/* Tab Pill Switcher with Glider */
 .auth-tabs-bar {
+  position: relative;
   display: flex;
   background: #f1f5f9;
   padding: 4px;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
-  gap: 4px;
+  user-select: none;
+}
+
+.tab-glider-track {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tab-glider-track.glider-register {
+  transform: translateX(100%);
 }
 
 .tab-pill {
+  position: relative;
+  z-index: 2;
   flex: 1;
   display: inline-flex;
   align-items: center;
@@ -579,7 +645,7 @@ const handleRegister = async (e?: Event) => {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tab-pill:hover {
@@ -587,9 +653,9 @@ const handleRegister = async (e?: Event) => {
 }
 
 .tab-pill.active {
-  background: #ffffff;
   color: #0f172a;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  background: transparent;
+  box-shadow: none;
 }
 
 .pill-spark {
@@ -969,5 +1035,62 @@ const handleRegister = async (e?: Event) => {
 .fade-slide-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+/* Form Swap Transitions */
+.auth-form-swap-enter-active,
+.auth-form-swap-leave-active {
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-form-swap-enter-from {
+  opacity: 0;
+  transform: translateY(10px) scale(0.99);
+}
+
+.auth-form-swap-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.99);
+}
+
+/* Header & Text Crossfade Animations */
+.auth-text-swap-enter-active,
+.auth-text-swap-leave-active {
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-text-swap-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.auth-text-swap-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* Micro Cascade Animation for Input Fields */
+.auth-fields-stack > .field-item {
+  animation: fieldFadeUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.auth-fields-stack > .field-item:nth-child(1) { animation-delay: 0.02s; }
+.auth-fields-stack > .field-item:nth-child(2) { animation-delay: 0.05s; }
+.auth-fields-stack > .field-item:nth-child(3) { animation-delay: 0.08s; }
+.auth-fields-stack > .field-item:nth-child(4) { animation-delay: 0.11s; }
+.auth-fields-stack > .remember-row { animation: fieldFadeUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) 0.08s backwards; }
+.auth-fields-stack > .btn-primary-action { animation: fieldFadeUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) 0.12s backwards; }
+
+@keyframes fieldFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
