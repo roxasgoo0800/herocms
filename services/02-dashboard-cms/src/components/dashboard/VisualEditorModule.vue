@@ -157,7 +157,7 @@ type EditorViewMode = 'design' | 'preview' | 'code';
 const activeTool = ref<ActiveTool>('select');
 const editorViewMode = ref<EditorViewMode>('design');
 const activeLeftTab = ref<'blocks' | 'layers' | 'design' | 'ai'>('blocks');
-const activeRightTab = ref<'content' | 'layout' | 'appearance'>('content');
+const activeRightTab = ref<'layout' | 'appearance'>('layout');
 
 // Studio Booting Transition & Draft State
 const isEditorBooting = ref(true);
@@ -379,7 +379,9 @@ const restoreDraftForActiveContainer = async (containerId: string) => {
       if (typeof draftData.panX === 'number') panX.value = draftData.panX;
       if (typeof draftData.panY === 'number') panY.value = draftData.panY;
       if (draftData.activeLeftTab) activeLeftTab.value = draftData.activeLeftTab;
-      if (draftData.activeRightTab) activeRightTab.value = draftData.activeRightTab;
+      if (draftData.activeRightTab) {
+        activeRightTab.value = draftData.activeRightTab === 'content' ? 'layout' : draftData.activeRightTab;
+      }
 
       const dateObj = new Date(draftData.updatedAt || Date.now());
       lastSavedDraftAt.value = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -3287,14 +3289,6 @@ const executeVsCodeReplaceAll = () => {
           <div class="inspector-tabs-bar">
             <button
               class="insp-tab-btn"
-              :class="{ active: activeRightTab === 'content' }"
-              @click="activeRightTab = 'content'"
-            >
-              <Edit3 :size="13" />
-              <span>Konten</span>
-            </button>
-            <button
-              class="insp-tab-btn"
               :class="{ active: activeRightTab === 'layout' }"
               @click="activeRightTab = 'layout'"
             >
@@ -3307,7 +3301,7 @@ const executeVsCodeReplaceAll = () => {
               @click="activeRightTab = 'appearance'"
             >
               <Palette :size="13" />
-              <span>Visual</span>
+              <span>Visual & Efek</span>
             </button>
           </div>
 
@@ -3327,158 +3321,15 @@ const executeVsCodeReplaceAll = () => {
                 <button
                   type="button"
                   class="btn-primary-gradient"
-                  style="width: 100%; margin-top: 10px; justify-content: center; gap: 8px; font-size: 11.5px; height: 34px;"
+                  style="width: 100%; margin-top: 10px; justify-content: center; gap: 8px; font-size: 11.5px; height: 36px;"
                   @click="openRichModalEditor(selectedBlock)"
                 >
-                  <Edit3 :size="13" /> Studio Editor & Animasi
+                  <Edit3 :size="13" /> Edit Konten, Tipografi & Animasi
                 </button>
               </div>
 
-              <!-- TAB 1: KONTEN TEKS & TOMBOL -->
-              <div v-if="activeRightTab === 'content'" class="tab-pane-inspector">
-                <!-- Badge Text -->
-                <div v-if="selectedBlock.badge !== undefined" class="field-item">
-                  <label class="field-label">Label Kategori / Badge</label>
-                  <div class="field-input-box">
-                    <input
-                      type="text"
-                      v-model="selectedBlock.badge"
-                      class="field-input"
-                      placeholder="Misal: DOCKER RUNTIME"
-                    />
-                  </div>
-                </div>
-
-                <!-- Title / Headline -->
-                <div class="field-item">
-                  <label class="field-label">Judul Utama (Headline)</label>
-                  <div class="field-input-box">
-                    <input
-                      type="text"
-                      v-model="selectedBlock.title"
-                      class="field-input"
-                      placeholder="Judul bagian..."
-                    />
-                  </div>
-                </div>
-
-                <!-- Subtitle / Deskripsi -->
-                <div v-if="selectedBlock.subtitle !== undefined" class="field-item">
-                  <label class="field-label">Deskripsi / Sub-Headline</label>
-                  <div class="field-input-box">
-                    <textarea
-                      v-model="selectedBlock.subtitle"
-                      class="field-textarea"
-                      rows="3"
-                      placeholder="Deskripsi penjelasan..."
-                    ></textarea>
-                  </div>
-                </div>
-
-                <!-- Primary Button -->
-                <div v-if="selectedBlock.buttonText !== undefined" class="field-item">
-                  <label class="field-label">Label Tombol Aksi (CTA)</label>
-                  <div class="field-input-box">
-                    <input
-                      type="text"
-                      v-model="selectedBlock.buttonText"
-                      class="field-input"
-                      placeholder="Misal: Mulai Sekarang"
-                    />
-                  </div>
-                </div>
-
-                <!-- Secondary Button (Hero) -->
-                <div v-if="selectedBlock.secondaryButtonText !== undefined" class="field-item">
-                  <label class="field-label">Tombol Sekunder</label>
-                  <div class="field-input-box">
-                    <input
-                      type="text"
-                      v-model="selectedBlock.secondaryButtonText"
-                      class="field-input"
-                      placeholder="Misal: Pelajari Sistem"
-                    />
-                  </div>
-                </div>
-
-                <!-- Sub-items editor (Progress bar, Accordion, Cards, Form controls, etc.) -->
-                <div v-if="selectedBlock.items && selectedBlock.items.length > 0" class="field-item">
-                  <div class="field-label-split" style="margin-bottom: 8px;">
-                    <label class="field-label">Daftar Item / Sub-Elemen ({{ selectedBlock.items.length }})</label>
-                  </div>
-                  <div class="sub-items-editor-list" style="display: flex; flex-direction: column; gap: 8px;">
-                    <div
-                      v-for="(subItem, subIdx) in selectedBlock.items"
-                      :key="subIdx"
-                      class="sub-item-card"
-                      style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 8px 10px;"
-                    >
-                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                        <span style="font-size: 11px; font-weight: 600; color: #38bdf8;">Item #{{ subIdx + 1 }}</span>
-                        <div style="display: flex; gap: 4px;">
-                          <button
-                            v-if="selectedBlock.items.length > 1"
-                            type="button"
-                            @click="selectedBlock.items.splice(subIdx, 1)"
-                            style="background: transparent; border: none; color: #f43f5e; cursor: pointer; padding: 2px;"
-                            title="Hapus Item"
-                          >
-                            <Trash2 :size="12" />
-                          </button>
-                        </div>
-                      </div>
-                      <div style="display: flex; flex-direction: column; gap: 6px;">
-                        <input
-                          v-if="subItem.title !== undefined"
-                          type="text"
-                          v-model="subItem.title"
-                          class="field-input"
-                          style="font-size: 11px; padding: 4px 8px;"
-                          placeholder="Judul item..."
-                        />
-                        <input
-                          v-if="subItem.label !== undefined"
-                          type="text"
-                          v-model="subItem.label"
-                          class="field-input"
-                          style="font-size: 11px; padding: 4px 8px;"
-                          placeholder="Label..."
-                        />
-                        <textarea
-                          v-if="subItem.desc !== undefined"
-                          v-model="subItem.desc"
-                          class="field-textarea"
-                          rows="2"
-                          style="font-size: 11px; padding: 4px 8px;"
-                          placeholder="Deskripsi item..."
-                        ></textarea>
-                        <div v-if="subItem.percentage !== undefined" style="display: flex; align-items: center; gap: 6px;">
-                          <label style="font-size: 10px; color: #94a3b8; white-space: nowrap;">Nilai: {{ subItem.percentage }}%</label>
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            v-model.number="subItem.percentage"
-                            class="range-slider"
-                            style="flex: 1;"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      @click="selectedBlock.items.push({ id: 'item-' + Date.now(), title: 'Item Baru', desc: 'Deskripsi baru', percentage: 70 })"
-                      class="btn-outline-action"
-                      style="font-size: 11px; justify-content: center; margin-top: 4px; padding: 6px;"
-                    >
-                      <Plus :size="12" /> Tambah Item
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- TAB 2: TATA LETAK & SPACING -->
-              <div v-else-if="activeRightTab === 'layout'" class="tab-pane-inspector">
+              <!-- TAB 1: TATA LETAK & SPACING -->
+              <div v-if="activeRightTab === 'layout'" class="tab-pane-inspector">
                 <div class="field-item">
                   <div class="field-label-split">
                     <label class="field-label">Padding Vertikal (Atas/Bawah)</label>
@@ -3730,6 +3581,79 @@ const executeVsCodeReplaceAll = () => {
                     v-html="editingBlockDraft.styles?.richContent || editingBlockDraft.subtitle || ''"
                     @input="onWysiwygInput"
                   ></div>
+                </div>
+
+                <!-- Sub-items editor inside Studio Modal -->
+                <div v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0" class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 8px;">
+                    <label class="field-label">Daftar Item / Sub-Elemen ({{ editingBlockDraft.items.length }})</label>
+                  </div>
+                  <div class="sub-items-editor-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div
+                      v-for="(subItem, subIdx) in editingBlockDraft.items"
+                      :key="subIdx"
+                      class="sub-item-card"
+                      style="background: #141d33; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px 12px;"
+                    >
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 11px; font-weight: 700; color: #00f2fe;">Item #{{ subIdx + 1 }}</span>
+                        <button
+                          v-if="editingBlockDraft.items.length > 1"
+                          type="button"
+                          @click="editingBlockDraft.items.splice(subIdx, 1)"
+                          style="background: transparent; border: none; color: #f43f5e; cursor: pointer; padding: 2px;"
+                          title="Hapus Item"
+                        >
+                          <Trash2 :size="12" />
+                        </button>
+                      </div>
+                      <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <input
+                          v-if="subItem.title !== undefined"
+                          type="text"
+                          v-model="subItem.title"
+                          class="field-input"
+                          style="font-size: 12px; padding: 6px 10px;"
+                          placeholder="Judul item..."
+                        />
+                        <input
+                          v-if="subItem.label !== undefined"
+                          type="text"
+                          v-model="subItem.label"
+                          class="field-input"
+                          style="font-size: 12px; padding: 6px 10px;"
+                          placeholder="Label..."
+                        />
+                        <textarea
+                          v-if="subItem.desc !== undefined"
+                          v-model="subItem.desc"
+                          class="field-textarea"
+                          rows="2"
+                          style="font-size: 12px; padding: 6px 10px;"
+                          placeholder="Deskripsi item..."
+                        ></textarea>
+                        <div v-if="subItem.percentage !== undefined" style="display: flex; align-items: center; gap: 8px;">
+                          <label style="font-size: 11px; color: #94a3b8; white-space: nowrap;">Nilai: {{ subItem.percentage }}%</label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            v-model.number="subItem.percentage"
+                            class="range-slider"
+                            style="flex: 1;"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      @click="editingBlockDraft.items.push({ id: 'item-' + Date.now(), title: 'Item Baru', desc: 'Deskripsi baru', percentage: 70 })"
+                      class="btn-outline-action"
+                      style="font-size: 11px; justify-content: center; margin-top: 4px; padding: 6px;"
+                    >
+                      <Plus :size="12" /> Tambah Item
+                    </button>
+                  </div>
                 </div>
               </div>
 
