@@ -1,6 +1,6 @@
 module github.com/cloudcms/provision-orchestrator
 
-go 1.22
+go 1.27
 
 require (
 	github.com/docker/docker v26.1.5+incompatible
