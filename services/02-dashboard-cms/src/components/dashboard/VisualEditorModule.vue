@@ -3455,54 +3455,61 @@ const executeVsCodeReplaceAll = () => {
       <!-- =================================================================== -->
       <div v-if="isRichEditorOpen && editingBlockDraft" class="rich-editor-backdrop" @click.self="closeRichModalEditor">
         <div class="rich-editor-modal">
-          <!-- Modal Header -->
+          <!-- Modal Top Header -->
           <div class="rich-modal-header">
-            <div class="rich-header-meta">
-              <span class="rich-header-badge">{{ editingBlockDraft.type }}</span>
-              <h3 class="rich-header-title">
-                <Edit3 :size="16" color="#00f2fe" />
-                <span>Studio Editor Konten & Desain: {{ editingBlockDraft.name }}</span>
-              </h3>
+            <div class="rich-header-left">
+              <div class="rich-title-icon-box">
+                <Edit3 :size="18" color="#00f2fe" />
+              </div>
+              <div class="rich-title-text-cluster">
+                <div class="rich-title-sup">
+                  <span class="rich-header-badge">{{ editingBlockDraft.type }}</span>
+                  <span class="rich-header-breadcrumb">/ Studio Visual Engine / Pengaturan Desain & Konten</span>
+                </div>
+                <h3 class="rich-header-heading">
+                  Studio Editor Konten & Desain: {{ editingBlockDraft.name }}
+                </h3>
+              </div>
             </div>
 
-            <!-- Tab Switcher (WYSIWYG, Tipografi, Warna & Gaya, Animasi) -->
-            <div class="rich-tabs-nav">
-              <button
-                type="button"
-                class="rich-tab-btn"
-                :class="{ 'is-active': richEditorActiveTab === 'content' }"
-                @click="richEditorActiveTab = 'content'"
-              >
-                <Type :size="14" /> Konten & WYSIWYG
-              </button>
-              <button
-                type="button"
-                class="rich-tab-btn"
-                :class="{ 'is-active': richEditorActiveTab === 'typography' }"
-                @click="richEditorActiveTab = 'typography'"
-              >
-                <Sparkles :size="14" /> Tipografi & Font
-              </button>
-              <button
-                type="button"
-                class="rich-tab-btn"
-                :class="{ 'is-active': richEditorActiveTab === 'appearance' }"
-                @click="richEditorActiveTab = 'appearance'"
-              >
-                <Palette :size="14" /> Warna & Gaya
-              </button>
-              <button
-                type="button"
-                class="rich-tab-btn"
-                :class="{ 'is-active': richEditorActiveTab === 'animation' }"
-                @click="richEditorActiveTab = 'animation'"
-              >
-                <Zap :size="14" /> Animasi & Gerakan
-              </button>
-            </div>
-
-            <button type="button" class="btn-close-rich-modal" @click="closeRichModalEditor" title="Tutup Modal">
+            <button type="button" class="btn-close-rich-modal" @click="closeRichModalEditor" title="Tutup Modal (ESC)">
               <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Dedicated Sub-Header Tab Navigation Bar -->
+          <div class="rich-tabs-subbar">
+            <button
+              type="button"
+              class="rich-nav-tab"
+              :class="{ 'is-active': richEditorActiveTab === 'content' }"
+              @click="richEditorActiveTab = 'content'"
+            >
+              <Type :size="15" /> Konten & WYSIWYG
+            </button>
+            <button
+              type="button"
+              class="rich-nav-tab"
+              :class="{ 'is-active': richEditorActiveTab === 'typography' }"
+              @click="richEditorActiveTab = 'typography'"
+            >
+              <Sparkles :size="15" /> Tipografi & Font
+            </button>
+            <button
+              type="button"
+              class="rich-nav-tab"
+              :class="{ 'is-active': richEditorActiveTab === 'appearance' }"
+              @click="richEditorActiveTab = 'appearance'"
+            >
+              <Palette :size="15" /> Warna & Gaya
+            </button>
+            <button
+              type="button"
+              class="rich-nav-tab"
+              :class="{ 'is-active': richEditorActiveTab === 'animation' }"
+              @click="richEditorActiveTab = 'animation'"
+            >
+              <Zap :size="15" /> Animasi & Gerakan
             </button>
           </div>
 
@@ -3857,7 +3864,8 @@ const executeVsCodeReplaceAll = () => {
             <div class="rich-preview-pane">
               <div class="preview-stage-header">
                 <span class="preview-stage-title">
-                  <Eye :size="14" color="#00f2fe" /> Pratinjau Interaktif Realtime
+                  <span class="live-pulse-dot"></span>
+                  Pratinjau Interaktif Realtime
                 </span>
                 <div class="preview-device-switch">
                   <button
@@ -3890,67 +3898,77 @@ const executeVsCodeReplaceAll = () => {
                 </div>
               </div>
 
-              <!-- Interactive Container with Device Frame -->
-              <div
-                class="preview-interactive-container"
-                :class="'device-' + richPreviewDevice"
-                :style="{
-                  backgroundColor: editingBlockDraft.styles?.bgColor || '#ffffff',
-                  color: editingBlockDraft.styles?.textColor || '#0f172a'
-                }"
-              >
-                <!-- Tombol Putar Ulang Animasi -->
-                <button
-                  type="button"
-                  class="preview-replay-trigger"
-                  @click="replayPreviewAnimation"
-                  title="Replay Animasi"
-                >
-                  <RotateCcw :size="12" /> Putar Ulang Animasi
-                </button>
+              <!-- Authentic Browser Mockup Window in Preview -->
+              <div class="preview-browser-frame" :class="'device-' + richPreviewDevice">
+                <div class="browser-mock-titlebar">
+                  <div class="mock-window-dots">
+                    <span class="mock-dot red"></span>
+                    <span class="mock-dot yellow"></span>
+                    <span class="mock-dot green"></span>
+                  </div>
+                  <div class="mock-url-pill">
+                    preview.herocms.internal/artboard/{{ editingBlockDraft.type.toLowerCase() }}
+                  </div>
+                  <button
+                    type="button"
+                    class="preview-replay-trigger"
+                    @click="replayPreviewAnimation"
+                    title="Putar Ulang Efek Animasi"
+                  >
+                    <RotateCcw :size="11" /> Putar Ulang
+                  </button>
+                </div>
 
-                <!-- Elemen Preview dengan style & animasi langsung -->
                 <div
-                  :key="animReplayKey"
-                  :class="[editingBlockDraft.styles?.animation && editingBlockDraft.styles.animation !== 'none' ? 'anim-' + editingBlockDraft.styles.animation : '']"
+                  class="browser-content-viewport"
                   :style="{
-                    fontFamily: editingBlockDraft.styles?.fontFamily,
-                    fontWeight: editingBlockDraft.styles?.fontWeight,
-                    letterSpacing: editingBlockDraft.styles?.letterSpacing ? `${editingBlockDraft.styles.letterSpacing}px` : undefined,
-                    textTransform: editingBlockDraft.styles?.textTransform,
-                    animationDuration: editingBlockDraft.styles?.animationDuration ? `${editingBlockDraft.styles.animationDuration}s` : undefined,
-                    width: '100%',
-                    textAlign: editingBlockDraft.styles?.align || 'center'
+                    backgroundColor: editingBlockDraft.styles?.bgColor || '#0e1526',
+                    color: editingBlockDraft.styles?.textColor || '#f8fafc'
                   }"
                 >
+                  <!-- Elemen Preview dengan style & animasi langsung -->
                   <div
-                    v-if="editingBlockDraft.badge"
-                    style="display: inline-block; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px; margin-bottom: 10px; background: rgba(0, 242, 254, 0.15); color: #0284c7;"
+                    :key="animReplayKey"
+                    :class="[editingBlockDraft.styles?.animation && editingBlockDraft.styles.animation !== 'none' ? 'anim-' + editingBlockDraft.styles.animation : '']"
+                    :style="{
+                      fontFamily: editingBlockDraft.styles?.fontFamily,
+                      fontWeight: editingBlockDraft.styles?.fontWeight,
+                      letterSpacing: editingBlockDraft.styles?.letterSpacing ? `${editingBlockDraft.styles.letterSpacing}px` : undefined,
+                      textTransform: editingBlockDraft.styles?.textTransform,
+                      animationDuration: editingBlockDraft.styles?.animationDuration ? `${editingBlockDraft.styles.animationDuration}s` : undefined,
+                      width: '100%',
+                      textAlign: editingBlockDraft.styles?.align || 'center'
+                    }"
                   >
-                    {{ editingBlockDraft.badge }}
+                    <div
+                      v-if="editingBlockDraft.badge"
+                      style="display: inline-block; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px; margin-bottom: 10px; background: rgba(0, 242, 254, 0.15); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.3);"
+                    >
+                      {{ editingBlockDraft.badge }}
+                    </div>
+                    <h2 style="font-size: 1.6rem; font-weight: 800; margin: 0 0 10px;">
+                      {{ editingBlockDraft.title }}
+                    </h2>
+                    <div
+                      v-if="editingBlockDraft.styles?.richContent"
+                      v-html="editingBlockDraft.styles.richContent"
+                      style="font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; opacity: 0.85;"
+                    ></div>
+                    <p
+                      v-else-if="editingBlockDraft.subtitle"
+                      style="font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; opacity: 0.85;"
+                    >
+                      {{ editingBlockDraft.subtitle }}
+                    </p>
+                    <button
+                      v-if="editingBlockDraft.buttonText"
+                      type="button"
+                      style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 700; color: #0b0f19; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 242, 254, 0.25);"
+                      :style="{ background: editingBlockDraft.styles?.accentColor ? editingBlockDraft.styles.accentColor : 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)' }"
+                    >
+                      {{ editingBlockDraft.buttonText }}
+                    </button>
                   </div>
-                  <h2 style="font-size: 1.6rem; font-weight: 800; margin: 0 0 10px;">
-                    {{ editingBlockDraft.title }}
-                  </h2>
-                  <div
-                    v-if="editingBlockDraft.styles?.richContent"
-                    v-html="editingBlockDraft.styles.richContent"
-                    style="font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; opacity: 0.85;"
-                  ></div>
-                  <p
-                    v-else-if="editingBlockDraft.subtitle"
-                    style="font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; opacity: 0.85;"
-                  >
-                    {{ editingBlockDraft.subtitle }}
-                  </p>
-                  <button
-                    v-if="editingBlockDraft.buttonText"
-                    type="button"
-                    style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 700; color: #ffffff; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);"
-                    :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor || '#0284c7' }"
-                  >
-                    {{ editingBlockDraft.buttonText }}
-                  </button>
                 </div>
               </div>
             </div>
@@ -3958,12 +3976,17 @@ const executeVsCodeReplaceAll = () => {
 
           <!-- Footer -->
           <div class="rich-modal-footer">
-            <button type="button" class="btn-outline-action" @click="closeRichModalEditor">
-              Batal
-            </button>
-            <button type="button" class="btn-primary-gradient" @click="applyRichModalEditor" style="display: inline-flex; align-items: center; gap: 6px;">
-              <Check :size="14" /> Terapkan ke Kanvas
-            </button>
+            <div class="rich-footer-hint">
+              <span>Tips: Tekan <kbd style="background: rgba(255,255,255,0.08); padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; color: #cbd5e1;">ESC</kbd> untuk menutup. Perubahan otomatis diselaraskan secara realtime.</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <button type="button" class="btn-outline-action" @click="closeRichModalEditor">
+                Batal
+              </button>
+              <button type="button" class="btn-primary-gradient" @click="applyRichModalEditor" style="display: inline-flex; align-items: center; gap: 6px;">
+                <Check :size="14" /> Terapkan ke Kanvas
+              </button>
+            </div>
           </div>
         </div>
       </div>
