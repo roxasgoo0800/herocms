@@ -812,6 +812,9 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 12px 14px 20px;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
 }
