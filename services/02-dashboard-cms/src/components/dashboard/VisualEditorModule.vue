@@ -34,8 +34,6 @@ import {
   Unlock,
   Check,
   Code2,
-  LayoutGrid,
-  CreditCard,
   Server,
   Globe,
   TrendingUp,
@@ -63,6 +61,9 @@ import {
   devicePresets,
   fontFamilies,
   colorPalettes,
+  blockCategories,
+  blockCatalogItems,
+  type BlockCategory,
   createDefaultBlocks,
   createLibraryBlock,
   type DevicePreset
@@ -81,6 +82,58 @@ const {
   handleAiGenerateContent,
   showToast
 } = useDashboardData();
+
+// -----------------------------------------------------------------------------
+// Block Catalog Filter & Search State (Canva-Style Explorer)
+// -----------------------------------------------------------------------------
+const selectedCatalogCategory = ref<BlockCategory>('all');
+const catalogSearchQuery = ref('');
+
+const filteredCatalogItems = computed(() => {
+  return blockCatalogItems.filter(item => {
+    const matchCat =
+      selectedCatalogCategory.value === 'all' || item.category === selectedCatalogCategory.value;
+    const q = catalogSearchQuery.value.trim().toLowerCase();
+    const matchQuery =
+      !q ||
+      item.name.toLowerCase().includes(q) ||
+      item.desc.toLowerCase().includes(q) ||
+      item.type.toLowerCase().includes(q);
+    return matchCat && matchQuery;
+  });
+});
+
+// Interactive Component Helpers for Canvas
+const toggleAccordionItem = (block: VisualBlock, index: number) => {
+  block.activeItemIndex = block.activeItemIndex === index ? -1 : index;
+};
+
+const nextSlide = (block: VisualBlock) => {
+  const len = block.items?.length || 1;
+  block.activeItemIndex = ((block.activeItemIndex || 0) + 1) % len;
+};
+
+const prevSlide = (block: VisualBlock) => {
+  const len = block.items?.length || 1;
+  block.activeItemIndex = ((block.activeItemIndex || 0) - 1 + len) % len;
+};
+
+const setSlide = (block: VisualBlock, index: number) => {
+  block.activeItemIndex = index;
+};
+
+const toggleBlockOpen = (block: VisualBlock) => {
+  block.isOpen = !block.isOpen;
+};
+
+const selectDropdownOption = (block: VisualBlock, index: number) => {
+  block.activeItemIndex = index;
+  block.isOpen = false;
+};
+
+const setPageNumber = (block: VisualBlock, index: number) => {
+  block.activeItemIndex = index;
+};
 
 // -----------------------------------------------------------------------------
 // Studio Canvas Workspace State (Canva / Photoshop Engine)
@@ -1595,56 +1648,247 @@ const executeVsCodeReplaceAll = () => {
 
           <!-- Dock Body -->
           <div class="dock-tab-body">
-            <!-- TAB 1: BLOCKS LIBRARY -->
+            <!-- TAB 1: BLOCKS LIBRARY (Canva/Figma Component Picker) -->
             <div v-if="activeLeftTab === 'blocks'" class="dock-blocks-catalog">
-              <div class="dock-section-head">
-                <h4>Katalog Blok Website</h4>
-                <p>Klik blok di bawah untuk menambahkannya langsung ke halaman.</p>
+              <div class="dock-catalog-header">
+                <div class="dock-section-head" style="margin-bottom: 0;">
+                  <h4>Katalog Blok Website</h4>
+                  <p>Pilih dan tambahkan komponen visual kaya ke kanvas halaman.</p>
+                </div>
+
+                <!-- Live Search Box -->
+                <div class="dock-search-box">
+                  <Search :size="13" class="search-icon" />
+                  <input
+                    v-model="catalogSearchQuery"
+                    type="text"
+                    placeholder="Cari blok (progress, slide, modal, card)..."
+                    class="catalog-search-input"
+                  />
+                  <button
+                    v-if="catalogSearchQuery"
+                    class="catalog-clear-btn"
+                    @click="catalogSearchQuery = ''"
+                    title="Hapus pencarian"
+                  >
+                    <X :size="11" />
+                  </button>
+                </div>
+
+                <!-- Category Filter Chips -->
+                <div class="catalog-category-chips">
+                  <button
+                    v-for="cat in blockCategories"
+                    :key="cat.id"
+                    class="cat-chip-btn"
+                    :class="{ active: selectedCatalogCategory === cat.id }"
+                    @click="selectedCatalogCategory = cat.id"
+                  >
+                    {{ cat.label }}
+                  </button>
+                </div>
+
+                <!-- Count Bar -->
+                <div class="catalog-count-bar">
+                  <span>Komponen Tersedia</span>
+                  <span class="catalog-count-badge">{{ filteredCatalogItems.length }} Blok</span>
+                </div>
               </div>
 
+              <!-- Visual Wireframe Cards Grid -->
               <div class="block-cards-grid">
-                <div class="block-add-card" @click="addBlockFromLibrary('hero')">
-                  <div class="card-icon-bubble">
-                    <LayoutGrid :size="18" />
+                <div
+                  v-for="item in filteredCatalogItems"
+                  :key="item.id"
+                  class="visual-wireframe-card"
+                  @click="addBlockFromLibrary(item.type)"
+                  :title="'Tambah ' + item.name + ' ke Kanvas'"
+                >
+                  <!-- Top Bar: Category Pill & Quick Add Button -->
+                  <div class="card-top-row">
+                    <span class="card-badge-pill">{{ item.badge || 'KOMPONEN' }}</span>
+                    <span class="btn-quick-add">
+                      <Plus :size="12" /> Tambah
+                    </span>
                   </div>
-                  <div class="card-meta">
-                    <strong>Hero Showcase</strong>
-                    <span>Banner visual tajam dengan headline & tombol aksi</span>
-                  </div>
-                  <Plus :size="14" class="icon-add-plus" />
-                </div>
 
-                <div class="block-add-card" @click="addBlockFromLibrary('features')">
-                  <div class="card-icon-bubble">
-                    <Server :size="18" />
-                  </div>
-                  <div class="card-meta">
-                    <strong>Bento Features Grid</strong>
-                    <span>Grid 3 kartu keunggulan dengan ikon modern</span>
-                  </div>
-                  <Plus :size="14" class="icon-add-plus" />
-                </div>
+                  <!-- CANVA-STYLE MINI VISUAL WIREFRAME PREVIEW -->
+                  <div class="block-wireframe-preview" :class="'wf-' + item.previewWireframe">
+                    <!-- 1. Navbar Wireframe -->
+                    <div v-if="item.previewWireframe === 'navbar'" class="mini-wf-navbar">
+                      <div class="mini-brand"><span class="mini-dot"></span><span>STUDIO</span></div>
+                      <div class="mini-links"><span></span><span></span><span></span></div>
+                      <div class="mini-pill-btn"></div>
+                    </div>
 
-                <div class="block-add-card" @click="addBlockFromLibrary('pricing')">
-                  <div class="card-icon-bubble">
-                    <CreditCard :size="18" />
-                  </div>
-                  <div class="card-meta">
-                    <strong>Tabel Harga / Paket</strong>
-                    <span>Daftar paket transparan dengan checklist fitur</span>
-                  </div>
-                  <Plus :size="14" class="icon-add-plus" />
-                </div>
+                    <!-- 2. Hero Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'hero'" class="mini-wf-hero">
+                      <div class="mini-badge-line"></div>
+                      <div class="mini-title-line"></div>
+                      <div class="mini-desc-line"></div>
+                      <div class="mini-buttons-row">
+                        <div class="mini-btn primary"></div>
+                        <div class="mini-btn secondary"></div>
+                      </div>
+                    </div>
 
-                <div class="block-add-card" @click="addBlockFromLibrary('cta')">
-                  <div class="card-icon-bubble">
-                    <Rocket :size="18" />
+                    <!-- 3. Features Bento Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'features'" class="mini-wf-bento">
+                      <div v-for="i in 3" :key="i" class="mini-bento-tile">
+                        <span class="mini-icon-circle"></span>
+                        <span class="mini-line-sm"></span>
+                        <span class="mini-line-xs"></span>
+                      </div>
+                    </div>
+
+                    <!-- 4. Progress Bar Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'progressbar'" class="mini-wf-progress">
+                      <div class="mini-pg-row">
+                        <div class="mini-pg-label"><span>Lighthouse Core</span><span>95%</span></div>
+                        <div class="mini-pg-track"><div class="mini-pg-fill" style="width: 95%"></div></div>
+                      </div>
+                      <div class="mini-pg-row">
+                        <div class="mini-pg-label"><span>Docker RAM</span><span>72%</span></div>
+                        <div class="mini-pg-track"><div class="mini-pg-fill" style="width: 72%"></div></div>
+                      </div>
+                      <div class="mini-pg-row">
+                        <div class="mini-pg-label"><span>SSL Ingress</span><span>100%</span></div>
+                        <div class="mini-pg-track"><div class="mini-pg-fill" style="width: 100%"></div></div>
+                      </div>
+                    </div>
+
+                    <!-- 5. Accordion Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'accordion'" class="mini-wf-accordion">
+                      <div class="mini-acc-item open">
+                        <div class="mini-acc-head"><span>Isolasi cgroups v2</span><span class="mini-chevron">▼</span></div>
+                        <div class="mini-acc-body"><span class="mini-line-xs"></span><span class="mini-line-xs w-75"></span></div>
+                      </div>
+                      <div class="mini-acc-item">
+                        <div class="mini-acc-head"><span>Otomatisasi SSL TLS</span><span class="mini-chevron">▶</span></div>
+                      </div>
+                      <div class="mini-acc-item">
+                        <div class="mini-acc-head"><span>Koneksi Custom Domain</span><span class="mini-chevron">▶</span></div>
+                      </div>
+                    </div>
+
+                    <!-- 6. Carousel Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'carousel'" class="mini-wf-carousel">
+                      <div class="mini-carousel-arrows">
+                        <span class="mini-arrow">&lt;</span>
+                        <div class="mini-slide-content">
+                          <span class="mini-slide-tag">Rilis 2.4</span>
+                          <span class="mini-line-sm"></span>
+                        </div>
+                        <span class="mini-arrow">&gt;</span>
+                      </div>
+                      <div class="mini-carousel-dots">
+                        <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+                      </div>
+                    </div>
+
+                    <!-- 7. Form Control Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'formcontrol'" class="mini-wf-form">
+                      <div class="mini-form-row"><span class="mini-input-field">Nama Lengkap...</span></div>
+                      <div class="mini-form-row"><span class="mini-input-field">name@domain.com</span></div>
+                      <div class="mini-form-row split">
+                        <span class="mini-select-field">Pilih Layanan ▼</span>
+                        <span class="mini-submit-btn">Kirim</span>
+                      </div>
+                    </div>
+
+                    <!-- 8. Card Grid Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'card'" class="mini-wf-cards">
+                      <div v-for="i in 3" :key="i" class="mini-card-col">
+                        <div class="mini-card-img"></div>
+                        <span class="mini-line-sm"></span>
+                        <span class="mini-line-xs"></span>
+                      </div>
+                    </div>
+
+                    <!-- 9. Modal Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'modal'" class="mini-wf-modal-backdrop">
+                      <div class="mini-wf-modal-dialog">
+                        <div class="mini-modal-head"><span>Akses Pro</span><span class="mini-close">&times;</span></div>
+                        <span class="mini-line-xs"></span>
+                        <div class="mini-modal-btns">
+                          <span class="mini-btn-xs cancel">Tutup</span>
+                          <span class="mini-btn-xs ok">Klaim</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 10. Dropdown Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'dropdown'" class="mini-wf-dropdown">
+                      <div class="mini-dropdown-trigger">
+                        <span>Filter Kategori</span>
+                        <span class="mini-arrow">▼</span>
+                      </div>
+                      <div class="mini-dropdown-menu">
+                        <span class="mini-dd-item active">✓ Cloud & Docker</span>
+                        <span class="mini-dd-item">Studio UI/UX</span>
+                      </div>
+                    </div>
+
+                    <!-- 11. List Group Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'listgroup'" class="mini-wf-listgroup">
+                      <div class="mini-lg-row active"><span class="mini-chk">✓</span><span>Domain Otomatis</span></div>
+                      <div class="mini-lg-row"><span class="mini-chk">✓</span><span>cgroups v2 Kernel</span></div>
+                      <div class="mini-lg-row"><span class="mini-chk">✓</span><span>BFF Go Latensi 1ms</span></div>
+                    </div>
+
+                    <!-- 12. Pricing Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'pricing'" class="mini-wf-pricing">
+                      <div class="mini-price-col"><span>49k</span><div class="mini-btn-xs">Pilih</div></div>
+                      <div class="mini-price-col popular"><span class="pop-pill">PRO</span><span>149k</span><div class="mini-btn-xs pop">Pilih</div></div>
+                      <div class="mini-price-col"><span>399k</span><div class="mini-btn-xs">Pilih</div></div>
+                    </div>
+
+                    <!-- 13. Stats Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'stats'" class="mini-wf-stats">
+                      <div class="mini-stat-tile"><strong>99.98%</strong><span>Uptime</span></div>
+                      <div class="mini-stat-tile"><strong>1.2ms</strong><span>Latency</span></div>
+                      <div class="mini-stat-tile"><strong>12.8M</strong><span>Requests</span></div>
+                      <div class="mini-stat-tile"><strong>256MB</strong><span>RAM</span></div>
+                    </div>
+
+                    <!-- 14. CTA Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'cta'" class="mini-wf-cta">
+                      <span class="mini-cta-title">Siap Deploy Website?</span>
+                      <span class="mini-cta-btn">Mulai Sekarang</span>
+                    </div>
+
+                    <!-- 15. Pagination Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'pagination'" class="mini-wf-pagination">
+                      <span class="mini-pg-btn">&laquo;</span>
+                      <span class="mini-pg-btn">1</span>
+                      <span class="mini-pg-btn active">2</span>
+                      <span class="mini-pg-btn">3</span>
+                      <span class="mini-pg-btn">&raquo;</span>
+                    </div>
+
+                    <!-- 16. Breadcrumb Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'breadcrumb'" class="mini-wf-breadcrumb">
+                      <span>Home</span><span class="slash">/</span>
+                      <span>Docs</span><span class="slash">/</span>
+                      <span class="active">Editor</span>
+                    </div>
+
+                    <!-- 17. Footer Wireframe -->
+                    <div v-else class="mini-wf-footer">
+                      <div class="mini-ft-cols">
+                        <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
+                        <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
+                        <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
+                      </div>
+                      <div class="mini-ft-copy"><span>© 2026 HeroCMS Studio</span></div>
+                    </div>
                   </div>
+
+                  <!-- Bottom Meta -->
                   <div class="card-meta">
-                    <strong>Call To Action Banner</strong>
-                    <span>Pusat konversi pengunjung dengan efek glowing</span>
+                    <strong>{{ item.name }}</strong>
+                    <span>{{ item.desc }}</span>
                   </div>
-                  <Plus :size="14" class="icon-add-plus" />
                 </div>
               </div>
             </div>
@@ -2125,6 +2369,347 @@ const executeVsCodeReplaceAll = () => {
                         </button>
                       </div>
                     </section>
+
+                    <!-- BLOCK TYPE: PROGRESS BAR -->
+                    <section
+                      v-else-if="block.type === 'progressbar'"
+                      class="rendered-progressbar-block"
+                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="progress-meters-grid">
+                        <div
+                          v-for="item in block.items"
+                          :key="item.id"
+                          class="progress-meter-card"
+                        >
+                          <div class="pm-head">
+                            <span class="pm-title">{{ item.title }}</span>
+                            <span class="pm-val">{{ item.percentage || 0 }}%</span>
+                          </div>
+                          <div class="pm-track">
+                            <div class="pm-fill" :style="{ width: (item.percentage || 0) + '%' }"></div>
+                          </div>
+                          <p v-if="item.desc" class="pm-desc">{{ item.desc }}</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: ACCORDION / COLLAPSE -->
+                    <section
+                      v-else-if="block.type === 'accordion'"
+                      class="rendered-accordion-block"
+                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="accordion-items-stack">
+                        <div
+                          v-for="(item, idx) in block.items"
+                          :key="item.id"
+                          class="accordion-card-item"
+                          :class="{ 'is-expanded': (block.activeItemIndex ?? 0) === idx }"
+                        >
+                          <button class="acc-card-trigger" @click.stop="toggleAccordionItem(block, idx)">
+                            <span class="acc-card-title">{{ item.title }}</span>
+                            <ChevronDown :size="16" class="acc-card-icon" />
+                          </button>
+                          <div v-if="(block.activeItemIndex ?? 0) === idx" class="acc-card-content">
+                            {{ item.desc }}
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: CAROUSEL / SLIDER -->
+                    <section
+                      v-else-if="block.type === 'carousel'"
+                      class="rendered-carousel-block"
+                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="carousel-stage-container">
+                        <div v-if="block.items && block.items.length > 0" class="carousel-slide-card">
+                          <span v-if="block.items[block.activeItemIndex || 0]?.tag" class="carousel-tag-badge">
+                            {{ block.items[block.activeItemIndex || 0]?.tag }}
+                          </span>
+                          <h3 class="carousel-headline">{{ block.items[block.activeItemIndex || 0]?.title }}</h3>
+                          <p class="carousel-lead-desc">{{ block.items[block.activeItemIndex || 0]?.desc }}</p>
+                          <span v-if="block.items[block.activeItemIndex || 0]?.author" class="carousel-author-credit">
+                            — {{ block.items[block.activeItemIndex || 0]?.author }}
+                          </span>
+                        </div>
+
+                        <!-- Carousel Nav Arrows -->
+                        <div class="carousel-nav-arrows">
+                          <button class="carousel-arrow-btn" @click.stop="prevSlide(block)" title="Slide Sebelumnya">
+                            <ArrowLeft :size="16" />
+                          </button>
+                          <button class="carousel-arrow-btn" @click.stop="nextSlide(block)" title="Slide Berikutnya">
+                            <ArrowRight :size="16" />
+                          </button>
+                        </div>
+
+                        <!-- Dots -->
+                        <div class="carousel-dots-indicator">
+                          <button
+                            v-for="(item, sIdx) in block.items"
+                            :key="item.id"
+                            class="carousel-dot"
+                            :class="{ active: (block.activeItemIndex || 0) === sIdx }"
+                            @click.stop="setSlide(block, sIdx)"
+                          ></button>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: FORM CONTROL -->
+                    <section
+                      v-else-if="block.type === 'formcontrol'"
+                      class="rendered-formcontrol-block"
+                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="form-card-container">
+                        <form class="form-fields-stack" @submit.prevent>
+                          <div v-for="item in block.items" :key="item.id" class="form-field-group">
+                            <label class="form-field-label">{{ item.title }}</label>
+                            <select v-if="item.tag === 'select'" class="form-rendered-select">
+                              <option>Pilihan 1: Solusi Cloud & Docker</option>
+                              <option>Pilihan 2: Visual Studio CMS</option>
+                              <option>Pilihan 3: Domain & Edge SSL</option>
+                            </select>
+                            <textarea
+                              v-else-if="item.tag === 'textarea'"
+                              rows="3"
+                              class="form-rendered-textarea"
+                              :placeholder="item.label"
+                            ></textarea>
+                            <input
+                              v-else
+                              :type="item.tag || 'text'"
+                              class="form-rendered-input"
+                              :placeholder="item.label"
+                            />
+                          </div>
+                          <button
+                            class="btn-form-submit"
+                            :style="{ backgroundColor: activeContainer.accentColor }"
+                          >
+                            {{ block.buttonText || 'Kirim Pesan Sekarang' }}
+                          </button>
+                        </form>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: MODAL -->
+                    <section
+                      v-else-if="block.type === 'modal'"
+                      class="rendered-modal-block"
+                      :style="{ padding: `${block.styles?.paddingY || 48}px 32px` }"
+                    >
+                      <div class="modal-preview-stage">
+                        <div class="modal-stage-header">
+                          <span class="modal-stage-badge">{{ block.badge || 'POPUP PROMOSI' }}</span>
+                          <button class="modal-stage-close" @click.stop="toggleBlockOpen(block)">
+                            <X :size="14" />
+                          </button>
+                        </div>
+                        <div class="modal-stage-body">
+                          <h3 class="modal-stage-title">{{ block.title }}</h3>
+                          <p class="modal-stage-desc">{{ block.subtitle }}</p>
+                          <div class="modal-stage-actions">
+                            <button class="btn-modal-secondary" @click.stop>
+                              {{ block.secondaryButtonText || 'Nanti Saja' }}
+                            </button>
+                            <button
+                              class="btn-modal-primary"
+                              :style="{ backgroundColor: activeContainer.accentColor }"
+                              @click.stop
+                            >
+                              {{ block.buttonText || 'Klaim Sekarang' }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: DROPDOWN -->
+                    <section
+                      v-else-if="block.type === 'dropdown'"
+                      class="rendered-dropdown-block"
+                      :style="{ padding: `${block.styles?.paddingY || 36}px 32px` }"
+                    >
+                      <div class="dropdown-component-card">
+                        <div class="section-title-wrap" style="margin-bottom: 12px; text-align: left;">
+                          <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                          <h3 class="sec-headline" style="font-size: 1.1rem;">{{ block.title }}</h3>
+                        </div>
+                        <button class="dropdown-trigger-btn" @click.stop="toggleBlockOpen(block)">
+                          <span>{{ block.items?.[block.activeItemIndex || 0]?.title || 'Pilih Kategori...' }}</span>
+                          <ChevronDown :size="16" />
+                        </button>
+                        <div v-if="block.isOpen" class="dropdown-options-list">
+                          <div
+                            v-for="(item, dIdx) in block.items"
+                            :key="item.id"
+                            class="dropdown-option-row"
+                            :class="{ 'is-selected': (block.activeItemIndex || 0) === dIdx }"
+                            @click.stop="selectDropdownOption(block, dIdx)"
+                          >
+                            <span>{{ item.title }}</span>
+                            <span v-if="item.desc" style="font-size: 0.72rem; color: #94a3b8;">{{ item.desc }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: CARDS GRID -->
+                    <section
+                      v-else-if="block.type === 'card'"
+                      class="rendered-card-block"
+                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="cards-showcase-grid">
+                        <div
+                          v-for="item in block.items"
+                          :key="item.id"
+                          class="showcase-grid-card"
+                        >
+                          <div class="card-header-banner">
+                            <span v-if="item.tag" class="card-tag-pill">{{ item.tag }}</span>
+                          </div>
+                          <div class="card-body-content">
+                            <h3 class="card-grid-title">{{ item.title }}</h3>
+                            <p class="card-grid-desc">{{ item.desc }}</p>
+                            <span v-if="item.role" class="card-role-label">Peran: {{ item.role }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: LIST GROUP -->
+                    <section
+                      v-else-if="block.type === 'listgroup'"
+                      class="rendered-listgroup-block"
+                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="listgroup-stack-card">
+                        <div
+                          v-for="item in block.items"
+                          :key="item.id"
+                          class="listgroup-item-row"
+                        >
+                          <span class="lg-check-icon"><Check :size="14" /></span>
+                          <div class="lg-text-meta">
+                            <span class="lg-item-title">{{ item.title }}</span>
+                            <span v-if="item.desc" class="lg-item-desc">{{ item.desc }}</span>
+                          </div>
+                          <span v-if="item.tag" class="lg-badge-tag">{{ item.tag }}</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: STATS -->
+                    <section
+                      v-else-if="block.type === 'stats'"
+                      class="rendered-stats-block"
+                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="stats-counters-row">
+                        <div
+                          v-for="item in block.items"
+                          :key="item.id"
+                          class="stat-counter-box"
+                        >
+                          <span class="stat-number-val">{{ item.title }}</span>
+                          <span class="stat-number-desc">{{ item.desc }}</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: PAGINATION -->
+                    <section
+                      v-else-if="block.type === 'pagination'"
+                      class="rendered-pagination-block"
+                      :style="{ padding: `${block.styles?.paddingY || 32}px 32px` }"
+                    >
+                      <div v-if="block.subtitle" style="text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">
+                        {{ block.subtitle }}
+                      </div>
+                      <div class="pagination-controls-row">
+                        <button class="pagination-btn" title="Sebelumnya">&laquo;</button>
+                        <button
+                          v-for="(item, pIdx) in block.items"
+                          :key="item.id"
+                          class="pagination-btn"
+                          :class="{ 'is-active': (block.activeItemIndex || 0) === pIdx }"
+                          @click.stop="setPageNumber(block, pIdx)"
+                        >
+                          {{ item.title }}
+                        </button>
+                        <button class="pagination-btn" title="Berikutnya">&raquo;</button>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: BREADCRUMB -->
+                    <nav
+                      v-else-if="block.type === 'breadcrumb'"
+                      class="rendered-breadcrumb-block"
+                      :style="{ padding: `${block.styles?.paddingY || 20}px 32px` }"
+                    >
+                      <div class="breadcrumb-trail-nav">
+                        <template v-for="(item, bIdx) in block.items" :key="item.id">
+                          <span v-if="bIdx > 0" class="bc-sep-icon">/</span>
+                          <a
+                            v-if="bIdx < (block.items?.length || 1) - 1"
+                            :href="item.url || '#'"
+                            class="bc-item-anchor"
+                            @click.prevent
+                          >
+                            {{ item.title }}
+                          </a>
+                          <span v-else class="bc-item-current">{{ item.title }}</span>
+                        </template>
+                      </div>
+                    </nav>
 
                     <!-- BLOCK TYPE 6: FOOTER -->
                     <footer
@@ -2688,6 +3273,81 @@ const executeVsCodeReplaceAll = () => {
                       class="field-input"
                       placeholder="Misal: Pelajari Sistem"
                     />
+                  </div>
+                </div>
+
+                <!-- Sub-items editor (Progress bar, Accordion, Cards, Form controls, etc.) -->
+                <div v-if="selectedBlock.items && selectedBlock.items.length > 0" class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 8px;">
+                    <label class="field-label">Daftar Item / Sub-Elemen ({{ selectedBlock.items.length }})</label>
+                  </div>
+                  <div class="sub-items-editor-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div
+                      v-for="(subItem, subIdx) in selectedBlock.items"
+                      :key="subIdx"
+                      class="sub-item-card"
+                      style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 8px 10px;"
+                    >
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 11px; font-weight: 600; color: #38bdf8;">Item #{{ subIdx + 1 }}</span>
+                        <div style="display: flex; gap: 4px;">
+                          <button
+                            v-if="selectedBlock.items.length > 1"
+                            type="button"
+                            @click="selectedBlock.items.splice(subIdx, 1)"
+                            style="background: transparent; border: none; color: #f43f5e; cursor: pointer; padding: 2px;"
+                            title="Hapus Item"
+                          >
+                            <Trash2 :size="12" />
+                          </button>
+                        </div>
+                      </div>
+                      <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <input
+                          v-if="subItem.title !== undefined"
+                          type="text"
+                          v-model="subItem.title"
+                          class="field-input"
+                          style="font-size: 11px; padding: 4px 8px;"
+                          placeholder="Judul item..."
+                        />
+                        <input
+                          v-if="subItem.label !== undefined"
+                          type="text"
+                          v-model="subItem.label"
+                          class="field-input"
+                          style="font-size: 11px; padding: 4px 8px;"
+                          placeholder="Label..."
+                        />
+                        <textarea
+                          v-if="subItem.desc !== undefined"
+                          v-model="subItem.desc"
+                          class="field-textarea"
+                          rows="2"
+                          style="font-size: 11px; padding: 4px 8px;"
+                          placeholder="Deskripsi item..."
+                        ></textarea>
+                        <div v-if="subItem.percentage !== undefined" style="display: flex; align-items: center; gap: 6px;">
+                          <label style="font-size: 10px; color: #94a3b8; white-space: nowrap;">Nilai: {{ subItem.percentage }}%</label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            v-model.number="subItem.percentage"
+                            class="range-slider"
+                            style="flex: 1;"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      @click="selectedBlock.items.push({ id: 'item-' + Date.now(), title: 'Item Baru', desc: 'Deskripsi baru', percentage: 70 })"
+                      class="btn-outline-action"
+                      style="font-size: 11px; justify-content: center; margin-top: 4px; padding: 6px;"
+                    >
+                      <Plus :size="12" /> Tambah Item
+                    </button>
                   </div>
                 </div>
               </div>

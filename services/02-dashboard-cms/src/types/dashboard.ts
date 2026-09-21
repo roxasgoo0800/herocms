@@ -46,7 +46,27 @@ export interface ContainerSite {
 
 export interface VisualBlock {
   id: string;
-  type: 'navbar' | 'hero' | 'features' | 'showcase' | 'pricing' | 'testimonials' | 'cta' | 'contact' | 'footer';
+  type:
+    | 'navbar'
+    | 'hero'
+    | 'features'
+    | 'showcase'
+    | 'pricing'
+    | 'testimonials'
+    | 'cta'
+    | 'contact'
+    | 'footer'
+    | 'progressbar'
+    | 'carousel'
+    | 'accordion'
+    | 'formcontrol'
+    | 'modal'
+    | 'pagination'
+    | 'dropdown'
+    | 'card'
+    | 'listgroup'
+    | 'stats'
+    | 'breadcrumb';
   name: string;
   badge?: string;
   title: string;
@@ -59,10 +79,12 @@ export interface VisualBlock {
   imageUrl?: string;
   isVisible: boolean;
   isLocked: boolean;
+  isOpen?: boolean;
+  activeItemIndex?: number;
   items?: Array<{
     id: string;
     title: string;
-    desc: string;
+    desc?: string;
     icon?: string;
     tag?: string;
     price?: string;
@@ -71,6 +93,11 @@ export interface VisualBlock {
     author?: string;
     role?: string;
     avatar?: string;
+    percentage?: number;
+    active?: boolean;
+    status?: string;
+    label?: string;
+    url?: string;
   }>;
   styles?: {
     paddingY?: number;
