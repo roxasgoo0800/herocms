@@ -810,7 +810,45 @@
 .dock-tab-body {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 12px 14px 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+/* Custom Sleek Bespoke Scrollbar for Studio Left Dock */
+.dock-tab-body::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.dock-tab-body::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 6px 0;
+}
+
+.dock-tab-body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+.dock-tab-body:hover::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+.dock-tab-body::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+.dock-tab-body::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.dock-tab-body::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 .dock-section-head {
@@ -5689,6 +5727,15 @@
 .rich-preview-pane::-webkit-scrollbar-thumb:hover,
 .browser-content-viewport::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+.rich-controls-pane::-webkit-scrollbar-button,
+.rich-preview-pane::-webkit-scrollbar-button,
+.browser-content-viewport::-webkit-scrollbar-button,
+.wysiwyg-editable-surface::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Sub-Items Editor Styles */
