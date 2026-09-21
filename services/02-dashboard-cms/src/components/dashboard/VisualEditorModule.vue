@@ -27,6 +27,7 @@ import {
   Copy,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Eye,
   EyeOff,
@@ -115,6 +116,44 @@ const {
 // -----------------------------------------------------------------------------
 const selectedCatalogCategory = ref<BlockCategory>('all');
 const catalogSearchQuery = ref('');
+const catalogChipsRef = ref<HTMLElement | null>(null);
+const canScrollChipsLeft = ref(false);
+const canScrollChipsRight = ref(false);
+
+const updateChipsScrollState = () => {
+  if (!catalogChipsRef.value) return;
+  const { scrollLeft, scrollWidth, clientWidth } = catalogChipsRef.value;
+  canScrollChipsLeft.value = scrollLeft > 2;
+  canScrollChipsRight.value = scrollLeft + clientWidth < scrollWidth - 2;
+};
+
+const scrollCategoryChips = (direction: 'left' | 'right') => {
+  if (!catalogChipsRef.value) return;
+  const distance = direction === 'left' ? -180 : 180;
+  catalogChipsRef.value.scrollBy({ left: distance, behavior: 'smooth' });
+  setTimeout(updateChipsScrollState, 260);
+};
+
+const onCategoryChipsWheel = (e: WheelEvent) => {
+  if (!catalogChipsRef.value) return;
+  if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+    e.preventDefault();
+    catalogChipsRef.value.scrollLeft += e.deltaY;
+    updateChipsScrollState();
+  }
+};
+
+const selectCategory = (catId: BlockCategory, event?: MouseEvent) => {
+  selectedCatalogCategory.value = catId;
+  if (event?.currentTarget && catalogChipsRef.value) {
+    (event.currentTarget as HTMLElement).scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'center'
+    });
+    setTimeout(updateChipsScrollState, 300);
+  }
+};
 
 const filteredCatalogItems = computed(() => {
   return blockCatalogItems.filter(item => {
@@ -173,6 +212,14 @@ const activeTool = ref<ActiveTool>('select');
 const editorViewMode = ref<EditorViewMode>('design');
 const activeLeftTab = ref<'blocks' | 'layers' | 'design' | 'ai'>('blocks');
 const activeRightTab = ref<'layout' | 'appearance'>('layout');
+
+watch(activeLeftTab, (newTab) => {
+  if (newTab === 'blocks') {
+    nextTick(() => {
+      updateChipsScrollState();
+    });
+  }
+});
 
 // Studio Booting Transition & Draft State
 const isEditorBooting = ref(true);
@@ -757,6 +804,7 @@ onMounted(async () => {
   window.addEventListener('mousemove', onCanvasMouseMove);
   window.addEventListener('mouseup', onCanvasMouseUp);
   window.addEventListener('resize', fitToScreen);
+  window.addEventListener('resize', updateChipsScrollState);
   document.addEventListener('click', handleSiteDropdownOutsideClick);
   document.addEventListener('click', handleAllDropdownOutsideClick);
 
@@ -772,6 +820,7 @@ onMounted(async () => {
 
   await nextTick();
   fitToScreen();
+  updateChipsScrollState();
 
   bootProgress.value = 50;
   bootStatusText.value = 'Memuat dependensi & engine editor...';
@@ -806,6 +855,7 @@ onUnmounted(() => {
   window.removeEventListener('mousemove', onCanvasMouseMove);
   window.removeEventListener('mouseup', onCanvasMouseUp);
   window.removeEventListener('resize', fitToScreen);
+  window.removeEventListener('resize', updateChipsScrollState);
   document.removeEventListener('click', handleSiteDropdownOutsideClick);
   document.removeEventListener('click', handleAllDropdownOutsideClick);
 
@@ -2038,16 +2088,48 @@ const executeVsCodeReplaceAll = () => {
                   </button>
                 </div>
 
-                <!-- Category Filter Chips -->
-                <div class="catalog-category-chips">
+                <!-- Category Filter Chips Carousel -->
+                <div class="catalog-chips-carousel-wrap">
                   <button
-                    v-for="cat in blockCategories"
-                    :key="cat.id"
-                    class="cat-chip-btn"
-                    :class="{ active: selectedCatalogCategory === cat.id }"
-                    @click="selectedCatalogCategory = cat.id"
+                    type="button"
+                    class="chips-nav-btn prev"
+                    :class="{ 'is-disabled': !canScrollChipsLeft }"
+                    :disabled="!canScrollChipsLeft"
+                    title="Geser kategori ke kiri"
+                    aria-label="Geser kategori ke kiri"
+                    @click="scrollCategoryChips('left')"
                   >
-                    {{ cat.label }}
+                    <ChevronLeft :size="13" />
+                  </button>
+
+                  <div
+                    ref="catalogChipsRef"
+                    class="catalog-category-chips"
+                    @scroll.passive="updateChipsScrollState"
+                    @wheel="onCategoryChipsWheel"
+                  >
+                    <button
+                      v-for="cat in blockCategories"
+                      :key="cat.id"
+                      type="button"
+                      class="cat-chip-btn"
+                      :class="{ active: selectedCatalogCategory === cat.id }"
+                      @click="selectCategory(cat.id, $event)"
+                    >
+                      {{ cat.label }}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="chips-nav-btn next"
+                    :class="{ 'is-disabled': !canScrollChipsRight }"
+                    :disabled="!canScrollChipsRight"
+                    title="Geser kategori ke kanan"
+                    aria-label="Geser kategori ke kanan"
+                    @click="scrollCategoryChips('right')"
+                  >
+                    <ChevronRight :size="13" />
                   </button>
                 </div>
 
