@@ -86,6 +86,7 @@ export interface VisualBlock {
     title: string;
     desc?: string;
     icon?: string;
+    image?: string;
     tag?: string;
     price?: string;
     period?: string;

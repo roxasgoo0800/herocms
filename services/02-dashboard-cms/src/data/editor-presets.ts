@@ -495,9 +495,9 @@ export const createLibraryBlock = (type: VisualBlock['type']): VisualBlock => {
         isLocked: false,
         activeItemIndex: 0,
         items: [
-          { id: 'sl1', title: 'Ekosistem Cloud-Native Terpadu', desc: 'Orkestrasi kontainer mandiri dengan konsumsi memori hemat dan respon ultra-cepat.', tag: 'Rilis 2.4', author: 'DevOps Lead' },
-          { id: 'sl2', title: 'Studio Visual Tingkat Enterprise', desc: 'Editor drag-and-drop canggih dengan kontrol piksel presisi dan mode pratinjau multi-perangkat.', tag: 'Featured', author: 'Design Architect' },
-          { id: 'sl3', title: 'AI Copilot & Otomasi Konten', desc: 'Hasilkan artikel blog, palet warna kustom, dan optimasi SEO hanya dalam hitungan detik.', tag: 'AI Powered', author: 'AI Specialist' }
+          { id: 'sl1', title: 'Ekosistem Cloud-Native Terpadu', desc: 'Orkestrasi kontainer mandiri dengan konsumsi memori hemat dan respon ultra-cepat.', tag: 'Rilis 2.4', author: 'DevOps Lead', image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80' },
+          { id: 'sl2', title: 'Studio Visual Tingkat Enterprise', desc: 'Editor drag-and-drop canggih dengan kontrol piksel presisi dan mode pratinjau multi-perangkat.', tag: 'Featured', author: 'Design Architect', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80' },
+          { id: 'sl3', title: 'AI Copilot & Otomasi Konten', desc: 'Hasilkan artikel blog, palet warna kustom, dan optimasi SEO hanya dalam hitungan detik.', tag: 'AI Powered', author: 'AI Specialist', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80' }
         ],
         styles: { paddingY: 60, align: 'center', bgMode: 'glass' }
       };

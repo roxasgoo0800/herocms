@@ -67,7 +67,9 @@ import {
   Box,
   Award,
   Star,
-  Key
+  Key,
+  Image as ImageIcon,
+  UploadCloud
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
@@ -947,6 +949,81 @@ const duplicateSubItem = (idx: number) => {
   copy.id = 'item-' + Date.now();
   copy.title = `${copy.title || 'Item'} (Salinan)`;
   editingBlockDraft.value.items.splice(idx + 1, 0, copy);
+};
+
+const blockUsesIcons = (blockType?: string): boolean => {
+  return blockType === 'features' || blockType === 'showcase';
+};
+
+const blockUsesImages = (blockType?: string): boolean => {
+  return blockType === 'carousel';
+};
+
+const onSlideImageUpload = (subIdx: number, event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+  const file = target.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (
+      editingBlockDraft.value?.items &&
+      editingBlockDraft.value.items[subIdx] &&
+      e.target?.result
+    ) {
+      editingBlockDraft.value.items[subIdx].image = e.target.result as string;
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
+const removeSlideImage = (subIdx: number) => {
+  if (editingBlockDraft.value?.items && editingBlockDraft.value.items[subIdx]) {
+    editingBlockDraft.value.items[subIdx].image = '';
+  }
+};
+
+const addNewSubItem = () => {
+  if (!editingBlockDraft.value) return;
+  if (!editingBlockDraft.value.items) editingBlockDraft.value.items = [];
+  const type = editingBlockDraft.value.type;
+  const newId = 'item-' + Date.now();
+  if (type === 'accordion') {
+    editingBlockDraft.value.items.push({
+      id: newId,
+      title: 'Pertanyaan Baru',
+      desc: 'Jawaban atau penjelasan untuk pertanyaan ini...'
+    });
+  } else if (type === 'progressbar') {
+    editingBlockDraft.value.items.push({
+      id: newId,
+      title: 'Metrik Performa Baru',
+      desc: 'Keterangan kapasitas atau performa sistem',
+      percentage: 85
+    });
+  } else if (type === 'carousel') {
+    editingBlockDraft.value.items.push({
+      id: newId,
+      title: 'Slide Baru',
+      desc: 'Deskripsi singkat seputar rilis atau sorotan fitur.',
+      tag: 'Baru',
+      author: 'Studio Team',
+      image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80'
+    });
+  } else if (type === 'formcontrol') {
+    editingBlockDraft.value.items.push({
+      id: newId,
+      title: 'Field Form Baru',
+      label: 'Masukkan nilai...',
+      tag: 'text'
+    });
+  } else {
+    editingBlockDraft.value.items.push({
+      id: newId,
+      title: 'Fitur Baru',
+      desc: 'Deskripsi fitur baru...',
+      icon: 'zap'
+    });
+  }
 };
 
 const applyBrandPalette = (palette: BrandPalette) => {
@@ -2710,6 +2787,13 @@ const executeVsCodeReplaceAll = () => {
 
                       <div class="carousel-stage-container">
                         <div v-if="block.items && block.items.length > 0" class="carousel-slide-card">
+                          <div v-if="block.items[block.activeItemIndex || 0]?.image" class="carousel-slide-img-wrap">
+                            <img
+                              :src="block.items[block.activeItemIndex || 0].image"
+                              :alt="block.items[block.activeItemIndex || 0].title || 'Slide Image'"
+                              class="carousel-slide-img"
+                            />
+                          </div>
                           <span v-if="block.items[block.activeItemIndex || 0]?.tag" class="carousel-tag-badge">
                             {{ block.items[block.activeItemIndex || 0]?.tag }}
                           </span>
@@ -3739,7 +3823,9 @@ const executeVsCodeReplaceAll = () => {
                 <div v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0" class="field-item">
                   <div class="field-label-split" style="margin-bottom: 8px;">
                     <label class="field-label">Daftar Item / Sub-Elemen ({{ editingBlockDraft.items.length }})</label>
-                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">Klik icon untuk mengganti</span>
+                    <span v-if="blockUsesIcons(editingBlockDraft.type)" style="font-size: 10px; color: #2563eb; font-weight: 600;">Klik icon untuk mengganti</span>
+                    <span v-else-if="blockUsesImages(editingBlockDraft.type)" style="font-size: 10px; color: #2563eb; font-weight: 600;">Unggah gambar slide</span>
+                    <span v-else style="font-size: 10px; color: #64748b; font-weight: 500;">Sesuaikan konten item</span>
                   </div>
                   <div class="sub-items-editor-list">
                     <div
@@ -3792,8 +3878,9 @@ const executeVsCodeReplaceAll = () => {
                       </div>
 
                       <div class="sub-item-main-row">
-                        <!-- Icon Trigger Button -->
+                        <!-- Icon Trigger Button (Only for blocks that use icons) -->
                         <button
+                          v-if="blockUsesIcons(editingBlockDraft.type)"
                           type="button"
                           class="sub-item-icon-trigger"
                           @click="openIconPicker(subIdx)"
@@ -3805,16 +3892,31 @@ const executeVsCodeReplaceAll = () => {
 
                         <div class="sub-item-title-col">
                           <div v-if="subItem.title !== undefined" class="sub-item-field-row">
-                            <label class="sub-item-field-label">Judul Item</label>
+                            <label class="sub-item-field-label">
+                              {{
+                                editingBlockDraft.type === 'accordion' ? 'Pertanyaan Accordion / FAQ' :
+                                editingBlockDraft.type === 'carousel' ? 'Judul Slide' :
+                                editingBlockDraft.type === 'progressbar' ? 'Label Metrik / Capaian' :
+                                editingBlockDraft.type === 'pricing' ? 'Nama Paket' :
+                                'Judul Item'
+                              }}
+                            </label>
                             <input
                               type="text"
                               v-model="subItem.title"
                               class="field-input sub-item-input"
-                              placeholder="Judul item..."
+                              :placeholder="
+                                editingBlockDraft.type === 'accordion' ? 'Pertanyaan FAQ...' :
+                                editingBlockDraft.type === 'carousel' ? 'Judul slide...' :
+                                editingBlockDraft.type === 'progressbar' ? 'Nama metrik...' :
+                                'Judul item...'
+                              "
                             />
                           </div>
                           <div v-if="subItem.label !== undefined" class="sub-item-field-row" style="margin-top: 4px;">
-                            <label class="sub-item-field-label">Label Badge</label>
+                            <label class="sub-item-field-label">
+                              {{ editingBlockDraft.type === 'formcontrol' ? 'Placeholder Input' : 'Label Badge' }}
+                            </label>
                             <input
                               type="text"
                               v-model="subItem.label"
@@ -3825,13 +3927,71 @@ const executeVsCodeReplaceAll = () => {
                         </div>
                       </div>
 
+                      <!-- Slide Image Uploader for Carousel -->
+                      <div v-if="blockUsesImages(editingBlockDraft.type)" class="sub-item-image-uploader">
+                        <label class="sub-item-field-label">Gambar Slide Carousel</label>
+                        <div class="slide-img-preview-row">
+                          <div class="slide-img-preview-box">
+                            <img
+                              v-if="subItem.image"
+                              :src="subItem.image"
+                              alt="Slide Preview"
+                              class="slide-thumbnail"
+                            />
+                            <div v-else class="slide-img-placeholder">
+                              <ImageIcon :size="18" />
+                              <span>Tidak ada gambar</span>
+                            </div>
+                            <button
+                              v-if="subItem.image"
+                              type="button"
+                              class="btn-remove-slide-img"
+                              @click="removeSlideImage(subIdx)"
+                              title="Hapus Gambar"
+                            >
+                              <X :size="11" />
+                            </button>
+                          </div>
+                          <div class="slide-img-controls">
+                            <label :for="'slide-upload-' + subIdx" class="btn-upload-slide-img">
+                              <UploadCloud :size="13" /> Unggah Gambar
+                            </label>
+                            <input
+                              :id="'slide-upload-' + subIdx"
+                              type="file"
+                              accept="image/*"
+                              @change="onSlideImageUpload(subIdx, $event)"
+                              style="display: none;"
+                            />
+                            <input
+                              type="text"
+                              v-model="subItem.image"
+                              class="field-input sub-item-input"
+                              placeholder="Atau tempel URL gambar (https://...)"
+                              style="font-size: 11px;"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       <div v-if="subItem.desc !== undefined" class="sub-item-field-row">
-                        <label class="sub-item-field-label">Deskripsi Item</label>
+                        <label class="sub-item-field-label">
+                          {{
+                            editingBlockDraft.type === 'accordion' ? 'Jawaban / Penjelasan Accordion' :
+                            editingBlockDraft.type === 'carousel' ? 'Deskripsi Slide' :
+                            editingBlockDraft.type === 'progressbar' ? 'Keterangan Metrik / Info Kuota' :
+                            'Deskripsi Item'
+                          }}
+                        </label>
                         <textarea
                           v-model="subItem.desc"
                           class="field-textarea sub-item-textarea"
                           rows="2"
-                          placeholder="Deskripsi item..."
+                          :placeholder="
+                            editingBlockDraft.type === 'accordion' ? 'Tuliskan jawaban atau rincian FAQ di sini...' :
+                            editingBlockDraft.type === 'carousel' ? 'Deskripsi singkat slide...' :
+                            'Deskripsi item...'
+                          "
                         ></textarea>
                       </div>
 
@@ -3890,7 +4050,7 @@ const executeVsCodeReplaceAll = () => {
 
                     <button
                       type="button"
-                      @click="editingBlockDraft.items.push({ id: 'item-' + Date.now(), title: 'Fitur Baru', desc: 'Deskripsi fitur baru...', icon: 'zap', percentage: 80 })"
+                      @click="addNewSubItem"
                       class="btn-add-subitem"
                     >
                       <Plus :size="13" /> Tambah Item Baru
@@ -4504,6 +4664,13 @@ const executeVsCodeReplaceAll = () => {
 
                       <div class="carousel-stage-container">
                         <div v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0" class="carousel-slide-card">
+                          <div v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.image" class="carousel-slide-img-wrap">
+                            <img
+                              :src="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0].image"
+                              :alt="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0].title || 'Slide Image'"
+                              class="carousel-slide-img"
+                            />
+                          </div>
                           <span v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.tag" class="carousel-tag-badge">
                             {{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.tag }}
                           </span>
