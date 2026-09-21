@@ -46,7 +46,27 @@ export interface ContainerSite {
 
 export interface VisualBlock {
   id: string;
-  type: 'navbar' | 'hero' | 'features' | 'showcase' | 'pricing' | 'testimonials' | 'cta' | 'contact' | 'footer';
+  type:
+    | 'navbar'
+    | 'hero'
+    | 'features'
+    | 'showcase'
+    | 'pricing'
+    | 'testimonials'
+    | 'cta'
+    | 'contact'
+    | 'footer'
+    | 'progressbar'
+    | 'carousel'
+    | 'accordion'
+    | 'formcontrol'
+    | 'modal'
+    | 'pagination'
+    | 'dropdown'
+    | 'card'
+    | 'listgroup'
+    | 'stats'
+    | 'breadcrumb';
   name: string;
   badge?: string;
   title: string;
@@ -59,11 +79,14 @@ export interface VisualBlock {
   imageUrl?: string;
   isVisible: boolean;
   isLocked: boolean;
+  isOpen?: boolean;
+  activeItemIndex?: number;
   items?: Array<{
     id: string;
     title: string;
-    desc: string;
+    desc?: string;
     icon?: string;
+    image?: string;
     tag?: string;
     price?: string;
     period?: string;
@@ -71,6 +94,11 @@ export interface VisualBlock {
     author?: string;
     role?: string;
     avatar?: string;
+    percentage?: number;
+    active?: boolean;
+    status?: string;
+    label?: string;
+    url?: string;
   }>;
   styles?: {
     paddingY?: number;
@@ -78,9 +106,19 @@ export interface VisualBlock {
     bgMode?: 'transparent' | 'solid' | 'gradient' | 'glass';
     bgColor?: string;
     textColor?: string;
+    accentColor?: string;
     borderRadius?: number;
     shadow?: 'none' | 'sm' | 'md' | 'lg' | 'glow';
     backdropBlur?: number;
+    fontFamily?: string;
+    fontWeight?: '300' | '400' | '500' | '600' | '700' | '800' | '900' | string;
+    fontSize?: number;
+    letterSpacing?: number;
+    textTransform?: 'none' | 'uppercase' | 'capitalize' | 'lowercase';
+    animation?: 'none' | 'fadeInUp' | 'slideInLeft' | 'zoomIn' | 'bounce' | 'pulseGlow' | 'float';
+    animationDuration?: number;
+    animationDelay?: number;
+    richContent?: string;
   };
 }
 

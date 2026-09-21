@@ -5,61 +5,58 @@ Dokumen standar arsitektur, konsistensi tema, performa, dan konvensi pengembanga
 ---
 
 ## 1. Lingkup Berlaku Universal (All Frontend Services)
-Aturan ini tidak hanya berlaku untuk Dashboard CMS, tetapi berlaku untuk **seluruh aplikasi web, landing page, dan modul frontend** di HeroCMS monorepo:
+Aturan ini berlaku untuk **seluruh aplikasi web, landing page, dan modul frontend** di HeroCMS monorepo:
 - `services/02-dashboard-cms`
 - `services/04-marketing-site`
 - Layanan web / dashboard baru berikutnya.
 
 ---
 
-## 2. Konsistensi Tema Visual (Obsidian Slate + Electric Cyan)
-- **Tema Gelap Mutlak**: Seluruh menu, modal dialog, formulir input, tabel data, dan halaman baru **HARUS** menggunakan tema resmi **Obsidian Slate + Electric Cyan**. DILARANG menggunakan palet terang/putih biasa atau warna bawaan browser (*no unthemed light mode*).
+## 2. Konsistensi Tema Visual (HeroCMS Studio - Bespoke Enterprise Design System)
+- **Karakter Visual Utama**: Mengikuti tema resmi HeroCMS Studio yang tercantum di [`DESIGN.md`](file:///home/rizal/dockerfile/docker-cms/DESIGN.md) dan arsitektur visual di [`src/assets/studio-master.css`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/assets/studio-master.css) & [`src/assets/studio-animations.css`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/assets/studio-animations.css).
 - **Palet Warna Resmi**:
-  - **Canvas & Background**: Deep Obsidian `#0b0f19`, Surface Card `#0e1526`, Elevated Surface `#141d33` / `#161f38`.
-  - **Aksen & Gradasi Utama**: Electric Cyan `#00f2fe` ke Royal Azure `#4facfe` (`linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)`).
-  - **Garis Batas (Borders)**: Halus semi-transparan `rgba(255, 255, 255, 0.08)` atau `#1e293b`.
-  - **Indikator & Badges Status**:
-    - Sukses / Aktif / Published: Emerald (`#10b981`, bg: `rgba(16, 185, 129, 0.12)`)
-    - Menunggu / Draft / Warning: Amber (`#f59e0b`, bg: `rgba(245, 158, 11, 0.12)`)
-    - Error / Kritis / Dihapus: Rose (`#f43f5e`, bg: `rgba(244, 63, 94, 0.12)`)
-    - Info / Netral: Electric Cyan / Sky (`#38bdf8`, bg: `rgba(56, 189, 248, 0.12)`)
-- **Efek Interaksi**: Tombol dan kartu interaktif harus memiliki hover glow halus, transisi mulus (`transition: all 0.2s ease`), dan radius sudut konsisten (`border-radius: 12px` untuk kartu, `8px`–`10px` untuk tombol dan input).
+  - **Canvas & Background**: Pure White `#ffffff` dan Slate Canvas `#f8fafc` dengan pola *ambient dot grid* (`radial-gradient(#cbd5e1 1.2px, transparent 1.2px)`).
+  - **Surfaces & Cards**: Pure White `#ffffff` dengan garis batas tipis halus `#e2e8f0` / `#e4e4e7` dan bayangan lembut (`box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05)`).
+  - **Aksi Primer & Anchors**: Deep Slate `#0f172a` / `#09090b` untuk tombol CTA utama, menu aktif, dan brand glyph.
+  - **Aksen Biru & Gradasi**: Royal Blue (`linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)`) untuk wordmark brand, tautan, progress kuota, dan ring fokus.
+  - **Sidebar & Top Bar**: Frosted glassmorphic white (`rgba(255, 255, 255, 0.96)`, `backdrop-filter: blur(20px)`).
+  - **Badges Status Semantic**:
+    - Running / Aktif / Published: Emerald (`#059669` / `#10b981`, bg: `#ecfdf5`, border: `#d1fae5`)
+    - Menunggu / Draft / Standby: Amber (`#b45309`, bg: `#fffbeb`, border: `#fde68a`)
+    - Error / Kritis / Dihapus: Red (`#ef4444`, bg: `#fef2f2`, border: `#fecaca`)
+    - Info / Netral: Royal Blue / Sky (`#2563eb`, bg: `#eff6ff`, border: `#bfdbfe`)
+- **Konsistensi Radius**: `border-radius: 12px`–`14px` untuk kartu dan modal, `8px` untuk tombol dan input form.
 
 ---
 
 ## 3. Arsitektur Master CSS Terpusat (`src/assets/studio-master.css`)
-- **Induk CSS Bersama**: Seluruh styling bersama, sistem grid, tipografi, tombol (`.btn-primary-gradient`, `.btn-outline-action`), kartu telemetri (`.stats-overview-grid`, `.telemetry-card`), tabel data (`.ledger-table`, `.pro-table`), bar pencarian (`.search-box`), tab segmen (`.year-toggle-group`), badges status, dan sistem modal dialog (`.modal-backdrop`, `.modal-dialog`) **HARUS** berada di master CSS terpusat.
+- **Induk CSS Bersama**: Seluruh styling bersama, sistem grid, tipografi, tombol (`.btn-top-create`, `.btn-modal-confirm`, `.btn-modal-ghost`), kartu telemetri (`.stats-overview-grid`, `.telemetry-card`), tabel data (`.ledger-table`, `.pro-table`), bar pencarian (`.search-box`), tab segmen (`.year-toggle-group`), badges status, dan sistem modal dialog (`.modal-backdrop`, `.modal-dialog`) **HARUS** berada di master CSS terpusat.
 - **Zero-CSS New Menu/Feature Creation**: Saat membuat menu atau fitur baru, manfaatkan class yang sudah tersedia di master CSS. DILARANG membuat duplikasi CSS untuk elemen-elemen yang sudah ada.
-- **Bespoke Scoped Styles Only**: Tag `<style scoped>` di komponen `.vue` hanya diperbolehkan jika ada kebutuhan visual yang benar-benar spesifik/unik untuk komponen tersebut (contoh: kertas faktur fisik `.invoice-paper`, cover reader mode artikel).
+- **Bespoke Scoped Styles Only**: Tag `<style scoped>` di komponen `.vue` hanya diperbolehkan jika ada kebutuhan visual yang benar-benar spesifik/unik untuk komponen tersebut.
 
 ---
 
 ## 4. Pemisahan Folder Data Statis (`src/data/*.ts`) vs Styling (`src/assets/*.css`)
 - **Pemisahan Sumber Daya Bersih (Clean Resource Separation)**:
   - **`src/assets/`**: Khusus file visual, stylesheet CSS (`studio-master.css`, `visual-editor.css`), icon, font, dan gambar. DILARANG mencampur file data TypeScript ke dalam folder assets.
-  - **`src/data/`**: Khusus file TypeScript berisi mock seeds, konstanta template, generator mockup, daftar font, dan preset desain (seperti [`src/data/dashboard-seeds.ts`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/data/dashboard-seeds.ts) dan [`src/data/editor-presets.ts`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/data/editor-presets.ts)).
+  - **`src/data/`**: Khusus file TypeScript berisi mock seeds, konstanta template, generator mockup, daftar font, dan preset desain (seperti [`src/data/dashboard-seeds.ts`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/data/dashboard-seeds.ts)).
 - **No Heavy Static Arrays in `.vue` or Logic Composables**: Dilarang menaruh ratusan baris data statis di dalam file Single File Component (`.vue`) maupun composables logika. Wajib diimpor secara modular dari `src/data/*.ts`.
-- **Tujuan**: Menjaga file `.vue` dan composable tetap ramping (<500 baris) agar pemindaian IDE (Volar/VS Code Language Server) instan, konsumsi RAM hemat, dan hot-reloading (HMR) tidak lag.
+- **Tujuan**: Menjaga file `.vue` dan composable tetap ramping (<500 baris) agar pemindaian IDE instan, konsumsi RAM hemat, dan hot-reloading (HMR) tidak lag.
 
 ---
 
-## 5. Standar UX & Tata Letak Halaman (Artikel, Halaman, dan Reader Mode)
+## 5. Standar UX & Tata Letak Halaman
 - **Tata Letak Bersih 2 Baris (2 Rows)**:
-  - **Baris 1 (Aksi & Filter)**: Judul modul, bar pencarian interaktif terpadu (`.search-box`), dan tab penyaring tahun/kategori (`.year-toggle-group`).
-  - **Baris 2 (Data Display)**: Grid telemetri metrik dan tabel data (`.ledger-table`).
-- **Mode Baca / Reader View (Contoh: "Artikel & Halaman CMS -> Judul")**:
-  - **Navigasi Tunggal di Atas**: Hanya gunakan satu header navigasi ringkas di bagian atas dengan tombol Kembali (**Back**) yang jelas. Dilarang membuat tombol navigasi atau toolbar ganda yang membingungkan.
+  - **Baris 1 (Aksi & Filter)**: Judul modul, bar pencarian interaktif terpadu (`.search-box`), dan tab penyaring tahun/kategori/status.
+  - **Baris 2 (Data Display)**: Grid telemetri metrik dan tabel data / kartu layanan.
+- **Mode Baca / Reader View**:
+  - **Navigasi Tunggal di Atas**: Hanya gunakan satu header navigasi ringkas di bagian atas dengan tombol Kembali (**Back**) yang jelas.
   - **Distraction-Free / Focus Reading**: Saat mode pembaca dibuka, sembunyikan atau minimalkan menu sidebar (*hidden/collapsed*) agar area baca lapang dan pengguna fokus membaca konten.
-  - **Estetika Konten**: Tampilan artikel di reader mode harus menyatu dengan tema Obsidian Dark, memiliki kover hero yang elegan, metadata penulis & tanggal terstruktur, serta tipografi paragraf yang nyaman di mata.
 
 ---
 
 ## 6. Lazy Loading Modul Antar-Menu (`defineAsyncComponent`)
-- **On-Demand Chunking**: Di view induk seperti [`DashboardView.vue`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/views/DashboardView.vue), semua modul menu **WAJIB** dimuat menggunakan `defineAsyncComponent`:
-  ```typescript
-  const MenuModule = defineAsyncComponent(() => import('../components/dashboard/MenuModule.vue'));
-  ```
-- **Dampak**: Initial bundle JS hanya berkisar ~67 kB. Pengguna hanya mendownload kode modul saat menu tersebut aktif diklik.
+- **On-Demand Chunking**: Di view induk seperti [`DashboardView.vue`](file:///home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/src/views/DashboardView.vue), semua modul menu **WAJIB** dimuat menggunakan `defineAsyncComponent`.
 
 ---
 
@@ -75,4 +72,3 @@ Aturan ini tidak hanya berlaku untuk Dashboard CMS, tetapi berlaku untuk **selur
   ```http
   Cache-Control: public, max-age=31536000, immutable
   ```
-  agar browser dapat melakukan cache permanen tanpa mengunduh ulang aset yang tidak berubah.

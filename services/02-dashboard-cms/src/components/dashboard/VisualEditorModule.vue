@@ -34,8 +34,6 @@ import {
   Unlock,
   Check,
   Code2,
-  LayoutGrid,
-  CreditCard,
   Server,
   Globe,
   TrendingUp,
@@ -49,11 +47,29 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  AlignJustify,
+  Bold,
+  Italic,
+  Underline,
+  Type,
+  Zap,
   Files,
   Search,
   GitBranch,
   Play,
-  RefreshCw
+  RefreshCw,
+  Cpu,
+  Database,
+  Activity,
+  Terminal,
+  Shield,
+  HardDrive,
+  Box,
+  Award,
+  Star,
+  Key,
+  Image as ImageIcon,
+  UploadCloud
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
@@ -63,9 +79,21 @@ import {
   devicePresets,
   fontFamilies,
   colorPalettes,
+  blockCategories,
+  blockCatalogItems,
+  type BlockCategory,
   createDefaultBlocks,
   createLibraryBlock,
-  type DevicePreset
+  type DevicePreset,
+  fontOptions,
+  colorPresets,
+  brandPalettes,
+  editorIconOptions,
+  animationOptions,
+  type FontOption,
+  type ColorPreset,
+  type BrandPalette,
+  type AnimationOption
 } from '../../data/editor-presets';
 
 const {
@@ -83,6 +111,58 @@ const {
 } = useDashboardData();
 
 // -----------------------------------------------------------------------------
+// Block Catalog Filter & Search State (Canva-Style Explorer)
+// -----------------------------------------------------------------------------
+const selectedCatalogCategory = ref<BlockCategory>('all');
+const catalogSearchQuery = ref('');
+
+const filteredCatalogItems = computed(() => {
+  return blockCatalogItems.filter(item => {
+    const matchCat =
+      selectedCatalogCategory.value === 'all' || item.category === selectedCatalogCategory.value;
+    const q = catalogSearchQuery.value.trim().toLowerCase();
+    const matchQuery =
+      !q ||
+      item.name.toLowerCase().includes(q) ||
+      item.desc.toLowerCase().includes(q) ||
+      item.type.toLowerCase().includes(q);
+    return matchCat && matchQuery;
+  });
+});
+
+// Interactive Component Helpers for Canvas
+const toggleAccordionItem = (block: VisualBlock, index: number) => {
+  block.activeItemIndex = block.activeItemIndex === index ? -1 : index;
+};
+
+const nextSlide = (block: VisualBlock) => {
+  const len = block.items?.length || 1;
+  block.activeItemIndex = ((block.activeItemIndex || 0) + 1) % len;
+};
+
+const prevSlide = (block: VisualBlock) => {
+  const len = block.items?.length || 1;
+  block.activeItemIndex = ((block.activeItemIndex || 0) - 1 + len) % len;
+};
+
+const setSlide = (block: VisualBlock, index: number) => {
+  block.activeItemIndex = index;
+};
+
+const toggleBlockOpen = (block: VisualBlock) => {
+  block.isOpen = !block.isOpen;
+};
+
+const selectDropdownOption = (block: VisualBlock, index: number) => {
+  block.activeItemIndex = index;
+  block.isOpen = false;
+};
+
+const setPageNumber = (block: VisualBlock, index: number) => {
+  block.activeItemIndex = index;
+};
+
+// -----------------------------------------------------------------------------
 // Studio Canvas Workspace State (Canva / Photoshop Engine)
 // -----------------------------------------------------------------------------
 
@@ -92,7 +172,7 @@ type EditorViewMode = 'design' | 'preview' | 'code';
 const activeTool = ref<ActiveTool>('select');
 const editorViewMode = ref<EditorViewMode>('design');
 const activeLeftTab = ref<'blocks' | 'layers' | 'design' | 'ai'>('blocks');
-const activeRightTab = ref<'content' | 'layout' | 'appearance'>('content');
+const activeRightTab = ref<'layout' | 'appearance'>('layout');
 
 // Studio Booting Transition & Draft State
 const isEditorBooting = ref(true);
@@ -314,7 +394,9 @@ const restoreDraftForActiveContainer = async (containerId: string) => {
       if (typeof draftData.panX === 'number') panX.value = draftData.panX;
       if (typeof draftData.panY === 'number') panY.value = draftData.panY;
       if (draftData.activeLeftTab) activeLeftTab.value = draftData.activeLeftTab;
-      if (draftData.activeRightTab) activeRightTab.value = draftData.activeRightTab;
+      if (draftData.activeRightTab) {
+        activeRightTab.value = draftData.activeRightTab === 'content' ? 'layout' : draftData.activeRightTab;
+      }
 
       const dateObj = new Date(draftData.updatedAt || Date.now());
       lastSavedDraftAt.value = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -761,6 +843,287 @@ const addBlockFromLibrary = (type: VisualBlock['type']) => {
 };
 
 const currentFont = ref('Plus Jakarta Sans');
+
+// -----------------------------------------------------------------------------
+// Rich Studio Modal: Visual & WYSIWYG Content Engine
+// -----------------------------------------------------------------------------
+const isRichEditorOpen = ref(false);
+const richEditorActiveTab = ref<'content' | 'typography' | 'appearance' | 'animation'>('content');
+const richPreviewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
+const editingBlockDraft = ref<VisualBlock | null>(null);
+const animReplayKey = ref(0);
+const richContentSurfaceRef = ref<HTMLDivElement | null>(null);
+
+const iconComponentMap: Record<string, any> = {
+  server: Server,
+  cloud: Cloud,
+  database: Database,
+  cpu: Cpu,
+  'hard-drive': HardDrive,
+  terminal: Terminal,
+  'code-2': Code2,
+  box: Box,
+  'shield-check': ShieldCheck,
+  shield: Shield,
+  lock: Lock,
+  key: Key,
+  globe: Globe,
+  'trending-up': TrendingUp,
+  zap: Zap,
+  activity: Activity,
+  rocket: Rocket,
+  check: Check,
+  sparkles: Sparkles,
+  layers: Layers,
+  award: Award,
+  star: Star,
+  sliders: Sliders
+};
+
+const getIconComponent = (iconName?: string) => {
+  if (!iconName) return Server;
+  return iconComponentMap[iconName] || Server;
+};
+
+// Interactive Icon Picker State
+const isIconPickerOpen = ref(false);
+const activeIconPickerSubIdx = ref<number | null>(null);
+const iconPickerSearchQuery = ref('');
+const selectedIconCategory = ref<'Semua' | 'Tech & Cloud' | 'Keamanan & Sistem' | 'Performa & Bisnis' | 'Desain & UI'>('Semua');
+
+const openIconPicker = (subIdx: number) => {
+  activeIconPickerSubIdx.value = subIdx;
+  iconPickerSearchQuery.value = '';
+  selectedIconCategory.value = 'Semua';
+  isIconPickerOpen.value = true;
+};
+
+const closeIconPicker = () => {
+  isIconPickerOpen.value = false;
+  activeIconPickerSubIdx.value = null;
+};
+
+const filteredIconOptions = computed(() => {
+  let list = editorIconOptions;
+  if (selectedIconCategory.value !== 'Semua') {
+    list = list.filter((item) => item.category === selectedIconCategory.value);
+  }
+  if (iconPickerSearchQuery.value.trim()) {
+    const q = iconPickerSearchQuery.value.toLowerCase();
+    list = list.filter((item) => item.name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q));
+  }
+  return list;
+});
+
+const selectIconForItem = (iconId: string) => {
+  if (
+    activeIconPickerSubIdx.value !== null &&
+    editingBlockDraft.value?.items &&
+    editingBlockDraft.value.items[activeIconPickerSubIdx.value]
+  ) {
+    editingBlockDraft.value.items[activeIconPickerSubIdx.value].icon = iconId;
+  }
+  closeIconPicker();
+};
+
+const moveSubItemUp = (idx: number) => {
+  if (!editingBlockDraft.value?.items || idx <= 0) return;
+  const items = editingBlockDraft.value.items;
+  const temp = items[idx];
+  items[idx] = items[idx - 1];
+  items[idx - 1] = temp;
+};
+
+const moveSubItemDown = (idx: number) => {
+  if (!editingBlockDraft.value?.items || idx >= editingBlockDraft.value.items.length - 1) return;
+  const items = editingBlockDraft.value.items;
+  const temp = items[idx];
+  items[idx] = items[idx + 1];
+  items[idx + 1] = temp;
+};
+
+const duplicateSubItem = (idx: number) => {
+  if (!editingBlockDraft.value?.items) return;
+  const original = editingBlockDraft.value.items[idx];
+  const copy = JSON.parse(JSON.stringify(original));
+  copy.id = 'item-' + Date.now();
+  copy.title = `${copy.title || 'Item'} (Salinan)`;
+  editingBlockDraft.value.items.splice(idx + 1, 0, copy);
+};
+
+const blockUsesIcons = (blockType?: string): boolean => {
+  return blockType === 'features' || blockType === 'showcase';
+};
+
+const blockUsesImages = (blockType?: string): boolean => {
+  return blockType === 'carousel';
+};
+
+const onSlideImageUpload = (subIdx: number, event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+  const file = target.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (
+      editingBlockDraft.value?.items &&
+      editingBlockDraft.value.items[subIdx] &&
+      e.target?.result
+    ) {
+      editingBlockDraft.value.items[subIdx].image = e.target.result as string;
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
+const removeSlideImage = (subIdx: number) => {
+  if (editingBlockDraft.value?.items && editingBlockDraft.value.items[subIdx]) {
+    editingBlockDraft.value.items[subIdx].image = '';
+  }
+};
+
+const addNewSubItem = () => {
+  if (!editingBlockDraft.value) return;
+  if (!editingBlockDraft.value.items) editingBlockDraft.value.items = [];
+  const type = editingBlockDraft.value.type;
+  const newId = 'item-' + Date.now();
+  if (type === 'accordion') {
+    editingBlockDraft.value.items.push({
+      id: newId,
+      title: 'Pertanyaan Baru',
+      desc: 'Jawaban atau penjelasan untuk pertanyaan ini...'
+    });
+  } else if (type === 'progressbar') {
+    editingBlockDraft.value.items.push({
+      id: newId,
+      title: 'Metrik Performa Baru',
+      desc: 'Keterangan kapasitas atau performa sistem',
+      percentage: 85
+    });
+  } else if (type === 'carousel') {
+    editingBlockDraft.value.items.push({
+      id: newId,
+      title: 'Slide Baru',
+      desc: 'Deskripsi singkat seputar rilis atau sorotan fitur.',
+      tag: 'Baru',
+      author: 'Studio Team',
+      image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80'
+    });
+  } else if (type === 'formcontrol') {
+    editingBlockDraft.value.items.push({
+      id: newId,
+      title: 'Field Form Baru',
+      label: 'Masukkan nilai...',
+      tag: 'text'
+    });
+  } else {
+    editingBlockDraft.value.items.push({
+      id: newId,
+      title: 'Fitur Baru',
+      desc: 'Deskripsi fitur baru...',
+      icon: 'zap'
+    });
+  }
+};
+
+const applyBrandPalette = (palette: BrandPalette) => {
+  if (!editingBlockDraft.value) return;
+  if (!editingBlockDraft.value.styles) {
+    editingBlockDraft.value.styles = {};
+  }
+  editingBlockDraft.value.styles.textColor = palette.textColor;
+  editingBlockDraft.value.styles.bgColor = palette.bgColor;
+  editingBlockDraft.value.styles.accentColor = palette.accentColor;
+};
+
+const wysiwygWordCount = computed(() => {
+  const text = (editingBlockDraft.value?.styles?.richContent || editingBlockDraft.value?.subtitle || '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+  return text ? text.split(/\s+/).length : 0;
+});
+
+const wysiwygCharCount = computed(() => {
+  const text = (editingBlockDraft.value?.styles?.richContent || editingBlockDraft.value?.subtitle || '')
+    .replace(/<[^>]*>/g, '');
+  return text.length;
+});
+
+const openRichModalEditor = (block: VisualBlock) => {
+  editingBlockDraft.value = JSON.parse(JSON.stringify(block));
+  if (!editingBlockDraft.value?.styles) {
+    editingBlockDraft.value!.styles = {};
+  }
+  if (!editingBlockDraft.value?.styles.richContent) {
+    editingBlockDraft.value!.styles.richContent =
+      editingBlockDraft.value?.subtitle || editingBlockDraft.value?.title || '';
+  }
+  if (!editingBlockDraft.value?.styles.animation) {
+    editingBlockDraft.value!.styles.animation = 'none';
+  }
+  if (!editingBlockDraft.value?.styles.fontFamily) {
+    editingBlockDraft.value!.styles.fontFamily = "'Plus Jakarta Sans', system-ui, sans-serif";
+  }
+  richEditorActiveTab.value = 'content';
+  isRichEditorOpen.value = true;
+};
+
+const closeRichModalEditor = () => {
+  isRichEditorOpen.value = false;
+  editingBlockDraft.value = null;
+};
+
+const onWysiwygInput = () => {
+  if (richContentSurfaceRef.value && editingBlockDraft.value?.styles) {
+    editingBlockDraft.value.styles.richContent = richContentSurfaceRef.value.innerHTML;
+  }
+};
+
+const applyRichModalEditor = () => {
+  if (!editingBlockDraft.value) return;
+  const idx = pageBlocks.value.findIndex((b) => b.id === editingBlockDraft.value?.id);
+  if (idx !== -1) {
+    if (richContentSurfaceRef.value && editingBlockDraft.value.styles) {
+      editingBlockDraft.value.styles.richContent = richContentSurfaceRef.value.innerHTML;
+    }
+    pageBlocks.value[idx] = JSON.parse(JSON.stringify(editingBlockDraft.value));
+    selectedBlockId.value = editingBlockDraft.value.id;
+    showToast(`Perubahan '${editingBlockDraft.value.name}' berhasil diterapkan!`, 'success');
+  }
+  isRichEditorOpen.value = false;
+  editingBlockDraft.value = null;
+};
+
+const replayPreviewAnimation = () => {
+  animReplayKey.value += 1;
+};
+
+const formatWysiwyg = (cmd: string, val: string | undefined = undefined) => {
+  document.execCommand(cmd, false, val);
+  if (richContentSurfaceRef.value && editingBlockDraft.value?.styles) {
+    editingBlockDraft.value.styles.richContent = richContentSurfaceRef.value.innerHTML;
+  }
+};
+
+const setEditingFont = (font: FontOption) => {
+  if (editingBlockDraft.value?.styles) {
+    editingBlockDraft.value.styles.fontFamily = font.family;
+  }
+};
+
+const setEditingColor = (color: ColorPreset, type: 'text' | 'bg' | 'accent') => {
+  if (!editingBlockDraft.value?.styles) return;
+  if (type === 'text') editingBlockDraft.value.styles.textColor = color.textHex;
+  if (type === 'bg') editingBlockDraft.value.styles.bgColor = color.hex;
+  if (type === 'accent') editingBlockDraft.value.styles.accentColor = color.hex;
+};
+
+const setEditingAnimation = (anim: AnimationOption['id']) => {
+  if (editingBlockDraft.value?.styles) {
+    editingBlockDraft.value.styles.animation = anim;
+    replayPreviewAnimation();
+  }
+};
 
 // JSON Schema Modal
 const isCodeModalOpen = ref(false);
@@ -1595,56 +1958,247 @@ const executeVsCodeReplaceAll = () => {
 
           <!-- Dock Body -->
           <div class="dock-tab-body">
-            <!-- TAB 1: BLOCKS LIBRARY -->
+            <!-- TAB 1: BLOCKS LIBRARY (Canva/Figma Component Picker) -->
             <div v-if="activeLeftTab === 'blocks'" class="dock-blocks-catalog">
-              <div class="dock-section-head">
-                <h4>Katalog Blok Website</h4>
-                <p>Klik blok di bawah untuk menambahkannya langsung ke halaman.</p>
+              <div class="dock-catalog-header">
+                <div class="dock-section-head" style="margin-bottom: 0;">
+                  <h4>Katalog Blok Website</h4>
+                  <p>Pilih dan tambahkan komponen visual kaya ke kanvas halaman.</p>
+                </div>
+
+                <!-- Live Search Box -->
+                <div class="dock-search-box">
+                  <Search :size="13" class="search-icon" />
+                  <input
+                    v-model="catalogSearchQuery"
+                    type="text"
+                    placeholder="Cari blok (progress, slide, modal, card)..."
+                    class="catalog-search-input"
+                  />
+                  <button
+                    v-if="catalogSearchQuery"
+                    class="catalog-clear-btn"
+                    @click="catalogSearchQuery = ''"
+                    title="Hapus pencarian"
+                  >
+                    <X :size="11" />
+                  </button>
+                </div>
+
+                <!-- Category Filter Chips -->
+                <div class="catalog-category-chips">
+                  <button
+                    v-for="cat in blockCategories"
+                    :key="cat.id"
+                    class="cat-chip-btn"
+                    :class="{ active: selectedCatalogCategory === cat.id }"
+                    @click="selectedCatalogCategory = cat.id"
+                  >
+                    {{ cat.label }}
+                  </button>
+                </div>
+
+                <!-- Count Bar -->
+                <div class="catalog-count-bar">
+                  <span>Komponen Tersedia</span>
+                  <span class="catalog-count-badge">{{ filteredCatalogItems.length }} Blok</span>
+                </div>
               </div>
 
+              <!-- Visual Wireframe Cards Grid -->
               <div class="block-cards-grid">
-                <div class="block-add-card" @click="addBlockFromLibrary('hero')">
-                  <div class="card-icon-bubble">
-                    <LayoutGrid :size="18" />
+                <div
+                  v-for="item in filteredCatalogItems"
+                  :key="item.id"
+                  class="visual-wireframe-card"
+                  @click="addBlockFromLibrary(item.type)"
+                  :title="'Tambah ' + item.name + ' ke Kanvas'"
+                >
+                  <!-- Top Bar: Category Pill & Quick Add Button -->
+                  <div class="card-top-row">
+                    <span class="card-badge-pill">{{ item.badge || 'KOMPONEN' }}</span>
+                    <span class="btn-quick-add">
+                      <Plus :size="12" /> Tambah
+                    </span>
                   </div>
-                  <div class="card-meta">
-                    <strong>Hero Showcase</strong>
-                    <span>Banner visual tajam dengan headline & tombol aksi</span>
-                  </div>
-                  <Plus :size="14" class="icon-add-plus" />
-                </div>
 
-                <div class="block-add-card" @click="addBlockFromLibrary('features')">
-                  <div class="card-icon-bubble">
-                    <Server :size="18" />
-                  </div>
-                  <div class="card-meta">
-                    <strong>Bento Features Grid</strong>
-                    <span>Grid 3 kartu keunggulan dengan ikon modern</span>
-                  </div>
-                  <Plus :size="14" class="icon-add-plus" />
-                </div>
+                  <!-- CANVA-STYLE MINI VISUAL WIREFRAME PREVIEW -->
+                  <div class="block-wireframe-preview" :class="'wf-' + item.previewWireframe">
+                    <!-- 1. Navbar Wireframe -->
+                    <div v-if="item.previewWireframe === 'navbar'" class="mini-wf-navbar">
+                      <div class="mini-brand"><span class="mini-dot"></span><span>STUDIO</span></div>
+                      <div class="mini-links"><span></span><span></span><span></span></div>
+                      <div class="mini-pill-btn"></div>
+                    </div>
 
-                <div class="block-add-card" @click="addBlockFromLibrary('pricing')">
-                  <div class="card-icon-bubble">
-                    <CreditCard :size="18" />
-                  </div>
-                  <div class="card-meta">
-                    <strong>Tabel Harga / Paket</strong>
-                    <span>Daftar paket transparan dengan checklist fitur</span>
-                  </div>
-                  <Plus :size="14" class="icon-add-plus" />
-                </div>
+                    <!-- 2. Hero Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'hero'" class="mini-wf-hero">
+                      <div class="mini-badge-line"></div>
+                      <div class="mini-title-line"></div>
+                      <div class="mini-desc-line"></div>
+                      <div class="mini-buttons-row">
+                        <div class="mini-btn primary"></div>
+                        <div class="mini-btn secondary"></div>
+                      </div>
+                    </div>
 
-                <div class="block-add-card" @click="addBlockFromLibrary('cta')">
-                  <div class="card-icon-bubble">
-                    <Rocket :size="18" />
+                    <!-- 3. Features Bento Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'features'" class="mini-wf-bento">
+                      <div v-for="i in 3" :key="i" class="mini-bento-tile">
+                        <span class="mini-icon-circle"></span>
+                        <span class="mini-line-sm"></span>
+                        <span class="mini-line-xs"></span>
+                      </div>
+                    </div>
+
+                    <!-- 4. Progress Bar Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'progressbar'" class="mini-wf-progress">
+                      <div class="mini-pg-row">
+                        <div class="mini-pg-label"><span>Lighthouse Core</span><span>95%</span></div>
+                        <div class="mini-pg-track"><div class="mini-pg-fill" style="width: 95%"></div></div>
+                      </div>
+                      <div class="mini-pg-row">
+                        <div class="mini-pg-label"><span>Docker RAM</span><span>72%</span></div>
+                        <div class="mini-pg-track"><div class="mini-pg-fill" style="width: 72%"></div></div>
+                      </div>
+                      <div class="mini-pg-row">
+                        <div class="mini-pg-label"><span>SSL Ingress</span><span>100%</span></div>
+                        <div class="mini-pg-track"><div class="mini-pg-fill" style="width: 100%"></div></div>
+                      </div>
+                    </div>
+
+                    <!-- 5. Accordion Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'accordion'" class="mini-wf-accordion">
+                      <div class="mini-acc-item open">
+                        <div class="mini-acc-head"><span>Isolasi cgroups v2</span><span class="mini-chevron">▼</span></div>
+                        <div class="mini-acc-body"><span class="mini-line-xs"></span><span class="mini-line-xs w-75"></span></div>
+                      </div>
+                      <div class="mini-acc-item">
+                        <div class="mini-acc-head"><span>Otomatisasi SSL TLS</span><span class="mini-chevron">▶</span></div>
+                      </div>
+                      <div class="mini-acc-item">
+                        <div class="mini-acc-head"><span>Koneksi Custom Domain</span><span class="mini-chevron">▶</span></div>
+                      </div>
+                    </div>
+
+                    <!-- 6. Carousel Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'carousel'" class="mini-wf-carousel">
+                      <div class="mini-carousel-arrows">
+                        <span class="mini-arrow">&lt;</span>
+                        <div class="mini-slide-content">
+                          <span class="mini-slide-tag">Rilis 2.4</span>
+                          <span class="mini-line-sm"></span>
+                        </div>
+                        <span class="mini-arrow">&gt;</span>
+                      </div>
+                      <div class="mini-carousel-dots">
+                        <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+                      </div>
+                    </div>
+
+                    <!-- 7. Form Control Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'formcontrol'" class="mini-wf-form">
+                      <div class="mini-form-row"><span class="mini-input-field">Nama Lengkap...</span></div>
+                      <div class="mini-form-row"><span class="mini-input-field">name@domain.com</span></div>
+                      <div class="mini-form-row split">
+                        <span class="mini-select-field">Pilih Layanan ▼</span>
+                        <span class="mini-submit-btn">Kirim</span>
+                      </div>
+                    </div>
+
+                    <!-- 8. Card Grid Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'card'" class="mini-wf-cards">
+                      <div v-for="i in 3" :key="i" class="mini-card-col">
+                        <div class="mini-card-img"></div>
+                        <span class="mini-line-sm"></span>
+                        <span class="mini-line-xs"></span>
+                      </div>
+                    </div>
+
+                    <!-- 9. Modal Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'modal'" class="mini-wf-modal-backdrop">
+                      <div class="mini-wf-modal-dialog">
+                        <div class="mini-modal-head"><span>Akses Pro</span><span class="mini-close">&times;</span></div>
+                        <span class="mini-line-xs"></span>
+                        <div class="mini-modal-btns">
+                          <span class="mini-btn-xs cancel">Tutup</span>
+                          <span class="mini-btn-xs ok">Klaim</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 10. Dropdown Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'dropdown'" class="mini-wf-dropdown">
+                      <div class="mini-dropdown-trigger">
+                        <span>Filter Kategori</span>
+                        <span class="mini-arrow">▼</span>
+                      </div>
+                      <div class="mini-dropdown-menu">
+                        <span class="mini-dd-item active">✓ Cloud & Docker</span>
+                        <span class="mini-dd-item">Studio UI/UX</span>
+                      </div>
+                    </div>
+
+                    <!-- 11. List Group Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'listgroup'" class="mini-wf-listgroup">
+                      <div class="mini-lg-row active"><span class="mini-chk">✓</span><span>Domain Otomatis</span></div>
+                      <div class="mini-lg-row"><span class="mini-chk">✓</span><span>cgroups v2 Kernel</span></div>
+                      <div class="mini-lg-row"><span class="mini-chk">✓</span><span>BFF Go Latensi 1ms</span></div>
+                    </div>
+
+                    <!-- 12. Pricing Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'pricing'" class="mini-wf-pricing">
+                      <div class="mini-price-col"><span>49k</span><div class="mini-btn-xs">Pilih</div></div>
+                      <div class="mini-price-col popular"><span class="pop-pill">PRO</span><span>149k</span><div class="mini-btn-xs pop">Pilih</div></div>
+                      <div class="mini-price-col"><span>399k</span><div class="mini-btn-xs">Pilih</div></div>
+                    </div>
+
+                    <!-- 13. Stats Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'stats'" class="mini-wf-stats">
+                      <div class="mini-stat-tile"><strong>99.98%</strong><span>Uptime</span></div>
+                      <div class="mini-stat-tile"><strong>1.2ms</strong><span>Latency</span></div>
+                      <div class="mini-stat-tile"><strong>12.8M</strong><span>Requests</span></div>
+                      <div class="mini-stat-tile"><strong>256MB</strong><span>RAM</span></div>
+                    </div>
+
+                    <!-- 14. CTA Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'cta'" class="mini-wf-cta">
+                      <span class="mini-cta-title">Siap Deploy Website?</span>
+                      <span class="mini-cta-btn">Mulai Sekarang</span>
+                    </div>
+
+                    <!-- 15. Pagination Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'pagination'" class="mini-wf-pagination">
+                      <span class="mini-pg-btn">&laquo;</span>
+                      <span class="mini-pg-btn">1</span>
+                      <span class="mini-pg-btn active">2</span>
+                      <span class="mini-pg-btn">3</span>
+                      <span class="mini-pg-btn">&raquo;</span>
+                    </div>
+
+                    <!-- 16. Breadcrumb Wireframe -->
+                    <div v-else-if="item.previewWireframe === 'breadcrumb'" class="mini-wf-breadcrumb">
+                      <span>Home</span><span class="slash">/</span>
+                      <span>Docs</span><span class="slash">/</span>
+                      <span class="active">Editor</span>
+                    </div>
+
+                    <!-- 17. Footer Wireframe -->
+                    <div v-else class="mini-wf-footer">
+                      <div class="mini-ft-cols">
+                        <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
+                        <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
+                        <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
+                      </div>
+                      <div class="mini-ft-copy"><span>© 2026 HeroCMS Studio</span></div>
+                    </div>
                   </div>
+
+                  <!-- Bottom Meta -->
                   <div class="card-meta">
-                    <strong>Call To Action Banner</strong>
-                    <span>Pusat konversi pengunjung dengan efek glowing</span>
+                    <strong>{{ item.name }}</strong>
+                    <span>{{ item.desc }}</span>
                   </div>
-                  <Plus :size="14" class="icon-add-plus" />
                 </div>
               </div>
             </div>
@@ -1911,9 +2465,21 @@ const executeVsCodeReplaceAll = () => {
                     :class="{
                       'is-selected': selectedBlockId === block.id && editorViewMode === 'design',
                       'is-hovered': hoveredBlockId === block.id && editorViewMode === 'design',
-                      'is-locked': block.isLocked
+                      'is-locked': block.isLocked,
+                      [block.styles?.animation && block.styles.animation !== 'none' ? 'anim-' + block.styles.animation : '']: true
+                    }"
+                    :style="{
+                      backgroundColor: block.styles?.bgColor,
+                      color: block.styles?.textColor,
+                      fontFamily: block.styles?.fontFamily,
+                      fontWeight: block.styles?.fontWeight,
+                      letterSpacing: block.styles?.letterSpacing ? `${block.styles.letterSpacing}px` : undefined,
+                      textTransform: block.styles?.textTransform,
+                      animationDuration: block.styles?.animationDuration ? `${block.styles.animationDuration}s` : undefined,
+                      '--accent-brand': block.styles?.accentColor || activeContainer.accentColor
                     }"
                     @click="selectBlock(block.id, $event)"
+                    @dblclick="openRichModalEditor(block)"
                     @mouseenter="hoveredBlockId = block.id"
                     @mouseleave="hoveredBlockId = null"
                   >
@@ -1928,6 +2494,16 @@ const executeVsCodeReplaceAll = () => {
                       <!-- Floating Action Bar Attached to Selected Block -->
                       <div class="floating-selection-bar" @click.stop>
                         <span class="selection-tag-pill">◆ {{ block.name }}</span>
+                        <div class="bar-divider"></div>
+                        <!-- Tombol Buka Editor Konten, Tipografi, Warna & Animasi -->
+                        <button
+                          type="button"
+                          class="float-btn highlight-edit-btn"
+                          @click="openRichModalEditor(block)"
+                          title="Buka Editor Konten, Tipografi, Warna & Animasi"
+                        >
+                          <Edit3 :size="12" /> Edit Konten & Gaya
+                        </button>
                         <div class="bar-divider"></div>
                         <button class="float-btn" @click="moveBlockUp(block.id)" title="Pindah ke Atas">
                           <ChevronUp :size="13" />
@@ -1954,7 +2530,7 @@ const executeVsCodeReplaceAll = () => {
                       class="rendered-nav-block"
                       :style="{ padding: `${block.styles?.paddingY || 16}px 32px` }"
                     >
-                      <div class="site-brand-logo" :style="{ color: activeContainer.accentColor }">
+                      <div class="site-brand-logo" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">
                         <span class="brand-cube-icon">◆</span>
                         <span class="brand-title">{{ block.title }}</span>
                       </div>
@@ -1963,7 +2539,7 @@ const executeVsCodeReplaceAll = () => {
                         <a href="#features" class="nav-anchor">Keunggulan</a>
                         <a href="#pricing" class="nav-anchor">Layanan</a>
                         <a href="#cta" class="nav-anchor">Kontak</a>
-                        <button class="btn-nav-action" :style="{ backgroundColor: activeContainer.accentColor }">
+                        <button class="btn-nav-action" :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }">
                           {{ block.buttonText || 'Hubungi Saya' }}
                         </button>
                       </div>
@@ -1982,7 +2558,7 @@ const executeVsCodeReplaceAll = () => {
                       <div
                         class="ambient-mesh-glow"
                         :style="{
-                          background: `radial-gradient(circle, ${activeContainer.accentColor}33 0%, transparent 70%)`
+                          background: `radial-gradient(circle, ${(block.styles?.accentColor || activeContainer.accentColor)}33 0%, transparent 70%)`
                         }"
                       ></div>
 
@@ -1990,9 +2566,9 @@ const executeVsCodeReplaceAll = () => {
                         v-if="block.badge"
                         class="hero-badge-tag"
                         :style="{
-                          color: activeContainer.accentColor,
-                          borderColor: activeContainer.accentColor + '40',
-                          backgroundColor: activeContainer.accentColor + '12'
+                          color: block.styles?.accentColor || activeContainer.accentColor,
+                          borderColor: (block.styles?.accentColor || activeContainer.accentColor) + '40',
+                          backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
                         }"
                       >
                         <span>{{ block.badge }}</span>
@@ -2002,14 +2578,15 @@ const executeVsCodeReplaceAll = () => {
                         {{ block.title }}
                       </h1>
 
-                      <p class="hero-bio-lead">
+                      <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="hero-bio-lead"></div>
+                      <p v-else class="hero-bio-lead">
                         {{ block.subtitle }}
                       </p>
 
                       <div class="hero-cta-cluster">
                         <button
                           class="btn-primary-glow"
-                          :style="{ backgroundColor: activeContainer.accentColor }"
+                          :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
                         >
                           <span>{{ block.buttonText || 'Eksplorasi Karya' }}</span>
                           <ArrowRight :size="14" />
@@ -2022,14 +2599,15 @@ const executeVsCodeReplaceAll = () => {
 
                     <!-- BLOCK TYPE 3: FEATURES GRID -->
                     <section
-                      v-else-if="block.type === 'features'"
+                      v-else-if="block.type === 'features' || block.type === 'showcase'"
                       class="rendered-features-block"
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
-                      <div class="section-title-wrap">
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="features-cards-trio">
@@ -2041,13 +2619,11 @@ const executeVsCodeReplaceAll = () => {
                           <div
                             class="card-icon-pill"
                             :style="{
-                              color: activeContainer.accentColor,
-                              backgroundColor: activeContainer.accentColor + '12'
+                              color: block.styles?.accentColor || activeContainer.accentColor,
+                              backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
                             }"
                           >
-                            <Server v-if="item.icon === 'server'" :size="20" />
-                            <Globe v-else-if="item.icon === 'globe'" :size="20" />
-                            <TrendingUp v-else :size="20" />
+                            <component :is="getIconComponent(item.icon)" :size="20" />
                           </div>
                           <h3 class="card-item-title">{{ item.title }}</h3>
                           <p class="card-item-desc">{{ item.desc }}</p>
@@ -2061,10 +2637,11 @@ const executeVsCodeReplaceAll = () => {
                       class="rendered-pricing-block"
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
-                      <div class="section-title-wrap">
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="pricing-cards-row">
@@ -2074,7 +2651,7 @@ const executeVsCodeReplaceAll = () => {
                           class="price-tier-card"
                           :class="{ featured: item.tag === 'Terpopuler' }"
                         >
-                          <span v-if="item.tag" class="tier-tag-pill" :style="{ backgroundColor: activeContainer.accentColor }">
+                          <span v-if="item.tag" class="tier-tag-pill" :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }">
                             {{ item.tag }}
                           </span>
                           <h4 class="tier-name">{{ item.title }}</h4>
@@ -2085,14 +2662,14 @@ const executeVsCodeReplaceAll = () => {
                           <p class="tier-desc">{{ item.desc }}</p>
                           <ul v-if="item.features" class="tier-feature-list">
                             <li v-for="(f, fi) in item.features" :key="fi">
-                              <Check :size="13" :color="activeContainer.accentColor" />
+                              <Check :size="13" :color="block.styles?.accentColor || activeContainer.accentColor" />
                               <span>{{ f }}</span>
                             </li>
                           </ul>
                           <button
                             class="btn-tier-action"
                             :style="{
-                              backgroundColor: item.tag === 'Terpopuler' ? activeContainer.accentColor : '#f1f5f9',
+                              backgroundColor: item.tag === 'Terpopuler' ? (block.styles?.accentColor || activeContainer.accentColor) : '#f1f5f9',
                               color: item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a'
                             }"
                           >
@@ -2111,20 +2688,385 @@ const executeVsCodeReplaceAll = () => {
                       <div
                         class="cta-inner-banner"
                         :style="{
-                          borderColor: activeContainer.accentColor + '30',
-                          background: `linear-gradient(135deg, ${activeContainer.accentColor}15 0%, #ffffff80 100%)`
+                          borderColor: (block.styles?.accentColor || activeContainer.accentColor) + '30',
+                          background: `linear-gradient(135deg, ${(block.styles?.accentColor || activeContainer.accentColor)}15 0%, #ffffff80 100%)`
                         }"
                       >
                         <h2 class="cta-heading">{{ block.title }}</h2>
-                        <p class="cta-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="cta-lead"></div>
+                        <p v-else class="cta-lead">{{ block.subtitle }}</p>
                         <button
                           class="btn-cta-big"
-                          :style="{ backgroundColor: activeContainer.accentColor }"
+                          :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
                         >
                           {{ block.buttonText || 'Mulai Sekarang' }}
                         </button>
                       </div>
                     </section>
+
+                    <!-- BLOCK TYPE: PROGRESS BAR -->
+                    <section
+                      v-else-if="block.type === 'progressbar'"
+                      class="rendered-progressbar-block"
+                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="progress-meters-grid">
+                        <div
+                          v-for="item in block.items"
+                          :key="item.id"
+                          class="progress-meter-card"
+                        >
+                          <div class="pm-head">
+                            <span class="pm-title">{{ item.title }}</span>
+                            <span class="pm-val" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">{{ item.percentage || 0 }}%</span>
+                          </div>
+                          <div class="pm-track">
+                            <div
+                              class="pm-fill"
+                              :style="{
+                                width: (item.percentage || 0) + '%',
+                                background: `linear-gradient(90deg, ${block.styles?.accentColor || activeContainer.accentColor}, #38bdf8)`
+                              }"
+                            ></div>
+                          </div>
+                          <p v-if="item.desc" class="pm-desc">{{ item.desc }}</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: ACCORDION / COLLAPSE -->
+                    <section
+                      v-else-if="block.type === 'accordion'"
+                      class="rendered-accordion-block"
+                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="accordion-items-stack">
+                        <div
+                          v-for="(item, idx) in block.items"
+                          :key="item.id"
+                          class="accordion-card-item"
+                          :class="{ 'is-expanded': (block.activeItemIndex ?? 0) === idx }"
+                        >
+                          <button class="acc-card-trigger" @click.stop="toggleAccordionItem(block, idx)">
+                            <span class="acc-card-title">{{ item.title }}</span>
+                            <ChevronDown :size="16" class="acc-card-icon" />
+                          </button>
+                          <div v-if="(block.activeItemIndex ?? 0) === idx" class="acc-card-content">
+                            {{ item.desc }}
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: CAROUSEL / SLIDER -->
+                    <section
+                      v-else-if="block.type === 'carousel'"
+                      class="rendered-carousel-block"
+                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="carousel-stage-container">
+                        <div v-if="block.items && block.items.length > 0" class="carousel-slide-card">
+                          <div v-if="block.items[block.activeItemIndex || 0]?.image" class="carousel-slide-img-wrap">
+                            <img
+                              :src="block.items[block.activeItemIndex || 0].image"
+                              :alt="block.items[block.activeItemIndex || 0].title || 'Slide Image'"
+                              class="carousel-slide-img"
+                            />
+                          </div>
+                          <span v-if="block.items[block.activeItemIndex || 0]?.tag" class="carousel-tag-badge">
+                            {{ block.items[block.activeItemIndex || 0]?.tag }}
+                          </span>
+                          <h3 class="carousel-headline">{{ block.items[block.activeItemIndex || 0]?.title }}</h3>
+                          <p class="carousel-lead-desc">{{ block.items[block.activeItemIndex || 0]?.desc }}</p>
+                          <span v-if="block.items[block.activeItemIndex || 0]?.author" class="carousel-author-credit">
+                            — {{ block.items[block.activeItemIndex || 0]?.author }}
+                          </span>
+                        </div>
+
+                        <!-- Carousel Nav Arrows -->
+                        <div class="carousel-nav-arrows">
+                          <button class="carousel-arrow-btn" @click.stop="prevSlide(block)" title="Slide Sebelumnya">
+                            <ArrowLeft :size="16" />
+                          </button>
+                          <button class="carousel-arrow-btn" @click.stop="nextSlide(block)" title="Slide Berikutnya">
+                            <ArrowRight :size="16" />
+                          </button>
+                        </div>
+
+                        <!-- Dots -->
+                        <div class="carousel-dots-indicator">
+                          <button
+                            v-for="(item, sIdx) in block.items"
+                            :key="item.id"
+                            class="carousel-dot"
+                            :class="{ active: (block.activeItemIndex || 0) === sIdx }"
+                            @click.stop="setSlide(block, sIdx)"
+                          ></button>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: FORM CONTROL -->
+                    <section
+                      v-else-if="block.type === 'formcontrol'"
+                      class="rendered-formcontrol-block"
+                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="form-card-container">
+                        <form class="form-fields-stack" @submit.prevent>
+                          <div v-for="item in block.items" :key="item.id" class="form-field-group">
+                            <label class="form-field-label">{{ item.title }}</label>
+                            <select v-if="item.tag === 'select'" class="form-rendered-select">
+                              <option>Pilihan 1: Solusi Cloud & Docker</option>
+                              <option>Pilihan 2: Visual Studio CMS</option>
+                              <option>Pilihan 3: Domain & Edge SSL</option>
+                            </select>
+                            <textarea
+                              v-else-if="item.tag === 'textarea'"
+                              rows="3"
+                              class="form-rendered-textarea"
+                              :placeholder="item.label || item.desc"
+                            ></textarea>
+                            <input
+                              v-else
+                              :type="item.tag || 'text'"
+                              class="form-rendered-input"
+                              :placeholder="item.label || item.desc"
+                            />
+                          </div>
+                          <button
+                            class="btn-form-submit"
+                            :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
+                          >
+                            {{ block.buttonText || 'Kirim Pesan Sekarang' }}
+                          </button>
+                        </form>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: MODAL -->
+                    <section
+                      v-else-if="block.type === 'modal'"
+                      class="rendered-modal-block"
+                      :style="{ padding: `${block.styles?.paddingY || 48}px 32px` }"
+                    >
+                      <div class="modal-preview-stage">
+                        <div class="modal-stage-header">
+                          <span class="modal-stage-badge">{{ block.badge || 'POPUP PROMOSI' }}</span>
+                          <button class="modal-stage-close" @click.stop="toggleBlockOpen(block)">
+                            <X :size="14" />
+                          </button>
+                        </div>
+                        <div class="modal-stage-body">
+                          <h3 class="modal-stage-title">{{ block.title }}</h3>
+                          <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="modal-stage-desc"></div>
+                          <p v-else class="modal-stage-desc">{{ block.subtitle }}</p>
+                          <div class="modal-stage-actions">
+                            <button class="btn-modal-secondary" @click.stop>
+                              {{ block.secondaryButtonText || 'Nanti Saja' }}
+                            </button>
+                            <button
+                              class="btn-modal-primary"
+                              :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
+                              @click.stop
+                            >
+                              {{ block.buttonText || 'Klaim Sekarang' }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: DROPDOWN -->
+                    <section
+                      v-else-if="block.type === 'dropdown'"
+                      class="rendered-dropdown-block"
+                      :style="{ padding: `${block.styles?.paddingY || 36}px 32px` }"
+                    >
+                      <div class="dropdown-component-card">
+                        <div class="section-title-wrap" style="margin-bottom: 12px; text-align: left;">
+                          <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                          <h3 class="sec-headline" style="font-size: 1.1rem;">{{ block.title }}</h3>
+                          <div v-if="block.styles?.richContent" v-html="block.styles.richContent" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;"></div>
+                          <p v-else-if="block.subtitle" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">{{ block.subtitle }}</p>
+                        </div>
+                        <button class="dropdown-trigger-btn" @click.stop="toggleBlockOpen(block)">
+                          <span>{{ block.items?.[block.activeItemIndex || 0]?.title || 'Pilih Kategori...' }}</span>
+                          <ChevronDown :size="16" />
+                        </button>
+                        <div v-if="block.isOpen" class="dropdown-options-list">
+                          <div
+                            v-for="(item, dIdx) in block.items"
+                            :key="item.id"
+                            class="dropdown-option-row"
+                            :class="{ 'is-selected': (block.activeItemIndex || 0) === dIdx }"
+                            @click.stop="selectDropdownOption(block, dIdx)"
+                          >
+                            <span>{{ item.title }}</span>
+                            <span v-if="item.desc" style="font-size: 0.72rem; color: #94a3b8;">{{ item.desc }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: CARDS GRID -->
+                    <section
+                      v-else-if="block.type === 'card'"
+                      class="rendered-card-block"
+                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="cards-showcase-grid">
+                        <div
+                          v-for="item in block.items"
+                          :key="item.id"
+                          class="showcase-grid-card"
+                        >
+                          <div class="card-header-banner">
+                            <span v-if="item.tag" class="card-tag-pill">{{ item.tag }}</span>
+                          </div>
+                          <div class="card-body-content">
+                            <h3 class="card-grid-title">{{ item.title }}</h3>
+                            <p class="card-grid-desc">{{ item.desc }}</p>
+                            <span v-if="item.role" class="card-role-label">Peran: {{ item.role }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: LIST GROUP -->
+                    <section
+                      v-else-if="block.type === 'listgroup'"
+                      class="rendered-listgroup-block"
+                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="listgroup-stack-card">
+                        <div
+                          v-for="item in block.items"
+                          :key="item.id"
+                          class="listgroup-item-row"
+                        >
+                          <span class="lg-check-icon"><Check :size="14" /></span>
+                          <div class="lg-text-meta">
+                            <span class="lg-item-title">{{ item.title }}</span>
+                            <span v-if="item.desc" class="lg-item-desc">{{ item.desc }}</span>
+                          </div>
+                          <span v-if="item.tag" class="lg-badge-tag">{{ item.tag }}</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: STATS -->
+                    <section
+                      v-else-if="block.type === 'stats'"
+                      class="rendered-stats-block"
+                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
+                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
+                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                      </div>
+
+                      <div class="stats-counters-row">
+                        <div
+                          v-for="item in block.items"
+                          :key="item.id"
+                          class="stat-counter-box"
+                        >
+                          <span class="stat-number-val">{{ item.title }}</span>
+                          <span class="stat-number-desc">{{ item.desc }}</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: PAGINATION -->
+                    <section
+                      v-else-if="block.type === 'pagination'"
+                      class="rendered-pagination-block"
+                      :style="{ padding: `${block.styles?.paddingY || 32}px 32px` }"
+                    >
+                      <div v-if="block.subtitle" style="text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">
+                        {{ block.subtitle }}
+                      </div>
+                      <div class="pagination-controls-row">
+                        <button class="pagination-btn" title="Sebelumnya">&laquo;</button>
+                        <button
+                          v-for="(item, pIdx) in block.items"
+                          :key="item.id"
+                          class="pagination-btn"
+                          :class="{ 'is-active': (block.activeItemIndex || 0) === pIdx }"
+                          @click.stop="setPageNumber(block, pIdx)"
+                        >
+                          {{ item.title }}
+                        </button>
+                        <button class="pagination-btn" title="Berikutnya">&raquo;</button>
+                      </div>
+                    </section>
+
+                    <!-- BLOCK TYPE: BREADCRUMB -->
+                    <nav
+                      v-else-if="block.type === 'breadcrumb'"
+                      class="rendered-breadcrumb-block"
+                      :style="{ padding: `${block.styles?.paddingY || 20}px 32px` }"
+                    >
+                      <div class="breadcrumb-trail-nav">
+                        <template v-for="(item, bIdx) in block.items" :key="item.id">
+                          <span v-if="bIdx > 0" class="bc-sep-icon">/</span>
+                          <a
+                            v-if="bIdx < (block.items?.length || 1) - 1"
+                            :href="item.url || '#'"
+                            class="bc-item-anchor"
+                            @click.prevent
+                          >
+                            {{ item.title }}
+                          </a>
+                          <span v-else class="bc-item-current">{{ item.title }}</span>
+                        </template>
+                      </div>
+                    </nav>
 
                     <!-- BLOCK TYPE 6: FOOTER -->
                     <footer
@@ -2135,7 +3077,7 @@ const executeVsCodeReplaceAll = () => {
                       <div class="footer-divider-line"></div>
                       <div class="footer-content-row">
                         <div class="footer-brand">
-                          <span class="brand-cube-icon" :style="{ color: activeContainer.accentColor }">◆</span>
+                          <span class="brand-cube-icon" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">◆</span>
                           <strong>{{ block.title }}</strong>
                         </div>
                         <p class="footer-copy">{{ block.subtitle }}</p>
@@ -2585,14 +3527,6 @@ const executeVsCodeReplaceAll = () => {
           <div class="inspector-tabs-bar">
             <button
               class="insp-tab-btn"
-              :class="{ active: activeRightTab === 'content' }"
-              @click="activeRightTab = 'content'"
-            >
-              <Edit3 :size="13" />
-              <span>Konten</span>
-            </button>
-            <button
-              class="insp-tab-btn"
               :class="{ active: activeRightTab === 'layout' }"
               @click="activeRightTab = 'layout'"
             >
@@ -2605,95 +3539,15 @@ const executeVsCodeReplaceAll = () => {
               @click="activeRightTab = 'appearance'"
             >
               <Palette :size="13" />
-              <span>Visual</span>
+              <span>Visual & Efek</span>
             </button>
           </div>
 
           <!-- Inspector Content Body -->
           <div class="inspector-scroll-area">
             <template v-if="selectedBlock">
-              <!-- Selected Block Header Card -->
-              <div class="selected-block-card">
-                <div class="block-card-top">
-                  <span class="badge-block-type">{{ selectedBlock.type.toUpperCase() }}</span>
-                  <span class="badge-block-status">
-                    <span class="status-indicator-dot"></span>
-                    Aktif
-                  </span>
-                </div>
-                <h3 class="block-card-title">{{ selectedBlock.name }}</h3>
-              </div>
-
-              <!-- TAB 1: KONTEN TEKS & TOMBOL -->
-              <div v-if="activeRightTab === 'content'" class="tab-pane-inspector">
-                <!-- Badge Text -->
-                <div v-if="selectedBlock.badge !== undefined" class="field-item">
-                  <label class="field-label">Label Kategori / Badge</label>
-                  <div class="field-input-box">
-                    <input
-                      type="text"
-                      v-model="selectedBlock.badge"
-                      class="field-input"
-                      placeholder="Misal: DOCKER RUNTIME"
-                    />
-                  </div>
-                </div>
-
-                <!-- Title / Headline -->
-                <div class="field-item">
-                  <label class="field-label">Judul Utama (Headline)</label>
-                  <div class="field-input-box">
-                    <input
-                      type="text"
-                      v-model="selectedBlock.title"
-                      class="field-input"
-                      placeholder="Judul bagian..."
-                    />
-                  </div>
-                </div>
-
-                <!-- Subtitle / Deskripsi -->
-                <div v-if="selectedBlock.subtitle !== undefined" class="field-item">
-                  <label class="field-label">Deskripsi / Sub-Headline</label>
-                  <div class="field-input-box">
-                    <textarea
-                      v-model="selectedBlock.subtitle"
-                      class="field-textarea"
-                      rows="3"
-                      placeholder="Deskripsi penjelasan..."
-                    ></textarea>
-                  </div>
-                </div>
-
-                <!-- Primary Button -->
-                <div v-if="selectedBlock.buttonText !== undefined" class="field-item">
-                  <label class="field-label">Label Tombol Aksi (CTA)</label>
-                  <div class="field-input-box">
-                    <input
-                      type="text"
-                      v-model="selectedBlock.buttonText"
-                      class="field-input"
-                      placeholder="Misal: Mulai Sekarang"
-                    />
-                  </div>
-                </div>
-
-                <!-- Secondary Button (Hero) -->
-                <div v-if="selectedBlock.secondaryButtonText !== undefined" class="field-item">
-                  <label class="field-label">Tombol Sekunder</label>
-                  <div class="field-input-box">
-                    <input
-                      type="text"
-                      v-model="selectedBlock.secondaryButtonText"
-                      class="field-input"
-                      placeholder="Misal: Pelajari Sistem"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <!-- TAB 2: TATA LETAK & SPACING -->
-              <div v-else-if="activeRightTab === 'layout'" class="tab-pane-inspector">
+              <!-- TAB 1: TATA LETAK & SPACING -->
+              <div v-if="activeRightTab === 'layout'" class="tab-pane-inspector">
                 <div class="field-item">
                   <div class="field-label-split">
                     <label class="field-label">Padding Vertikal (Atas/Bawah)</label>
@@ -2810,6 +3664,1397 @@ const executeVsCodeReplaceAll = () => {
               <Copy :size="14" />
               <span>Salin Schema JSON</span>
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- 4. RICH STUDIO MODAL: ADVANCED WYSIWYG & VISUAL DESIGN ENGINE       -->
+      <!-- =================================================================== -->
+      <div v-if="isRichEditorOpen && editingBlockDraft" class="rich-editor-backdrop" @click.self="closeRichModalEditor">
+        <div class="rich-editor-modal">
+          <!-- Modal Top Header -->
+          <div class="rich-modal-header">
+            <div class="rich-header-left">
+              <div class="rich-title-icon-box">
+                <Edit3 :size="18" color="#0f172a" />
+              </div>
+              <div class="rich-title-text-cluster">
+                <div class="rich-title-sup">
+                  <span class="rich-header-badge">{{ editingBlockDraft.type }}</span>
+                  <span class="rich-header-breadcrumb">/ Studio Visual Engine / Pengaturan Desain & Konten</span>
+                </div>
+                <h3 class="rich-header-heading">
+                  Studio Editor Konten & Desain: {{ editingBlockDraft.name }}
+                </h3>
+              </div>
+            </div>
+
+            <button type="button" class="btn-close-rich-modal" @click="closeRichModalEditor" title="Tutup Modal (ESC)">
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Dedicated Sub-Header Tab Navigation Bar -->
+          <div class="rich-tabs-subbar">
+            <div class="segmented-tab-group">
+              <button
+                type="button"
+                class="btn-segmented-tab"
+                :class="{ active: richEditorActiveTab === 'content' }"
+                @click="richEditorActiveTab = 'content'"
+              >
+                <Type :size="13" />
+                <span>Konten & WYSIWYG</span>
+              </button>
+              <button
+                type="button"
+                class="btn-segmented-tab"
+                :class="{ active: richEditorActiveTab === 'typography' }"
+                @click="richEditorActiveTab = 'typography'"
+              >
+                <Sparkles :size="13" />
+                <span>Tipografi & Font</span>
+              </button>
+              <button
+                type="button"
+                class="btn-segmented-tab"
+                :class="{ active: richEditorActiveTab === 'appearance' }"
+                @click="richEditorActiveTab = 'appearance'"
+              >
+                <Palette :size="13" />
+                <span>Warna & Gaya</span>
+              </button>
+              <button
+                type="button"
+                class="btn-segmented-tab"
+                :class="{ active: richEditorActiveTab === 'animation' }"
+                @click="richEditorActiveTab = 'animation'"
+              >
+                <Zap :size="13" />
+                <span>Animasi & Gerakan</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Modal Body (2 Columns Split) -->
+          <div class="rich-modal-body">
+            <!-- Left Column: Controls & Form per Tab -->
+            <div class="rich-controls-pane">
+              <!-- TAB 1: KONTEN & WYSIWYG -->
+              <div v-if="richEditorActiveTab === 'content'" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="field-item">
+                  <label class="field-label">Nama Bagian / Komponen</label>
+                  <input type="text" v-model="editingBlockDraft.name" class="field-input" />
+                </div>
+                <div class="field-item" v-if="editingBlockDraft.badge !== undefined">
+                  <label class="field-label">Label Badge Kategori</label>
+                  <input type="text" v-model="editingBlockDraft.badge" class="field-input" />
+                </div>
+                <div class="field-item">
+                  <label class="field-label">Judul Utama (Headline)</label>
+                  <input type="text" v-model="editingBlockDraft.title" class="field-input" />
+                </div>
+                <div class="field-item" v-if="editingBlockDraft.buttonText !== undefined">
+                  <label class="field-label">Label Tombol Aksi (CTA)</label>
+                  <input type="text" v-model="editingBlockDraft.buttonText" class="field-input" />
+                </div>
+
+                <!-- WYSIWYG Rich Text Editor Surface -->
+                <div class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 6px;">
+                    <label class="field-label">Deskripsi Kaya (Notion-Style WYSIWYG)</label>
+                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">Format Bebas: Bold, Italic, List & Perataan</span>
+                  </div>
+                  <div class="wysiwyg-unified-card">
+                    <div class="wysiwyg-card-toolbar">
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('bold')" title="Tebal (Ctrl+B)">
+                        <Bold :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('italic')" title="Miring (Ctrl+I)">
+                        <Italic :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('underline')" title="Garis Bawah (Ctrl+U)">
+                        <Underline :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('strikeThrough')" title="Coret">
+                        <s>S</s>
+                      </button>
+                      <div class="wysiwyg-divider"></div>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyLeft')" title="Rata Kiri">
+                        <AlignLeft :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyCenter')" title="Rata Tengah">
+                        <AlignCenter :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyRight')" title="Rata Kanan">
+                        <AlignRight :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyFull')" title="Rata Kanan Kiri">
+                        <AlignJustify :size="13" />
+                      </button>
+                      <div class="wysiwyg-divider"></div>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('insertUnorderedList')" title="Daftar Bullet">
+                        •
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('insertOrderedList')" title="Daftar Angka">
+                        1.
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('removeFormat')" title="Hapus Format">
+                        <RotateCcw :size="13" />
+                      </button>
+                    </div>
+                    <div
+                      ref="richContentSurfaceRef"
+                      class="wysiwyg-card-surface"
+                      contenteditable="true"
+                      data-placeholder="Ketik konten blok di sini..."
+                      v-html="editingBlockDraft.styles?.richContent || editingBlockDraft.subtitle || ''"
+                      @input="onWysiwygInput"
+                    ></div>
+                    <div class="wysiwyg-card-footer">
+                      <span>{{ wysiwygWordCount }} kata · {{ wysiwygCharCount }} karakter</span>
+                      <span style="font-size: 10px; color: #64748b;">Editor Aktif</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sub-items editor inside Studio Modal -->
+                <div v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0" class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 8px;">
+                    <label class="field-label">Daftar Item / Sub-Elemen ({{ editingBlockDraft.items.length }})</label>
+                    <span v-if="blockUsesIcons(editingBlockDraft.type)" style="font-size: 10px; color: #2563eb; font-weight: 600;">Klik icon untuk mengganti</span>
+                    <span v-else-if="blockUsesImages(editingBlockDraft.type)" style="font-size: 10px; color: #2563eb; font-weight: 600;">Unggah gambar slide</span>
+                    <span v-else style="font-size: 10px; color: #64748b; font-weight: 500;">Sesuaikan konten item</span>
+                  </div>
+                  <div class="sub-items-editor-list">
+                    <div
+                      v-for="(subItem, subIdx) in editingBlockDraft.items"
+                      :key="subItem.id || subIdx"
+                      class="sub-item-card-v2"
+                    >
+                      <div class="sub-item-top-bar">
+                        <div class="sub-item-pill-group">
+                          <span class="sub-item-badge">Item #{{ subIdx + 1 }}</span>
+                          <span v-if="subItem.title" class="sub-item-preview-title">{{ subItem.title }}</span>
+                        </div>
+                        <div class="sub-item-actions-cluster">
+                          <button
+                            type="button"
+                            class="btn-subitem-action"
+                            :disabled="subIdx === 0"
+                            @click="moveSubItemUp(subIdx)"
+                            title="Naikkan Urutan"
+                          >
+                            <ChevronUp :size="13" />
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-subitem-action"
+                            :disabled="subIdx === editingBlockDraft.items.length - 1"
+                            @click="moveSubItemDown(subIdx)"
+                            title="Turunkan Urutan"
+                          >
+                            <ChevronDown :size="13" />
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-subitem-action"
+                            @click="duplicateSubItem(subIdx)"
+                            title="Duplikasi Item"
+                          >
+                            <Copy :size="12" />
+                          </button>
+                          <button
+                            v-if="editingBlockDraft.items.length > 1"
+                            type="button"
+                            class="btn-subitem-action danger"
+                            @click="editingBlockDraft.items.splice(subIdx, 1)"
+                            title="Hapus Item"
+                          >
+                            <Trash2 :size="12" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="sub-item-main-row">
+                        <!-- Icon Trigger Button (Only for blocks that use icons) -->
+                        <button
+                          v-if="blockUsesIcons(editingBlockDraft.type)"
+                          type="button"
+                          class="sub-item-icon-trigger"
+                          @click="openIconPicker(subIdx)"
+                          title="Klik untuk memilih Icon"
+                        >
+                          <component :is="getIconComponent(subItem.icon)" :size="20" />
+                          <span class="icon-trigger-label">Ganti</span>
+                        </button>
+
+                        <div class="sub-item-title-col">
+                          <div v-if="subItem.title !== undefined" class="sub-item-field-row">
+                            <label class="sub-item-field-label">
+                              {{
+                                editingBlockDraft.type === 'accordion' ? 'Pertanyaan Accordion / FAQ' :
+                                editingBlockDraft.type === 'carousel' ? 'Judul Slide' :
+                                editingBlockDraft.type === 'progressbar' ? 'Label Metrik / Capaian' :
+                                editingBlockDraft.type === 'pricing' ? 'Nama Paket' :
+                                'Judul Item'
+                              }}
+                            </label>
+                            <input
+                              type="text"
+                              v-model="subItem.title"
+                              class="field-input sub-item-input"
+                              :placeholder="
+                                editingBlockDraft.type === 'accordion' ? 'Pertanyaan FAQ...' :
+                                editingBlockDraft.type === 'carousel' ? 'Judul slide...' :
+                                editingBlockDraft.type === 'progressbar' ? 'Nama metrik...' :
+                                'Judul item...'
+                              "
+                            />
+                          </div>
+                          <div v-if="subItem.label !== undefined" class="sub-item-field-row" style="margin-top: 4px;">
+                            <label class="sub-item-field-label">
+                              {{ editingBlockDraft.type === 'formcontrol' ? 'Placeholder Input' : 'Label Badge' }}
+                            </label>
+                            <input
+                              type="text"
+                              v-model="subItem.label"
+                              class="field-input sub-item-input"
+                              placeholder="Label..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Slide Image Uploader for Carousel -->
+                      <div v-if="blockUsesImages(editingBlockDraft.type)" class="sub-item-image-uploader">
+                        <label class="sub-item-field-label">Gambar Slide Carousel</label>
+                        <div class="slide-img-preview-row">
+                          <div class="slide-img-preview-box">
+                            <img
+                              v-if="subItem.image"
+                              :src="subItem.image"
+                              alt="Slide Preview"
+                              class="slide-thumbnail"
+                            />
+                            <div v-else class="slide-img-placeholder">
+                              <ImageIcon :size="18" />
+                              <span>Tidak ada gambar</span>
+                            </div>
+                            <button
+                              v-if="subItem.image"
+                              type="button"
+                              class="btn-remove-slide-img"
+                              @click="removeSlideImage(subIdx)"
+                              title="Hapus Gambar"
+                            >
+                              <X :size="11" />
+                            </button>
+                          </div>
+                          <div class="slide-img-controls">
+                            <label :for="'slide-upload-' + subIdx" class="btn-upload-slide-img">
+                              <UploadCloud :size="13" /> Unggah Gambar
+                            </label>
+                            <input
+                              :id="'slide-upload-' + subIdx"
+                              type="file"
+                              accept="image/*"
+                              @change="onSlideImageUpload(subIdx, $event)"
+                              style="display: none;"
+                            />
+                            <input
+                              type="text"
+                              v-model="subItem.image"
+                              class="field-input sub-item-input"
+                              placeholder="Atau tempel URL gambar (https://...)"
+                              style="font-size: 11px;"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div v-if="subItem.desc !== undefined" class="sub-item-field-row">
+                        <label class="sub-item-field-label">
+                          {{
+                            editingBlockDraft.type === 'accordion' ? 'Jawaban / Penjelasan Accordion' :
+                            editingBlockDraft.type === 'carousel' ? 'Deskripsi Slide' :
+                            editingBlockDraft.type === 'progressbar' ? 'Keterangan Metrik / Info Kuota' :
+                            'Deskripsi Item'
+                          }}
+                        </label>
+                        <textarea
+                          v-model="subItem.desc"
+                          class="field-textarea sub-item-textarea"
+                          rows="2"
+                          :placeholder="
+                            editingBlockDraft.type === 'accordion' ? 'Tuliskan jawaban atau rincian FAQ di sini...' :
+                            editingBlockDraft.type === 'carousel' ? 'Deskripsi singkat slide...' :
+                            'Deskripsi item...'
+                          "
+                        ></textarea>
+                      </div>
+
+                      <div v-if="subItem.percentage !== undefined" class="sub-item-progress-row">
+                        <label class="sub-item-field-label" style="white-space: nowrap; margin-bottom: 0;">Nilai: {{ subItem.percentage }}%</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          v-model.number="subItem.percentage"
+                          class="range-slider"
+                          style="flex: 1;"
+                        />
+                      </div>
+
+                      <div v-if="subItem.tag !== undefined" class="sub-item-field-row" style="margin-top: 4px;">
+                        <label class="sub-item-field-label">Tag / Lencana</label>
+                        <input
+                          type="text"
+                          v-model="subItem.tag"
+                          class="field-input sub-item-input"
+                          placeholder="Contoh: Terpopuler, Baru..."
+                        />
+                      </div>
+
+                      <div v-if="subItem.price !== undefined" class="sub-item-field-row" style="margin-top: 4px;">
+                        <label class="sub-item-field-label">Harga & Periode</label>
+                        <div style="display: flex; gap: 8px;">
+                          <input
+                            type="text"
+                            v-model="subItem.price"
+                            class="field-input sub-item-input"
+                            placeholder="Harga (mis: Rp 299rb)"
+                            style="flex: 1;"
+                          />
+                          <input
+                            type="text"
+                            v-model="subItem.period"
+                            class="field-input sub-item-input"
+                            placeholder="Periode (mis: /bln)"
+                            style="width: 100px;"
+                          />
+                        </div>
+                      </div>
+
+                      <div v-if="subItem.role !== undefined" class="sub-item-field-row" style="margin-top: 4px;">
+                        <label class="sub-item-field-label">Peran / Jabatan</label>
+                        <input
+                          type="text"
+                          v-model="subItem.role"
+                          class="field-input sub-item-input"
+                          placeholder="Peran (mis: Lead Engineer)"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      @click="addNewSubItem"
+                      class="btn-add-subitem"
+                    >
+                      <Plus :size="13" /> Tambah Item Baru
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 2: TIPOGRAFI & FONT -->
+              <div v-else-if="richEditorActiveTab === 'typography'" style="display: flex; flex-direction: column; gap: 14px;">
+                <div class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 8px;">
+                    <label class="field-label">Pilih Jenis Font (Font Family)</label>
+                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">Google Fonts Enterprise</span>
+                  </div>
+                  <div class="typography-compact-grid">
+                    <div
+                      v-for="font in fontOptions"
+                      :key="font.id"
+                      class="font-compact-card"
+                      :class="{ 'is-selected': editingBlockDraft.styles?.fontFamily === font.family }"
+                      @click="setEditingFont(font)"
+                    >
+                      <div class="font-compact-top">
+                        <span class="font-compact-name">{{ font.name.split(' ')[0] }}</span>
+                        <span class="font-category-tag">{{ font.category }}</span>
+                      </div>
+                      <div class="font-compact-preview" :style="{ fontFamily: font.family }">
+                        Ag Headline Preview 123
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="color-setting-card">
+                  <div class="field-label-split">
+                    <label class="field-label">Ketebalan Font (Font Weight)</label>
+                    <span class="field-val-badge">{{ editingBlockDraft.styles?.fontWeight || 'Default' }}</span>
+                  </div>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button
+                      v-for="weight in ['400', '500', '600', '700', '800', '900']"
+                      :key="weight"
+                      type="button"
+                      class="btn-segmented-tab"
+                      :class="{ active: editingBlockDraft.styles?.fontWeight === weight }"
+                      @click="editingBlockDraft.styles ? (editingBlockDraft.styles.fontWeight = weight) : null"
+                      style="padding: 4px 10px; font-size: 11px;"
+                    >
+                      {{ weight === '400' ? 'Normal (400)' : weight === '600' ? 'SemiBold (600)' : weight === '700' ? 'Bold (700)' : weight === '900' ? 'Black (900)' : weight }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="color-setting-card">
+                  <div class="field-label-split">
+                    <label class="field-label">Letter Spacing (Jarak Karakter)</label>
+                    <span class="field-val-badge">{{ editingBlockDraft.styles?.letterSpacing || 0 }}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-1"
+                    max="6"
+                    step="0.5"
+                    :value="editingBlockDraft.styles?.letterSpacing || 0"
+                    @input="editingBlockDraft.styles ? (editingBlockDraft.styles.letterSpacing = parseFloat(($event.target as HTMLInputElement).value)) : null"
+                    class="range-slider"
+                  />
+                </div>
+
+                <div class="color-setting-card">
+                  <label class="field-label" style="margin-bottom: 8px;">Transformasi Teks (Text Transform)</label>
+                  <div style="display: flex; gap: 6px;">
+                    <button
+                      v-for="tt in [
+                        { id: 'none', label: 'Biasa (Default)' },
+                        { id: 'uppercase', label: 'UPPERCASE' },
+                        { id: 'capitalize', label: 'Capitalize' }
+                      ]"
+                      :key="tt.id"
+                      type="button"
+                      class="btn-segmented-tab"
+                      :class="{ active: editingBlockDraft.styles?.textTransform === tt.id }"
+                      @click="editingBlockDraft.styles ? (editingBlockDraft.styles.textTransform = tt.id as any) : null"
+                      style="padding: 4px 10px; font-size: 11px;"
+                    >
+                      {{ tt.label }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 3: WARNA & GAYA -->
+              <div v-else-if="richEditorActiveTab === 'appearance'" style="display: flex; flex-direction: column; gap: 14px;">
+                <!-- Section 1: Curated Brand Palettes -->
+                <div class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 8px;">
+                    <label class="field-label">Preset Palet Brand Terpadu</label>
+                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">1-Klik Harmonis</span>
+                  </div>
+                  <div class="brand-palettes-grid">
+                    <div
+                      v-for="pal in brandPalettes"
+                      :key="pal.id"
+                      class="brand-palette-card"
+                      :class="{ 'is-active': editingBlockDraft.styles?.textColor === pal.textColor && editingBlockDraft.styles?.bgColor === pal.bgColor }"
+                      @click="applyBrandPalette(pal)"
+                    >
+                      <div class="brand-palette-meta">
+                        <span class="brand-palette-name">{{ pal.name }}</span>
+                      </div>
+                      <div class="brand-palette-desc">{{ pal.desc }}</div>
+                      <div class="brand-palette-preview">
+                        <span class="brand-preview-chip" :style="{ background: pal.textColor, color: '#ffffff' }">Text</span>
+                        <span class="brand-preview-chip" :style="{ background: pal.bgColor, color: pal.textColor }">Card</span>
+                        <span class="brand-preview-chip" :style="{ background: pal.accentColor, color: '#ffffff' }">Accent</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 2: Detailed Controls -->
+                <div class="color-setting-card">
+                  <div class="color-setting-header">
+                    <span class="color-setting-title">Warna Teks Utama</span>
+                    <span style="font-size: 11px; font-family: monospace; color: #64748b;">{{ editingBlockDraft.styles?.textColor || '#0f172a' }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button
+                      v-for="col in colorPresets"
+                      :key="col.id"
+                      type="button"
+                      class="color-swatch-circle"
+                      :style="{ backgroundColor: col.hex }"
+                      :class="{ 'is-active': editingBlockDraft.styles?.textColor === col.hex }"
+                      @click="setEditingColor(col, 'text')"
+                      :title="col.name"
+                    ></button>
+                  </div>
+                  <div class="color-picker-dual-control">
+                    <input
+                      type="color"
+                      v-model="editingBlockDraft.styles!.textColor"
+                      class="native-color-trigger"
+                    />
+                    <input
+                      type="text"
+                      v-model="editingBlockDraft.styles!.textColor"
+                      class="field-input"
+                      style="width: 140px; font-size: 12px; font-family: monospace;"
+                      placeholder="#0f172a"
+                    />
+                  </div>
+                </div>
+
+                <div class="color-setting-card">
+                  <div class="color-setting-header">
+                    <span class="color-setting-title">Latar Belakang (Background Surface)</span>
+                    <span style="font-size: 11px; font-family: monospace; color: #64748b;">{{ editingBlockDraft.styles?.bgColor || '#ffffff' }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button
+                      v-for="col in colorPresets"
+                      :key="col.id"
+                      type="button"
+                      class="color-swatch-circle"
+                      :style="{ backgroundColor: col.hex }"
+                      :class="{ 'is-active': editingBlockDraft.styles?.bgColor === col.hex }"
+                      @click="setEditingColor(col, 'bg')"
+                      :title="col.name"
+                    ></button>
+                  </div>
+                  <div class="color-picker-dual-control">
+                    <input
+                      type="color"
+                      v-model="editingBlockDraft.styles!.bgColor"
+                      class="native-color-trigger"
+                    />
+                    <input
+                      type="text"
+                      v-model="editingBlockDraft.styles!.bgColor"
+                      class="field-input"
+                      style="width: 140px; font-size: 12px; font-family: monospace;"
+                      placeholder="#ffffff"
+                    />
+                  </div>
+                </div>
+
+                <div class="color-setting-card">
+                  <div class="color-setting-header">
+                    <span class="color-setting-title">Warna Aksen Brand / Tombol</span>
+                    <span style="font-size: 11px; font-family: monospace; color: #64748b;">{{ editingBlockDraft.styles?.accentColor || '#2563eb' }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button
+                      v-for="col in colorPresets"
+                      :key="col.id"
+                      type="button"
+                      class="color-swatch-circle"
+                      :style="{ backgroundColor: col.hex }"
+                      :class="{ 'is-active': editingBlockDraft.styles?.accentColor === col.hex }"
+                      @click="setEditingColor(col, 'accent')"
+                      :title="col.name"
+                    ></button>
+                  </div>
+                  <div class="color-picker-dual-control">
+                    <input
+                      type="color"
+                      v-model="editingBlockDraft.styles!.accentColor"
+                      class="native-color-trigger"
+                    />
+                    <input
+                      type="text"
+                      v-model="editingBlockDraft.styles!.accentColor"
+                      class="field-input"
+                      style="width: 140px; font-size: 12px; font-family: monospace;"
+                      placeholder="#2563eb"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 4: ANIMASI & GERAKAN -->
+              <div v-else-if="richEditorActiveTab === 'animation'" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 8px;">
+                    <label class="field-label">Pilih Efek Animasi</label>
+                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">Aktif saat dilihat pengunjung</span>
+                  </div>
+                  <div class="animations-grid">
+                    <div
+                      v-for="anim in animationOptions"
+                      :key="anim.id"
+                      class="animation-card"
+                      :class="{ 'is-active': editingBlockDraft.styles?.animation === anim.id }"
+                      @click="setEditingAnimation(anim.id)"
+                    >
+                      <div class="anim-title">
+                        <span>{{ anim.name }}</span>
+                        <Zap v-if="editingBlockDraft.styles?.animation === anim.id" :size="14" color="#2563eb" />
+                      </div>
+                      <div class="anim-desc">{{ anim.desc }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field-item" v-if="editingBlockDraft.styles?.animation && editingBlockDraft.styles.animation !== 'none'">
+                  <div class="field-label-split">
+                    <label class="field-label">Durasi Animasi (Kecepatan Gerakan)</label>
+                    <span class="field-val-badge">{{ editingBlockDraft.styles?.animationDuration || 0.65 }} detik</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="2.5"
+                    step="0.05"
+                    :value="editingBlockDraft.styles?.animationDuration || 0.65"
+                    @input="editingBlockDraft.styles ? (editingBlockDraft.styles.animationDuration = parseFloat(($event.target as HTMLInputElement).value)) : null; replayPreviewAnimation()"
+                    class="range-slider"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Interactive Realtime Live Preview -->
+            <div class="rich-preview-pane">
+              <div class="preview-stage-header">
+                <span class="preview-stage-title">
+                  <span class="live-pulse-dot"></span>
+                  Pratinjau Interaktif Realtime
+                </span>
+                <div class="preview-device-switch">
+                  <button
+                    type="button"
+                    class="btn-device"
+                    :class="{ 'is-active': richPreviewDevice === 'desktop' }"
+                    @click="richPreviewDevice = 'desktop'"
+                    title="Desktop Preview"
+                  >
+                    <Laptop :size="13" />
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-device"
+                    :class="{ 'is-active': richPreviewDevice === 'tablet' }"
+                    @click="richPreviewDevice = 'tablet'"
+                    title="Tablet Preview"
+                  >
+                    <Tablet :size="13" />
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-device"
+                    :class="{ 'is-active': richPreviewDevice === 'mobile' }"
+                    @click="richPreviewDevice = 'mobile'"
+                    title="Mobile Phone Preview"
+                  >
+                    <Smartphone :size="13" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Authentic Browser Mockup Window in Preview -->
+              <div class="preview-browser-frame" :class="'device-' + richPreviewDevice">
+                <div class="browser-mock-titlebar">
+                  <div class="mock-window-dots">
+                    <span class="mock-dot red"></span>
+                    <span class="mock-dot yellow"></span>
+                    <span class="mock-dot green"></span>
+                  </div>
+                  <div class="mock-url-pill">
+                    preview.herocms.internal/artboard/{{ editingBlockDraft.type.toLowerCase() }}
+                  </div>
+                  <button
+                    type="button"
+                    class="preview-replay-trigger"
+                    @click="replayPreviewAnimation"
+                    title="Putar Ulang Efek Animasi"
+                  >
+                    <RotateCcw :size="11" /> Putar Ulang
+                  </button>
+                </div>
+
+                <div
+                  class="browser-content-viewport"
+                  :style="{
+                    backgroundColor: editingBlockDraft.styles?.bgColor || '#ffffff',
+                    color: editingBlockDraft.styles?.textColor || '#0f172a',
+                    '--accent-brand': editingBlockDraft.styles?.accentColor || activeContainer.accentColor
+                  }"
+                >
+                  <!-- Elemen Preview dengan style & animasi langsung yang 100% 1-to-1 dengan kanvas -->
+                  <div
+                    :key="animReplayKey"
+                    class="live-preview-stage"
+                    :class="[editingBlockDraft.styles?.animation && editingBlockDraft.styles.animation !== 'none' ? 'anim-' + editingBlockDraft.styles.animation : '']"
+                    :style="{
+                      fontFamily: editingBlockDraft.styles?.fontFamily,
+                      fontWeight: editingBlockDraft.styles?.fontWeight,
+                      letterSpacing: editingBlockDraft.styles?.letterSpacing ? `${editingBlockDraft.styles.letterSpacing}px` : undefined,
+                      textTransform: editingBlockDraft.styles?.textTransform,
+                      animationDuration: editingBlockDraft.styles?.animationDuration ? `${editingBlockDraft.styles.animationDuration}s` : undefined
+                    }"
+                  >
+                    <!-- 1. NAVBAR PREVIEW -->
+                    <nav
+                      v-if="editingBlockDraft.type === 'navbar'"
+                      class="rendered-nav-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 16}px 24px` }"
+                    >
+                      <div class="site-brand-logo" :style="{ color: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }">
+                        <span class="brand-cube-icon">◆</span>
+                        <span class="brand-title">{{ editingBlockDraft.title }}</span>
+                      </div>
+                      <div class="nav-links-cluster">
+                        <a href="#hero" class="nav-anchor active">Beranda</a>
+                        <a href="#features" class="nav-anchor">Keunggulan</a>
+                        <a href="#pricing" class="nav-anchor">Layanan</a>
+                        <a href="#cta" class="nav-anchor">Kontak</a>
+                        <button class="btn-nav-action" type="button" :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }">
+                          {{ editingBlockDraft.buttonText || 'Hubungi Saya' }}
+                        </button>
+                      </div>
+                    </nav>
+
+                    <!-- 2. HERO PREVIEW -->
+                    <header
+                      v-else-if="editingBlockDraft.type === 'hero'"
+                      class="rendered-hero-block"
+                      :style="{
+                        padding: `${editingBlockDraft.styles?.paddingY || 56}px 24px`,
+                        textAlign: editingBlockDraft.styles?.align || 'center'
+                      }"
+                    >
+                      <div
+                        class="ambient-mesh-glow"
+                        :style="{
+                          background: `radial-gradient(circle, ${(editingBlockDraft.styles?.accentColor || activeContainer.accentColor)}33 0%, transparent 70%)`
+                        }"
+                      ></div>
+
+                      <div
+                        v-if="editingBlockDraft.badge"
+                        class="hero-badge-tag"
+                        :style="{
+                          color: editingBlockDraft.styles?.accentColor || activeContainer.accentColor,
+                          borderColor: (editingBlockDraft.styles?.accentColor || activeContainer.accentColor) + '40',
+                          backgroundColor: (editingBlockDraft.styles?.accentColor || activeContainer.accentColor) + '12'
+                        }"
+                      >
+                        <span>{{ editingBlockDraft.badge }}</span>
+                      </div>
+
+                      <h1 class="hero-main-heading">
+                        {{ editingBlockDraft.title }}
+                      </h1>
+
+                      <div
+                        v-if="editingBlockDraft.styles?.richContent"
+                        v-html="editingBlockDraft.styles.richContent"
+                        class="hero-bio-lead"
+                      ></div>
+                      <p v-else class="hero-bio-lead">
+                        {{ editingBlockDraft.subtitle }}
+                      </p>
+
+                      <div class="hero-cta-cluster">
+                        <button
+                          class="btn-primary-glow"
+                          type="button"
+                          :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }"
+                        >
+                          <span>{{ editingBlockDraft.buttonText || 'Eksplorasi Karya' }}</span>
+                          <ArrowRight :size="14" />
+                        </button>
+                        <button v-if="editingBlockDraft.secondaryButtonText" type="button" class="btn-secondary-clean">
+                          <span>{{ editingBlockDraft.secondaryButtonText }}</span>
+                        </button>
+                      </div>
+                    </header>
+
+                    <!-- 3. FEATURES / SHOWCASE PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'features' || editingBlockDraft.type === 'showcase'"
+                      class="rendered-features-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="features-cards-trio">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="feature-bento-card"
+                        >
+                          <div
+                            class="card-icon-pill"
+                            :style="{
+                              color: editingBlockDraft.styles?.accentColor || activeContainer.accentColor,
+                              backgroundColor: (editingBlockDraft.styles?.accentColor || activeContainer.accentColor) + '12'
+                            }"
+                          >
+                            <component :is="getIconComponent(item.icon)" :size="20" />
+                          </div>
+                          <h3 class="card-item-title">{{ item.title }}</h3>
+                          <p class="card-item-desc">{{ item.desc }}</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 4. PRICING PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'pricing'"
+                      class="rendered-pricing-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="pricing-cards-row">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="price-tier-card"
+                          :class="{ featured: item.tag === 'Terpopuler' }"
+                        >
+                          <span v-if="item.tag" class="tier-tag-pill" :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }">
+                            {{ item.tag }}
+                          </span>
+                          <h4 class="tier-name">{{ item.title }}</h4>
+                          <div class="tier-price-val">
+                            <span class="price-num">{{ item.price }}</span>
+                            <span class="price-cycle">{{ item.period }}</span>
+                          </div>
+                          <p class="tier-desc">{{ item.desc }}</p>
+                          <ul v-if="item.features" class="tier-feature-list">
+                            <li v-for="(f, fi) in item.features" :key="fi">
+                              <Check :size="13" :color="editingBlockDraft.styles?.accentColor || activeContainer.accentColor" />
+                              <span>{{ f }}</span>
+                            </li>
+                          </ul>
+                          <button
+                            class="btn-tier-action"
+                            type="button"
+                            :style="{
+                              backgroundColor: item.tag === 'Terpopuler' ? (editingBlockDraft.styles?.accentColor || activeContainer.accentColor) : '#f1f5f9',
+                              color: item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a'
+                            }"
+                          >
+                            Pilih Paket
+                          </button>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 5. CTA PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'cta'"
+                      class="rendered-cta-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 36}px 20px` }"
+                    >
+                      <div
+                        class="cta-inner-banner"
+                        :style="{
+                          borderColor: (editingBlockDraft.styles?.accentColor || activeContainer.accentColor) + '30',
+                          background: `linear-gradient(135deg, ${(editingBlockDraft.styles?.accentColor || activeContainer.accentColor)}15 0%, #ffffff80 100%)`
+                        }"
+                      >
+                        <h2 class="cta-heading">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="cta-lead"></div>
+                        <p v-else class="cta-lead">{{ editingBlockDraft.subtitle }}</p>
+                        <button
+                          class="btn-cta-big"
+                          type="button"
+                          :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }"
+                        >
+                          {{ editingBlockDraft.buttonText || 'Mulai Sekarang' }}
+                        </button>
+                      </div>
+                    </section>
+
+                    <!-- 6. PROGRESS BAR PREVIEW (1-to-1 with canvas cards) -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'progressbar'"
+                      class="rendered-progressbar-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'left' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="progress-meters-grid">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="progress-meter-card"
+                        >
+                          <div class="pm-head">
+                            <span class="pm-title">{{ item.title }}</span>
+                            <span class="pm-val" :style="{ color: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }">{{ item.percentage || 0 }}%</span>
+                          </div>
+                          <div class="pm-track">
+                            <div
+                              class="pm-fill"
+                              :style="{
+                                width: (item.percentage || 0) + '%',
+                                background: `linear-gradient(90deg, ${editingBlockDraft.styles?.accentColor || activeContainer.accentColor}, #38bdf8)`
+                              }"
+                            ></div>
+                          </div>
+                          <p v-if="item.desc" class="pm-desc">{{ item.desc }}</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 7. ACCORDION / COLLAPSE PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'accordion'"
+                      class="rendered-accordion-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="accordion-items-stack">
+                        <div
+                          v-for="(item, idx) in editingBlockDraft.items"
+                          :key="item.id"
+                          class="accordion-card-item"
+                          :class="{ 'is-expanded': (editingBlockDraft.activeItemIndex ?? 0) === idx }"
+                        >
+                          <button class="acc-card-trigger" type="button" @click="toggleAccordionItem(editingBlockDraft, idx)">
+                            <span class="acc-card-title">{{ item.title }}</span>
+                            <ChevronDown :size="16" class="acc-card-icon" />
+                          </button>
+                          <div v-if="(editingBlockDraft.activeItemIndex ?? 0) === idx" class="acc-card-content">
+                            {{ item.desc }}
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 8. CAROUSEL / SLIDER PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'carousel'"
+                      class="rendered-carousel-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="carousel-stage-container">
+                        <div v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0" class="carousel-slide-card">
+                          <div v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.image" class="carousel-slide-img-wrap">
+                            <img
+                              :src="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0].image"
+                              :alt="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0].title || 'Slide Image'"
+                              class="carousel-slide-img"
+                            />
+                          </div>
+                          <span v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.tag" class="carousel-tag-badge">
+                            {{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.tag }}
+                          </span>
+                          <h3 class="carousel-headline">{{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.title }}</h3>
+                          <p class="carousel-lead-desc">{{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.desc }}</p>
+                          <span v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.author" class="carousel-author-credit">
+                            — {{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.author }}
+                          </span>
+                        </div>
+
+                        <!-- Carousel Nav Arrows -->
+                        <div class="carousel-nav-arrows">
+                          <button class="carousel-arrow-btn" type="button" @click="prevSlide(editingBlockDraft)" title="Slide Sebelumnya">
+                            <ArrowLeft :size="16" />
+                          </button>
+                          <button class="carousel-arrow-btn" type="button" @click="nextSlide(editingBlockDraft)" title="Slide Berikutnya">
+                            <ArrowRight :size="16" />
+                          </button>
+                        </div>
+
+                        <!-- Dots -->
+                        <div class="carousel-dots-indicator">
+                          <button
+                            v-for="(item, sIdx) in editingBlockDraft.items"
+                            :key="item.id"
+                            type="button"
+                            class="carousel-dot"
+                            :class="{ active: (editingBlockDraft.activeItemIndex || 0) === sIdx }"
+                            @click="setSlide(editingBlockDraft, sIdx)"
+                          ></button>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 9. FORM CONTROL PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'formcontrol'"
+                      class="rendered-formcontrol-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="form-card-container">
+                        <form class="form-fields-stack" @submit.prevent>
+                          <div v-for="item in editingBlockDraft.items" :key="item.id" class="form-field-group">
+                            <label class="form-field-label">{{ item.title }}</label>
+                            <select v-if="item.tag === 'select'" class="form-rendered-select">
+                              <option>Pilihan 1: Solusi Cloud & Docker</option>
+                              <option>Pilihan 2: Visual Studio CMS</option>
+                              <option>Pilihan 3: Domain & Edge SSL</option>
+                            </select>
+                            <textarea
+                              v-else-if="item.tag === 'textarea'"
+                              rows="3"
+                              class="form-rendered-textarea"
+                              :placeholder="item.label || item.desc"
+                            ></textarea>
+                            <input
+                              v-else
+                              :type="item.tag || 'text'"
+                              class="form-rendered-input"
+                              :placeholder="item.label || item.desc"
+                            />
+                          </div>
+                          <button
+                            class="btn-form-submit"
+                            type="button"
+                            :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }"
+                          >
+                            {{ editingBlockDraft.buttonText || 'Kirim Pesan Sekarang' }}
+                          </button>
+                        </form>
+                      </div>
+                    </section>
+
+                    <!-- 10. MODAL PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'modal'"
+                      class="rendered-modal-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 36}px 20px` }"
+                    >
+                      <div class="modal-preview-stage">
+                        <div class="modal-stage-header">
+                          <span class="modal-stage-badge">{{ editingBlockDraft.badge || 'POPUP PROMOSI' }}</span>
+                          <button class="modal-stage-close" type="button" @click="toggleBlockOpen(editingBlockDraft)">
+                            <X :size="14" />
+                          </button>
+                        </div>
+                        <div class="modal-stage-body">
+                          <h3 class="modal-stage-title">{{ editingBlockDraft.title }}</h3>
+                          <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="modal-stage-desc"></div>
+                          <p v-else class="modal-stage-desc">{{ editingBlockDraft.subtitle }}</p>
+                          <div class="modal-stage-actions">
+                            <button class="btn-modal-secondary" type="button">
+                              {{ editingBlockDraft.secondaryButtonText || 'Nanti Saja' }}
+                            </button>
+                            <button
+                              class="btn-modal-primary"
+                              type="button"
+                              :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }"
+                            >
+                              {{ editingBlockDraft.buttonText || 'Klaim Sekarang' }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 11. DROPDOWN PREVIEW (1-to-1 with canvas card & select) -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'dropdown'"
+                      class="rendered-dropdown-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 36}px 20px` }"
+                    >
+                      <div class="dropdown-component-card">
+                        <div class="section-title-wrap" style="margin-bottom: 12px; text-align: left;">
+                          <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                          <h3 class="sec-headline" style="font-size: 1.1rem;">{{ editingBlockDraft.title }}</h3>
+                          <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;"></div>
+                          <p v-else-if="editingBlockDraft.subtitle" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">{{ editingBlockDraft.subtitle }}</p>
+                        </div>
+                        <button class="dropdown-trigger-btn" type="button" @click="toggleBlockOpen(editingBlockDraft)">
+                          <span>{{ editingBlockDraft.items?.[editingBlockDraft.activeItemIndex || 0]?.title || 'Pilih Kategori...' }}</span>
+                          <ChevronDown :size="16" />
+                        </button>
+                        <div v-if="editingBlockDraft.isOpen" class="dropdown-options-list">
+                          <div
+                            v-for="(item, dIdx) in editingBlockDraft.items"
+                            :key="item.id"
+                            class="dropdown-option-row"
+                            :class="{ 'is-selected': (editingBlockDraft.activeItemIndex || 0) === dIdx }"
+                            @click="selectDropdownOption(editingBlockDraft, dIdx)"
+                          >
+                            <span>{{ item.title }}</span>
+                            <span v-if="item.desc" style="font-size: 0.72rem; color: #94a3b8;">{{ item.desc }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 12. CARD SHOWCASE PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'card'"
+                      class="rendered-card-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="cards-showcase-grid">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="showcase-grid-card"
+                        >
+                          <div class="card-header-banner">
+                            <span v-if="item.tag" class="card-tag-pill">{{ item.tag }}</span>
+                          </div>
+                          <div class="card-body-content">
+                            <h3 class="card-grid-title">{{ item.title }}</h3>
+                            <p class="card-grid-desc">{{ item.desc }}</p>
+                            <span v-if="item.role" class="card-role-label">Peran: {{ item.role }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 13. LIST GROUP PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'listgroup'"
+                      class="rendered-listgroup-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 36}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'left' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="listgroup-stack-card">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="listgroup-item-row"
+                        >
+                          <span class="lg-check-icon"><Check :size="14" /></span>
+                          <div class="lg-text-meta">
+                            <span class="lg-item-title">{{ item.title }}</span>
+                            <span v-if="item.desc" class="lg-item-desc">{{ item.desc }}</span>
+                          </div>
+                          <span v-if="item.tag" class="lg-badge-tag">{{ item.tag }}</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 14. STATS PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'stats'"
+                      class="rendered-stats-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 36}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="stats-counters-row">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="stat-counter-box"
+                        >
+                          <span class="stat-number-val">{{ item.title }}</span>
+                          <span class="stat-number-desc">{{ item.desc }}</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 15. PAGINATION PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'pagination'"
+                      class="rendered-pagination-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 24}px 20px` }"
+                    >
+                      <div v-if="editingBlockDraft.subtitle" style="text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">
+                        {{ editingBlockDraft.subtitle }}
+                      </div>
+                      <div class="pagination-controls-row">
+                        <button class="pagination-btn" type="button" title="Sebelumnya">&laquo;</button>
+                        <button
+                          v-for="(item, pIdx) in editingBlockDraft.items"
+                          :key="item.id"
+                          type="button"
+                          class="pagination-btn"
+                          :class="{ 'is-active': (editingBlockDraft.activeItemIndex || 0) === pIdx }"
+                          @click="setPageNumber(editingBlockDraft, pIdx)"
+                        >
+                          {{ item.title }}
+                        </button>
+                        <button class="pagination-btn" type="button" title="Berikutnya">&raquo;</button>
+                      </div>
+                    </section>
+
+                    <!-- 16. BREADCRUMB PREVIEW -->
+                    <nav
+                      v-else-if="editingBlockDraft.type === 'breadcrumb'"
+                      class="rendered-breadcrumb-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 16}px 20px` }"
+                    >
+                      <div class="breadcrumb-trail-nav">
+                        <template v-for="(item, bIdx) in editingBlockDraft.items" :key="item.id">
+                          <span v-if="bIdx > 0" class="bc-sep-icon">/</span>
+                          <a
+                            v-if="bIdx < (editingBlockDraft.items?.length || 1) - 1"
+                            :href="item.url || '#'"
+                            class="bc-item-anchor"
+                            @click.prevent
+                          >
+                            {{ item.title }}
+                          </a>
+                          <span v-else class="bc-item-current">{{ item.title }}</span>
+                        </template>
+                      </div>
+                    </nav>
+
+                    <!-- 17. FOOTER PREVIEW -->
+                    <footer
+                      v-else-if="editingBlockDraft.type === 'footer'"
+                      class="rendered-footer-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 24}px 20px` }"
+                    >
+                      <div class="footer-divider-line"></div>
+                      <div class="footer-content-row">
+                        <div class="footer-brand">
+                          <span class="brand-cube-icon" :style="{ color: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }">◆</span>
+                          <strong>{{ editingBlockDraft.title }}</strong>
+                        </div>
+                        <p class="footer-copy">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+                    </footer>
+
+                    <!-- 18. FALLBACK PREVIEW -->
+                    <section v-else style="padding: 24px 20px; text-align: center;">
+                      <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                      <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                      <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                      <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      <button
+                        v-if="editingBlockDraft.buttonText"
+                        type="button"
+                        class="btn-primary-glow"
+                        :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }"
+                      >
+                        {{ editingBlockDraft.buttonText }}
+                      </button>
+                    </section>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="rich-modal-footer">
+            <div class="rich-footer-hint">
+              <span>Tips: Tekan <kbd style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; color: #334155;">ESC</kbd> untuk menutup. Perubahan otomatis diselaraskan secara realtime.</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <button type="button" class="btn-outline-action" @click="closeRichModalEditor">
+                Batal
+              </button>
+              <button type="button" class="btn-primary-gradient" @click="applyRichModalEditor" style="display: inline-flex; align-items: center; gap: 6px;">
+                <Check :size="14" /> Terapkan ke Kanvas
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- Interactive Lucide Icon Picker Modal Dialog                         -->
+      <!-- =================================================================== -->
+      <div v-if="isIconPickerOpen" class="icon-picker-backdrop" @click.self="closeIconPicker">
+        <div class="icon-picker-modal">
+          <div class="icon-picker-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <Sparkles :size="16" color="#2563eb" />
+              <span class="icon-picker-title">Pilih Icon Item</span>
+            </div>
+            <button type="button" class="btn-close-rich-modal" @click="closeIconPicker" style="width: 28px; height: 28px;">
+              <X :size="14" />
+            </button>
+          </div>
+
+          <div class="icon-picker-search-bar">
+            <Search :size="14" style="position: absolute; left: 28px; top: 20px; color: #94a3b8;" />
+            <input
+              type="text"
+              v-model="iconPickerSearchQuery"
+              class="icon-picker-search-input"
+              placeholder="Cari icon (server, cloud, shield, zap, lock)..."
+            />
+          </div>
+
+          <div style="display: flex; gap: 6px; padding: 4px 18px 10px; overflow-x: auto; flex-shrink: 0;">
+            <button
+              v-for="cat in (['Semua', 'Tech & Cloud', 'Keamanan & Sistem', 'Performa & Bisnis', 'Desain & UI'] as const)"
+              :key="cat"
+              type="button"
+              class="btn-segmented-tab"
+              :class="{ active: selectedIconCategory === cat }"
+              @click="selectedIconCategory = cat"
+              style="padding: 3px 10px; font-size: 11px; white-space: nowrap;"
+            >
+              {{ cat }}
+            </button>
+          </div>
+
+          <div class="icon-picker-body">
+            <div class="icon-picker-grid">
+              <button
+                v-for="opt in filteredIconOptions"
+                :key="opt.id"
+                type="button"
+                class="icon-picker-tile"
+                :class="{ 'is-selected': activeIconPickerSubIdx !== null && editingBlockDraft?.items?.[activeIconPickerSubIdx]?.icon === opt.icon }"
+                @click="selectIconForItem(opt.icon)"
+              >
+                <component :is="getIconComponent(opt.icon)" :size="20" />
+                <span class="icon-tile-name">{{ opt.name }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
