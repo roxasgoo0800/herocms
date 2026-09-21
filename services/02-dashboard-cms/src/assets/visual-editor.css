@@ -747,7 +747,7 @@
 
 /* Left Studio Dock */
 .studio-left-dock {
-  width: 290px;
+  width: 380px;
   height: 100%;
   background: #ffffff;
   border-right: 1px solid #e2e8f0;
@@ -810,7 +810,48 @@
 .dock-tab-body {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 12px 14px 20px;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+/* Custom Sleek Bespoke Scrollbar for Studio Left Dock */
+.dock-tab-body::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.dock-tab-body::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 6px 0;
+}
+
+.dock-tab-body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+.dock-tab-body:hover::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+.dock-tab-body::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+.dock-tab-body::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.dock-tab-body::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 .dock-section-head {
@@ -1751,6 +1792,14 @@
   border-radius: 8px;
   box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3);
   z-index: 40;
+}
+
+/* Position floating toolbar inside the top of the first block so it is never clipped by artboard edge */
+.block-node-wrapper.is-first-block .floating-selection-bar,
+.block-node-wrapper:first-of-type .floating-selection-bar {
+  top: 12px;
+  left: 20px;
+  box-shadow: 0 8px 24px -2px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 
 .selection-tag-pill {
@@ -3908,13 +3957,69 @@
   color: #0f172a;
 }
 
+/* Category Filter Chips Carousel Container */
+.catalog-chips-carousel-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+
+.chips-nav-btn {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  flex-shrink: 0;
+}
+
+.chips-nav-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
+  transform: scale(1.06);
+}
+
+.chips-nav-btn:active:not(:disabled) {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #93c5fd;
+  transform: scale(0.96);
+}
+
+.chips-nav-btn:disabled,
+.chips-nav-btn.is-disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  box-shadow: none;
+}
+
 /* Category Filter Chips (Horizontal Scrollable) */
 .catalog-category-chips {
+  flex: 1;
+  min-width: 0;
   display: flex;
   gap: 5px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding: 2px 0;
   scrollbar-width: none;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 .catalog-category-chips::-webkit-scrollbar {
@@ -4029,7 +4134,7 @@
 /* Wireframe Container */
 .block-wireframe-preview {
   width: 100%;
-  height: 72px;
+  height: 80px;
   border-radius: 6px;
   background: #0b0f19;
   border: 1px solid #1e293b;
@@ -5440,22 +5545,26 @@
   animation: animFloatSmooth 3.5s infinite ease-in-out;
 }
 
-/* Floating Action Bar Highlighting */
+/* Floating Action Bar Highlighting (HeroCMS Royal Blue Enterprise Theme) */
 .float-btn.highlight-edit-btn {
   width: auto !important;
   height: 24px;
   padding: 0 10px;
-  gap: 5px;
-  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-  color: #0b0f19 !important;
+  gap: 6px;
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  color: #ffffff !important;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 242, 254, 0.35);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.15s ease;
 }
 .float-btn.highlight-edit-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 242, 254, 0.55);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.55);
+  color: #ffffff !important;
 }
 
 /* -----------------------------------------------------------------------------
@@ -5689,6 +5798,15 @@
 .rich-preview-pane::-webkit-scrollbar-thumb:hover,
 .browser-content-viewport::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+.rich-controls-pane::-webkit-scrollbar-button,
+.rich-preview-pane::-webkit-scrollbar-button,
+.browser-content-viewport::-webkit-scrollbar-button,
+.wysiwyg-editable-surface::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Sub-Items Editor Styles */

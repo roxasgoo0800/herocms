@@ -27,6 +27,7 @@ import {
   Copy,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Eye,
   EyeOff,
@@ -115,6 +116,44 @@ const {
 // -----------------------------------------------------------------------------
 const selectedCatalogCategory = ref<BlockCategory>('all');
 const catalogSearchQuery = ref('');
+const catalogChipsRef = ref<HTMLElement | null>(null);
+const canScrollChipsLeft = ref(false);
+const canScrollChipsRight = ref(false);
+
+const updateChipsScrollState = () => {
+  if (!catalogChipsRef.value) return;
+  const { scrollLeft, scrollWidth, clientWidth } = catalogChipsRef.value;
+  canScrollChipsLeft.value = scrollLeft > 2;
+  canScrollChipsRight.value = scrollLeft + clientWidth < scrollWidth - 2;
+};
+
+const scrollCategoryChips = (direction: 'left' | 'right') => {
+  if (!catalogChipsRef.value) return;
+  const distance = direction === 'left' ? -180 : 180;
+  catalogChipsRef.value.scrollBy({ left: distance, behavior: 'smooth' });
+  setTimeout(updateChipsScrollState, 260);
+};
+
+const onCategoryChipsWheel = (e: WheelEvent) => {
+  if (!catalogChipsRef.value) return;
+  if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+    e.preventDefault();
+    catalogChipsRef.value.scrollLeft += e.deltaY;
+    updateChipsScrollState();
+  }
+};
+
+const selectCategory = (catId: BlockCategory, event?: MouseEvent) => {
+  selectedCatalogCategory.value = catId;
+  if (event?.currentTarget && catalogChipsRef.value) {
+    (event.currentTarget as HTMLElement).scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'center'
+    });
+    setTimeout(updateChipsScrollState, 300);
+  }
+};
 
 const filteredCatalogItems = computed(() => {
   return blockCatalogItems.filter(item => {
@@ -173,6 +212,14 @@ const activeTool = ref<ActiveTool>('select');
 const editorViewMode = ref<EditorViewMode>('design');
 const activeLeftTab = ref<'blocks' | 'layers' | 'design' | 'ai'>('blocks');
 const activeRightTab = ref<'layout' | 'appearance'>('layout');
+
+watch(activeLeftTab, (newTab) => {
+  if (newTab === 'blocks') {
+    nextTick(() => {
+      updateChipsScrollState();
+    });
+  }
+});
 
 // Studio Booting Transition & Draft State
 const isEditorBooting = ref(true);
@@ -513,10 +560,7 @@ watch(
   }
 );
 
-// Computed selected block
-const selectedBlock = computed(() => {
-  return pageBlocks.value.find((b) => b.id === selectedBlockId.value) || null;
-});
+
 
 // -----------------------------------------------------------------------------
 // Undo / Redo History Engine
@@ -709,14 +753,65 @@ const onKeyUp = (e: KeyboardEvent) => {
   }
 };
 
+// Smooth Inertial Scrolling for Studio Left Dock
+const dockTabBodyRef = ref<HTMLDivElement | null>(null);
+let targetScrollTop = 0;
+let isSmoothScrolling = false;
+let scrollAnimFrame: number | null = null;
+
+const onDockTabWheel = (e: WheelEvent) => {
+  if (!dockTabBodyRef.value) return;
+  const el = dockTabBodyRef.value;
+  const maxScroll = el.scrollHeight - el.clientHeight;
+  if (maxScroll <= 0) return;
+
+  if (Math.abs(e.deltaY) < 1) return;
+
+  e.preventDefault();
+  targetScrollTop = Math.max(0, Math.min(maxScroll, (isSmoothScrolling ? targetScrollTop : el.scrollTop) + e.deltaY * 0.85));
+
+  if (!isSmoothScrolling) {
+    isSmoothScrolling = true;
+    const animateScroll = () => {
+      if (!dockTabBodyRef.value) {
+        isSmoothScrolling = false;
+        return;
+      }
+      const current = dockTabBodyRef.value.scrollTop;
+      const diff = targetScrollTop - current;
+      if (Math.abs(diff) < 0.6) {
+        dockTabBodyRef.value.scrollTop = targetScrollTop;
+        isSmoothScrolling = false;
+        scrollAnimFrame = null;
+      } else {
+        dockTabBodyRef.value.scrollTop = current + diff * 0.16;
+        scrollAnimFrame = requestAnimationFrame(animateScroll);
+      }
+    };
+    scrollAnimFrame = requestAnimationFrame(animateScroll);
+  }
+};
+
+const onDockScroll = () => {
+  if (!isSmoothScrolling && dockTabBodyRef.value) {
+    targetScrollTop = dockTabBodyRef.value.scrollTop;
+  }
+};
+
 onMounted(async () => {
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
   window.addEventListener('mousemove', onCanvasMouseMove);
   window.addEventListener('mouseup', onCanvasMouseUp);
   window.addEventListener('resize', fitToScreen);
+  window.addEventListener('resize', updateChipsScrollState);
   document.addEventListener('click', handleSiteDropdownOutsideClick);
   document.addEventListener('click', handleAllDropdownOutsideClick);
+
+  if (dockTabBodyRef.value) {
+    dockTabBodyRef.value.addEventListener('wheel', onDockTabWheel, { passive: false });
+    dockTabBodyRef.value.addEventListener('scroll', onDockScroll);
+  }
 
   // Smooth booting transition & dependency/draft load
   isEditorBooting.value = true;
@@ -725,6 +820,7 @@ onMounted(async () => {
 
   await nextTick();
   fitToScreen();
+  updateChipsScrollState();
 
   bootProgress.value = 50;
   bootStatusText.value = 'Memuat dependensi & engine editor...';
@@ -759,8 +855,15 @@ onUnmounted(() => {
   window.removeEventListener('mousemove', onCanvasMouseMove);
   window.removeEventListener('mouseup', onCanvasMouseUp);
   window.removeEventListener('resize', fitToScreen);
+  window.removeEventListener('resize', updateChipsScrollState);
   document.removeEventListener('click', handleSiteDropdownOutsideClick);
   document.removeEventListener('click', handleAllDropdownOutsideClick);
+
+  if (dockTabBodyRef.value) {
+    dockTabBodyRef.value.removeEventListener('wheel', onDockTabWheel);
+    dockTabBodyRef.value.removeEventListener('scroll', onDockScroll);
+  }
+  if (scrollAnimFrame) cancelAnimationFrame(scrollAnimFrame);
 });
 
 // -----------------------------------------------------------------------------
@@ -848,7 +951,7 @@ const currentFont = ref('Plus Jakarta Sans');
 // Rich Studio Modal: Visual & WYSIWYG Content Engine
 // -----------------------------------------------------------------------------
 const isRichEditorOpen = ref(false);
-const richEditorActiveTab = ref<'content' | 'typography' | 'appearance' | 'animation'>('content');
+const richEditorActiveTab = ref<'content' | 'layout' | 'typography' | 'appearance' | 'animation'>('content');
 const richPreviewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
 const editingBlockDraft = ref<VisualBlock | null>(null);
 const animReplayKey = ref(0);
@@ -1957,7 +2060,7 @@ const executeVsCodeReplaceAll = () => {
           </nav>
 
           <!-- Dock Body -->
-          <div class="dock-tab-body">
+          <div class="dock-tab-body" ref="dockTabBodyRef" @scroll="onDockScroll">
             <!-- TAB 1: BLOCKS LIBRARY (Canva/Figma Component Picker) -->
             <div v-if="activeLeftTab === 'blocks'" class="dock-blocks-catalog">
               <div class="dock-catalog-header">
@@ -1985,16 +2088,48 @@ const executeVsCodeReplaceAll = () => {
                   </button>
                 </div>
 
-                <!-- Category Filter Chips -->
-                <div class="catalog-category-chips">
+                <!-- Category Filter Chips Carousel -->
+                <div class="catalog-chips-carousel-wrap">
                   <button
-                    v-for="cat in blockCategories"
-                    :key="cat.id"
-                    class="cat-chip-btn"
-                    :class="{ active: selectedCatalogCategory === cat.id }"
-                    @click="selectedCatalogCategory = cat.id"
+                    type="button"
+                    class="chips-nav-btn prev"
+                    :class="{ 'is-disabled': !canScrollChipsLeft }"
+                    :disabled="!canScrollChipsLeft"
+                    title="Geser kategori ke kiri"
+                    aria-label="Geser kategori ke kiri"
+                    @click="scrollCategoryChips('left')"
                   >
-                    {{ cat.label }}
+                    <ChevronLeft :size="13" />
+                  </button>
+
+                  <div
+                    ref="catalogChipsRef"
+                    class="catalog-category-chips"
+                    @scroll.passive="updateChipsScrollState"
+                    @wheel="onCategoryChipsWheel"
+                  >
+                    <button
+                      v-for="cat in blockCategories"
+                      :key="cat.id"
+                      type="button"
+                      class="cat-chip-btn"
+                      :class="{ active: selectedCatalogCategory === cat.id }"
+                      @click="selectCategory(cat.id, $event)"
+                    >
+                      {{ cat.label }}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="chips-nav-btn next"
+                    :class="{ 'is-disabled': !canScrollChipsRight }"
+                    :disabled="!canScrollChipsRight"
+                    title="Geser kategori ke kanan"
+                    aria-label="Geser kategori ke kanan"
+                    @click="scrollCategoryChips('right')"
+                  >
+                    <ChevronRight :size="13" />
                   </button>
                 </div>
 
@@ -2458,11 +2593,12 @@ const executeVsCodeReplaceAll = () => {
               <!-- Website Content Stage -->
               <div class="website-rendered-surface" :style="{ '--accent-brand': activeContainer.accentColor }">
                 <!-- Loop Over Blocks -->
-                <template v-for="block in pageBlocks" :key="block.id">
+                <template v-for="(block, bIdx) in pageBlocks" :key="block.id">
                   <div
                     v-if="block.isVisible"
                     class="block-node-wrapper"
                     :class="{
+                      'is-first-block': bIdx === 0 || pageBlocks.findIndex(b => b.isVisible) === bIdx,
                       'is-selected': selectedBlockId === block.id && editorViewMode === 'design',
                       'is-hovered': hoveredBlockId === block.id && editorViewMode === 'design',
                       'is-locked': block.isLocked,
@@ -3518,128 +3654,6 @@ const executeVsCodeReplaceAll = () => {
           </div>
         </section>
         </div>
-
-        <!-- ----------------------------------------------------------------- -->
-        <!-- RIGHT STUDIO DOCK: DEEP STYLE INSPECTOR & CONTENT CONTROLS        -->
-        <!-- ----------------------------------------------------------------- -->
-        <aside class="studio-right-inspector" :class="{ 'dock-hidden': editorViewMode !== 'design' }">
-          <!-- Inspector Tabs Header -->
-          <div class="inspector-tabs-bar">
-            <button
-              class="insp-tab-btn"
-              :class="{ active: activeRightTab === 'layout' }"
-              @click="activeRightTab = 'layout'"
-            >
-              <Sliders :size="13" />
-              <span>Tata Letak</span>
-            </button>
-            <button
-              class="insp-tab-btn"
-              :class="{ active: activeRightTab === 'appearance' }"
-              @click="activeRightTab = 'appearance'"
-            >
-              <Palette :size="13" />
-              <span>Visual & Efek</span>
-            </button>
-          </div>
-
-          <!-- Inspector Content Body -->
-          <div class="inspector-scroll-area">
-            <template v-if="selectedBlock">
-              <!-- TAB 1: TATA LETAK & SPACING -->
-              <div v-if="activeRightTab === 'layout'" class="tab-pane-inspector">
-                <div class="field-item">
-                  <div class="field-label-split">
-                    <label class="field-label">Padding Vertikal (Atas/Bawah)</label>
-                    <span class="field-val-badge">{{ selectedBlock.styles?.paddingY || 40 }}px</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="16"
-                    max="140"
-                    step="4"
-                    :value="selectedBlock.styles?.paddingY || 40"
-                    @input="selectedBlock.styles ? (selectedBlock.styles.paddingY = parseInt(($event.target as HTMLInputElement).value)) : null"
-                    class="range-slider"
-                  />
-                </div>
-
-                <div class="field-item">
-                  <label class="field-label">Perataan Teks (Alignment)</label>
-                  <div class="align-buttons-group">
-                    <button
-                      class="align-btn"
-                      :class="{ active: selectedBlock.styles?.align === 'left' }"
-                      @click="selectedBlock.styles ? (selectedBlock.styles.align = 'left') : null"
-                    >
-                      <AlignLeft :size="13" />
-                      <span>Kiri</span>
-                    </button>
-                    <button
-                      class="align-btn"
-                      :class="{ active: selectedBlock.styles?.align === 'center' || !selectedBlock.styles?.align }"
-                      @click="selectedBlock.styles ? (selectedBlock.styles.align = 'center') : null"
-                    >
-                      <AlignCenter :size="13" />
-                      <span>Tengah</span>
-                    </button>
-                    <button
-                      class="align-btn"
-                      :class="{ active: selectedBlock.styles?.align === 'right' }"
-                      @click="selectedBlock.styles ? (selectedBlock.styles.align = 'right') : null"
-                    >
-                      <AlignRight :size="13" />
-                      <span>Kanan</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- TAB 3: VISUAL & EFFECTS -->
-              <div v-else class="tab-pane-inspector">
-                <div class="field-item">
-                  <label class="field-label">Mode Latar Belakang (Background)</label>
-                  <div class="bgmode-selector-matrix">
-                    <button
-                      class="bgmode-btn"
-                      :class="{ active: selectedBlock.styles?.bgMode === 'transparent' || !selectedBlock.styles?.bgMode }"
-                      @click="selectedBlock.styles ? (selectedBlock.styles.bgMode = 'transparent') : null"
-                    >
-                      Transparan
-                    </button>
-                    <button
-                      class="bgmode-btn"
-                      :class="{ active: selectedBlock.styles?.bgMode === 'glass' }"
-                      @click="selectedBlock.styles ? (selectedBlock.styles.bgMode = 'glass') : null"
-                    >
-                      Glassmorphism
-                    </button>
-                  </div>
-                </div>
-
-                <div class="field-item" style="margin-top: 20px;">
-                  <label class="field-label">Aksi Cepat Section</label>
-                  <div class="block-quick-actions">
-                    <button class="btn-quick-outline" @click="duplicateBlock(selectedBlock.id)">
-                      <Copy :size="13" />
-                      <span>Duplikat Section</span>
-                    </button>
-                    <button class="btn-quick-outline danger" @click="deleteBlock(selectedBlock.id)">
-                      <Trash2 :size="13" />
-                      <span>Hapus Section</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <!-- Fallback When No Block is Selected -->
-            <div v-else class="empty-inspector-state">
-              <MousePointer :size="28" color="#94a3b8" />
-              <p>Pilih salah satu komponen di kanvas atau daftar layers untuk mengedit konten dan gayanya.</p>
-            </div>
-          </div>
-        </aside>
       </div>
 
       <!-- =================================================================== -->
@@ -3706,6 +3720,15 @@ const executeVsCodeReplaceAll = () => {
               >
                 <Type :size="13" />
                 <span>Konten & WYSIWYG</span>
+              </button>
+              <button
+                type="button"
+                class="btn-segmented-tab"
+                :class="{ active: richEditorActiveTab === 'layout' }"
+                @click="richEditorActiveTab = 'layout'"
+              >
+                <Sliders :size="13" />
+                <span>Tata Letak</span>
               </button>
               <button
                 type="button"
@@ -4059,7 +4082,123 @@ const executeVsCodeReplaceAll = () => {
                 </div>
               </div>
 
-              <!-- TAB 2: TIPOGRAFI & FONT -->
+              <!-- TAB 2: TATA LETAK & SPACING -->
+              <div v-else-if="richEditorActiveTab === 'layout'" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- Vertical Padding -->
+                <div class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 6px;">
+                    <label class="field-label">Padding Vertikal (Atas/Bawah)</label>
+                    <span class="field-val-badge">{{ editingBlockDraft.styles?.paddingY || 40 }}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="16"
+                    max="140"
+                    step="4"
+                    :value="editingBlockDraft.styles?.paddingY || 40"
+                    @input="editingBlockDraft.styles ? (editingBlockDraft.styles.paddingY = parseInt(($event.target as HTMLInputElement).value)) : null"
+                    class="range-slider"
+                  />
+                  <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-top: 4px;">
+                    <span>Kompak (16px)</span>
+                    <span>Standar (40-60px)</span>
+                    <span>Lapang (140px)</span>
+                  </div>
+                </div>
+
+                <!-- Text Alignment -->
+                <div class="field-item">
+                  <label class="field-label">Perataan Teks (Alignment)</label>
+                  <div class="align-buttons-group">
+                    <button
+                      type="button"
+                      class="align-btn"
+                      :class="{ active: editingBlockDraft.styles?.align === 'left' }"
+                      @click="editingBlockDraft.styles ? (editingBlockDraft.styles.align = 'left') : null"
+                    >
+                      <AlignLeft :size="13" />
+                      <span>Kiri</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="align-btn"
+                      :class="{ active: editingBlockDraft.styles?.align === 'center' || !editingBlockDraft.styles?.align }"
+                      @click="editingBlockDraft.styles ? (editingBlockDraft.styles.align = 'center') : null"
+                    >
+                      <AlignCenter :size="13" />
+                      <span>Tengah</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="align-btn"
+                      :class="{ active: editingBlockDraft.styles?.align === 'right' }"
+                      @click="editingBlockDraft.styles ? (editingBlockDraft.styles.align = 'right') : null"
+                    >
+                      <AlignRight :size="13" />
+                      <span>Kanan</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Background Surface Style -->
+                <div class="field-item">
+                  <label class="field-label">Mode Latar Belakang (Background Style)</label>
+                  <div class="bgmode-selector-matrix">
+                    <button
+                      type="button"
+                      class="bgmode-btn"
+                      :class="{ active: editingBlockDraft.styles?.bgMode === 'transparent' || !editingBlockDraft.styles?.bgMode }"
+                      @click="editingBlockDraft.styles ? (editingBlockDraft.styles.bgMode = 'transparent') : null"
+                    >
+                      Transparan
+                    </button>
+                    <button
+                      type="button"
+                      class="bgmode-btn"
+                      :class="{ active: editingBlockDraft.styles?.bgMode === 'glass' }"
+                      @click="editingBlockDraft.styles ? (editingBlockDraft.styles.bgMode = 'glass') : null"
+                    >
+                      Glassmorphism
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Corner Radius -->
+                <div class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 6px;">
+                    <label class="field-label">Radius Sudut Kartu (Border Radius)</label>
+                    <span class="field-val-badge">{{ editingBlockDraft.styles?.borderRadius || 12 }}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="32"
+                    step="2"
+                    :value="editingBlockDraft.styles?.borderRadius || 12"
+                    @input="editingBlockDraft.styles ? (editingBlockDraft.styles.borderRadius = parseInt(($event.target as HTMLInputElement).value)) : null"
+                    class="range-slider"
+                  />
+                </div>
+
+                <!-- Backdrop Blur (Conditional if glass mode) -->
+                <div v-if="editingBlockDraft.styles?.bgMode === 'glass'" class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 6px;">
+                    <label class="field-label">Intensitas Blur Glassmorphism</label>
+                    <span class="field-val-badge">{{ editingBlockDraft.styles?.backdropBlur || 16 }}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="4"
+                    max="32"
+                    step="2"
+                    :value="editingBlockDraft.styles?.backdropBlur || 16"
+                    @input="editingBlockDraft.styles ? (editingBlockDraft.styles.backdropBlur = parseInt(($event.target as HTMLInputElement).value)) : null"
+                    class="range-slider"
+                  />
+                </div>
+              </div>
+
+              <!-- TAB 3: TIPOGRAFI & FONT -->
               <div v-else-if="richEditorActiveTab === 'typography'" style="display: flex; flex-direction: column; gap: 14px;">
                 <div class="field-item">
                   <div class="field-label-split" style="margin-bottom: 8px;">
