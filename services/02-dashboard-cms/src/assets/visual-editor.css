@@ -2278,8 +2278,8 @@
 .studio-right-inspector {
   width: 320px;
   height: 100%;
-  background: #ffffff;
-  border-left: 1px solid #e2e8f0;
+  background: #0e1526;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -2300,40 +2300,42 @@
 
 .inspector-tabs-bar {
   display: flex;
-  gap: 2px;
+  gap: 3px;
   padding: 3px;
-  margin: 10px 14px 10px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  margin: 12px 14px 10px;
+  background: #0b0f19;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
 }
 
 .insp-tab-btn {
   flex: 1;
-  height: 30px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   border-radius: 6px;
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .insp-tab-btn:hover {
-  color: #0f172a;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .insp-tab-btn.active {
-  background: #0f172a;
-  color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+  background: #141d33;
+  color: #00f2fe;
+  border-color: rgba(0, 242, 254, 0.35);
+  font-weight: 750;
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.15);
 }
 
 .inspector-scroll-area {
@@ -2342,14 +2344,14 @@
   padding: 10px 14px 20px;
 }
 
-/* Selected Block Card - Refined HeroCMS Obsidian */
+/* Selected Block Card (Legacy fallback if displayed) */
 .selected-block-card {
   padding: 12px 14px;
   margin-bottom: 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #141d33;
+  border: 1px solid rgba(0, 242, 254, 0.25);
   border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .block-card-top {
@@ -2361,10 +2363,10 @@
 
 .badge-block-type {
   font-size: 0.62rem;
-  font-weight: 700;
-  color: #ffffff;
-  background: #0f172a;
-  border: 1px solid #0f172a;
+  font-weight: 800;
+  color: #00f2fe;
+  background: rgba(0, 242, 254, 0.12);
+  border: 1px solid rgba(0, 242, 254, 0.35);
   padding: 2px 7px;
   border-radius: 4px;
   letter-spacing: 0.06em;
@@ -2376,9 +2378,9 @@
   gap: 5px;
   font-size: 0.68rem;
   font-weight: 600;
-  color: #059669;
-  background: #ecfdf5;
-  border: 1px solid #d1fae5;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   padding: 1px 7px;
   border-radius: 9999px;
 }
@@ -2388,13 +2390,13 @@
   height: 6px;
   border-radius: 50%;
   background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 6px #10b981;
 }
 
 .block-card-title {
   font-size: 0.92rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 750;
+  color: #f8fafc;
   margin: 0;
   line-height: 1.35;
   letter-spacing: -0.01em;
@@ -2409,7 +2411,7 @@
   display: block;
   font-size: 0.72rem;
   font-weight: 700;
-  color: #334155;
+  color: #cbd5e1;
   margin-bottom: 6px;
   letter-spacing: 0.01em;
 }
@@ -2423,10 +2425,10 @@
 
 .field-val-badge {
   font-size: 0.7rem;
-  font-weight: 700;
-  color: #0f172a;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
+  font-weight: 750;
+  color: #00f2fe;
+  background: rgba(0, 242, 254, 0.12);
+  border: 1px solid rgba(0, 242, 254, 0.3);
   padding: 2px 7px;
   border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, monospace;
@@ -2510,7 +2512,8 @@
   width: 100%;
   height: 6px;
   border-radius: 3px;
-  background: #e2e8f0;
+  background: #141d33;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   outline: none;
   margin: 8px 0;
   cursor: pointer;
@@ -2522,16 +2525,16 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #0f172a;
-  border: 2px solid #ffffff;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
+  background: #00f2fe;
+  border: 2px solid #0e1526;
+  box-shadow: 0 0 8px rgba(0, 242, 254, 0.5);
   cursor: pointer;
   transition: transform 0.1s ease, background 0.15s ease;
 }
 
 .range-slider::-webkit-slider-thumb:hover {
   transform: scale(1.15);
-  background: #1e293b;
+  background: #38bdf8;
 }
 
 /* Alignment & Background Selector Groups */
@@ -2540,8 +2543,8 @@
   display: flex;
   gap: 3px;
   padding: 3px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: #0b0f19;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
 }
 
@@ -2550,12 +2553,12 @@
   flex: 1;
   height: 32px;
   gap: 5px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   border-radius: 6px;
   font-size: 0.74rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -2565,15 +2568,17 @@
 
 .align-btn:hover,
 .bgmode-btn:hover {
-  color: #0f172a;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .align-btn.active,
 .bgmode-btn.active {
-  background: #0f172a;
-  color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+  background: #141d33;
+  color: #00f2fe;
+  border-color: rgba(0, 242, 254, 0.35);
+  font-weight: 750;
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
 }
 
 .block-quick-actions {
@@ -2590,38 +2595,33 @@
   height: 36px;
   padding: 0 12px;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #141d33;
   font-size: 0.76rem;
   font-weight: 600;
-  color: #334155;
+  color: #cbd5e1;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .btn-quick-outline:hover {
-  background: #f8fafc;
-  border-color: #0f172a;
-  color: #0f172a;
+  background: #16223d;
+  border-color: #00f2fe;
+  color: #00f2fe;
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
 }
 
 .btn-quick-outline.danger {
-  color: #ef4444;
-  border-color: #fecaca;
-  background: #ffffff;
+  color: #f43f5e;
+  border-color: rgba(244, 63, 94, 0.3);
+  background: rgba(244, 63, 94, 0.08);
 }
 
 .btn-quick-outline.danger:hover {
-  background: #fef2f2;
-  border-color: #f87171;
-  color: #b91c1c;
-}
-
-.btn-quick-outline.danger:hover {
-  background: #fef2f2;
-  border-color: #f87171;
-  color: #b91c1c;
+  background: rgba(244, 63, 94, 0.18);
+  border-color: #f43f5e;
+  color: #ff6b81;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.3);
 }
 
 .empty-inspector-state {

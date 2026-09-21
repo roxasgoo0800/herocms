@@ -3308,26 +3308,6 @@ const executeVsCodeReplaceAll = () => {
           <!-- Inspector Content Body -->
           <div class="inspector-scroll-area">
             <template v-if="selectedBlock">
-              <!-- Selected Block Header Card -->
-              <div class="selected-block-card">
-                <div class="block-card-top">
-                  <span class="badge-block-type">{{ selectedBlock.type.toUpperCase() }}</span>
-                  <span class="badge-block-status">
-                    <span class="status-indicator-dot"></span>
-                    Aktif
-                  </span>
-                </div>
-                <h3 class="block-card-title">{{ selectedBlock.name }}</h3>
-                <button
-                  type="button"
-                  class="btn-primary-gradient"
-                  style="width: 100%; margin-top: 10px; justify-content: center; gap: 8px; font-size: 11.5px; height: 36px;"
-                  @click="openRichModalEditor(selectedBlock)"
-                >
-                  <Edit3 :size="13" /> Edit Konten, Tipografi & Animasi
-                </button>
-              </div>
-
               <!-- TAB 1: TATA LETAK & SPACING -->
               <div v-if="activeRightTab === 'layout'" class="tab-pane-inspector">
                 <div class="field-item">
