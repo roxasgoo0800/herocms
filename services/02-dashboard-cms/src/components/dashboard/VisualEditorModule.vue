@@ -2392,11 +2392,14 @@ const executeVsCodeReplaceAll = () => {
                       [block.styles?.animation && block.styles.animation !== 'none' ? 'anim-' + block.styles.animation : '']: true
                     }"
                     :style="{
+                      backgroundColor: block.styles?.bgColor,
+                      color: block.styles?.textColor,
                       fontFamily: block.styles?.fontFamily,
                       fontWeight: block.styles?.fontWeight,
                       letterSpacing: block.styles?.letterSpacing ? `${block.styles.letterSpacing}px` : undefined,
                       textTransform: block.styles?.textTransform,
-                      animationDuration: block.styles?.animationDuration ? `${block.styles.animationDuration}s` : undefined
+                      animationDuration: block.styles?.animationDuration ? `${block.styles.animationDuration}s` : undefined,
+                      '--accent-brand': block.styles?.accentColor || activeContainer.accentColor
                     }"
                     @click="selectBlock(block.id, $event)"
                     @dblclick="openRichModalEditor(block)"
@@ -2450,7 +2453,7 @@ const executeVsCodeReplaceAll = () => {
                       class="rendered-nav-block"
                       :style="{ padding: `${block.styles?.paddingY || 16}px 32px` }"
                     >
-                      <div class="site-brand-logo" :style="{ color: activeContainer.accentColor }">
+                      <div class="site-brand-logo" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">
                         <span class="brand-cube-icon">◆</span>
                         <span class="brand-title">{{ block.title }}</span>
                       </div>
@@ -2459,7 +2462,7 @@ const executeVsCodeReplaceAll = () => {
                         <a href="#features" class="nav-anchor">Keunggulan</a>
                         <a href="#pricing" class="nav-anchor">Layanan</a>
                         <a href="#cta" class="nav-anchor">Kontak</a>
-                        <button class="btn-nav-action" :style="{ backgroundColor: activeContainer.accentColor }">
+                        <button class="btn-nav-action" :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }">
                           {{ block.buttonText || 'Hubungi Saya' }}
                         </button>
                       </div>
@@ -2478,7 +2481,7 @@ const executeVsCodeReplaceAll = () => {
                       <div
                         class="ambient-mesh-glow"
                         :style="{
-                          background: `radial-gradient(circle, ${activeContainer.accentColor}33 0%, transparent 70%)`
+                          background: `radial-gradient(circle, ${(block.styles?.accentColor || activeContainer.accentColor)}33 0%, transparent 70%)`
                         }"
                       ></div>
 
@@ -2486,9 +2489,9 @@ const executeVsCodeReplaceAll = () => {
                         v-if="block.badge"
                         class="hero-badge-tag"
                         :style="{
-                          color: activeContainer.accentColor,
-                          borderColor: activeContainer.accentColor + '40',
-                          backgroundColor: activeContainer.accentColor + '12'
+                          color: block.styles?.accentColor || activeContainer.accentColor,
+                          borderColor: (block.styles?.accentColor || activeContainer.accentColor) + '40',
+                          backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
                         }"
                       >
                         <span>{{ block.badge }}</span>
@@ -2498,14 +2501,15 @@ const executeVsCodeReplaceAll = () => {
                         {{ block.title }}
                       </h1>
 
-                      <p class="hero-bio-lead">
+                      <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="hero-bio-lead"></div>
+                      <p v-else class="hero-bio-lead">
                         {{ block.subtitle }}
                       </p>
 
                       <div class="hero-cta-cluster">
                         <button
                           class="btn-primary-glow"
-                          :style="{ backgroundColor: activeContainer.accentColor }"
+                          :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
                         >
                           <span>{{ block.buttonText || 'Eksplorasi Karya' }}</span>
                           <ArrowRight :size="14" />
@@ -2518,14 +2522,15 @@ const executeVsCodeReplaceAll = () => {
 
                     <!-- BLOCK TYPE 3: FEATURES GRID -->
                     <section
-                      v-else-if="block.type === 'features'"
+                      v-else-if="block.type === 'features' || block.type === 'showcase'"
                       class="rendered-features-block"
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
-                      <div class="section-title-wrap">
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="features-cards-trio">
@@ -2537,8 +2542,8 @@ const executeVsCodeReplaceAll = () => {
                           <div
                             class="card-icon-pill"
                             :style="{
-                              color: activeContainer.accentColor,
-                              backgroundColor: activeContainer.accentColor + '12'
+                              color: block.styles?.accentColor || activeContainer.accentColor,
+                              backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
                             }"
                           >
                             <component :is="getIconComponent(item.icon)" :size="20" />
@@ -2555,10 +2560,11 @@ const executeVsCodeReplaceAll = () => {
                       class="rendered-pricing-block"
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
-                      <div class="section-title-wrap">
+                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="pricing-cards-row">
@@ -2568,7 +2574,7 @@ const executeVsCodeReplaceAll = () => {
                           class="price-tier-card"
                           :class="{ featured: item.tag === 'Terpopuler' }"
                         >
-                          <span v-if="item.tag" class="tier-tag-pill" :style="{ backgroundColor: activeContainer.accentColor }">
+                          <span v-if="item.tag" class="tier-tag-pill" :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }">
                             {{ item.tag }}
                           </span>
                           <h4 class="tier-name">{{ item.title }}</h4>
@@ -2579,14 +2585,14 @@ const executeVsCodeReplaceAll = () => {
                           <p class="tier-desc">{{ item.desc }}</p>
                           <ul v-if="item.features" class="tier-feature-list">
                             <li v-for="(f, fi) in item.features" :key="fi">
-                              <Check :size="13" :color="activeContainer.accentColor" />
+                              <Check :size="13" :color="block.styles?.accentColor || activeContainer.accentColor" />
                               <span>{{ f }}</span>
                             </li>
                           </ul>
                           <button
                             class="btn-tier-action"
                             :style="{
-                              backgroundColor: item.tag === 'Terpopuler' ? activeContainer.accentColor : '#f1f5f9',
+                              backgroundColor: item.tag === 'Terpopuler' ? (block.styles?.accentColor || activeContainer.accentColor) : '#f1f5f9',
                               color: item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a'
                             }"
                           >
@@ -2605,15 +2611,16 @@ const executeVsCodeReplaceAll = () => {
                       <div
                         class="cta-inner-banner"
                         :style="{
-                          borderColor: activeContainer.accentColor + '30',
-                          background: `linear-gradient(135deg, ${activeContainer.accentColor}15 0%, #ffffff80 100%)`
+                          borderColor: (block.styles?.accentColor || activeContainer.accentColor) + '30',
+                          background: `linear-gradient(135deg, ${(block.styles?.accentColor || activeContainer.accentColor)}15 0%, #ffffff80 100%)`
                         }"
                       >
                         <h2 class="cta-heading">{{ block.title }}</h2>
-                        <p class="cta-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="cta-lead"></div>
+                        <p v-else class="cta-lead">{{ block.subtitle }}</p>
                         <button
                           class="btn-cta-big"
-                          :style="{ backgroundColor: activeContainer.accentColor }"
+                          :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
                         >
                           {{ block.buttonText || 'Mulai Sekarang' }}
                         </button>
@@ -2629,7 +2636,8 @@ const executeVsCodeReplaceAll = () => {
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="progress-meters-grid">
@@ -2640,10 +2648,16 @@ const executeVsCodeReplaceAll = () => {
                         >
                           <div class="pm-head">
                             <span class="pm-title">{{ item.title }}</span>
-                            <span class="pm-val">{{ item.percentage || 0 }}%</span>
+                            <span class="pm-val" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">{{ item.percentage || 0 }}%</span>
                           </div>
                           <div class="pm-track">
-                            <div class="pm-fill" :style="{ width: (item.percentage || 0) + '%' }"></div>
+                            <div
+                              class="pm-fill"
+                              :style="{
+                                width: (item.percentage || 0) + '%',
+                                background: `linear-gradient(90deg, ${block.styles?.accentColor || activeContainer.accentColor}, #38bdf8)`
+                              }"
+                            ></div>
                           </div>
                           <p v-if="item.desc" class="pm-desc">{{ item.desc }}</p>
                         </div>
@@ -2659,7 +2673,8 @@ const executeVsCodeReplaceAll = () => {
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="accordion-items-stack">
@@ -2689,7 +2704,8 @@ const executeVsCodeReplaceAll = () => {
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="carousel-stage-container">
@@ -2736,7 +2752,8 @@ const executeVsCodeReplaceAll = () => {
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="form-card-container">
@@ -2752,18 +2769,18 @@ const executeVsCodeReplaceAll = () => {
                               v-else-if="item.tag === 'textarea'"
                               rows="3"
                               class="form-rendered-textarea"
-                              :placeholder="item.label"
+                              :placeholder="item.label || item.desc"
                             ></textarea>
                             <input
                               v-else
                               :type="item.tag || 'text'"
                               class="form-rendered-input"
-                              :placeholder="item.label"
+                              :placeholder="item.label || item.desc"
                             />
                           </div>
                           <button
                             class="btn-form-submit"
-                            :style="{ backgroundColor: activeContainer.accentColor }"
+                            :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
                           >
                             {{ block.buttonText || 'Kirim Pesan Sekarang' }}
                           </button>
@@ -2786,14 +2803,15 @@ const executeVsCodeReplaceAll = () => {
                         </div>
                         <div class="modal-stage-body">
                           <h3 class="modal-stage-title">{{ block.title }}</h3>
-                          <p class="modal-stage-desc">{{ block.subtitle }}</p>
+                          <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="modal-stage-desc"></div>
+                          <p v-else class="modal-stage-desc">{{ block.subtitle }}</p>
                           <div class="modal-stage-actions">
                             <button class="btn-modal-secondary" @click.stop>
                               {{ block.secondaryButtonText || 'Nanti Saja' }}
                             </button>
                             <button
                               class="btn-modal-primary"
-                              :style="{ backgroundColor: activeContainer.accentColor }"
+                              :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
                               @click.stop
                             >
                               {{ block.buttonText || 'Klaim Sekarang' }}
@@ -2813,6 +2831,8 @@ const executeVsCodeReplaceAll = () => {
                         <div class="section-title-wrap" style="margin-bottom: 12px; text-align: left;">
                           <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                           <h3 class="sec-headline" style="font-size: 1.1rem;">{{ block.title }}</h3>
+                          <div v-if="block.styles?.richContent" v-html="block.styles.richContent" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;"></div>
+                          <p v-else-if="block.subtitle" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">{{ block.subtitle }}</p>
                         </div>
                         <button class="dropdown-trigger-btn" @click.stop="toggleBlockOpen(block)">
                           <span>{{ block.items?.[block.activeItemIndex || 0]?.title || 'Pilih Kategori...' }}</span>
@@ -2842,7 +2862,8 @@ const executeVsCodeReplaceAll = () => {
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="cards-showcase-grid">
@@ -2872,7 +2893,8 @@ const executeVsCodeReplaceAll = () => {
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="listgroup-stack-card">
@@ -2900,7 +2922,8 @@ const executeVsCodeReplaceAll = () => {
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
                         <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
                         <h2 class="sec-headline">{{ block.title }}</h2>
-                        <p v-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
                       </div>
 
                       <div class="stats-counters-row">
@@ -2970,7 +2993,7 @@ const executeVsCodeReplaceAll = () => {
                       <div class="footer-divider-line"></div>
                       <div class="footer-content-row">
                         <div class="footer-brand">
-                          <span class="brand-cube-icon" :style="{ color: activeContainer.accentColor }">◆</span>
+                          <span class="brand-cube-icon" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">◆</span>
                           <strong>{{ block.title }}</strong>
                         </div>
                         <p class="footer-copy">{{ block.subtitle }}</p>
@@ -3823,6 +3846,46 @@ const executeVsCodeReplaceAll = () => {
                           style="flex: 1;"
                         />
                       </div>
+
+                      <div v-if="subItem.tag !== undefined" class="sub-item-field-row" style="margin-top: 4px;">
+                        <label class="sub-item-field-label">Tag / Lencana</label>
+                        <input
+                          type="text"
+                          v-model="subItem.tag"
+                          class="field-input sub-item-input"
+                          placeholder="Contoh: Terpopuler, Baru..."
+                        />
+                      </div>
+
+                      <div v-if="subItem.price !== undefined" class="sub-item-field-row" style="margin-top: 4px;">
+                        <label class="sub-item-field-label">Harga & Periode</label>
+                        <div style="display: flex; gap: 8px;">
+                          <input
+                            type="text"
+                            v-model="subItem.price"
+                            class="field-input sub-item-input"
+                            placeholder="Harga (mis: Rp 299rb)"
+                            style="flex: 1;"
+                          />
+                          <input
+                            type="text"
+                            v-model="subItem.period"
+                            class="field-input sub-item-input"
+                            placeholder="Periode (mis: /bln)"
+                            style="width: 100px;"
+                          />
+                        </div>
+                      </div>
+
+                      <div v-if="subItem.role !== undefined" class="sub-item-field-row" style="margin-top: 4px;">
+                        <label class="sub-item-field-label">Peran / Jabatan</label>
+                        <input
+                          type="text"
+                          v-model="subItem.role"
+                          class="field-input sub-item-input"
+                          placeholder="Peran (mis: Lead Engineer)"
+                        />
+                      </div>
                     </div>
 
                     <button
@@ -4155,128 +4218,600 @@ const executeVsCodeReplaceAll = () => {
                   class="browser-content-viewport"
                   :style="{
                     backgroundColor: editingBlockDraft.styles?.bgColor || '#ffffff',
-                    color: editingBlockDraft.styles?.textColor || '#0f172a'
+                    color: editingBlockDraft.styles?.textColor || '#0f172a',
+                    '--accent-brand': editingBlockDraft.styles?.accentColor || activeContainer.accentColor
                   }"
                 >
-                  <!-- Elemen Preview dengan style & animasi langsung -->
+                  <!-- Elemen Preview dengan style & animasi langsung yang 100% 1-to-1 dengan kanvas -->
                   <div
                     :key="animReplayKey"
+                    class="live-preview-stage"
                     :class="[editingBlockDraft.styles?.animation && editingBlockDraft.styles.animation !== 'none' ? 'anim-' + editingBlockDraft.styles.animation : '']"
                     :style="{
                       fontFamily: editingBlockDraft.styles?.fontFamily,
                       fontWeight: editingBlockDraft.styles?.fontWeight,
                       letterSpacing: editingBlockDraft.styles?.letterSpacing ? `${editingBlockDraft.styles.letterSpacing}px` : undefined,
                       textTransform: editingBlockDraft.styles?.textTransform,
-                      animationDuration: editingBlockDraft.styles?.animationDuration ? `${editingBlockDraft.styles.animationDuration}s` : undefined,
-                      width: '100%',
-                      textAlign: editingBlockDraft.styles?.align || 'center'
+                      animationDuration: editingBlockDraft.styles?.animationDuration ? `${editingBlockDraft.styles.animationDuration}s` : undefined
                     }"
                   >
-                    <div
-                      v-if="editingBlockDraft.badge"
-                      style="display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; margin-bottom: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;"
+                    <!-- 1. NAVBAR PREVIEW -->
+                    <nav
+                      v-if="editingBlockDraft.type === 'navbar'"
+                      class="rendered-nav-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 16}px 24px` }"
                     >
-                      {{ editingBlockDraft.badge }}
-                    </div>
-                    <h2 style="font-size: 1.6rem; font-weight: 800; margin: 0 0 10px; color: inherit;">
-                      {{ editingBlockDraft.title }}
-                    </h2>
-                    <div
-                      v-if="editingBlockDraft.styles?.richContent"
-                      v-html="editingBlockDraft.styles.richContent"
-                      style="font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; opacity: 0.85;"
-                    ></div>
-                    <p
-                      v-else-if="editingBlockDraft.subtitle"
-                      style="font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; opacity: 0.85;"
-                    >
-                      {{ editingBlockDraft.subtitle }}
-                    </p>
+                      <div class="site-brand-logo" :style="{ color: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }">
+                        <span class="brand-cube-icon">◆</span>
+                        <span class="brand-title">{{ editingBlockDraft.title }}</span>
+                      </div>
+                      <div class="nav-links-cluster">
+                        <a href="#hero" class="nav-anchor active">Beranda</a>
+                        <a href="#features" class="nav-anchor">Keunggulan</a>
+                        <a href="#pricing" class="nav-anchor">Layanan</a>
+                        <a href="#cta" class="nav-anchor">Kontak</a>
+                        <button class="btn-nav-action" type="button" :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }">
+                          {{ editingBlockDraft.buttonText || 'Hubungi Saya' }}
+                        </button>
+                      </div>
+                    </nav>
 
-                    <!-- Rich items display in live preview -->
-                    <div
-                      v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0"
-                      style="margin-top: 24px; width: 100%;"
+                    <!-- 2. HERO PREVIEW -->
+                    <header
+                      v-else-if="editingBlockDraft.type === 'hero'"
+                      class="rendered-hero-block"
+                      :style="{
+                        padding: `${editingBlockDraft.styles?.paddingY || 56}px 24px`,
+                        textAlign: editingBlockDraft.styles?.align || 'center'
+                      }"
                     >
-                      <!-- 1. Features / Showcase Grid Cards -->
                       <div
-                        v-if="editingBlockDraft.type === 'showcase' || editingBlockDraft.type === 'features'"
-                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; text-align: left;"
+                        class="ambient-mesh-glow"
+                        :style="{
+                          background: `radial-gradient(circle, ${(editingBlockDraft.styles?.accentColor || activeContainer.accentColor)}33 0%, transparent 70%)`
+                        }"
+                      ></div>
+
+                      <div
+                        v-if="editingBlockDraft.badge"
+                        class="hero-badge-tag"
+                        :style="{
+                          color: editingBlockDraft.styles?.accentColor || activeContainer.accentColor,
+                          borderColor: (editingBlockDraft.styles?.accentColor || activeContainer.accentColor) + '40',
+                          backgroundColor: (editingBlockDraft.styles?.accentColor || activeContainer.accentColor) + '12'
+                        }"
                       >
-                        <div
-                          v-for="(item, fIdx) in editingBlockDraft.items"
-                          :key="item.id || fIdx"
-                          style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); display: flex; flex-direction: column; gap: 8px;"
-                        >
-                          <div style="width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center;">
-                            <component :is="getIconComponent(item.icon)" :size="17" />
-                          </div>
-                          <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0;">{{ item.title }}</h4>
-                          <p v-if="item.desc" style="font-size: 0.8rem; color: #64748b; line-height: 1.5; margin: 0;">{{ item.desc }}</p>
-                        </div>
+                        <span>{{ editingBlockDraft.badge }}</span>
                       </div>
 
-                      <!-- 2. Progress Bars -->
+                      <h1 class="hero-main-heading">
+                        {{ editingBlockDraft.title }}
+                      </h1>
+
                       <div
-                        v-else-if="editingBlockDraft.type === 'progressbar'"
-                        style="max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; text-align: left;"
-                      >
-                        <div v-for="(item, pIdx) in editingBlockDraft.items" :key="item.id || pIdx">
-                          <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; color: #0f172a; margin-bottom: 5px;">
-                            <span>{{ item.title }}</span>
-                            <span style="color: #2563eb; font-weight: 700;">{{ item.percentage || 75 }}%</span>
-                          </div>
-                          <div style="width: 100%; height: 7px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
-                            <div style="height: 100%; background: #0f172a; border-radius: 999px; transition: width 0.3s ease;" :style="{ width: `${item.percentage || 75}%` }"></div>
-                          </div>
-                        </div>
+                        v-if="editingBlockDraft.styles?.richContent"
+                        v-html="editingBlockDraft.styles.richContent"
+                        class="hero-bio-lead"
+                      ></div>
+                      <p v-else class="hero-bio-lead">
+                        {{ editingBlockDraft.subtitle }}
+                      </p>
+
+                      <div class="hero-cta-cluster">
+                        <button
+                          class="btn-primary-glow"
+                          type="button"
+                          :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }"
+                        >
+                          <span>{{ editingBlockDraft.buttonText || 'Eksplorasi Karya' }}</span>
+                          <ArrowRight :size="14" />
+                        </button>
+                        <button v-if="editingBlockDraft.secondaryButtonText" type="button" class="btn-secondary-clean">
+                          <span>{{ editingBlockDraft.secondaryButtonText }}</span>
+                        </button>
+                      </div>
+                    </header>
+
+                    <!-- 3. FEATURES / SHOWCASE PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'features' || editingBlockDraft.type === 'showcase'"
+                      class="rendered-features-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
                       </div>
 
-                      <!-- 3. Accordion / Collapse -->
-                      <div
-                        v-else-if="editingBlockDraft.type === 'accordion'"
-                        style="max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; text-align: left;"
-                      >
+                      <div class="features-cards-trio">
                         <div
-                          v-for="(item, aIdx) in editingBlockDraft.items"
-                          :key="item.id || aIdx"
-                          style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;"
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="feature-bento-card"
                         >
-                          <div style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 0.86rem; font-weight: 700; color: #0f172a; background: #f8fafc;">
-                            <span>{{ item.title }}</span>
-                            <ChevronDown :size="14" color="#64748b" />
+                          <div
+                            class="card-icon-pill"
+                            :style="{
+                              color: editingBlockDraft.styles?.accentColor || activeContainer.accentColor,
+                              backgroundColor: (editingBlockDraft.styles?.accentColor || activeContainer.accentColor) + '12'
+                            }"
+                          >
+                            <component :is="getIconComponent(item.icon)" :size="20" />
                           </div>
-                          <div v-if="aIdx === 0 || item.desc" style="padding: 12px 16px; font-size: 0.8rem; color: #64748b; line-height: 1.5; border-top: 1px solid #f1f5f9;">
+                          <h3 class="card-item-title">{{ item.title }}</h3>
+                          <p class="card-item-desc">{{ item.desc }}</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 4. PRICING PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'pricing'"
+                      class="rendered-pricing-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="pricing-cards-row">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="price-tier-card"
+                          :class="{ featured: item.tag === 'Terpopuler' }"
+                        >
+                          <span v-if="item.tag" class="tier-tag-pill" :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }">
+                            {{ item.tag }}
+                          </span>
+                          <h4 class="tier-name">{{ item.title }}</h4>
+                          <div class="tier-price-val">
+                            <span class="price-num">{{ item.price }}</span>
+                            <span class="price-cycle">{{ item.period }}</span>
+                          </div>
+                          <p class="tier-desc">{{ item.desc }}</p>
+                          <ul v-if="item.features" class="tier-feature-list">
+                            <li v-for="(f, fi) in item.features" :key="fi">
+                              <Check :size="13" :color="editingBlockDraft.styles?.accentColor || activeContainer.accentColor" />
+                              <span>{{ f }}</span>
+                            </li>
+                          </ul>
+                          <button
+                            class="btn-tier-action"
+                            type="button"
+                            :style="{
+                              backgroundColor: item.tag === 'Terpopuler' ? (editingBlockDraft.styles?.accentColor || activeContainer.accentColor) : '#f1f5f9',
+                              color: item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a'
+                            }"
+                          >
+                            Pilih Paket
+                          </button>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 5. CTA PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'cta'"
+                      class="rendered-cta-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 36}px 20px` }"
+                    >
+                      <div
+                        class="cta-inner-banner"
+                        :style="{
+                          borderColor: (editingBlockDraft.styles?.accentColor || activeContainer.accentColor) + '30',
+                          background: `linear-gradient(135deg, ${(editingBlockDraft.styles?.accentColor || activeContainer.accentColor)}15 0%, #ffffff80 100%)`
+                        }"
+                      >
+                        <h2 class="cta-heading">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="cta-lead"></div>
+                        <p v-else class="cta-lead">{{ editingBlockDraft.subtitle }}</p>
+                        <button
+                          class="btn-cta-big"
+                          type="button"
+                          :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }"
+                        >
+                          {{ editingBlockDraft.buttonText || 'Mulai Sekarang' }}
+                        </button>
+                      </div>
+                    </section>
+
+                    <!-- 6. PROGRESS BAR PREVIEW (1-to-1 with canvas cards) -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'progressbar'"
+                      class="rendered-progressbar-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'left' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="progress-meters-grid">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="progress-meter-card"
+                        >
+                          <div class="pm-head">
+                            <span class="pm-title">{{ item.title }}</span>
+                            <span class="pm-val" :style="{ color: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }">{{ item.percentage || 0 }}%</span>
+                          </div>
+                          <div class="pm-track">
+                            <div
+                              class="pm-fill"
+                              :style="{
+                                width: (item.percentage || 0) + '%',
+                                background: `linear-gradient(90deg, ${editingBlockDraft.styles?.accentColor || activeContainer.accentColor}, #38bdf8)`
+                              }"
+                            ></div>
+                          </div>
+                          <p v-if="item.desc" class="pm-desc">{{ item.desc }}</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 7. ACCORDION / COLLAPSE PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'accordion'"
+                      class="rendered-accordion-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="accordion-items-stack">
+                        <div
+                          v-for="(item, idx) in editingBlockDraft.items"
+                          :key="item.id"
+                          class="accordion-card-item"
+                          :class="{ 'is-expanded': (editingBlockDraft.activeItemIndex ?? 0) === idx }"
+                        >
+                          <button class="acc-card-trigger" type="button" @click="toggleAccordionItem(editingBlockDraft, idx)">
+                            <span class="acc-card-title">{{ item.title }}</span>
+                            <ChevronDown :size="16" class="acc-card-icon" />
+                          </button>
+                          <div v-if="(editingBlockDraft.activeItemIndex ?? 0) === idx" class="acc-card-content">
                             {{ item.desc }}
                           </div>
                         </div>
                       </div>
+                    </section>
 
-                      <!-- 4. Fallback Generic Items Grid -->
-                      <div
-                        v-else
-                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; text-align: left;"
-                      >
-                        <div
-                          v-for="(item, gIdx) in editingBlockDraft.items"
-                          :key="item.id || gIdx"
-                          style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);"
-                        >
-                          <span v-if="item.label" style="display: inline-block; font-size: 10px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 4px; margin-bottom: 6px;">{{ item.label }}</span>
-                          <h4 style="font-size: 0.9rem; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">{{ item.title }}</h4>
-                          <p v-if="item.desc" style="font-size: 0.78rem; color: #64748b; line-height: 1.45; margin: 0;">{{ item.desc }}</p>
+                    <!-- 8. CAROUSEL / SLIDER PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'carousel'"
+                      class="rendered-carousel-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="carousel-stage-container">
+                        <div v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0" class="carousel-slide-card">
+                          <span v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.tag" class="carousel-tag-badge">
+                            {{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.tag }}
+                          </span>
+                          <h3 class="carousel-headline">{{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.title }}</h3>
+                          <p class="carousel-lead-desc">{{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.desc }}</p>
+                          <span v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.author" class="carousel-author-credit">
+                            — {{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.author }}
+                          </span>
+                        </div>
+
+                        <!-- Carousel Nav Arrows -->
+                        <div class="carousel-nav-arrows">
+                          <button class="carousel-arrow-btn" type="button" @click="prevSlide(editingBlockDraft)" title="Slide Sebelumnya">
+                            <ArrowLeft :size="16" />
+                          </button>
+                          <button class="carousel-arrow-btn" type="button" @click="nextSlide(editingBlockDraft)" title="Slide Berikutnya">
+                            <ArrowRight :size="16" />
+                          </button>
+                        </div>
+
+                        <!-- Dots -->
+                        <div class="carousel-dots-indicator">
+                          <button
+                            v-for="(item, sIdx) in editingBlockDraft.items"
+                            :key="item.id"
+                            type="button"
+                            class="carousel-dot"
+                            :class="{ active: (editingBlockDraft.activeItemIndex || 0) === sIdx }"
+                            @click="setSlide(editingBlockDraft, sIdx)"
+                          ></button>
                         </div>
                       </div>
-                    </div>
+                    </section>
 
-                    <button
-                      v-if="editingBlockDraft.buttonText"
-                      type="button"
-                      style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 600; color: #ffffff; cursor: pointer; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15); margin-top: 20px;"
-                      :style="{ background: editingBlockDraft.styles?.accentColor ? editingBlockDraft.styles.accentColor : '#0f172a' }"
+                    <!-- 9. FORM CONTROL PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'formcontrol'"
+                      class="rendered-formcontrol-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
                     >
-                      {{ editingBlockDraft.buttonText }}
-                    </button>
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="form-card-container">
+                        <form class="form-fields-stack" @submit.prevent>
+                          <div v-for="item in editingBlockDraft.items" :key="item.id" class="form-field-group">
+                            <label class="form-field-label">{{ item.title }}</label>
+                            <select v-if="item.tag === 'select'" class="form-rendered-select">
+                              <option>Pilihan 1: Solusi Cloud & Docker</option>
+                              <option>Pilihan 2: Visual Studio CMS</option>
+                              <option>Pilihan 3: Domain & Edge SSL</option>
+                            </select>
+                            <textarea
+                              v-else-if="item.tag === 'textarea'"
+                              rows="3"
+                              class="form-rendered-textarea"
+                              :placeholder="item.label || item.desc"
+                            ></textarea>
+                            <input
+                              v-else
+                              :type="item.tag || 'text'"
+                              class="form-rendered-input"
+                              :placeholder="item.label || item.desc"
+                            />
+                          </div>
+                          <button
+                            class="btn-form-submit"
+                            type="button"
+                            :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }"
+                          >
+                            {{ editingBlockDraft.buttonText || 'Kirim Pesan Sekarang' }}
+                          </button>
+                        </form>
+                      </div>
+                    </section>
+
+                    <!-- 10. MODAL PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'modal'"
+                      class="rendered-modal-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 36}px 20px` }"
+                    >
+                      <div class="modal-preview-stage">
+                        <div class="modal-stage-header">
+                          <span class="modal-stage-badge">{{ editingBlockDraft.badge || 'POPUP PROMOSI' }}</span>
+                          <button class="modal-stage-close" type="button" @click="toggleBlockOpen(editingBlockDraft)">
+                            <X :size="14" />
+                          </button>
+                        </div>
+                        <div class="modal-stage-body">
+                          <h3 class="modal-stage-title">{{ editingBlockDraft.title }}</h3>
+                          <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="modal-stage-desc"></div>
+                          <p v-else class="modal-stage-desc">{{ editingBlockDraft.subtitle }}</p>
+                          <div class="modal-stage-actions">
+                            <button class="btn-modal-secondary" type="button">
+                              {{ editingBlockDraft.secondaryButtonText || 'Nanti Saja' }}
+                            </button>
+                            <button
+                              class="btn-modal-primary"
+                              type="button"
+                              :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }"
+                            >
+                              {{ editingBlockDraft.buttonText || 'Klaim Sekarang' }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 11. DROPDOWN PREVIEW (1-to-1 with canvas card & select) -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'dropdown'"
+                      class="rendered-dropdown-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 36}px 20px` }"
+                    >
+                      <div class="dropdown-component-card">
+                        <div class="section-title-wrap" style="margin-bottom: 12px; text-align: left;">
+                          <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                          <h3 class="sec-headline" style="font-size: 1.1rem;">{{ editingBlockDraft.title }}</h3>
+                          <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;"></div>
+                          <p v-else-if="editingBlockDraft.subtitle" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">{{ editingBlockDraft.subtitle }}</p>
+                        </div>
+                        <button class="dropdown-trigger-btn" type="button" @click="toggleBlockOpen(editingBlockDraft)">
+                          <span>{{ editingBlockDraft.items?.[editingBlockDraft.activeItemIndex || 0]?.title || 'Pilih Kategori...' }}</span>
+                          <ChevronDown :size="16" />
+                        </button>
+                        <div v-if="editingBlockDraft.isOpen" class="dropdown-options-list">
+                          <div
+                            v-for="(item, dIdx) in editingBlockDraft.items"
+                            :key="item.id"
+                            class="dropdown-option-row"
+                            :class="{ 'is-selected': (editingBlockDraft.activeItemIndex || 0) === dIdx }"
+                            @click="selectDropdownOption(editingBlockDraft, dIdx)"
+                          >
+                            <span>{{ item.title }}</span>
+                            <span v-if="item.desc" style="font-size: 0.72rem; color: #94a3b8;">{{ item.desc }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 12. CARD SHOWCASE PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'card'"
+                      class="rendered-card-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 40}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="cards-showcase-grid">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="showcase-grid-card"
+                        >
+                          <div class="card-header-banner">
+                            <span v-if="item.tag" class="card-tag-pill">{{ item.tag }}</span>
+                          </div>
+                          <div class="card-body-content">
+                            <h3 class="card-grid-title">{{ item.title }}</h3>
+                            <p class="card-grid-desc">{{ item.desc }}</p>
+                            <span v-if="item.role" class="card-role-label">Peran: {{ item.role }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 13. LIST GROUP PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'listgroup'"
+                      class="rendered-listgroup-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 36}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'left' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="listgroup-stack-card">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="listgroup-item-row"
+                        >
+                          <span class="lg-check-icon"><Check :size="14" /></span>
+                          <div class="lg-text-meta">
+                            <span class="lg-item-title">{{ item.title }}</span>
+                            <span v-if="item.desc" class="lg-item-desc">{{ item.desc }}</span>
+                          </div>
+                          <span v-if="item.tag" class="lg-badge-tag">{{ item.tag }}</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 14. STATS PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'stats'"
+                      class="rendered-stats-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 36}px 20px` }"
+                    >
+                      <div class="section-title-wrap" :style="{ textAlign: editingBlockDraft.styles?.align || 'center' }">
+                        <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                        <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                        <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                        <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+
+                      <div class="stats-counters-row">
+                        <div
+                          v-for="item in editingBlockDraft.items"
+                          :key="item.id"
+                          class="stat-counter-box"
+                        >
+                          <span class="stat-number-val">{{ item.title }}</span>
+                          <span class="stat-number-desc">{{ item.desc }}</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 15. PAGINATION PREVIEW -->
+                    <section
+                      v-else-if="editingBlockDraft.type === 'pagination'"
+                      class="rendered-pagination-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 24}px 20px` }"
+                    >
+                      <div v-if="editingBlockDraft.subtitle" style="text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">
+                        {{ editingBlockDraft.subtitle }}
+                      </div>
+                      <div class="pagination-controls-row">
+                        <button class="pagination-btn" type="button" title="Sebelumnya">&laquo;</button>
+                        <button
+                          v-for="(item, pIdx) in editingBlockDraft.items"
+                          :key="item.id"
+                          type="button"
+                          class="pagination-btn"
+                          :class="{ 'is-active': (editingBlockDraft.activeItemIndex || 0) === pIdx }"
+                          @click="setPageNumber(editingBlockDraft, pIdx)"
+                        >
+                          {{ item.title }}
+                        </button>
+                        <button class="pagination-btn" type="button" title="Berikutnya">&raquo;</button>
+                      </div>
+                    </section>
+
+                    <!-- 16. BREADCRUMB PREVIEW -->
+                    <nav
+                      v-else-if="editingBlockDraft.type === 'breadcrumb'"
+                      class="rendered-breadcrumb-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 16}px 20px` }"
+                    >
+                      <div class="breadcrumb-trail-nav">
+                        <template v-for="(item, bIdx) in editingBlockDraft.items" :key="item.id">
+                          <span v-if="bIdx > 0" class="bc-sep-icon">/</span>
+                          <a
+                            v-if="bIdx < (editingBlockDraft.items?.length || 1) - 1"
+                            :href="item.url || '#'"
+                            class="bc-item-anchor"
+                            @click.prevent
+                          >
+                            {{ item.title }}
+                          </a>
+                          <span v-else class="bc-item-current">{{ item.title }}</span>
+                        </template>
+                      </div>
+                    </nav>
+
+                    <!-- 17. FOOTER PREVIEW -->
+                    <footer
+                      v-else-if="editingBlockDraft.type === 'footer'"
+                      class="rendered-footer-block"
+                      :style="{ padding: `${editingBlockDraft.styles?.paddingY || 24}px 20px` }"
+                    >
+                      <div class="footer-divider-line"></div>
+                      <div class="footer-content-row">
+                        <div class="footer-brand">
+                          <span class="brand-cube-icon" :style="{ color: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }">◆</span>
+                          <strong>{{ editingBlockDraft.title }}</strong>
+                        </div>
+                        <p class="footer-copy">{{ editingBlockDraft.subtitle }}</p>
+                      </div>
+                    </footer>
+
+                    <!-- 18. FALLBACK PREVIEW -->
+                    <section v-else style="padding: 24px 20px; text-align: center;">
+                      <span v-if="editingBlockDraft.badge" class="badge-mini-caps">{{ editingBlockDraft.badge }}</span>
+                      <h2 class="sec-headline">{{ editingBlockDraft.title }}</h2>
+                      <div v-if="editingBlockDraft.styles?.richContent" v-html="editingBlockDraft.styles.richContent" class="sec-lead"></div>
+                      <p v-else-if="editingBlockDraft.subtitle" class="sec-lead">{{ editingBlockDraft.subtitle }}</p>
+                      <button
+                        v-if="editingBlockDraft.buttonText"
+                        type="button"
+                        class="btn-primary-glow"
+                        :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor }"
+                      >
+                        {{ editingBlockDraft.buttonText }}
+                      </button>
+                    </section>
                   </div>
                 </div>
               </div>
