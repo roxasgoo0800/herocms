@@ -3439,7 +3439,7 @@ const executeVsCodeReplaceAll = () => {
           <div class="rich-modal-header">
             <div class="rich-header-left">
               <div class="rich-title-icon-box">
-                <Edit3 :size="18" color="#00f2fe" />
+                <Edit3 :size="18" color="#0f172a" />
               </div>
               <div class="rich-title-text-cluster">
                 <div class="rich-title-sup">
@@ -3902,8 +3902,8 @@ const executeVsCodeReplaceAll = () => {
                 <div
                   class="browser-content-viewport"
                   :style="{
-                    backgroundColor: editingBlockDraft.styles?.bgColor || '#0e1526',
-                    color: editingBlockDraft.styles?.textColor || '#f8fafc'
+                    backgroundColor: editingBlockDraft.styles?.bgColor || '#ffffff',
+                    color: editingBlockDraft.styles?.textColor || '#0f172a'
                   }"
                 >
                   <!-- Elemen Preview dengan style & animasi langsung -->
@@ -3922,11 +3922,11 @@ const executeVsCodeReplaceAll = () => {
                   >
                     <div
                       v-if="editingBlockDraft.badge"
-                      style="display: inline-block; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px; margin-bottom: 10px; background: rgba(0, 242, 254, 0.15); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.3);"
+                      style="display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; margin-bottom: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;"
                     >
                       {{ editingBlockDraft.badge }}
                     </div>
-                    <h2 style="font-size: 1.6rem; font-weight: 800; margin: 0 0 10px;">
+                    <h2 style="font-size: 1.6rem; font-weight: 800; margin: 0 0 10px; color: inherit;">
                       {{ editingBlockDraft.title }}
                     </h2>
                     <div
@@ -3943,8 +3943,8 @@ const executeVsCodeReplaceAll = () => {
                     <button
                       v-if="editingBlockDraft.buttonText"
                       type="button"
-                      style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 700; color: #0b0f19; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 242, 254, 0.25);"
-                      :style="{ background: editingBlockDraft.styles?.accentColor ? editingBlockDraft.styles.accentColor : 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)' }"
+                      style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 600; color: #ffffff; cursor: pointer; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);"
+                      :style="{ background: editingBlockDraft.styles?.accentColor ? editingBlockDraft.styles.accentColor : '#0f172a' }"
                     >
                       {{ editingBlockDraft.buttonText }}
                     </button>
@@ -3957,7 +3957,7 @@ const executeVsCodeReplaceAll = () => {
           <!-- Footer -->
           <div class="rich-modal-footer">
             <div class="rich-footer-hint">
-              <span>Tips: Tekan <kbd style="background: rgba(255,255,255,0.08); padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; color: #cbd5e1;">ESC</kbd> untuk menutup. Perubahan otomatis diselaraskan secara realtime.</span>
+              <span>Tips: Tekan <kbd style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; color: #334155;">ESC</kbd> untuk menutup. Perubahan otomatis diselaraskan secara realtime.</span>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
               <button type="button" class="btn-outline-action" @click="closeRichModalEditor">
