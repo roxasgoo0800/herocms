@@ -47,6 +47,12 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  AlignJustify,
+  Bold,
+  Italic,
+  Underline,
+  Type,
+  Zap,
   Files,
   Search,
   GitBranch,
@@ -66,7 +72,13 @@ import {
   type BlockCategory,
   createDefaultBlocks,
   createLibraryBlock,
-  type DevicePreset
+  type DevicePreset,
+  fontOptions,
+  colorPresets,
+  animationOptions,
+  type FontOption,
+  type ColorPreset,
+  type AnimationOption
 } from '../../data/editor-presets';
 
 const {
@@ -814,6 +826,92 @@ const addBlockFromLibrary = (type: VisualBlock['type']) => {
 };
 
 const currentFont = ref('Plus Jakarta Sans');
+
+// -----------------------------------------------------------------------------
+// Rich Studio Modal: Visual & WYSIWYG Content Engine
+// -----------------------------------------------------------------------------
+const isRichEditorOpen = ref(false);
+const richEditorActiveTab = ref<'content' | 'typography' | 'appearance' | 'animation'>('content');
+const richPreviewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
+const editingBlockDraft = ref<VisualBlock | null>(null);
+const animReplayKey = ref(0);
+const richContentSurfaceRef = ref<HTMLDivElement | null>(null);
+
+const openRichModalEditor = (block: VisualBlock) => {
+  editingBlockDraft.value = JSON.parse(JSON.stringify(block));
+  if (!editingBlockDraft.value?.styles) {
+    editingBlockDraft.value!.styles = {};
+  }
+  if (!editingBlockDraft.value?.styles.richContent) {
+    editingBlockDraft.value!.styles.richContent =
+      editingBlockDraft.value?.subtitle || editingBlockDraft.value?.title || '';
+  }
+  if (!editingBlockDraft.value?.styles.animation) {
+    editingBlockDraft.value!.styles.animation = 'none';
+  }
+  if (!editingBlockDraft.value?.styles.fontFamily) {
+    editingBlockDraft.value!.styles.fontFamily = "'Plus Jakarta Sans', system-ui, sans-serif";
+  }
+  richEditorActiveTab.value = 'content';
+  isRichEditorOpen.value = true;
+};
+
+const closeRichModalEditor = () => {
+  isRichEditorOpen.value = false;
+  editingBlockDraft.value = null;
+};
+
+const onWysiwygInput = () => {
+  if (richContentSurfaceRef.value && editingBlockDraft.value?.styles) {
+    editingBlockDraft.value.styles.richContent = richContentSurfaceRef.value.innerHTML;
+  }
+};
+
+const applyRichModalEditor = () => {
+  if (!editingBlockDraft.value) return;
+  const idx = pageBlocks.value.findIndex((b) => b.id === editingBlockDraft.value?.id);
+  if (idx !== -1) {
+    if (richContentSurfaceRef.value && editingBlockDraft.value.styles) {
+      editingBlockDraft.value.styles.richContent = richContentSurfaceRef.value.innerHTML;
+    }
+    pageBlocks.value[idx] = JSON.parse(JSON.stringify(editingBlockDraft.value));
+    selectedBlockId.value = editingBlockDraft.value.id;
+    showToast(`Perubahan '${editingBlockDraft.value.name}' berhasil diterapkan!`, 'success');
+  }
+  isRichEditorOpen.value = false;
+  editingBlockDraft.value = null;
+};
+
+const replayPreviewAnimation = () => {
+  animReplayKey.value += 1;
+};
+
+const formatWysiwyg = (cmd: string, val: string | undefined = undefined) => {
+  document.execCommand(cmd, false, val);
+  if (richContentSurfaceRef.value && editingBlockDraft.value?.styles) {
+    editingBlockDraft.value.styles.richContent = richContentSurfaceRef.value.innerHTML;
+  }
+};
+
+const setEditingFont = (font: FontOption) => {
+  if (editingBlockDraft.value?.styles) {
+    editingBlockDraft.value.styles.fontFamily = font.family;
+  }
+};
+
+const setEditingColor = (color: ColorPreset, type: 'text' | 'bg' | 'accent') => {
+  if (!editingBlockDraft.value?.styles) return;
+  if (type === 'text') editingBlockDraft.value.styles.textColor = color.textHex;
+  if (type === 'bg') editingBlockDraft.value.styles.bgColor = color.hex;
+  if (type === 'accent') editingBlockDraft.value.styles.accentColor = color.hex;
+};
+
+const setEditingAnimation = (anim: AnimationOption['id']) => {
+  if (editingBlockDraft.value?.styles) {
+    editingBlockDraft.value.styles.animation = anim;
+    replayPreviewAnimation();
+  }
+};
 
 // JSON Schema Modal
 const isCodeModalOpen = ref(false);
@@ -2155,9 +2253,18 @@ const executeVsCodeReplaceAll = () => {
                     :class="{
                       'is-selected': selectedBlockId === block.id && editorViewMode === 'design',
                       'is-hovered': hoveredBlockId === block.id && editorViewMode === 'design',
-                      'is-locked': block.isLocked
+                      'is-locked': block.isLocked,
+                      [block.styles?.animation && block.styles.animation !== 'none' ? 'anim-' + block.styles.animation : '']: true
+                    }"
+                    :style="{
+                      fontFamily: block.styles?.fontFamily,
+                      fontWeight: block.styles?.fontWeight,
+                      letterSpacing: block.styles?.letterSpacing ? `${block.styles.letterSpacing}px` : undefined,
+                      textTransform: block.styles?.textTransform,
+                      animationDuration: block.styles?.animationDuration ? `${block.styles.animationDuration}s` : undefined
                     }"
                     @click="selectBlock(block.id, $event)"
+                    @dblclick="openRichModalEditor(block)"
                     @mouseenter="hoveredBlockId = block.id"
                     @mouseleave="hoveredBlockId = null"
                   >
@@ -2172,6 +2279,16 @@ const executeVsCodeReplaceAll = () => {
                       <!-- Floating Action Bar Attached to Selected Block -->
                       <div class="floating-selection-bar" @click.stop>
                         <span class="selection-tag-pill">◆ {{ block.name }}</span>
+                        <div class="bar-divider"></div>
+                        <!-- Tombol Buka Editor Konten, Tipografi, Warna & Animasi -->
+                        <button
+                          type="button"
+                          class="float-btn highlight-edit-btn"
+                          @click="openRichModalEditor(block)"
+                          title="Buka Editor Konten, Tipografi, Warna & Animasi"
+                        >
+                          <Edit3 :size="12" /> Edit Konten & Gaya
+                        </button>
                         <div class="bar-divider"></div>
                         <button class="float-btn" @click="moveBlockUp(block.id)" title="Pindah ke Atas">
                           <ChevronUp :size="13" />
@@ -3207,6 +3324,14 @@ const executeVsCodeReplaceAll = () => {
                   </span>
                 </div>
                 <h3 class="block-card-title">{{ selectedBlock.name }}</h3>
+                <button
+                  type="button"
+                  class="btn-primary-gradient"
+                  style="width: 100%; margin-top: 10px; justify-content: center; gap: 8px; font-size: 11.5px; height: 34px;"
+                  @click="openRichModalEditor(selectedBlock)"
+                >
+                  <Edit3 :size="13" /> Studio Editor & Animasi
+                </button>
               </div>
 
               <!-- TAB 1: KONTEN TEKS & TOMBOL -->
@@ -3469,6 +3594,451 @@ const executeVsCodeReplaceAll = () => {
             <button class="btn-copy-schema" @click="copySchemaJson">
               <Copy :size="14" />
               <span>Salin Schema JSON</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- 4. RICH STUDIO MODAL: ADVANCED WYSIWYG & VISUAL DESIGN ENGINE       -->
+      <!-- =================================================================== -->
+      <div v-if="isRichEditorOpen && editingBlockDraft" class="rich-editor-backdrop" @click.self="closeRichModalEditor">
+        <div class="rich-editor-modal">
+          <!-- Modal Header -->
+          <div class="rich-modal-header">
+            <div class="rich-header-meta">
+              <span class="rich-header-badge">{{ editingBlockDraft.type }}</span>
+              <h3 class="rich-header-title">
+                <Edit3 :size="16" color="#00f2fe" />
+                <span>Studio Editor Konten & Desain: {{ editingBlockDraft.name }}</span>
+              </h3>
+            </div>
+
+            <!-- Tab Switcher (WYSIWYG, Tipografi, Warna & Gaya, Animasi) -->
+            <div class="rich-tabs-nav">
+              <button
+                type="button"
+                class="rich-tab-btn"
+                :class="{ 'is-active': richEditorActiveTab === 'content' }"
+                @click="richEditorActiveTab = 'content'"
+              >
+                <Type :size="14" /> Konten & WYSIWYG
+              </button>
+              <button
+                type="button"
+                class="rich-tab-btn"
+                :class="{ 'is-active': richEditorActiveTab === 'typography' }"
+                @click="richEditorActiveTab = 'typography'"
+              >
+                <Sparkles :size="14" /> Tipografi & Font
+              </button>
+              <button
+                type="button"
+                class="rich-tab-btn"
+                :class="{ 'is-active': richEditorActiveTab === 'appearance' }"
+                @click="richEditorActiveTab = 'appearance'"
+              >
+                <Palette :size="14" /> Warna & Gaya
+              </button>
+              <button
+                type="button"
+                class="rich-tab-btn"
+                :class="{ 'is-active': richEditorActiveTab === 'animation' }"
+                @click="richEditorActiveTab = 'animation'"
+              >
+                <Zap :size="14" /> Animasi & Gerakan
+              </button>
+            </div>
+
+            <button type="button" class="btn-close-rich-modal" @click="closeRichModalEditor" title="Tutup Modal">
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Modal Body (2 Columns Split) -->
+          <div class="rich-modal-body">
+            <!-- Left Column: Controls & Form per Tab -->
+            <div class="rich-controls-pane">
+              <!-- TAB 1: KONTEN & WYSIWYG -->
+              <div v-if="richEditorActiveTab === 'content'" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="field-item">
+                  <label class="field-label">Nama Bagian / Komponen</label>
+                  <input type="text" v-model="editingBlockDraft.name" class="field-input" />
+                </div>
+                <div class="field-item" v-if="editingBlockDraft.badge !== undefined">
+                  <label class="field-label">Label Badge Kategori</label>
+                  <input type="text" v-model="editingBlockDraft.badge" class="field-input" />
+                </div>
+                <div class="field-item">
+                  <label class="field-label">Judul Utama (Headline)</label>
+                  <input type="text" v-model="editingBlockDraft.title" class="field-input" />
+                </div>
+                <div class="field-item" v-if="editingBlockDraft.buttonText !== undefined">
+                  <label class="field-label">Label Tombol Aksi (CTA)</label>
+                  <input type="text" v-model="editingBlockDraft.buttonText" class="field-input" />
+                </div>
+
+                <!-- WYSIWYG Rich Text Editor Surface -->
+                <div class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 6px;">
+                    <label class="field-label">Deskripsi Kaya (Rich Text WYSIWYG)</label>
+                    <span style="font-size: 10px; color: #00f2fe; font-weight: 600;">Format Bebas: Bold, Italic, Link, Warna</span>
+                  </div>
+                  <!-- Toolbar WYSIWYG -->
+                  <div class="wysiwyg-toolbar">
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('bold')" title="Tebal (Ctrl+B)">
+                      <Bold :size="13" />
+                    </button>
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('italic')" title="Miring (Ctrl+I)">
+                      <Italic :size="13" />
+                    </button>
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('underline')" title="Garis Bawah (Ctrl+U)">
+                      <Underline :size="13" />
+                    </button>
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('strikeThrough')" title="Coret">
+                      <s>S</s>
+                    </button>
+                    <div class="wysiwyg-divider"></div>
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyLeft')" title="Rata Kiri">
+                      <AlignLeft :size="13" />
+                    </button>
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyCenter')" title="Rata Tengah">
+                      <AlignCenter :size="13" />
+                    </button>
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyRight')" title="Rata Kanan">
+                      <AlignRight :size="13" />
+                    </button>
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyFull')" title="Rata Kanan Kiri">
+                      <AlignJustify :size="13" />
+                    </button>
+                    <div class="wysiwyg-divider"></div>
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('insertUnorderedList')" title="Daftar Bullet">
+                      •
+                    </button>
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('insertOrderedList')" title="Daftar Angka">
+                      1.
+                    </button>
+                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('removeFormat')" title="Hapus Format">
+                      <RotateCcw :size="13" />
+                    </button>
+                  </div>
+                  <!-- ContentEditable Surface -->
+                  <div
+                    ref="richContentSurfaceRef"
+                    class="wysiwyg-editable-surface"
+                    contenteditable="true"
+                    v-html="editingBlockDraft.styles?.richContent || editingBlockDraft.subtitle || ''"
+                    @input="onWysiwygInput"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- TAB 2: TIPOGRAFI & FONT -->
+              <div v-else-if="richEditorActiveTab === 'typography'" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="field-item">
+                  <label class="field-label">Pilih Jenis Font (Font Family)</label>
+                  <div class="typography-grid">
+                    <div
+                      v-for="font in fontOptions"
+                      :key="font.id"
+                      class="font-card-option"
+                      :class="{ 'is-selected': editingBlockDraft.styles?.fontFamily === font.family }"
+                      @click="setEditingFont(font)"
+                    >
+                      <div class="font-name-label">{{ font.name }}</div>
+                      <div class="font-sample-text" :style="{ fontFamily: font.family }">
+                        The quick brown fox jumps over the lazy dog.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field-item">
+                  <div class="field-label-split">
+                    <label class="field-label">Ketebalan Font (Font Weight)</label>
+                    <span class="field-val-badge">{{ editingBlockDraft.styles?.fontWeight || 'Default' }}</span>
+                  </div>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button
+                      v-for="weight in ['400', '500', '600', '700', '800', '900']"
+                      :key="weight"
+                      type="button"
+                      class="btn-outline-action"
+                      :class="{ active: editingBlockDraft.styles?.fontWeight === weight }"
+                      @click="editingBlockDraft.styles ? (editingBlockDraft.styles.fontWeight = weight) : null"
+                      style="font-size: 11px; padding: 4px 10px;"
+                    >
+                      {{ weight === '400' ? 'Normal' : weight === '600' ? 'SemiBold' : weight === '700' ? 'Bold' : weight === '900' ? 'Black' : weight }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="field-item">
+                  <div class="field-label-split">
+                    <label class="field-label">Letter Spacing (Jarak Karakter Teks)</label>
+                    <span class="field-val-badge">{{ editingBlockDraft.styles?.letterSpacing || 0 }}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-1"
+                    max="6"
+                    step="0.5"
+                    :value="editingBlockDraft.styles?.letterSpacing || 0"
+                    @input="editingBlockDraft.styles ? (editingBlockDraft.styles.letterSpacing = parseFloat(($event.target as HTMLInputElement).value)) : null"
+                    class="range-slider"
+                  />
+                </div>
+
+                <div class="field-item">
+                  <label class="field-label">Transformasi Teks (Text Transform)</label>
+                  <div style="display: flex; gap: 6px;">
+                    <button
+                      v-for="tt in [
+                        { id: 'none', label: 'Biasa' },
+                        { id: 'uppercase', label: 'UPPERCASE' },
+                        { id: 'capitalize', label: 'Capitalize' }
+                      ]"
+                      :key="tt.id"
+                      type="button"
+                      class="btn-outline-action"
+                      :class="{ active: editingBlockDraft.styles?.textTransform === tt.id }"
+                      @click="editingBlockDraft.styles ? (editingBlockDraft.styles.textTransform = tt.id as any) : null"
+                      style="font-size: 11px; padding: 4px 10px;"
+                    >
+                      {{ tt.label }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 3: WARNA & GAYA -->
+              <div v-else-if="richEditorActiveTab === 'appearance'" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="field-item">
+                  <label class="field-label">Warna Teks Utama</label>
+                  <div class="color-swatches-grid" style="margin-bottom: 8px;">
+                    <div
+                      v-for="col in colorPresets"
+                      :key="col.id"
+                      class="color-swatch-circle"
+                      :style="{ backgroundColor: col.hex }"
+                      :class="{ 'is-active': editingBlockDraft.styles?.textColor === col.hex }"
+                      @click="setEditingColor(col, 'text')"
+                      :title="col.name"
+                    ></div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input
+                      type="color"
+                      v-model="editingBlockDraft.styles!.textColor"
+                      style="width: 32px; height: 32px; border: none; background: transparent; cursor: pointer;"
+                    />
+                    <input
+                      type="text"
+                      v-model="editingBlockDraft.styles!.textColor"
+                      class="field-input"
+                      style="width: 140px; font-size: 12px; font-family: monospace;"
+                      placeholder="#000000"
+                    />
+                  </div>
+                </div>
+
+                <div class="field-item">
+                  <label class="field-label">Warna Latar Belakang (Background)</label>
+                  <div class="color-swatches-grid" style="margin-bottom: 8px;">
+                    <div
+                      v-for="col in colorPresets"
+                      :key="col.id"
+                      class="color-swatch-circle"
+                      :style="{ backgroundColor: col.hex }"
+                      :class="{ 'is-active': editingBlockDraft.styles?.bgColor === col.hex }"
+                      @click="setEditingColor(col, 'bg')"
+                      :title="col.name"
+                    ></div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input
+                      type="color"
+                      v-model="editingBlockDraft.styles!.bgColor"
+                      style="width: 32px; height: 32px; border: none; background: transparent; cursor: pointer;"
+                    />
+                    <input
+                      type="text"
+                      v-model="editingBlockDraft.styles!.bgColor"
+                      class="field-input"
+                      style="width: 140px; font-size: 12px; font-family: monospace;"
+                      placeholder="Transparan / Hex"
+                    />
+                  </div>
+                </div>
+
+                <div class="field-item">
+                  <label class="field-label">Warna Aksen Brand / Tombol</label>
+                  <div class="color-swatches-grid" style="margin-bottom: 8px;">
+                    <div
+                      v-for="col in colorPresets"
+                      :key="col.id"
+                      class="color-swatch-circle"
+                      :style="{ backgroundColor: col.hex }"
+                      :class="{ 'is-active': editingBlockDraft.styles?.accentColor === col.hex }"
+                      @click="setEditingColor(col, 'accent')"
+                      :title="col.name"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 4: ANIMASI & GERAKAN -->
+              <div v-else-if="richEditorActiveTab === 'animation'" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="field-item">
+                  <div class="field-label-split" style="margin-bottom: 8px;">
+                    <label class="field-label">Pilih Efek Animasi</label>
+                    <span style="font-size: 10px; color: #00f2fe; font-weight: 600;">Aktif saat dilihat pengunjung</span>
+                  </div>
+                  <div class="animations-grid">
+                    <div
+                      v-for="anim in animationOptions"
+                      :key="anim.id"
+                      class="animation-card"
+                      :class="{ 'is-active': editingBlockDraft.styles?.animation === anim.id }"
+                      @click="setEditingAnimation(anim.id)"
+                    >
+                      <div class="anim-title">
+                        <span>{{ anim.name }}</span>
+                        <Zap v-if="editingBlockDraft.styles?.animation === anim.id" :size="14" color="#00f2fe" />
+                      </div>
+                      <div class="anim-desc">{{ anim.desc }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field-item" v-if="editingBlockDraft.styles?.animation && editingBlockDraft.styles.animation !== 'none'">
+                  <div class="field-label-split">
+                    <label class="field-label">Durasi Animasi (Kecepatan Gerakan)</label>
+                    <span class="field-val-badge">{{ editingBlockDraft.styles?.animationDuration || 0.65 }} detik</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="2.5"
+                    step="0.05"
+                    :value="editingBlockDraft.styles?.animationDuration || 0.65"
+                    @input="editingBlockDraft.styles ? (editingBlockDraft.styles.animationDuration = parseFloat(($event.target as HTMLInputElement).value)) : null; replayPreviewAnimation()"
+                    class="range-slider"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Interactive Realtime Live Preview -->
+            <div class="rich-preview-pane">
+              <div class="preview-stage-header">
+                <span class="preview-stage-title">
+                  <Eye :size="14" color="#00f2fe" /> Pratinjau Interaktif Realtime
+                </span>
+                <div class="preview-device-switch">
+                  <button
+                    type="button"
+                    class="btn-device"
+                    :class="{ 'is-active': richPreviewDevice === 'desktop' }"
+                    @click="richPreviewDevice = 'desktop'"
+                    title="Desktop Preview"
+                  >
+                    <Laptop :size="13" />
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-device"
+                    :class="{ 'is-active': richPreviewDevice === 'tablet' }"
+                    @click="richPreviewDevice = 'tablet'"
+                    title="Tablet Preview"
+                  >
+                    <Tablet :size="13" />
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-device"
+                    :class="{ 'is-active': richPreviewDevice === 'mobile' }"
+                    @click="richPreviewDevice = 'mobile'"
+                    title="Mobile Phone Preview"
+                  >
+                    <Smartphone :size="13" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Interactive Container with Device Frame -->
+              <div
+                class="preview-interactive-container"
+                :class="'device-' + richPreviewDevice"
+                :style="{
+                  backgroundColor: editingBlockDraft.styles?.bgColor || '#ffffff',
+                  color: editingBlockDraft.styles?.textColor || '#0f172a'
+                }"
+              >
+                <!-- Tombol Putar Ulang Animasi -->
+                <button
+                  type="button"
+                  class="preview-replay-trigger"
+                  @click="replayPreviewAnimation"
+                  title="Replay Animasi"
+                >
+                  <RotateCcw :size="12" /> Putar Ulang Animasi
+                </button>
+
+                <!-- Elemen Preview dengan style & animasi langsung -->
+                <div
+                  :key="animReplayKey"
+                  :class="[editingBlockDraft.styles?.animation && editingBlockDraft.styles.animation !== 'none' ? 'anim-' + editingBlockDraft.styles.animation : '']"
+                  :style="{
+                    fontFamily: editingBlockDraft.styles?.fontFamily,
+                    fontWeight: editingBlockDraft.styles?.fontWeight,
+                    letterSpacing: editingBlockDraft.styles?.letterSpacing ? `${editingBlockDraft.styles.letterSpacing}px` : undefined,
+                    textTransform: editingBlockDraft.styles?.textTransform,
+                    animationDuration: editingBlockDraft.styles?.animationDuration ? `${editingBlockDraft.styles.animationDuration}s` : undefined,
+                    width: '100%',
+                    textAlign: editingBlockDraft.styles?.align || 'center'
+                  }"
+                >
+                  <div
+                    v-if="editingBlockDraft.badge"
+                    style="display: inline-block; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px; margin-bottom: 10px; background: rgba(0, 242, 254, 0.15); color: #0284c7;"
+                  >
+                    {{ editingBlockDraft.badge }}
+                  </div>
+                  <h2 style="font-size: 1.6rem; font-weight: 800; margin: 0 0 10px;">
+                    {{ editingBlockDraft.title }}
+                  </h2>
+                  <div
+                    v-if="editingBlockDraft.styles?.richContent"
+                    v-html="editingBlockDraft.styles.richContent"
+                    style="font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; opacity: 0.85;"
+                  ></div>
+                  <p
+                    v-else-if="editingBlockDraft.subtitle"
+                    style="font-size: 0.95rem; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; opacity: 0.85;"
+                  >
+                    {{ editingBlockDraft.subtitle }}
+                  </p>
+                  <button
+                    v-if="editingBlockDraft.buttonText"
+                    type="button"
+                    style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 700; color: #ffffff; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);"
+                    :style="{ backgroundColor: editingBlockDraft.styles?.accentColor || activeContainer.accentColor || '#0284c7' }"
+                  >
+                    {{ editingBlockDraft.buttonText }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="rich-modal-footer">
+            <button type="button" class="btn-outline-action" @click="closeRichModalEditor">
+              Batal
+            </button>
+            <button type="button" class="btn-primary-gradient" @click="applyRichModalEditor" style="display: inline-flex; align-items: center; gap: 6px;">
+              <Check :size="14" /> Terapkan ke Kanvas
             </button>
           </div>
         </div>

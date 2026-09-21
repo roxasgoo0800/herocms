@@ -105,9 +105,19 @@ export interface VisualBlock {
     bgMode?: 'transparent' | 'solid' | 'gradient' | 'glass';
     bgColor?: string;
     textColor?: string;
+    accentColor?: string;
     borderRadius?: number;
     shadow?: 'none' | 'sm' | 'md' | 'lg' | 'glow';
     backdropBlur?: number;
+    fontFamily?: string;
+    fontWeight?: '300' | '400' | '500' | '600' | '700' | '800' | '900' | string;
+    fontSize?: number;
+    letterSpacing?: number;
+    textTransform?: 'none' | 'uppercase' | 'capitalize' | 'lowercase';
+    animation?: 'none' | 'fadeInUp' | 'slideInLeft' | 'zoomIn' | 'bounce' | 'pulseGlow' | 'float';
+    animationDuration?: number;
+    animationDelay?: number;
+    richContent?: string;
   };
 }
 

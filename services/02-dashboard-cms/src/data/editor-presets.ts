@@ -709,3 +709,60 @@ export const createLibraryBlock = (type: VisualBlock['type']): VisualBlock => {
       };
   }
 };
+
+// -----------------------------------------------------------------------------
+// Typography, Animation, and Color Presets for Visual Rich Studio
+// -----------------------------------------------------------------------------
+
+export interface FontOption {
+  id: string;
+  name: string;
+  family: string;
+  category: 'sans' | 'serif' | 'display' | 'mono';
+}
+
+export const fontOptions: FontOption[] = [
+  { id: 'inter', name: 'Inter (Sleek Clean)', family: "'Inter', system-ui, sans-serif", category: 'sans' },
+  { id: 'plus-jakarta', name: 'Plus Jakarta Sans (Modern UI)', family: "'Plus Jakarta Sans', system-ui, sans-serif", category: 'sans' },
+  { id: 'outfit', name: 'Outfit (Geometric High-End)', family: "'Outfit', system-ui, sans-serif", category: 'sans' },
+  { id: 'poppins', name: 'Poppins (Friendly Tech)', family: "'Poppins', sans-serif", category: 'sans' },
+  { id: 'playfair', name: 'Playfair Display (Luxury Serif)', family: "'Playfair Display', Georgia, serif", category: 'serif' },
+  { id: 'fira-code', name: 'Fira Code (Developer Mono)', family: "'Fira Code', 'Courier New', monospace", category: 'mono' },
+  { id: 'roboto', name: 'Roboto (Neutral Pro)', family: "'Roboto', sans-serif", category: 'sans' }
+];
+
+export interface ColorPreset {
+  id: string;
+  name: string;
+  hex: string;
+  textHex: string;
+}
+
+export const colorPresets: ColorPreset[] = [
+  { id: 'cyan', name: 'Electric Cyan', hex: '#00f2fe', textHex: '#00f2fe' },
+  { id: 'azure', name: 'Royal Azure', hex: '#4facfe', textHex: '#4facfe' },
+  { id: 'emerald', name: 'Neon Emerald', hex: '#10b981', textHex: '#10b981' },
+  { id: 'amber', name: 'Amber Gold', hex: '#f59e0b', textHex: '#f59e0b' },
+  { id: 'rose', name: 'Vivid Rose', hex: '#f43f5e', textHex: '#f43f5e' },
+  { id: 'violet', name: 'Ultra Violet', hex: '#8b5cf6', textHex: '#8b5cf6' },
+  { id: 'white', name: 'Pure White', hex: '#ffffff', textHex: '#ffffff' },
+  { id: 'slate', name: 'Muted Slate', hex: '#94a3b8', textHex: '#94a3b8' },
+  { id: 'obsidian', name: 'Deep Obsidian', hex: '#0b0f19', textHex: '#0b0f19' }
+];
+
+export interface AnimationOption {
+  id: 'none' | 'fadeInUp' | 'slideInLeft' | 'zoomIn' | 'bounce' | 'pulseGlow' | 'float';
+  name: string;
+  desc: string;
+  icon: string;
+}
+
+export const animationOptions: AnimationOption[] = [
+  { id: 'none', name: 'Tanpa Animasi', desc: 'Elemen statis tanpa efek gerakan', icon: 'eye-off' },
+  { id: 'fadeInUp', name: 'Fade In Up', desc: 'Meluncur lembut dari bawah dengan transisi opasitas', icon: 'arrow-up' },
+  { id: 'slideInLeft', name: 'Slide In Left', desc: 'Masuk dari sisi kiri dengan akselerasi halus', icon: 'arrow-right' },
+  { id: 'zoomIn', name: 'Zoom In Pop', desc: 'Membesar dinamis dari titik tengah', icon: 'maximize' },
+  { id: 'bounce', name: 'Dynamic Bounce', desc: 'Efek membal ceria untuk memikat perhatian', icon: 'zap' },
+  { id: 'pulseGlow', name: 'Pulse Cyan Glow', desc: 'Berdenyut dengan pancaran pendar neon Electric Cyan', icon: 'sparkles' },
+  { id: 'float', name: 'Floating Infinite', desc: 'Mengambang naik-turun halus secara terus menerus', icon: 'cloud' }
+];
