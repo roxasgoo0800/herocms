@@ -2,6 +2,56 @@
    HEROCMS STUDIO - BESPOKE ENTERPRISE DESIGN SYSTEM (CLEAN & NON-BOOTSTRAP)
    ========================================================================== */
 
+/* -----------------------------------------------------------------------------
+ * Global Smooth Scrolling & Universal Sleek Custom Scrollbars
+ * --------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+*,
+*::before,
+*::after {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+/* Universal WebKit Custom Scrollbar (Chrome, Edge, Safari, Arc, Brave) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+:hover::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.55);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb !important;
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .dashboard-root-layout {
   min-height: 100vh;
   display: flex;
