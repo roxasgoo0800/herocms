@@ -5565,40 +5565,47 @@
 
 /* Dedicated Sub-Header Tab Navigation Bar */
 .rich-tabs-subbar {
-  height: 48px;
+  height: 52px;
   padding: 0 24px;
-  background: #f8fafc;
+  background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-shrink: 0;
 }
 
-.rich-nav-tab {
+.rich-tabs-subbar .segmented-tab-group {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 3px;
+  border-radius: 8px;
+  display: inline-flex;
+  gap: 3px;
+}
+
+.rich-tabs-subbar .btn-segmented-tab {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: #64748b;
+  padding: 6px 14px;
+  border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
+  color: #64748b;
   cursor: pointer;
+  border: none;
+  background: transparent;
   transition: all 0.15s ease;
+  user-select: none;
 }
 
-.rich-nav-tab:hover {
+.rich-tabs-subbar .btn-segmented-tab:hover {
   color: #0f172a;
-  background: #f1f5f9;
 }
 
-.rich-nav-tab.is-active {
+.rich-tabs-subbar .btn-segmented-tab.active {
   background: #ffffff;
   color: #0f172a;
-  border-color: #cbd5e1;
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
@@ -5631,6 +5638,172 @@
   flex-direction: column;
   overflow-y: auto;
   gap: 16px;
+}
+
+/* Sleek Enterprise Studio Scrollbars */
+.rich-controls-pane::-webkit-scrollbar,
+.rich-preview-pane::-webkit-scrollbar,
+.browser-content-viewport::-webkit-scrollbar,
+.wysiwyg-editable-surface::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.rich-controls-pane::-webkit-scrollbar-track,
+.rich-preview-pane::-webkit-scrollbar-track,
+.browser-content-viewport::-webkit-scrollbar-track,
+.wysiwyg-editable-surface::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rich-controls-pane::-webkit-scrollbar-thumb,
+.rich-preview-pane::-webkit-scrollbar-thumb,
+.browser-content-viewport::-webkit-scrollbar-thumb,
+.wysiwyg-editable-surface::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.rich-controls-pane::-webkit-scrollbar-thumb:hover,
+.rich-preview-pane::-webkit-scrollbar-thumb:hover,
+.browser-content-viewport::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Sub-Items Editor Styles */
+.sub-items-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sub-item-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sub-item-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 8px -1px rgba(15, 23, 42, 0.06);
+}
+
+.sub-item-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.sub-item-card-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sub-item-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.sub-item-preview-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-subitem-delete {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-subitem-delete:hover {
+  color: #ef4444;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.sub-item-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sub-item-field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sub-item-field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.sub-item-input {
+  font-size: 12px !important;
+  height: 34px !important;
+}
+
+.sub-item-textarea {
+  font-size: 12px !important;
+  min-height: 56px !important;
+  padding: 8px 10px !important;
+}
+
+.sub-item-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-add-subitem {
+  width: 100%;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 4px;
+}
+
+.btn-add-subitem:hover {
+  background: #ffffff;
+  border-color: #2563eb;
+  color: #2563eb;
 }
 
 /* WYSIWYG Editor Toolbar & Surface */
@@ -5899,7 +6072,7 @@
 }
 
 .browser-mock-titlebar {
-  height: 36px;
+  height: 38px;
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
@@ -5907,11 +6080,14 @@
   justify-content: space-between;
   padding: 0 12px;
   flex-shrink: 0;
+  position: relative;
 }
 
 .mock-window-dots {
   display: flex;
   gap: 6px;
+  align-items: center;
+  width: 54px;
 }
 
 .mock-dot {
@@ -5928,10 +6104,15 @@
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  padding: 2px 10px;
+  padding: 3px 12px;
   font-size: 0.68rem;
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: #64748b;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .browser-content-viewport {
@@ -5948,10 +6129,9 @@
 }
 
 .preview-replay-trigger {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 5px 12px;
+  position: static;
+  height: 26px;
+  padding: 0 10px;
   border-radius: 6px;
   background: #ffffff;
   color: #334155;
@@ -5959,12 +6139,11 @@
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  z-index: 10;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
 .preview-replay-trigger:hover {

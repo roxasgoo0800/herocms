@@ -3459,38 +3459,44 @@ const executeVsCodeReplaceAll = () => {
 
           <!-- Dedicated Sub-Header Tab Navigation Bar -->
           <div class="rich-tabs-subbar">
-            <button
-              type="button"
-              class="rich-nav-tab"
-              :class="{ 'is-active': richEditorActiveTab === 'content' }"
-              @click="richEditorActiveTab = 'content'"
-            >
-              <Type :size="15" /> Konten & WYSIWYG
-            </button>
-            <button
-              type="button"
-              class="rich-nav-tab"
-              :class="{ 'is-active': richEditorActiveTab === 'typography' }"
-              @click="richEditorActiveTab = 'typography'"
-            >
-              <Sparkles :size="15" /> Tipografi & Font
-            </button>
-            <button
-              type="button"
-              class="rich-nav-tab"
-              :class="{ 'is-active': richEditorActiveTab === 'appearance' }"
-              @click="richEditorActiveTab = 'appearance'"
-            >
-              <Palette :size="15" /> Warna & Gaya
-            </button>
-            <button
-              type="button"
-              class="rich-nav-tab"
-              :class="{ 'is-active': richEditorActiveTab === 'animation' }"
-              @click="richEditorActiveTab = 'animation'"
-            >
-              <Zap :size="15" /> Animasi & Gerakan
-            </button>
+            <div class="segmented-tab-group">
+              <button
+                type="button"
+                class="btn-segmented-tab"
+                :class="{ active: richEditorActiveTab === 'content' }"
+                @click="richEditorActiveTab = 'content'"
+              >
+                <Type :size="13" />
+                <span>Konten & WYSIWYG</span>
+              </button>
+              <button
+                type="button"
+                class="btn-segmented-tab"
+                :class="{ active: richEditorActiveTab === 'typography' }"
+                @click="richEditorActiveTab = 'typography'"
+              >
+                <Sparkles :size="13" />
+                <span>Tipografi & Font</span>
+              </button>
+              <button
+                type="button"
+                class="btn-segmented-tab"
+                :class="{ active: richEditorActiveTab === 'appearance' }"
+                @click="richEditorActiveTab = 'appearance'"
+              >
+                <Palette :size="13" />
+                <span>Warna & Gaya</span>
+              </button>
+              <button
+                type="button"
+                class="btn-segmented-tab"
+                :class="{ active: richEditorActiveTab === 'animation' }"
+                @click="richEditorActiveTab = 'animation'"
+              >
+                <Zap :size="13" />
+                <span>Animasi & Gerakan</span>
+              </button>
+            </div>
           </div>
 
           <!-- Modal Body (2 Columns Split) -->
@@ -3520,7 +3526,7 @@ const executeVsCodeReplaceAll = () => {
                 <div class="field-item">
                   <div class="field-label-split" style="margin-bottom: 6px;">
                     <label class="field-label">Deskripsi Kaya (Rich Text WYSIWYG)</label>
-                    <span style="font-size: 10px; color: #00f2fe; font-weight: 600;">Format Bebas: Bold, Italic, Link, Warna</span>
+                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">Format Bebas: Bold, Italic, Link, Warna</span>
                   </div>
                   <!-- Toolbar WYSIWYG -->
                   <div class="wysiwyg-toolbar">
@@ -3575,52 +3581,57 @@ const executeVsCodeReplaceAll = () => {
                   <div class="field-label-split" style="margin-bottom: 8px;">
                     <label class="field-label">Daftar Item / Sub-Elemen ({{ editingBlockDraft.items.length }})</label>
                   </div>
-                  <div class="sub-items-editor-list" style="display: flex; flex-direction: column; gap: 8px;">
+                  <div class="sub-items-editor-list">
                     <div
                       v-for="(subItem, subIdx) in editingBlockDraft.items"
                       :key="subIdx"
                       class="sub-item-card"
-                      style="background: #141d33; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px 12px;"
                     >
-                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                        <span style="font-size: 11px; font-weight: 700; color: #00f2fe;">Item #{{ subIdx + 1 }}</span>
+                      <div class="sub-item-card-header">
+                        <div class="sub-item-card-tag">
+                          <span class="sub-item-badge">Item #{{ subIdx + 1 }}</span>
+                          <span v-if="subItem.title" class="sub-item-preview-title">{{ subItem.title }}</span>
+                        </div>
                         <button
                           v-if="editingBlockDraft.items.length > 1"
                           type="button"
                           @click="editingBlockDraft.items.splice(subIdx, 1)"
-                          style="background: transparent; border: none; color: #f43f5e; cursor: pointer; padding: 2px;"
+                          class="btn-subitem-delete"
                           title="Hapus Item"
                         >
-                          <Trash2 :size="12" />
+                          <Trash2 :size="13" />
                         </button>
                       </div>
-                      <div style="display: flex; flex-direction: column; gap: 6px;">
-                        <input
-                          v-if="subItem.title !== undefined"
-                          type="text"
-                          v-model="subItem.title"
-                          class="field-input"
-                          style="font-size: 12px; padding: 6px 10px;"
-                          placeholder="Judul item..."
-                        />
-                        <input
-                          v-if="subItem.label !== undefined"
-                          type="text"
-                          v-model="subItem.label"
-                          class="field-input"
-                          style="font-size: 12px; padding: 6px 10px;"
-                          placeholder="Label..."
-                        />
-                        <textarea
-                          v-if="subItem.desc !== undefined"
-                          v-model="subItem.desc"
-                          class="field-textarea"
-                          rows="2"
-                          style="font-size: 12px; padding: 6px 10px;"
-                          placeholder="Deskripsi item..."
-                        ></textarea>
-                        <div v-if="subItem.percentage !== undefined" style="display: flex; align-items: center; gap: 8px;">
-                          <label style="font-size: 11px; color: #94a3b8; white-space: nowrap;">Nilai: {{ subItem.percentage }}%</label>
+                      <div class="sub-item-fields">
+                        <div v-if="subItem.title !== undefined" class="sub-item-field-row">
+                          <label class="sub-item-field-label">Judul Item</label>
+                          <input
+                            type="text"
+                            v-model="subItem.title"
+                            class="field-input sub-item-input"
+                            placeholder="Judul item..."
+                          />
+                        </div>
+                        <div v-if="subItem.label !== undefined" class="sub-item-field-row">
+                          <label class="sub-item-field-label">Label Badge</label>
+                          <input
+                            type="text"
+                            v-model="subItem.label"
+                            class="field-input sub-item-input"
+                            placeholder="Label..."
+                          />
+                        </div>
+                        <div v-if="subItem.desc !== undefined" class="sub-item-field-row">
+                          <label class="sub-item-field-label">Deskripsi Item</label>
+                          <textarea
+                            v-model="subItem.desc"
+                            class="field-textarea sub-item-textarea"
+                            rows="2"
+                            placeholder="Deskripsi item..."
+                          ></textarea>
+                        </div>
+                        <div v-if="subItem.percentage !== undefined" class="sub-item-progress-row">
+                          <label class="sub-item-field-label" style="white-space: nowrap; margin-bottom: 0;">Nilai: {{ subItem.percentage }}%</label>
                           <input
                             type="range"
                             min="0"
@@ -3635,10 +3646,9 @@ const executeVsCodeReplaceAll = () => {
                     <button
                       type="button"
                       @click="editingBlockDraft.items.push({ id: 'item-' + Date.now(), title: 'Item Baru', desc: 'Deskripsi baru', percentage: 70 })"
-                      class="btn-outline-action"
-                      style="font-size: 11px; justify-content: center; margin-top: 4px; padding: 6px;"
+                      class="btn-add-subitem"
                     >
-                      <Plus :size="12" /> Tambah Item
+                      <Plus :size="13" /> Tambah Item Baru
                     </button>
                   </div>
                 </div>
@@ -3803,7 +3813,7 @@ const executeVsCodeReplaceAll = () => {
                 <div class="field-item">
                   <div class="field-label-split" style="margin-bottom: 8px;">
                     <label class="field-label">Pilih Efek Animasi</label>
-                    <span style="font-size: 10px; color: #00f2fe; font-weight: 600;">Aktif saat dilihat pengunjung</span>
+                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">Aktif saat dilihat pengunjung</span>
                   </div>
                   <div class="animations-grid">
                     <div
@@ -3815,7 +3825,7 @@ const executeVsCodeReplaceAll = () => {
                     >
                       <div class="anim-title">
                         <span>{{ anim.name }}</span>
-                        <Zap v-if="editingBlockDraft.styles?.animation === anim.id" :size="14" color="#00f2fe" />
+                        <Zap v-if="editingBlockDraft.styles?.animation === anim.id" :size="14" color="#2563eb" />
                       </div>
                       <div class="anim-desc">{{ anim.desc }}</div>
                     </div>
@@ -3940,10 +3950,89 @@ const executeVsCodeReplaceAll = () => {
                     >
                       {{ editingBlockDraft.subtitle }}
                     </p>
+
+                    <!-- Rich items display in live preview -->
+                    <div
+                      v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0"
+                      style="margin-top: 24px; width: 100%;"
+                    >
+                      <!-- 1. Features / Showcase Grid Cards -->
+                      <div
+                        v-if="editingBlockDraft.type === 'showcase' || editingBlockDraft.type === 'features'"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; text-align: left;"
+                      >
+                        <div
+                          v-for="(item, fIdx) in editingBlockDraft.items"
+                          :key="item.id || fIdx"
+                          style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); display: flex; flex-direction: column; gap: 8px;"
+                        >
+                          <div style="width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center;">
+                            <Server v-if="item.icon === 'server' || fIdx === 0" :size="17" />
+                            <Globe v-else-if="item.icon === 'globe' || fIdx === 1" :size="17" />
+                            <TrendingUp v-else :size="17" />
+                          </div>
+                          <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0;">{{ item.title }}</h4>
+                          <p v-if="item.desc" style="font-size: 0.8rem; color: #64748b; line-height: 1.5; margin: 0;">{{ item.desc }}</p>
+                        </div>
+                      </div>
+
+                      <!-- 2. Progress Bars -->
+                      <div
+                        v-else-if="editingBlockDraft.type === 'progressbar'"
+                        style="max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; text-align: left;"
+                      >
+                        <div v-for="(item, pIdx) in editingBlockDraft.items" :key="item.id || pIdx">
+                          <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; color: #0f172a; margin-bottom: 5px;">
+                            <span>{{ item.title }}</span>
+                            <span style="color: #2563eb; font-weight: 700;">{{ item.percentage || 75 }}%</span>
+                          </div>
+                          <div style="width: 100%; height: 7px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+                            <div style="height: 100%; background: #0f172a; border-radius: 999px; transition: width 0.3s ease;" :style="{ width: `${item.percentage || 75}%` }"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 3. Accordion / Collapse -->
+                      <div
+                        v-else-if="editingBlockDraft.type === 'accordion'"
+                        style="max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; text-align: left;"
+                      >
+                        <div
+                          v-for="(item, aIdx) in editingBlockDraft.items"
+                          :key="item.id || aIdx"
+                          style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;"
+                        >
+                          <div style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 0.86rem; font-weight: 700; color: #0f172a; background: #f8fafc;">
+                            <span>{{ item.title }}</span>
+                            <ChevronDown :size="14" color="#64748b" />
+                          </div>
+                          <div v-if="aIdx === 0 || item.desc" style="padding: 12px 16px; font-size: 0.8rem; color: #64748b; line-height: 1.5; border-top: 1px solid #f1f5f9;">
+                            {{ item.desc }}
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 4. Fallback Generic Items Grid -->
+                      <div
+                        v-else
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; text-align: left;"
+                      >
+                        <div
+                          v-for="(item, gIdx) in editingBlockDraft.items"
+                          :key="item.id || gIdx"
+                          style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);"
+                        >
+                          <span v-if="item.label" style="display: inline-block; font-size: 10px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 4px; margin-bottom: 6px;">{{ item.label }}</span>
+                          <h4 style="font-size: 0.9rem; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">{{ item.title }}</h4>
+                          <p v-if="item.desc" style="font-size: 0.78rem; color: #64748b; line-height: 1.45; margin: 0;">{{ item.desc }}</p>
+                        </div>
+                      </div>
+                    </div>
+
                     <button
                       v-if="editingBlockDraft.buttonText"
                       type="button"
-                      style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 600; color: #ffffff; cursor: pointer; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);"
+                      style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 600; color: #ffffff; cursor: pointer; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15); margin-top: 20px;"
                       :style="{ background: editingBlockDraft.styles?.accentColor ? editingBlockDraft.styles.accentColor : '#0f172a' }"
                     >
                       {{ editingBlockDraft.buttonText }}
