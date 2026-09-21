@@ -2455,11 +2455,12 @@ const executeVsCodeReplaceAll = () => {
               <!-- Website Content Stage -->
               <div class="website-rendered-surface" :style="{ '--accent-brand': activeContainer.accentColor }">
                 <!-- Loop Over Blocks -->
-                <template v-for="block in pageBlocks" :key="block.id">
+                <template v-for="(block, bIdx) in pageBlocks" :key="block.id">
                   <div
                     v-if="block.isVisible"
                     class="block-node-wrapper"
                     :class="{
+                      'is-first-block': bIdx === 0 || pageBlocks.findIndex(b => b.isVisible) === bIdx,
                       'is-selected': selectedBlockId === block.id && editorViewMode === 'design',
                       'is-hovered': hoveredBlockId === block.id && editorViewMode === 'design',
                       'is-locked': block.isLocked,

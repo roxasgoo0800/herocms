@@ -1791,6 +1791,14 @@
   z-index: 40;
 }
 
+/* Position floating toolbar inside the top of the first block so it is never clipped by artboard edge */
+.block-node-wrapper.is-first-block .floating-selection-bar,
+.block-node-wrapper:first-of-type .floating-selection-bar {
+  top: 12px;
+  left: 20px;
+  box-shadow: 0 8px 24px -2px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
 .selection-tag-pill {
   font-size: 0.68rem;
   font-weight: 800;
@@ -5478,22 +5486,26 @@
   animation: animFloatSmooth 3.5s infinite ease-in-out;
 }
 
-/* Floating Action Bar Highlighting */
+/* Floating Action Bar Highlighting (HeroCMS Royal Blue Enterprise Theme) */
 .float-btn.highlight-edit-btn {
   width: auto !important;
   height: 24px;
   padding: 0 10px;
-  gap: 5px;
-  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-  color: #0b0f19 !important;
+  gap: 6px;
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  color: #ffffff !important;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 242, 254, 0.35);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.15s ease;
 }
 .float-btn.highlight-edit-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 242, 254, 0.55);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.55);
+  color: #ffffff !important;
 }
 
 /* -----------------------------------------------------------------------------
