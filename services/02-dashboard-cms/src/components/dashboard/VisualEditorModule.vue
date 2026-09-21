@@ -57,7 +57,17 @@ import {
   Search,
   GitBranch,
   Play,
-  RefreshCw
+  RefreshCw,
+  Cpu,
+  Database,
+  Activity,
+  Terminal,
+  Shield,
+  HardDrive,
+  Box,
+  Award,
+  Star,
+  Key
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
@@ -75,9 +85,12 @@ import {
   type DevicePreset,
   fontOptions,
   colorPresets,
+  brandPalettes,
+  editorIconOptions,
   animationOptions,
   type FontOption,
   type ColorPreset,
+  type BrandPalette,
   type AnimationOption
 } from '../../data/editor-presets';
 
@@ -838,6 +851,126 @@ const richPreviewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
 const editingBlockDraft = ref<VisualBlock | null>(null);
 const animReplayKey = ref(0);
 const richContentSurfaceRef = ref<HTMLDivElement | null>(null);
+
+const iconComponentMap: Record<string, any> = {
+  server: Server,
+  cloud: Cloud,
+  database: Database,
+  cpu: Cpu,
+  'hard-drive': HardDrive,
+  terminal: Terminal,
+  'code-2': Code2,
+  box: Box,
+  'shield-check': ShieldCheck,
+  shield: Shield,
+  lock: Lock,
+  key: Key,
+  globe: Globe,
+  'trending-up': TrendingUp,
+  zap: Zap,
+  activity: Activity,
+  rocket: Rocket,
+  check: Check,
+  sparkles: Sparkles,
+  layers: Layers,
+  award: Award,
+  star: Star,
+  sliders: Sliders
+};
+
+const getIconComponent = (iconName?: string) => {
+  if (!iconName) return Server;
+  return iconComponentMap[iconName] || Server;
+};
+
+// Interactive Icon Picker State
+const isIconPickerOpen = ref(false);
+const activeIconPickerSubIdx = ref<number | null>(null);
+const iconPickerSearchQuery = ref('');
+const selectedIconCategory = ref<'Semua' | 'Tech & Cloud' | 'Keamanan & Sistem' | 'Performa & Bisnis' | 'Desain & UI'>('Semua');
+
+const openIconPicker = (subIdx: number) => {
+  activeIconPickerSubIdx.value = subIdx;
+  iconPickerSearchQuery.value = '';
+  selectedIconCategory.value = 'Semua';
+  isIconPickerOpen.value = true;
+};
+
+const closeIconPicker = () => {
+  isIconPickerOpen.value = false;
+  activeIconPickerSubIdx.value = null;
+};
+
+const filteredIconOptions = computed(() => {
+  let list = editorIconOptions;
+  if (selectedIconCategory.value !== 'Semua') {
+    list = list.filter((item) => item.category === selectedIconCategory.value);
+  }
+  if (iconPickerSearchQuery.value.trim()) {
+    const q = iconPickerSearchQuery.value.toLowerCase();
+    list = list.filter((item) => item.name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q));
+  }
+  return list;
+});
+
+const selectIconForItem = (iconId: string) => {
+  if (
+    activeIconPickerSubIdx.value !== null &&
+    editingBlockDraft.value?.items &&
+    editingBlockDraft.value.items[activeIconPickerSubIdx.value]
+  ) {
+    editingBlockDraft.value.items[activeIconPickerSubIdx.value].icon = iconId;
+  }
+  closeIconPicker();
+};
+
+const moveSubItemUp = (idx: number) => {
+  if (!editingBlockDraft.value?.items || idx <= 0) return;
+  const items = editingBlockDraft.value.items;
+  const temp = items[idx];
+  items[idx] = items[idx - 1];
+  items[idx - 1] = temp;
+};
+
+const moveSubItemDown = (idx: number) => {
+  if (!editingBlockDraft.value?.items || idx >= editingBlockDraft.value.items.length - 1) return;
+  const items = editingBlockDraft.value.items;
+  const temp = items[idx];
+  items[idx] = items[idx + 1];
+  items[idx + 1] = temp;
+};
+
+const duplicateSubItem = (idx: number) => {
+  if (!editingBlockDraft.value?.items) return;
+  const original = editingBlockDraft.value.items[idx];
+  const copy = JSON.parse(JSON.stringify(original));
+  copy.id = 'item-' + Date.now();
+  copy.title = `${copy.title || 'Item'} (Salinan)`;
+  editingBlockDraft.value.items.splice(idx + 1, 0, copy);
+};
+
+const applyBrandPalette = (palette: BrandPalette) => {
+  if (!editingBlockDraft.value) return;
+  if (!editingBlockDraft.value.styles) {
+    editingBlockDraft.value.styles = {};
+  }
+  editingBlockDraft.value.styles.textColor = palette.textColor;
+  editingBlockDraft.value.styles.bgColor = palette.bgColor;
+  editingBlockDraft.value.styles.accentColor = palette.accentColor;
+};
+
+const wysiwygWordCount = computed(() => {
+  const text = (editingBlockDraft.value?.styles?.richContent || editingBlockDraft.value?.subtitle || '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+  return text ? text.split(/\s+/).length : 0;
+});
+
+const wysiwygCharCount = computed(() => {
+  const text = (editingBlockDraft.value?.styles?.richContent || editingBlockDraft.value?.subtitle || '')
+    .replace(/<[^>]*>/g, '');
+  return text.length;
+});
 
 const openRichModalEditor = (block: VisualBlock) => {
   editingBlockDraft.value = JSON.parse(JSON.stringify(block));
@@ -2408,9 +2541,7 @@ const executeVsCodeReplaceAll = () => {
                               backgroundColor: activeContainer.accentColor + '12'
                             }"
                           >
-                            <Server v-if="item.icon === 'server'" :size="20" />
-                            <Globe v-else-if="item.icon === 'globe'" :size="20" />
-                            <TrendingUp v-else :size="20" />
+                            <component :is="getIconComponent(item.icon)" :size="20" />
                           </div>
                           <h3 class="card-item-title">{{ item.title }}</h3>
                           <p class="card-item-desc">{{ item.desc }}</p>
@@ -3525,127 +3656,178 @@ const executeVsCodeReplaceAll = () => {
                 <!-- WYSIWYG Rich Text Editor Surface -->
                 <div class="field-item">
                   <div class="field-label-split" style="margin-bottom: 6px;">
-                    <label class="field-label">Deskripsi Kaya (Rich Text WYSIWYG)</label>
-                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">Format Bebas: Bold, Italic, Link, Warna</span>
+                    <label class="field-label">Deskripsi Kaya (Notion-Style WYSIWYG)</label>
+                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">Format Bebas: Bold, Italic, List & Perataan</span>
                   </div>
-                  <!-- Toolbar WYSIWYG -->
-                  <div class="wysiwyg-toolbar">
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('bold')" title="Tebal (Ctrl+B)">
-                      <Bold :size="13" />
-                    </button>
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('italic')" title="Miring (Ctrl+I)">
-                      <Italic :size="13" />
-                    </button>
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('underline')" title="Garis Bawah (Ctrl+U)">
-                      <Underline :size="13" />
-                    </button>
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('strikeThrough')" title="Coret">
-                      <s>S</s>
-                    </button>
-                    <div class="wysiwyg-divider"></div>
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyLeft')" title="Rata Kiri">
-                      <AlignLeft :size="13" />
-                    </button>
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyCenter')" title="Rata Tengah">
-                      <AlignCenter :size="13" />
-                    </button>
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyRight')" title="Rata Kanan">
-                      <AlignRight :size="13" />
-                    </button>
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyFull')" title="Rata Kanan Kiri">
-                      <AlignJustify :size="13" />
-                    </button>
-                    <div class="wysiwyg-divider"></div>
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('insertUnorderedList')" title="Daftar Bullet">
-                      •
-                    </button>
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('insertOrderedList')" title="Daftar Angka">
-                      1.
-                    </button>
-                    <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('removeFormat')" title="Hapus Format">
-                      <RotateCcw :size="13" />
-                    </button>
+                  <div class="wysiwyg-unified-card">
+                    <div class="wysiwyg-card-toolbar">
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('bold')" title="Tebal (Ctrl+B)">
+                        <Bold :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('italic')" title="Miring (Ctrl+I)">
+                        <Italic :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('underline')" title="Garis Bawah (Ctrl+U)">
+                        <Underline :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('strikeThrough')" title="Coret">
+                        <s>S</s>
+                      </button>
+                      <div class="wysiwyg-divider"></div>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyLeft')" title="Rata Kiri">
+                        <AlignLeft :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyCenter')" title="Rata Tengah">
+                        <AlignCenter :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyRight')" title="Rata Kanan">
+                        <AlignRight :size="13" />
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('justifyFull')" title="Rata Kanan Kiri">
+                        <AlignJustify :size="13" />
+                      </button>
+                      <div class="wysiwyg-divider"></div>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('insertUnorderedList')" title="Daftar Bullet">
+                        •
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('insertOrderedList')" title="Daftar Angka">
+                        1.
+                      </button>
+                      <button type="button" class="wysiwyg-btn" @click="formatWysiwyg('removeFormat')" title="Hapus Format">
+                        <RotateCcw :size="13" />
+                      </button>
+                    </div>
+                    <div
+                      ref="richContentSurfaceRef"
+                      class="wysiwyg-card-surface"
+                      contenteditable="true"
+                      data-placeholder="Ketik konten blok di sini..."
+                      v-html="editingBlockDraft.styles?.richContent || editingBlockDraft.subtitle || ''"
+                      @input="onWysiwygInput"
+                    ></div>
+                    <div class="wysiwyg-card-footer">
+                      <span>{{ wysiwygWordCount }} kata · {{ wysiwygCharCount }} karakter</span>
+                      <span style="font-size: 10px; color: #64748b;">Editor Aktif</span>
+                    </div>
                   </div>
-                  <!-- ContentEditable Surface -->
-                  <div
-                    ref="richContentSurfaceRef"
-                    class="wysiwyg-editable-surface"
-                    contenteditable="true"
-                    v-html="editingBlockDraft.styles?.richContent || editingBlockDraft.subtitle || ''"
-                    @input="onWysiwygInput"
-                  ></div>
                 </div>
 
                 <!-- Sub-items editor inside Studio Modal -->
                 <div v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0" class="field-item">
                   <div class="field-label-split" style="margin-bottom: 8px;">
                     <label class="field-label">Daftar Item / Sub-Elemen ({{ editingBlockDraft.items.length }})</label>
+                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">Klik icon untuk mengganti</span>
                   </div>
                   <div class="sub-items-editor-list">
                     <div
                       v-for="(subItem, subIdx) in editingBlockDraft.items"
-                      :key="subIdx"
-                      class="sub-item-card"
+                      :key="subItem.id || subIdx"
+                      class="sub-item-card-v2"
                     >
-                      <div class="sub-item-card-header">
-                        <div class="sub-item-card-tag">
+                      <div class="sub-item-top-bar">
+                        <div class="sub-item-pill-group">
                           <span class="sub-item-badge">Item #{{ subIdx + 1 }}</span>
                           <span v-if="subItem.title" class="sub-item-preview-title">{{ subItem.title }}</span>
                         </div>
-                        <button
-                          v-if="editingBlockDraft.items.length > 1"
-                          type="button"
-                          @click="editingBlockDraft.items.splice(subIdx, 1)"
-                          class="btn-subitem-delete"
-                          title="Hapus Item"
-                        >
-                          <Trash2 :size="13" />
-                        </button>
+                        <div class="sub-item-actions-cluster">
+                          <button
+                            type="button"
+                            class="btn-subitem-action"
+                            :disabled="subIdx === 0"
+                            @click="moveSubItemUp(subIdx)"
+                            title="Naikkan Urutan"
+                          >
+                            <ChevronUp :size="13" />
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-subitem-action"
+                            :disabled="subIdx === editingBlockDraft.items.length - 1"
+                            @click="moveSubItemDown(subIdx)"
+                            title="Turunkan Urutan"
+                          >
+                            <ChevronDown :size="13" />
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-subitem-action"
+                            @click="duplicateSubItem(subIdx)"
+                            title="Duplikasi Item"
+                          >
+                            <Copy :size="12" />
+                          </button>
+                          <button
+                            v-if="editingBlockDraft.items.length > 1"
+                            type="button"
+                            class="btn-subitem-action danger"
+                            @click="editingBlockDraft.items.splice(subIdx, 1)"
+                            title="Hapus Item"
+                          >
+                            <Trash2 :size="12" />
+                          </button>
+                        </div>
                       </div>
-                      <div class="sub-item-fields">
-                        <div v-if="subItem.title !== undefined" class="sub-item-field-row">
-                          <label class="sub-item-field-label">Judul Item</label>
-                          <input
-                            type="text"
-                            v-model="subItem.title"
-                            class="field-input sub-item-input"
-                            placeholder="Judul item..."
-                          />
+
+                      <div class="sub-item-main-row">
+                        <!-- Icon Trigger Button -->
+                        <button
+                          type="button"
+                          class="sub-item-icon-trigger"
+                          @click="openIconPicker(subIdx)"
+                          title="Klik untuk memilih Icon"
+                        >
+                          <component :is="getIconComponent(subItem.icon)" :size="20" />
+                          <span class="icon-trigger-label">Ganti</span>
+                        </button>
+
+                        <div class="sub-item-title-col">
+                          <div v-if="subItem.title !== undefined" class="sub-item-field-row">
+                            <label class="sub-item-field-label">Judul Item</label>
+                            <input
+                              type="text"
+                              v-model="subItem.title"
+                              class="field-input sub-item-input"
+                              placeholder="Judul item..."
+                            />
+                          </div>
+                          <div v-if="subItem.label !== undefined" class="sub-item-field-row" style="margin-top: 4px;">
+                            <label class="sub-item-field-label">Label Badge</label>
+                            <input
+                              type="text"
+                              v-model="subItem.label"
+                              class="field-input sub-item-input"
+                              placeholder="Label..."
+                            />
+                          </div>
                         </div>
-                        <div v-if="subItem.label !== undefined" class="sub-item-field-row">
-                          <label class="sub-item-field-label">Label Badge</label>
-                          <input
-                            type="text"
-                            v-model="subItem.label"
-                            class="field-input sub-item-input"
-                            placeholder="Label..."
-                          />
-                        </div>
-                        <div v-if="subItem.desc !== undefined" class="sub-item-field-row">
-                          <label class="sub-item-field-label">Deskripsi Item</label>
-                          <textarea
-                            v-model="subItem.desc"
-                            class="field-textarea sub-item-textarea"
-                            rows="2"
-                            placeholder="Deskripsi item..."
-                          ></textarea>
-                        </div>
-                        <div v-if="subItem.percentage !== undefined" class="sub-item-progress-row">
-                          <label class="sub-item-field-label" style="white-space: nowrap; margin-bottom: 0;">Nilai: {{ subItem.percentage }}%</label>
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            v-model.number="subItem.percentage"
-                            class="range-slider"
-                            style="flex: 1;"
-                          />
-                        </div>
+                      </div>
+
+                      <div v-if="subItem.desc !== undefined" class="sub-item-field-row">
+                        <label class="sub-item-field-label">Deskripsi Item</label>
+                        <textarea
+                          v-model="subItem.desc"
+                          class="field-textarea sub-item-textarea"
+                          rows="2"
+                          placeholder="Deskripsi item..."
+                        ></textarea>
+                      </div>
+
+                      <div v-if="subItem.percentage !== undefined" class="sub-item-progress-row">
+                        <label class="sub-item-field-label" style="white-space: nowrap; margin-bottom: 0;">Nilai: {{ subItem.percentage }}%</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          v-model.number="subItem.percentage"
+                          class="range-slider"
+                          style="flex: 1;"
+                        />
                       </div>
                     </div>
+
                     <button
                       type="button"
-                      @click="editingBlockDraft.items.push({ id: 'item-' + Date.now(), title: 'Item Baru', desc: 'Deskripsi baru', percentage: 70 })"
+                      @click="editingBlockDraft.items.push({ id: 'item-' + Date.now(), title: 'Fitur Baru', desc: 'Deskripsi fitur baru...', icon: 'zap', percentage: 80 })"
                       class="btn-add-subitem"
                     >
                       <Plus :size="13" /> Tambah Item Baru
@@ -3655,26 +3837,32 @@ const executeVsCodeReplaceAll = () => {
               </div>
 
               <!-- TAB 2: TIPOGRAFI & FONT -->
-              <div v-else-if="richEditorActiveTab === 'typography'" style="display: flex; flex-direction: column; gap: 16px;">
+              <div v-else-if="richEditorActiveTab === 'typography'" style="display: flex; flex-direction: column; gap: 14px;">
                 <div class="field-item">
-                  <label class="field-label">Pilih Jenis Font (Font Family)</label>
-                  <div class="typography-grid">
+                  <div class="field-label-split" style="margin-bottom: 8px;">
+                    <label class="field-label">Pilih Jenis Font (Font Family)</label>
+                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">Google Fonts Enterprise</span>
+                  </div>
+                  <div class="typography-compact-grid">
                     <div
                       v-for="font in fontOptions"
                       :key="font.id"
-                      class="font-card-option"
+                      class="font-compact-card"
                       :class="{ 'is-selected': editingBlockDraft.styles?.fontFamily === font.family }"
                       @click="setEditingFont(font)"
                     >
-                      <div class="font-name-label">{{ font.name }}</div>
-                      <div class="font-sample-text" :style="{ fontFamily: font.family }">
-                        The quick brown fox jumps over the lazy dog.
+                      <div class="font-compact-top">
+                        <span class="font-compact-name">{{ font.name.split(' ')[0] }}</span>
+                        <span class="font-category-tag">{{ font.category }}</span>
+                      </div>
+                      <div class="font-compact-preview" :style="{ fontFamily: font.family }">
+                        Ag Headline Preview 123
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div class="field-item">
+                <div class="color-setting-card">
                   <div class="field-label-split">
                     <label class="field-label">Ketebalan Font (Font Weight)</label>
                     <span class="field-val-badge">{{ editingBlockDraft.styles?.fontWeight || 'Default' }}</span>
@@ -3684,19 +3872,19 @@ const executeVsCodeReplaceAll = () => {
                       v-for="weight in ['400', '500', '600', '700', '800', '900']"
                       :key="weight"
                       type="button"
-                      class="btn-outline-action"
+                      class="btn-segmented-tab"
                       :class="{ active: editingBlockDraft.styles?.fontWeight === weight }"
                       @click="editingBlockDraft.styles ? (editingBlockDraft.styles.fontWeight = weight) : null"
-                      style="font-size: 11px; padding: 4px 10px;"
+                      style="padding: 4px 10px; font-size: 11px;"
                     >
-                      {{ weight === '400' ? 'Normal' : weight === '600' ? 'SemiBold' : weight === '700' ? 'Bold' : weight === '900' ? 'Black' : weight }}
+                      {{ weight === '400' ? 'Normal (400)' : weight === '600' ? 'SemiBold (600)' : weight === '700' ? 'Bold (700)' : weight === '900' ? 'Black (900)' : weight }}
                     </button>
                   </div>
                 </div>
 
-                <div class="field-item">
+                <div class="color-setting-card">
                   <div class="field-label-split">
-                    <label class="field-label">Letter Spacing (Jarak Karakter Teks)</label>
+                    <label class="field-label">Letter Spacing (Jarak Karakter)</label>
                     <span class="field-val-badge">{{ editingBlockDraft.styles?.letterSpacing || 0 }}px</span>
                   </div>
                   <input
@@ -3710,21 +3898,21 @@ const executeVsCodeReplaceAll = () => {
                   />
                 </div>
 
-                <div class="field-item">
-                  <label class="field-label">Transformasi Teks (Text Transform)</label>
+                <div class="color-setting-card">
+                  <label class="field-label" style="margin-bottom: 8px;">Transformasi Teks (Text Transform)</label>
                   <div style="display: flex; gap: 6px;">
                     <button
                       v-for="tt in [
-                        { id: 'none', label: 'Biasa' },
+                        { id: 'none', label: 'Biasa (Default)' },
                         { id: 'uppercase', label: 'UPPERCASE' },
                         { id: 'capitalize', label: 'Capitalize' }
                       ]"
                       :key="tt.id"
                       type="button"
-                      class="btn-outline-action"
+                      class="btn-segmented-tab"
                       :class="{ active: editingBlockDraft.styles?.textTransform === tt.id }"
                       @click="editingBlockDraft.styles ? (editingBlockDraft.styles.textTransform = tt.id as any) : null"
-                      style="font-size: 11px; padding: 4px 10px;"
+                      style="padding: 4px 10px; font-size: 11px;"
                     >
                       {{ tt.label }}
                     </button>
@@ -3733,77 +3921,131 @@ const executeVsCodeReplaceAll = () => {
               </div>
 
               <!-- TAB 3: WARNA & GAYA -->
-              <div v-else-if="richEditorActiveTab === 'appearance'" style="display: flex; flex-direction: column; gap: 16px;">
+              <div v-else-if="richEditorActiveTab === 'appearance'" style="display: flex; flex-direction: column; gap: 14px;">
+                <!-- Section 1: Curated Brand Palettes -->
                 <div class="field-item">
-                  <label class="field-label">Warna Teks Utama</label>
-                  <div class="color-swatches-grid" style="margin-bottom: 8px;">
+                  <div class="field-label-split" style="margin-bottom: 8px;">
+                    <label class="field-label">Preset Palet Brand Terpadu</label>
+                    <span style="font-size: 10px; color: #2563eb; font-weight: 600;">1-Klik Harmonis</span>
+                  </div>
+                  <div class="brand-palettes-grid">
                     <div
+                      v-for="pal in brandPalettes"
+                      :key="pal.id"
+                      class="brand-palette-card"
+                      :class="{ 'is-active': editingBlockDraft.styles?.textColor === pal.textColor && editingBlockDraft.styles?.bgColor === pal.bgColor }"
+                      @click="applyBrandPalette(pal)"
+                    >
+                      <div class="brand-palette-meta">
+                        <span class="brand-palette-name">{{ pal.name }}</span>
+                      </div>
+                      <div class="brand-palette-desc">{{ pal.desc }}</div>
+                      <div class="brand-palette-preview">
+                        <span class="brand-preview-chip" :style="{ background: pal.textColor, color: '#ffffff' }">Text</span>
+                        <span class="brand-preview-chip" :style="{ background: pal.bgColor, color: pal.textColor }">Card</span>
+                        <span class="brand-preview-chip" :style="{ background: pal.accentColor, color: '#ffffff' }">Accent</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 2: Detailed Controls -->
+                <div class="color-setting-card">
+                  <div class="color-setting-header">
+                    <span class="color-setting-title">Warna Teks Utama</span>
+                    <span style="font-size: 11px; font-family: monospace; color: #64748b;">{{ editingBlockDraft.styles?.textColor || '#0f172a' }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button
                       v-for="col in colorPresets"
                       :key="col.id"
+                      type="button"
                       class="color-swatch-circle"
                       :style="{ backgroundColor: col.hex }"
                       :class="{ 'is-active': editingBlockDraft.styles?.textColor === col.hex }"
                       @click="setEditingColor(col, 'text')"
                       :title="col.name"
-                    ></div>
+                    ></button>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="color-picker-dual-control">
                     <input
                       type="color"
                       v-model="editingBlockDraft.styles!.textColor"
-                      style="width: 32px; height: 32px; border: none; background: transparent; cursor: pointer;"
+                      class="native-color-trigger"
                     />
                     <input
                       type="text"
                       v-model="editingBlockDraft.styles!.textColor"
                       class="field-input"
                       style="width: 140px; font-size: 12px; font-family: monospace;"
-                      placeholder="#000000"
+                      placeholder="#0f172a"
                     />
                   </div>
                 </div>
 
-                <div class="field-item">
-                  <label class="field-label">Warna Latar Belakang (Background)</label>
-                  <div class="color-swatches-grid" style="margin-bottom: 8px;">
-                    <div
+                <div class="color-setting-card">
+                  <div class="color-setting-header">
+                    <span class="color-setting-title">Latar Belakang (Background Surface)</span>
+                    <span style="font-size: 11px; font-family: monospace; color: #64748b;">{{ editingBlockDraft.styles?.bgColor || '#ffffff' }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button
                       v-for="col in colorPresets"
                       :key="col.id"
+                      type="button"
                       class="color-swatch-circle"
                       :style="{ backgroundColor: col.hex }"
                       :class="{ 'is-active': editingBlockDraft.styles?.bgColor === col.hex }"
                       @click="setEditingColor(col, 'bg')"
                       :title="col.name"
-                    ></div>
+                    ></button>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="color-picker-dual-control">
                     <input
                       type="color"
                       v-model="editingBlockDraft.styles!.bgColor"
-                      style="width: 32px; height: 32px; border: none; background: transparent; cursor: pointer;"
+                      class="native-color-trigger"
                     />
                     <input
                       type="text"
                       v-model="editingBlockDraft.styles!.bgColor"
                       class="field-input"
                       style="width: 140px; font-size: 12px; font-family: monospace;"
-                      placeholder="Transparan / Hex"
+                      placeholder="#ffffff"
                     />
                   </div>
                 </div>
 
-                <div class="field-item">
-                  <label class="field-label">Warna Aksen Brand / Tombol</label>
-                  <div class="color-swatches-grid" style="margin-bottom: 8px;">
-                    <div
+                <div class="color-setting-card">
+                  <div class="color-setting-header">
+                    <span class="color-setting-title">Warna Aksen Brand / Tombol</span>
+                    <span style="font-size: 11px; font-family: monospace; color: #64748b;">{{ editingBlockDraft.styles?.accentColor || '#2563eb' }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button
                       v-for="col in colorPresets"
                       :key="col.id"
+                      type="button"
                       class="color-swatch-circle"
                       :style="{ backgroundColor: col.hex }"
                       :class="{ 'is-active': editingBlockDraft.styles?.accentColor === col.hex }"
                       @click="setEditingColor(col, 'accent')"
                       :title="col.name"
-                    ></div>
+                    ></button>
+                  </div>
+                  <div class="color-picker-dual-control">
+                    <input
+                      type="color"
+                      v-model="editingBlockDraft.styles!.accentColor"
+                      class="native-color-trigger"
+                    />
+                    <input
+                      type="text"
+                      v-model="editingBlockDraft.styles!.accentColor"
+                      class="field-input"
+                      style="width: 140px; font-size: 12px; font-family: monospace;"
+                      placeholder="#2563eb"
+                    />
                   </div>
                 </div>
               </div>
@@ -3967,9 +4209,7 @@ const executeVsCodeReplaceAll = () => {
                           style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); display: flex; flex-direction: column; gap: 8px;"
                         >
                           <div style="width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center;">
-                            <Server v-if="item.icon === 'server' || fIdx === 0" :size="17" />
-                            <Globe v-else-if="item.icon === 'globe' || fIdx === 1" :size="17" />
-                            <TrendingUp v-else :size="17" />
+                            <component :is="getIconComponent(item.icon)" :size="17" />
                           </div>
                           <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0;">{{ item.title }}</h4>
                           <p v-if="item.desc" style="font-size: 0.8rem; color: #64748b; line-height: 1.5; margin: 0;">{{ item.desc }}</p>
@@ -4054,6 +4294,63 @@ const executeVsCodeReplaceAll = () => {
               </button>
               <button type="button" class="btn-primary-gradient" @click="applyRichModalEditor" style="display: inline-flex; align-items: center; gap: 6px;">
                 <Check :size="14" /> Terapkan ke Kanvas
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- Interactive Lucide Icon Picker Modal Dialog                         -->
+      <!-- =================================================================== -->
+      <div v-if="isIconPickerOpen" class="icon-picker-backdrop" @click.self="closeIconPicker">
+        <div class="icon-picker-modal">
+          <div class="icon-picker-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <Sparkles :size="16" color="#2563eb" />
+              <span class="icon-picker-title">Pilih Icon Item</span>
+            </div>
+            <button type="button" class="btn-close-rich-modal" @click="closeIconPicker" style="width: 28px; height: 28px;">
+              <X :size="14" />
+            </button>
+          </div>
+
+          <div class="icon-picker-search-bar">
+            <Search :size="14" style="position: absolute; left: 28px; top: 20px; color: #94a3b8;" />
+            <input
+              type="text"
+              v-model="iconPickerSearchQuery"
+              class="icon-picker-search-input"
+              placeholder="Cari icon (server, cloud, shield, zap, lock)..."
+            />
+          </div>
+
+          <div style="display: flex; gap: 6px; padding: 4px 18px 10px; overflow-x: auto; flex-shrink: 0;">
+            <button
+              v-for="cat in (['Semua', 'Tech & Cloud', 'Keamanan & Sistem', 'Performa & Bisnis', 'Desain & UI'] as const)"
+              :key="cat"
+              type="button"
+              class="btn-segmented-tab"
+              :class="{ active: selectedIconCategory === cat }"
+              @click="selectedIconCategory = cat"
+              style="padding: 3px 10px; font-size: 11px; white-space: nowrap;"
+            >
+              {{ cat }}
+            </button>
+          </div>
+
+          <div class="icon-picker-body">
+            <div class="icon-picker-grid">
+              <button
+                v-for="opt in filteredIconOptions"
+                :key="opt.id"
+                type="button"
+                class="icon-picker-tile"
+                :class="{ 'is-selected': activeIconPickerSubIdx !== null && editingBlockDraft?.items?.[activeIconPickerSubIdx]?.icon === opt.icon }"
+                @click="selectIconForItem(opt.icon)"
+              >
+                <component :is="getIconComponent(opt.icon)" :size="20" />
+                <span class="icon-tile-name">{{ opt.name }}</span>
               </button>
             </div>
           </div>

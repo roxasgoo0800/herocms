@@ -739,15 +739,74 @@ export interface ColorPreset {
 }
 
 export const colorPresets: ColorPreset[] = [
-  { id: 'cyan', name: 'Electric Cyan', hex: '#00f2fe', textHex: '#00f2fe' },
-  { id: 'azure', name: 'Royal Azure', hex: '#4facfe', textHex: '#4facfe' },
-  { id: 'emerald', name: 'Neon Emerald', hex: '#10b981', textHex: '#10b981' },
-  { id: 'amber', name: 'Amber Gold', hex: '#f59e0b', textHex: '#f59e0b' },
-  { id: 'rose', name: 'Vivid Rose', hex: '#f43f5e', textHex: '#f43f5e' },
-  { id: 'violet', name: 'Ultra Violet', hex: '#8b5cf6', textHex: '#8b5cf6' },
-  { id: 'white', name: 'Pure White', hex: '#ffffff', textHex: '#ffffff' },
-  { id: 'slate', name: 'Muted Slate', hex: '#94a3b8', textHex: '#94a3b8' },
-  { id: 'obsidian', name: 'Deep Obsidian', hex: '#0b0f19', textHex: '#0b0f19' }
+  { id: 'slate', name: 'Deep Slate', hex: '#0f172a', textHex: '#0f172a' },
+  { id: 'blue', name: 'Royal Blue', hex: '#2563eb', textHex: '#2563eb' },
+  { id: 'sky', name: 'Sky Cyan', hex: '#0284c7', textHex: '#0284c7' },
+  { id: 'emerald', name: 'Emerald Green', hex: '#059669', textHex: '#059669' },
+  { id: 'amber', name: 'Amber Gold', hex: '#d97706', textHex: '#d97706' },
+  { id: 'rose', name: 'Rose Red', hex: '#e11d48', textHex: '#e11d48' },
+  { id: 'violet', name: 'Ultra Violet', hex: '#7c3aed', textHex: '#7c3aed' },
+  { id: 'zinc', name: 'Neutral Zinc', hex: '#52525b', textHex: '#52525b' },
+  { id: 'canvas', name: 'Slate Light', hex: '#f8fafc', textHex: '#0f172a' },
+  { id: 'white', name: 'Pure White', hex: '#ffffff', textHex: '#0f172a' }
+];
+
+export interface BrandPalette {
+  id: string;
+  name: string;
+  desc: string;
+  textColor: string;
+  bgColor: string;
+  accentColor: string;
+}
+
+export const brandPalettes: BrandPalette[] = [
+  { id: 'hero-slate', name: 'Hero Slate Pro', desc: 'Tema resmi enterprise HeroCMS', textColor: '#0f172a', bgColor: '#ffffff', accentColor: '#2563eb' },
+  { id: 'ocean-blue', name: 'Oceanic Cloud', desc: 'Biru royal sejuk & terpercaya', textColor: '#0f172a', bgColor: '#f0f9ff', accentColor: '#0284c7' },
+  { id: 'emerald-vault', name: 'Emerald Security', desc: 'Aksen hijau fintech terisolasi', textColor: '#064e3b', bgColor: '#f0fdf4', accentColor: '#059669' },
+  { id: 'violet-luxury', name: 'Violet Studio', desc: 'Modern, elegan & berani', textColor: '#1e1b4b', bgColor: '#faf5ff', accentColor: '#7c3aed' },
+  { id: 'amber-sunset', name: 'Amber Horizon', desc: 'Hangat, dinamis & atraktif', textColor: '#451a03', bgColor: '#fffbeb', accentColor: '#d97706' },
+  { id: 'monochrome', name: 'Minimal Mono', desc: 'Netral hitam putih esensial', textColor: '#09090b', bgColor: '#ffffff', accentColor: '#09090b' }
+];
+
+export interface EditorIconOption {
+  id: string;
+  name: string;
+  category: 'Tech & Cloud' | 'Keamanan & Sistem' | 'Performa & Bisnis' | 'Desain & UI';
+  icon: string;
+}
+
+export const editorIconOptions: EditorIconOption[] = [
+  // Tech & Cloud
+  { id: 'server', name: 'Server Node', category: 'Tech & Cloud', icon: 'server' },
+  { id: 'cloud', name: 'Cloud Native', category: 'Tech & Cloud', icon: 'cloud' },
+  { id: 'database', name: 'Database SQL', category: 'Tech & Cloud', icon: 'database' },
+  { id: 'cpu', name: 'CPU Processor', category: 'Tech & Cloud', icon: 'cpu' },
+  { id: 'hard-drive', name: 'Storage SSD', category: 'Tech & Cloud', icon: 'hard-drive' },
+  { id: 'terminal', name: 'CLI Terminal', category: 'Tech & Cloud', icon: 'terminal' },
+  { id: 'code-2', name: 'API & Code', category: 'Tech & Cloud', icon: 'code-2' },
+  { id: 'box', name: 'Docker Box', category: 'Tech & Cloud', icon: 'box' },
+
+  // Keamanan & Sistem
+  { id: 'shield-check', name: 'Shield Verify', category: 'Keamanan & Sistem', icon: 'shield-check' },
+  { id: 'shield', name: 'Security Guard', category: 'Keamanan & Sistem', icon: 'shield' },
+  { id: 'lock', name: 'Encryption Lock', category: 'Keamanan & Sistem', icon: 'lock' },
+  { id: 'key', name: 'API Key Access', category: 'Keamanan & Sistem', icon: 'key' },
+  { id: 'globe', name: 'Global Network', category: 'Keamanan & Sistem', icon: 'globe' },
+
+  // Performa & Bisnis
+  { id: 'trending-up', name: 'High Growth', category: 'Performa & Bisnis', icon: 'trending-up' },
+  { id: 'zap', name: 'Ultra Fast', category: 'Performa & Bisnis', icon: 'zap' },
+  { id: 'activity', name: 'Live Telemetry', category: 'Performa & Bisnis', icon: 'activity' },
+  { id: 'rocket', name: 'Fast Deploy', category: 'Performa & Bisnis', icon: 'rocket' },
+  { id: 'check', name: 'Compliance SLA', category: 'Performa & Bisnis', icon: 'check' },
+
+  // Desain & UI
+  { id: 'sparkles', name: 'AI Features', category: 'Desain & UI', icon: 'sparkles' },
+  { id: 'layers', name: 'Multi Layer', category: 'Desain & UI', icon: 'layers' },
+  { id: 'award', name: 'Award Trophy', category: 'Desain & UI', icon: 'award' },
+  { id: 'star', name: 'Featured Star', category: 'Desain & UI', icon: 'star' },
+  { id: 'sliders', name: 'Custom Control', category: 'Desain & UI', icon: 'sliders' }
 ];
 
 export interface AnimationOption {
@@ -763,6 +822,6 @@ export const animationOptions: AnimationOption[] = [
   { id: 'slideInLeft', name: 'Slide In Left', desc: 'Masuk dari sisi kiri dengan akselerasi halus', icon: 'arrow-right' },
   { id: 'zoomIn', name: 'Zoom In Pop', desc: 'Membesar dinamis dari titik tengah', icon: 'maximize' },
   { id: 'bounce', name: 'Dynamic Bounce', desc: 'Efek membal ceria untuk memikat perhatian', icon: 'zap' },
-  { id: 'pulseGlow', name: 'Pulse Cyan Glow', desc: 'Berdenyut dengan pancaran pendar neon Electric Cyan', icon: 'sparkles' },
+  { id: 'pulseGlow', name: 'Pulse Glow', desc: 'Berdenyut dengan pendar royal blue halus', icon: 'sparkles' },
   { id: 'float', name: 'Floating Infinite', desc: 'Mengambang naik-turun halus secara terus menerus', icon: 'cloud' }
 ];
