@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import {
   History,
   GitCommit,
@@ -19,11 +19,27 @@ import type { ChangelogType } from '../../types/dashboard';
 
 const searchQuery = ref('');
 const selectedTypeFilter = ref<string>('all');
+const searchInputRef = ref<HTMLInputElement | null>(null);
+
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    searchInputRef.value?.focus();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown);
+});
 
 const totalReleasesCount = computed(() => changelogReleases.length);
 const latestVersion = computed(() => changelogReleases[0]?.version || 'v1.0.0');
 const totalItemsCount = computed(() =>
-  changelogReleases.reduce((acc, rel) => acc + rel.items.length, 0)
+  changelogReleases.reduce((acc, rel) => acc + (rel.items ? rel.items.length : 0), 0)
 );
 
 const filteredReleases = computed(() => {
@@ -36,19 +52,19 @@ const filteredReleases = computed(() => {
         !q ||
         rel.version.toLowerCase().includes(q) ||
         rel.title.toLowerCase().includes(q) ||
-        rel.summary.toLowerCase().includes(q);
+        (rel.summary && rel.summary.toLowerCase().includes(q));
 
-      const matchingItems = rel.items.filter(item => {
+      const matchingItems = (rel.items || []).filter(item => {
         const matchType = typeFilter === 'all' || item.type === typeFilter;
         const matchItemQuery =
           !q ||
-          item.description.toLowerCase().includes(q) ||
-          item.scope.toLowerCase().includes(q) ||
-          item.type.toLowerCase().includes(q);
+          (item.description && item.description.toLowerCase().includes(q)) ||
+          (item.scope && item.scope.toLowerCase().includes(q)) ||
+          (item.type && item.type.toLowerCase().includes(q));
         return matchType && (matchRelHeader || matchItemQuery);
       });
 
-      if (matchingItems.length > 0 || (matchRelHeader && typeFilter === 'all')) {
+      if (matchingItems.length > 0) {
         return {
           ...rel,
           items: matchingItems
@@ -174,61 +190,67 @@ const getTypeIcon = (type: ChangelogType) => {
       </div>
     </div>
 
-    <!-- Filter & Search Toolbar -->
-    <div class="ledger-filter-toolbar" style="margin-bottom: 20px;">
-      <div class="search-box">
-        <Search :size="14" class="search-icon" />
+    <!-- Filter & Search Toolbar (Unified HeroCMS Studio Layout) -->
+    <div class="filter-toolbar" style="margin-bottom: 24px;">
+      <div class="search-command-shell">
+        <Search :size="15" class="search-lead-glyph" />
         <input
+          ref="searchInputRef"
           v-model="searchQuery"
           type="text"
-          placeholder="Cari versi, modul, atau deskripsi log..."
-          class="search-input"
+          placeholder="Cari versi (v1.x), modul, atau deskripsi log..."
+          class="search-command-input"
         />
-        <button v-if="searchQuery" class="clear-search-btn" @click="searchQuery = ''" title="Hapus">
-          <X :size="12" />
+        <button v-if="searchQuery" class="btn-clear-search" @click="searchQuery = ''" title="Bersihkan">
+          <X :size="13" />
         </button>
+        <kbd class="shortcut-tag">⌘K</kbd>
       </div>
 
-      <div class="filter-pills-row">
+      <div class="segmented-filter-bar">
         <button
           type="button"
-          class="filter-pill"
+          class="segment-pill"
           :class="{ active: selectedTypeFilter === 'all' }"
           @click="selectedTypeFilter = 'all'"
         >
-          Semua Tipe
+          <span>Semua Tipe</span>
         </button>
         <button
           type="button"
-          class="filter-pill"
+          class="segment-pill"
           :class="{ active: selectedTypeFilter === 'feature' }"
           @click="selectedTypeFilter = 'feature'"
         >
-          <Sparkles :size="12" /> Fitur Baru
+          <Sparkles :size="12" />
+          <span>Fitur Baru</span>
         </button>
         <button
           type="button"
-          class="filter-pill"
+          class="segment-pill"
           :class="{ active: selectedTypeFilter === 'bugfix' }"
           @click="selectedTypeFilter = 'bugfix'"
         >
-          <Wrench :size="12" /> Perbaikan Bug
+          <Wrench :size="12" />
+          <span>Perbaikan Bug</span>
         </button>
         <button
           type="button"
-          class="filter-pill"
+          class="segment-pill"
           :class="{ active: selectedTypeFilter === 'performance' }"
           @click="selectedTypeFilter = 'performance'"
         >
-          <Zap :size="12" /> Performa
+          <Zap :size="12" />
+          <span>Performa</span>
         </button>
         <button
           type="button"
-          class="filter-pill"
+          class="segment-pill"
           :class="{ active: selectedTypeFilter === 'security' }"
           @click="selectedTypeFilter = 'security'"
         >
-          <ShieldCheck :size="12" /> Keamanan
+          <ShieldCheck :size="12" />
+          <span>Keamanan</span>
         </button>
       </div>
     </div>
@@ -478,38 +500,7 @@ const getTypeIcon = (type: ChangelogType) => {
   flex: 1;
 }
 
-.filter-pills-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
 
-.filter-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.74rem;
-  font-weight: 600;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.filter-pill:hover {
-  background: #f8fafc;
-  color: #0f172a;
-}
-
-.filter-pill.active {
-  background: #0f172a;
-  color: #ffffff;
-  border-color: #0f172a;
-}
 
 .empty-state-banner {
   text-align: center;

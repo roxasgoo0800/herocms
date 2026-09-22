@@ -5300,6 +5300,30 @@ html {
   margin-top: 2px;
 }
 
+.btn-upgrade-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  background: #0f172a;
+  color: #ffffff;
+  border: 1px solid #0f172a;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.btn-upgrade-action:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
 .plan-meta-footer {
   display: flex;
   justify-content: space-between;
@@ -7828,48 +7852,31 @@ html {
   flex-wrap: wrap;
 }
 
-.search-command-shell {
-  position: relative;
-  flex: 1;
+/* Unified search command shell sizing in toolbars */
+.filter-toolbar .search-command-shell {
   max-width: 380px;
+  flex: 1;
 }
 
-.search-lead-glyph {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94a3b8;
-}
-
-.search-command-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 45px 8px 36px;
-  border: 1px solid #cbd5e1;
+.btn-reset-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  background: #0f172a;
+  color: #ffffff;
+  border: 1px solid #0f172a;
+  padding: 7px 14px;
   border-radius: 8px;
-  font-size: 12.5px;
-  color: #0f172a;
-  outline: none;
-  background: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.search-command-input:focus {
-  border-color: #0f172a;
-  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.06);
-}
-
-.shortcut-tag {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  padding: 1px 5px;
-  border-radius: 4px;
-  color: #64748b;
+.btn-reset-filter:hover {
+  background: #1e293b;
+  border-color: #1e293b;
 }
 
 .segmented-filter-bar {

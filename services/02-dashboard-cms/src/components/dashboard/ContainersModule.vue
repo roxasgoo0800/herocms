@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue';
 import {
   Server,
   Globe,
@@ -43,6 +44,23 @@ const {
   activeContainerId,
   activeMenu
 } = useDashboardData();
+
+const searchInputRef = ref<HTMLInputElement | null>(null);
+
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    searchInputRef.value?.focus();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown);
+});
 
 const selectForEditor = (containerId: string) => {
   activeContainerId.value = containerId;
@@ -176,7 +194,7 @@ const selectForEditor = (containerId: string) => {
     </div>
 
     <!-- 3-Column Site Cards Grid (Matching 3-Container Subscription Quota) -->
-    <div v-if="filteredContainers.length > 0 || (statusFilter === 'all' && containers.length < userPlan.maxContainers)" class="site-cards-grid">
+    <div v-if="filteredContainers.length > 0 || (!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers)" class="site-cards-grid">
       <!-- Active & Existing Container Cards -->
       <div
         v-for="c in filteredContainers"
@@ -198,145 +216,131 @@ const selectForEditor = (containerId: string) => {
                 <h3 class="site-title-text">{{ c.name }}</h3>
               </div>
               <div class="site-sub-row">
-                <span class="site-template-badge">{{ c.templateName }}</span>
-                <span class="site-id-tag">#{{ c.id }}</span>
+                <a
+                  :href="'https://' + c.subdomain"
+                  target="_blank"
+                  class="site-subdomain-link"
+                  @click.stop
+                >
+                  <span>{{ c.subdomain }}</span>
+                  <ArrowUpRight :size="11" />
+                </a>
+                <button
+                  class="btn-copy-subdomain"
+                  @click.stop="copyToClipboard(c.subdomain, c.id)"
+                  :title="copiedSubdomain === c.id ? 'Tersalin!' : 'Salin Domain'"
+                >
+                  <Check v-if="copiedSubdomain === c.id" :size="11" class="text-green" />
+                  <Copy v-else :size="11" />
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- Radar Status Chip -->
-          <div
-            class="radar-status-pill"
-            :class="{
-              'status-running': c.status === 'running',
-              'status-stopped': c.status === 'stopped',
-              'status-provisioning': c.status === 'provisioning'
-            }"
-          >
-            <span class="radar-ping-ring" v-if="c.status === 'running'"></span>
-            <span class="radar-dot"></span>
-            <span v-if="c.status === 'running'">Running</span>
-            <span v-else-if="c.status === 'stopped'">Standby</span>
-            <span v-else>Deploying...</span>
-          </div>
-        </div>
-
-        <!-- Bespoke Terminal URL Pill -->
-        <div class="site-url-box">
-          <div class="url-text-wrap">
-            <Globe :size="13" class="url-glyph" />
-            <span class="url-mono">https://{{ c.subdomain }}</span>
-          </div>
-          <div class="url-actions">
-            <button
-              class="btn-url-action"
-              @click="copyToClipboard(c.subdomain, c.id)"
-              :title="copiedSubdomain === c.id ? 'Tersalin!' : 'Salin URL'"
+          <div class="card-status-badge">
+            <span
+              class="status-pill"
+              :class="{
+                'pill-running': c.status === 'running',
+                'pill-stopped': c.status === 'stopped',
+                'pill-provisioning': c.status === 'provisioning'
+              }"
             >
-              <Check v-if="copiedSubdomain === c.id" :size="13" color="#059669" />
-              <Copy v-else :size="13" />
-            </button>
-            <a :href="`https://${c.subdomain}`" target="_blank" class="btn-url-action" title="Buka Situs">
-              <ArrowUpRight :size="13" />
-            </a>
+              <span class="status-dot-mini"></span>
+              <span v-if="c.status === 'running'">Running</span>
+              <span v-else-if="c.status === 'stopped'">Standby</span>
+              <span v-else>Deploying...</span>
+            </span>
           </div>
         </div>
 
-        <!-- Bespoke Dual Infrastructure Meters -->
-        <div class="resource-gauges-row">
-          <div class="gauge-col">
-            <div class="gauge-meta">
-              <span class="gauge-title">CPU ALLOCATION</span>
-              <span class="gauge-val">
-                <strong>{{ c.cpuUsage }}%</strong>
-                <span class="gauge-sub">/ {{ c.cpuLimit }}</span>
-              </span>
-            </div>
-            <div class="custom-meter-track">
-              <div
-                class="custom-meter-fill fill-blue"
-                :style="{ width: `${Math.min(c.cpuUsage * 2.5, 100)}%` }"
-              >
-                <span class="meter-glow"></span>
+        <!-- Telemetry Spec Rows -->
+        <div class="card-specs-body">
+          <div class="spec-row">
+            <span class="spec-label">TEMPLATE / ENGINE</span>
+            <span class="spec-value mono">{{ c.templateName }}</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">PENGGUNAAN CPU</span>
+            <div class="spec-meter-val">
+              <span class="spec-value">{{ c.cpuUsage }}% <span class="spec-denom">/ {{ c.cpuLimit }}</span></span>
+              <div class="meter-bar-micro">
+                <div class="meter-fill" :style="{ width: Math.min(c.cpuUsage * 2, 100) + '%' }"></div>
               </div>
             </div>
           </div>
-
-          <div class="gauge-col">
-            <div class="gauge-meta">
-              <span class="gauge-title">RAM MEMORY</span>
-              <span class="gauge-val">
-                <strong>{{ c.ramUsage }} MB</strong>
-                <span class="gauge-sub">/ {{ c.ramLimit }} MB</span>
-              </span>
-            </div>
-            <div class="custom-meter-track">
-              <div
-                class="custom-meter-fill fill-emerald"
-                :style="{ width: `${(c.ramUsage / c.ramLimit) * 100}%` }"
-              >
-                <span class="meter-glow"></span>
+          <div class="spec-row">
+            <span class="spec-label">MEMORI RAM</span>
+            <div class="spec-meter-val">
+              <span class="spec-value">{{ c.ramUsage }} MB <span class="spec-denom">/ {{ c.ramLimit }} MB</span></span>
+              <div class="meter-bar-micro">
+                <div class="meter-fill purple" :style="{ width: ((c.ramUsage / c.ramLimit) * 100) + '%' }"></div>
               </div>
             </div>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">UPTIME & TRAFIK</span>
+            <span class="spec-value mono text-blue">{{ c.uptime }} • {{ (c.visitsThisWeek || 0).toLocaleString() }} visits</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">KATEGORI SITUS</span>
+            <span class="spec-value text-capitalize">{{ c.category }} • SSL Aktif</span>
           </div>
         </div>
 
-        <!-- Card Action Buttons Footer -->
-        <div class="card-action-bar">
-          <button
-            class="btn-action-primary"
-            @click="selectForEditor(c.id)"
-          >
-            <Edit3 :size="14" />
-            <span>Buka Editor Studio</span>
+        <!-- Card Footer Control Deck -->
+        <div class="card-control-deck">
+          <button class="btn-primary-open-editor" @click="selectForEditor(c.id)">
+            <Edit3 :size="13" />
+            <span>Buka Editor</span>
           </button>
 
-          <!-- Runtime Controls -->
-          <div class="runtime-btn-group">
+          <div class="deck-runtime-toggles">
             <button
               v-if="c.status === 'stopped'"
               class="btn-icon-ctrl btn-play"
               @click="startContainer(c)"
-              title="Jalankan Kontainer (Start)"
+              title="Start Kontainer"
             >
-              <Play :size="13" />
+              <Play :size="12" />
             </button>
             <button
-              v-if="c.status === 'running'"
-              class="btn-icon-ctrl btn-pause"
+              v-else
+              class="btn-icon-ctrl btn-stop"
+              :disabled="c.status === 'provisioning'"
               @click="stopContainer(c)"
-              title="Hentikan Sementara (Stop)"
+              title="Stop Kontainer"
             >
               <Square :size="12" />
             </button>
             <button
               class="btn-icon-ctrl"
-              :disabled="c.status === 'stopped'"
+              :disabled="c.status === 'stopped' || c.status === 'provisioning'"
               @click="restartContainer(c)"
               title="Restart Kontainer"
             >
-              <RotateCw :size="13" />
+              <RotateCw :size="12" />
             </button>
             <button
               class="btn-icon-ctrl btn-term"
               @click="openLogsModal(c)"
-              title="Lihat Log Docker & Traefik"
+              title="Lihat Log"
             >
-              <Terminal :size="13" />
+              <Terminal :size="12" />
             </button>
             <button
               class="btn-icon-ctrl btn-del"
               @click="deleteContainer(c)"
               title="Hapus Kontainer"
             >
-              <Trash2 :size="13" />
+              <Trash2 :size="12" />
             </button>
           </div>
         </div>
       </div>
 
       <!-- Quota Available Slot Placeholders (Fills 3-column grid) -->
-      <template v-if="statusFilter === 'all' && containers.length < userPlan.maxContainers">
+      <template v-if="!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers">
         <div
           v-for="slotNum in (userPlan.maxContainers - containers.length)"
           :key="'slot-' + slotNum"
@@ -362,11 +366,16 @@ const selectForEditor = (containerId: string) => {
     </div>
 
     <!-- Empty State if search finds nothing -->
-    <div v-else class="empty-search-state">
-      <Search :size="32" color="#94a3b8" />
+    <div v-else class="empty-state-card" style="margin-top: 10px;">
+      <Server :size="34" style="color: #94a3b8; margin-bottom: 4px;" />
       <h3>Tidak ada kontainer ditemukan</h3>
-      <p>Tidak ada kontainer yang cocok dengan kata kunci "{{ searchQuery }}".</p>
-      <button class="btn-clear-search-lg" @click="searchQuery = ''; statusFilter = 'all'">
+      <p v-if="searchQuery">
+        Tidak ada situs atau kontainer yang cocok dengan kata kunci pencarian "<strong>{{ searchQuery }}</strong>".
+      </p>
+      <p v-else>
+        Tidak ada kontainer dengan status filter terpilih.
+      </p>
+      <button class="btn-reset-filter" @click="searchQuery = ''; statusFilter = 'all'">
         Reset Pencarian & Filter
       </button>
     </div>

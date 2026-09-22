@@ -179,9 +179,22 @@ const searchQuery = ref('');
 const statusFilter = ref<'all' | 'running' | 'stopped'>('all');
 
 const filteredContainers = computed(() => {
+  const q = (searchQuery.value || '').trim().toLowerCase();
   return containers.value.filter(c => {
-    const matchQuery = c.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                       c.subdomain.toLowerCase().includes(searchQuery.value.toLowerCase());
+    if (!c) return false;
+    const name = (c.name || '').toLowerCase();
+    const subdomain = (c.subdomain || '').toLowerCase();
+    const id = (c.id || '').toLowerCase();
+    const category = (c.category || '').toLowerCase();
+    const templateName = (c.templateName || '').toLowerCase();
+
+    const matchQuery = !q ||
+                       name.includes(q) ||
+                       subdomain.includes(q) ||
+                       id.includes(q) ||
+                       category.includes(q) ||
+                       templateName.includes(q);
+
     const matchStatus = statusFilter.value === 'all' ? true : c.status === statusFilter.value;
     return matchQuery && matchStatus;
   });

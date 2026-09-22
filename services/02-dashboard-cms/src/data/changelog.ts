@@ -2,11 +2,45 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.2.4',
+    releaseDate: '22 September 2026',
+    title: 'Penyelarasan Desain Toolbar & Searchbar, Perbaikan CSS Billing, dan Validasi Runtime Kontainer',
+    summary: 'Penyelarasan visual dan fungsional pada sistem pencarian antar modul: integrasi command bar ⌘K terpadu dengan segmented pill filter, styling tombol Upgrade Paket langganan, perbaikan search query kontainer dan template, serta pembersihan card specs telemetri.',
+    badge: 'Latest',
+    author: 'HeroCMS Core Architecture Team',
+    items: [
+      {
+        id: 'c-124-1',
+        type: 'bugfix',
+        scope: 'Kapasitas & Paket Langganan',
+        description: 'Menambahkan rule CSS .btn-upgrade-action pada studio-master.css sehingga tombol Upgrade / Ganti Paket memiliki visual Deep Slate dan efek hover Royal Blue yang elegan.'
+      },
+      {
+        id: 'c-124-2',
+        type: 'improvement',
+        scope: 'Changelog & Toolbar',
+        description: 'Merestrukturisasi toolbar ChangelogModule menjadi layout 1 baris modern (.filter-toolbar) yang menyatukan search command bar dengan tombol filter jenis perubahan (segmented-pill).'
+      },
+      {
+        id: 'c-124-3',
+        type: 'bugfix',
+        scope: 'Pencarian & Kontainer',
+        description: 'Memperbaiki logika filter pencarian pada Situs & Kontainer dan Katalog Template agar responsif terhadap kata kunci multi-field, dilengkapi shortcut ⌘K dan empty state action.'
+      },
+      {
+        id: 'c-124-4',
+        type: 'improvement',
+        scope: 'Runtime & TypeScript',
+        description: 'Menyelaraskan properti telemetry card specs pada ContainersModule dan filteredContainers di useDashboardData dengan interface ContainerSite yang valid.'
+      }
+    ]
+  },
+  {
     version: 'v1.2.3',
     releaseDate: '22 September 2026',
     title: 'Perbaikan Total Pusat Bantuan, Siklus Tiket & Sinkronisasi DB/Redis',
     summary: 'Restorasi menyeluruh pada modul tiket support: integrasi penuh API backend (Create, Reply, Resolve), proteksi null-safety pesan, normalisasi status/prioritas, dan identitas author tenant dinamis.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Core Architecture Team',
     items: [
       {
