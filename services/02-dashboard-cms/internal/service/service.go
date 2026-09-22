@@ -483,6 +483,66 @@ func (s *Services) GetTicketMessages(ctx context.Context, id string) []gin.H {
 	return msgs
 }
 
+type CreateTicketInput struct {
+	Subject    string `json:"subject" binding:"required"`
+	Category   string `json:"category"`
+	Priority   string `json:"priority"`
+	Message    string `json:"message" binding:"required"`
+	AuthorName string `json:"authorName"`
+	AuthorRole string `json:"authorRole"`
+}
+
+type TicketReplyInput struct {
+	Message    string `json:"message" binding:"required"`
+	AuthorName string `json:"authorName"`
+	AuthorRole string `json:"authorRole"`
+	Sender     string `json:"sender"`
+}
+
+func (s *Services) CreateTicket(ctx context.Context, tenantID string, input CreateTicketInput) (gin.H, error) {
+	if input.Category == "" {
+		input.Category = "Infrastructure & Container"
+	}
+	if input.Priority == "" {
+		input.Priority = "p2_high"
+	}
+	ticketNumber := fmt.Sprintf("TKT-%04d", time.Now().Unix()%9000+1000)
+
+	ticket, err := s.Repo.CreateTicket(ctx, tenantID, ticketNumber, input.Subject, input.Category, input.Priority, input.Message, input.AuthorName, input.AuthorRole)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+
+	return ticket, nil
+}
+
+func (s *Services) AddTicketMessage(ctx context.Context, tenantID, ticketKey string, input TicketReplyInput) (gin.H, error) {
+	msg, err := s.Repo.AddTicketMessage(ctx, tenantID, ticketKey, input.Message, input.AuthorName, input.AuthorRole, input.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+
+	return msg, nil
+}
+
+func (s *Services) ResolveTicket(ctx context.Context, tenantID, ticketKey string) error {
+	err := s.Repo.ResolveTicket(ctx, tenantID, ticketKey)
+	if err != nil {
+		return err
+	}
+
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+
+	return nil
+}
+
 // -----------------------------------------------------------------------------
 // Invoices & Billing Service (With Redis Caching)
 // -----------------------------------------------------------------------------

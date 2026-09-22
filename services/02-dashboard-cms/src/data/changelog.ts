@@ -2,11 +2,45 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.2.3',
+    releaseDate: '22 September 2026',
+    title: 'Perbaikan Total Pusat Bantuan, Siklus Tiket & Sinkronisasi DB/Redis',
+    summary: 'Restorasi menyeluruh pada modul tiket support: integrasi penuh API backend (Create, Reply, Resolve), proteksi null-safety pesan, normalisasi status/prioritas, dan identitas author tenant dinamis.',
+    badge: 'Latest',
+    author: 'HeroCMS Core Architecture Team',
+    items: [
+      {
+        id: 'c-123-1',
+        type: 'bugfix',
+        scope: 'Pusat Bantuan & Tiket',
+        description: 'Menambahkan fungsi normalisasi data (normalizeTicket) untuk mencegah runtime exception ketika daftar tiket dimuat dari Redis / backend tanpa array pesan.'
+      },
+      {
+        id: 'c-123-2',
+        type: 'feature',
+        scope: 'Backend API & DB',
+        description: 'Mengimplementasikan endpoint penuh POST /tickets, POST /tickets/:id/messages, dan PUT /tickets/:id/resolve dengan persistensi PostgreSQL dan cache invalidation Redis.'
+      },
+      {
+        id: 'c-123-3',
+        type: 'improvement',
+        scope: 'Identitas Tenant',
+        description: 'Menggantikan authorName hardcoded dengan identitas akun aktif (getTenantAuthor) yang sinkron dengan email tenant login saat membuat tiket atau membalas pesan.'
+      },
+      {
+        id: 'c-123-4',
+        type: 'improvement',
+        scope: 'UI / UX & Keyboard',
+        description: 'Dukungan pintasan keyboard Cmd+Enter (macOS) dan Ctrl+Enter untuk pengiriman balasan instan, auto-scroll thread, serta proteksi fallback status L2 assigned.'
+      }
+    ]
+  },
+  {
     version: 'v1.2.2',
     releaseDate: '22 September 2026',
     title: 'Sesi Logout Terpadu, Auto-Invalidation Cache & Standar Changelog',
     summary: 'Pembaruan krusial pada penanganan siklus logout sesi multi-user, auto-purge service worker usang, dan integrasi modul catatan rilis sistem.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Core Architecture Team',
     items: [
       {

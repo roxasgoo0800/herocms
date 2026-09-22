@@ -608,8 +608,62 @@ const testWebhook = (wh: WebhookItem) => {
   }, 1000);
 };
 
+// Helper to get current tenant author details dynamically
+const getTenantAuthor = () => {
+  const email = userEmail.value || 'admin@herocms.id';
+  let name = email.split('@')[0];
+  name = name.split('.').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+  return {
+    authorName: name || 'Tenant Administrator',
+    authorRole: 'Tenant Administrator'
+  };
+};
+
+// Normalize ticket data from any source (Redis, DB, localStorage, seeds)
+const normalizeTicket = (t: any): SupportTicketItem => {
+  let msgs: TicketMessage[] = [];
+  if (Array.isArray(t.messages)) {
+    msgs = t.messages.map((m: any) => ({
+      id: m.id || `msg_${Date.now()}`,
+      sender: m.sender || (m.senderRole === 'staff' || m.senderRole === 'support' ? 'support' : 'tenant'),
+      authorName: m.authorName || m.senderName || 'Staff',
+      authorRole: m.authorRole || m.senderRole || 'Support',
+      timestamp: m.timestamp || m.createdAt || 'Baru saja',
+      message: m.message || ''
+    }));
+  }
+
+  let priority: SupportTicketItem['priority'] = 'p3_normal';
+  const pLow = (t.priority || '').toLowerCase();
+  if (pLow === 'p1_urgent' || pLow === 'urgent' || pLow === 'critical' || pLow === 'p1') {
+    priority = 'p1_urgent';
+  } else if (pLow === 'p2_high' || pLow === 'high' || pLow === 'p2') {
+    priority = 'p2_high';
+  }
+
+  let status: SupportTicketItem['status'] = 'open';
+  const sLow = (t.status || '').toLowerCase();
+  if (sLow === 'resolved' || sLow === 'closed' || sLow === 'selesai') {
+    status = 'resolved';
+  } else if (sLow === 'in_progress' || sLow === 'answered' || sLow === 'pending' || sLow === 'proses') {
+    status = 'in_progress';
+  }
+
+  return {
+    id: t.id || t.ticket_number || `TKT-${Math.floor(1000 + Math.random() * 9000)}`,
+    subject: t.subject || 'Tiket Bantuan',
+    category: t.category || 'Infrastructure & Container',
+    priority,
+    status,
+    createdAt: t.createdAt || 'Baru saja',
+    lastUpdated: t.lastUpdated || t.lastReply || 'Baru saja',
+    assignedEngineer: t.assignedEngineer || (status !== 'open' ? 'Budi Hartono (L2 Cloud DevOps)' : undefined),
+    messages: msgs
+  };
+};
+
 // Support Ticketing State
-const supportTickets = ref<SupportTicketItem[]>([...initialSupportTickets]);
+const supportTickets = ref<SupportTicketItem[]>(initialSupportTickets.map(t => normalizeTicket(t)));
 
 const selectedTicket = ref<SupportTicketItem | null>(null);
 const isCreateTicketModalOpen = ref(false);
@@ -633,15 +687,16 @@ const openCreateTicketModal = () => {
   isCreateTicketModalOpen.value = true;
 };
 
-const handleCreateTicket = () => {
+const handleCreateTicket = async () => {
   if (!newTicketForm.value.subject || !newTicketForm.value.message) {
     showToast('Harap isi judul dan deskripsi tiket bantuan.', 'error');
     return;
   }
 
-  const newTicketId = `TKT-${Math.floor(1000 + Math.random() * 9000)}`;
-  const newTicket: SupportTicketItem = {
-    id: newTicketId,
+  const { authorName, authorRole } = getTenantAuthor();
+  const tempId = `TKT-${Math.floor(1000 + Math.random() * 9000)}`;
+  const optimisticTicket: SupportTicketItem = {
+    id: tempId,
     subject: newTicketForm.value.subject,
     category: newTicketForm.value.category,
     priority: newTicketForm.value.priority,
@@ -652,65 +707,137 @@ const handleCreateTicket = () => {
       {
         id: `msg_${Date.now()}`,
         sender: 'tenant',
-        authorName: 'Rizal Pratama',
-        authorRole: 'Tenant Administrator',
+        authorName,
+        authorRole,
         timestamp: 'Baru saja',
         message: newTicketForm.value.message
       }
     ]
   };
 
-  supportTickets.value.unshift(newTicket);
+  supportTickets.value.unshift(optimisticTicket);
   isCreateTicketModalOpen.value = false;
-  showToast(`Tiket ${newTicketId} berhasil dibuat! Tim DevOps akan merespons dalam < 15 menit.`, 'success');
+  showToast(`Tiket ${tempId} berhasil dibuat! Tim DevOps akan merespons dalam < 15 menit.`, 'success');
+
+  try {
+    const res = await studioApi.createTicket({
+      subject: optimisticTicket.subject,
+      category: optimisticTicket.category,
+      priority: optimisticTicket.priority,
+      message: newTicketForm.value.message,
+      authorName,
+      authorRole
+    });
+    if (res && res.id) {
+      optimisticTicket.id = res.id;
+      if (res.createdAt) optimisticTicket.createdAt = res.createdAt;
+    }
+  } catch (err) {
+    console.warn('[TICKET SYNC] Offline fallback retained for created ticket');
+  }
 };
 
-const openTicketDetail = (ticket: SupportTicketItem) => {
+const openTicketDetail = async (ticket: SupportTicketItem) => {
   selectedTicket.value = ticket;
   ticketReplyText.value = '';
   isTicketDetailModalOpen.value = true;
+
+  if (!ticket.messages) {
+    ticket.messages = [];
+  }
+
+  if (ticket.messages.length === 0) {
+    try {
+      const res = await studioApi.getTicketMessages(ticket.id);
+      if (res?.messages && Array.isArray(res.messages)) {
+        ticket.messages = res.messages.map((m: any) => ({
+          id: m.id || `msg_${Date.now()}`,
+          sender: m.sender || (m.senderRole === 'staff' || m.senderRole === 'support' ? 'support' : 'tenant'),
+          authorName: m.authorName || m.senderName || 'Staff',
+          authorRole: m.authorRole || m.senderRole || 'Support',
+          timestamp: m.timestamp || m.createdAt || 'Baru saja',
+          message: m.message || ''
+        }));
+      }
+    } catch (e) {
+      // Retain existing
+    }
+  }
 };
 
-const sendTicketReply = () => {
+const sendTicketReply = async () => {
   if (!ticketReplyText.value.trim() || !selectedTicket.value) return;
+
+  const currentTicket = selectedTicket.value;
+  const replyContent = ticketReplyText.value.trim();
+  const { authorName, authorRole } = getTenantAuthor();
+
+  if (!currentTicket.messages) {
+    currentTicket.messages = [];
+  }
 
   const newMsg: TicketMessage = {
     id: `msg_${Date.now()}`,
     sender: 'tenant',
-    authorName: 'Rizal Pratama',
-    authorRole: 'Tenant Administrator',
+    authorName,
+    authorRole,
     timestamp: 'Baru saja',
-    message: ticketReplyText.value.trim()
+    message: replyContent
   };
 
-  selectedTicket.value.messages.push(newMsg);
-  selectedTicket.value.lastUpdated = 'Baru saja';
+  currentTicket.messages.push(newMsg);
+  currentTicket.lastUpdated = 'Baru saja';
   ticketReplyText.value = '';
   showToast('Balasan terkirim ke tiket support.', 'success');
 
-  if (selectedTicket.value.status === 'open') {
+  try {
+    await studioApi.sendTicketReply(currentTicket.id, {
+      message: replyContent,
+      authorName,
+      authorRole,
+      sender: 'tenant'
+    });
+  } catch (err) {
+    console.warn('[TICKET REPLY] Backend sync failed, retained in client state');
+  }
+
+  if (currentTicket.status === 'open') {
     setTimeout(() => {
-      if (selectedTicket.value) {
-        selectedTicket.value.status = 'in_progress';
-        selectedTicket.value.assignedEngineer = 'Budi Hartono (L2 Cloud DevOps)';
-        selectedTicket.value.messages.push({
+      if (currentTicket) {
+        currentTicket.status = 'in_progress';
+        currentTicket.assignedEngineer = 'Budi Hartono (L2 Cloud DevOps)';
+        const autoReply: TicketMessage = {
           id: `msg_${Date.now() + 1}`,
           sender: 'support',
           authorName: 'Budi Hartono',
           authorRole: 'L2 Cloud DevOps Engineer',
           timestamp: 'Baru saja',
           message: 'Pesan Anda sudah diterima. Kami sedang menguji replikasi isu pada staging environment.'
-        });
+        };
+        currentTicket.messages.push(autoReply);
         showToast('Tim Support merespons tiket Anda!', 'info');
+
+        studioApi.sendTicketReply(currentTicket.id, {
+          message: autoReply.message,
+          authorName: autoReply.authorName,
+          authorRole: autoReply.authorRole,
+          sender: 'support'
+        }).catch(() => {});
       }
     }, 2000);
   }
 };
 
-const resolveTicket = (ticket: SupportTicketItem) => {
+const resolveTicket = async (ticket: SupportTicketItem) => {
   ticket.status = 'resolved';
   ticket.lastUpdated = 'Baru saja';
   showToast(`Tiket ${ticket.id} ditandai sebagai Selesai / Resolved.`, 'success');
+
+  try {
+    await studioApi.resolveTicket(ticket.id);
+  } catch (err) {
+    console.warn('[TICKET RESOLVE] Backend sync failed, retained in client state');
+  }
 };
 
 // Backend API Synchronization & Redis Warmup
@@ -740,7 +867,7 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
           customDomains.value = b.domains.domains;
         }
         if (b.tickets?.tickets?.length) {
-          supportTickets.value = b.tickets.tickets;
+          supportTickets.value = b.tickets.tickets.map((t: any) => normalizeTicket(t));
         }
         if (b.invoices?.invoices?.length) {
           invoices.value = b.invoices.invoices;
@@ -810,7 +937,7 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
       customDomains.value = dRes.value.domains;
     }
     if (tRes.status === 'fulfilled' && tRes.value?.tickets?.length) {
-      supportTickets.value = tRes.value.tickets;
+      supportTickets.value = tRes.value.tickets.map((t: any) => normalizeTicket(t));
     }
     if (iRes.status === 'fulfilled' && iRes.value?.invoices?.length) {
       invoices.value = iRes.value.invoices;
@@ -852,7 +979,7 @@ const hydrateFromCache = () => {
       if (Array.isArray(data.articles) && data.articles.length) articles.value = data.articles;
       if (Array.isArray(data.mediaAssets) && data.mediaAssets.length) mediaAssets.value = data.mediaAssets;
       if (Array.isArray(data.customDomains) && data.customDomains.length) customDomains.value = data.customDomains;
-      if (Array.isArray(data.supportTickets) && data.supportTickets.length) supportTickets.value = data.supportTickets;
+      if (Array.isArray(data.supportTickets) && data.supportTickets.length) supportTickets.value = data.supportTickets.map((t: any) => normalizeTicket(t));
       if (Array.isArray(data.invoices) && data.invoices.length) invoices.value = data.invoices;
       if (Array.isArray(data.webhooks) && data.webhooks.length) webhooks.value = data.webhooks;
       if (data.userPlan?.name) userPlan.value = data.userPlan;
@@ -868,7 +995,7 @@ if (typeof localStorage !== 'undefined' && localStorage.getItem('cloudcms_auth_t
 
 // Reset entire dashboard reactive state and client storage
 const resetDashboardState = () => {
-  // 1. Reset all reactive state back to initial clean state
+  // 1. Reset all in-memory reactive state
   userEmail.value = '';
   userPlan.value = { ...initialUserPlan };
   containers.value = [...initialContainers];
@@ -877,7 +1004,7 @@ const resetDashboardState = () => {
   activeArticleForReader.value = null;
   mediaAssets.value = [...initialMediaAssets];
   customDomains.value = [...initialCustomDomains];
-  supportTickets.value = [...initialSupportTickets];
+  supportTickets.value = initialSupportTickets.map(t => normalizeTicket(t));
   invoices.value = [...initialInvoices];
   webhooks.value = [...initialWebhooks];
   activeMenu.value = 'containers';

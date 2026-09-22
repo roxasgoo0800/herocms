@@ -99,7 +99,13 @@ export const studioApi = {
 
   // Tickets
   getTickets: () => apiFetch('/tickets'),
+  createTicket: (data: { subject: string; category: string; priority: string; message: string; authorName?: string; authorRole?: string }) =>
+    apiFetch('/tickets', { method: 'POST', body: JSON.stringify(data) }),
   getTicketMessages: (id: string) => apiFetch(`/tickets/${id}/messages`),
+  sendTicketReply: (id: string, data: { message: string; authorName?: string; authorRole?: string; sender?: string }) =>
+    apiFetch(`/tickets/${id}/messages`, { method: 'POST', body: JSON.stringify(data) }),
+  resolveTicket: (id: string) =>
+    apiFetch(`/tickets/${id}/resolve`, { method: 'PUT' }),
 
   // Invoices & Billing
   getInvoices: () => apiFetch('/invoices'),

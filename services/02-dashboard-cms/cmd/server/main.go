@@ -104,7 +104,10 @@ func main() {
 
 			// Support Tickets & Threads
 			protected.GET("/tickets", h.ListTickets)
+			protected.POST("/tickets", h.CreateTicket)
 			protected.GET("/tickets/:id/messages", h.GetTicketMessages)
+			protected.POST("/tickets/:id/messages", h.AddTicketMessage)
+			protected.PUT("/tickets/:id/resolve", h.ResolveTicket)
 
 			// Billing & Invoices
 			protected.GET("/invoices", h.ListInvoices)

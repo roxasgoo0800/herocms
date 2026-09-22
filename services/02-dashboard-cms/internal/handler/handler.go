@@ -420,9 +420,47 @@ func (h *Handler) ListTickets(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"tickets": h.Services.GetTickets(c.Request.Context(), getTenantID(c))})
 }
 
+func (h *Handler) CreateTicket(c *gin.Context) {
+	var input service.CreateTicketInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Subject dan Message wajib diisi"})
+		return
+	}
+	tkt, err := h.Services.CreateTicket(c.Request.Context(), getTenantID(c), input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat tiket: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, tkt)
+}
+
 func (h *Handler) GetTicketMessages(c *gin.Context) {
 	id := c.Param("id")
 	c.JSON(http.StatusOK, gin.H{"messages": h.Services.GetTicketMessages(c.Request.Context(), id)})
+}
+
+func (h *Handler) AddTicketMessage(c *gin.Context) {
+	id := c.Param("id")
+	var input service.TicketReplyInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Pesan balasan wajib diisi"})
+		return
+	}
+	msg, err := h.Services.AddTicketMessage(c.Request.Context(), getTenantID(c), id, input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengirim balasan: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, msg)
+}
+
+func (h *Handler) ResolveTicket(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.Services.ResolveTicket(c.Request.Context(), getTenantID(c), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyelesaikan tiket: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "resolved", "id": id})
 }
 
 // -----------------------------------------------------------------------------

@@ -77,7 +77,7 @@ const scrollThreadToBottom = () => {
 };
 
 watch(
-  () => [isTicketDetailModalOpen.value, selectedTicket.value?.messages.length],
+  () => [isTicketDetailModalOpen.value, selectedTicket.value?.messages?.length],
   ([isOpen]) => {
     if (isOpen) {
       scrollThreadToBottom();
@@ -247,7 +247,7 @@ watch(
               </span>
               <span class="meta-item msg-count">
                 <MessageSquare :size="12" />
-                <span>{{ tkt.messages.length }} Pesan</span>
+                <span>{{ tkt.messages?.length || 0 }} Pesan</span>
               </span>
             </div>
           </div>
@@ -427,9 +427,9 @@ watch(
                 <span class="lbl">Dibuat:</span>
                 <strong>{{ selectedTicket.createdAt }}</strong>
               </div>
-              <div v-if="selectedTicket.assignedEngineer" class="meta-banner-item">
+              <div class="meta-banner-item">
                 <span class="lbl">Assigned DevOps:</span>
-                <strong class="text-blue">{{ selectedTicket.assignedEngineer }}</strong>
+                <strong class="text-blue">{{ selectedTicket.assignedEngineer || 'Dedicated DevOps Engine (L2)' }}</strong>
               </div>
             </div>
 
@@ -466,9 +466,10 @@ watch(
               <textarea
                 v-model="ticketReplyText"
                 rows="2"
-                placeholder="Tulis balasan pesan atau info tambahan untuk engineer..."
+                placeholder="Tulis balasan pesan atau info tambahan untuk engineer... (Tekan Cmd/Ctrl + Enter untuk kirim)"
                 class="reply-textarea"
                 @keydown.enter.ctrl.prevent="sendTicketReply"
+                @keydown.enter.meta.prevent="sendTicketReply"
               ></textarea>
               <div class="reply-actions-row">
                 <button
