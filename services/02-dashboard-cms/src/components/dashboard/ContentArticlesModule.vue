@@ -60,6 +60,7 @@ const openArticleReader = (art: ContentArticle) => {
 
 const closeArticleReader = () => {
   activeArticleForReader.value = null;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 const copyCodeSnippet = () => {

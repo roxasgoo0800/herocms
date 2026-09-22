@@ -753,50 +753,6 @@ const onKeyUp = (e: KeyboardEvent) => {
   }
 };
 
-// Smooth Inertial Scrolling for Studio Left Dock
-const dockTabBodyRef = ref<HTMLDivElement | null>(null);
-let targetScrollTop = 0;
-let isSmoothScrolling = false;
-let scrollAnimFrame: number | null = null;
-
-const onDockTabWheel = (e: WheelEvent) => {
-  if (!dockTabBodyRef.value) return;
-  const el = dockTabBodyRef.value;
-  const maxScroll = el.scrollHeight - el.clientHeight;
-  if (maxScroll <= 0) return;
-
-  if (Math.abs(e.deltaY) < 1) return;
-
-  e.preventDefault();
-  targetScrollTop = Math.max(0, Math.min(maxScroll, (isSmoothScrolling ? targetScrollTop : el.scrollTop) + e.deltaY * 0.85));
-
-  if (!isSmoothScrolling) {
-    isSmoothScrolling = true;
-    const animateScroll = () => {
-      if (!dockTabBodyRef.value) {
-        isSmoothScrolling = false;
-        return;
-      }
-      const current = dockTabBodyRef.value.scrollTop;
-      const diff = targetScrollTop - current;
-      if (Math.abs(diff) < 0.6) {
-        dockTabBodyRef.value.scrollTop = targetScrollTop;
-        isSmoothScrolling = false;
-        scrollAnimFrame = null;
-      } else {
-        dockTabBodyRef.value.scrollTop = current + diff * 0.16;
-        scrollAnimFrame = requestAnimationFrame(animateScroll);
-      }
-    };
-    scrollAnimFrame = requestAnimationFrame(animateScroll);
-  }
-};
-
-const onDockScroll = () => {
-  if (!isSmoothScrolling && dockTabBodyRef.value) {
-    targetScrollTop = dockTabBodyRef.value.scrollTop;
-  }
-};
 
 onMounted(async () => {
   window.addEventListener('keydown', onKeyDown);
@@ -808,10 +764,6 @@ onMounted(async () => {
   document.addEventListener('click', handleSiteDropdownOutsideClick);
   document.addEventListener('click', handleAllDropdownOutsideClick);
 
-  if (dockTabBodyRef.value) {
-    dockTabBodyRef.value.addEventListener('wheel', onDockTabWheel, { passive: false });
-    dockTabBodyRef.value.addEventListener('scroll', onDockScroll);
-  }
 
   // Smooth booting transition & dependency/draft load
   isEditorBooting.value = true;
@@ -859,11 +811,7 @@ onUnmounted(() => {
   document.removeEventListener('click', handleSiteDropdownOutsideClick);
   document.removeEventListener('click', handleAllDropdownOutsideClick);
 
-  if (dockTabBodyRef.value) {
-    dockTabBodyRef.value.removeEventListener('wheel', onDockTabWheel);
-    dockTabBodyRef.value.removeEventListener('scroll', onDockScroll);
-  }
-  if (scrollAnimFrame) cancelAnimationFrame(scrollAnimFrame);
+
 });
 
 // -----------------------------------------------------------------------------
@@ -2060,7 +2008,7 @@ const executeVsCodeReplaceAll = () => {
           </nav>
 
           <!-- Dock Body -->
-          <div class="dock-tab-body" ref="dockTabBodyRef" @scroll="onDockScroll">
+          <div class="dock-tab-body">
             <!-- TAB 1: BLOCKS LIBRARY (Canva/Figma Component Picker) -->
             <div v-if="activeLeftTab === 'blocks'" class="dock-blocks-catalog">
               <div class="dock-catalog-header">
