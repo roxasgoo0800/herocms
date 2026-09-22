@@ -73,7 +73,8 @@ const {
   isLogsModalOpen,
   activeLogContainer,
   copyContainerLogs,
-  syncWithBackend
+  syncWithBackend,
+  executeLogout
 } = useDashboardData();
 
 onMounted(async () => {
@@ -85,11 +86,8 @@ watch(activeMenu, () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-const handleLogout = () => {
-  localStorage.removeItem('cloudcms_auth_token');
-  localStorage.removeItem('cloudcms_user_email');
-  sessionStorage.removeItem('herocms_splash_seen');
-  router.push('/login');
+const handleLogout = async () => {
+  await executeLogout(router);
 };
 </script>
 

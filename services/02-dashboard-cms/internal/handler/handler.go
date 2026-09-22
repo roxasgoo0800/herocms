@@ -214,13 +214,15 @@ func (h *Handler) Logout(c *gin.Context) {
 		h.Services.RevokeSession(c.Request.Context(), tokenHash.(string))
 	}
 
-	// Clear cookies
+	// Clear all session & tracking cookies
 	csrfCookieName := h.Services.Config.CSRFCookieName
 	if csrfCookieName == "" {
 		csrfCookieName = "csrf_token"
 	}
 	c.SetCookie("herocms_session", "", -1, "/", "", false, true)
 	c.SetCookie(csrfCookieName, "", -1, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
+	c.SetCookie("herocms_active_menu", "", -1, "/", "", false, false)
+	c.SetCookie("herocms_active_container_id", "", -1, "/", "", false, false)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logout berhasil, sesi dan cookie telah dibersihkan."})
 }

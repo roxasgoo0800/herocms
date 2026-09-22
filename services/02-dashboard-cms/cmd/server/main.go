@@ -149,12 +149,19 @@ func main() {
 
 			targetFile := filepath.Join(distDir, filepath.Clean(path))
 			if fi, err := os.Stat(targetFile); err == nil && !fi.IsDir() {
+				if filepath.Base(targetFile) == "index.html" || filepath.Base(targetFile) == "sw.js" {
+					c.Header("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+					c.Header("Pragma", "no-cache")
+					c.Header("Expires", "0")
+				}
 				c.File(targetFile)
 				return
 			}
 
-			// SPA Fallback: Serve index.html
-			c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+			// SPA Fallback: Serve index.html with strict anti-cache headers
+			c.Header("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+			c.Header("Pragma", "no-cache")
+			c.Header("Expires", "0")
 			c.File(filepath.Join(distDir, "index.html"))
 		})
 

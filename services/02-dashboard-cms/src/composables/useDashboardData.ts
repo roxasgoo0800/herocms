@@ -861,7 +861,81 @@ const hydrateFromCache = () => {
   }
 };
 
-hydrateFromCache();
+if (typeof localStorage !== 'undefined' && localStorage.getItem('cloudcms_auth_token')) {
+  hydrateFromCache();
+}
+
+// Reset entire dashboard reactive state and client storage
+const resetDashboardState = () => {
+  // 1. Reset all reactive state back to initial clean state
+  userEmail.value = '';
+  userPlan.value = { ...initialUserPlan };
+  containers.value = [...initialContainers];
+  activeContainerId.value = 'hero_tenant_9942';
+  articles.value = [...initialArticles];
+  activeArticleForReader.value = null;
+  mediaAssets.value = [...initialMediaAssets];
+  customDomains.value = [...initialCustomDomains];
+  supportTickets.value = [...initialSupportTickets];
+  invoices.value = [...initialInvoices];
+  webhooks.value = [...initialWebhooks];
+  activeMenu.value = 'containers';
+  searchQuery.value = '';
+  statusFilter.value = 'all';
+
+  // 2. Clear all client storage
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('cloudcms_auth_token');
+    localStorage.removeItem('cloudcms_user_email');
+    localStorage.removeItem('cloudcms_csrf_token');
+    localStorage.removeItem('herocms_dashboard_cache');
+    localStorage.removeItem('herocms_active_menu');
+    localStorage.removeItem('herocms_active_container_id');
+  }
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem('herocms_splash_seen');
+    sessionStorage.clear();
+  }
+
+  // 3. Clear all browser cookies
+  if (typeof document !== 'undefined') {
+    const cookiesToClear = [
+      'herocms_session',
+      'csrf_token',
+      'herocms_active_menu',
+      'herocms_active_container_id'
+    ];
+    for (const name of cookiesToClear) {
+      document.cookie = `${name}=; path=/; max-age=-1; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    }
+  }
+};
+
+const executeLogout = async (router?: any) => {
+  try {
+    // 1. Panggil API backend untuk memusnahkan sesi di Redis dan membatalkan cookie
+    await studioApi.logout().catch((e) => console.warn('[AUTH] Logout API notice:', e));
+  } catch (err) {
+    console.warn('[AUTH] Logout notice:', err);
+  } finally {
+    // 2. Bersihkan seluruh reactive state dan client storage
+    resetDashboardState();
+
+    // 3. Navigasi bersih ke halaman login
+    if (router) {
+      router.push('/login');
+    } else if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+  }
+};
+
+const updateUserEmail = (email: string) => {
+  userEmail.value = email;
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('cloudcms_user_email', email);
+  }
+};
 
 export function useDashboardData() {
   return {
@@ -940,7 +1014,10 @@ export function useDashboardData() {
     handleCreateTicket,
     openTicketDetail,
     sendTicketReply,
-    resolveTicket
+    resolveTicket,
+    executeLogout,
+    resetDashboardState,
+    updateUserEmail
   };
 }
 
