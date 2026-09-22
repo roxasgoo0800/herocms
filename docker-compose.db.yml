@@ -47,7 +47,7 @@ services:
   # 3. MinIO S3 Object Storage (Media Assets, Templates & Backups)
   # ---------------------------------------------------------------------------
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: herocms_minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
