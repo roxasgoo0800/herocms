@@ -81,3 +81,39 @@ Aturan ini tidak hanya berlaku untuk Dashboard CMS, tetapi berlaku untuk **selur
   Cache-Control: public, max-age=31536000, immutable
   ```
   agar browser dapat melakukan cache permanen tanpa mengunduh ulang aset yang tidak berubah.
+
+---
+
+## 8. Standar Changelog & Semantic Versioning (Wajib untuk AI Agent & Developer)
+Setiap AI Agent maupun pengembang yang melakukan modifikasi kode, penambahan fitur, atau perbaikan bug di repositori HeroCMS **WAJIB** mencatat perubahan secara terstruktur ke dalam dataset changelog resmi di:
+[`services/02-dashboard-cms/src/data/changelog.ts`](file:///Users/rizalfahmi/Documents/React/herocms/services/02-dashboard-cms/src/data/changelog.ts)
+
+- **Aturan Penomoran Versi (Semantic Versioning: `vMajor.Minor.Patch/Revision`)**:
+  1. **Major (`X.0.0`)**: Digunakan jika ada perubahan arsitektur fundamental, perombakan database/API yang bersifat breaking change, atau perombakan sistem UI/UX secara radikal.
+  2. **Minor (`x.Y.0`)**: Digunakan setiap kali menambahkan **menu baru, modul baru, atau kapabilitas fungsional baru** yang backwards-compatible (contoh: pembuatan Menu Changelog, Modul Telemetri baru).
+  3. **Revision / Patch (`x.y.Z`)**: Digunakan untuk **perbaikan bug (bugfix), optimasi performa** (contoh: smooth scrolling fix, cache invalidation tune), perbaikan visual CSS, atau perapihan kode.
+
+- **Struktur Entri Changelog Wajib**:
+  Setiap versi baru ditambahkan di posisi teratas array `changelogReleases` dengan format:
+  ```typescript
+  {
+    version: 'v1.X.Y',
+    releaseDate: 'DD MMMM YYYY',
+    title: 'Judul Rilis Ringkas & Informatif',
+    description: 'Ringkasan perubahan fungsional dan teknis yang diterapkan.',
+    isLatest: true, // pastikan versi sebelumnya diset false
+    items: [
+      {
+        id: 'CHG-XXXX',
+        type: 'feature' | 'fix' | 'improvement' | 'security' | 'perf',
+        title: 'Judul Perubahan',
+        description: 'Detail teknis apa yang diubah dan dampaknya.',
+        component: 'Dashboard / Editor / Backend / Auth',
+        author: 'HeroCMS Dev / AI Agent',
+        tags: ['Tag1', 'Tag2']
+      }
+    ]
+  }
+  ```
+- **Larangan**: Dilarang menyelesaikan pekerjaan atau melakukan commit tanpa memperbarui catatan perubahan dan menaikkan nomor versi yang sesuai di changelog.
+

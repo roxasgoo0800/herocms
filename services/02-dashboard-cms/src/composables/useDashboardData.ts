@@ -37,7 +37,8 @@ const VALID_MENUS: ActiveMenu[] = [
   'webhooks',
   'billing',
   'invoices',
-  'tickets'
+  'tickets',
+  'changelog'
 ];
 
 const getCookie = (name: string): string | null => {
