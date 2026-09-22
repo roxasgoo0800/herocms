@@ -142,23 +142,7 @@ func RateLimiter(rdb *redis.Client, maxRequests int, window time.Duration) gin.H
 // SessionOrJWTAuth verifies authentication via Redis Stateful Session Cookie (PWA) or JWT Bearer Token
 func SessionOrJWTAuth(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 1. Check HTTP-Only Session Cookie (PWA / Browser First-Class Support)
-		sessionCookie, err := c.Cookie("herocms_session")
-		if err == nil && sessionCookie != "" {
-			sess, err := rdb.GetSession(c.Request.Context(), sessionCookie)
-			if err == nil && sess != nil {
-				c.Set("session_id", sess.SessionID)
-				c.Set("tenant_id", sess.TenantID)
-				c.Set("user_id", sess.UserID)
-				c.Set("email", sess.Email)
-				c.Set("full_name", sess.FullName)
-				c.Set("role", sess.Role)
-				c.Next()
-				return
-			}
-		}
-
-		// 2. Check Authorization: Bearer <token>
+		// 1. Check Authorization: Bearer <token> (Explicit client token takes precedence)
 		authHeader := c.GetHeader("Authorization")
 		if authHeader != "" {
 			parts := strings.Split(authHeader, " ")
@@ -187,6 +171,22 @@ func SessionOrJWTAuth(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 						}
 					}
 				}
+			}
+		}
+
+		// 2. Check HTTP-Only Session Cookie (PWA / Browser First-Class Support)
+		sessionCookie, err := c.Cookie("herocms_session")
+		if err == nil && sessionCookie != "" {
+			sess, err := rdb.GetSession(c.Request.Context(), sessionCookie)
+			if err == nil && sess != nil {
+				c.Set("session_id", sess.SessionID)
+				c.Set("tenant_id", sess.TenantID)
+				c.Set("user_id", sess.UserID)
+				c.Set("email", sess.Email)
+				c.Set("full_name", sess.FullName)
+				c.Set("role", sess.Role)
+				c.Next()
+				return
 			}
 		}
 

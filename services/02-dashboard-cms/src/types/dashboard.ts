@@ -11,7 +11,8 @@ export type ActiveMenu =
   | 'webhooks'
   | 'billing'
   | 'invoices'
-  | 'tickets';
+  | 'tickets'
+  | 'changelog';
 
 export interface UserPlan {
   name: string;
@@ -204,4 +205,23 @@ export interface SupportTicketItem {
   lastUpdated: string;
   assignedEngineer?: string;
   messages: TicketMessage[];
+}
+
+export type ChangelogType = 'feature' | 'improvement' | 'bugfix' | 'security' | 'performance';
+
+export interface ChangelogItem {
+  id: string;
+  type: ChangelogType;
+  scope: string;
+  description: string;
+}
+
+export interface ChangelogRelease {
+  version: string;
+  releaseDate: string;
+  title: string;
+  summary: string;
+  badge?: 'Latest' | 'Stable' | 'LTS';
+  items: ChangelogItem[];
+  author: string;
 }

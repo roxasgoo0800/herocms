@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue';
 import {
   Server,
   Globe,
@@ -43,6 +44,23 @@ const {
   activeContainerId,
   activeMenu
 } = useDashboardData();
+
+const searchInputRef = ref<HTMLInputElement | null>(null);
+
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    searchInputRef.value?.focus();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown);
+});
 
 const selectForEditor = (containerId: string) => {
   activeContainerId.value = containerId;
@@ -134,6 +152,7 @@ const selectForEditor = (containerId: string) => {
       <div class="search-command-shell">
         <Search :size="15" class="search-lead-glyph" />
         <input
+          ref="searchInputRef"
           v-model="searchQuery"
           type="text"
           placeholder="Cari situs, subdomain, atau container ID..."
@@ -176,7 +195,7 @@ const selectForEditor = (containerId: string) => {
     </div>
 
     <!-- 3-Column Site Cards Grid (Matching 3-Container Subscription Quota) -->
-    <div v-if="filteredContainers.length > 0 || (statusFilter === 'all' && containers.length < userPlan.maxContainers)" class="site-cards-grid">
+    <div v-if="filteredContainers.length > 0 || (!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers)" class="site-cards-grid">
       <!-- Active & Existing Container Cards -->
       <div
         v-for="c in filteredContainers"
@@ -336,7 +355,7 @@ const selectForEditor = (containerId: string) => {
       </div>
 
       <!-- Quota Available Slot Placeholders (Fills 3-column grid) -->
-      <template v-if="statusFilter === 'all' && containers.length < userPlan.maxContainers">
+      <template v-if="!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers">
         <div
           v-for="slotNum in (userPlan.maxContainers - containers.length)"
           :key="'slot-' + slotNum"
@@ -362,11 +381,16 @@ const selectForEditor = (containerId: string) => {
     </div>
 
     <!-- Empty State if search finds nothing -->
-    <div v-else class="empty-search-state">
-      <Search :size="32" color="#94a3b8" />
+    <div v-else class="empty-state-card" style="margin-top: 10px;">
+      <Server :size="34" style="color: #94a3b8; margin-bottom: 4px;" />
       <h3>Tidak ada kontainer ditemukan</h3>
-      <p>Tidak ada kontainer yang cocok dengan kata kunci "{{ searchQuery }}".</p>
-      <button class="btn-clear-search-lg" @click="searchQuery = ''; statusFilter = 'all'">
+      <p v-if="searchQuery">
+        Tidak ada situs atau kontainer yang cocok dengan kata kunci pencarian "<strong>{{ searchQuery }}</strong>".
+      </p>
+      <p v-else>
+        Tidak ada kontainer dengan status filter terpilih.
+      </p>
+      <button class="btn-reset-filter" @click="searchQuery = ''; statusFilter = 'all'">
         Reset Pencarian & Filter
       </button>
     </div>

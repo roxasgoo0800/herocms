@@ -23,10 +23,14 @@ export async function apiFetch<T = any>(endpoint: string, options: RequestInit =
   const csrfToken = getCookie('csrf_token') || localStorage.getItem('cloudcms_csrf_token');
   const method = (options.method || 'GET').toUpperCase();
 
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {})
   };
+
+  if (!isFormData && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -93,13 +97,23 @@ export const studioApi = {
 
   // Assets
   getAssets: () => apiFetch('/assets'),
+  uploadAsset: (formData: FormData) =>
+    apiFetch('/assets/upload', { method: 'POST', body: formData }),
+  deleteAsset: (id: string) =>
+    apiFetch(`/assets/${id}`, { method: 'DELETE' }),
 
   // Domains
   getDomains: () => apiFetch('/domains'),
 
   // Tickets
   getTickets: () => apiFetch('/tickets'),
+  createTicket: (data: { subject: string; category: string; priority: string; message: string; authorName?: string; authorRole?: string }) =>
+    apiFetch('/tickets', { method: 'POST', body: JSON.stringify(data) }),
   getTicketMessages: (id: string) => apiFetch(`/tickets/${id}/messages`),
+  sendTicketReply: (id: string, data: { message: string; authorName?: string; authorRole?: string; sender?: string }) =>
+    apiFetch(`/tickets/${id}/messages`, { method: 'POST', body: JSON.stringify(data) }),
+  resolveTicket: (id: string) =>
+    apiFetch(`/tickets/${id}/resolve`, { method: 'PUT' }),
 
   // Invoices & Billing
   getInvoices: () => apiFetch('/invoices'),

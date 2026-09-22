@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import {
   GraduationCap,
   CheckCircle2,
   ChevronRight,
   Sparkles,
   Zap,
-  Search
+  Search,
+  X
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 
@@ -17,11 +18,42 @@ const {
 
 const selectedCategory = ref<'all' | 'portfolio' | 'blog' | 'education' | 'business'>('all');
 const searchTemplate = ref('');
+const searchInputRef = ref<HTMLInputElement | null>(null);
+
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    searchInputRef.value?.focus();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown);
+});
 
 const filteredTemplates = computed(() => {
+  const q = searchTemplate.value.trim().toLowerCase();
   return officialTemplates.value.filter(tpl => {
-    const matchesSearch = tpl.title.toLowerCase().includes(searchTemplate.value.toLowerCase()) ||
-                          tpl.desc.toLowerCase().includes(searchTemplate.value.toLowerCase());
+    if (!tpl) return false;
+    const title = (tpl.title || '').toLowerCase();
+    const desc = (tpl.desc || '').toLowerCase();
+    const cat = (tpl.category || '').toLowerCase();
+    const id = (tpl.id || '').toLowerCase();
+    const tier = (tpl.tier || '').toLowerCase();
+    const matchFeatures = Array.isArray(tpl.features) && tpl.features.some((f: string) => f.toLowerCase().includes(q));
+
+    const matchesSearch = !q ||
+                          title.includes(q) ||
+                          desc.includes(q) ||
+                          cat.includes(q) ||
+                          id.includes(q) ||
+                          tier.includes(q) ||
+                          matchFeatures;
+
     if (!matchesSearch) return false;
     if (selectedCategory.value === 'all') return true;
     return tpl.category === selectedCategory.value;
@@ -48,11 +80,15 @@ const filteredTemplates = computed(() => {
       <div class="search-command-shell">
         <Search :size="15" class="search-lead-glyph" />
         <input
+          ref="searchInputRef"
           v-model="searchTemplate"
           type="text"
           placeholder="Cari template portofolio, blog editorial, kursus, UMKM..."
           class="search-command-input"
         />
+        <button v-if="searchTemplate" class="btn-clear-search" @click="searchTemplate = ''" title="Bersihkan">
+          <X :size="13" />
+        </button>
         <kbd class="shortcut-tag">⌘K</kbd>
       </div>
 
@@ -62,7 +98,7 @@ const filteredTemplates = computed(() => {
           :class="{ active: selectedCategory === 'all' }"
           @click="selectedCategory = 'all'"
         >
-          <span>Semua (4)</span>
+          <span>Semua ({{ officialTemplates.length }})</span>
         </button>
         <button
           class="segment-pill"
@@ -206,6 +242,21 @@ const filteredTemplates = computed(() => {
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Empty State for Template Search / Filter -->
+    <div v-if="filteredTemplates.length === 0" class="empty-state-card" style="margin-top: 10px;">
+      <Search :size="34" style="color: #94a3b8; margin-bottom: 4px;" />
+      <h3>Tidak ada blueprint template ditemukan</h3>
+      <p v-if="searchTemplate">
+        Tidak ada template yang cocok dengan kata kunci pencarian "<strong>{{ searchTemplate }}</strong>".
+      </p>
+      <p v-else>
+        Tidak ada template untuk kategori terpilih.
+      </p>
+      <button class="btn-reset-filter" @click="searchTemplate = ''; selectedCategory = 'all'">
+        Lihat Semua Template
+      </button>
     </div>
   </section>
 </template>

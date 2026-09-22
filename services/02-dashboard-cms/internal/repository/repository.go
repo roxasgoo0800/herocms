@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -728,7 +729,7 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, error) {
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
-			SELECT id, name, file_type, file_size, dimensions, storage_url, created_at
+			SELECT id, name, file_type, file_size, dimensions, storage_url, s3_key, created_at
 			FROM media_assets
 			WHERE tenant_id = $1
 			ORDER BY created_at DESC
@@ -737,9 +738,9 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 			defer rows.Close()
 			var list []gin.H
 			for rows.Next() {
-				var id, name, fileType, fileSize, dimensions, url string
+				var id, name, fileType, fileSize, dimensions, url, s3Key string
 				var createdAt time.Time
-				if err := rows.Scan(&id, &name, &fileType, &fileSize, &dimensions, &url, &createdAt); err == nil {
+				if err := rows.Scan(&id, &name, &fileType, &fileSize, &dimensions, &url, &s3Key, &createdAt); err == nil {
 					list = append(list, gin.H{
 						"id":         id,
 						"name":       name,
@@ -747,6 +748,7 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 						"size":       fileSize,
 						"dimensions": dimensions,
 						"url":        url,
+						"s3Key":      s3Key,
 						"uploadedAt": createdAt.Format("2 Jan 2006"),
 					})
 				}
@@ -761,6 +763,84 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.Assets, nil
+}
+
+func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, mimeType, dimensions, fileSize string, fileSizeBytes int64, storageURL, s3Key string) (gin.H, error) {
+	now := time.Now()
+	nowStr := now.Format("2 Jan 2006")
+
+	if r.DB != nil {
+		var id string
+		err := r.DB.QueryRowContext(ctx, `
+			INSERT INTO media_assets (
+				id, tenant_id, name, file_type, mime_type, dimensions, file_size, file_size_bytes, storage_url, s3_key, created_at
+			) VALUES (
+				gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()
+			)
+			RETURNING id::text
+		`, tenantID, name, fileType, mimeType, dimensions, fileSize, fileSizeBytes, storageURL, s3Key).Scan(&id)
+		if err == nil {
+			asset := gin.H{
+				"id":         id,
+				"name":       name,
+				"type":       fileType,
+				"mimeType":   mimeType,
+				"dimensions": dimensions,
+				"size":       fileSize,
+				"url":        storageURL,
+				"s3Key":      s3Key,
+				"uploadedAt": nowStr,
+			}
+			return asset, nil
+		}
+		log.Printf("[DB ERROR] CreateAsset: %v", err)
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	id := fmt.Sprintf("ast_%d", now.UnixNano()%1000000)
+	asset := gin.H{
+		"id":         id,
+		"name":       name,
+		"type":       fileType,
+		"mimeType":   mimeType,
+		"dimensions": dimensions,
+		"size":       fileSize,
+		"url":        storageURL,
+		"s3Key":      s3Key,
+		"uploadedAt": nowStr,
+	}
+	r.Assets = append([]gin.H{asset}, r.Assets...)
+	return asset, nil
+}
+
+func (r *Repository) DeleteAsset(ctx context.Context, tenantID, assetID string) (string, error) {
+	var s3Key string
+
+	if r.DB != nil {
+		err := r.DB.QueryRowContext(ctx, `
+			DELETE FROM media_assets
+			WHERE tenant_id = $1 AND (id::text = $2 OR s3_key = $2 OR name = $2)
+			RETURNING s3_key
+		`, tenantID, assetID).Scan(&s3Key)
+		if err == nil {
+			return s3Key, nil
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, a := range r.Assets {
+		if fmt.Sprintf("%v", a["id"]) == assetID || fmt.Sprintf("%v", a["s3Key"]) == assetID {
+			if k, ok := a["s3Key"].(string); ok {
+				s3Key = k
+			}
+			r.Assets = append(r.Assets[:i], r.Assets[i+1:]...)
+			return s3Key, nil
+		}
+	}
+	return s3Key, nil
 }
 
 func (r *Repository) GetDomains(ctx context.Context, tenantID string) ([]gin.H, error) {
@@ -802,6 +882,28 @@ func (r *Repository) GetDomains(ctx context.Context, tenantID string) ([]gin.H, 
 	return r.Domains, nil
 }
 
+func normalizePriority(p string) string {
+	switch strings.ToLower(p) {
+	case "p1_urgent", "urgent", "critical", "p1":
+		return "p1_urgent"
+	case "p2_high", "high", "p2":
+		return "p2_high"
+	default:
+		return "p3_normal"
+	}
+}
+
+func normalizeStatus(s string) string {
+	switch strings.ToLower(s) {
+	case "resolved", "closed", "selesai":
+		return "resolved"
+	case "in_progress", "answered", "pending", "proses":
+		return "in_progress"
+	default:
+		return "open"
+	}
+}
+
 func (r *Repository) GetTickets(ctx context.Context, tenantID string) ([]gin.H, error) {
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
@@ -817,15 +919,31 @@ func (r *Repository) GetTickets(ctx context.Context, tenantID string) ([]gin.H, 
 				var id, ticketNumber, subject, category, priority, status, lastReply string
 				var createdAt time.Time
 				if err := rows.Scan(&id, &ticketNumber, &subject, &category, &priority, &status, &lastReply, &createdAt); err == nil {
+					normPriority := normalizePriority(priority)
+					normStatus := normalizeStatus(status)
+
+					msgs, _ := r.GetTicketMessages(ctx, ticketNumber)
+					if msgs == nil {
+						msgs = []gin.H{}
+					}
+
+					assigned := ""
+					if normStatus != "open" {
+						assigned = "Budi Hartono (L2 Cloud DevOps)"
+					}
+
 					list = append(list, gin.H{
-						"id":        ticketNumber,
-						"dbId":      id,
-						"subject":   subject,
-						"category":  category,
-						"priority":  priority,
-						"status":    status,
-						"lastReply": lastReply,
-						"createdAt": createdAt.Format("2 Jan 2006, 15:04"),
+						"id":               ticketNumber,
+						"dbId":             id,
+						"subject":          subject,
+						"category":         category,
+						"priority":         normPriority,
+						"status":           normStatus,
+						"lastUpdated":      lastReply,
+						"lastReply":        lastReply,
+						"assignedEngineer": assigned,
+						"createdAt":        createdAt.Format("2 Jan 2006, 15:04"),
+						"messages":         msgs,
 					})
 				}
 			}
@@ -838,7 +956,32 @@ func (r *Repository) GetTickets(ctx context.Context, tenantID string) ([]gin.H, 
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.Tickets, nil
+	var out []gin.H
+	for _, t := range r.Tickets {
+		tCopy := gin.H{}
+		for k, v := range t {
+			tCopy[k] = v
+		}
+		ticketID, _ := tCopy["id"].(string)
+		if tCopy["messages"] == nil {
+			msgs := r.Messages[ticketID]
+			if msgs == nil {
+				msgs = []gin.H{}
+			}
+			tCopy["messages"] = msgs
+		}
+		if tCopy["lastUpdated"] == nil && tCopy["lastReply"] != nil {
+			tCopy["lastUpdated"] = tCopy["lastReply"]
+		}
+		if pStr, ok := tCopy["priority"].(string); ok {
+			tCopy["priority"] = normalizePriority(pStr)
+		}
+		if sStr, ok := tCopy["status"].(string); ok {
+			tCopy["status"] = normalizeStatus(sStr)
+		}
+		out = append(out, tCopy)
+	}
+	return out, nil
 }
 
 func (r *Repository) GetTicketMessages(ctx context.Context, ticketKey string) ([]gin.H, error) {
@@ -857,12 +1000,23 @@ func (r *Repository) GetTicketMessages(ctx context.Context, ticketKey string) ([
 				var id, senderName, senderRole, message string
 				var createdAt time.Time
 				if err := rows.Scan(&id, &senderName, &senderRole, &message, &createdAt); err == nil {
+					sender := "tenant"
+					authorRole := "Tenant Administrator"
+					if senderRole == "staff" || senderRole == "support" {
+						sender = "support"
+						authorRole = "L2 Cloud DevOps Engineer"
+					}
+					timeStr := createdAt.Format("2 Jan 2006, 15:04")
 					list = append(list, gin.H{
 						"id":         id,
+						"sender":     sender,
 						"senderName": senderName,
+						"authorName": senderName,
 						"senderRole": senderRole,
+						"authorRole": authorRole,
+						"timestamp":  timeStr,
+						"createdAt":  timeStr,
 						"message":    message,
-						"createdAt":  createdAt.Format("2 Jan 2006, 15:04"),
 					})
 				}
 			}
@@ -880,6 +1034,190 @@ func (r *Repository) GetTicketMessages(ctx context.Context, ticketKey string) ([
 		return []gin.H{}, nil
 	}
 	return msgs, nil
+}
+
+func (r *Repository) CreateTicket(ctx context.Context, tenantID, ticketNumber, subject, category, priority, message, authorName, authorRole string) (gin.H, error) {
+	if authorName == "" {
+		authorName = "Tenant Administrator"
+	}
+	if authorRole == "" {
+		authorRole = "Tenant Administrator"
+	}
+	nowStr := time.Now().Format("2 Jan 2006, 15:04")
+
+	if r.DB != nil {
+		var ticketID string
+		err := r.DB.QueryRowContext(ctx, `
+			INSERT INTO support_tickets (id, tenant_id, ticket_number, subject, category, priority, status, last_reply, created_at, updated_at)
+			VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, 'open', 'Baru saja', NOW(), NOW())
+			RETURNING id
+		`, tenantID, ticketNumber, subject, category, priority).Scan(&ticketID)
+		if err == nil {
+			var msgID string
+			_ = r.DB.QueryRowContext(ctx, `
+				INSERT INTO ticket_messages (id, ticket_id, sender_name, sender_role, message, created_at)
+				VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW())
+				RETURNING id
+			`, ticketID, authorName, "customer", message).Scan(&msgID)
+
+			firstMsg := gin.H{
+				"id":         msgID,
+				"sender":     "tenant",
+				"authorName": authorName,
+				"authorRole": authorRole,
+				"timestamp":  nowStr,
+				"createdAt":  nowStr,
+				"message":    message,
+			}
+
+			return gin.H{
+				"id":          ticketNumber,
+				"dbId":        ticketID,
+				"subject":     subject,
+				"category":    category,
+				"priority":    normalizePriority(priority),
+				"status":      "open",
+				"lastUpdated": "Baru saja",
+				"lastReply":   "Baru saja",
+				"createdAt":   nowStr,
+				"messages":    []gin.H{firstMsg},
+			}, nil
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	msgID := fmt.Sprintf("msg_%d", time.Now().UnixNano())
+	firstMsg := gin.H{
+		"id":         msgID,
+		"sender":     "tenant",
+		"authorName": authorName,
+		"authorRole": authorRole,
+		"timestamp":  nowStr,
+		"createdAt":  nowStr,
+		"message":    message,
+	}
+
+	tkt := gin.H{
+		"id":          ticketNumber,
+		"subject":     subject,
+		"category":    category,
+		"priority":    normalizePriority(priority),
+		"status":      "open",
+		"lastUpdated": "Baru saja",
+		"lastReply":   "Baru saja",
+		"createdAt":   nowStr,
+		"messages":    []gin.H{firstMsg},
+	}
+
+	r.Tickets = append([]gin.H{tkt}, r.Tickets...)
+	r.Messages[ticketNumber] = []gin.H{firstMsg}
+
+	return tkt, nil
+}
+
+func (r *Repository) AddTicketMessage(ctx context.Context, tenantID, ticketKey, message, authorName, authorRole, sender string) (gin.H, error) {
+	if authorName == "" {
+		authorName = "Tenant Administrator"
+	}
+	if authorRole == "" {
+		authorRole = "Tenant Administrator"
+	}
+	if sender == "" {
+		sender = "tenant"
+	}
+	senderRole := "customer"
+	if sender == "support" {
+		senderRole = "staff"
+	}
+	nowStr := time.Now().Format("2 Jan 2006, 15:04")
+
+	if r.DB != nil {
+		var ticketID string
+		err := r.DB.QueryRowContext(ctx, `
+			SELECT id FROM support_tickets
+			WHERE (ticket_number = $1 OR id::text = $1) AND tenant_id = $2
+		`, ticketKey, tenantID).Scan(&ticketID)
+		if err == nil {
+			var msgID string
+			err = r.DB.QueryRowContext(ctx, `
+				INSERT INTO ticket_messages (id, ticket_id, sender_name, sender_role, message, created_at)
+				VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW())
+				RETURNING id
+			`, ticketID, authorName, senderRole, message).Scan(&msgID)
+			if err == nil {
+				_, _ = r.DB.ExecContext(ctx, `
+					UPDATE support_tickets
+					SET last_reply = 'Baru saja', updated_at = NOW(), status = CASE WHEN status = 'resolved' THEN 'open' ELSE status END
+					WHERE id = $1
+				`, ticketID)
+
+				return gin.H{
+					"id":         msgID,
+					"sender":     sender,
+					"authorName": authorName,
+					"authorRole": authorRole,
+					"timestamp":  nowStr,
+					"createdAt":  nowStr,
+					"message":    message,
+				}, nil
+			}
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	msgID := fmt.Sprintf("msg_%d", time.Now().UnixNano())
+	newMsg := gin.H{
+		"id":         msgID,
+		"sender":     sender,
+		"authorName": authorName,
+		"authorRole": authorRole,
+		"timestamp":  nowStr,
+		"createdAt":  nowStr,
+		"message":    message,
+	}
+
+	r.Messages[ticketKey] = append(r.Messages[ticketKey], newMsg)
+
+	for i := range r.Tickets {
+		if tID, _ := r.Tickets[i]["id"].(string); tID == ticketKey {
+			r.Tickets[i]["lastUpdated"] = "Baru saja"
+			r.Tickets[i]["lastReply"] = "Baru saja"
+			if msgs, ok := r.Tickets[i]["messages"].([]gin.H); ok {
+				r.Tickets[i]["messages"] = append(msgs, newMsg)
+			}
+			break
+		}
+	}
+
+	return newMsg, nil
+}
+
+func (r *Repository) ResolveTicket(ctx context.Context, tenantID, ticketKey string) error {
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			UPDATE support_tickets
+			SET status = 'resolved', last_reply = 'Baru saja', updated_at = NOW()
+			WHERE (ticket_number = $1 OR id::text = $1) AND tenant_id = $2
+		`, ticketKey, tenantID)
+		if err == nil {
+			return nil
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i := range r.Tickets {
+		if tID, _ := r.Tickets[i]["id"].(string); tID == ticketKey {
+			r.Tickets[i]["status"] = "resolved"
+			r.Tickets[i]["lastUpdated"] = "Baru saja"
+			break
+		}
+	}
+	return nil
 }
 
 func (r *Repository) GetInvoices(ctx context.Context, tenantID string) ([]gin.H, error) {

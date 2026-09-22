@@ -32,7 +32,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ExternalLink,
-  Check
+  Check,
+  History
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 
@@ -48,6 +49,7 @@ const WebhooksApiModule = defineAsyncComponent(() => import('../components/dashb
 const BillingPlanModule = defineAsyncComponent(() => import('../components/dashboard/BillingPlanModule.vue'));
 const InvoicesHistoryModule = defineAsyncComponent(() => import('../components/dashboard/InvoicesHistoryModule.vue'));
 const SupportTicketingModule = defineAsyncComponent(() => import('../components/dashboard/SupportTicketingModule.vue'));
+const ChangelogModule = defineAsyncComponent(() => import('../components/dashboard/ChangelogModule.vue'));
 import { useSplashTransition } from '../composables/useSplashTransition';
 
 const router = useRouter();
@@ -73,7 +75,8 @@ const {
   isLogsModalOpen,
   activeLogContainer,
   copyContainerLogs,
-  syncWithBackend
+  syncWithBackend,
+  executeLogout
 } = useDashboardData();
 
 onMounted(async () => {
@@ -85,11 +88,8 @@ watch(activeMenu, () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-const handleLogout = () => {
-  localStorage.removeItem('cloudcms_auth_token');
-  localStorage.removeItem('cloudcms_user_email');
-  sessionStorage.removeItem('herocms_splash_seen');
-  router.push('/login');
+const handleLogout = async () => {
+  await executeLogout(router);
 };
 </script>
 
@@ -242,6 +242,19 @@ const handleLogout = () => {
             <span class="nav-badge badge-warning">1 Aktif</span>
           </button>
         </nav>
+
+        <div class="nav-section-title">INFORMASI & SISTEM</div>
+        <nav class="sidebar-nav-list">
+          <button
+            class="nav-link"
+            :class="{ active: activeMenu === 'changelog' }"
+            @click="activeMenu = 'changelog'"
+          >
+            <History :size="17" />
+            <span class="nav-link-text">Changelog & Rilis</span>
+            <span class="nav-badge badge-primary">v1.2.6</span>
+          </button>
+        </nav>
       </div>
 
       <!-- Bottom Sidebar: Quota Gauge & User Profile -->
@@ -317,7 +330,8 @@ const handleLogout = () => {
               activeMenu === 'webhooks' ? 'Webhooks & Integrasi API' :
               activeMenu === 'billing' ? 'Kapasitas & Paket Langganan' :
               activeMenu === 'invoices' ? 'Faktur & Riwayat Invoice Resmi' :
-              'Pusat Bantuan & Tiket Support'
+              activeMenu === 'tickets' ? 'Pusat Bantuan & Tiket Support' :
+              'Changelog & Catatan Rilis Sistem'
             }}
           </span>
           <template v-if="activeMenu === 'content' && activeArticleForReader">
@@ -401,6 +415,7 @@ const handleLogout = () => {
         <BillingPlanModule v-else-if="activeMenu === 'billing'" />
         <InvoicesHistoryModule v-else-if="activeMenu === 'invoices'" />
         <SupportTicketingModule v-else-if="activeMenu === 'tickets'" />
+        <ChangelogModule v-else-if="activeMenu === 'changelog'" />
       </main>
     </div>
 

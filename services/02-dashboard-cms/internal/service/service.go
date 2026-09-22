@@ -5,7 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -13,6 +19,7 @@ import (
 	"github.com/cloudcms/dashboard-cms-backend/internal/config"
 	"github.com/cloudcms/dashboard-cms-backend/internal/redis"
 	"github.com/cloudcms/dashboard-cms-backend/internal/repository"
+	"github.com/cloudcms/dashboard-cms-backend/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -30,14 +37,16 @@ type Services struct {
 	Config     *config.Config
 	Repo       *repository.Repository
 	Redis      *redis.Client
+	S3         *storage.S3Client
 	JWTSecret  []byte
 }
 
-func NewServices(cfg *config.Config, repo *repository.Repository, rdb *redis.Client) *Services {
+func NewServices(cfg *config.Config, repo *repository.Repository, rdb *redis.Client, s3 *storage.S3Client) *Services {
 	return &Services{
 		Config:    cfg,
 		Repo:      repo,
 		Redis:     rdb,
+		S3:        s3,
 		JWTSecret: cfg.JWTSecret,
 	}
 }
@@ -437,6 +446,110 @@ func (s *Services) GetAssets(ctx context.Context, tenantID string) gin.H {
 	return res
 }
 
+func (s *Services) UploadAsset(ctx context.Context, tenantID string, fileHeader *multipart.FileHeader) (gin.H, error) {
+	if tenantID == "" {
+		tenantID = "99420000-0000-0000-0000-000000009942"
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		return nil, fmt.Errorf("gagal membaca file: %w", err)
+	}
+	defer file.Close()
+
+	ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
+	fileType := strings.ToUpper(strings.TrimPrefix(ext, "."))
+	if fileType == "" {
+		fileType = "BIN"
+	}
+
+	contentType := fileHeader.Header.Get("Content-Type")
+	if contentType == "" || contentType == "application/octet-stream" {
+		switch ext {
+		case ".jpg", ".jpeg":
+			contentType = "image/jpeg"
+		case ".png":
+			contentType = "image/png"
+		case ".gif":
+			contentType = "image/gif"
+		case ".webp":
+			contentType = "image/webp"
+		case ".svg":
+			contentType = "image/svg+xml"
+		case ".pdf":
+			contentType = "application/pdf"
+		case ".mp4":
+			contentType = "video/mp4"
+		default:
+			contentType = "application/octet-stream"
+		}
+	}
+
+	dimensions := "N/A"
+	if strings.HasPrefix(contentType, "image/") && ext != ".svg" {
+		cfg, _, imgErr := image.DecodeConfig(file)
+		if imgErr == nil {
+			dimensions = fmt.Sprintf("%dx%d px", cfg.Width, cfg.Height)
+		}
+		// Reset read pointer
+		if seeker, ok := file.(interface{ Seek(offset int64, whence int) (int64, error) }); ok {
+			_, _ = seeker.Seek(0, 0)
+		}
+	}
+
+	// Format file size
+	sizeBytes := fileHeader.Size
+	var fileSizeStr string
+	if sizeBytes < 1024 {
+		fileSizeStr = fmt.Sprintf("%d B", sizeBytes)
+	} else if sizeBytes < 1024*1024 {
+		fileSizeStr = fmt.Sprintf("%.1f KB", float64(sizeBytes)/1024)
+	} else {
+		fileSizeStr = fmt.Sprintf("%.1f MB", float64(sizeBytes)/(1024*1024))
+	}
+
+	var storageURL, s3Key string
+	if s.S3 != nil {
+		storageURL, s3Key, err = s.S3.UploadFile(ctx, tenantID, fileHeader.Filename, file, sizeBytes, contentType)
+		if err != nil {
+			return nil, fmt.Errorf("gagal mengunggah ke S3: %w", err)
+		}
+	} else {
+		s3Key = fmt.Sprintf("tenants/%s/%d-%s", tenantID, time.Now().UnixNano(), fileHeader.Filename)
+		storageURL = fmt.Sprintf("http://localhost:9000/herocms-media/%s", s3Key)
+	}
+
+	asset, err := s.Repo.CreateAsset(ctx, tenantID, fileHeader.Filename, fileType, contentType, dimensions, fileSizeStr, sizeBytes, storageURL, s3Key)
+	if err != nil {
+		return nil, fmt.Errorf("gagal menyimpan metadata aset: %w", err)
+	}
+
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:assets", tenantID))
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+
+	return asset, nil
+}
+
+func (s *Services) DeleteAsset(ctx context.Context, tenantID, assetID string) error {
+	if tenantID == "" {
+		tenantID = "99420000-0000-0000-0000-000000009942"
+	}
+
+	s3Key, err := s.Repo.DeleteAsset(ctx, tenantID, assetID)
+	if err != nil {
+		return err
+	}
+
+	if s3Key != "" && s.S3 != nil {
+		_ = s.S3.DeleteFile(ctx, s3Key)
+	}
+
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:assets", tenantID))
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+
+	return nil
+}
+
 // -----------------------------------------------------------------------------
 // Custom Domains Service (With Redis Caching)
 // -----------------------------------------------------------------------------
@@ -481,6 +594,66 @@ func (s *Services) GetTicketMessages(ctx context.Context, id string) []gin.H {
 		return []gin.H{}
 	}
 	return msgs
+}
+
+type CreateTicketInput struct {
+	Subject    string `json:"subject" binding:"required"`
+	Category   string `json:"category"`
+	Priority   string `json:"priority"`
+	Message    string `json:"message" binding:"required"`
+	AuthorName string `json:"authorName"`
+	AuthorRole string `json:"authorRole"`
+}
+
+type TicketReplyInput struct {
+	Message    string `json:"message" binding:"required"`
+	AuthorName string `json:"authorName"`
+	AuthorRole string `json:"authorRole"`
+	Sender     string `json:"sender"`
+}
+
+func (s *Services) CreateTicket(ctx context.Context, tenantID string, input CreateTicketInput) (gin.H, error) {
+	if input.Category == "" {
+		input.Category = "Infrastructure & Container"
+	}
+	if input.Priority == "" {
+		input.Priority = "p2_high"
+	}
+	ticketNumber := fmt.Sprintf("TKT-%04d", time.Now().Unix()%9000+1000)
+
+	ticket, err := s.Repo.CreateTicket(ctx, tenantID, ticketNumber, input.Subject, input.Category, input.Priority, input.Message, input.AuthorName, input.AuthorRole)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+
+	return ticket, nil
+}
+
+func (s *Services) AddTicketMessage(ctx context.Context, tenantID, ticketKey string, input TicketReplyInput) (gin.H, error) {
+	msg, err := s.Repo.AddTicketMessage(ctx, tenantID, ticketKey, input.Message, input.AuthorName, input.AuthorRole, input.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+
+	return msg, nil
+}
+
+func (s *Services) ResolveTicket(ctx context.Context, tenantID, ticketKey string) error {
+	err := s.Repo.ResolveTicket(ctx, tenantID, ticketKey)
+	if err != nil {
+		return err
+	}
+
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
+	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+
+	return nil
 }
 
 // -----------------------------------------------------------------------------

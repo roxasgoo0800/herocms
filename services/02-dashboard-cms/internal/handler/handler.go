@@ -214,13 +214,15 @@ func (h *Handler) Logout(c *gin.Context) {
 		h.Services.RevokeSession(c.Request.Context(), tokenHash.(string))
 	}
 
-	// Clear cookies
+	// Clear all session & tracking cookies
 	csrfCookieName := h.Services.Config.CSRFCookieName
 	if csrfCookieName == "" {
 		csrfCookieName = "csrf_token"
 	}
 	c.SetCookie("herocms_session", "", -1, "/", "", false, true)
 	c.SetCookie(csrfCookieName, "", -1, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
+	c.SetCookie("herocms_active_menu", "", -1, "/", "", false, false)
+	c.SetCookie("herocms_active_container_id", "", -1, "/", "", false, false)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logout berhasil, sesi dan cookie telah dibersihkan."})
 }
@@ -402,6 +404,52 @@ func (h *Handler) ListAssets(c *gin.Context) {
 	c.JSON(http.StatusOK, h.Services.GetAssets(c.Request.Context(), getTenantID(c)))
 }
 
+func (h *Handler) UploadAsset(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File wajib disertakan dalam form data (field: 'file')"})
+		return
+	}
+
+	// 50MB limit check
+	if file.Size > 50*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ukuran file melebihi batas maksimum 50 MB"})
+		return
+	}
+
+	tenantID := getTenantID(c)
+	asset, err := h.Services.UploadAsset(c.Request.Context(), tenantID, file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "File berhasil diunggah ke storage MinIO S3",
+		"asset":   asset,
+	})
+}
+
+func (h *Handler) DeleteAsset(c *gin.Context) {
+	assetID := c.Param("id")
+	if assetID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID aset tidak boleh kosong"})
+		return
+	}
+
+	tenantID := getTenantID(c)
+	err := h.Services.DeleteAsset(c.Request.Context(), tenantID, assetID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Aset berhasil dihapus dari S3 dan database",
+		"id":      assetID,
+	})
+}
+
 // -----------------------------------------------------------------------------
 // Domains
 // -----------------------------------------------------------------------------
@@ -418,9 +466,47 @@ func (h *Handler) ListTickets(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"tickets": h.Services.GetTickets(c.Request.Context(), getTenantID(c))})
 }
 
+func (h *Handler) CreateTicket(c *gin.Context) {
+	var input service.CreateTicketInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Subject dan Message wajib diisi"})
+		return
+	}
+	tkt, err := h.Services.CreateTicket(c.Request.Context(), getTenantID(c), input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat tiket: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, tkt)
+}
+
 func (h *Handler) GetTicketMessages(c *gin.Context) {
 	id := c.Param("id")
 	c.JSON(http.StatusOK, gin.H{"messages": h.Services.GetTicketMessages(c.Request.Context(), id)})
+}
+
+func (h *Handler) AddTicketMessage(c *gin.Context) {
+	id := c.Param("id")
+	var input service.TicketReplyInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Pesan balasan wajib diisi"})
+		return
+	}
+	msg, err := h.Services.AddTicketMessage(c.Request.Context(), getTenantID(c), id, input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengirim balasan: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, msg)
+}
+
+func (h *Handler) ResolveTicket(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.Services.ResolveTicket(c.Request.Context(), getTenantID(c), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyelesaikan tiket: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "resolved", "id": id})
 }
 
 // -----------------------------------------------------------------------------

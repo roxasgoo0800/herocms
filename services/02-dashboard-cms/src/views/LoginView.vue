@@ -17,9 +17,11 @@ import {
 } from 'lucide-vue-next';
 import { studioApi } from '../services/apiClient';
 import { useSplashTransition } from '../composables/useSplashTransition';
+import { useDashboardData } from '../composables/useDashboardData';
 
 const router = useRouter();
 const { triggerSplash } = useSplashTransition();
+const { resetDashboardState, updateUserEmail } = useDashboardData();
 
 // Auth Mode
 const authMode = ref<'login' | 'register'>('login');
@@ -67,8 +69,10 @@ const handleLogin = async (e?: Event) => {
   try {
     const res = await studioApi.login(idVal, passVal);
     if (res?.token) {
+      resetDashboardState();
       localStorage.setItem('cloudcms_auth_token', res.token);
       localStorage.setItem('cloudcms_user_email', res.user?.email || idVal);
+      updateUserEmail(res.user?.email || idVal);
       successMessage.value = 'Kredensial terverifikasi! Mempersiapkan workspace studio...';
       
       // Step 1: Trigger login card cinematic drop-down and blur exit
@@ -123,8 +127,10 @@ const handleRegister = async (e?: Event) => {
   try {
     const res = await studioApi.register(nameVal, emailVal, passVal);
     if (res?.token) {
+      resetDashboardState();
       localStorage.setItem('cloudcms_auth_token', res.token);
       localStorage.setItem('cloudcms_user_email', res.user?.email || emailVal);
+      updateUserEmail(res.user?.email || emailVal);
       successMessage.value = 'Akun berhasil dibuat! Mengalihkan ke pemilihan kuota kontainer...';
 
       setTimeout(() => {
