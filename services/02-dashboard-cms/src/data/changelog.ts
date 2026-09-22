@@ -2,11 +2,27 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.2.5',
+    releaseDate: '22 September 2026',
+    title: 'Restorasi Arsitektur Kartu Kontainer & Kompatibilitas Studio Master CSS',
+    summary: 'Memperbaiki tata letak kartu kontainer yang sempat berantakan akibat mismatch class HTML. Mengembalikan struktur markup visual studio resmi yang terhubung dengan studio-master.css (radar status chip, subdomain URL box, dual resource gauges, dan action control bar).',
+    badge: 'Latest',
+    author: 'HeroCMS Core Architecture Team',
+    items: [
+      {
+        id: 'c-125-1',
+        type: 'bugfix',
+        scope: 'Situs & Kontainer UI',
+        description: 'Mengembalikan struktur markup kartu .pro-site-card ke standar studio-master.css, memulihkan radar status pill bengan animasi ping, kotak tautan subdomain terpadu, pengukur alokasi CPU & RAM dengan track gradient, serta bar tombol kontrol runtime Docker.'
+      }
+    ]
+  },
+  {
     version: 'v1.2.4',
     releaseDate: '22 September 2026',
     title: 'Penyelarasan Desain Toolbar & Searchbar, Perbaikan CSS Billing, dan Validasi Runtime Kontainer',
     summary: 'Penyelarasan visual dan fungsional pada sistem pencarian antar modul: integrasi command bar ⌘K terpadu dengan segmented pill filter, styling tombol Upgrade Paket langganan, perbaikan search query kontainer dan template, serta pembersihan card specs telemetri.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Core Architecture Team',
     items: [
       {

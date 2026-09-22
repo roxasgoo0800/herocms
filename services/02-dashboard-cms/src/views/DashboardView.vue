@@ -252,7 +252,7 @@ const handleLogout = async () => {
           >
             <History :size="17" />
             <span class="nav-link-text">Changelog & Rilis</span>
-            <span class="nav-badge badge-primary">v1.2.4</span>
+            <span class="nav-badge badge-primary">v1.2.5</span>
           </button>
         </nav>
       </div>
