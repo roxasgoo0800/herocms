@@ -23,10 +23,14 @@ export async function apiFetch<T = any>(endpoint: string, options: RequestInit =
   const csrfToken = getCookie('csrf_token') || localStorage.getItem('cloudcms_csrf_token');
   const method = (options.method || 'GET').toUpperCase();
 
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {})
   };
+
+  if (!isFormData && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -93,6 +97,10 @@ export const studioApi = {
 
   // Assets
   getAssets: () => apiFetch('/assets'),
+  uploadAsset: (formData: FormData) =>
+    apiFetch('/assets/upload', { method: 'POST', body: formData }),
+  deleteAsset: (id: string) =>
+    apiFetch(`/assets/${id}`, { method: 'DELETE' }),
 
   // Domains
   getDomains: () => apiFetch('/domains'),

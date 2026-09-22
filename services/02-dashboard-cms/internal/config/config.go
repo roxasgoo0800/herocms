@@ -3,6 +3,7 @@ package config
 import (
 	"bufio"
 	"crypto/rand"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -21,6 +22,14 @@ type Config struct {
 	RedisPass       string
 	OrchestratorURL string
 	DistDir         string
+
+	// MinIO / S3 Configuration
+	S3Endpoint  string
+	S3AccessKey string
+	S3SecretKey string
+	S3Bucket    string
+	S3UseSSL    bool
+	S3PublicURL string
 
 	// CORS Configuration
 	CORSAllowedOrigins   []string
@@ -161,6 +170,33 @@ func LoadConfig() *Config {
 	csrfCookieDomain := os.Getenv("CSRF_COOKIE_DOMAIN")
 	csrfCookieSecure := strings.ToLower(os.Getenv("CSRF_COOKIE_SECURE")) == "true"
 
+	// MinIO / S3 Environment Parsing
+	s3Endpoint := os.Getenv("S3_ENDPOINT")
+	if s3Endpoint == "" {
+		s3Endpoint = "127.0.0.1:9000"
+	}
+	s3AccessKey := os.Getenv("S3_ACCESS_KEY")
+	if s3AccessKey == "" {
+		s3AccessKey = "minioadmin"
+	}
+	s3SecretKey := os.Getenv("S3_SECRET_KEY")
+	if s3SecretKey == "" {
+		s3SecretKey = "secret_minio_password"
+	}
+	s3Bucket := os.Getenv("S3_BUCKET")
+	if s3Bucket == "" {
+		s3Bucket = "herocms-media"
+	}
+	s3UseSSL := strings.ToLower(os.Getenv("S3_USE_SSL")) == "true"
+	s3PublicURL := os.Getenv("S3_PUBLIC_URL")
+	if s3PublicURL == "" {
+		proto := "http"
+		if s3UseSSL {
+			proto = "https"
+		}
+		s3PublicURL = fmt.Sprintf("%s://%s/%s", proto, s3Endpoint, s3Bucket)
+	}
+
 	return &Config{
 		Port:                 port,
 		JWTSecret:            jwtSecret,
@@ -174,6 +210,12 @@ func LoadConfig() *Config {
 		RedisPass:            redisPass,
 		OrchestratorURL:      orchURL,
 		DistDir:              distDir,
+		S3Endpoint:           s3Endpoint,
+		S3AccessKey:          s3AccessKey,
+		S3SecretKey:          s3SecretKey,
+		S3Bucket:             s3Bucket,
+		S3UseSSL:             s3UseSSL,
+		S3PublicURL:          s3PublicURL,
 		CORSAllowedOrigins:   corsOrigins,
 		CORSAllowCredentials: corsCreds,
 		CSRFEnabled:          csrfEnabled,

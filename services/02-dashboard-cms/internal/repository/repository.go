@@ -729,7 +729,7 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, error) {
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
-			SELECT id, name, file_type, file_size, dimensions, storage_url, created_at
+			SELECT id, name, file_type, file_size, dimensions, storage_url, s3_key, created_at
 			FROM media_assets
 			WHERE tenant_id = $1
 			ORDER BY created_at DESC
@@ -738,9 +738,9 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 			defer rows.Close()
 			var list []gin.H
 			for rows.Next() {
-				var id, name, fileType, fileSize, dimensions, url string
+				var id, name, fileType, fileSize, dimensions, url, s3Key string
 				var createdAt time.Time
-				if err := rows.Scan(&id, &name, &fileType, &fileSize, &dimensions, &url, &createdAt); err == nil {
+				if err := rows.Scan(&id, &name, &fileType, &fileSize, &dimensions, &url, &s3Key, &createdAt); err == nil {
 					list = append(list, gin.H{
 						"id":         id,
 						"name":       name,
@@ -748,6 +748,7 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 						"size":       fileSize,
 						"dimensions": dimensions,
 						"url":        url,
+						"s3Key":      s3Key,
 						"uploadedAt": createdAt.Format("2 Jan 2006"),
 					})
 				}
@@ -762,6 +763,84 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.Assets, nil
+}
+
+func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, mimeType, dimensions, fileSize string, fileSizeBytes int64, storageURL, s3Key string) (gin.H, error) {
+	now := time.Now()
+	nowStr := now.Format("2 Jan 2006")
+
+	if r.DB != nil {
+		var id string
+		err := r.DB.QueryRowContext(ctx, `
+			INSERT INTO media_assets (
+				id, tenant_id, name, file_type, mime_type, dimensions, file_size, file_size_bytes, storage_url, s3_key, created_at
+			) VALUES (
+				gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()
+			)
+			RETURNING id::text
+		`, tenantID, name, fileType, mimeType, dimensions, fileSize, fileSizeBytes, storageURL, s3Key).Scan(&id)
+		if err == nil {
+			asset := gin.H{
+				"id":         id,
+				"name":       name,
+				"type":       fileType,
+				"mimeType":   mimeType,
+				"dimensions": dimensions,
+				"size":       fileSize,
+				"url":        storageURL,
+				"s3Key":      s3Key,
+				"uploadedAt": nowStr,
+			}
+			return asset, nil
+		}
+		log.Printf("[DB ERROR] CreateAsset: %v", err)
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	id := fmt.Sprintf("ast_%d", now.UnixNano()%1000000)
+	asset := gin.H{
+		"id":         id,
+		"name":       name,
+		"type":       fileType,
+		"mimeType":   mimeType,
+		"dimensions": dimensions,
+		"size":       fileSize,
+		"url":        storageURL,
+		"s3Key":      s3Key,
+		"uploadedAt": nowStr,
+	}
+	r.Assets = append([]gin.H{asset}, r.Assets...)
+	return asset, nil
+}
+
+func (r *Repository) DeleteAsset(ctx context.Context, tenantID, assetID string) (string, error) {
+	var s3Key string
+
+	if r.DB != nil {
+		err := r.DB.QueryRowContext(ctx, `
+			DELETE FROM media_assets
+			WHERE tenant_id = $1 AND (id::text = $2 OR s3_key = $2 OR name = $2)
+			RETURNING s3_key
+		`, tenantID, assetID).Scan(&s3Key)
+		if err == nil {
+			return s3Key, nil
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, a := range r.Assets {
+		if fmt.Sprintf("%v", a["id"]) == assetID || fmt.Sprintf("%v", a["s3Key"]) == assetID {
+			if k, ok := a["s3Key"].(string); ok {
+				s3Key = k
+			}
+			r.Assets = append(r.Assets[:i], r.Assets[i+1:]...)
+			return s3Key, nil
+		}
+	}
+	return s3Key, nil
 }
 
 func (r *Repository) GetDomains(ctx context.Context, tenantID string) ([]gin.H, error) {

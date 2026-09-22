@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import {
   UploadCloud,
   Search,
@@ -15,15 +15,19 @@ import {
   Download,
   Eye,
   X,
-  File
+  File,
+  Trash2,
+  Loader2
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { MediaAssetItem } from '../../types/dashboard';
 
 const {
   mediaAssets,
+  isUploadingMedia,
   uploadMediaDemo,
   uploadMediaFiles,
+  deleteMedia,
   copyToClipboard,
   copiedSubdomain,
   showToast
@@ -33,6 +37,22 @@ const assetFilter = ref<'all' | 'image' | 'vector' | 'pdf' | 'excel' | 'doc'>('a
 const mediaSearch = ref('');
 const isDragging = ref(false);
 const fileInputRef = ref<HTMLInputElement | null>(null);
+const searchInputRef = ref<HTMLInputElement | null>(null);
+
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    searchInputRef.value?.focus();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown);
+});
 
 // Document preview modal state
 const isPreviewModalOpen = ref(false);
@@ -89,6 +109,19 @@ const downloadMediaFile = (item: MediaAssetItem) => {
   element.click();
   document.body.removeChild(element);
   showToast(`Mengunduh berkas ${item.name}...`, 'info');
+};
+
+const handleDeleteMedia = (item: MediaAssetItem) => {
+  if (confirm(`Apakah Anda yakin ingin menghapus '${item.name}' dari S3 bucket?`)) {
+    deleteMedia(item);
+  }
+};
+
+const handleDeleteFromModal = (item: MediaAssetItem) => {
+  if (confirm(`Apakah Anda yakin ingin menghapus '${item.name}' dari S3 bucket?`)) {
+    deleteMedia(item);
+    isPreviewModalOpen.value = false;
+  }
 };
 </script>
 
@@ -193,7 +226,16 @@ const downloadMediaFile = (item: MediaAssetItem) => {
       />
 
       <div class="dropzone-glow-ring"></div>
-      <div class="dropzone-content">
+      <div v-if="isUploadingMedia" class="dropzone-content">
+        <div class="dropzone-icon-box">
+          <Loader2 :size="28" class="spin-animation" style="color: #2563eb;" />
+        </div>
+        <div class="dropzone-text-group">
+          <h3 class="dropzone-heading">Mengunggah ke MinIO S3...</h3>
+          <p class="dropzone-sub">Menyimpan objek dan mengindeks metadata ke database.</p>
+        </div>
+      </div>
+      <div v-else class="dropzone-content">
         <div class="dropzone-icon-box">
           <UploadCloud :size="28" />
         </div>
@@ -221,11 +263,15 @@ const downloadMediaFile = (item: MediaAssetItem) => {
       <div class="search-command-shell">
         <Search :size="15" class="search-lead-glyph" />
         <input
+          ref="searchInputRef"
           v-model="mediaSearch"
           type="text"
           placeholder="Cari berkas gambar, dokumen PDF, spreadsheet Excel, laporan..."
           class="search-command-input"
         />
+        <button v-if="mediaSearch" class="btn-clear-search" @click="mediaSearch = ''" title="Bersihkan">
+          <X :size="13" />
+        </button>
         <kbd class="shortcut-tag">⌘K</kbd>
       </div>
 
@@ -387,6 +433,13 @@ const downloadMediaFile = (item: MediaAssetItem) => {
             >
               <Eye :size="14" />
             </button>
+            <button
+              class="overlay-btn overlay-btn-danger"
+              @click.stop="handleDeleteMedia(med)"
+              title="Hapus dari S3"
+            >
+              <Trash2 :size="14" />
+            </button>
           </div>
         </div>
 
@@ -477,6 +530,10 @@ const downloadMediaFile = (item: MediaAssetItem) => {
           </div>
 
           <div class="modal-footer-row">
+            <button type="button" class="btn-modal-danger" @click="handleDeleteFromModal(selectedMediaForPreview)">
+              <Trash2 :size="14" />
+              <span>Hapus Berkas</span>
+            </button>
             <button type="button" class="btn-modal-ghost" @click="isPreviewModalOpen = false">
               Tutup
             </button>

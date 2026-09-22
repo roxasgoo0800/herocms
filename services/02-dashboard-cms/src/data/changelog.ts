@@ -2,11 +2,45 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.2.6',
+    releaseDate: '22 September 2026',
+    title: 'Integrasi MinIO S3 Object Storage untuk Media Assets & Refinement Command Search Bar',
+    summary: 'Mengaktifkan arsitektur MinIO S3 Object Storage asli untuk menu Media Assets (S3) lengkap dengan konfigurasi Docker Compose, S3 client Go (minio-go/v7), endpoint upload multipart & delete, serta perampingan visual Search Command Bar di seluruh modul dashboard.',
+    badge: 'Latest',
+    author: 'HeroCMS Core Architecture Team',
+    items: [
+      {
+        id: 'c-126-1',
+        type: 'feature',
+        scope: 'Infrastruktur MinIO S3',
+        description: 'Menambahkan container MinIO S3 dan volume data pada docker-compose.db.yml dan docker-compose.yml (port 9000 untuk S3 API dan port 9001 untuk Web Console), lengkap dengan konfigurasi kredensial dan bucket herocms-media.'
+      },
+      {
+        id: 'c-126-2',
+        type: 'feature',
+        scope: 'Backend Golang Storage Layer',
+        description: 'Menerapkan package resmi minio-go/v7 dalam storage.S3Client dengan auto-create bucket dan policy public-read, penambahan CreateAsset dan DeleteAsset di repository, serta endpoint POST /api/assets/upload dan DELETE /api/assets/:id.'
+      },
+      {
+        id: 'c-126-3',
+        type: 'feature',
+        scope: 'Frontend Media Assets (S3)',
+        description: 'Menghubungkan unggahan berkas nyata (FormData multipart) dan penghapusan aset via apiClient.ts dan useDashboardData.ts, dilengkapi indikator loading spinner saat upload, tombol hapus di hover kartu, dan tombol hapus di modal preview berkas.'
+      },
+      {
+        id: 'c-126-4',
+        type: 'improvement',
+        scope: 'Sistem Pencarian Command Bar',
+        description: 'Merampingkan CSS .search-command-shell pada studio-master.css menjadi satu kontainer modern (tinggi 38px, border-radius 9px, focus ring 2px halus) di modul Situs & Kontainer, Media Assets, Katalog Template, dan Changelog, dilengkapi tombol clear X dan shortcut ⌘K.'
+      }
+    ]
+  },
+  {
     version: 'v1.2.5',
     releaseDate: '22 September 2026',
     title: 'Restorasi Arsitektur Kartu Kontainer & Kompatibilitas Studio Master CSS',
     summary: 'Memperbaiki tata letak kartu kontainer yang sempat berantakan akibat mismatch class HTML. Mengembalikan struktur markup visual studio resmi yang terhubung dengan studio-master.css (radar status chip, subdomain URL box, dual resource gauges, dan action control bar).',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Core Architecture Team',
     items: [
       {

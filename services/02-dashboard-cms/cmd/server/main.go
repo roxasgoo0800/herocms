@@ -17,6 +17,7 @@ import (
 	"github.com/cloudcms/dashboard-cms-backend/internal/redis"
 	"github.com/cloudcms/dashboard-cms-backend/internal/repository"
 	"github.com/cloudcms/dashboard-cms-backend/internal/service"
+	"github.com/cloudcms/dashboard-cms-backend/internal/storage"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,13 +31,16 @@ func main() {
 	// 3. Initialize PostgreSQL 16 Repository (Row-Level Security)
 	repo := repository.NewRepository(cfg)
 
-	// 4. Initialize Core Business Logic Services
-	services := service.NewServices(cfg, repo, rdb)
+	// 4. Initialize MinIO S3 Object Storage Client
+	s3Client := storage.NewS3Client(cfg)
 
-	// 5. Initialize HTTP Handlers
+	// 5. Initialize Core Business Logic Services
+	services := service.NewServices(cfg, repo, rdb, s3Client)
+
+	// 6. Initialize HTTP Handlers
 	h := handler.NewHandler(services)
 
-	// 6. Setup Gin Router
+	// 7. Setup Gin Router
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery())
@@ -53,6 +57,7 @@ func main() {
 			"status":   "healthy",
 			"database": repo.DB != nil,
 			"redis":    rdb.Rdb != nil,
+			"s3":       s3Client.Available,
 			"time":     time.Now().UTC().Format(time.RFC3339),
 		})
 	})
@@ -98,6 +103,8 @@ func main() {
 
 			// Asset Storage (MinIO S3)
 			protected.GET("/assets", h.ListAssets)
+			protected.POST("/assets/upload", h.UploadAsset)
+			protected.DELETE("/assets/:id", h.DeleteAsset)
 
 			// Custom Domain & DNS Ingress
 			protected.GET("/domains", h.ListDomains)

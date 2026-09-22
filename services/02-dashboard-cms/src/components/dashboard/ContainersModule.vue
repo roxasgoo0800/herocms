@@ -152,6 +152,7 @@ const selectForEditor = (containerId: string) => {
       <div class="search-command-shell">
         <Search :size="15" class="search-lead-glyph" />
         <input
+          ref="searchInputRef"
           v-model="searchQuery"
           type="text"
           placeholder="Cari situs, subdomain, atau container ID..."

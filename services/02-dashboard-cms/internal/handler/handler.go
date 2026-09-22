@@ -404,6 +404,52 @@ func (h *Handler) ListAssets(c *gin.Context) {
 	c.JSON(http.StatusOK, h.Services.GetAssets(c.Request.Context(), getTenantID(c)))
 }
 
+func (h *Handler) UploadAsset(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File wajib disertakan dalam form data (field: 'file')"})
+		return
+	}
+
+	// 50MB limit check
+	if file.Size > 50*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ukuran file melebihi batas maksimum 50 MB"})
+		return
+	}
+
+	tenantID := getTenantID(c)
+	asset, err := h.Services.UploadAsset(c.Request.Context(), tenantID, file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "File berhasil diunggah ke storage MinIO S3",
+		"asset":   asset,
+	})
+}
+
+func (h *Handler) DeleteAsset(c *gin.Context) {
+	assetID := c.Param("id")
+	if assetID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID aset tidak boleh kosong"})
+		return
+	}
+
+	tenantID := getTenantID(c)
+	err := h.Services.DeleteAsset(c.Request.Context(), tenantID, assetID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Aset berhasil dihapus dari S3 dan database",
+		"id":      assetID,
+	})
+}
+
 // -----------------------------------------------------------------------------
 // Domains
 // -----------------------------------------------------------------------------
