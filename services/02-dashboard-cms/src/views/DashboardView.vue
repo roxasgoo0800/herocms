@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, defineAsyncComponent } from 'vue';
+import { onMounted, watch, defineAsyncComponent } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
@@ -78,6 +78,11 @@ const {
 
 onMounted(async () => {
   await syncWithBackend();
+});
+
+// Smooth scroll ke atas saat berganti menu antarmuka
+watch(activeMenu, () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 const handleLogout = () => {

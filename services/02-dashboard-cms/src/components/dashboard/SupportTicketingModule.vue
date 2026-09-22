@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import {
   LifeBuoy,
   Plus,
@@ -62,6 +62,28 @@ const getStatusLabel = (status: SupportTicketItem['status']) => {
   if (status === 'in_progress') return 'Sedang Ditangani L2';
   return 'Selesai';
 };
+
+// Auto smooth-scroll ke pesan terbaru pada thread percakapan tiket
+const threadScrollRef = ref<HTMLDivElement | null>(null);
+const scrollThreadToBottom = () => {
+  nextTick(() => {
+    if (threadScrollRef.value) {
+      threadScrollRef.value.scrollTo({
+        top: threadScrollRef.value.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  });
+};
+
+watch(
+  () => [isTicketDetailModalOpen.value, selectedTicket.value?.messages.length],
+  ([isOpen]) => {
+    if (isOpen) {
+      scrollThreadToBottom();
+    }
+  }
+);
 </script>
 
 <template>
@@ -395,7 +417,7 @@ const getStatusLabel = (status: SupportTicketItem['status']) => {
           </div>
 
           <!-- Thread Messages List -->
-          <div class="ticket-thread-scroll">
+          <div class="ticket-thread-scroll" ref="threadScrollRef">
             <div class="thread-meta-banner">
               <div class="meta-banner-item">
                 <span class="lbl">Kategori:</span>
