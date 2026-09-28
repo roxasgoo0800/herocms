@@ -2,11 +2,27 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.3.6',
+    releaseDate: '28 September 2026',
+    title: 'Adopsi Pre-Built Container Image Resmi CI/CD pada Docker Compose',
+    summary: 'Menggantikan build lokal Dockerfile pada service dashboard-cms dan marketing-site dengan image resmi terkompilasi dari Docker Hub (roxas0800/herocms-dashboard dan roxas0800/herocms-marketing) hasil pipeline CI/CD GitHub Actions.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-136-1',
+        type: 'improvement',
+        scope: 'Docker Compose & Production Deployment',
+        description: 'Menghapus direktif local build context pada service dashboard-cms dan marketing-site di docker-compose.yml, beralih penuh ke Docker Hub registry image roxas0800/herocms-dashboard:latest dan roxas0800/herocms-marketing:latest untuk mempercepat deployment tanpa overhead kompilasi lokal.'
+      }
+    ]
+  },
+  {
     version: 'v1.3.5',
     releaseDate: '28 September 2026',
     title: 'Integrasi Traefik Edge Routing untuk MinIO S3 (minio.stackbyte.id)',
     summary: 'Menghubungkan container MinIO ke traefik_network dengan konfigurasi dynamic router label Traefik v3 untuk endpoint publik S3 (minio.stackbyte.id) dan MinIO Console (minio-console.stackbyte.id) tanpa ekspos port numerik.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

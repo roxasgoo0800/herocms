@@ -65,9 +65,7 @@ services:
   # 3. Service 02: Dashboard CMS Studio (Native Golang Host + Vue 3 SPA)
   # ---------------------------------------------------------------------------
   dashboard-cms:
-    build:
-      context: ./services/02-dashboard-cms
-      dockerfile: Dockerfile
+    image: roxas0800/herocms-dashboard:latest
     container_name: herocms_dashboard_cms
     restart: unless-stopped
     networks:
@@ -147,9 +145,7 @@ services:
   # 5. Service 04: Marketing Landing Site (Native Golang Host + React SPA)
   # ---------------------------------------------------------------------------
   marketing-site:
-    build:
-      context: ./services/04-marketing-site
-      dockerfile: Dockerfile
+    image: roxas0800/herocms-marketing:latest
     container_name: herocms_marketing_site
     restart: unless-stopped
     networks:
