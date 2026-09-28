@@ -349,12 +349,23 @@ const copyContainerLogs = () => {
 // Copy feedback
 const copiedSubdomain = ref<string | null>(null);
 const copyToClipboard = (text: string, id: string) => {
-  navigator.clipboard.writeText(`https://${text}`);
+  if (!text) return;
+  let toCopy = text.trim();
+
+  toCopy = toCopy.replace(/^https?:\/\/(https?:\/\/)/i, '$1');
+
+  if (!/^[a-zA-Z0-9+.-]+:\/\//.test(toCopy)) {
+    if (toCopy.includes('.') && !toCopy.includes(' ') && !toCopy.includes('\n')) {
+      toCopy = `https://${toCopy}`;
+    }
+  }
+
+  navigator.clipboard.writeText(toCopy);
   copiedSubdomain.value = id;
   setTimeout(() => {
     copiedSubdomain.value = null;
   }, 2000);
-  showToast(`URL disalin ke clipboard: https://${text}`, 'info');
+  showToast(`Tautan disalin ke clipboard: ${toCopy}`, 'info');
 };
 
 // Official Templates & Pricelist Catalog
