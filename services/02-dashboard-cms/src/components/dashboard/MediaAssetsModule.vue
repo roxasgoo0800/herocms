@@ -17,15 +17,25 @@ import {
   X,
   File,
   Trash2,
-  Loader2
+  Loader2,
+  ExternalLink,
+  ShieldCheck,
+  HardDrive,
+  Calendar
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { MediaAssetItem } from '../../types/dashboard';
 
+const isImage = (type?: string) => {
+  if (!type) return false;
+  return ['JPG', 'JPEG', 'PNG', 'WEBP', 'GIF', 'AVIF', 'SVG'].includes(type.toUpperCase());
+};
+
 const {
   mediaAssets,
+  mediaBucketName,
+  mediaStorage,
   isUploadingMedia,
-  uploadMediaDemo,
   uploadMediaFiles,
   deleteMedia,
   copyToClipboard,
@@ -89,8 +99,6 @@ const handleDropUpload = (e: DragEvent) => {
   isDragging.value = false;
   if (e.dataTransfer && e.dataTransfer.files.length > 0) {
     uploadMediaFiles(e.dataTransfer.files);
-  } else {
-    uploadMediaDemo();
   }
 };
 
@@ -135,7 +143,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
       </div>
       <div class="quota-quick-pills">
         <span class="pill-metric">Region: <strong>ID-JKT-1 (MinIO S3)</strong></span>
-        <span class="pill-metric-highlight">S3 Bucket: <strong>tenant-9942-media</strong></span>
+        <span class="pill-metric-highlight">S3 Dedicated Bucket: <strong>{{ mediaBucketName }}</strong></span>
       </div>
     </div>
 
@@ -146,10 +154,10 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
           <span class="telemetry-label">KAPASITAS S3 BUCKET</span>
           <div class="telemetry-glyph blue"><Database :size="15" /></div>
         </div>
-        <div class="telemetry-val">120 MB <span class="telemetry-denom">/ 2.0 GB</span></div>
+        <div class="telemetry-val">{{ mediaStorage.usedStorage }} <span class="telemetry-denom">/ 2.0 GB</span></div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
-          <span>1.88 GB kuota tersedia (SSD NVMe)</span>
+          <span>{{ mediaStorage.freeStorage }} kuota tersedia (SSD NVMe)</span>
         </div>
       </div>
 
@@ -164,11 +172,11 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
 
       <div class="telemetry-card">
         <div class="telemetry-top">
-          <span class="telemetry-label">BANDWIDTH BULAN INI</span>
+          <span class="telemetry-label">UTILISASI KUOTA AKUN</span>
           <div class="telemetry-glyph purple"><Globe :size="15" /></div>
         </div>
-        <div class="telemetry-val">1.42 GB <span class="badge-growth-pill">Normal</span></div>
-        <div class="telemetry-sub"><span>Unlimited egress edge proxy</span></div>
+        <div class="telemetry-val">{{ mediaStorage.usagePercentage }} <span class="badge-growth-pill">Max 2 GB</span></div>
+        <div class="telemetry-sub"><span>Terisolasi per customer account</span></div>
       </div>
 
       <div class="telemetry-card">
@@ -185,24 +193,16 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
     <div class="pro-panel storage-breakdown-panel">
       <div class="breakdown-header">
         <div class="breakdown-title-group">
-          <strong>Distribusi Penyimpanan Objek S3</strong>
-          <span>Alokasi kapasitas berdasarkan format berkas media</span>
+          <strong>Distribusi Penyimpanan Objek S3 Terisolasi</strong>
+          <span>Alokasi kapasitas objek media pelanggan (Batas: 2.0 GB)</span>
         </div>
         <div class="breakdown-tags">
-          <span class="legend-item"><span class="legend-dot blue"></span> Gambar (84 MB)</span>
-          <span class="legend-item"><span class="legend-dot red"></span> PDF (24 MB)</span>
-          <span class="legend-item"><span class="legend-dot emerald"></span> Excel (8 MB)</span>
-          <span class="legend-item"><span class="legend-dot indigo"></span> Docs (4 MB)</span>
-          <span class="legend-item"><span class="legend-dot purple"></span> Vektor (12 MB)</span>
-          <span class="legend-item"><span class="legend-dot gray"></span> Bebas (1.87 GB)</span>
+          <span class="legend-item"><span class="legend-dot blue"></span> Terpakai ({{ mediaStorage.usedStorage }})</span>
+          <span class="legend-item"><span class="legend-dot gray"></span> Kuota Bebas ({{ mediaStorage.freeStorage }})</span>
         </div>
       </div>
       <div class="multi-seg-track">
-        <div class="seg-fill blue" style="width: 4.2%" title="Gambar: 84MB"></div>
-        <div class="seg-fill red" style="width: 1.2%" title="PDF: 24MB"></div>
-        <div class="seg-fill emerald" style="width: 0.4%" title="Excel: 8MB"></div>
-        <div class="seg-fill indigo" style="width: 0.2%" title="Docs: 4MB"></div>
-        <div class="seg-fill purple" style="width: 0.6%" title="Vektor: 12MB"></div>
+        <div class="seg-fill blue" :style="{ width: mediaStorage.usagePercentage }" :title="'Terpakai: ' + mediaStorage.usedStorage"></div>
       </div>
     </div>
 
@@ -380,33 +380,16 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             <span class="media-type-badge badge-docx">{{ med.type }}</span>
           </div>
 
-          <!-- 4. RASTER IMAGES & BANNERS -->
-          <div v-else-if="med.name.includes('banner')" class="graphic-banner-preview">
-            <div class="graphic-code-watermark">
-              <code>docker run -d -p 80:80 herocms/tenant</code>
-            </div>
-            <span class="graphic-tag-badge">HERO BANNER</span>
+          <!-- 4. REAL RASTER IMAGES & SVGS -->
+          <div v-else-if="isImage(med.type)" class="graphic-real-image">
+            <img :src="med.url" :alt="med.name" class="gallery-card-thumb" loading="lazy" />
             <span class="media-type-badge badge-img">{{ med.type }}</span>
           </div>
 
-          <div v-else-if="med.name.includes('avatar')" class="graphic-avatar-preview">
-            <div class="avatar-ring-glow">
-              <div class="avatar-inner-circle">RP</div>
-            </div>
-            <span class="media-type-badge badge-img">{{ med.type }}</span>
-          </div>
-
-          <div v-else-if="med.name.includes('traefik')" class="graphic-diagram-preview">
-            <div class="infra-nodes-mock">
-              <span>Client</span> ➔ <span>Traefik:443</span> ➔ <span>Docker C1</span>
-            </div>
-            <span class="media-type-badge badge-img">{{ med.type }}</span>
-          </div>
-
-          <!-- 5. SVG VECTOR -->
+          <!-- 5. SVG VECTOR / FALLBACK -->
           <div v-else class="graphic-vector-preview">
             <div class="vector-mark-symbol">◆ HC</div>
-            <span class="media-type-badge badge-svg">SVG</span>
+            <span class="media-type-badge badge-svg">{{ med.type }}</span>
           </div>
 
           <!-- Hover Overlay with Fast Actions -->
@@ -461,16 +444,17 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
         <UploadCloud :size="36" class="empty-icon" />
         <h4>Tidak ada berkas media ditemukan</h4>
         <p>Unggah berkas baru atau sesuaikan kata kunci pencarian Anda.</p>
-        <button class="btn-primary-ghost" @click="uploadMediaDemo">
-          Unggah Contoh Dokumen / Berkas
+        <button class="btn-primary-ghost" @click="triggerFileInput">
+          <UploadCloud :size="14" style="margin-right: 6px;" />
+          Pilih Berkas untuk Diunggah
         </button>
       </div>
     </div>
 
-    <!-- MODAL: PREVIEW & DETAIL BERKAS S3 -->
+    <!-- MODAL: PREVIEW & DETAIL BERKAS S3 (BESPOKE MEDIA INSPECTOR) -->
     <Teleport to="body">
       <div v-if="isPreviewModalOpen && selectedMediaForPreview" class="modal-backdrop" @click.self="isPreviewModalOpen = false">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-media-inspector">
           <div class="modal-header">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" :class="'type-' + selectedMediaForPreview.type.toLowerCase()">
@@ -479,8 +463,10 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                 <File v-else-if="['DOCX', 'DOC'].includes(selectedMediaForPreview.type)" :size="18" />
                 <FileCode v-else :size="18" />
               </div>
-              <div>
-                <h3 class="modal-heading">{{ selectedMediaForPreview.name }}</h3>
+              <div style="min-width: 0; flex: 1;">
+                <h3 class="modal-heading" :title="selectedMediaForPreview.name" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 500px;">
+                  {{ selectedMediaForPreview.name }}
+                </h3>
                 <p class="modal-subheading">Aset tersimpan di S3 MinIO dengan proteksi TLS dan CDN Edge Caching.</p>
               </div>
             </div>
@@ -490,41 +476,115 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
           </div>
 
           <div class="preview-modal-body">
-            <!-- Visual Header -->
-            <div class="preview-visual-box" :class="'box-' + selectedMediaForPreview.type.toLowerCase()">
-              <div class="preview-visual-inner">
-                <span class="preview-type-pill">{{ selectedMediaForPreview.type }}</span>
+            <!-- 1. Real Visual Hero Canvas Viewport -->
+            <div class="inspector-canvas-box">
+              <!-- Floating Header Pills -->
+              <div class="canvas-floating-toolbar">
+                <span class="canvas-tag-pill">{{ selectedMediaForPreview.type }} • {{ selectedMediaForPreview.dimensions }}</span>
+                <a :href="selectedMediaForPreview.url" target="_blank" rel="noopener noreferrer" class="btn-canvas-action" title="Buka berkas langsung di tab baru">
+                  <ExternalLink :size="12" />
+                  <span>Buka Tab Baru</span>
+                </a>
+              </div>
+
+              <!-- If Image / Graphic: Render REAL Image -->
+              <img
+                v-if="isImage(selectedMediaForPreview.type)"
+                :src="selectedMediaForPreview.url"
+                :alt="selectedMediaForPreview.name"
+                class="inspector-real-img"
+              />
+
+              <!-- If PDF / Document: Stylized Document Card -->
+              <div v-else class="inspector-doc-canvas">
+                <div class="inspector-doc-icon-wrap" :class="'type-' + (['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type) ? 'excel' : ['DOCX', 'DOC'].includes(selectedMediaForPreview.type) ? 'word' : selectedMediaForPreview.type === 'PDF' ? 'pdf' : 'vector')">
+                  <FileSpreadsheet v-if="['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type)" :size="30" />
+                  <FileText v-else-if="selectedMediaForPreview.type === 'PDF'" :size="30" />
+                  <File v-else-if="['DOCX', 'DOC'].includes(selectedMediaForPreview.type)" :size="30" />
+                  <FileCode v-else :size="30" />
+                </div>
                 <h4>{{ selectedMediaForPreview.name }}</h4>
                 <p>{{ selectedMediaForPreview.dimensions }} • {{ selectedMediaForPreview.size }}</p>
               </div>
             </div>
 
-            <!-- Metadata Spec List -->
-            <div class="file-specs-list">
-              <div class="spec-row">
-                <span class="spec-lbl">S3 Bucket URI:</span>
-                <code>s3://tenant-9942-media/assets/{{ selectedMediaForPreview.name }}</code>
-              </div>
-              <div class="spec-row">
-                <span class="spec-lbl">Edge CDN URL:</span>
-                <div class="spec-copyable">
-                  <code>{{ selectedMediaForPreview.url }}</code>
-                  <button
-                    class="btn-spec-copy"
-                    @click="copyToClipboard(selectedMediaForPreview.url, selectedMediaForPreview.id)"
-                  >
-                    <Check v-if="copiedSubdomain === selectedMediaForPreview.id" :size="13" class="text-green" />
-                    <Copy v-else :size="13" />
-                  </button>
+            <!-- 2. High-Tech 2x2 Telemetry Grid for File Specs -->
+            <div class="inspector-grid-telemetry">
+              <div class="inspector-telemetry-cell">
+                <div class="telemetry-cell-label">
+                  <HardDrive :size="13" />
+                  <span>Ukuran & Dimensi</span>
                 </div>
+                <div class="telemetry-cell-val">{{ selectedMediaForPreview.size }} <span style="font-weight: 500; font-size: 11.5px; color: #64748b;">({{ selectedMediaForPreview.dimensions }})</span></div>
+                <div class="telemetry-cell-sub">Format: {{ selectedMediaForPreview.type }} File Object</div>
               </div>
-              <div class="spec-row">
-                <span class="spec-lbl">Tanggal Diunggah:</span>
-                <span>{{ selectedMediaForPreview.uploadedAt }}</span>
+
+              <div class="inspector-telemetry-cell">
+                <div class="telemetry-cell-label">
+                  <Database :size="13" />
+                  <span>S3 Dedicated Bucket</span>
+                </div>
+                <div class="telemetry-cell-val" style="color: #2563eb; font-family: ui-monospace, monospace; font-size: 12.5px;">
+                  {{ selectedMediaForPreview.bucketName || mediaBucketName }}
+                </div>
+                <div class="telemetry-cell-sub">Isolasi Fisik Multi-Tenant</div>
               </div>
-              <div class="spec-row">
-                <span class="spec-lbl">Status Edge:</span>
-                <span class="badge-online">Cached on Traefik v3 (1.2ms TTFB)</span>
+
+              <div class="inspector-telemetry-cell">
+                <div class="telemetry-cell-label">
+                  <Calendar :size="13" />
+                  <span>Tanggal Diunggah</span>
+                </div>
+                <div class="telemetry-cell-val">{{ selectedMediaForPreview.uploadedAt }}</div>
+                <div class="telemetry-cell-sub">Waktu Sinkronisasi Database</div>
+              </div>
+
+              <div class="inspector-telemetry-cell">
+                <div class="telemetry-cell-label">
+                  <ShieldCheck :size="13" />
+                  <span>Keamanan & CDN Edge</span>
+                </div>
+                <div class="telemetry-cell-val">
+                  <span class="badge-online">Cached Traefik v3 (1.2ms)</span>
+                </div>
+                <div class="telemetry-cell-sub">Magic Bytes Passed • Anti-RCE Clean</div>
+              </div>
+            </div>
+
+            <!-- 3. Copyable S3 URI & Edge CDN URL Strips -->
+            <div class="inspector-url-bar">
+              <span class="url-bar-label">
+                <Database :size="13" />
+                <span>S3 Bucket URI:</span>
+              </span>
+              <div class="url-bar-shell">
+                <span class="url-bar-text">s3://{{ selectedMediaForPreview.bucketName || mediaBucketName }}/{{ selectedMediaForPreview.s3Key || selectedMediaForPreview.name }}</span>
+                <button
+                  class="btn-url-copy"
+                  @click="copyToClipboard('s3://' + (selectedMediaForPreview.bucketName || mediaBucketName) + '/' + (selectedMediaForPreview.s3Key || selectedMediaForPreview.name), selectedMediaForPreview.id + '_s3')"
+                >
+                  <Check v-if="copiedSubdomain === selectedMediaForPreview.id + '_s3'" :size="13" class="text-green" />
+                  <Copy v-else :size="13" />
+                  <span>{{ copiedSubdomain === selectedMediaForPreview.id + '_s3' ? 'Tersalin' : 'Salin URI' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="inspector-url-bar">
+              <span class="url-bar-label">
+                <Globe :size="13" />
+                <span>Edge Public CDN URL:</span>
+              </span>
+              <div class="url-bar-shell">
+                <span class="url-bar-text">{{ selectedMediaForPreview.url }}</span>
+                <button
+                  class="btn-url-copy"
+                  @click="copyToClipboard(selectedMediaForPreview.url, selectedMediaForPreview.id)"
+                >
+                  <Check v-if="copiedSubdomain === selectedMediaForPreview.id" :size="13" class="text-green" />
+                  <Copy v-else :size="13" />
+                  <span>{{ copiedSubdomain === selectedMediaForPreview.id ? 'Tersalin' : 'Salin URL' }}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -534,6 +594,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
               <Trash2 :size="14" />
               <span>Hapus Berkas</span>
             </button>
+            <div style="flex: 1;"></div>
             <button type="button" class="btn-modal-ghost" @click="isPreviewModalOpen = false">
               Tutup
             </button>

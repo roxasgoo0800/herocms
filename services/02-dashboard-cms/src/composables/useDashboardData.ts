@@ -349,12 +349,23 @@ const copyContainerLogs = () => {
 // Copy feedback
 const copiedSubdomain = ref<string | null>(null);
 const copyToClipboard = (text: string, id: string) => {
-  navigator.clipboard.writeText(`https://${text}`);
+  if (!text) return;
+  let toCopy = text.trim();
+
+  toCopy = toCopy.replace(/^https?:\/\/(https?:\/\/)/i, '$1');
+
+  if (!/^[a-zA-Z0-9+.-]+:\/\//.test(toCopy)) {
+    if (toCopy.includes('.') && !toCopy.includes(' ') && !toCopy.includes('\n')) {
+      toCopy = `https://${toCopy}`;
+    }
+  }
+
+  navigator.clipboard.writeText(toCopy);
   copiedSubdomain.value = id;
   setTimeout(() => {
     copiedSubdomain.value = null;
   }, 2000);
-  showToast(`URL disalin ke clipboard: https://${text}`, 'info');
+  showToast(`Tautan disalin ke clipboard: ${toCopy}`, 'info');
 };
 
 // Official Templates & Pricelist Catalog
@@ -534,8 +545,60 @@ const deleteArticle = (art: ContentArticle) => {
 };
 
 // Media Assets State
+const mediaBucketName = ref<string>('tenant-994200000000-media');
+const mediaStorage = ref({
+  usedStorage: '0 MB',
+  usedBytes: 0,
+  maxStorage: '2048 MB',
+  maxBytes: 2147483648,
+  freeStorage: '2.00 GB',
+  usagePercentage: '0.0%'
+});
 const mediaAssets = ref<MediaAssetItem[]>([...initialMediaAssets]);
 const isUploadingMedia = ref(false);
+
+const formatBytesToReadable = (bytes: number): string => {
+  if (bytes <= 0) return '0 MB';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+};
+
+const parseReadableToBytes = (sizeStr: string): number => {
+  if (!sizeStr) return 0;
+  const clean = sizeStr.trim().toUpperCase();
+  const num = parseFloat(clean.replace(/[^0-9.]/g, '')) || 0;
+  if (clean.includes('GB')) return Math.round(num * 1024 * 1024 * 1024);
+  if (clean.includes('MB')) return Math.round(num * 1024 * 1024);
+  if (clean.includes('KB')) return Math.round(num * 1024);
+  return Math.round(num);
+};
+
+const recalculateStorage = () => {
+  const maxBytes = 2147483648; // 2.0 GB
+  let totalBytes = 0;
+  for (const item of mediaAssets.value) {
+    if (typeof item.sizeBytes === 'number' && item.sizeBytes > 0) {
+      totalBytes += item.sizeBytes;
+    } else {
+      totalBytes += parseReadableToBytes(item.size);
+    }
+  }
+
+  const freeBytes = Math.max(0, maxBytes - totalBytes);
+  const percent = (totalBytes / maxBytes) * 100;
+  const percentStr = percent > 0 && percent < 0.1 ? '0.1%' : `${percent.toFixed(1)}%`;
+
+  mediaStorage.value = {
+    usedStorage: formatBytesToReadable(totalBytes),
+    usedBytes: totalBytes,
+    maxStorage: '2048 MB',
+    maxBytes,
+    freeStorage: formatBytesToReadable(freeBytes),
+    usagePercentage: percentStr
+  };
+};
 
 const uploadMediaFiles = async (files: FileList | File[]) => {
   isUploadingMedia.value = true;
@@ -550,76 +613,56 @@ const uploadMediaFiles = async (files: FileList | File[]) => {
       const res = await studioApi.uploadAsset(formData);
       if (res?.asset) {
         mediaAssets.value.unshift(res.asset);
+        if (res.storage?.usedStorage) {
+          mediaStorage.value = {
+            usedStorage: res.storage.usedStorage,
+            usedBytes: res.storage.usedBytes || 0,
+            maxStorage: res.storage.maxStorage || '2048 MB',
+            maxBytes: res.storage.maxBytes || 2147483648,
+            freeStorage: res.storage.freeStorage || '2.00 GB',
+            usagePercentage: res.storage.usagePercentage || '0.0%'
+          };
+        } else {
+          recalculateStorage();
+        }
         successCount++;
       } else {
         throw new Error('Format respon server tidak valid');
       }
     } catch (err: any) {
-      console.warn('[MEDIA S3 UPLOAD FALLBACK]', err);
-      // Fallback local representation if offline
-      const ext = file.name.split('.').pop()?.toUpperCase() || 'FILE';
-      let sizeStr = `${(file.size / 1024).toFixed(0)} KB`;
-      if (file.size > 1024 * 1024) {
-        sizeStr = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
-      }
-      let dimensionStr = 'Dokumen S3';
-      if (['PNG', 'JPG', 'JPEG', 'WEBP', 'AVIF'].includes(ext)) {
-        dimensionStr = 'Raster Image';
-      } else if (ext === 'SVG') {
-        dimensionStr = 'Vector';
-      } else if (ext === 'PDF') {
-        dimensionStr = 'Dokumen PDF';
-      }
-
-      const fallbackAsset: MediaAssetItem = {
-        id: `med_${Date.now()}_${i}`,
-        name: file.name,
-        size: sizeStr,
-        type: ext,
-        dimensions: dimensionStr,
-        uploadedAt: 'Baru saja',
-        url: URL.createObjectURL(file)
-      };
-      mediaAssets.value.unshift(fallbackAsset);
-      successCount++;
+      console.warn('[MEDIA S3 UPLOAD ERROR]', err);
+      const errMsg = err?.message || 'Gagal mengunggah berkas ke MinIO S3';
+      showToast(errMsg, 'error');
     }
   }
 
   isUploadingMedia.value = false;
-  showToast(`${successCount} file berhasil diunggah ke MinIO S3 & disinkronkan!`, 'success');
-};
-
-const uploadMediaDemo = () => {
-  const fakeFiles = [
-    { name: 'laporan-performa-q4.xlsx', size: '310 KB', type: 'XLSX', dim: 'Spreadsheet Excel (8 Sheet)' },
-    { name: 'whitepaper-edge-architecture.pdf', size: '2.1 MB', type: 'PDF', dim: 'Dokumen PDF (32 Hal)' },
-    { name: 'spesifikasi-kebutuhan-software.docx', size: '142 KB', type: 'DOCX', dim: 'Dokumen Word (12 Hal)' },
-    { name: 'diagram-topologi-jaringan.png', size: '420 KB', type: 'PNG', dim: '1920x1080' },
-    { name: 'banner-event-tech-summit.webp', size: '94 KB', type: 'WEBP', dim: '1200x630' }
-  ];
-  const picked = fakeFiles[Math.floor(Math.random() * fakeFiles.length)];
-  const newAsset: MediaAssetItem = {
-    id: `med_${Date.now()}`,
-    name: picked.name,
-    size: picked.size,
-    type: picked.type,
-    dimensions: picked.dim,
-    uploadedAt: 'Baru saja',
-    url: `https://cdn.cloudcms.app/assets/${picked.name}`
-  };
-  mediaAssets.value.unshift(newAsset);
-  showToast(`File ${picked.name} (${picked.type}) terunggah ke S3 bucket & terindeks!`, 'success');
+  if (successCount > 0) {
+    showToast(`${successCount} file berhasil diunggah ke MinIO S3 & disinkronkan!`, 'success');
+    recalculateStorage();
+  }
 };
 
 const deleteMedia = async (med: MediaAssetItem) => {
   try {
-    await studioApi.deleteAsset(med.id);
+    const res = await studioApi.deleteAsset(med.id);
+    if (res?.storage?.usedStorage) {
+      mediaStorage.value = {
+        usedStorage: res.storage.usedStorage,
+        usedBytes: res.storage.usedBytes || 0,
+        maxStorage: res.storage.maxStorage || '2048 MB',
+        maxBytes: res.storage.maxBytes || 2147483648,
+        freeStorage: res.storage.freeStorage || '2.00 GB',
+        usagePercentage: res.storage.usagePercentage || '0.0%'
+      };
+    }
   } catch (err: any) {
     console.warn('[MEDIA S3 DELETE WARNING]', err);
   }
   const idx = mediaAssets.value.findIndex(m => m.id === med.id);
   if (idx !== -1) {
     mediaAssets.value.splice(idx, 1);
+    recalculateStorage();
     showToast(`Media ${med.name} dihapus dari S3 bucket.`, 'info');
   }
 };
@@ -895,8 +938,25 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
         if (b.articles?.articles?.length) {
           articles.value = b.articles.articles;
         }
-        if (Array.isArray(b.assets?.assets) && b.assets.assets.length) {
-          mediaAssets.value = b.assets.assets;
+        if (b.assets) {
+          if (Array.isArray(b.assets.assets)) {
+            mediaAssets.value = b.assets.assets;
+          }
+          if (b.assets.bucketName) {
+            mediaBucketName.value = b.assets.bucketName;
+          }
+          if (b.assets.usedStorage) {
+            mediaStorage.value = {
+              usedStorage: b.assets.usedStorage,
+              usedBytes: b.assets.usedBytes || 0,
+              maxStorage: b.assets.maxStorage || '2048 MB',
+              maxBytes: b.assets.maxBytes || 2147483648,
+              freeStorage: b.assets.freeStorage || '2.00 GB',
+              usagePercentage: b.assets.usagePercentage || '0.0%'
+            };
+          } else {
+            recalculateStorage();
+          }
         }
         if (b.domains?.domains?.length) {
           customDomains.value = b.domains.domains;
@@ -928,6 +988,8 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
             containers: containers.value,
             articles: articles.value,
             mediaAssets: mediaAssets.value,
+            mediaStorage: mediaStorage.value,
+            mediaBucketName: mediaBucketName.value,
             customDomains: customDomains.value,
             supportTickets: supportTickets.value,
             invoices: invoices.value,
@@ -965,8 +1027,23 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
     if (aRes.status === 'fulfilled' && aRes.value?.articles?.length) {
       articles.value = aRes.value.articles;
     }
-    if (mRes.status === 'fulfilled' && Array.isArray(mRes.value?.assets) && mRes.value.assets.length) {
-      mediaAssets.value = mRes.value.assets;
+    if (mRes.status === 'fulfilled' && mRes.value) {
+      if (Array.isArray(mRes.value?.assets)) {
+        mediaAssets.value = mRes.value.assets;
+      }
+      if (mRes.value.bucketName) {
+        mediaBucketName.value = mRes.value.bucketName;
+      }
+      if (mRes.value.usedStorage) {
+        mediaStorage.value = {
+          usedStorage: mRes.value.usedStorage,
+          usedBytes: mRes.value.usedBytes || 0,
+          maxStorage: mRes.value.maxStorage || '2048 MB',
+          maxBytes: mRes.value.maxBytes || 2147483648,
+          freeStorage: mRes.value.freeStorage || '2.00 GB',
+          usagePercentage: mRes.value.usagePercentage || '0.0%'
+        };
+      }
     }
     if (dRes.status === 'fulfilled' && dRes.value?.domains?.length) {
       customDomains.value = dRes.value.domains;
@@ -988,6 +1065,8 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
         containers: containers.value,
         articles: articles.value,
         mediaAssets: mediaAssets.value,
+        mediaStorage: mediaStorage.value,
+        mediaBucketName: mediaBucketName.value,
         customDomains: customDomains.value,
         supportTickets: supportTickets.value,
         invoices: invoices.value,
@@ -1012,7 +1091,17 @@ const hydrateFromCache = () => {
       const data = JSON.parse(raw);
       if (Array.isArray(data.containers) && data.containers.length) containers.value = data.containers;
       if (Array.isArray(data.articles) && data.articles.length) articles.value = data.articles;
-      if (Array.isArray(data.mediaAssets) && data.mediaAssets.length) mediaAssets.value = data.mediaAssets;
+      if (Array.isArray(data.mediaAssets)) {
+        mediaAssets.value = data.mediaAssets;
+        if (data.mediaStorage) {
+          mediaStorage.value = data.mediaStorage;
+        } else {
+          recalculateStorage();
+        }
+        if (data.mediaBucketName) {
+          mediaBucketName.value = data.mediaBucketName;
+        }
+      }
       if (Array.isArray(data.customDomains) && data.customDomains.length) customDomains.value = data.customDomains;
       if (Array.isArray(data.supportTickets) && data.supportTickets.length) supportTickets.value = data.supportTickets.map((t: any) => normalizeTicket(t));
       if (Array.isArray(data.invoices) && data.invoices.length) invoices.value = data.invoices;
@@ -1038,6 +1127,7 @@ const resetDashboardState = () => {
   articles.value = [...initialArticles];
   activeArticleForReader.value = null;
   mediaAssets.value = [...initialMediaAssets];
+  recalculateStorage();
   customDomains.value = [...initialCustomDomains];
   supportTickets.value = initialSupportTickets.map(t => normalizeTicket(t));
   invoices.value = [...initialInvoices];
@@ -1159,8 +1249,10 @@ export function useDashboardData() {
     handleCreateArticle,
     deleteArticle,
     mediaAssets,
+    mediaBucketName,
+    mediaStorage,
     isUploadingMedia,
-    uploadMediaDemo,
+    recalculateStorage,
     uploadMediaFiles,
     deleteMedia,
     webhooks,

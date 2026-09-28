@@ -2,11 +2,139 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.3.3',
+    releaseDate: '28 September 2026',
+    title: 'Perbaikan Sanitasi Skema URL Clipboard & Pencegahan Duplikasi Protokol',
+    summary: 'Memperbaiki helper copyToClipboard agar mendeteksi protokol URL dan URI scheme (http, https, s3) yang sudah ada dari environment, sehingga menyalin URL tidak lagi menghasilkan prefiks ganda seperti https://http://.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-133-1',
+        type: 'bugfix',
+        scope: 'Clipboard & URL Resolver',
+        description: 'Menghilangkan penambahan protokol https:// secara paksa pada helper copyToClipboard. Skema URL yang sudah diawali http://, https://, atau s3:// disalin utuh apa adanya sesuai konfigurasi environment.'
+      }
+    ]
+  },
+  {
+    version: 'v1.3.2',
+    releaseDate: '28 September 2026',
+    title: 'Transisi Data Aktual Media S3 & Penulisan Penggunaan Kuota Real-Time',
+    summary: 'Menghapus seluruh berkas contoh/demo statis dari basis data dan repositori, beralih penuh ke data aktual customer, serta menghadirkan kalkulasi dan penulisan metrik kapasitas penyimpanan S3 secara real-time pada setiap unggahan dan penghapusan berkas.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-132-1',
+        type: 'improvement',
+        scope: 'Pembersihan Data Contoh / Mock',
+        description: 'Menghapus seluruh entri mock media dari PostgreSQL, repository Go, dan inisialisasi frontend seeds. Mengarahkan modul Media Assets murni menampilkan berkas yang benar-benar diunggah oleh tenant.'
+      },
+      {
+        id: 'c-132-2',
+        type: 'feature',
+        scope: 'Real-Time Storage Usage Telemetry',
+        description: 'Menerapkan kalkulasi penggunaan kuota dinamis (recalculateStorage) di klien dan server: kapasitas S3 terpakai, kuota bebas (2.0 GB), persentase utilisasi, dan jumlah berkas langsung diperbarui saat berkas diunggah atau dihapus.'
+      },
+      {
+        id: 'c-132-3',
+        type: 'improvement',
+        scope: 'Cache & Hydration Synchronization',
+        description: 'Menyinkronkan status penyimpanan dan nama bucket ke dalam warmup bundle Redis serta cache lokal dashboard, mencegah keterlambatan pembacaan telemetri saat aplikasi dimuat ulang.'
+      },
+      {
+        id: 'c-132-4',
+        type: 'improvement',
+        scope: 'Environment Templates (.env.example)',
+        description: 'Menambahkan konfigurasi lengkap MinIO S3 Object Storage (S3_PORT, MINIO_CONSOLE_PORT, S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET, S3_USE_SSL, S3_PUBLIC_URL) pada file template .env.example root dan dashboard-cms.'
+      }
+    ]
+  },
+  {
+    version: 'v1.3.1',
+    releaseDate: '28 September 2026',
+    title: 'Desain Ulang Modal Media Inspector & Render Thumbnail Asli S3',
+    summary: 'Merombak tampilan modal inspeksi berkas menjadi Media Inspector modern dengan hero visual viewport, render foto asli, grid telemetri 2x2, serta perapihan URL bar dengan tombol 1-klik salin dan buka tab baru.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-131-1',
+        type: 'improvement',
+        scope: 'Media Inspector Modal UI',
+        description: 'Merombak modal preview berkas (.modal-dialog-media-inspector): menampilkan foto nyata langsung di viewport kanvas dengan background studio, grid telemetri spesifikasi 2x2, dan bilah salin URL/URI S3 tanpa pemotongan teks.'
+      },
+      {
+        id: 'c-131-2',
+        type: 'improvement',
+        scope: 'Galeri Media Assets',
+        description: 'Menampilkan thumbnail foto nyata pada kartu galeri berkas gambar (JPG, PNG, WebP, AVIF) menggantikan placeholder grafis statis.'
+      },
+      {
+        id: 'c-131-3',
+        type: 'bugfix',
+        scope: 'URL Resolver S3',
+        description: 'Membersihkan duplikasi prefiks bucket pada resolusi storageURL di storage layer MinIO sehingga URL langsung merujuk ke bucket tenant secara presisi.'
+      }
+    ]
+  },
+  {
+    version: 'v1.3.0',
+    releaseDate: '28 September 2026',
+    title: 'Multi-Tenant S3 Bucket Isolation, Kuota Hard Limit 2 GB & Pertahanan Siber Media Assets',
+    summary: 'Menerapkan arsitektur segregasi S3 bucket mandiri per customer (1 tenant = 1 dedicated bucket), penegakan kuota penyimpanan 2.0 GB server-side, magic bytes content sniffing, whitelist tipe berkas aman, dan telemetri kuota dinamis.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-130-1',
+        type: 'feature',
+        scope: 'Multi-Tenant S3 Bucket Engine',
+        description: 'Menerapkan segregasi fisik S3 di mana setiap tenant memiliki dedicated bucket MinIO mandiri (tenant-<id>-media) dengan lazy auto-provisioning dan scoped public-read policy.'
+      },
+      {
+        id: 'c-130-2',
+        type: 'security',
+        scope: 'File Upload & Anti-Malware Sniffing',
+        description: 'Menambahkan deteksi magic bytes (512 bytes awal), whitelist ketat (Gambar, PDF, CSV, XLSX, DOCX, TXT), dan pemblokiran total executable/skrip berbahaya (.exe, .sh, .php, .js).'
+      },
+      {
+        id: 'c-130-3',
+        type: 'feature',
+        scope: 'Storage Quota Enforcer (2 GB)',
+        description: 'Penegakan batas kuota penyimpanan 2.0 GB per akun customer di backend Go dengan penolakan HTTP 413 dan visual gauge telemetri real-time di UI Media Assets.'
+      }
+    ]
+  },
+  {
+    version: 'v1.2.7',
+    releaseDate: '28 September 2026',
+    title: 'Modernisasi Image MinIO S3 & Penataan Port Orkestrasi Database Lokal',
+    summary: 'Memperbarui image container MinIO S3 ke image resmi Chainguard (cgr.dev/chainguard/minio) untuk mengatasi deprecation image lama di Docker Hub/Quay, serta menata mapping port agar tidak bentrok dengan Portainer.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-127-1',
+        type: 'bugfix',
+        scope: 'Infrastruktur MinIO S3',
+        description: 'Memperbarui image MinIO S3 pada docker-compose.db.yml dan docker-compose.yml menggunakan cgr.dev/chainguard/minio:latest dan menyesuaikan healthcheck tanpa utilitas mc.'
+      },
+      {
+        id: 'c-127-2',
+        type: 'improvement',
+        scope: 'Local Docker Environment',
+        description: 'Menyesuaikan alokasi port Portainer (HTTP: 9002, HTTPS: 9443) agar port 9000 bersih dan dapat digunakan secara optimal oleh MinIO S3 API.'
+      }
+    ]
+  },
+  {
     version: 'v1.2.6',
     releaseDate: '22 September 2026',
     title: 'Integrasi MinIO S3 Object Storage untuk Media Assets & Refinement Command Search Bar',
     summary: 'Mengaktifkan arsitektur MinIO S3 Object Storage asli untuk menu Media Assets (S3) lengkap dengan konfigurasi Docker Compose, S3 client Go (minio-go/v7), endpoint upload multipart & delete, serta perampingan visual Search Command Bar di seluruh modul dashboard.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Core Architecture Team',
     items: [
       {

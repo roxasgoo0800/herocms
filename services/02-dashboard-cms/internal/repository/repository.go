@@ -336,42 +336,6 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		NOW() - INTERVAL '7 days'
 	) ON CONFLICT (id) DO NOTHING;
 
-	-- Media Assets
-	INSERT INTO media_assets (id, tenant_id, name, file_type, mime_type, dimensions, file_size, storage_url, s3_key)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000201',
-		'99420000-0000-0000-0000-000000009942',
-		'cv-resume-engineer.pdf',
-		'PDF',
-		'application/pdf',
-		'A4 Format',
-		'420 KB',
-		'https://cdn.rizalpratama.cloud/assets/cv-resume-engineer.pdf',
-		'assets/cv-resume-engineer.pdf'
-	),
-	(
-		'99420000-0000-0000-0000-000000000202',
-		'99420000-0000-0000-0000-000000009942',
-		'laporan-rekap-telemetri-q3.xlsx',
-		'XLSX',
-		'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-		'4 Sheets',
-		'1.2 MB',
-		'https://cdn.rizalpratama.cloud/assets/laporan-rekap-telemetri-q3.xlsx',
-		'assets/laporan-rekap-telemetri-q3.xlsx'
-	),
-	(
-		'99420000-0000-0000-0000-000000000203',
-		'99420000-0000-0000-0000-000000009942',
-		'blueprint-spesifikasi-sistem.docx',
-		'DOCX',
-		'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-		'12 Halaman',
-		'850 KB',
-		'https://cdn.rizalpratama.cloud/assets/blueprint-spesifikasi-sistem.docx',
-		'assets/blueprint-spesifikasi-sistem.docx'
-	) ON CONFLICT (id) DO NOTHING;
 
 	-- Custom Domains
 	INSERT INTO custom_domains (id, tenant_id, domain, target_cname, target_ip, dns_status, ssl_status)
@@ -726,10 +690,36 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 	return r.Articles, nil
 }
 
+func (r *Repository) GetTenantStorageUsageBytes(ctx context.Context, tenantID string) (int64, error) {
+	if r.DB != nil {
+		var totalBytes int64
+		err := r.DB.QueryRowContext(ctx, `
+			SELECT COALESCE(SUM(file_size_bytes), 0)
+			FROM media_assets
+			WHERE tenant_id = $1
+		`, tenantID).Scan(&totalBytes)
+		if err == nil {
+			return totalBytes, nil
+		}
+	}
+
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var total int64
+	for _, a := range r.Assets {
+		if sizeBytes, ok := a["fileSizeBytes"].(int64); ok {
+			total += sizeBytes
+		} else {
+			total += 2 * 1024 * 1024
+		}
+	}
+	return total, nil
+}
+
 func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, error) {
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
-			SELECT id, name, file_type, file_size, dimensions, storage_url, s3_key, created_at
+			SELECT id, name, file_type, file_size, file_size_bytes, dimensions, storage_url, s3_key, COALESCE(bucket_name, ''), created_at
 			FROM media_assets
 			WHERE tenant_id = $1
 			ORDER BY created_at DESC
@@ -738,17 +728,20 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 			defer rows.Close()
 			var list []gin.H
 			for rows.Next() {
-				var id, name, fileType, fileSize, dimensions, url, s3Key string
+				var id, name, fileType, fileSize, dimensions, url, s3Key, bucketName string
+				var fileSizeBytes int64
 				var createdAt time.Time
-				if err := rows.Scan(&id, &name, &fileType, &fileSize, &dimensions, &url, &s3Key, &createdAt); err == nil {
+				if err := rows.Scan(&id, &name, &fileType, &fileSize, &fileSizeBytes, &dimensions, &url, &s3Key, &bucketName, &createdAt); err == nil {
 					list = append(list, gin.H{
 						"id":         id,
 						"name":       name,
 						"type":       fileType,
 						"size":       fileSize,
+						"sizeBytes":  fileSizeBytes,
 						"dimensions": dimensions,
 						"url":        url,
 						"s3Key":      s3Key,
+						"bucketName": bucketName,
 						"uploadedAt": createdAt.Format("2 Jan 2006"),
 					})
 				}
@@ -765,7 +758,7 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 	return r.Assets, nil
 }
 
-func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, mimeType, dimensions, fileSize string, fileSizeBytes int64, storageURL, s3Key string) (gin.H, error) {
+func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, mimeType, dimensions, fileSize string, fileSizeBytes int64, storageURL, s3Key, bucketName string) (gin.H, error) {
 	now := time.Now()
 	nowStr := now.Format("2 Jan 2006")
 
@@ -773,12 +766,12 @@ func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, 
 		var id string
 		err := r.DB.QueryRowContext(ctx, `
 			INSERT INTO media_assets (
-				id, tenant_id, name, file_type, mime_type, dimensions, file_size, file_size_bytes, storage_url, s3_key, created_at
+				id, tenant_id, name, file_type, mime_type, dimensions, file_size, file_size_bytes, storage_url, s3_key, bucket_name, created_at
 			) VALUES (
-				gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()
+				gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()
 			)
 			RETURNING id::text
-		`, tenantID, name, fileType, mimeType, dimensions, fileSize, fileSizeBytes, storageURL, s3Key).Scan(&id)
+		`, tenantID, name, fileType, mimeType, dimensions, fileSize, fileSizeBytes, storageURL, s3Key, bucketName).Scan(&id)
 		if err == nil {
 			asset := gin.H{
 				"id":         id,
@@ -787,8 +780,10 @@ func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, 
 				"mimeType":   mimeType,
 				"dimensions": dimensions,
 				"size":       fileSize,
+				"sizeBytes":  fileSizeBytes,
 				"url":        storageURL,
 				"s3Key":      s3Key,
+				"bucketName": bucketName,
 				"uploadedAt": nowStr,
 			}
 			return asset, nil
@@ -809,6 +804,7 @@ func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, 
 		"size":       fileSize,
 		"url":        storageURL,
 		"s3Key":      s3Key,
+		"bucketName": bucketName,
 		"uploadedAt": nowStr,
 	}
 	r.Assets = append([]gin.H{asset}, r.Assets...)
@@ -1409,17 +1405,7 @@ func (r *Repository) seedInitialData() {
 		},
 	}
 
-	r.Assets = []gin.H{
-		{
-			"id":         "ast_01",
-			"name":       "cv-resume-engineer.pdf",
-			"type":       "PDF",
-			"size":       "420 KB",
-			"dimensions": "A4 Format",
-			"uploadedAt": "18 Sep 2026",
-			"url":        "https://cdn.rizalpratama.cloud/assets/cv-resume-engineer.pdf",
-		},
-	}
+	r.Assets = []gin.H{}
 
 	r.Domains = []gin.H{
 		{

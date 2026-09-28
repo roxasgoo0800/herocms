@@ -108,9 +108,8 @@ flowchart TB
     - API Telemetri & Docker status: *NetworkFirst* dengan timeout 3 detik dan fallback ke cache offline IndexedDB.
     - Media CDN/S3: *StaleWhileRevalidate* dengan maxEntries 100 dan maxAge 30 hari.
   - **Background Sync:** Mengantrekan aksi penulisan artikel dan penyesuaian tema saat offline menggunakan `workbox-background-sync`.
-* **Fitur Utama:**
   - **Dynamic Schema Builder:** Tipe konten yang dapat disesuaikan per kategori (misal: "Studi Kasus Portofolio" dengan kolom: nama klien, teknologi yang digunakan, galeri gambar, link GitHub; atau "Artikel Blog" dengan kolom: waktu baca, markdown, URL kanonikal).
-  - **Asset Manager:** Upload langsung ke MinIO / S3 via *presigned URL*, memastikan server aplikasi tidak terbebani pemrosesan file besar.
+  - **Asset Manager Terisolasi (MinIO S3):** Penyimpanan aset media terpusat di mana setiap tenant memiliki **1 Dedicated S3 Bucket Mandiri** (`tenant-<tenant_id>-media`). Berkas yang diunggah ke Media Assets dapat langsung digunakan di Visual Editor tanpa upload berulang, dengan batas kuota penyimpanan 2 GB per akun dan whitelist tipe berkas aman.
 
 ### 3.3 Program 3: API Orkestrator Provisioning & Deployment
 * **Runtime:** Golang 1.23+ biner terkodifikasi mandiri (`CGO_ENABLED=0`).
