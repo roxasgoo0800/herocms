@@ -2,11 +2,33 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.3.5',
+    releaseDate: '28 September 2026',
+    title: 'Integrasi Traefik Edge Routing untuk MinIO S3 (minio.stackbyte.id)',
+    summary: 'Menghubungkan container MinIO ke traefik_network dengan konfigurasi dynamic router label Traefik v3 untuk endpoint publik S3 (minio.stackbyte.id) dan MinIO Console (minio-console.stackbyte.id) tanpa ekspos port numerik.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-135-1',
+        type: 'feature',
+        scope: 'Traefik Edge & Ingress',
+        description: 'Menerapkan dynamic routing Traefik v3 untuk MinIO S3 API (Port 9000) pada Host minio.stackbyte.id dan Web Console UI (Port 9001) pada Host minio-console.stackbyte.id tanpa membutuhkan port di URL.'
+      },
+      {
+        id: 'c-135-2',
+        type: 'improvement',
+        scope: 'Environment & Docker Compose',
+        description: 'Menghubungkan container herocms_minio ke bridge external traefik_network dan menyelaraskan S3_PUBLIC_URL default menjadi http://minio.stackbyte.id.'
+      }
+    ]
+  },
+  {
     version: 'v1.3.4',
     releaseDate: '28 September 2026',
     title: 'Pipeline CI/CD: GitHub Actions Otomatisasi Build & Push Docker Hub',
     summary: 'Menerapkan workflow GitHub Actions terenkripsi untuk otomatisasi kompilasi image Docker (dashboard-cms dan marketing-site) serta push ke Docker Hub menggunakan kredensial rahasia tersimpan.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

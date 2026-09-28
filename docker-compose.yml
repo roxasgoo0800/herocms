@@ -93,7 +93,7 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY:-secret_minio_password}
       S3_BUCKET: ${S3_BUCKET:-herocms-media}
       S3_USE_SSL: "false"
-      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://localhost:9000/herocms-media}
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://minio.stackbyte.id}
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,6 +120,7 @@ services:
     command: server /data --console-address ":9001"
     networks:
       - app-network
+      - traefik_network
     ports:
       - "${S3_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
@@ -128,6 +129,19 @@ services:
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-secret_minio_password}
     volumes:
       - minio_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_network"
+      # S3 API Public Routing (Port 9000 -> minio.stackbyte.id)
+      - "traefik.http.routers.herocms-minio.rule=Host(`minio.stackbyte.id`)"
+      - "traefik.http.routers.herocms-minio.entrypoints=web"
+      - "traefik.http.routers.herocms-minio.service=herocms-minio-svc"
+      - "traefik.http.services.herocms-minio-svc.loadbalancer.server.port=9000"
+      # MinIO Web Console UI Routing (Port 9001 -> minio-console.stackbyte.id)
+      - "traefik.http.routers.herocms-minio-console.rule=Host(`minio-console.stackbyte.id`)"
+      - "traefik.http.routers.herocms-minio-console.entrypoints=web"
+      - "traefik.http.routers.herocms-minio-console.service=herocms-minio-console-svc"
+      - "traefik.http.services.herocms-minio-console-svc.loadbalancer.server.port=9001"
 
   # ---------------------------------------------------------------------------
   # 5. Service 04: Marketing Landing Site (Native Golang Host + React SPA)
