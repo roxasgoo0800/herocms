@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, watch, defineAsyncComponent } from 'vue';
+import { onMounted, watch, defineAsyncComponent, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
@@ -51,6 +51,7 @@ const InvoicesHistoryModule = defineAsyncComponent(() => import('../components/d
 const SupportTicketingModule = defineAsyncComponent(() => import('../components/dashboard/SupportTicketingModule.vue'));
 const ChangelogModule = defineAsyncComponent(() => import('../components/dashboard/ChangelogModule.vue'));
 import { useSplashTransition } from '../composables/useSplashTransition';
+import { changelogReleases } from '../data/changelog';
 
 const router = useRouter();
 const { isDashboardEntering } = useSplashTransition();
@@ -65,6 +66,7 @@ const {
   containers,
   articles,
   activeArticleForReader,
+  mediaStorage,
   copyToClipboard,
   copiedSubdomain,
   openCreateModal,
@@ -78,6 +80,8 @@ const {
   syncWithBackend,
   executeLogout
 } = useDashboardData();
+
+const latestSystemVersion = computed(() => changelogReleases[0]?.version || 'v1.3.3');
 
 onMounted(async () => {
   await syncWithBackend();
@@ -164,7 +168,7 @@ const handleLogout = async () => {
           >
             <HardDrive :size="17" />
             <span class="nav-link-text">Media Assets (S3)</span>
-            <span class="nav-badge">120MB</span>
+            <span class="nav-badge">{{ mediaStorage.usedStorage }}</span>
           </button>
 
           <button
@@ -252,7 +256,7 @@ const handleLogout = async () => {
           >
             <History :size="17" />
             <span class="nav-link-text">Changelog & Rilis</span>
-            <span class="nav-badge badge-primary">v1.2.6</span>
+            <span class="nav-badge badge-primary">{{ latestSystemVersion }}</span>
           </button>
         </nav>
       </div>
