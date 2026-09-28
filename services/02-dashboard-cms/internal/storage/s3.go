@@ -36,8 +36,12 @@ func GetTenantBucketName(tenantID string) string {
 }
 
 func NewS3Client(cfg *config.Config) *S3Client {
+	basePublicURL := strings.TrimRight(cfg.S3PublicURL, "/")
+	basePublicURL = strings.TrimSuffix(basePublicURL, "/"+cfg.S3Bucket)
+	basePublicURL = strings.TrimSuffix(basePublicURL, "/herocms-media")
+
 	s3 := &S3Client{
-		PublicURL: strings.TrimRight(cfg.S3PublicURL, "/"),
+		PublicURL: basePublicURL,
 	}
 
 	client, err := minio.New(cfg.S3Endpoint, &minio.Options{

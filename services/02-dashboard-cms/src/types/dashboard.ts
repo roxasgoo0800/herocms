@@ -144,6 +144,9 @@ export interface MediaAssetItem {
   dimensions: string;
   uploadedAt: string;
   url: string;
+  bucketName?: string;
+  s3Key?: string;
+  mimeType?: string;
 }
 
 export interface CustomDomainItem {
