@@ -24,6 +24,8 @@ import type { MediaAssetItem } from '../../types/dashboard';
 
 const {
   mediaAssets,
+  mediaBucketName,
+  mediaStorage,
   isUploadingMedia,
   uploadMediaDemo,
   uploadMediaFiles,
@@ -135,7 +137,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
       </div>
       <div class="quota-quick-pills">
         <span class="pill-metric">Region: <strong>ID-JKT-1 (MinIO S3)</strong></span>
-        <span class="pill-metric-highlight">S3 Bucket: <strong>tenant-9942-media</strong></span>
+        <span class="pill-metric-highlight">S3 Dedicated Bucket: <strong>{{ mediaBucketName }}</strong></span>
       </div>
     </div>
 
@@ -146,10 +148,10 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
           <span class="telemetry-label">KAPASITAS S3 BUCKET</span>
           <div class="telemetry-glyph blue"><Database :size="15" /></div>
         </div>
-        <div class="telemetry-val">120 MB <span class="telemetry-denom">/ 2.0 GB</span></div>
+        <div class="telemetry-val">{{ mediaStorage.usedStorage }} <span class="telemetry-denom">/ 2.0 GB</span></div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
-          <span>1.88 GB kuota tersedia (SSD NVMe)</span>
+          <span>{{ mediaStorage.freeStorage }} kuota tersedia (SSD NVMe)</span>
         </div>
       </div>
 
@@ -164,11 +166,11 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
 
       <div class="telemetry-card">
         <div class="telemetry-top">
-          <span class="telemetry-label">BANDWIDTH BULAN INI</span>
+          <span class="telemetry-label">UTILISASI KUOTA AKUN</span>
           <div class="telemetry-glyph purple"><Globe :size="15" /></div>
         </div>
-        <div class="telemetry-val">1.42 GB <span class="badge-growth-pill">Normal</span></div>
-        <div class="telemetry-sub"><span>Unlimited egress edge proxy</span></div>
+        <div class="telemetry-val">{{ mediaStorage.usagePercentage }} <span class="badge-growth-pill">Max 2 GB</span></div>
+        <div class="telemetry-sub"><span>Terisolasi per customer account</span></div>
       </div>
 
       <div class="telemetry-card">
@@ -185,24 +187,16 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
     <div class="pro-panel storage-breakdown-panel">
       <div class="breakdown-header">
         <div class="breakdown-title-group">
-          <strong>Distribusi Penyimpanan Objek S3</strong>
-          <span>Alokasi kapasitas berdasarkan format berkas media</span>
+          <strong>Distribusi Penyimpanan Objek S3 Terisolasi</strong>
+          <span>Alokasi kapasitas objek media pelanggan (Batas: 2.0 GB)</span>
         </div>
         <div class="breakdown-tags">
-          <span class="legend-item"><span class="legend-dot blue"></span> Gambar (84 MB)</span>
-          <span class="legend-item"><span class="legend-dot red"></span> PDF (24 MB)</span>
-          <span class="legend-item"><span class="legend-dot emerald"></span> Excel (8 MB)</span>
-          <span class="legend-item"><span class="legend-dot indigo"></span> Docs (4 MB)</span>
-          <span class="legend-item"><span class="legend-dot purple"></span> Vektor (12 MB)</span>
-          <span class="legend-item"><span class="legend-dot gray"></span> Bebas (1.87 GB)</span>
+          <span class="legend-item"><span class="legend-dot blue"></span> Terpakai ({{ mediaStorage.usedStorage }})</span>
+          <span class="legend-item"><span class="legend-dot gray"></span> Kuota Bebas ({{ mediaStorage.freeStorage }})</span>
         </div>
       </div>
       <div class="multi-seg-track">
-        <div class="seg-fill blue" style="width: 4.2%" title="Gambar: 84MB"></div>
-        <div class="seg-fill red" style="width: 1.2%" title="PDF: 24MB"></div>
-        <div class="seg-fill emerald" style="width: 0.4%" title="Excel: 8MB"></div>
-        <div class="seg-fill indigo" style="width: 0.2%" title="Docs: 4MB"></div>
-        <div class="seg-fill purple" style="width: 0.6%" title="Vektor: 12MB"></div>
+        <div class="seg-fill blue" :style="{ width: mediaStorage.usagePercentage }" :title="'Terpakai: ' + mediaStorage.usedStorage"></div>
       </div>
     </div>
 

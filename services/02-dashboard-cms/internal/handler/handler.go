@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/cloudcms/dashboard-cms-backend/internal/redis"
@@ -420,7 +421,16 @@ func (h *Handler) UploadAsset(c *gin.Context) {
 	tenantID := getTenantID(c)
 	asset, err := h.Services.UploadAsset(c.Request.Context(), tenantID, file)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errStr := err.Error()
+		if strings.Contains(errStr, "kuota") || strings.Contains(errStr, "kapasitas") {
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": errStr})
+			return
+		}
+		if strings.Contains(errStr, "tidak didukung") || strings.Contains(errStr, "diblokir") || strings.Contains(errStr, "ditolak") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": errStr})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errStr})
 		return
 	}
 

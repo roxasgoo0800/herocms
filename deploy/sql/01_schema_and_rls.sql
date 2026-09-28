@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS media_assets (
     file_size_bytes BIGINT NOT NULL DEFAULT 0,
     storage_url VARCHAR(512) NOT NULL,
     s3_key VARCHAR(512) NOT NULL,
+    bucket_name VARCHAR(128) NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

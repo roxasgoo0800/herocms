@@ -534,6 +534,15 @@ const deleteArticle = (art: ContentArticle) => {
 };
 
 // Media Assets State
+const mediaBucketName = ref<string>('tenant-994200000000-media');
+const mediaStorage = ref({
+  usedStorage: '0 MB',
+  usedBytes: 0,
+  maxStorage: '2048 MB',
+  maxBytes: 2147483648,
+  freeStorage: '2.00 GB',
+  usagePercentage: '0.0%'
+});
 const mediaAssets = ref<MediaAssetItem[]>([...initialMediaAssets]);
 const isUploadingMedia = ref(false);
 
@@ -555,38 +564,30 @@ const uploadMediaFiles = async (files: FileList | File[]) => {
         throw new Error('Format respon server tidak valid');
       }
     } catch (err: any) {
-      console.warn('[MEDIA S3 UPLOAD FALLBACK]', err);
-      // Fallback local representation if offline
-      const ext = file.name.split('.').pop()?.toUpperCase() || 'FILE';
-      let sizeStr = `${(file.size / 1024).toFixed(0)} KB`;
-      if (file.size > 1024 * 1024) {
-        sizeStr = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
-      }
-      let dimensionStr = 'Dokumen S3';
-      if (['PNG', 'JPG', 'JPEG', 'WEBP', 'AVIF'].includes(ext)) {
-        dimensionStr = 'Raster Image';
-      } else if (ext === 'SVG') {
-        dimensionStr = 'Vector';
-      } else if (ext === 'PDF') {
-        dimensionStr = 'Dokumen PDF';
-      }
-
-      const fallbackAsset: MediaAssetItem = {
-        id: `med_${Date.now()}_${i}`,
-        name: file.name,
-        size: sizeStr,
-        type: ext,
-        dimensions: dimensionStr,
-        uploadedAt: 'Baru saja',
-        url: URL.createObjectURL(file)
-      };
-      mediaAssets.value.unshift(fallbackAsset);
-      successCount++;
+      console.warn('[MEDIA S3 UPLOAD ERROR]', err);
+      const errMsg = err?.message || 'Gagal mengunggah berkas ke MinIO S3';
+      showToast(errMsg, 'error');
     }
   }
 
   isUploadingMedia.value = false;
-  showToast(`${successCount} file berhasil diunggah ke MinIO S3 & disinkronkan!`, 'success');
+  if (successCount > 0) {
+    showToast(`${successCount} file berhasil diunggah ke MinIO S3 & disinkronkan!`, 'success');
+    // Refresh storage stats
+    try {
+      const fresh = await studioApi.getAssets();
+      if (fresh?.usedStorage) {
+        mediaStorage.value = {
+          usedStorage: fresh.usedStorage,
+          usedBytes: fresh.usedBytes || 0,
+          maxStorage: fresh.maxStorage || '2048 MB',
+          maxBytes: fresh.maxBytes || 2147483648,
+          freeStorage: fresh.freeStorage || '2.00 GB',
+          usagePercentage: fresh.usagePercentage || '0.0%'
+        };
+      }
+    } catch (_) {}
+  }
 };
 
 const uploadMediaDemo = () => {
@@ -965,8 +966,23 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
     if (aRes.status === 'fulfilled' && aRes.value?.articles?.length) {
       articles.value = aRes.value.articles;
     }
-    if (mRes.status === 'fulfilled' && Array.isArray(mRes.value?.assets) && mRes.value.assets.length) {
-      mediaAssets.value = mRes.value.assets;
+    if (mRes.status === 'fulfilled' && mRes.value) {
+      if (Array.isArray(mRes.value?.assets)) {
+        mediaAssets.value = mRes.value.assets;
+      }
+      if (mRes.value.bucketName) {
+        mediaBucketName.value = mRes.value.bucketName;
+      }
+      if (mRes.value.usedStorage) {
+        mediaStorage.value = {
+          usedStorage: mRes.value.usedStorage,
+          usedBytes: mRes.value.usedBytes || 0,
+          maxStorage: mRes.value.maxStorage || '2048 MB',
+          maxBytes: mRes.value.maxBytes || 2147483648,
+          freeStorage: mRes.value.freeStorage || '2.00 GB',
+          usagePercentage: mRes.value.usagePercentage || '0.0%'
+        };
+      }
     }
     if (dRes.status === 'fulfilled' && dRes.value?.domains?.length) {
       customDomains.value = dRes.value.domains;
@@ -1159,6 +1175,8 @@ export function useDashboardData() {
     handleCreateArticle,
     deleteArticle,
     mediaAssets,
+    mediaBucketName,
+    mediaStorage,
     isUploadingMedia,
     uploadMediaDemo,
     uploadMediaFiles,

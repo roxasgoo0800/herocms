@@ -2,11 +2,61 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.3.0',
+    releaseDate: '28 September 2026',
+    title: 'Multi-Tenant S3 Bucket Isolation, Kuota Hard Limit 2 GB & Pertahanan Siber Media Assets',
+    summary: 'Menerapkan arsitektur segregasi S3 bucket mandiri per customer (1 tenant = 1 dedicated bucket), penegakan kuota penyimpanan 2.0 GB server-side, magic bytes content sniffing, whitelist tipe berkas aman, dan telemetri kuota dinamis.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-130-1',
+        type: 'feature',
+        scope: 'Multi-Tenant S3 Bucket Engine',
+        description: 'Menerapkan segregasi fisik S3 di mana setiap tenant memiliki dedicated bucket MinIO mandiri (tenant-<id>-media) dengan lazy auto-provisioning dan scoped public-read policy.'
+      },
+      {
+        id: 'c-130-2',
+        type: 'security',
+        scope: 'File Upload & Anti-Malware Sniffing',
+        description: 'Menambahkan deteksi magic bytes (512 bytes awal), whitelist ketat (Gambar, PDF, CSV, XLSX, DOCX, TXT), dan pemblokiran total executable/skrip berbahaya (.exe, .sh, .php, .js).'
+      },
+      {
+        id: 'c-130-3',
+        type: 'feature',
+        scope: 'Storage Quota Enforcer (2 GB)',
+        description: 'Penegakan batas kuota penyimpanan 2.0 GB per akun customer di backend Go dengan penolakan HTTP 413 dan visual gauge telemetri real-time di UI Media Assets.'
+      }
+    ]
+  },
+  {
+    version: 'v1.2.7',
+    releaseDate: '28 September 2026',
+    title: 'Modernisasi Image MinIO S3 & Penataan Port Orkestrasi Database Lokal',
+    summary: 'Memperbarui image container MinIO S3 ke image resmi Chainguard (cgr.dev/chainguard/minio) untuk mengatasi deprecation image lama di Docker Hub/Quay, serta menata mapping port agar tidak bentrok dengan Portainer.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-127-1',
+        type: 'bugfix',
+        scope: 'Infrastruktur MinIO S3',
+        description: 'Memperbarui image MinIO S3 pada docker-compose.db.yml dan docker-compose.yml menggunakan cgr.dev/chainguard/minio:latest dan menyesuaikan healthcheck tanpa utilitas mc.'
+      },
+      {
+        id: 'c-127-2',
+        type: 'improvement',
+        scope: 'Local Docker Environment',
+        description: 'Menyesuaikan alokasi port Portainer (HTTP: 9002, HTTPS: 9443) agar port 9000 bersih dan dapat digunakan secara optimal oleh MinIO S3 API.'
+      }
+    ]
+  },
+  {
     version: 'v1.2.6',
     releaseDate: '22 September 2026',
     title: 'Integrasi MinIO S3 Object Storage untuk Media Assets & Refinement Command Search Bar',
     summary: 'Mengaktifkan arsitektur MinIO S3 Object Storage asli untuk menu Media Assets (S3) lengkap dengan konfigurasi Docker Compose, S3 client Go (minio-go/v7), endpoint upload multipart & delete, serta perampingan visual Search Command Bar di seluruh modul dashboard.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Core Architecture Team',
     items: [
       {

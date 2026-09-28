@@ -18,6 +18,7 @@ bin/
 *.exe
 *.test
 *.out
+dashboard-cms-server
 vendor/
 
 # Environment variables & secrets

@@ -9,6 +9,7 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
@@ -423,10 +424,40 @@ func (s *Services) GetArticles(ctx context.Context, tenantID string) []gin.H {
 }
 
 // -----------------------------------------------------------------------------
-// Assets Service (With Redis Caching)
+// Assets Service (With 2GB Quota, Security Whitelist & Multi-Bucket S3)
 // -----------------------------------------------------------------------------
 
+const MaxTenantStorageBytes int64 = 2 * 1024 * 1024 * 1024 // 2.0 GB
+
+var AllowedMediaExtensions = map[string]bool{
+	".jpg":  true,
+	".jpeg": true,
+	".png":  true,
+	".webp": true,
+	".gif":  true,
+	".svg":  true,
+	".avif": true,
+	".pdf":  true,
+	".csv":  true,
+	".xlsx": true,
+	".xls":  true,
+	".docx": true,
+	".doc":  true,
+	".txt":  true,
+}
+
+var ProhibitedMediaExtensions = map[string]bool{
+	".exe": true, ".sh": true, ".bat": true, ".cmd": true, ".msi": true,
+	".php": true, ".phtml": true, ".phar": true, ".js": true, ".mjs": true,
+	".html": true, ".htm": true, ".py": true, ".pl": true, ".cgi": true,
+	".jar": true, ".vbs": true, ".scr": true,
+}
+
 func (s *Services) GetAssets(ctx context.Context, tenantID string) gin.H {
+	if tenantID == "" {
+		tenantID = "99420000-0000-0000-0000-000000009942"
+	}
+
 	cacheKey := fmt.Sprintf("tenant:%s:menu:assets", tenantID)
 	var cached gin.H
 	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
@@ -437,10 +468,39 @@ func (s *Services) GetAssets(ctx context.Context, tenantID string) gin.H {
 	if assets == nil {
 		assets = []gin.H{}
 	}
+
+	usedBytes, _ := s.Repo.GetTenantStorageUsageBytes(ctx, tenantID)
+	usedMB := float64(usedBytes) / (1024 * 1024)
+	var usedStorageStr string
+	if usedBytes < 1024*1024 {
+		usedStorageStr = fmt.Sprintf("%.1f KB", float64(usedBytes)/1024)
+	} else if usedBytes < 1024*1024*1024 {
+		usedStorageStr = fmt.Sprintf("%.1f MB", usedMB)
+	} else {
+		usedStorageStr = fmt.Sprintf("%.2f GB", float64(usedBytes)/(1024*1024*1024))
+	}
+
+	freeBytes := MaxTenantStorageBytes - usedBytes
+	if freeBytes < 0 {
+		freeBytes = 0
+	}
+	freeStorageStr := fmt.Sprintf("%.2f GB", float64(freeBytes)/(1024*1024*1024))
+	bucketName := storage.GetTenantBucketName(tenantID)
+
+	usagePercent := (float64(usedBytes) / float64(MaxTenantStorageBytes)) * 100
+	if usagePercent > 100 {
+		usagePercent = 100
+	}
+
 	res := gin.H{
-		"assets":      assets,
-		"usedStorage": "120 MB",
-		"maxStorage":  "2048 MB",
+		"assets":          assets,
+		"bucketName":      bucketName,
+		"usedStorage":     usedStorageStr,
+		"usedBytes":       usedBytes,
+		"maxStorage":      "2048 MB",
+		"maxBytes":        MaxTenantStorageBytes,
+		"freeStorage":     freeStorageStr,
+		"usagePercentage": fmt.Sprintf("%.1f%%", usagePercent),
 	}
 	_ = s.Redis.SetJSON(ctx, cacheKey, res, 30*time.Minute)
 	return res
@@ -451,13 +511,48 @@ func (s *Services) UploadAsset(ctx context.Context, tenantID string, fileHeader 
 		tenantID = "99420000-0000-0000-0000-000000009942"
 	}
 
+	// 1. Validasi Ekstensi & Whitelist Format Keamanan
+	ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
+	if ProhibitedMediaExtensions[ext] {
+		return nil, fmt.Errorf("berkas '%s' diblokir oleh kebijakan keamanan (ekstensi berbahaya dilarang)", fileHeader.Filename)
+	}
+	if !AllowedMediaExtensions[ext] {
+		return nil, fmt.Errorf("tipe berkas '%s' tidak didukung. HeroCMS hanya mendukung gambar (JPG, PNG, WebP, GIF, SVG, AVIF) dan dokumen (PDF, CSV, XLSX, DOCX, TXT)", ext)
+	}
+
 	file, err := fileHeader.Open()
 	if err != nil {
 		return nil, fmt.Errorf("gagal membaca file: %w", err)
 	}
 	defer file.Close()
 
-	ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
+	// 2. Magic Bytes Content Sniffing (Membaca 512 bytes pertama untuk verifikasi tipe sebenarnya)
+	headerBuf := make([]byte, 512)
+	n, _ := file.Read(headerBuf)
+	detectedMime := http.DetectContentType(headerBuf[:n])
+
+	// Tolak berkas yang terdeteksi sebagai binary executable atau shell script
+	if strings.HasPrefix(detectedMime, "application/x-executable") ||
+		strings.HasPrefix(detectedMime, "application/x-dosexec") ||
+		strings.HasPrefix(detectedMime, "application/x-sharedlib") ||
+		strings.HasPrefix(detectedMime, "text/x-shellscript") ||
+		strings.HasPrefix(detectedMime, "text/x-php") {
+		return nil, fmt.Errorf("berkas ditolak oleh pertahanan siber HeroCMS: terdeteksi kode biner/skrip berbahaya (%s)", detectedMime)
+	}
+
+	// Kembalikan pointer baca file ke awal
+	if seeker, ok := file.(io.Seeker); ok {
+		_, _ = seeker.Seek(0, io.SeekStart)
+	}
+
+	// 3. Penegakan Kuota Kapasitas 2.0 GB (Pre-flight Quota Enforcer)
+	currentUsageBytes, _ := s.Repo.GetTenantStorageUsageBytes(ctx, tenantID)
+	if currentUsageBytes+fileHeader.Size > MaxTenantStorageBytes {
+		usedMB := float64(currentUsageBytes) / (1024 * 1024)
+		fileMB := float64(fileHeader.Size) / (1024 * 1024)
+		return nil, fmt.Errorf("kapasitas penyimpanan melebihi batas kuota 2.0 GB (Terpakai: %.1f MB / 2048 MB, Ukuran Berkas: %.1f MB). Hapus beberapa berkas lama untuk melanjutkan", usedMB, fileMB)
+	}
+
 	fileType := strings.ToUpper(strings.TrimPrefix(ext, "."))
 	if fileType == "" {
 		fileType = "BIN"
@@ -478,10 +573,16 @@ func (s *Services) UploadAsset(ctx context.Context, tenantID string, fileHeader 
 			contentType = "image/svg+xml"
 		case ".pdf":
 			contentType = "application/pdf"
-		case ".mp4":
-			contentType = "video/mp4"
+		case ".csv":
+			contentType = "text/csv"
+		case ".xlsx":
+			contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+		case ".docx":
+			contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+		case ".txt":
+			contentType = "text/plain"
 		default:
-			contentType = "application/octet-stream"
+			contentType = detectedMime
 		}
 	}
 
@@ -491,9 +592,8 @@ func (s *Services) UploadAsset(ctx context.Context, tenantID string, fileHeader 
 		if imgErr == nil {
 			dimensions = fmt.Sprintf("%dx%d px", cfg.Width, cfg.Height)
 		}
-		// Reset read pointer
-		if seeker, ok := file.(interface{ Seek(offset int64, whence int) (int64, error) }); ok {
-			_, _ = seeker.Seek(0, 0)
+		if seeker, ok := file.(io.Seeker); ok {
+			_, _ = seeker.Seek(0, io.SeekStart)
 		}
 	}
 
@@ -508,18 +608,21 @@ func (s *Services) UploadAsset(ctx context.Context, tenantID string, fileHeader 
 		fileSizeStr = fmt.Sprintf("%.1f MB", float64(sizeBytes)/(1024*1024))
 	}
 
-	var storageURL, s3Key string
+	// 4. Upload ke Bucket Dedicated MinIO S3 Tenant (1 Customer = 1 Dedicated Bucket)
+	var storageURL, s3Key, bucketName string
 	if s.S3 != nil {
-		storageURL, s3Key, err = s.S3.UploadFile(ctx, tenantID, fileHeader.Filename, file, sizeBytes, contentType)
+		storageURL, s3Key, bucketName, err = s.S3.UploadFile(ctx, tenantID, fileHeader.Filename, file, sizeBytes, contentType)
 		if err != nil {
-			return nil, fmt.Errorf("gagal mengunggah ke S3: %w", err)
+			return nil, fmt.Errorf("gagal mengunggah ke S3 tenant bucket: %w", err)
 		}
 	} else {
-		s3Key = fmt.Sprintf("tenants/%s/%d-%s", tenantID, time.Now().UnixNano(), fileHeader.Filename)
-		storageURL = fmt.Sprintf("http://localhost:9000/herocms-media/%s", s3Key)
+		bucketName = storage.GetTenantBucketName(tenantID)
+		s3Key = fmt.Sprintf("%d-%s", time.Now().UnixNano(), fileHeader.Filename)
+		storageURL = fmt.Sprintf("http://localhost:9000/%s/%s", bucketName, s3Key)
 	}
 
-	asset, err := s.Repo.CreateAsset(ctx, tenantID, fileHeader.Filename, fileType, contentType, dimensions, fileSizeStr, sizeBytes, storageURL, s3Key)
+	// 5. Simpan Metadata ke Database PostgreSQL dengan RLS
+	asset, err := s.Repo.CreateAsset(ctx, tenantID, fileHeader.Filename, fileType, contentType, dimensions, fileSizeStr, sizeBytes, storageURL, s3Key, bucketName)
 	if err != nil {
 		return nil, fmt.Errorf("gagal menyimpan metadata aset: %w", err)
 	}
@@ -541,7 +644,7 @@ func (s *Services) DeleteAsset(ctx context.Context, tenantID, assetID string) er
 	}
 
 	if s3Key != "" && s.S3 != nil {
-		_ = s.S3.DeleteFile(ctx, s3Key)
+		_ = s.S3.DeleteFile(ctx, tenantID, s3Key)
 	}
 
 	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:assets", tenantID))

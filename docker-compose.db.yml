@@ -47,7 +47,7 @@ services:
   # 3. MinIO S3 Object Storage (Media Assets, Templates & Backups)
   # ---------------------------------------------------------------------------
   minio:
-    image: quay.io/minio/minio:latest
+    image: cgr.dev/chainguard/minio:latest
     container_name: herocms_minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -59,11 +59,6 @@ services:
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-secret_minio_password}
     volumes:
       - minio_data:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
 volumes:
   postgres_data:

@@ -114,7 +114,7 @@ services:
   # 4. Service MinIO S3 Object Storage (Media Assets & Cloud CDN)
   # ---------------------------------------------------------------------------
   minio:
-    image: minio/minio:latest
+    image: cgr.dev/chainguard/minio:latest
     container_name: herocms_minio
     restart: unless-stopped
     command: server /data --console-address ":9001"

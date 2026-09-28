@@ -143,6 +143,24 @@ Dengan digunakannya cookie sesi browser, risiko serangan CSRF dicegah menggunaka
   - `Access-Control-Allow-Headers: Authorization, Content-Type, Accept, X-Requested-With, X-CSRF-Token, X-XSRF-Token`
   - `Access-Control-Expose-Headers: X-CSRF-Token`
 
+### 3.8 Keamanan Media Assets: Segregasi Dedicated S3 Bucket, Hard Quota 2 GB, Whitelist Format & Anti-Malware Sniffing
+Untuk menjamin platform kebal terhadap serangan file upload (*Remote Code Execution*, *Stored XSS*, dan *Denial of Service / Disk Flooding*):
+1. **Isolasi 1 Customer = 1 Dedicated S3 Bucket:**
+   - Setiap tenant memiliki bucket S3 terpisah di MinIO (nama: `tenant-<tenant_id_singkat>-media`).
+   - Mencegah kebocoran berkas antar penyewa (*zero cross-tenant data bleed*).
+   - Backend Go secara otomatis menginisialisasi bucket mandiri (*lazy auto-provisioning*) dan memasang scoped bucket policy saat tenant pertama kali aktif.
+2. **Penegakan Kuota Maksimal 2 GB (Hard Quota Enforcer):**
+   - Kuota default: **2.0 GB** (`2.147.483.648 bytes`) per akun customer.
+   - Pengecekan pre-flight di sisi server: jika `total_used_bytes + new_file_size > 2GB`, upload seketika ditolak dengan kode status **HTTP 413 Payload Too Large**.
+3. **Whitelist Ekstensi & MIME Type Ketat:**
+   - **Gambar:** `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.svg`, `.avif`.
+   - **Dokumen & Spreadsheet:** `.pdf`, `.csv`, `.xlsx`, `.xls`, `.docx`, `.doc`, `.txt`.
+   - **Tolak Keras Berkas Berbahaya:** `.exe`, `.sh`, `.bat`, `.php`, `.js`, `.html`, `.py`, `.phar` diblokir langsung.
+4. **Magic Bytes Content Sniffing:**
+   - Backend Go membaca 512 byte awal berkas menggunakan `http.DetectContentType` untuk mendeteksi penyamaran ekstensi (misal file biner executable atau shell script yang diberi nama ekstensi `.jpg` atau `.pdf`).
+5. **Sanitasi Nama Berkas (Anti Path-Traversal):**
+   - Menghilangkan karakter khusus dan `../`, mengganti spasi dengan `-`, dan menambahkan *timestamp nano* untuk menjamin keunikan objek S3.
+
 ---
 
 ## 4. Keamanan Edge, Domain Kustom & Otomatisasi SSL
