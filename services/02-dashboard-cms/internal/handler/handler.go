@@ -434,9 +434,11 @@ func (h *Handler) UploadAsset(c *gin.Context) {
 		return
 	}
 
+	currentAssets := h.Services.GetAssets(c.Request.Context(), tenantID)
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "File berhasil diunggah ke storage MinIO S3",
 		"asset":   asset,
+		"storage": currentAssets,
 	})
 }
 
@@ -454,9 +456,11 @@ func (h *Handler) DeleteAsset(c *gin.Context) {
 		return
 	}
 
+	currentAssets := h.Services.GetAssets(c.Request.Context(), tenantID)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Aset berhasil dihapus dari S3 dan database",
 		"id":      assetID,
+		"storage": currentAssets,
 	})
 }
 

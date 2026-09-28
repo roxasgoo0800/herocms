@@ -226,71 +226,7 @@ export const initialArticles: ContentArticle[] = [
   }
 ];
 
-export const initialMediaAssets: MediaAssetItem[] = [
-  {
-    id: 'med_1',
-    name: 'hero-banner-developer.webp',
-    size: '84 KB',
-    type: 'WEBP',
-    dimensions: '1920x1080',
-    uploadedAt: '18 Sep 2026',
-    url: 'https://cdn.cloudcms.app/assets/hero-banner.webp'
-  },
-  {
-    id: 'med_2',
-    name: 'laporan-keuangan-q3-2026.xlsx',
-    size: '245 KB',
-    type: 'XLSX',
-    dimensions: 'Spreadsheet (14 Kolom)',
-    uploadedAt: '17 Sep 2026',
-    url: 'https://cdn.cloudcms.app/assets/laporan-keuangan-q3-2026.xlsx'
-  },
-  {
-    id: 'med_3',
-    name: 'arsitektur-sistem-cloudcms.pdf',
-    size: '1.4 MB',
-    type: 'PDF',
-    dimensions: 'Dokumen PDF (18 Hal)',
-    uploadedAt: '16 Sep 2026',
-    url: 'https://cdn.cloudcms.app/assets/arsitektur-sistem-cloudcms.pdf'
-  },
-  {
-    id: 'med_4',
-    name: 'avatar-profile-rizal.jpg',
-    size: '42 KB',
-    type: 'JPEG',
-    dimensions: '800x800',
-    uploadedAt: '15 Sep 2026',
-    url: 'https://cdn.cloudcms.app/assets/avatar.jpg'
-  },
-  {
-    id: 'med_5',
-    name: 'sop-deployment-kontainer.docx',
-    size: '88 KB',
-    type: 'DOCX',
-    dimensions: 'Dokumen Word (6 Hal)',
-    uploadedAt: '14 Sep 2026',
-    url: 'https://cdn.cloudcms.app/assets/sop-deployment-kontainer.docx'
-  },
-  {
-    id: 'med_6',
-    name: 'traefik-architecture-diagram.png',
-    size: '156 KB',
-    type: 'PNG',
-    dimensions: '1440x900',
-    uploadedAt: '12 Sep 2026',
-    url: 'https://cdn.cloudcms.app/assets/diagram.png'
-  },
-  {
-    id: 'med_7',
-    name: 'brand-logo-white.svg',
-    size: '8 KB',
-    type: 'SVG',
-    dimensions: 'Vector',
-    uploadedAt: '10 Sep 2026',
-    url: 'https://cdn.cloudcms.app/assets/logo.svg'
-  }
-];
+export const initialMediaAssets: MediaAssetItem[] = [];
 
 export const initialWebhooks: WebhookItem[] = [
   {

@@ -36,7 +36,6 @@ const {
   mediaBucketName,
   mediaStorage,
   isUploadingMedia,
-  uploadMediaDemo,
   uploadMediaFiles,
   deleteMedia,
   copyToClipboard,
@@ -100,8 +99,6 @@ const handleDropUpload = (e: DragEvent) => {
   isDragging.value = false;
   if (e.dataTransfer && e.dataTransfer.files.length > 0) {
     uploadMediaFiles(e.dataTransfer.files);
-  } else {
-    uploadMediaDemo();
   }
 };
 
@@ -447,8 +444,9 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
         <UploadCloud :size="36" class="empty-icon" />
         <h4>Tidak ada berkas media ditemukan</h4>
         <p>Unggah berkas baru atau sesuaikan kata kunci pencarian Anda.</p>
-        <button class="btn-primary-ghost" @click="uploadMediaDemo">
-          Unggah Contoh Dokumen / Berkas
+        <button class="btn-primary-ghost" @click="triggerFileInput">
+          <UploadCloud :size="14" style="margin-right: 6px;" />
+          Pilih Berkas untuk Diunggah
         </button>
       </div>
     </div>

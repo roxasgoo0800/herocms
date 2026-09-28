@@ -140,6 +140,7 @@ export interface MediaAssetItem {
   id: string;
   name: string;
   size: string;
+  sizeBytes?: number;
   type: string;
   dimensions: string;
   uploadedAt: string;

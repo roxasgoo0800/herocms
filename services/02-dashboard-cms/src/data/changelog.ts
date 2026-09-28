@@ -2,11 +2,39 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.3.2',
+    releaseDate: '28 September 2026',
+    title: 'Transisi Data Aktual Media S3 & Penulisan Penggunaan Kuota Real-Time',
+    summary: 'Menghapus seluruh berkas contoh/demo statis dari basis data dan repositori, beralih penuh ke data aktual customer, serta menghadirkan kalkulasi dan penulisan metrik kapasitas penyimpanan S3 secara real-time pada setiap unggahan dan penghapusan berkas.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-132-1',
+        type: 'improvement',
+        scope: 'Pembersihan Data Contoh / Mock',
+        description: 'Menghapus seluruh entri mock media dari PostgreSQL, repository Go, dan inisialisasi frontend seeds. Mengarahkan modul Media Assets murni menampilkan berkas yang benar-benar diunggah oleh tenant.'
+      },
+      {
+        id: 'c-132-2',
+        type: 'feature',
+        scope: 'Real-Time Storage Usage Telemetry',
+        description: 'Menerapkan kalkulasi penggunaan kuota dinamis (recalculateStorage) di klien dan server: kapasitas S3 terpakai, kuota bebas (2.0 GB), persentase utilisasi, dan jumlah berkas langsung diperbarui saat berkas diunggah atau dihapus.'
+      },
+      {
+        id: 'c-132-3',
+        type: 'improvement',
+        scope: 'Cache & Hydration Synchronization',
+        description: 'Menyinkronkan status penyimpanan dan nama bucket ke dalam warmup bundle Redis serta cache lokal dashboard, mencegah keterlambatan pembacaan telemetri saat aplikasi dimuat ulang.'
+      }
+    ]
+  },
+  {
     version: 'v1.3.1',
     releaseDate: '28 September 2026',
     title: 'Desain Ulang Modal Media Inspector & Render Thumbnail Asli S3',
     summary: 'Merombak tampilan modal inspeksi berkas menjadi Media Inspector modern dengan hero visual viewport, render foto asli, grid telemetri 2x2, serta perapihan URL bar dengan tombol 1-klik salin dan buka tab baru.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
