@@ -64,6 +64,198 @@ export const blueprintWorkflowSteps = [
 
 export const officialTemplatesData: OfficialTemplateItem[] = [
   {
+    id: 'tpl_ecommerce_store',
+    title: 'Toko Online Modern & Katalog Penjualan Produk (E-Commerce)',
+    category: 'business',
+    tier: 'Included in Plan',
+    priceText: 'Gratis dalam Kuota',
+    isPro: false,
+    desc: 'Website toko online instan untuk jualan produk retail, fashion, kuliner, dan barang UMKM. Dilengkapi etalase produk dengan harga Rupiah, keranjang belanja interaktif, promo diskon, dan checkout langsung ke WhatsApp penjual.',
+    features: [
+      'Etalase Produk Lengkap & Tag Diskon Coret',
+      'Checkout Otomatis Direct WhatsApp Penjual',
+      'Keranjang Belanja Cepat & Estimasi Ongkir',
+      'Integrasi Pembayaran QRIS & Rekening Toko',
+      'Peringkat SEO Google Shopping & Mobile Responsif'
+    ],
+    accentColor: '#ea580c',
+    fontFamily: 'Plus Jakarta Sans',
+    defaultRole: 'Toko Online Resmi & Retail Store',
+    defaultBio: 'Pusat belanja produk original berkualitas dengan promo diskon harian, garansi resmi 100%, dan pengiriman cepat ke seluruh Indonesia.',
+    lighthouseScore: 100,
+    author: 'Hero Commerce Core',
+    rating: 4.99,
+    downloadsCount: 3820,
+    isFeatured: true,
+    layoutType: 'E-Commerce Store & WhatsApp Checkout',
+    tags: ['Toko Online', 'Jualan Produk', 'WhatsApp Checkout', 'E-Commerce UMKM', 'Diskon Promo'],
+    stats: {
+      ttfb: '1.2ms',
+      seo: '100%',
+      pwa: 'Aktif PWA'
+    },
+    themeConfig: {
+      fontFamily: 'Plus Jakarta Sans',
+      accentColor: '#ea580c',
+      borderRadius: 12,
+      bgMode: 'glass'
+    },
+    blocks: [
+      {
+        id: 'shop_nav',
+        type: 'navbar',
+        name: 'Header Toko Online',
+        title: 'HeroStore Official',
+        buttonText: 'Keranjang (3 Item)',
+        buttonUrl: '#cart',
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          bgMode: 'glass',
+          paddingY: 16,
+          accentColor: '#ea580c'
+        }
+      },
+      {
+        id: 'shop_hero',
+        type: 'hero',
+        name: 'Banner Promo & Jualan',
+        badge: '🔥 FLASH SALE SPESIAL HARI INI • DISKON S.D 60%',
+        title: 'Belanja Produk Favorit Anda dengan Harga Terbaik & Garansi Resmi',
+        subtitle: 'Koleksi lengkap barang berkualitas, jaminan produk original 100%, pengiriman cepat, dan kemudahan transaksi langsung via WhatsApp.',
+        buttonText: 'Beli Sekarang / Lihat Etalase',
+        buttonUrl: '#products',
+        secondaryButtonText: 'Chat WhatsApp Penjual',
+        secondaryButtonUrl: 'https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20ingin%20tanya%20produk%20promo%20HeroStore',
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          align: 'center',
+          paddingY: 54,
+          accentColor: '#ea580c'
+        }
+      },
+      {
+        id: 'shop_stats',
+        type: 'stats',
+        name: 'Jaminan & Kepercayaan Toko',
+        title: 'Komitmen Belanja Aman',
+        subtitle: 'Kepuasan dan keamanan transaksi ribuan pembeli adalah prioritas kami.',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          { id: 's1', title: '50.000+', desc: 'Pesanan Sukses Dikirim' },
+          { id: 's2', title: '100%', desc: 'Jaminan Originalitas' },
+          { id: 's3', title: '4.98 / 5.0', desc: 'Rating Pembeli Puas' },
+          { id: 's4', title: '< 5 Menit', desc: 'Respon CS WhatsApp' }
+        ],
+        styles: {
+          paddingY: 36,
+          bgMode: 'glass',
+          accentColor: '#ea580c'
+        }
+      },
+      {
+        id: 'shop_products',
+        type: 'card',
+        name: 'Etalase Produk Paling Laris',
+        badge: 'PRODUK BEST SELLER',
+        title: 'Etalase Produk Unggulan & Promo Terbatas',
+        subtitle: 'Pilih produk favorit Anda, klik beli, dan pesanan akan otomatis terhubung ke WhatsApp penjual.',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          {
+            id: 'prod1',
+            title: 'Wireless Noise-Cancelling Headphones Pro',
+            desc: 'Suara bass bertenaga, daya tahan baterai 45 jam, mikrofon ultra jernih untuk panggilan, dan ear cushion memory foam empuk.',
+            price: 'Rp 349.000 (Hemat 50%)',
+            tag: 'Diskon 50% • Best Seller'
+          },
+          {
+            id: 'prod2',
+            title: 'Smart Ergonomic Backpack Anti Air & USB Port',
+            desc: 'Material kain Oxford waterproof, kompartemen laptop 16 inci aman dengan busa tebal, dan slot botol minuman ergonomis.',
+            price: 'Rp 219.000 (Hemat 45%)',
+            tag: 'Flash Sale • Terlaris'
+          },
+          {
+            id: 'prod3',
+            title: 'Jam Tangan Pintar AMOLED Sport Edition IP68',
+            desc: 'Pelacak kebugaran 120+ mode olahraga, sensor detak jantung 24 jam, notifikasi WhatsApp masuk, dan baterai tahan 14 hari.',
+            price: 'Rp 489.000 (Hemat 40%)',
+            tag: 'Garansi 1 Thn • Gratis Ongkir'
+          }
+        ],
+        styles: {
+          paddingY: 48,
+          accentColor: '#ea580c'
+        }
+      },
+      {
+        id: 'shop_features',
+        type: 'features',
+        name: 'Keunggulan Belanja',
+        badge: 'KEUNGGULAN KAMI',
+        title: 'Kenapa Harus Belanja di Toko Kami?',
+        subtitle: 'Layanan purna jual terbaik untuk menjamin kenyamanan setiap transaksi Anda.',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          {
+            id: 'f1',
+            title: 'Gratis Ongkir Seluruh Indonesia',
+            desc: 'Nikmati subsidi bebas ongkos kirim ke seluruh kota dengan ekspedisi terpercaya.'
+          },
+          {
+            id: 'f2',
+            title: 'Garansi Retur & Uang Kembali 7 Hari',
+            desc: 'Barang tidak sesuai atau rusak saat pengiriman? Kami ganti baru tanpa ribet.'
+          },
+          {
+            id: 'f3',
+            title: 'Bisa Bayar di Tempat (COD) & QRIS',
+            desc: 'Pilihan metode pembayaran fleksibel: transfer bank, QRIS instan, atau bayar tunai saat kurir tiba.'
+          }
+        ],
+        styles: {
+          paddingY: 48,
+          accentColor: '#ea580c'
+        }
+      },
+      {
+        id: 'shop_cta',
+        type: 'cta',
+        name: 'Call to Action Jualan',
+        badge: 'ORDER CEPAT WHATSAPP',
+        title: 'Ingin Pesan Sekarang atau Tanya Ketersediaan Varian?',
+        subtitle: 'Admin kami yang ramah siap melayani pesanan Anda langsung via WhatsApp dengan respon super cepat.',
+        buttonText: 'Chat & Beli via WhatsApp',
+        buttonUrl: 'https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20mau%20order%20produk%20di%20HeroStore',
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          paddingY: 54,
+          bgMode: 'glass',
+          accentColor: '#ea580c'
+        }
+      },
+      {
+        id: 'shop_footer',
+        type: 'footer',
+        name: 'Footer Toko',
+        title: 'HeroStore Official Store',
+        content: '© 2026 PT Hero Niaga Retail. Pusat belanja online resmi dan terpercaya di Indonesia.',
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          paddingY: 28,
+          accentColor: '#ea580c'
+        }
+      }
+    ]
+  },
+  {
     id: 'tpl_portfolio_pro',
     title: 'Portofolio Teknis & Cloud Engineer',
     category: 'portfolio',

@@ -85,9 +85,15 @@ const handleDemoClick = (actionName: string) => {
 
         <nav v-if="device !== 'mobile'" class="sim-nav-links-row">
           <a href="javascript:void(0)" @click="handleDemoClick('Navigasi Beranda')">Beranda</a>
-          <a href="javascript:void(0)" @click="handleDemoClick('Navigasi Fitur')">Fitur</a>
-          <a href="javascript:void(0)" @click="handleDemoClick('Navigasi Portofolio')">Showcase</a>
-          <a href="javascript:void(0)" @click="handleDemoClick('Navigasi Kontak')">Kontak</a>
+          <a href="javascript:void(0)" @click="handleDemoClick('Navigasi Produk')">
+            {{ template.category === 'business' ? 'Katalog Produk' : 'Fitur' }}
+          </a>
+          <a href="javascript:void(0)" @click="handleDemoClick('Navigasi Promo')">
+            {{ template.category === 'business' ? 'Promo Diskon' : 'Showcase' }}
+          </a>
+          <a href="javascript:void(0)" @click="handleDemoClick('Navigasi Kontak')">
+            {{ template.category === 'business' ? 'WhatsApp Toko' : 'Kontak' }}
+          </a>
         </nav>
 
         <div class="sim-nav-actions">

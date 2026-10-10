@@ -78,8 +78,14 @@ export const changelogReleases: ChangelogRelease[] = [
       {
         id: 'c-141-12',
         type: 'improvement',
-        scope: 'Physical Gyroscope Rotation & OLED Reflow Choreography',
-        description: 'Mengganti animasi perubahan orientasi dasar (yang sebelumnya hanya meregangkan lebar/tinggi div seperti karet) dengan koreografi rotasi giroskopik fisik 3D otentik: sasis perangkat terangkat dengan inersia sudut tilt -8.5° dan bayangan mendalam, reflow tampilan layar dengan shutter micro-blur OLED (mencegah teks melompat-lompat selama transisi), serta settling pegas elastis yang grounded layaknya simulasi perangkat nyata.'
+        scope: 'Stable Hardware Frame Preservation & Fluid Device Dimension Morphing',
+        description: 'Memperbaiki sasis fisik perangkat agar bingkai HP dan tablet tidak pernah hilang atau berkedip saat orientasi diubah: menghilangkan keyframe 3D yang sebelumnya menimpa multi-ring box-shadow, memastikan bezel titanium dan rounded corners tetap kokoh utuh, serta menerapkan transisi dimensi hardware yang mulus berbasis kurva cubic-bezier(0.16, 1, 0.3, 1) layaknya simulator kelas industri.'
+      },
+      {
+        id: 'c-141-13',
+        type: 'feature',
+        scope: 'Flagship Commercial Selling Store Blueprint (E-Commerce Jualan Retail)',
+        description: 'Menetapkan blueprint Toko Online & Penjualan Produk Retail sebagai blueprint unggulan #1 (default) menggantikan portofolio personal: dilengkapi etalase produk dengan harga Rupiah, promo flash sale, keranjang belanja, tombol direct checkout WhatsApp, dan jaminan belanja aman untuk mendukung ekosistem website komersial yang berorientasi pada penjualan produk nyata.'
       }
     ]
   },

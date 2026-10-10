@@ -69,51 +69,21 @@ const splitTabletOrientation = ref<'portrait' | 'landscape'>('portrait');
 const mobileOrientation = ref<'portrait' | 'landscape'>('portrait');
 const splitMobileOrientation = ref<'portrait' | 'landscape'>('portrait');
 
-// Physical Gyroscope Rotation Animation State
-const isRotatingSimulator = ref(false);
-const simulatorRotationDir = ref<'to-landscape' | 'to-portrait'>('to-landscape');
-
+// Orientation State
 const handleSetMobileOrientation = (target: 'portrait' | 'landscape') => {
-  if (mobileOrientation.value === target) return;
-  simulatorRotationDir.value = target === 'landscape' ? 'to-landscape' : 'to-portrait';
-  isRotatingSimulator.value = true;
   mobileOrientation.value = target;
-  setTimeout(() => {
-    isRotatingSimulator.value = false;
-  }, 480);
 };
 
 const handleSetTabletOrientation = (target: 'portrait' | 'landscape') => {
-  if (tabletOrientation.value === target) return;
-  simulatorRotationDir.value = target === 'landscape' ? 'to-landscape' : 'to-portrait';
-  isRotatingSimulator.value = true;
   tabletOrientation.value = target;
-  setTimeout(() => {
-    isRotatingSimulator.value = false;
-  }, 480);
 };
 
-const isRotatingSplit = ref(false);
-const splitRotationDir = ref<'to-landscape' | 'to-portrait'>('to-landscape');
-
 const handleSetSplitMobileOrientation = (target: 'portrait' | 'landscape') => {
-  if (splitMobileOrientation.value === target) return;
-  splitRotationDir.value = target === 'landscape' ? 'to-landscape' : 'to-portrait';
-  isRotatingSplit.value = true;
   splitMobileOrientation.value = target;
-  setTimeout(() => {
-    isRotatingSplit.value = false;
-  }, 480);
 };
 
 const handleSetSplitTabletOrientation = (target: 'portrait' | 'landscape') => {
-  if (splitTabletOrientation.value === target) return;
-  splitRotationDir.value = target === 'landscape' ? 'to-landscape' : 'to-portrait';
-  isRotatingSplit.value = true;
   splitTabletOrientation.value = target;
-  setTimeout(() => {
-    isRotatingSplit.value = false;
-  }, 480);
 };
 
 const previewAccent = ref<string>('#2563eb');
@@ -695,9 +665,7 @@ const handleConfirmDeploy = async () => {
             v-if="splitDevice === 'mobile'"
             class="preview-browser-chassis device-mobile"
             :class="{
-              'orientation-landscape': splitMobileOrientation === 'landscape',
-              'device-anim-rotate-landscape': isRotatingSplit && splitRotationDir === 'to-landscape',
-              'device-anim-rotate-portrait': isRotatingSplit && splitRotationDir === 'to-portrait'
+              'orientation-landscape': splitMobileOrientation === 'landscape'
             }"
           >
             <!-- Left-edge Rotated Dynamic Island when in Landscape -->
@@ -732,7 +700,7 @@ const handleConfirmDeploy = async () => {
               </div>
             </div>
 
-            <div class="preview-chassis-content" :class="{ 'screen-display-reflow': isRotatingSplit }">
+            <div class="preview-chassis-content">
               <TemplateLiveRenderer
                 :template="selectedSplitTemplate"
                 :accent-color="selectedSplitTemplate.accentColor"
@@ -758,9 +726,7 @@ const handleConfirmDeploy = async () => {
             v-else-if="splitDevice === 'tablet'"
             class="preview-browser-chassis device-tablet"
             :class="{
-              'orientation-landscape': splitTabletOrientation === 'landscape',
-              'device-anim-rotate-landscape': isRotatingSplit && splitRotationDir === 'to-landscape',
-              'device-anim-rotate-portrait': isRotatingSplit && splitRotationDir === 'to-portrait'
+              'orientation-landscape': splitTabletOrientation === 'landscape'
             }"
           >
             <div class="tablet-bezel-camera">
@@ -785,7 +751,7 @@ const handleConfirmDeploy = async () => {
               </div>
             </div>
 
-            <div class="preview-chassis-content" :class="{ 'screen-display-reflow': isRotatingSplit }">
+            <div class="preview-chassis-content">
               <TemplateLiveRenderer
                 :template="selectedSplitTemplate"
                 :accent-color="selectedSplitTemplate.accentColor"
@@ -1093,15 +1059,12 @@ const handleConfirmDeploy = async () => {
             'device-' + previewDevice,
             {
               'framed-mode': isDesktopFramed && previewDevice === 'desktop',
-              'orientation-landscape': (previewDevice === 'tablet' && tabletOrientation === 'landscape') || (previewDevice === 'mobile' && mobileOrientation === 'landscape'),
-              'device-anim-rotate-landscape': isRotatingSimulator && simulatorRotationDir === 'to-landscape',
-              'device-anim-rotate-portrait': isRotatingSimulator && simulatorRotationDir === 'to-portrait'
+              'orientation-landscape': (previewDevice === 'tablet' && tabletOrientation === 'landscape') || (previewDevice === 'mobile' && mobileOrientation === 'landscape')
             }
           ]"
           :style="{
             transform: (previewDevice === 'desktop' && !isDesktopFramed && previewZoomScale === 1) ? 'none' : `scale(${previewZoomScale})`,
-            transformOrigin: 'top center',
-            transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.25s ease'
+            transformOrigin: 'top center'
           }"
         >
           <!-- 1. Real macOS Chrome Bar (for Desktop Only) -->
@@ -1196,7 +1159,6 @@ const handleConfirmDeploy = async () => {
           <!-- Dynamic Live Renderer Content (Inside Screen) -->
           <div
             class="preview-chassis-content"
-            :class="{ 'screen-display-reflow': isRotatingSimulator }"
             :style="{ opacity: isRefreshing ? 0.4 : 1, transition: 'opacity 0.2s ease' }"
           >
             <TemplateLiveRenderer
