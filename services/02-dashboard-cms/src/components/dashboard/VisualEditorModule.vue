@@ -408,8 +408,9 @@ const restoreDraftForActiveContainer = async (containerId: string) => {
     // 1. Coba ambil dari Redis Backend terlebih dahulu
     try {
       const res = await studioApi.getEditorDraft(containerId);
-      if (res?.data && res.data.blocks && Array.isArray(res.data.blocks)) {
-        draftData = res.data;
+      const serverDraft = res?.draft || res?.data;
+      if (serverDraft && serverDraft.blocks && Array.isArray(serverDraft.blocks)) {
+        draftData = serverDraft;
       }
     } catch (apiErr) {
       console.warn('[VisualEditor] Redis draft fetch fallback:', apiErr);
@@ -543,6 +544,21 @@ watch(
     }
   },
   { deep: true }
+);
+
+// Sync pageBlocks if activeContainer blocks were updated externally (e.g. from Template Catalog Apply)
+watch(
+  () => activeContainer.value?.themeConfig?.blocks,
+  (incomingBlocks) => {
+    if (incomingBlocks && Array.isArray(incomingBlocks) && incomingBlocks.length > 0) {
+      const curStr = JSON.stringify(pageBlocks.value);
+      const incStr = JSON.stringify(incomingBlocks);
+      if (curStr !== incStr) {
+        pageBlocks.value = JSON.parse(incStr);
+        selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
+      }
+    }
+  }
 );
 
 // Watch container metadata and editor viewport to persist last edit position

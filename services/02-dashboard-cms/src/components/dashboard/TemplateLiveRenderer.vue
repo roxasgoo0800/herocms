@@ -156,6 +156,39 @@ const handleDemoClick = (actionName: string) => {
             <span>{{ block.secondaryButtonText }}</span>
           </button>
         </div>
+
+        <!-- Interactive Cloud Showcase Terminal Mockup (for Portfolio Blueprint) -->
+        <div
+          v-if="template.category === 'portfolio' && device !== 'mobile'"
+          class="sim-terminal-strip"
+          :class="{ 'terminal-dark': isDarkMode }"
+        >
+          <div class="terminal-strip-top">
+            <div class="terminal-strip-dots">
+              <span class="d-red"></span>
+              <span class="d-yellow"></span>
+              <span class="d-green"></span>
+            </div>
+            <span class="terminal-strip-title">node-edge-cluster ~ zsh</span>
+            <span class="terminal-strip-badge">Traefik v3 HTTP/3</span>
+          </div>
+          <div class="terminal-strip-content">
+            <div class="t-line">
+              <span class="t-prefix">rizal@cloudcms:~$</span>
+              <span class="t-command">curl -s https://rizal.cloudcms.app/telemetry | jq '{status, engine, latency}'</span>
+            </div>
+            <div class="t-response">
+              <span class="t-bracket">{</span>
+              <div class="t-indent">
+                <div><span class="t-key">"status"</span>: <span class="t-green">"200_ACTIVE_RUNNING"</span>,</div>
+                <div><span class="t-key">"edge_router"</span>: <span class="t-cyan">"Traefik v3.1 TLS 1.3"</span>,</div>
+                <div><span class="t-key">"isolation"</span>: <span class="t-blue">"Docker Linux cgroups v2"</span>,</div>
+                <div><span class="t-key">"avg_ttfb"</span>: <span class="t-yellow">"1.2ms"</span></div>
+              </div>
+              <span class="t-bracket">}</span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- 3. STATS BLOCK -->

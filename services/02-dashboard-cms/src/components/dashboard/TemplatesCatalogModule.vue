@@ -23,7 +23,12 @@ import {
   Sun,
   Moon,
   Lock,
-  Wifi
+  Wifi,
+  ArrowDown,
+  ShieldCheck,
+  Check,
+  Globe,
+  FolderGit2
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import {
@@ -36,6 +41,8 @@ import TemplateLiveRenderer from './TemplateLiveRenderer.vue';
 
 const {
   officialTemplates,
+  containers,
+  userPlan,
   activeContainer,
   applyTemplateToActiveContainer,
   deployContainerFromTemplate
@@ -143,17 +150,35 @@ const featuredSpotlight = computed(() => {
 const isApplyModalOpen = ref(false);
 const templateToApply = ref<OfficialTemplateItem | null>(null);
 const applyJumpToEditor = ref(true);
+const applySelectedAccent = ref<string>('#2563eb');
 const isApplying = ref(false);
+
+const modalAccentPresets = [
+  '#2563eb', // Royal Blue
+  '#4f46e5', // Indigo
+  '#8b5cf6', // Violet
+  '#059669', // Emerald
+  '#d97706', // Amber
+  '#e11d48', // Rose
+  '#0284c7', // Cyan Sky
+  '#0f172a'  // Deep Slate
+];
 
 const openApplyModal = (tpl: OfficialTemplateItem) => {
   templateToApply.value = tpl;
+  applySelectedAccent.value = tpl.accentColor || '#2563eb';
+  applyJumpToEditor.value = true;
   isApplyModalOpen.value = true;
 };
 
 const handleConfirmApply = async () => {
   if (!templateToApply.value) return;
   isApplying.value = true;
-  const ok = await applyTemplateToActiveContainer(templateToApply.value.id, applyJumpToEditor.value);
+  const ok = await applyTemplateToActiveContainer(
+    templateToApply.value.id,
+    applyJumpToEditor.value,
+    applySelectedAccent.value
+  );
   isApplying.value = false;
   if (ok) {
     isApplyModalOpen.value = false;
@@ -817,123 +842,254 @@ const handleConfirmDeploy = async () => {
       </div>
     </div>
 
-    <!-- MODAL TERAPKAN KE SITUS AKTIF -->
+    <!-- MODAL TERAPKAN KE SITUS AKTIF (BESPOKE PIPELINE DESIGN) -->
     <div v-if="isApplyModalOpen && templateToApply" class="modal-backdrop">
-      <div class="modal-dialog" style="max-width: 520px;">
-        <div class="modal-header">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div class="stat-icon-wrapper" :style="{ background: `${templateToApply.accentColor}18`, color: templateToApply.accentColor }">
-              <Sliders :size="18" />
+      <div class="modal-dialog blueprint-config-dialog">
+        <!-- Header -->
+        <div class="modal-header-bespoke">
+          <div class="modal-header-info">
+            <div class="modal-glyph-box" :style="{ background: `${applySelectedAccent}18`, color: applySelectedAccent }">
+              <Sliders :size="20" />
             </div>
-            <div>
-              <h3 class="modal-title">Terapkan Blueprint Template</h3>
-              <p class="modal-subtitle">Perbarui desain situs kontainer yang sedang aktif</p>
+            <div class="modal-header-text">
+              <h3>Terapkan Blueprint Arsitektur</h3>
+              <p>Perbarui susunan blok dan tema desain pada kontainer aktif</p>
             </div>
           </div>
-          <button class="btn-modal-close" @click="isApplyModalOpen = false"><X :size="16" /></button>
+          <button class="btn-modal-close-bespoke" @click="isApplyModalOpen = false" title="Tutup">
+            <X :size="15" />
+          </button>
         </div>
 
-        <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px;">
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
-            <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 4px;">Template yang dipilih:</div>
-            <div style="font-size: 1rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-              <span>{{ templateToApply.title }}</span>
-              <span class="badge-status info">{{ templateToApply.category.toUpperCase() }}</span>
+        <div class="blueprint-modal-body">
+          <!-- 1. Pipeline Transfer Flow Diagram -->
+          <div class="pipeline-transfer-wrap">
+            <!-- Source Blueprint Card -->
+            <div class="blueprint-source-card" :style="{ borderLeft: `3px solid ${applySelectedAccent}` }">
+              <div class="pipeline-card-lead">
+                <span class="pipeline-card-role-label">Blueprint Sumber</span>
+                <span class="pipe-meta-pill" style="color: #2563eb; background: #eff6ff; border-color: #bfdbfe;">
+                  <Sparkles :size="10" /> {{ templateToApply.tier }}
+                </span>
+              </div>
+
+              <div class="blueprint-source-title-row">
+                <span class="blueprint-source-title">{{ templateToApply.title }}</span>
+                <span class="badge-status info" style="font-size: 0.65rem;">{{ templateToApply.category.toUpperCase() }}</span>
+              </div>
+
+              <p class="blueprint-source-desc">{{ templateToApply.desc }}</p>
+
+              <div class="blueprint-source-meta-pills">
+                <span class="pipe-meta-pill">
+                  <Zap :size="10" style="color: #10b981;" /> {{ templateToApply.lighthouseScore }}/100 SEO
+                </span>
+                <span class="pipe-meta-pill">
+                  ⚡ {{ templateToApply.stats?.ttfb || '1.2ms' }} Latensi
+                </span>
+                <span class="pipe-meta-pill">
+                  Aa {{ templateToApply.fontFamily }}
+                </span>
+                <span class="pipe-meta-pill">
+                  {{ templateToApply.blocks.length }} Blok Siap Pakai
+                </span>
+              </div>
             </div>
-            <p style="font-size: 0.8125rem; color: #64748b; margin: 6px 0 0;">
-              {{ templateToApply.desc }}
-            </p>
+
+            <!-- Connector Flow Node -->
+            <div class="pipeline-connector-node">
+              <span class="pipeline-connector-badge">
+                <ArrowDown :size="12" class="pipeline-arrow-pulse" />
+                <span>Menerapkan Struktur Blok & Styling Ke:</span>
+              </span>
+            </div>
+
+            <!-- Target Container Card -->
+            <div v-if="activeContainer" class="blueprint-target-card">
+              <div class="blueprint-target-header">
+                <span class="pipeline-card-role-label" style="color: #1e40af;">Kontainer Target</span>
+                <span class="target-badge-online">
+                  <span class="target-pulse-dot"></span>
+                  <span>Online / Siap Update</span>
+                </span>
+              </div>
+              <h4 class="target-container-name">{{ activeContainer.name }}</h4>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="target-subdomain-pill">https://{{ activeContainer.subdomain }}.cloudcms.app</span>
+                <span style="font-size: 0.72rem; color: #64748b;">(Port 80/443 Traefik)</span>
+              </div>
+            </div>
+            <div v-else class="modal-safety-banner" style="background: #fef2f2; border-color: #fecaca; color: #991b1b;">
+              <span>Peringatan: Belum ada situs kontainer yang dipilih. Silakan pilih kontainer aktif di menu Kontainer.</span>
+            </div>
           </div>
 
-          <div v-if="activeContainer" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px;">
-            <div style="font-size: 0.78rem; color: #1e40af; font-weight: 600; margin-bottom: 2px;">Situs Kontainer Target:</div>
-            <div style="font-size: 0.95rem; font-weight: 700; color: #1e3a8a;">{{ activeContainer.name }}</div>
-            <div style="font-size: 0.78rem; color: #3b82f6; font-family: monospace;">{{ activeContainer.subdomain }}</div>
-          </div>
-          <div v-else style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px; color: #991b1b; font-size: 0.85rem;">
-            Peringatan: Belum ada situs kontainer yang dipilih. Silakan pilih situs terlebih dahulu di menu Kontainer.
+          <!-- 2. Accent Color Palette Selector -->
+          <div class="modal-palette-group">
+            <div class="modal-palette-header">
+              <span class="modal-palette-label">
+                <Palette :size="13" /> Warna Aksen Identitas
+              </span>
+              <span class="modal-palette-hex">{{ applySelectedAccent }}</span>
+            </div>
+            <div class="modal-color-swatches-row">
+              <button
+                v-for="color in modalAccentPresets"
+                :key="color"
+                class="modal-swatch-dot"
+                :class="{ active: applySelectedAccent.toLowerCase() === color.toLowerCase() }"
+                :style="{ backgroundColor: color }"
+                @click="applySelectedAccent = color"
+                :title="'Pilih warna aksen: ' + color"
+              >
+                <Check v-if="applySelectedAccent.toLowerCase() === color.toLowerCase()" :size="13" class="swatch-check-glyph" />
+              </button>
+            </div>
           </div>
 
-          <label style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #334155; cursor: pointer;">
-            <input type="checkbox" v-model="applyJumpToEditor" style="width: 16px; height: 16px; accent-color: #2563eb;" />
-            <span>Langsung buka dan sunting di Visual Editor setelah template diterapkan</span>
-          </label>
+          <!-- 3. iOS Style Toggle Switch -->
+          <div class="modal-toggle-row" @click="applyJumpToEditor = !applyJumpToEditor">
+            <div class="toggle-text-wrap">
+              <span class="toggle-label-title">Buka di Visual Editor Studio</span>
+              <span class="toggle-label-desc">Otomatis beralih ke kanvas visual editor untuk langsung menyunting konten</span>
+            </div>
+            <div class="ios-switch" :class="{ active: applyJumpToEditor }">
+              <div class="ios-switch-thumb"></div>
+            </div>
+          </div>
+
+          <!-- 4. Safety Assurance Notice -->
+          <div class="modal-safety-banner">
+            <ShieldCheck :size="16" style="flex-shrink: 0; color: #059669;" />
+            <span><strong>Snapshot Aman:</strong> Cadangan kontainer dibuat otomatis. Anda selalu dapat membatalkan atau menyunting setiap blok kapan saja.</span>
+          </div>
         </div>
 
-        <div class="modal-footer">
-          <button class="btn-modal-ghost" @click="isApplyModalOpen = false" :disabled="isApplying">Batal</button>
+        <!-- Footer Actions -->
+        <div class="modal-footer-bespoke">
+          <button class="btn-modal-ghost-bespoke" @click="isApplyModalOpen = false" :disabled="isApplying">
+            Batal
+          </button>
           <button
-            class="btn-modal-confirm"
+            class="btn-modal-confirm-bespoke"
             :disabled="!activeContainer || isApplying"
             @click="handleConfirmApply"
           >
-            <span v-if="isApplying">Menerapkan...</span>
-            <span v-else>Terapkan Blueprint</span>
+            <RotateCw v-if="isApplying" :size="14" class="spin-animation" />
+            <Sparkles v-else :size="14" />
+            <span v-if="isApplying">Menerapkan Blueprint...</span>
+            <span v-else>Terapkan Blueprint Sekarang</span>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- MODAL DEPLOY BLUEPRINT BARU -->
+    <!-- MODAL DEPLOY BLUEPRINT BARU (BESPOKE ENTERPRISE DESIGN) -->
     <div v-if="isDeployModalOpen && templateToDeploy" class="modal-backdrop">
-      <div class="modal-dialog" style="max-width: 520px;">
-        <div class="modal-header">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div class="stat-icon-wrapper" style="background: rgba(37, 99, 235, 0.1); color: #2563eb;">
-              <Rocket :size="18" />
+      <div class="modal-dialog blueprint-config-dialog">
+        <!-- Header -->
+        <div class="modal-header-bespoke">
+          <div class="modal-header-info">
+            <div class="modal-glyph-box" style="background: rgba(37, 99, 235, 0.12); color: #2563eb;">
+              <Rocket :size="20" />
             </div>
-            <div>
-              <h3 class="modal-title">Deploy Blueprint Baru</h3>
-              <p class="modal-subtitle">Alokasikan kontainer baru dengan layout ini</p>
+            <div class="modal-header-text">
+              <h3>Deploy Blueprint Kontainer Baru</h3>
+              <p>Alokasikan kontainer mandiri terisolasi dengan cetak biru ini</p>
             </div>
           </div>
-          <button class="btn-modal-close" @click="isDeployModalOpen = false"><X :size="16" /></button>
+          <button class="btn-modal-close-bespoke" @click="isDeployModalOpen = false" title="Tutup">
+            <X :size="15" />
+          </button>
         </div>
 
-        <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px;">
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px;">
-            <div style="font-size: 0.75rem; color: #64748b;">Blueprint Basis:</div>
+        <div class="blueprint-modal-body">
+          <!-- Blueprint Summary Strip -->
+          <div class="blueprint-source-card" :style="{ borderLeft: `3px solid ${templateToDeploy.accentColor}` }">
+            <div class="pipeline-card-lead">
+              <span class="pipeline-card-role-label">Basis Arsitektur</span>
+              <span class="badge-status running" style="font-size: 0.65rem;">
+                <Zap :size="10" /> {{ templateToDeploy.lighthouseScore }}/100 Core Web Vitals
+              </span>
+            </div>
             <strong style="color: #0f172a; font-size: 0.95rem;">{{ templateToDeploy.title }}</strong>
+            <p class="blueprint-source-desc" style="margin-bottom: 0;">{{ templateToDeploy.desc }}</p>
           </div>
 
+          <!-- Quota Indicator Strip -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 0.78rem; color: #475569;">
+              Status Kuota Paket: <strong>{{ userPlan?.name || 'HeroPro' }}</strong>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="badge-status running" style="font-size: 0.7rem;">
+                {{ containers.length }} / {{ userPlan?.maxContainers || 3 }} Kontainer
+              </span>
+            </div>
+          </div>
+
+          <!-- Form Fields -->
           <div class="form-group-field">
-            <label class="form-label">Nama Situs Web <span style="color: #ef4444;">*</span></label>
+            <label class="form-label" style="display: flex; align-items: center; gap: 6px;">
+              <FolderGit2 :size="13" style="color: #2563eb;" />
+              <span>Nama Situs / Brand</span>
+              <span style="color: #ef4444;">*</span>
+            </label>
             <input
               v-model="deployForm.name"
               type="text"
               class="form-input"
-              placeholder="Contoh: Portal Media Baru"
+              placeholder="Contoh: Portofolio Senior Architect"
+              style="font-size: 0.875rem;"
             />
           </div>
 
           <div class="form-group-field">
-            <label class="form-label">Subdomain Cloud <span style="color: #ef4444;">*</span></label>
+            <label class="form-label" style="display: flex; align-items: center; gap: 6px;">
+              <Globe :size="13" style="color: #2563eb;" />
+              <span>Subdomain Edge Cloud Traefik</span>
+              <span style="color: #ef4444;">*</span>
+            </label>
             <div style="display: flex; align-items: center; gap: 6px;">
               <input
                 v-model="deployForm.subdomain"
                 type="text"
                 class="form-input"
-                placeholder="nama-situs"
+                placeholder="nama-proyek"
+                style="font-family: monospace; font-size: 0.85rem;"
               />
-              <span style="font-size: 0.82rem; color: #64748b; font-family: monospace; white-space: nowrap;">.cloudcms.app</span>
+              <span style="font-size: 0.82rem; color: #64748b; font-family: monospace; white-space: nowrap; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                .cloudcms.app
+              </span>
             </div>
           </div>
 
-          <label style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #334155; cursor: pointer;">
-            <input type="checkbox" v-model="deployForm.jumpToEditor" style="width: 16px; height: 16px; accent-color: #2563eb;" />
-            <span>Langsung buka di Visual Editor setelah kontainer aktif</span>
-          </label>
+          <!-- iOS Toggle Switch -->
+          <div class="modal-toggle-row" @click="deployForm.jumpToEditor = !deployForm.jumpToEditor">
+            <div class="toggle-text-wrap">
+              <span class="toggle-label-title">Buka di Visual Editor Setelah Terdeploy</span>
+              <span class="toggle-label-desc">Langsung arahkan ke kanvas studio untuk menyunting teks dan susunan komponen</span>
+            </div>
+            <div class="ios-switch" :class="{ active: deployForm.jumpToEditor }">
+              <div class="ios-switch-thumb"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="modal-footer">
-          <button class="btn-modal-ghost" @click="isDeployModalOpen = false" :disabled="isDeploying">Batal</button>
+        <!-- Footer -->
+        <div class="modal-footer-bespoke">
+          <button class="btn-modal-ghost-bespoke" @click="isDeployModalOpen = false" :disabled="isDeploying">
+            Batal
+          </button>
           <button
-            class="btn-modal-confirm"
+            class="btn-modal-confirm-bespoke"
             :disabled="!deployForm.name.trim() || !deployForm.subdomain.trim() || isDeploying"
             @click="handleConfirmDeploy"
           >
-            <span v-if="isDeploying">Memulai Provisioning...</span>
-            <span v-else>Mulai Alokasi Kontainer</span>
+            <RotateCw v-if="isDeploying" :size="14" class="spin-animation" />
+            <Rocket v-else :size="14" />
+            <span v-if="isDeploying">Memulai Provisioning Kontainer...</span>
+            <span v-else>Mulai Alokasi & Deploy</span>
           </button>
         </div>
       </div>

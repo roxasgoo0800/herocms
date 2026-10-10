@@ -372,7 +372,7 @@ const copyToClipboard = (text: string, id: string) => {
 // Official Templates & Blueprint Engine State
 const officialTemplates = ref<OfficialTemplateItem[]>([...defaultOfficialTemplates]);
 
-const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: boolean = false): Promise<boolean> => {
+const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: boolean = false, customAccentColor?: string): Promise<boolean> => {
   const tpl = officialTemplates.value.find(t => t.id === templateId);
   if (!tpl) {
     showToast('Blueprint template tidak ditemukan.', 'error');
@@ -385,11 +385,12 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
 
   try {
     const targetId = activeContainer.value.id;
-    const clonedBlocks = JSON.parse(JSON.stringify(tpl.blocks));
+    const chosenAccent = customAccentColor || tpl.accentColor;
+    const clonedBlocks = JSON.parse(JSON.stringify(tpl.blocks || []));
 
     // Sinkronkan state kontainer aktif
     activeContainer.value.templateName = tpl.title;
-    activeContainer.value.accentColor = tpl.accentColor;
+    activeContainer.value.accentColor = chosenAccent;
     activeContainer.value.roleOrHeadline = tpl.defaultRole;
     activeContainer.value.bioIntro = tpl.defaultBio;
     activeContainer.value.lastDeployed = 'Baru saja (Template diterapkan)';
@@ -399,31 +400,40 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
     activeContainer.value.themeConfig = {
       ...activeContainer.value.themeConfig,
       ...tpl.themeConfig,
+      accentColor: chosenAccent,
       blocks: clonedBlocks
+    };
+
+    // Payload draft lengkap untuk Visual Editor Studio
+    const editorDraftPayload = {
+      blocks: clonedBlocks,
+      roleOrHeadline: tpl.defaultRole,
+      bioIntro: tpl.defaultBio,
+      accentColor: chosenAccent,
+      fontFamily: tpl.fontFamily,
+      selectedBlockId: clonedBlocks[1]?.id || clonedBlocks[0]?.id || null,
+      zoom: 100,
+      currentDevice: 'desktop',
+      updatedAt: new Date().toISOString(),
+      timestamp: Date.now()
     };
 
     // Cache lokal untuk reaktivitas instan Visual Editor
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(`cloudcms_draft_${targetId}`, JSON.stringify({
-        blocks: clonedBlocks,
-        accentColor: tpl.accentColor,
-        fontFamily: tpl.fontFamily,
-        timestamp: Date.now()
-      }));
+      localStorage.setItem(`herocms_editor_draft_${targetId}`, JSON.stringify(editorDraftPayload));
+      localStorage.setItem(`cloudcms_draft_${targetId}`, JSON.stringify(editorDraftPayload));
     }
 
     // Persist ke database backend
     await studioApi.saveSiteDesign(targetId, {
       roleOrHeadline: tpl.defaultRole,
       bioIntro: tpl.defaultBio,
-      accentColor: tpl.accentColor,
+      accentColor: chosenAccent,
       themeConfig: activeContainer.value.themeConfig
     }).catch(err => console.warn('[API] saveSiteDesign warning:', err));
 
-    await studioApi.saveEditorDraft(targetId, {
-      blocks: clonedBlocks,
-      timestamp: Date.now()
-    }).catch(err => console.warn('[API] saveEditorDraft warning:', err));
+    await studioApi.saveEditorDraft(targetId, editorDraftPayload)
+      .catch(err => console.warn('[API] saveEditorDraft warning:', err));
 
     showToast(`Blueprint '${tpl.title}' berhasil diterapkan ke '${activeContainer.value.name}'!`, 'success');
 
@@ -474,12 +484,20 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
   activeContainerId.value = newId;
 
   if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(`cloudcms_draft_${newId}`, JSON.stringify({
+    const editorDraftPayload = {
       blocks: clonedBlocks,
+      roleOrHeadline: newContainerObj.roleOrHeadline,
+      bioIntro: newContainerObj.bioIntro,
       accentColor: newContainerObj.accentColor,
       fontFamily: tpl?.fontFamily || 'Inter',
+      selectedBlockId: clonedBlocks[1]?.id || clonedBlocks[0]?.id || null,
+      zoom: 100,
+      currentDevice: 'desktop',
+      updatedAt: new Date().toISOString(),
       timestamp: Date.now()
-    }));
+    };
+    localStorage.setItem(`herocms_editor_draft_${newId}`, JSON.stringify(editorDraftPayload));
+    localStorage.setItem(`cloudcms_draft_${newId}`, JSON.stringify(editorDraftPayload));
   }
 
   showToast(`Mengalokasikan kontainer baru dengan blueprint '${tpl?.title || 'Default'}'...`, 'info');
