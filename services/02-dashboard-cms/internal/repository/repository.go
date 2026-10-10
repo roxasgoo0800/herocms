@@ -156,6 +156,7 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		file_size_bytes BIGINT NOT NULL DEFAULT 0,
 		storage_url VARCHAR(512) NOT NULL,
 		s3_key VARCHAR(512) NOT NULL,
+		bucket_name VARCHAR(128) NOT NULL DEFAULT '',
 		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	);
 
@@ -222,6 +223,7 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 	);
 
 	ALTER TABLE media_assets ALTER COLUMN mime_type TYPE VARCHAR(255);
+	ALTER TABLE media_assets ADD COLUMN IF NOT EXISTS bucket_name VARCHAR(128) NOT NULL DEFAULT '';
 	`
 
 	if _, err := r.DB.Exec(schemaSQL); err != nil {
