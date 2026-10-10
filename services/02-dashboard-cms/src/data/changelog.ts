@@ -50,6 +50,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'feature',
         scope: 'Tablet Orientation Switcher (Portret 768px vs Lanskap 1024px)',
         description: 'Menambahkan fitur rotasi orientasi tablet (Portret 768px dan Lanskap 1024px) baik pada Simulator Layar Penuh maupun Split Studio Preview dengan animasi transisi sasis yang mulus, tombol pengalih di toolbar atas, serta adaptasi rendering responsif secara langsung.'
+      },
+      {
+        id: 'c-141-8',
+        type: 'feature',
+        scope: 'Mobile Landscape Orientation Switcher (Portret 390px vs Lanskap 844px)',
+        description: 'Menambahkan opsi rotasi orientasi smartphone (Portret 390px dan Lanskap 844px) dengan bezel fisik elegan, Dynamic Island presisi, indikator gestur bar bawah, transisi sasis mulus, dan adaptasi tata letak konten responsif.'
       }
     ]
   },

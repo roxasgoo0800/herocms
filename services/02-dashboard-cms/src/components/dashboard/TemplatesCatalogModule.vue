@@ -66,6 +66,8 @@ const previewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
 const isDesktopFramed = ref(false); // false = Layar Penuh 100% edge-to-edge
 const tabletOrientation = ref<'portrait' | 'landscape'>('portrait');
 const splitTabletOrientation = ref<'portrait' | 'landscape'>('portrait');
+const mobileOrientation = ref<'portrait' | 'landscape'>('portrait');
+const splitMobileOrientation = ref<'portrait' | 'landscape'>('portrait');
 const previewAccent = ref<string>('#2563eb');
 const isPreviewDarkMode = ref(false);
 const previewZoomScale = ref<number>(1);
@@ -595,6 +597,29 @@ const handleConfirmDeploy = async () => {
               </button>
             </div>
 
+            <!-- Split Mobile Orientation Toggle -->
+            <div v-if="splitDevice === 'mobile'" class="preview-device-switchers" style="padding: 2px;">
+              <button
+                class="btn-device-pill"
+                :class="{ active: splitMobileOrientation === 'portrait' }"
+                style="padding: 3px 6px; font-size: 0.68rem;"
+                title="Smartphone Portret (390px)"
+                @click="splitMobileOrientation = 'portrait'"
+              >
+                <span>390px</span>
+              </button>
+              <button
+                class="btn-device-pill"
+                :class="{ active: splitMobileOrientation === 'landscape' }"
+                style="padding: 3px 6px; font-size: 0.68rem;"
+                title="Smartphone Lanskap / Rotasi (844px)"
+                @click="splitMobileOrientation = 'landscape'"
+              >
+                <RotateCw :size="10" />
+                <span>844px</span>
+              </button>
+            </div>
+
             <button class="btn-preview-action-apply" style="padding: 5px 10px; font-size: 0.75rem;" @click="openApplyModal(selectedSplitTemplate)">
               Terapkan
             </button>
@@ -607,7 +632,11 @@ const handleConfirmDeploy = async () => {
         <div
           class="split-preview-scroll-viewport"
           :style="{
-            maxWidth: splitDevice === 'mobile' ? '390px' : splitDevice === 'tablet' ? (splitTabletOrientation === 'landscape' ? '1024px' : '768px') : '100%',
+            maxWidth: splitDevice === 'mobile'
+              ? (splitMobileOrientation === 'landscape' ? '844px' : '390px')
+              : splitDevice === 'tablet'
+                ? (splitTabletOrientation === 'landscape' ? '1024px' : '768px')
+                : '100%',
             margin: '0 auto',
             transition: 'max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
           }"
@@ -615,7 +644,7 @@ const handleConfirmDeploy = async () => {
           <TemplateLiveRenderer
             :template="selectedSplitTemplate"
             :accent-color="selectedSplitTemplate.accentColor"
-            :device="splitDevice === 'tablet' && splitTabletOrientation === 'landscape' ? 'desktop' : splitDevice"
+            :device="splitDevice === 'tablet' && splitTabletOrientation === 'landscape' ? 'desktop' : (splitDevice === 'mobile' && splitMobileOrientation === 'landscape' ? 'tablet' : splitDevice)"
           />
         </div>
       </div>
@@ -777,6 +806,30 @@ const handleConfirmDeploy = async () => {
             </button>
           </div>
 
+          <!-- Mobile Orientation Toggle (Portrait 390px vs Landscape 844px) -->
+          <div v-if="previewDevice === 'mobile'" class="preview-device-switchers" style="padding: 2px;">
+            <button
+              class="btn-device-pill"
+              :class="{ active: mobileOrientation === 'portrait' }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Smartphone Portret (390px)"
+              @click="mobileOrientation = 'portrait'"
+            >
+              <Smartphone :size="12" />
+              <span>Portret (390px)</span>
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: mobileOrientation === 'landscape' }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Smartphone Lanskap / Rotasi (844px)"
+              @click="mobileOrientation = 'landscape'"
+            >
+              <RotateCw :size="12" />
+              <span>Lanskap (844px)</span>
+            </button>
+          </div>
+
           <!-- Color Accent Picker -->
           <div class="preview-color-selector">
             <Palette :size="14" style="color: #94a3b8; margin-right: 2px;" />
@@ -878,7 +931,7 @@ const handleConfirmDeploy = async () => {
             'device-' + previewDevice,
             {
               'framed-mode': isDesktopFramed && previewDevice === 'desktop',
-              'orientation-landscape': previewDevice === 'tablet' && tabletOrientation === 'landscape'
+              'orientation-landscape': (previewDevice === 'tablet' && tabletOrientation === 'landscape') || (previewDevice === 'mobile' && mobileOrientation === 'landscape')
             }
           ]"
           :style="{
@@ -927,7 +980,7 @@ const handleConfirmDeploy = async () => {
               :template="activePreviewTemplate"
               :accent-color="previewAccent"
               :is-dark-mode="isPreviewDarkMode"
-              :device="previewDevice === 'tablet' && tabletOrientation === 'landscape' ? 'desktop' : previewDevice"
+              :device="previewDevice === 'tablet' && tabletOrientation === 'landscape' ? 'desktop' : (previewDevice === 'mobile' && mobileOrientation === 'landscape' ? 'tablet' : previewDevice)"
             />
           </div>
 

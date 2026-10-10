@@ -10859,6 +10859,11 @@ html {
 
 .preview-browser-chassis.device-mobile {
   max-width: 390px;
+  transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s ease;
+}
+
+.preview-browser-chassis.device-mobile.orientation-landscape {
+  max-width: 844px;
 }
 
 .preview-chassis-chrome {
