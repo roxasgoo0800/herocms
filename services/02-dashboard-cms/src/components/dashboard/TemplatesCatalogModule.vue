@@ -64,6 +64,8 @@ const isPreviewOpen = ref(false);
 const activePreviewTemplate = ref<OfficialTemplateItem | null>(null);
 const previewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
 const isDesktopFramed = ref(false); // false = Layar Penuh 100% edge-to-edge
+const tabletOrientation = ref<'portrait' | 'landscape'>('portrait');
+const splitTabletOrientation = ref<'portrait' | 'landscape'>('portrait');
 const previewAccent = ref<string>('#2563eb');
 const isPreviewDarkMode = ref(false);
 const previewZoomScale = ref<number>(1);
@@ -559,16 +561,40 @@ const handleConfirmDeploy = async () => {
 
           <div style="display: flex; align-items: center; gap: 8px;">
             <div class="preview-device-switchers">
-              <button class="btn-device-pill" :class="{ active: splitDevice === 'desktop' }" @click="splitDevice = 'desktop'">
+              <button class="btn-device-pill" :class="{ active: splitDevice === 'desktop' }" @click="splitDevice = 'desktop'" title="Desktop">
                 <Monitor :size="12" />
               </button>
-              <button class="btn-device-pill" :class="{ active: splitDevice === 'tablet' }" @click="splitDevice = 'tablet'">
+              <button class="btn-device-pill" :class="{ active: splitDevice === 'tablet' }" @click="splitDevice = 'tablet'" title="Tablet">
                 <Tablet :size="12" />
               </button>
-              <button class="btn-device-pill" :class="{ active: splitDevice === 'mobile' }" @click="splitDevice = 'mobile'">
+              <button class="btn-device-pill" :class="{ active: splitDevice === 'mobile' }" @click="splitDevice = 'mobile'" title="Mobile">
                 <Smartphone :size="12" />
               </button>
             </div>
+
+            <!-- Split Tablet Orientation Toggle -->
+            <div v-if="splitDevice === 'tablet'" class="preview-device-switchers" style="padding: 2px;">
+              <button
+                class="btn-device-pill"
+                :class="{ active: splitTabletOrientation === 'portrait' }"
+                style="padding: 3px 6px; font-size: 0.68rem;"
+                title="Tablet Portret (768px)"
+                @click="splitTabletOrientation = 'portrait'"
+              >
+                <span>768px</span>
+              </button>
+              <button
+                class="btn-device-pill"
+                :class="{ active: splitTabletOrientation === 'landscape' }"
+                style="padding: 3px 6px; font-size: 0.68rem;"
+                title="Tablet Lanskap / Rotasi (1024px)"
+                @click="splitTabletOrientation = 'landscape'"
+              >
+                <RotateCw :size="10" />
+                <span>1024px</span>
+              </button>
+            </div>
+
             <button class="btn-preview-action-apply" style="padding: 5px 10px; font-size: 0.75rem;" @click="openApplyModal(selectedSplitTemplate)">
               Terapkan
             </button>
@@ -578,11 +604,18 @@ const handleConfirmDeploy = async () => {
           </div>
         </div>
 
-        <div class="split-preview-scroll-viewport" :style="{ maxWidth: splitDevice === 'mobile' ? '390px' : splitDevice === 'tablet' ? '768px' : '100%', margin: '0 auto' }">
+        <div
+          class="split-preview-scroll-viewport"
+          :style="{
+            maxWidth: splitDevice === 'mobile' ? '390px' : splitDevice === 'tablet' ? (splitTabletOrientation === 'landscape' ? '1024px' : '768px') : '100%',
+            margin: '0 auto',
+            transition: 'max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          }"
+        >
           <TemplateLiveRenderer
             :template="selectedSplitTemplate"
             :accent-color="selectedSplitTemplate.accentColor"
-            :device="splitDevice"
+            :device="splitDevice === 'tablet' && splitTabletOrientation === 'landscape' ? 'desktop' : splitDevice"
           />
         </div>
       </div>
@@ -720,6 +753,30 @@ const handleConfirmDeploy = async () => {
             </button>
           </div>
 
+          <!-- Tablet Orientation Toggle (Portrait 768px vs Landscape 1024px) -->
+          <div v-if="previewDevice === 'tablet'" class="preview-device-switchers" style="padding: 2px;">
+            <button
+              class="btn-device-pill"
+              :class="{ active: tabletOrientation === 'portrait' }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Tablet Portret (768px)"
+              @click="tabletOrientation = 'portrait'"
+            >
+              <Tablet :size="12" />
+              <span>Portret (768px)</span>
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: tabletOrientation === 'landscape' }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Tablet Lanskap / Rotasi (1024px)"
+              @click="tabletOrientation = 'landscape'"
+            >
+              <RotateCw :size="12" />
+              <span>Lanskap (1024px)</span>
+            </button>
+          </div>
+
           <!-- Color Accent Picker -->
           <div class="preview-color-selector">
             <Palette :size="14" style="color: #94a3b8; margin-right: 2px;" />
@@ -819,7 +876,10 @@ const handleConfirmDeploy = async () => {
           class="preview-browser-chassis"
           :class="[
             'device-' + previewDevice,
-            { 'framed-mode': isDesktopFramed && previewDevice === 'desktop' }
+            {
+              'framed-mode': isDesktopFramed && previewDevice === 'desktop',
+              'orientation-landscape': previewDevice === 'tablet' && tabletOrientation === 'landscape'
+            }
           ]"
           :style="{
             transform: (previewDevice === 'desktop' && !isDesktopFramed && previewZoomScale === 1) ? 'none' : `scale(${previewZoomScale})`,
@@ -867,7 +927,7 @@ const handleConfirmDeploy = async () => {
               :template="activePreviewTemplate"
               :accent-color="previewAccent"
               :is-dark-mode="isPreviewDarkMode"
-              :device="previewDevice"
+              :device="previewDevice === 'tablet' && tabletOrientation === 'landscape' ? 'desktop' : previewDevice"
             />
           </div>
 

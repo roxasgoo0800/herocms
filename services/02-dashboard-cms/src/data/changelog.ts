@@ -44,6 +44,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'feature',
         scope: 'Desktop Simulator Fullscreen Edge-to-Edge',
         description: 'Menjadikan pratinjau versi desktop tampil dalam mode Layar Penuh 100% (Edge-to-Edge Fullscreen) secara default tanpa ruang hitam kosong di kiri-kanan, serta menyediakan tombol pengalih mode Layar Penuh vs Bingkai Jendela (1200px) di toolbar simulator.'
+      },
+      {
+        id: 'c-141-7',
+        type: 'feature',
+        scope: 'Tablet Orientation Switcher (Portret 768px vs Lanskap 1024px)',
+        description: 'Menambahkan fitur rotasi orientasi tablet (Portret 768px dan Lanskap 1024px) baik pada Simulator Layar Penuh maupun Split Studio Preview dengan animasi transisi sasis yang mulus, tombol pengalih di toolbar atas, serta adaptasi rendering responsif secara langsung.'
       }
     ]
   },
