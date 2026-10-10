@@ -15,10 +15,19 @@ import {
   Tablet,
   Smartphone,
   ShieldCheck,
-  Palette
+  Palette,
+  Star,
+  Grid,
+  Columns,
+  Wand2
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
-import type { OfficialTemplateItem } from '../../data/templates-data';
+import {
+  officialTemplatesData,
+  marketplacePulseMetrics,
+  blueprintWorkflowSteps,
+  type OfficialTemplateItem
+} from '../../data/templates-data';
 
 const {
   officialTemplates,
@@ -30,6 +39,9 @@ const {
 const selectedCategory = ref<'all' | 'portfolio' | 'blog' | 'education' | 'business'>('all');
 const searchTemplate = ref('');
 const searchInputRef = ref<HTMLInputElement | null>(null);
+const viewMode = ref<'grid' | 'split'>('grid');
+const selectedSplitTemplate = ref<OfficialTemplateItem>(officialTemplatesData[0]);
+const splitDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
 
 // Shortcut ⌘K / Ctrl+K
 const handleGlobalKeydown = (e: KeyboardEvent) => {
@@ -60,6 +72,8 @@ const filteredTemplates = computed(() => {
     const cat = (tpl.category || '').toLowerCase();
     const id = (tpl.id || '').toLowerCase();
     const tier = (tpl.tier || '').toLowerCase();
+    const author = (tpl.author || '').toLowerCase();
+    const tags = Array.isArray(tpl.tags) ? tpl.tags.join(' ').toLowerCase() : '';
     const matchFeatures = Array.isArray(tpl.features) && tpl.features.some((f: string) => f.toLowerCase().includes(q));
 
     const matchesSearch = !q ||
@@ -68,6 +82,8 @@ const filteredTemplates = computed(() => {
       cat.includes(q) ||
       id.includes(q) ||
       tier.includes(q) ||
+      author.includes(q) ||
+      tags.includes(q) ||
       matchFeatures;
 
     if (!matchesSearch) return false;
@@ -76,8 +92,12 @@ const filteredTemplates = computed(() => {
   });
 });
 
+const featuredSpotlight = computed(() => {
+  return officialTemplates.value.find(t => t.isFeatured) || officialTemplates.value[0];
+});
+
 // -----------------------------------------------------------------------------
-// Interactive Preview Simulator State
+// Interactive Fullscreen Preview Simulator State
 // -----------------------------------------------------------------------------
 const isPreviewOpen = ref(false);
 const activePreviewTemplate = ref<OfficialTemplateItem | null>(null);
@@ -163,11 +183,11 @@ const handleConfirmDeploy = async () => {
 
 <template>
   <section class="fade-in-section">
-    <!-- Header Intro -->
+    <!-- Header Intro & Breadcrumb -->
     <div class="page-intro-row">
       <div>
-        <h1 class="page-title">Katalog Template Resmi & Blueprint Store</h1>
-        <p class="page-desc">Blueprint arsitektur web modern yang 100% siap pakai. Pratinjau interaktif, terapkan ke situs aktif, atau deploy kontainer mandiri dalam hitungan detik.</p>
+        <h1 class="page-title">Katalog Template & Blueprint Architecture Store</h1>
+        <p class="page-desc">Ekosistem arsitektur web modern siap pakai dengan integrasi Traefik v3, audit SEO 100/100, dan kesiapan deploy kontainer mandiri dalam hitungan detik.</p>
       </div>
       <div class="quota-quick-pills">
         <span class="pill-metric">Engine: <strong>Vue 3 + Visual Blocks</strong></span>
@@ -175,15 +195,95 @@ const handleConfirmDeploy = async () => {
       </div>
     </div>
 
-    <!-- Marketplace Filter & Search Toolbar -->
-    <div class="filter-toolbar" style="margin-bottom: 24px;">
+    <!-- 1. FEATURED SPOTLIGHT HERO BANNER -->
+    <div v-if="featuredSpotlight" class="blueprint-spotlight-hero">
+      <div class="spotlight-left-content">
+        <div class="spotlight-badge-row">
+          <span class="spotlight-badge-featured">
+            <Sparkles :size="12" /> Blueprint Pilihan Editor
+          </span>
+          <span class="spotlight-badge-rating">
+            <Star :size="11" fill="#fbbf24" stroke="none" /> {{ featuredSpotlight.rating || 4.98 }} ({{ featuredSpotlight.downloadsCount || 1420 }} deploy)
+          </span>
+          <span class="badge-status running" style="font-size: 0.7rem; padding: 2px 8px;">
+            <Zap :size="11" /> {{ featuredSpotlight.lighthouseScore }}/100 Lighthouse
+          </span>
+        </div>
+
+        <h2 class="spotlight-title">{{ featuredSpotlight.title }}</h2>
+        <p class="spotlight-desc">{{ featuredSpotlight.desc }}</p>
+
+        <div class="spotlight-spec-strip">
+          <span class="spotlight-spec-item">Arsitek: <strong>{{ featuredSpotlight.author || 'Hero Core Studio' }}</strong></span>
+          <span>•</span>
+          <span class="spotlight-spec-item">Latensi: <strong>{{ featuredSpotlight.stats?.ttfb || '1.2ms' }}</strong></span>
+          <span>•</span>
+          <span class="spotlight-spec-item">Tata Letak: <strong>{{ featuredSpotlight.layoutType || 'Single Page Pro' }}</strong></span>
+        </div>
+
+        <div class="spotlight-actions-row">
+          <button class="btn-preview-action-deploy" @click="openPreviewModal(featuredSpotlight)">
+            <Eye :size="14" />
+            <span>Pratinjau Interaktif</span>
+          </button>
+          <button class="btn-preview-action-apply" @click="openApplyModal(featuredSpotlight)">
+            <Sliders :size="14" />
+            <span>Terapkan ke Situs Ini</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Spotlight Right Realistic Mini Showcase -->
+      <div class="spotlight-right-preview">
+        <div class="spotlight-chassis-mockup">
+          <div class="spotlight-mockup-header">
+            <div class="preview-chrome-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span style="font-family: monospace; font-size: 0.68rem; color: #94a3b8;">
+              {{ featuredSpotlight.category }}.cloudcms.app
+            </span>
+          </div>
+          <div class="spotlight-mockup-body">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+              <strong style="color: #ffffff; font-size: 0.82rem;">{{ featuredSpotlight.title.split('&')[0] }}</strong>
+              <span class="badge-status running" style="font-size: 0.62rem;">Edge Ready</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 0.72rem; color: #94a3b8;">Headline:</span>
+              <p style="font-size: 0.78rem; color: #e2e8f0; margin: 0; line-height: 1.35;">{{ featuredSpotlight.defaultRole }}</p>
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 4px;">
+              <span v-for="(t, tIdx) in (featuredSpotlight.tags || []).slice(0, 3)" :key="tIdx" class="m-pill blue" style="font-size: 0.62rem;">
+                {{ t }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MARKETPLACE PULSE TELEMETRY GRID -->
+    <div class="blueprint-pulse-grid">
+      <div v-for="pulse in marketplacePulseMetrics" :key="pulse.id" class="pulse-card">
+        <div class="pulse-info-group">
+          <span class="pulse-label">{{ pulse.label }}</span>
+          <span class="pulse-value">{{ pulse.value }}</span>
+          <span class="pulse-sub">{{ pulse.sub }}</span>
+        </div>
+        <span class="pulse-badge">{{ pulse.badge }}</span>
+      </div>
+    </div>
+
+    <!-- 3. MARKETPLACE FILTER & SEARCH TOOLBAR -->
+    <div class="filter-toolbar" style="margin-bottom: 20px;">
       <div class="search-command-shell">
         <Search :size="15" class="search-lead-glyph" />
         <input
           ref="searchInputRef"
           v-model="searchTemplate"
           type="text"
-          placeholder="Cari blueprint portofolio, media editorial, LMS, SaaS, agensi..."
+          placeholder="Cari blueprint portofolio, media editorial, LMS, SaaS, agensi, tag teknologi..."
           class="search-command-input"
         />
         <button v-if="searchTemplate" class="btn-clear-search" @click="searchTemplate = ''" title="Bersihkan">
@@ -229,10 +329,34 @@ const handleConfirmDeploy = async () => {
           <span>Bisnis & SaaS</span>
         </button>
       </div>
+
+      <!-- View Mode Toggle: Grid vs Split Studio Inspector -->
+      <div class="view-mode-pill-group">
+        <button
+          class="btn-view-mode-pill"
+          :class="{ active: viewMode === 'grid' }"
+          @click="viewMode = 'grid'"
+          title="Tampilan Grid Katalog"
+        >
+          <Grid :size="14" />
+          <span>Grid</span>
+        </button>
+        <button
+          class="btn-view-mode-pill"
+          :class="{ active: viewMode === 'split' }"
+          @click="viewMode = 'split'"
+          title="Tampilan Split Studio Inspector (Live Preview Berdampingan)"
+        >
+          <Columns :size="14" />
+          <span>Live Studio</span>
+        </button>
+      </div>
     </div>
 
-    <!-- High-End Template Grid -->
-    <div class="template-market-grid">
+    <!-- =====================================================================
+         A. GRID VIEW MODE (TAMPILAN KATALOG LUAS)
+         ===================================================================== -->
+    <div v-if="viewMode === 'grid'" class="template-market-grid">
       <div
         v-for="tpl in filteredTemplates"
         :key="tpl.id"
@@ -247,7 +371,7 @@ const handleConfirmDeploy = async () => {
             <div class="mockup-url-pill">{{ tpl.category }}.cloudcms.app</div>
           </div>
 
-          <!-- Dynamic Realistic Previews -->
+          <!-- Dynamic Realistic Mini Canvases -->
           <div v-if="tpl.category === 'portfolio'" class="mock-canvas-portfolio">
             <div class="portfolio-hero-mini">
               <div class="avatar-badge-mini" :style="{ background: tpl.accentColor }">RP</div>
@@ -349,6 +473,150 @@ const handleConfirmDeploy = async () => {
       </div>
     </div>
 
+    <!-- =====================================================================
+         B. SPLIT STUDIO INSPECTOR MODE (LIVE PREVIEW BERDAMPINGAN)
+         ===================================================================== -->
+    <div v-else class="split-studio-container">
+      <!-- Left: Compact Template List -->
+      <div class="split-catalog-sidebar">
+        <div
+          v-for="tpl in filteredTemplates"
+          :key="tpl.id"
+          class="split-template-card"
+          :class="{ active: selectedSplitTemplate?.id === tpl.id }"
+          @click="selectedSplitTemplate = tpl"
+        >
+          <div class="split-card-thumb" :style="{ background: `linear-gradient(135deg, #0f172a 0%, ${tpl.accentColor} 100%)` }">
+            <span>{{ tpl.category.slice(0, 2).toUpperCase() }}</span>
+          </div>
+          <div class="split-card-content">
+            <div class="split-card-title-row">
+              <h4 class="split-card-title">{{ tpl.title }}</h4>
+              <span class="spotlight-badge-rating" style="font-size: 0.65rem;">
+                ★ {{ tpl.rating || 4.95 }}
+              </span>
+            </div>
+            <p class="split-card-desc">{{ tpl.desc }}</p>
+            <div class="split-card-meta-row">
+              <span>{{ tpl.author || 'Hero Core' }}</span>
+              <span>•</span>
+              <span style="color: #2563eb; font-weight: 700;">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Sticky Live Browser Simulator Pane -->
+      <div class="split-preview-pane">
+        <div class="split-preview-topbar">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="preview-chrome-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span style="color: #ffffff; font-size: 0.85rem; font-weight: 700;">
+              {{ selectedSplitTemplate?.title }}
+            </span>
+          </div>
+
+          <!-- Topbar Controls for Split View -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="preview-device-switchers">
+              <button class="btn-device-pill" :class="{ active: splitDevice === 'desktop' }" @click="splitDevice = 'desktop'">
+                <Monitor :size="12" />
+              </button>
+              <button class="btn-device-pill" :class="{ active: splitDevice === 'tablet' }" @click="splitDevice = 'tablet'">
+                <Tablet :size="12" />
+              </button>
+              <button class="btn-device-pill" :class="{ active: splitDevice === 'mobile' }" @click="splitDevice = 'mobile'">
+                <Smartphone :size="12" />
+              </button>
+            </div>
+            <button class="btn-preview-action-apply" style="padding: 5px 10px; font-size: 0.75rem;" @click="openApplyModal(selectedSplitTemplate)">
+              Terapkan
+            </button>
+            <button class="btn-preview-action-deploy" style="padding: 5px 12px; font-size: 0.75rem;" @click="openDeployModal(selectedSplitTemplate)">
+              Deploy Baru
+            </button>
+          </div>
+        </div>
+
+        <!-- Rendered Split Simulator Stage -->
+        <div class="split-preview-scroll-viewport" :style="{ maxWidth: splitDevice === 'mobile' ? '390px' : splitDevice === 'tablet' ? '768px' : '100%', margin: '0 auto' }">
+          <div class="preview-chassis-content" :style="{ fontFamily: selectedSplitTemplate.fontFamily }">
+            <header class="sim-rendered-navbar">
+              <div class="sim-nav-brand" :style="{ color: selectedSplitTemplate.accentColor }">
+                {{ selectedSplitTemplate.category === 'portfolio' ? 'Rizal Pratama' : selectedSplitTemplate.title.split('&')[0] }}
+              </div>
+              <button class="sim-nav-btn" :style="{ background: selectedSplitTemplate.accentColor }">
+                Hubungi Kami
+              </button>
+            </header>
+
+            <section class="sim-rendered-hero">
+              <span class="sim-hero-badge" :style="{ background: `${selectedSplitTemplate.accentColor}15`, color: selectedSplitTemplate.accentColor }">
+                ★ {{ selectedSplitTemplate.tier.toUpperCase() }}
+              </span>
+              <h2 class="sim-hero-title">
+                {{ selectedSplitTemplate.defaultRole || selectedSplitTemplate.title }}
+              </h2>
+              <p class="sim-hero-sub">
+                {{ selectedSplitTemplate.defaultBio || selectedSplitTemplate.desc }}
+              </p>
+              <div class="sim-hero-ctas">
+                <button class="sim-btn-primary" :style="{ background: selectedSplitTemplate.accentColor }">
+                  Jelajahi Solusi
+                </button>
+              </div>
+            </section>
+
+            <section style="padding: 16px 0; background: #fafafa;">
+              <div class="sim-grid-3">
+                <div v-for="(f, idx) in selectedSplitTemplate.features" :key="idx" class="sim-feature-card">
+                  <strong>{{ f }}</strong>
+                  <p>Dioptimalkan tanpa bloatware pihak ketiga, mendukung cache Traefik edge.</p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. BLUEPRINT WORKFLOW CONCEPT ROADMAP -->
+    <div class="blueprint-workflow-strip">
+      <div class="workflow-header-row">
+        <h3>Filosofi Blueprint & Alur Kerja Ekosistem</h3>
+        <p>Bagaimana cetak biru arsitektur HeroCMS mentransformasikan konsep desain menjadi layanan web otonom berkinerja tinggi.</p>
+      </div>
+      <div class="workflow-steps-grid">
+        <div v-for="step in blueprintWorkflowSteps" :key="step.step" class="workflow-step-card">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span class="workflow-step-num">{{ step.step }}</span>
+            <span class="workflow-step-badge">{{ step.badge }}</span>
+          </div>
+          <strong>{{ step.title }}</strong>
+          <p>{{ step.desc }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. AI BLUEPRINT ARCHITECT ASSISTANT BANNER -->
+    <div class="ai-blueprint-banner">
+      <div class="ai-blueprint-info">
+        <div class="ai-icon-circ">
+          <Wand2 :size="22" />
+        </div>
+        <div class="ai-blueprint-text">
+          <h4>Butuh Arsitektur Khusus Sesuai Karakter Bisnismu?</h4>
+          <p>Deskripsikan model bisnis Anda dalam bahasa sehari-hari. AI Blueprint Architect akan menyusun modul blok visual khusus secara instan.</p>
+        </div>
+      </div>
+      <button class="btn-ai-architect" @click="openPreviewModal(featuredSpotlight)">
+        <Sparkles :size="14" />
+        <span>Buka Generator AI</span>
+      </button>
+    </div>
+
     <!-- Empty State -->
     <div v-if="filteredTemplates.length === 0" class="empty-state-card" style="margin-top: 10px;">
       <Search :size="34" style="color: #94a3b8; margin-bottom: 4px;" />
@@ -365,10 +633,9 @@ const handleConfirmDeploy = async () => {
     </div>
 
     <!-- =====================================================================
-         1. FULLSCREEN INTERACTIVE PREVIEW SIMULATOR MODAL
+         FULLSCREEN INTERACTIVE PREVIEW SIMULATOR MODAL
          ===================================================================== -->
     <div v-if="isPreviewOpen && activePreviewTemplate" class="preview-simulator-overlay">
-      <!-- Topbar Controls -->
       <div class="preview-simulator-topbar">
         <div class="preview-meta-info">
           <div class="preview-title-wrap">
@@ -388,7 +655,6 @@ const handleConfirmDeploy = async () => {
           </div>
         </div>
 
-        <!-- Center: Device Switchers & Accent Picker -->
         <div style="display: flex; align-items: center; gap: 16px;">
           <div class="preview-device-switchers">
             <button
@@ -420,7 +686,6 @@ const handleConfirmDeploy = async () => {
             </button>
           </div>
 
-          <!-- Color Accent Picker -->
           <div class="preview-color-selector">
             <Palette :size="14" style="color: #94a3b8; margin-right: 2px;" />
             <button
@@ -435,7 +700,6 @@ const handleConfirmDeploy = async () => {
           </div>
         </div>
 
-        <!-- Right: Action Buttons -->
         <div class="preview-actions-group">
           <button
             v-if="activeContainer"
@@ -458,10 +722,8 @@ const handleConfirmDeploy = async () => {
         </div>
       </div>
 
-      <!-- Simulator Viewport Stage -->
       <div class="preview-simulator-stage">
         <div class="preview-browser-chassis" :class="'device-' + previewDevice">
-          <!-- Browser Header Bar -->
           <div class="preview-chassis-chrome">
             <div class="preview-chrome-dots">
               <span></span><span></span><span></span>
@@ -472,9 +734,7 @@ const handleConfirmDeploy = async () => {
             </div>
           </div>
 
-          <!-- Rendered Template Body (Dynamic Blocks) -->
           <div class="preview-chassis-content" :style="{ fontFamily: activePreviewTemplate.fontFamily }">
-            <!-- 1. Navbar Block -->
             <header class="sim-rendered-navbar">
               <div class="sim-nav-brand" :style="{ color: previewAccent }">
                 {{ activePreviewTemplate.category === 'portfolio' ? 'Rizal Pratama' : activePreviewTemplate.title.split('&')[0] }}
@@ -490,7 +750,6 @@ const handleConfirmDeploy = async () => {
               </button>
             </header>
 
-            <!-- 2. Hero Block -->
             <section class="sim-rendered-hero">
               <span class="sim-hero-badge" :style="{ background: `${previewAccent}15`, color: previewAccent, border: `1px solid ${previewAccent}30` }">
                 ★ {{ activePreviewTemplate.tier.toUpperCase() }} • LIGHTHOUSE 100/100
@@ -511,7 +770,6 @@ const handleConfirmDeploy = async () => {
               </div>
             </section>
 
-            <!-- 3. Key Highlights Grid -->
             <section style="padding: 24px 0; background: #fafafa; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9;">
               <div class="sim-section-header">
                 <h3>Keunggulan Arsitektur & Performa</h3>
@@ -528,7 +786,6 @@ const handleConfirmDeploy = async () => {
               </div>
             </section>
 
-            <!-- 4. Footer Block -->
             <footer class="sim-rendered-footer">
               <div>
                 <strong>HeroCMS Studio Blueprint</strong> • Ditenagai oleh Traefik & Docker Container
@@ -542,9 +799,7 @@ const handleConfirmDeploy = async () => {
       </div>
     </div>
 
-    <!-- =====================================================================
-         2. MODAL TERAPKAN KE SITUS AKTIF
-         ===================================================================== -->
+    <!-- MODAL TERAPKAN KE SITUS AKTIF -->
     <div v-if="isApplyModalOpen && templateToApply" class="modal-backdrop">
       <div class="modal-dialog" style="max-width: 520px;">
         <div class="modal-header">
@@ -601,9 +856,7 @@ const handleConfirmDeploy = async () => {
       </div>
     </div>
 
-    <!-- =====================================================================
-         3. MODAL DEPLOY BLUEPRINT BARU
-         ===================================================================== -->
+    <!-- MODAL DEPLOY BLUEPRINT BARU -->
     <div v-if="isDeployModalOpen && templateToDeploy" class="modal-backdrop">
       <div class="modal-dialog" style="max-width: 520px;">
         <div class="modal-header">

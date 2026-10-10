@@ -14,6 +14,12 @@ export interface OfficialTemplateItem {
   defaultRole: string;
   defaultBio: string;
   lighthouseScore: number;
+  author?: string;
+  rating?: number;
+  downloadsCount?: number;
+  isFeatured?: boolean;
+  tags?: string[];
+  layoutType?: string;
   stats: {
     ttfb: string;
     seo: string;
@@ -27,6 +33,34 @@ export interface OfficialTemplateItem {
   };
   blocks: VisualBlock[];
 }
+
+export const marketplacePulseMetrics = [
+  { id: 'm1', label: 'Situs Ter-Deploy Aktif', value: '3.120+', sub: 'Terisolasi Kontainer RLS', badge: '+18% bln ini' },
+  { id: 'm2', label: 'Latensi Respon Edge', value: '1.2ms', sub: 'Traefik v3 HTTP/3 Router', badge: 'Ultra Cepat' },
+  { id: 'm3', label: 'Skor Lighthouse Rata-Rata', value: '99.8 / 100', sub: 'Core Web Vitals Sempurna', badge: 'SEO 100%' },
+  { id: 'm4', label: 'Blok Visual Modular', value: '48+ Modul', sub: 'Native Drag-and-Drop', badge: 'Zero Bloat' }
+];
+
+export const blueprintWorkflowSteps = [
+  {
+    step: '01',
+    badge: 'LANGKAH AWAL',
+    title: 'Pilih Blueprint Arsitektur',
+    desc: 'Pilih blueprint yang sesuai dengan jenis kebutuhan Anda: portofolio teknis, media blog editorial, pusat edukasi LMS, atau showcase bisnis.'
+  },
+  {
+    step: '02',
+    badge: 'KUSTOMISASI',
+    title: 'Ubah Visual & Konten Bebas',
+    desc: 'Gunakan Visual Editor Studio untuk merombak susunan blok, palet warna, tipografi, konten artikel, atau formulir webhook secara langsung.'
+  },
+  {
+    step: '03',
+    badge: 'PROVISIONING',
+    title: 'Deploy Mandiri 1-Klik',
+    desc: 'Sistem otomatis menyiapkan kontainer terisolasi, rute edge Traefik, dan sertifikat SSL otomatis di domain pilihan Anda.'
+  }
+];
 
 export const officialTemplatesData: OfficialTemplateItem[] = [
   {
@@ -43,6 +77,12 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
     defaultRole: 'Senior Cloud & Platform Engineer',
     defaultBio: 'Merancang sistem terdistribusi skala besar, orkestrasi kontainer Docker/Kubernetes mandiri, dan edge router Traefik berlatensi rendah.',
     lighthouseScore: 100,
+    author: 'Hero Core Platform',
+    rating: 4.98,
+    downloadsCount: 1420,
+    isFeatured: true,
+    layoutType: 'Single Page Showpiece',
+    tags: ['Cloud Engineer', 'GitHub API', 'PWA Offline', 'Lighthouse 100'],
     stats: {
       ttfb: '1.4ms',
       seo: '100%',
@@ -227,6 +267,12 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
     defaultRole: 'Tech Chronicle & Editorial Lab',
     defaultBio: 'Jurnal berkala riset teknologi, rekayasa perangkat lunak, keamanan siber, dan arsitektur terdistribusi modern.',
     lighthouseScore: 100,
+    author: 'Hero Publishing Lab',
+    rating: 4.95,
+    downloadsCount: 1180,
+    isFeatured: true,
+    layoutType: 'Multi-Section Media',
+    tags: ['Editorial', 'Markdown/Visual', 'Reading Time', 'OpenGraph Auto-Gen'],
     stats: {
       ttfb: '1.2ms',
       seo: '100%',
@@ -375,6 +421,12 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
     defaultRole: 'Cloud Engineering Academy & Masterclass',
     defaultBio: 'Pusat pelatihan intensif rekayasa infrastruktur modern, kontainer otonom, dan arsitektur backend berkinerja tinggi.',
     lighthouseScore: 100,
+    author: 'Hero LMS Solutions',
+    rating: 4.92,
+    downloadsCount: 890,
+    isFeatured: false,
+    layoutType: 'Course & Syllabus Hub',
+    tags: ['LMS Silabus', 'Video Embed', 'Accordion Modul', 'Pricing'],
     stats: {
       ttfb: '1.6ms',
       seo: '100%',
@@ -538,6 +590,12 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
     defaultRole: 'Agensi Solusi Digital & Cloud Studio',
     defaultBio: 'Membantu transformasi digital bisnis UMKM dan perusahaan berkembang dengan infrastruktur web yang andal dan konversi optimal.',
     lighthouseScore: 100,
+    author: 'Hero Commercial Core',
+    rating: 4.97,
+    downloadsCount: 2040,
+    isFeatured: true,
+    layoutType: 'Catalog & WhatsApp Checkout',
+    tags: ['E-Commerce UMKM', 'WhatsApp Checkout', 'Pricing Cards', 'Conversion Ready'],
     stats: {
       ttfb: '1.3ms',
       seo: '100%',
@@ -687,6 +745,12 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
     defaultRole: 'Cloud Orchestrator & CaaS Platform',
     defaultBio: 'Platform otomatisasi deployment aplikasi berbasis kontainer mikro dengan zero-configuration dan proteksi edge menyeluruh.',
     lighthouseScore: 100,
+    author: 'Hero Cloud Ecosystem',
+    rating: 4.99,
+    downloadsCount: 1650,
+    isFeatured: true,
+    layoutType: 'SaaS Platform Landing',
+    tags: ['SaaS Landing', 'Feature Matrix', 'FAQ Accordion', 'Lead Gen'],
     stats: {
       ttfb: '1.1ms',
       seo: '100%',
@@ -855,6 +919,12 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
     defaultRole: 'Bespoke Digital Design & Creative Studio',
     defaultBio: 'Menciptakan karya visual yang membekas, identitas brand yang berani, dan pengalaman web yang memenangkan penghargaan.',
     lighthouseScore: 100,
+    author: 'Studio Avant-Garde',
+    rating: 4.94,
+    downloadsCount: 760,
+    isFeatured: false,
+    layoutType: 'Avant-Garde Showcase',
+    tags: ['Creative Studio', 'Masonry Grid', 'Dark/Glass', 'Design Portfolio'],
     stats: {
       ttfb: '1.5ms',
       seo: '100%',
