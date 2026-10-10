@@ -32,6 +32,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Live Terminal Simulator & Visual Showcase',
         description: 'Menambahkan mockup terminal macOS interaktif pada hero pratinjau live simulator untuk menampilkan telemetri Traefik v3, latensi TTFB sub-2ms, dan isolasi Linux cgroups v2 secara realistis.'
+      },
+      {
+        id: 'c-141-5',
+        type: 'improvement',
+        scope: 'Teleport Fullscreen Blur & Dead-Center Alignment',
+        description: 'Membungkus seluruh modal dan simulator pratinjau dengan Teleport to="body" dan z-index 100000 agar efek backdrop blur menyelimuti 100% seluruh layar viewport (melintasi sidebar dan header atas tanpa terisolasi di content area), serta posisi form dialog tepat berada di tengah layar.'
       }
     ]
   },
