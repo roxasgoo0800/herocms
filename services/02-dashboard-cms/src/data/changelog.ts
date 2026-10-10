@@ -68,6 +68,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Device Aspect Ratio & Screen Inner Scrolling Fix',
         description: 'Memperbaiki proporsi fisik perangkat mobile dan tablet agar tidak melar/memanjang tanpa batas ke bawah: menetapkan batas tinggi fisik proporsional (iPhone ~780px, iPad ~860px) dengan scrollbar internal yang mulus di dalam layar perangkat dan perataan tengah vertikal pada panggung simulator.'
+      },
+      {
+        id: 'c-141-11',
+        type: 'improvement',
+        scope: 'Mobile Landscape Ergonomics & Hardware Orientation Realignment',
+        description: 'Memperbaiki tata letak hardware smartphone pada mode rotasi lanskap: memindahkan Dynamic Island fisik ke bezel samping kiri (sesuai arah rotasi 90 derajat alami), menghilangkan lubang speaker yang janggal di sisi panjang atas, memperluas tinggi viewport lanskap menjadi 520px agar konten lega, menyatukan URL bar ke status bar atas, dan mempertahankan gestur bar bawah yang elegan.'
       }
     ]
   },

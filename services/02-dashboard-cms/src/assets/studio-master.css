@@ -10881,7 +10881,7 @@ html {
 .preview-browser-chassis.device-mobile.orientation-landscape {
   width: 844px;
   max-width: 844px;
-  height: min(440px, calc(88vh - 40px));
+  height: min(520px, calc(88vh - 40px));
 }
 
 .preview-chassis-chrome {
@@ -12719,6 +12719,40 @@ html {
 
 .preview-browser-chassis.device-mobile.orientation-landscape {
   border-radius: 40px;
+  position: relative;
+}
+
+/* Left-Edge Physical Dynamic Island for Rotated Landscape Phone */
+.mobile-landscape-island-left {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 72px;
+  background: #000000;
+  border-radius: 99px;
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.mobile-landscape-status-bar {
+  background: #090d16;
+  padding: 6px 20px 6px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  z-index: 30;
+  user-select: none;
+  letter-spacing: -0.01em;
 }
 
 /* Speaker Earpiece Slit */

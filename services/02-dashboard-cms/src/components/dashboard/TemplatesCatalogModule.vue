@@ -648,14 +648,33 @@ const handleConfirmDeploy = async () => {
             class="preview-browser-chassis device-mobile"
             :class="{ 'orientation-landscape': splitMobileOrientation === 'landscape' }"
           >
-            <div class="mobile-speaker-slit"></div>
-            <div class="mobile-hardware-bar">
+            <!-- Left-edge Rotated Dynamic Island when in Landscape -->
+            <div v-if="splitMobileOrientation === 'landscape'" class="mobile-landscape-island-left">
+              <div class="island-camera-lens"></div>
+              <div class="island-sensor-dot"></div>
+            </div>
+
+            <!-- Speaker Slit (Portrait only) -->
+            <div v-if="splitMobileOrientation === 'portrait'" class="mobile-speaker-slit"></div>
+
+            <!-- Portrait Hardware Bar with Centered Dynamic Island -->
+            <div v-if="splitMobileOrientation === 'portrait'" class="mobile-hardware-bar">
               <span>09:41</span>
               <div class="mobile-dynamic-island">
                 <div class="island-camera-lens"></div>
                 <div class="island-sensor-dot"></div>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
+                <Wifi :size="11" />
+                <span>100%</span>
+              </div>
+            </div>
+
+            <!-- Landscape Status Bar (Sleek edge-to-edge status) -->
+            <div v-if="splitMobileOrientation === 'landscape'" class="mobile-landscape-status-bar">
+              <span>09:41</span>
+              <span style="font-size: 0.65rem; color: #94a3b8; font-family: monospace;">https://{{ selectedSplitTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
                 <Wifi :size="11" />
                 <span>100%</span>
               </div>
@@ -669,7 +688,8 @@ const handleConfirmDeploy = async () => {
               />
             </div>
 
-            <div class="mobile-safari-bar">
+            <!-- Floating Safari Bar (Portrait only, in landscape URL is in status bar) -->
+            <div v-if="splitMobileOrientation === 'portrait'" class="mobile-safari-bar">
               <div class="mobile-safari-pill">
                 <Lock :size="10" style="color: #10b981;" />
                 <span>{{ selectedSplitTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
@@ -1083,15 +1103,33 @@ const handleConfirmDeploy = async () => {
           </div>
 
           <!-- 3. Realistic Smartphone Hardware Header (for Mobile Only) -->
-          <div v-if="previewDevice === 'mobile'" class="mobile-speaker-slit"></div>
+          <!-- Left-edge Rotated Dynamic Island when in Landscape -->
+          <div v-if="previewDevice === 'mobile' && mobileOrientation === 'landscape'" class="mobile-landscape-island-left">
+            <div class="island-camera-lens"></div>
+            <div class="island-sensor-dot"></div>
+          </div>
 
-          <div v-if="previewDevice === 'mobile'" class="mobile-hardware-bar">
+          <!-- Speaker Slit (Portrait only) -->
+          <div v-if="previewDevice === 'mobile' && mobileOrientation === 'portrait'" class="mobile-speaker-slit"></div>
+
+          <!-- Portrait Hardware Bar with Centered Dynamic Island -->
+          <div v-if="previewDevice === 'mobile' && mobileOrientation === 'portrait'" class="mobile-hardware-bar">
             <span>09:41</span>
             <div class="mobile-dynamic-island">
               <div class="island-camera-lens"></div>
               <div class="island-sensor-dot"></div>
             </div>
             <div style="display: flex; align-items: center; gap: 4px;">
+              <Wifi :size="11" />
+              <span>100%</span>
+            </div>
+          </div>
+
+          <!-- Landscape Status Bar (Sleek edge-to-edge status) -->
+          <div v-if="previewDevice === 'mobile' && mobileOrientation === 'landscape'" class="mobile-landscape-status-bar">
+            <span>09:41</span>
+            <span style="font-size: 0.65rem; color: #94a3b8; font-family: monospace;">https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
               <Wifi :size="11" />
               <span>100%</span>
             </div>
@@ -1107,8 +1145,8 @@ const handleConfirmDeploy = async () => {
             />
           </div>
 
-          <!-- Smartphone Floating URL Bar & Home Indicator -->
-          <div v-if="previewDevice === 'mobile'" class="mobile-safari-bar">
+          <!-- Smartphone Floating URL Bar (Portrait only, in landscape URL is in status bar) -->
+          <div v-if="previewDevice === 'mobile' && mobileOrientation === 'portrait'" class="mobile-safari-bar">
             <div class="mobile-safari-pill">
               <Lock :size="10" style="color: #10b981;" />
               <span>{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
