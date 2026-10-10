@@ -14,12 +14,16 @@ import {
   Monitor,
   Tablet,
   Smartphone,
-  ShieldCheck,
   Palette,
   Star,
   Grid,
   Columns,
-  Wand2
+  Wand2,
+  RotateCw,
+  Sun,
+  Moon,
+  Lock,
+  Wifi
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import {
@@ -28,6 +32,7 @@ import {
   blueprintWorkflowSteps,
   type OfficialTemplateItem
 } from '../../data/templates-data';
+import TemplateLiveRenderer from './TemplateLiveRenderer.vue';
 
 const {
   officialTemplates,
@@ -43,7 +48,43 @@ const viewMode = ref<'grid' | 'split'>('grid');
 const selectedSplitTemplate = ref<OfficialTemplateItem>(officialTemplatesData[0]);
 const splitDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
 
-// Shortcut ⌘K / Ctrl+K
+// -----------------------------------------------------------------------------
+// Interactive Fullscreen Preview Simulator State
+// -----------------------------------------------------------------------------
+const isPreviewOpen = ref(false);
+const activePreviewTemplate = ref<OfficialTemplateItem | null>(null);
+const previewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
+const previewAccent = ref<string>('#2563eb');
+const isPreviewDarkMode = ref(false);
+const previewZoomScale = ref<number>(1);
+const isRefreshing = ref(false);
+
+const handleRefreshSimulator = () => {
+  isRefreshing.value = true;
+  setTimeout(() => {
+    isRefreshing.value = false;
+  }, 450);
+};
+
+const colorPresets = [
+  '#2563eb', // Royal Blue
+  '#059669', // Emerald
+  '#7c3aed', // Purple
+  '#ea580c', // Orange
+  '#0284c7', // Sky
+  '#db2777'  // Rose
+];
+
+const openPreviewModal = (tpl: OfficialTemplateItem) => {
+  activePreviewTemplate.value = tpl;
+  previewAccent.value = tpl.accentColor || '#2563eb';
+  previewDevice.value = 'desktop';
+  isPreviewDarkMode.value = false;
+  previewZoomScale.value = 1;
+  isPreviewOpen.value = true;
+};
+
+// Shortcut ⌘K / Ctrl+K & ESC
 const handleGlobalKeydown = (e: KeyboardEvent) => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault();
@@ -95,30 +136,6 @@ const filteredTemplates = computed(() => {
 const featuredSpotlight = computed(() => {
   return officialTemplates.value.find(t => t.isFeatured) || officialTemplates.value[0];
 });
-
-// -----------------------------------------------------------------------------
-// Interactive Fullscreen Preview Simulator State
-// -----------------------------------------------------------------------------
-const isPreviewOpen = ref(false);
-const activePreviewTemplate = ref<OfficialTemplateItem | null>(null);
-const previewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
-const previewAccent = ref<string>('#2563eb');
-
-const colorPresets = [
-  '#2563eb', // Royal Blue
-  '#059669', // Emerald
-  '#7c3aed', // Purple
-  '#ea580c', // Orange
-  '#0284c7', // Sky
-  '#db2777'  // Rose
-];
-
-const openPreviewModal = (tpl: OfficialTemplateItem) => {
-  activePreviewTemplate.value = tpl;
-  previewAccent.value = tpl.accentColor || '#2563eb';
-  previewDevice.value = 'desktop';
-  isPreviewOpen.value = true;
-};
 
 // -----------------------------------------------------------------------------
 // Apply to Active Container Modal State
@@ -233,7 +250,6 @@ const handleConfirmDeploy = async () => {
         </div>
       </div>
 
-      <!-- Spotlight Right Realistic Mini Showcase -->
       <div class="spotlight-right-preview">
         <div class="spotlight-chassis-mockup">
           <div class="spotlight-mockup-header">
@@ -330,7 +346,7 @@ const handleConfirmDeploy = async () => {
         </button>
       </div>
 
-      <!-- View Mode Toggle: Grid vs Split Studio Inspector -->
+      <!-- View Mode Toggle -->
       <div class="view-mode-pill-group">
         <button
           class="btn-view-mode-pill"
@@ -354,7 +370,7 @@ const handleConfirmDeploy = async () => {
     </div>
 
     <!-- =====================================================================
-         A. GRID VIEW MODE (TAMPILAN KATALOG LUAS)
+         A. GRID VIEW MODE
          ===================================================================== -->
     <div v-if="viewMode === 'grid'" class="template-market-grid">
       <div
@@ -362,7 +378,6 @@ const handleConfirmDeploy = async () => {
         :key="tpl.id"
         class="tpl-market-card-pro"
       >
-        <!-- Card Visual Mockup Header -->
         <div class="tpl-mockup-stage" :class="'stage-' + tpl.category" :style="{ borderBottom: `2px solid ${tpl.accentColor}` }">
           <div class="mockup-browser-shell">
             <div class="mockup-dots">
@@ -371,7 +386,6 @@ const handleConfirmDeploy = async () => {
             <div class="mockup-url-pill">{{ tpl.category }}.cloudcms.app</div>
           </div>
 
-          <!-- Dynamic Realistic Mini Canvases -->
           <div v-if="tpl.category === 'portfolio'" class="mock-canvas-portfolio">
             <div class="portfolio-hero-mini">
               <div class="avatar-badge-mini" :style="{ background: tpl.accentColor }">RP</div>
@@ -424,7 +438,6 @@ const handleConfirmDeploy = async () => {
             </div>
           </div>
 
-          <!-- Tier Badge Floating -->
           <div class="tpl-float-badges">
             <span class="tpl-type-pill">{{ tpl.category.toUpperCase() }}</span>
             <span class="tpl-tier-pill" :class="{ 'tier-pro': tpl.isPro }">
@@ -434,7 +447,6 @@ const handleConfirmDeploy = async () => {
           </div>
         </div>
 
-        <!-- Card Body -->
         <div class="tpl-card-body-pro">
           <div class="tpl-title-row">
             <h3 class="tpl-card-title">{{ tpl.title }}</h3>
@@ -453,7 +465,6 @@ const handleConfirmDeploy = async () => {
           </div>
         </div>
 
-        <!-- Card Footer Actions -->
         <div class="tpl-card-footer-pro">
           <div class="tpl-price-info">
             <span class="price-lbl">Status Lisensi:</span>
@@ -518,7 +529,6 @@ const handleConfirmDeploy = async () => {
             </span>
           </div>
 
-          <!-- Topbar Controls for Split View -->
           <div style="display: flex; align-items: center; gap: 8px;">
             <div class="preview-device-switchers">
               <button class="btn-device-pill" :class="{ active: splitDevice === 'desktop' }" @click="splitDevice = 'desktop'">
@@ -540,44 +550,12 @@ const handleConfirmDeploy = async () => {
           </div>
         </div>
 
-        <!-- Rendered Split Simulator Stage -->
         <div class="split-preview-scroll-viewport" :style="{ maxWidth: splitDevice === 'mobile' ? '390px' : splitDevice === 'tablet' ? '768px' : '100%', margin: '0 auto' }">
-          <div class="preview-chassis-content" :style="{ fontFamily: selectedSplitTemplate.fontFamily }">
-            <header class="sim-rendered-navbar">
-              <div class="sim-nav-brand" :style="{ color: selectedSplitTemplate.accentColor }">
-                {{ selectedSplitTemplate.category === 'portfolio' ? 'Rizal Pratama' : selectedSplitTemplate.title.split('&')[0] }}
-              </div>
-              <button class="sim-nav-btn" :style="{ background: selectedSplitTemplate.accentColor }">
-                Hubungi Kami
-              </button>
-            </header>
-
-            <section class="sim-rendered-hero">
-              <span class="sim-hero-badge" :style="{ background: `${selectedSplitTemplate.accentColor}15`, color: selectedSplitTemplate.accentColor }">
-                ★ {{ selectedSplitTemplate.tier.toUpperCase() }}
-              </span>
-              <h2 class="sim-hero-title">
-                {{ selectedSplitTemplate.defaultRole || selectedSplitTemplate.title }}
-              </h2>
-              <p class="sim-hero-sub">
-                {{ selectedSplitTemplate.defaultBio || selectedSplitTemplate.desc }}
-              </p>
-              <div class="sim-hero-ctas">
-                <button class="sim-btn-primary" :style="{ background: selectedSplitTemplate.accentColor }">
-                  Jelajahi Solusi
-                </button>
-              </div>
-            </section>
-
-            <section style="padding: 16px 0; background: #fafafa;">
-              <div class="sim-grid-3">
-                <div v-for="(f, idx) in selectedSplitTemplate.features" :key="idx" class="sim-feature-card">
-                  <strong>{{ f }}</strong>
-                  <p>Dioptimalkan tanpa bloatware pihak ketiga, mendukung cache Traefik edge.</p>
-                </div>
-              </div>
-            </section>
-          </div>
+          <TemplateLiveRenderer
+            :template="selectedSplitTemplate"
+            :accent-color="selectedSplitTemplate.accentColor"
+            :device="splitDevice"
+          />
         </div>
       </div>
     </div>
@@ -633,9 +611,10 @@ const handleConfirmDeploy = async () => {
     </div>
 
     <!-- =====================================================================
-         FULLSCREEN INTERACTIVE PREVIEW SIMULATOR MODAL
+         FULLSCREEN INTERACTIVE PREVIEW SIMULATOR MODAL (BESPOKE CHASSIS)
          ===================================================================== -->
     <div v-if="isPreviewOpen && activePreviewTemplate" class="preview-simulator-overlay">
+      <!-- Topbar Controls -->
       <div class="preview-simulator-topbar">
         <div class="preview-meta-info">
           <div class="preview-title-wrap">
@@ -655,7 +634,9 @@ const handleConfirmDeploy = async () => {
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 16px;">
+        <!-- Center: Device Switcher, Color Picker, Zoom & Day/Night -->
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <!-- Device Switchers -->
           <div class="preview-device-switchers">
             <button
               class="btn-device-pill"
@@ -686,6 +667,7 @@ const handleConfirmDeploy = async () => {
             </button>
           </div>
 
+          <!-- Color Accent Picker -->
           <div class="preview-color-selector">
             <Palette :size="14" style="color: #94a3b8; margin-right: 2px;" />
             <button
@@ -698,8 +680,58 @@ const handleConfirmDeploy = async () => {
               :title="'Uji Warna Aksen: ' + c"
             ></button>
           </div>
+
+          <!-- Day / Night Mode Simulation Switch -->
+          <button
+            class="btn-device-pill"
+            style="padding: 6px 10px;"
+            :title="isPreviewDarkMode ? 'Mode Terang (Light)' : 'Mode Gelap (Dark)'"
+            @click="isPreviewDarkMode = !isPreviewDarkMode"
+          >
+            <Sun v-if="isPreviewDarkMode" :size="14" style="color: #fbbf24;" />
+            <Moon v-else :size="14" style="color: #94a3b8;" />
+          </button>
+
+          <!-- Zoom Scale Switcher -->
+          <div class="preview-device-switchers" style="padding: 2px;">
+            <button
+              class="btn-device-pill"
+              :class="{ active: previewZoomScale === 1 }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              @click="previewZoomScale = 1"
+            >
+              100%
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: previewZoomScale === 0.85 }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              @click="previewZoomScale = 0.85"
+            >
+              85%
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: previewZoomScale === 0.75 }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              @click="previewZoomScale = 0.75"
+            >
+              75%
+            </button>
+          </div>
+
+          <!-- Reload Simulator Button -->
+          <button
+            class="btn-device-pill"
+            style="padding: 6px 9px;"
+            title="Muat Ulang Simulasi"
+            @click="handleRefreshSimulator"
+          >
+            <RotateCw :size="13" :class="{ 'spin-animation': isRefreshing }" />
+          </button>
         </div>
 
+        <!-- Right Action Buttons -->
         <div class="preview-actions-group">
           <button
             v-if="activeContainer"
@@ -714,7 +746,7 @@ const handleConfirmDeploy = async () => {
             @click="openDeployModal(activePreviewTemplate)"
           >
             <Rocket :size="14" />
-            <span>Deploy Kontainer Baru</span>
+            <span>Deploy Baru</span>
           </button>
           <button class="btn-preview-close" @click="isPreviewOpen = false" title="Tutup Pratinjau (ESC)">
             <X :size="16" />
@@ -722,78 +754,64 @@ const handleConfirmDeploy = async () => {
         </div>
       </div>
 
+      <!-- Simulator Viewport Stage with Zoom Scaling -->
       <div class="preview-simulator-stage">
-        <div class="preview-browser-chassis" :class="'device-' + previewDevice">
-          <div class="preview-chassis-chrome">
+        <div
+          class="preview-browser-chassis"
+          :class="'device-' + previewDevice"
+          :style="{
+            transform: `scale(${previewZoomScale})`,
+            transformOrigin: 'top center',
+            transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.25s ease'
+          }"
+        >
+          <!-- 1. Real macOS Chrome Bar (for Desktop & Tablet) -->
+          <div v-if="previewDevice !== 'mobile'" class="preview-chassis-chrome">
             <div class="preview-chrome-dots">
               <span></span><span></span><span></span>
             </div>
+
+            <!-- Reload Icon & URL Bar -->
+            <button
+              style="background: transparent; border: none; color: #64748b; cursor: pointer; display: flex; align-items: center; padding: 2px;"
+              title="Refresh"
+              @click="handleRefreshSimulator"
+            >
+              <RotateCw :size="12" :class="{ 'spin-animation': isRefreshing }" />
+            </button>
+
             <div class="preview-chrome-address-bar">
-              <ShieldCheck :size="12" style="color: #10b981;" />
-              <span>https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              <Lock :size="11" style="color: #10b981;" />
+              <span style="color: #0f172a; font-weight: 600;">https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              <span style="margin-left: auto; font-size: 0.65rem; color: #10b981; font-weight: 700; background: #ecfdf5; padding: 1px 6px; border-radius: 4px;">
+                ● 1.2ms TTFB
+              </span>
             </div>
           </div>
 
-          <div class="preview-chassis-content" :style="{ fontFamily: activePreviewTemplate.fontFamily }">
-            <header class="sim-rendered-navbar">
-              <div class="sim-nav-brand" :style="{ color: previewAccent }">
-                {{ activePreviewTemplate.category === 'portfolio' ? 'Rizal Pratama' : activePreviewTemplate.title.split('&')[0] }}
-              </div>
-              <nav class="sim-nav-links" v-if="previewDevice !== 'mobile'">
-                <span>Tentang</span>
-                <span>Fitur</span>
-                <span>Karya</span>
-                <span>Kontak</span>
-              </nav>
-              <button class="sim-nav-btn" :style="{ background: previewAccent }">
-                Hubungi Kami
-              </button>
-            </header>
+          <!-- 2. Realistic Smartphone Hardware Bar & Notch (for Mobile) -->
+          <div v-if="previewDevice === 'mobile'" class="mobile-hardware-bar">
+            <span>09:41</span>
+            <div class="mobile-dynamic-island"></div>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <Wifi :size="11" />
+              <span>100%</span>
+            </div>
+          </div>
 
-            <section class="sim-rendered-hero">
-              <span class="sim-hero-badge" :style="{ background: `${previewAccent}15`, color: previewAccent, border: `1px solid ${previewAccent}30` }">
-                ★ {{ activePreviewTemplate.tier.toUpperCase() }} • LIGHTHOUSE 100/100
-              </span>
-              <h2 class="sim-hero-title">
-                {{ activePreviewTemplate.defaultRole || activePreviewTemplate.title }}
-              </h2>
-              <p class="sim-hero-sub">
-                {{ activePreviewTemplate.defaultBio || activePreviewTemplate.desc }}
-              </p>
-              <div class="sim-hero-ctas">
-                <button class="sim-btn-primary" :style="{ background: previewAccent }">
-                  Mulai Sekarang
-                </button>
-                <button class="sim-btn-outline">
-                  Pelajari Selengkapnya
-                </button>
-              </div>
-            </section>
+          <!-- Dynamic Live Renderer Content -->
+          <div class="preview-chassis-content" :style="{ opacity: isRefreshing ? 0.4 : 1, transition: 'opacity 0.2s ease' }">
+            <TemplateLiveRenderer
+              :template="activePreviewTemplate"
+              :accent-color="previewAccent"
+              :is-dark-mode="isPreviewDarkMode"
+              :device="previewDevice"
+            />
+          </div>
 
-            <section style="padding: 24px 0; background: #fafafa; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9;">
-              <div class="sim-section-header">
-                <h3>Keunggulan Arsitektur & Performa</h3>
-                <p>Dioptimalkan secara otonom untuk waktu muat instan dan UX responsif.</p>
-              </div>
-              <div class="sim-grid-3">
-                <div v-for="(f, idx) in activePreviewTemplate.features" :key="idx" class="sim-feature-card">
-                  <div class="sim-card-icon" :style="{ background: previewAccent }">
-                    <CheckCircle2 :size="18" />
-                  </div>
-                  <strong>{{ f }}</strong>
-                  <p>Arsitektur native tanpa bloatware pihak ketiga, mendukung cache edge Traefik v3 dan SSL otomatis.</p>
-                </div>
-              </div>
-            </section>
-
-            <footer class="sim-rendered-footer">
-              <div>
-                <strong>HeroCMS Studio Blueprint</strong> • Ditenagai oleh Traefik & Docker Container
-              </div>
-              <div>
-                © 2026 Hak Cipta Dilindungi.
-              </div>
-            </footer>
+          <!-- Smartphone Home Indicator (for Mobile) -->
+          <div v-if="previewDevice === 'mobile'" class="mobile-home-indicator-bar">
+            <div class="home-notch-pill"></div>
           </div>
         </div>
       </div>

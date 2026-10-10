@@ -38,6 +38,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'feature',
         scope: 'Ecosystem Condiments & Dual View Mode',
         description: 'Menambahkan banner Spotlight Blueprint Pilihan Editor, bar metrik Marketplace Pulse Telemetry, mode tampilan Dual View (Grid Catalog vs Split Studio Inspector berdampingan dengan live device preview instan), peta alur kerja filosofi blueprint (3 langkah), serta banner asisten AI Blueprint Architect.'
+      },
+      {
+        id: 'c-140-6',
+        type: 'improvement',
+        scope: 'Realistic Device Simulator & Dynamic Block Rendering',
+        description: 'Memperbaharui simulator pratinjau secara radikal: menghadirkan komponen TemplateLiveRenderer yang merender blok visual aktual (Accordion buka-tutup interaktif, toggle paket harga, ranking listgroup, showcase studi kasus), chassis smartphone realistis dengan Dynamic Island & status bar, macOS browser bar dengan live TTFB status, switch dark/light mode live, zoom scaler (100%, 85%, 70%), dan animasi muat ulang.'
       }
     ]
   },
