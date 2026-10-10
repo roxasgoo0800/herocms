@@ -11,7 +11,7 @@ export const changelogReleases: ChangelogRelease[] = [
     items: [
       {
         id: 'c-138-1',
-        type: 'fix',
+        type: 'bugfix',
         scope: 'PostgreSQL Database & Repository',
         description: 'Memperbaiki skema DDL media_assets dan menambahkan migrasi ALTER TABLE ADD COLUMN IF NOT EXISTS bucket_name agar query CreateAsset dan GetAssets berjalan tanpa kendala kolom tidak ditemukan.'
       },

@@ -22,7 +22,8 @@ import {
   ShieldCheck,
   HardDrive,
   Calendar,
-  ArrowUpDown
+  ArrowUpDown,
+  ChevronDown
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { MediaAssetItem } from '../../types/dashboard';
@@ -46,6 +47,14 @@ const {
 
 const assetFilter = ref<'all' | 'image' | 'vector' | 'pdf' | 'excel' | 'doc'>('all');
 const sortBy = ref<'newest' | 'oldest' | 'name' | 'size'>('newest');
+const isSortDropdownOpen = ref(false);
+const sortOptions = [
+  { value: 'newest', label: 'Terbaru' },
+  { value: 'oldest', label: 'Terlama' },
+  { value: 'name', label: 'Nama (A-Z)' },
+  { value: 'size', label: 'Ukuran Terbesar' }
+] as const;
+
 const mediaSearch = ref('');
 const isDragging = ref(false);
 const failedImageIds = ref<Set<string>>(new Set());
@@ -61,12 +70,21 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
   }
 };
 
+const handleSortDropdownOutsideClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement;
+  if (!target.closest('.custom-filter-dropdown-wrap')) {
+    isSortDropdownOpen.value = false;
+  }
+};
+
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown);
+  document.addEventListener('click', handleSortDropdownOutsideClick);
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown);
+  document.removeEventListener('click', handleSortDropdownOutsideClick);
 });
 
 // Document preview modal state
@@ -331,15 +349,31 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
       </div>
 
       <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-        <!-- Sort Control -->
-        <div class="media-sort-wrapper">
-          <ArrowUpDown :size="13" class="sort-icon" />
-          <select v-model="sortBy" class="media-sort-select" title="Urutkan Berkas">
-            <option value="newest">Terbaru</option>
-            <option value="oldest">Terlama</option>
-            <option value="name">Nama (A-Z)</option>
-            <option value="size">Ukuran Terbesar</option>
-          </select>
+        <!-- Bespoke Custom Sort Dropdown (HeroCMS Studio Theme) -->
+        <div class="custom-filter-dropdown-wrap">
+          <button
+            type="button"
+            class="custom-filter-trigger-btn"
+            @click.stop="isSortDropdownOpen = !isSortDropdownOpen"
+            title="Urutkan Berkas"
+          >
+            <ArrowUpDown :size="13" style="color: #64748b;" />
+            <span>{{ sortOptions.find(o => o.value === sortBy)?.label || 'Terbaru' }}</span>
+            <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isSortDropdownOpen }" />
+          </button>
+          <div v-if="isSortDropdownOpen" class="custom-filter-dropdown-menu">
+            <button
+              v-for="opt in sortOptions"
+              :key="opt.value"
+              type="button"
+              class="custom-filter-dropdown-item"
+              :class="{ active: sortBy === opt.value }"
+              @click="sortBy = opt.value; isSortDropdownOpen = false"
+            >
+              <span>{{ opt.label }}</span>
+              <Check v-if="sortBy === opt.value" :size="13" class="dropdown-check-icon" />
+            </button>
+          </div>
         </div>
 
         <div class="segmented-filter-bar">
