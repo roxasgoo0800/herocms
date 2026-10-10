@@ -74,6 +74,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Mobile Landscape Ergonomics & Hardware Orientation Realignment',
         description: 'Memperbaiki tata letak hardware smartphone pada mode rotasi lanskap: memindahkan Dynamic Island fisik ke bezel samping kiri (sesuai arah rotasi 90 derajat alami), menghilangkan lubang speaker yang janggal di sisi panjang atas, memperluas tinggi viewport lanskap menjadi 520px agar konten lega, menyatukan URL bar ke status bar atas, dan mempertahankan gestur bar bawah yang elegan.'
+      },
+      {
+        id: 'c-141-12',
+        type: 'improvement',
+        scope: 'Physical Gyroscope Rotation & OLED Reflow Choreography',
+        description: 'Mengganti animasi perubahan orientasi dasar (yang sebelumnya hanya meregangkan lebar/tinggi div seperti karet) dengan koreografi rotasi giroskopik fisik 3D otentik: sasis perangkat terangkat dengan inersia sudut tilt -8.5° dan bayangan mendalam, reflow tampilan layar dengan shutter micro-blur OLED (mencegah teks melompat-lompat selama transisi), serta settling pegas elastis yang grounded layaknya simulasi perangkat nyata.'
       }
     ]
   },

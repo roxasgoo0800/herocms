@@ -68,6 +68,54 @@ const tabletOrientation = ref<'portrait' | 'landscape'>('portrait');
 const splitTabletOrientation = ref<'portrait' | 'landscape'>('portrait');
 const mobileOrientation = ref<'portrait' | 'landscape'>('portrait');
 const splitMobileOrientation = ref<'portrait' | 'landscape'>('portrait');
+
+// Physical Gyroscope Rotation Animation State
+const isRotatingSimulator = ref(false);
+const simulatorRotationDir = ref<'to-landscape' | 'to-portrait'>('to-landscape');
+
+const handleSetMobileOrientation = (target: 'portrait' | 'landscape') => {
+  if (mobileOrientation.value === target) return;
+  simulatorRotationDir.value = target === 'landscape' ? 'to-landscape' : 'to-portrait';
+  isRotatingSimulator.value = true;
+  mobileOrientation.value = target;
+  setTimeout(() => {
+    isRotatingSimulator.value = false;
+  }, 480);
+};
+
+const handleSetTabletOrientation = (target: 'portrait' | 'landscape') => {
+  if (tabletOrientation.value === target) return;
+  simulatorRotationDir.value = target === 'landscape' ? 'to-landscape' : 'to-portrait';
+  isRotatingSimulator.value = true;
+  tabletOrientation.value = target;
+  setTimeout(() => {
+    isRotatingSimulator.value = false;
+  }, 480);
+};
+
+const isRotatingSplit = ref(false);
+const splitRotationDir = ref<'to-landscape' | 'to-portrait'>('to-landscape');
+
+const handleSetSplitMobileOrientation = (target: 'portrait' | 'landscape') => {
+  if (splitMobileOrientation.value === target) return;
+  splitRotationDir.value = target === 'landscape' ? 'to-landscape' : 'to-portrait';
+  isRotatingSplit.value = true;
+  splitMobileOrientation.value = target;
+  setTimeout(() => {
+    isRotatingSplit.value = false;
+  }, 480);
+};
+
+const handleSetSplitTabletOrientation = (target: 'portrait' | 'landscape') => {
+  if (splitTabletOrientation.value === target) return;
+  splitRotationDir.value = target === 'landscape' ? 'to-landscape' : 'to-portrait';
+  isRotatingSplit.value = true;
+  splitTabletOrientation.value = target;
+  setTimeout(() => {
+    isRotatingSplit.value = false;
+  }, 480);
+};
+
 const previewAccent = ref<string>('#2563eb');
 const isPreviewDarkMode = ref(false);
 const previewZoomScale = ref<number>(1);
@@ -581,7 +629,7 @@ const handleConfirmDeploy = async () => {
                 :class="{ active: splitTabletOrientation === 'portrait' }"
                 style="padding: 3px 6px; font-size: 0.68rem;"
                 title="Tablet Portret (768px)"
-                @click="splitTabletOrientation = 'portrait'"
+                @click="handleSetSplitTabletOrientation('portrait')"
               >
                 <span>768px</span>
               </button>
@@ -590,7 +638,7 @@ const handleConfirmDeploy = async () => {
                 :class="{ active: splitTabletOrientation === 'landscape' }"
                 style="padding: 3px 6px; font-size: 0.68rem;"
                 title="Tablet Lanskap / Rotasi (1024px)"
-                @click="splitTabletOrientation = 'landscape'"
+                @click="handleSetSplitTabletOrientation('landscape')"
               >
                 <RotateCw :size="10" />
                 <span>1024px</span>
@@ -604,7 +652,7 @@ const handleConfirmDeploy = async () => {
                 :class="{ active: splitMobileOrientation === 'portrait' }"
                 style="padding: 3px 6px; font-size: 0.68rem;"
                 title="Smartphone Portret (390px)"
-                @click="splitMobileOrientation = 'portrait'"
+                @click="handleSetSplitMobileOrientation('portrait')"
               >
                 <span>390px</span>
               </button>
@@ -613,7 +661,7 @@ const handleConfirmDeploy = async () => {
                 :class="{ active: splitMobileOrientation === 'landscape' }"
                 style="padding: 3px 6px; font-size: 0.68rem;"
                 title="Smartphone Lanskap / Rotasi (844px)"
-                @click="splitMobileOrientation = 'landscape'"
+                @click="handleSetSplitMobileOrientation('landscape')"
               >
                 <RotateCw :size="10" />
                 <span>844px</span>
@@ -646,7 +694,11 @@ const handleConfirmDeploy = async () => {
           <div
             v-if="splitDevice === 'mobile'"
             class="preview-browser-chassis device-mobile"
-            :class="{ 'orientation-landscape': splitMobileOrientation === 'landscape' }"
+            :class="{
+              'orientation-landscape': splitMobileOrientation === 'landscape',
+              'device-anim-rotate-landscape': isRotatingSplit && splitRotationDir === 'to-landscape',
+              'device-anim-rotate-portrait': isRotatingSplit && splitRotationDir === 'to-portrait'
+            }"
           >
             <!-- Left-edge Rotated Dynamic Island when in Landscape -->
             <div v-if="splitMobileOrientation === 'landscape'" class="mobile-landscape-island-left">
@@ -680,7 +732,7 @@ const handleConfirmDeploy = async () => {
               </div>
             </div>
 
-            <div class="preview-chassis-content">
+            <div class="preview-chassis-content" :class="{ 'screen-display-reflow': isRotatingSplit }">
               <TemplateLiveRenderer
                 :template="selectedSplitTemplate"
                 :accent-color="selectedSplitTemplate.accentColor"
@@ -705,7 +757,11 @@ const handleConfirmDeploy = async () => {
           <div
             v-else-if="splitDevice === 'tablet'"
             class="preview-browser-chassis device-tablet"
-            :class="{ 'orientation-landscape': splitTabletOrientation === 'landscape' }"
+            :class="{
+              'orientation-landscape': splitTabletOrientation === 'landscape',
+              'device-anim-rotate-landscape': isRotatingSplit && splitRotationDir === 'to-landscape',
+              'device-anim-rotate-portrait': isRotatingSplit && splitRotationDir === 'to-portrait'
+            }"
           >
             <div class="tablet-bezel-camera">
               <div class="tablet-camera-lens"></div>
@@ -729,7 +785,7 @@ const handleConfirmDeploy = async () => {
               </div>
             </div>
 
-            <div class="preview-chassis-content">
+            <div class="preview-chassis-content" :class="{ 'screen-display-reflow': isRotatingSplit }">
               <TemplateLiveRenderer
                 :template="selectedSplitTemplate"
                 :accent-color="selectedSplitTemplate.accentColor"
@@ -895,7 +951,7 @@ const handleConfirmDeploy = async () => {
               :class="{ active: tabletOrientation === 'portrait' }"
               style="padding: 4px 8px; font-size: 0.7rem;"
               title="Tablet Portret (768px)"
-              @click="tabletOrientation = 'portrait'"
+              @click="handleSetTabletOrientation('portrait')"
             >
               <Tablet :size="12" />
               <span>Portret (768px)</span>
@@ -905,7 +961,7 @@ const handleConfirmDeploy = async () => {
               :class="{ active: tabletOrientation === 'landscape' }"
               style="padding: 4px 8px; font-size: 0.7rem;"
               title="Tablet Lanskap / Rotasi (1024px)"
-              @click="tabletOrientation = 'landscape'"
+              @click="handleSetTabletOrientation('landscape')"
             >
               <RotateCw :size="12" />
               <span>Lanskap (1024px)</span>
@@ -919,7 +975,7 @@ const handleConfirmDeploy = async () => {
               :class="{ active: mobileOrientation === 'portrait' }"
               style="padding: 4px 8px; font-size: 0.7rem;"
               title="Smartphone Portret (390px)"
-              @click="mobileOrientation = 'portrait'"
+              @click="handleSetMobileOrientation('portrait')"
             >
               <Smartphone :size="12" />
               <span>Portret (390px)</span>
@@ -929,7 +985,7 @@ const handleConfirmDeploy = async () => {
               :class="{ active: mobileOrientation === 'landscape' }"
               style="padding: 4px 8px; font-size: 0.7rem;"
               title="Smartphone Lanskap / Rotasi (844px)"
-              @click="mobileOrientation = 'landscape'"
+              @click="handleSetMobileOrientation('landscape')"
             >
               <RotateCw :size="12" />
               <span>Lanskap (844px)</span>
@@ -1037,7 +1093,9 @@ const handleConfirmDeploy = async () => {
             'device-' + previewDevice,
             {
               'framed-mode': isDesktopFramed && previewDevice === 'desktop',
-              'orientation-landscape': (previewDevice === 'tablet' && tabletOrientation === 'landscape') || (previewDevice === 'mobile' && mobileOrientation === 'landscape')
+              'orientation-landscape': (previewDevice === 'tablet' && tabletOrientation === 'landscape') || (previewDevice === 'mobile' && mobileOrientation === 'landscape'),
+              'device-anim-rotate-landscape': isRotatingSimulator && simulatorRotationDir === 'to-landscape',
+              'device-anim-rotate-portrait': isRotatingSimulator && simulatorRotationDir === 'to-portrait'
             }
           ]"
           :style="{
@@ -1136,7 +1194,11 @@ const handleConfirmDeploy = async () => {
           </div>
 
           <!-- Dynamic Live Renderer Content (Inside Screen) -->
-          <div class="preview-chassis-content" :style="{ opacity: isRefreshing ? 0.4 : 1, transition: 'opacity 0.2s ease' }">
+          <div
+            class="preview-chassis-content"
+            :class="{ 'screen-display-reflow': isRotatingSimulator }"
+            :style="{ opacity: isRefreshing ? 0.4 : 1, transition: 'opacity 0.2s ease' }"
+          >
             <TemplateLiveRenderer
               :template="activePreviewTemplate"
               :accent-color="previewAccent"
