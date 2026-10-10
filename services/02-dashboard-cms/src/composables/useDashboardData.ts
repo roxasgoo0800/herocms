@@ -639,11 +639,14 @@ const uploadMediaFiles = async (files: FileList | File[]) => {
   isUploadingMedia.value = false;
   if (successCount > 0) {
     showToast(`${successCount} file berhasil diunggah ke MinIO S3 & disinkronkan!`, 'success');
-    recalculateStorage();
+    if (!mediaStorage.value.usedStorage || mediaStorage.value.usedStorage === '0 MB') {
+      recalculateStorage();
+    }
   }
 };
 
 const deleteMedia = async (med: MediaAssetItem) => {
+  let serverStorageUpdated = false;
   try {
     const res = await studioApi.deleteAsset(med.id);
     if (res?.storage?.usedStorage) {
@@ -655,6 +658,7 @@ const deleteMedia = async (med: MediaAssetItem) => {
         freeStorage: res.storage.freeStorage || '2.00 GB',
         usagePercentage: res.storage.usagePercentage || '0.0%'
       };
+      serverStorageUpdated = true;
     }
   } catch (err: any) {
     console.warn('[MEDIA S3 DELETE WARNING]', err);
@@ -662,7 +666,9 @@ const deleteMedia = async (med: MediaAssetItem) => {
   const idx = mediaAssets.value.findIndex(m => m.id === med.id);
   if (idx !== -1) {
     mediaAssets.value.splice(idx, 1);
-    recalculateStorage();
+    if (!serverStorageUpdated) {
+      recalculateStorage();
+    }
     showToast(`Media ${med.name} dihapus dari S3 bucket.`, 'info');
   }
 };
@@ -918,6 +924,12 @@ const resolveTicket = async (ticket: SupportTicketItem) => {
   }
 };
 
+// User-scoped LocalStorage Cache Key Helper
+const getCacheKey = (email?: string) => {
+  const user = (email || userEmail.value || '').toLowerCase().trim();
+  return user ? `herocms_dashboard_cache_${user}` : 'herocms_dashboard_cache';
+};
+
 // Backend API Synchronization & Redis Warmup
 const isBackendSyncing = ref(false);
 const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
@@ -929,13 +941,16 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
       const warmRes = await studioApi.warmAllMenusCache();
       if (warmRes?.bundle) {
         const b = warmRes.bundle;
-        if (b.containers?.containers?.length) {
+        if (Array.isArray(b.containers?.containers)) {
           containers.value = b.containers.containers;
           if (b.containers.quota?.max) {
             userPlan.value.maxContainers = b.containers.quota.max;
           }
+          if (containers.value.length > 0 && !containers.value.some(c => c.id === activeContainerId.value)) {
+            activeContainerId.value = containers.value[0].id;
+          }
         }
-        if (b.articles?.articles?.length) {
+        if (Array.isArray(b.articles?.articles)) {
           articles.value = b.articles.articles;
         }
         if (b.assets) {
@@ -958,16 +973,16 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
             recalculateStorage();
           }
         }
-        if (b.domains?.domains?.length) {
+        if (Array.isArray(b.domains?.domains)) {
           customDomains.value = b.domains.domains;
         }
-        if (b.tickets?.tickets?.length) {
+        if (Array.isArray(b.tickets?.tickets)) {
           supportTickets.value = b.tickets.tickets.map((t: any) => normalizeTicket(t));
         }
-        if (b.invoices?.invoices?.length) {
+        if (Array.isArray(b.invoices?.invoices)) {
           invoices.value = b.invoices.invoices;
         }
-        if (b.webhooks?.webhooks?.length) {
+        if (Array.isArray(b.webhooks?.webhooks)) {
           webhooks.value = b.webhooks.webhooks;
         }
         if (b.quota?.plan?.name) {
@@ -981,10 +996,11 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
           };
         }
 
-        // Persist to local cache for instant zero-latency loads
+        // Persist to user-scoped local cache for instant zero-latency loads
         try {
-          localStorage.setItem('herocms_dashboard_cache', JSON.stringify({
+          localStorage.setItem(getCacheKey(), JSON.stringify({
             timestamp: Date.now(),
+            user: userEmail.value,
             containers: containers.value,
             articles: articles.value,
             mediaAssets: mediaAssets.value,
@@ -1018,13 +1034,16 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
       studioApi.getWebhooks()
     ]);
 
-    if (cRes.status === 'fulfilled' && cRes.value?.containers?.length) {
+    if (cRes.status === 'fulfilled' && Array.isArray(cRes.value?.containers)) {
       containers.value = cRes.value.containers;
       if (cRes.value.quota?.max) {
         userPlan.value.maxContainers = cRes.value.quota.max;
       }
+      if (containers.value.length > 0 && !containers.value.some(c => c.id === activeContainerId.value)) {
+        activeContainerId.value = containers.value[0].id;
+      }
     }
-    if (aRes.status === 'fulfilled' && aRes.value?.articles?.length) {
+    if (aRes.status === 'fulfilled' && Array.isArray(aRes.value?.articles)) {
       articles.value = aRes.value.articles;
     }
     if (mRes.status === 'fulfilled' && mRes.value) {
@@ -1043,25 +1062,28 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
           freeStorage: mRes.value.freeStorage || '2.00 GB',
           usagePercentage: mRes.value.usagePercentage || '0.0%'
         };
+      } else {
+        recalculateStorage();
       }
     }
-    if (dRes.status === 'fulfilled' && dRes.value?.domains?.length) {
+    if (dRes.status === 'fulfilled' && Array.isArray(dRes.value?.domains)) {
       customDomains.value = dRes.value.domains;
     }
-    if (tRes.status === 'fulfilled' && tRes.value?.tickets?.length) {
+    if (tRes.status === 'fulfilled' && Array.isArray(tRes.value?.tickets)) {
       supportTickets.value = tRes.value.tickets.map((t: any) => normalizeTicket(t));
     }
-    if (iRes.status === 'fulfilled' && iRes.value?.invoices?.length) {
+    if (iRes.status === 'fulfilled' && Array.isArray(iRes.value?.invoices)) {
       invoices.value = iRes.value.invoices;
     }
-    if (wRes.status === 'fulfilled' && wRes.value?.webhooks?.length) {
+    if (wRes.status === 'fulfilled' && Array.isArray(wRes.value?.webhooks)) {
       webhooks.value = wRes.value.webhooks;
     }
 
-    // Persist fresh server state to local cache for instant zero-latency loads
+    // Persist fresh server state to user-scoped local cache for instant zero-latency loads
     try {
-      localStorage.setItem('herocms_dashboard_cache', JSON.stringify({
+      localStorage.setItem(getCacheKey(), JSON.stringify({
         timestamp: Date.now(),
+        user: userEmail.value,
         containers: containers.value,
         articles: articles.value,
         mediaAssets: mediaAssets.value,
@@ -1084,13 +1106,22 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
 };
 
 // Immediate cache hydration for instant zero-latency rendering
-const hydrateFromCache = () => {
+const hydrateFromCache = (overrideEmail?: string) => {
   try {
-    const raw = localStorage.getItem('herocms_dashboard_cache');
+    const targetEmail = (overrideEmail || userEmail.value || '').toLowerCase().trim();
+    const raw = localStorage.getItem(getCacheKey(targetEmail));
     if (raw) {
       const data = JSON.parse(raw);
-      if (Array.isArray(data.containers) && data.containers.length) containers.value = data.containers;
-      if (Array.isArray(data.articles) && data.articles.length) articles.value = data.articles;
+      if (data.user && targetEmail && data.user.toLowerCase().trim() !== targetEmail) {
+        return;
+      }
+      if (Array.isArray(data.containers)) {
+        containers.value = data.containers;
+        if (containers.value.length > 0 && !containers.value.some(c => c.id === activeContainerId.value)) {
+          activeContainerId.value = containers.value[0].id;
+        }
+      }
+      if (Array.isArray(data.articles)) articles.value = data.articles;
       if (Array.isArray(data.mediaAssets)) {
         mediaAssets.value = data.mediaAssets;
         if (data.mediaStorage) {
@@ -1102,10 +1133,10 @@ const hydrateFromCache = () => {
           mediaBucketName.value = data.mediaBucketName;
         }
       }
-      if (Array.isArray(data.customDomains) && data.customDomains.length) customDomains.value = data.customDomains;
-      if (Array.isArray(data.supportTickets) && data.supportTickets.length) supportTickets.value = data.supportTickets.map((t: any) => normalizeTicket(t));
-      if (Array.isArray(data.invoices) && data.invoices.length) invoices.value = data.invoices;
-      if (Array.isArray(data.webhooks) && data.webhooks.length) webhooks.value = data.webhooks;
+      if (Array.isArray(data.customDomains)) customDomains.value = data.customDomains;
+      if (Array.isArray(data.supportTickets)) supportTickets.value = data.supportTickets.map((t: any) => normalizeTicket(t));
+      if (Array.isArray(data.invoices)) invoices.value = data.invoices;
+      if (Array.isArray(data.webhooks)) webhooks.value = data.webhooks;
       if (data.userPlan?.name) userPlan.value = data.userPlan;
     }
   } catch (e) {
@@ -1120,6 +1151,7 @@ if (typeof localStorage !== 'undefined' && localStorage.getItem('cloudcms_auth_t
 // Reset entire dashboard reactive state and client storage
 const resetDashboardState = () => {
   // 1. Reset all in-memory reactive state
+  const prevEmail = userEmail.value;
   userEmail.value = '';
   userPlan.value = { ...initialUserPlan };
   containers.value = [...initialContainers];
@@ -1136,12 +1168,15 @@ const resetDashboardState = () => {
   searchQuery.value = '';
   statusFilter.value = 'all';
 
-  // 2. Clear all client storage
+  // 2. Clear user and cache storage
   if (typeof localStorage !== 'undefined') {
+    if (prevEmail) {
+      localStorage.removeItem(getCacheKey(prevEmail));
+    }
+    localStorage.removeItem('herocms_dashboard_cache');
     localStorage.removeItem('cloudcms_auth_token');
     localStorage.removeItem('cloudcms_user_email');
     localStorage.removeItem('cloudcms_csrf_token');
-    localStorage.removeItem('herocms_dashboard_cache');
     localStorage.removeItem('herocms_active_menu');
     localStorage.removeItem('herocms_active_container_id');
   }
@@ -1273,7 +1308,9 @@ export function useDashboardData() {
     resolveTicket,
     executeLogout,
     resetDashboardState,
-    updateUserEmail
+    updateUserEmail,
+    getCacheKey,
+    hydrateFromCache
   };
 }
 

@@ -526,7 +526,10 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.Containers, nil
+	if tenantID == "99420000-0000-0000-0000-000000009942" {
+		return r.Containers, nil
+	}
+	return []gin.H{}, nil
 }
 
 func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H) error {
@@ -709,6 +712,13 @@ func (r *Repository) GetTenantStorageUsageBytes(ctx context.Context, tenantID st
 	defer r.mu.RUnlock()
 	var total int64
 	for _, a := range r.Assets {
+		if tID, ok := a["tenant_id"].(string); ok && tID != "" {
+			if tID != tenantID {
+				continue
+			}
+		} else if tenantID != "99420000-0000-0000-0000-000000009942" {
+			continue
+		}
 		if sizeBytes, ok := a["fileSizeBytes"].(int64); ok {
 			total += sizeBytes
 		} else {
@@ -757,7 +767,17 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.Assets, nil
+	var filtered []gin.H
+	for _, a := range r.Assets {
+		if tID, ok := a["tenant_id"].(string); ok && tID != "" {
+			if tID == tenantID {
+				filtered = append(filtered, a)
+			}
+		} else if tenantID == "99420000-0000-0000-0000-000000009942" {
+			filtered = append(filtered, a)
+		}
+	}
+	return filtered, nil
 }
 
 func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, mimeType, dimensions, fileSize string, fileSizeBytes int64, storageURL, s3Key, bucketName string) (gin.H, error) {
