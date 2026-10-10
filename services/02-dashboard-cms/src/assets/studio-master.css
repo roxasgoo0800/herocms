@@ -10809,6 +10809,12 @@ html {
   background-size: 20px 20px;
 }
 
+.preview-simulator-stage.stage-desktop-fullscreen {
+  padding: 0 !important;
+  background-image: none !important;
+  background-color: #ffffff !important;
+}
+
 .preview-browser-chassis {
   background: #ffffff;
   border-radius: 12px;
@@ -10821,7 +10827,24 @@ html {
 }
 
 .preview-browser-chassis.device-desktop {
+  max-width: 100%;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+}
+
+.preview-browser-chassis.device-desktop.framed-mode {
   max-width: 1200px;
+  border-radius: 12px;
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  margin: 0 auto;
+}
+
+.preview-browser-chassis.device-desktop:not(.framed-mode) .preview-chassis-chrome {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  padding: 8px 24px;
 }
 
 .preview-browser-chassis.device-tablet {

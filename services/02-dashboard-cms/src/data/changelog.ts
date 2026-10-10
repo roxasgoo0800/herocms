@@ -38,6 +38,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Teleport Fullscreen Blur & Dead-Center Alignment',
         description: 'Membungkus seluruh modal dan simulator pratinjau dengan Teleport to="body" dan z-index 100000 agar efek backdrop blur menyelimuti 100% seluruh layar viewport (melintasi sidebar dan header atas tanpa terisolasi di content area), serta posisi form dialog tepat berada di tengah layar.'
+      },
+      {
+        id: 'c-141-6',
+        type: 'feature',
+        scope: 'Desktop Simulator Fullscreen Edge-to-Edge',
+        description: 'Menjadikan pratinjau versi desktop tampil dalam mode Layar Penuh 100% (Edge-to-Edge Fullscreen) secara default tanpa ruang hitam kosong di kiri-kanan, serta menyediakan tombol pengalih mode Layar Penuh vs Bingkai Jendela (1200px) di toolbar simulator.'
       }
     ]
   },

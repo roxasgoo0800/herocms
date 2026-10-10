@@ -28,7 +28,9 @@ import {
   ShieldCheck,
   Check,
   Globe,
-  FolderGit2
+  FolderGit2,
+  Maximize2,
+  Minimize2
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import {
@@ -61,6 +63,7 @@ const splitDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
 const isPreviewOpen = ref(false);
 const activePreviewTemplate = ref<OfficialTemplateItem | null>(null);
 const previewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
+const isDesktopFramed = ref(false); // false = Layar Penuh 100% edge-to-edge
 const previewAccent = ref<string>('#2563eb');
 const isPreviewDarkMode = ref(false);
 const previewZoomScale = ref<number>(1);
@@ -693,6 +696,30 @@ const handleConfirmDeploy = async () => {
             </button>
           </div>
 
+          <!-- Desktop Fullscreen vs Framed Toggle (Only shown when on Desktop mode) -->
+          <div v-if="previewDevice === 'desktop'" class="preview-device-switchers" style="padding: 2px;">
+            <button
+              class="btn-device-pill"
+              :class="{ active: !isDesktopFramed }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Tampilan Layar Penuh 100% (Edge-to-Edge)"
+              @click="isDesktopFramed = false"
+            >
+              <Maximize2 :size="12" />
+              <span>Layar Penuh</span>
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: isDesktopFramed }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Tampilan Bingkai Jendela (1200px)"
+              @click="isDesktopFramed = true"
+            >
+              <Minimize2 :size="12" />
+              <span>1200px</span>
+            </button>
+          </div>
+
           <!-- Color Accent Picker -->
           <div class="preview-color-selector">
             <Palette :size="14" style="color: #94a3b8; margin-right: 2px;" />
@@ -781,12 +808,21 @@ const handleConfirmDeploy = async () => {
       </div>
 
       <!-- Simulator Viewport Stage with Zoom Scaling -->
-      <div class="preview-simulator-stage">
+      <div
+        class="preview-simulator-stage"
+        :class="{
+          'stage-desktop-fullscreen': previewDevice === 'desktop' && !isDesktopFramed,
+          'stage-framed': previewDevice !== 'desktop' || isDesktopFramed
+        }"
+      >
         <div
           class="preview-browser-chassis"
-          :class="'device-' + previewDevice"
+          :class="[
+            'device-' + previewDevice,
+            { 'framed-mode': isDesktopFramed && previewDevice === 'desktop' }
+          ]"
           :style="{
-            transform: `scale(${previewZoomScale})`,
+            transform: (previewDevice === 'desktop' && !isDesktopFramed && previewZoomScale === 1) ? 'none' : `scale(${previewZoomScale})`,
             transformOrigin: 'top center',
             transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.25s ease'
           }"
