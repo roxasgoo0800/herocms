@@ -56,6 +56,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'feature',
         scope: 'Mobile Landscape Orientation Switcher (Portret 390px vs Lanskap 844px)',
         description: 'Menambahkan opsi rotasi orientasi smartphone (Portret 390px dan Lanskap 844px) dengan bezel fisik elegan, Dynamic Island presisi, indikator gestur bar bawah, transisi sasis mulus, dan adaptasi tata letak konten responsif.'
+      },
+      {
+        id: 'c-141-9',
+        type: 'feature',
+        scope: 'Realistic Physical Hardware Device Mockups (Mobile Phone & iPad Tablet)',
+        description: 'Mengubah tampilan pratinjau mobile dan tablet menjadi mockup fisik perangkat keras yang otentik: Smartphone Flagship (speaker earpiece slit, Dynamic Island dengan lensa kamera & sensor, status bar 09:41, floating Safari address pill, home notch pill) dan iPad Pro Tablet (bezel camera, status bar iPadOS, Safari tab strip & SSL address box, home indicator), baik di Simulator Layar Penuh maupun Split Studio View.'
       }
     ]
   },

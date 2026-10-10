@@ -10849,8 +10849,7 @@ html {
 
 .preview-browser-chassis.device-tablet {
   max-width: 768px;
-  border-radius: 14px;
-  transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s ease;
+  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.35s ease, transform 0.25s ease;
 }
 
 .preview-browser-chassis.device-tablet.orientation-landscape {
@@ -10859,7 +10858,7 @@ html {
 
 .preview-browser-chassis.device-mobile {
   max-width: 390px;
-  transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s ease;
+  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.35s ease, transform 0.25s ease;
 }
 
 .preview-browser-chassis.device-mobile.orientation-landscape {
@@ -12627,43 +12626,118 @@ html {
   background: #10b981;
 }
 
-/* Realistic Mobile Smartphone Chassis */
+/* ==========================================================================
+   AUTHENTIC REALISTIC HARDWARE DEVICE MOCKUPS (MOBILE PHONE & TABLET)
+   ========================================================================== */
+
+/* 1. REALISTIC SMARTPHONE CHASSIS */
 .preview-browser-chassis.device-mobile {
-  max-width: 390px;
-  border-radius: 44px;
-  border: 10px solid #0f172a;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(255, 255, 255, 0.15);
+  border-radius: 50px;
+  border: 12px solid #090d16;
+  box-shadow: 
+    0 0 0 2px #334155, 
+    0 0 0 4px #1e293b,
+    0 25px 70px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
+  background: #090d16;
 }
 
+.preview-browser-chassis.device-mobile.orientation-landscape {
+  border-radius: 40px;
+}
+
+/* Speaker Earpiece Slit */
+.mobile-speaker-slit {
+  width: 52px;
+  height: 3.5px;
+  background: #1e293b;
+  border-radius: 99px;
+  margin: 4px auto 1px;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+/* Smartphone Hardware Status Bar */
 .mobile-hardware-bar {
-  background: #0f172a;
-  padding: 8px 16px 4px;
+  background: #090d16;
+  padding: 6px 18px 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   color: #ffffff;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 700;
   position: relative;
   z-index: 30;
+  letter-spacing: -0.01em;
+  user-select: none;
 }
 
+/* Realistic Dynamic Island with Camera Lens & Sensor */
 .mobile-dynamic-island {
   position: absolute;
   left: 50%;
-  top: 6px;
+  top: 5px;
   transform: translateX(-50%);
-  width: 90px;
-  height: 20px;
+  width: 106px;
+  height: 25px;
   background: #000000;
   border-radius: 99px;
   z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
+.island-camera-lens {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #0a1122;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 2px rgba(59, 130, 246, 0.4);
+}
+
+.island-sensor-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #050b14;
+}
+
+/* Mobile Safari Compact Floating URL Bar */
+.mobile-safari-bar {
+  background: #090d16;
+  padding: 6px 14px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 29;
+}
+
+.mobile-safari-pill {
+  width: 100%;
+  max-width: 250px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #e2e8f0;
+  font-size: 0.68rem;
+  font-family: ui-monospace, monospace;
+}
+
+/* Smartphone Home Indicator Bar */
 .mobile-home-indicator-bar {
-  background: #0f172a;
+  background: #090d16;
   padding: 6px 0 8px;
   display: flex;
   justify-content: center;
@@ -12673,8 +12747,118 @@ html {
 .home-notch-pill {
   width: 120px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.4);
   border-radius: 99px;
+  transition: width 0.25s ease;
+}
+
+/* 2. REALISTIC TABLET (IPAD PRO) HARDWARE CHASSIS */
+.preview-browser-chassis.device-tablet {
+  border-radius: 32px;
+  border: 14px solid #090d16;
+  box-shadow: 
+    0 0 0 2px #334155, 
+    0 0 0 4px #1e293b,
+    0 30px 80px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  background: #090d16;
+}
+
+.preview-browser-chassis.device-tablet.orientation-landscape {
+  border-radius: 30px;
+}
+
+/* Tablet Front Camera on Bezel */
+.tablet-bezel-camera {
+  background: #090d16;
+  padding: 4px 0 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tablet-camera-lens {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0a1122;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 2px rgba(59, 130, 246, 0.5);
+}
+
+.tablet-sensor-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #050b14;
+}
+
+/* Tablet Screen iPadOS Status Bar */
+.tablet-status-bar {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 5px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #0f172a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  user-select: none;
+}
+
+/* Tablet Safari App Bar (Tabs + Address) */
+.tablet-safari-bar {
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tablet-safari-tab {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #0f172a;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tablet-safari-address-box {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Tablet Bottom Home Indicator Bar */
+.tablet-home-indicator-bar {
+  background: #090d16;
+  padding: 6px 0 8px;
+  display: flex;
+  justify-content: center;
+  z-index: 30;
 }
 
 /* ==========================================================================

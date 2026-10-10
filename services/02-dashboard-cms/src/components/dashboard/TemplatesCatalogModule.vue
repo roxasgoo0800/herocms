@@ -638,14 +638,100 @@ const handleConfirmDeploy = async () => {
                 ? (splitTabletOrientation === 'landscape' ? '1024px' : '768px')
                 : '100%',
             margin: '0 auto',
+            padding: splitDevice !== 'desktop' ? '16px 0' : '0',
             transition: 'max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
           }"
         >
-          <TemplateLiveRenderer
-            :template="selectedSplitTemplate"
-            :accent-color="selectedSplitTemplate.accentColor"
-            :device="splitDevice === 'tablet' && splitTabletOrientation === 'landscape' ? 'desktop' : (splitDevice === 'mobile' && splitMobileOrientation === 'landscape' ? 'tablet' : splitDevice)"
-          />
+          <!-- 1. Real Smartphone Device Mockup in Split View -->
+          <div
+            v-if="splitDevice === 'mobile'"
+            class="preview-browser-chassis device-mobile"
+            :class="{ 'orientation-landscape': splitMobileOrientation === 'landscape' }"
+          >
+            <div class="mobile-speaker-slit"></div>
+            <div class="mobile-hardware-bar">
+              <span>09:41</span>
+              <div class="mobile-dynamic-island">
+                <div class="island-camera-lens"></div>
+                <div class="island-sensor-dot"></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <Wifi :size="11" />
+                <span>100%</span>
+              </div>
+            </div>
+
+            <div class="preview-chassis-content">
+              <TemplateLiveRenderer
+                :template="selectedSplitTemplate"
+                :accent-color="selectedSplitTemplate.accentColor"
+                :device="splitMobileOrientation === 'landscape' ? 'tablet' : 'mobile'"
+              />
+            </div>
+
+            <div class="mobile-safari-bar">
+              <div class="mobile-safari-pill">
+                <Lock :size="10" style="color: #10b981;" />
+                <span>{{ selectedSplitTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              </div>
+            </div>
+
+            <div class="mobile-home-indicator-bar">
+              <div class="home-notch-pill"></div>
+            </div>
+          </div>
+
+          <!-- 2. Real iPad Pro Tablet Device Mockup in Split View -->
+          <div
+            v-else-if="splitDevice === 'tablet'"
+            class="preview-browser-chassis device-tablet"
+            :class="{ 'orientation-landscape': splitTabletOrientation === 'landscape' }"
+          >
+            <div class="tablet-bezel-camera">
+              <div class="tablet-camera-lens"></div>
+              <div class="tablet-sensor-dot"></div>
+            </div>
+            <div class="tablet-status-bar">
+              <span>09:41 • Senin, 10 Okt</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <Wifi :size="12" />
+                <span>100%</span>
+              </div>
+            </div>
+            <div class="tablet-safari-bar">
+              <div class="tablet-safari-tab">
+                <Globe :size="11" style="color: #2563eb;" />
+                <span>{{ selectedSplitTemplate.title }}</span>
+              </div>
+              <div class="tablet-safari-address-box">
+                <Lock :size="11" style="color: #10b981;" />
+                <span>https://{{ selectedSplitTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              </div>
+            </div>
+
+            <div class="preview-chassis-content">
+              <TemplateLiveRenderer
+                :template="selectedSplitTemplate"
+                :accent-color="selectedSplitTemplate.accentColor"
+                :device="splitTabletOrientation === 'landscape' ? 'desktop' : 'tablet'"
+              />
+            </div>
+
+            <div class="tablet-home-indicator-bar">
+              <div class="home-notch-pill"></div>
+            </div>
+          </div>
+
+          <!-- 3. Desktop Chassis in Split View -->
+          <div v-else class="preview-browser-chassis device-desktop">
+            <div class="preview-chassis-content">
+              <TemplateLiveRenderer
+                :template="selectedSplitTemplate"
+                :accent-color="selectedSplitTemplate.accentColor"
+                device="desktop"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -940,8 +1026,8 @@ const handleConfirmDeploy = async () => {
             transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.25s ease'
           }"
         >
-          <!-- 1. Real macOS Chrome Bar (for Desktop & Tablet) -->
-          <div v-if="previewDevice !== 'mobile'" class="preview-chassis-chrome">
+          <!-- 1. Real macOS Chrome Bar (for Desktop Only) -->
+          <div v-if="previewDevice === 'desktop'" class="preview-chassis-chrome">
             <div class="preview-chrome-dots">
               <span></span><span></span><span></span>
             </div>
@@ -964,17 +1050,54 @@ const handleConfirmDeploy = async () => {
             </div>
           </div>
 
-          <!-- 2. Realistic Smartphone Hardware Bar & Notch (for Mobile) -->
+          <!-- 2. Realistic iPad Pro Hardware Header (for Tablet Only) -->
+          <div v-if="previewDevice === 'tablet'" class="tablet-bezel-camera">
+            <div class="tablet-camera-lens"></div>
+            <div class="tablet-sensor-dot"></div>
+          </div>
+
+          <div v-if="previewDevice === 'tablet'" class="tablet-status-bar">
+            <span>09:41 • Senin, 10 Okt</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <Wifi :size="12" />
+              <span>100%</span>
+            </div>
+          </div>
+
+          <div v-if="previewDevice === 'tablet'" class="tablet-safari-bar">
+            <div class="tablet-safari-tab">
+              <Globe :size="11" style="color: #2563eb;" />
+              <span>{{ activePreviewTemplate.title }}</span>
+            </div>
+            <div class="tablet-safari-address-box">
+              <Lock :size="11" style="color: #10b981;" />
+              <span>https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+            </div>
+            <button
+              style="background: transparent; border: none; color: #64748b; cursor: pointer; display: flex; align-items: center; padding: 2px;"
+              title="Refresh"
+              @click="handleRefreshSimulator"
+            >
+              <RotateCw :size="11" :class="{ 'spin-animation': isRefreshing }" />
+            </button>
+          </div>
+
+          <!-- 3. Realistic Smartphone Hardware Header (for Mobile Only) -->
+          <div v-if="previewDevice === 'mobile'" class="mobile-speaker-slit"></div>
+
           <div v-if="previewDevice === 'mobile'" class="mobile-hardware-bar">
             <span>09:41</span>
-            <div class="mobile-dynamic-island"></div>
+            <div class="mobile-dynamic-island">
+              <div class="island-camera-lens"></div>
+              <div class="island-sensor-dot"></div>
+            </div>
             <div style="display: flex; align-items: center; gap: 4px;">
               <Wifi :size="11" />
               <span>100%</span>
             </div>
           </div>
 
-          <!-- Dynamic Live Renderer Content -->
+          <!-- Dynamic Live Renderer Content (Inside Screen) -->
           <div class="preview-chassis-content" :style="{ opacity: isRefreshing ? 0.4 : 1, transition: 'opacity 0.2s ease' }">
             <TemplateLiveRenderer
               :template="activePreviewTemplate"
@@ -984,8 +1107,20 @@ const handleConfirmDeploy = async () => {
             />
           </div>
 
-          <!-- Smartphone Home Indicator (for Mobile) -->
+          <!-- Smartphone Floating URL Bar & Home Indicator -->
+          <div v-if="previewDevice === 'mobile'" class="mobile-safari-bar">
+            <div class="mobile-safari-pill">
+              <Lock :size="10" style="color: #10b981;" />
+              <span>{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+            </div>
+          </div>
+
           <div v-if="previewDevice === 'mobile'" class="mobile-home-indicator-bar">
+            <div class="home-notch-pill"></div>
+          </div>
+
+          <!-- Tablet Bottom Home Indicator -->
+          <div v-if="previewDevice === 'tablet'" class="tablet-home-indicator-bar">
             <div class="home-notch-pill"></div>
           </div>
         </div>
