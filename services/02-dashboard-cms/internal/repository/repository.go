@@ -546,9 +546,8 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 			fmt.Sprintf("%v", site["category"]),
 			fmt.Sprintf("%v", site["templateName"]),
 			fmt.Sprintf("%v", site["subdomain"]),
-			fmt.Sprintf("%v", site["status"]),
 			14, 88, 256, "0.5 vCPU", "Baru saja aktif", 0,
-			"#2563eb",
+			fmt.Sprintf("%v", site["accentColor"]),
 			fmt.Sprintf("%v", site["roleOrHeadline"]),
 			fmt.Sprintf("%v", site["bioIntro"]),
 		)

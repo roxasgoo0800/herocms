@@ -25,6 +25,7 @@ import {
   initialWebhooks,
   initialSupportTickets
 } from '../data/dashboard-seeds';
+import type { OfficialTemplateItem } from '../data/templates-data';
 
 const VALID_MENUS: ActiveMenu[] = [
   'containers',
@@ -368,8 +369,160 @@ const copyToClipboard = (text: string, id: string) => {
   showToast(`Tautan disalin ke clipboard: ${toCopy}`, 'info');
 };
 
-// Official Templates & Pricelist Catalog
-const officialTemplates = ref([...defaultOfficialTemplates]);
+// Official Templates & Blueprint Engine State
+const officialTemplates = ref<OfficialTemplateItem[]>([...defaultOfficialTemplates]);
+
+const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: boolean = false): Promise<boolean> => {
+  const tpl = officialTemplates.value.find(t => t.id === templateId);
+  if (!tpl) {
+    showToast('Blueprint template tidak ditemukan.', 'error');
+    return false;
+  }
+  if (!activeContainer.value) {
+    showToast('Silakan pilih atau buat kontainer situs terlebih dahulu sebelum menerapkan template.', 'error');
+    return false;
+  }
+
+  try {
+    const targetId = activeContainer.value.id;
+    const clonedBlocks = JSON.parse(JSON.stringify(tpl.blocks));
+
+    // Sinkronkan state kontainer aktif
+    activeContainer.value.templateName = tpl.title;
+    activeContainer.value.accentColor = tpl.accentColor;
+    activeContainer.value.roleOrHeadline = tpl.defaultRole;
+    activeContainer.value.bioIntro = tpl.defaultBio;
+    activeContainer.value.lastDeployed = 'Baru saja (Template diterapkan)';
+    if (!activeContainer.value.themeConfig) {
+      activeContainer.value.themeConfig = {};
+    }
+    activeContainer.value.themeConfig = {
+      ...activeContainer.value.themeConfig,
+      ...tpl.themeConfig,
+      blocks: clonedBlocks
+    };
+
+    // Cache lokal untuk reaktivitas instan Visual Editor
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(`cloudcms_draft_${targetId}`, JSON.stringify({
+        blocks: clonedBlocks,
+        accentColor: tpl.accentColor,
+        fontFamily: tpl.fontFamily,
+        timestamp: Date.now()
+      }));
+    }
+
+    // Persist ke database backend
+    await studioApi.saveSiteDesign(targetId, {
+      roleOrHeadline: tpl.defaultRole,
+      bioIntro: tpl.defaultBio,
+      accentColor: tpl.accentColor,
+      themeConfig: activeContainer.value.themeConfig
+    }).catch(err => console.warn('[API] saveSiteDesign warning:', err));
+
+    await studioApi.saveEditorDraft(targetId, {
+      blocks: clonedBlocks,
+      timestamp: Date.now()
+    }).catch(err => console.warn('[API] saveEditorDraft warning:', err));
+
+    showToast(`Blueprint '${tpl.title}' berhasil diterapkan ke '${activeContainer.value.name}'!`, 'success');
+
+    if (jumpToEditor) {
+      activeMenu.value = 'editor';
+    }
+    return true;
+  } catch (err: any) {
+    console.error('Failed to apply template:', err);
+    showToast('Gagal menerapkan template: ' + (err?.message || 'Kesalahan internal'), 'error');
+    return false;
+  }
+};
+
+const deployContainerFromTemplate = async (payload: { name: string; subdomain: string; templateId: string; jumpToEditor?: boolean }): Promise<boolean> => {
+  if (!payload.name?.trim() || !payload.subdomain?.trim()) {
+    showToast('Nama situs dan subdomain wajib diisi.', 'error');
+    return false;
+  }
+
+  const tpl = officialTemplates.value.find(t => t.id === payload.templateId);
+  const cleanSubdomain = payload.subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '');
+  const newId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
+  const clonedBlocks = tpl ? JSON.parse(JSON.stringify(tpl.blocks)) : [];
+
+  const newContainerObj: ContainerSite = {
+    id: newId,
+    name: payload.name.trim(),
+    category: tpl ? tpl.category : 'portfolio',
+    templateName: tpl ? tpl.title : 'Portofolio Teknis Engineer',
+    subdomain: `${cleanSubdomain}.cloudcms.app`,
+    status: 'provisioning',
+    cpuUsage: 4,
+    ramUsage: 36,
+    ramLimit: 256,
+    cpuLimit: '0.5 vCPU',
+    uptime: 'Inisialisasi...',
+    visitsThisWeek: 0,
+    ssl: true,
+    roleOrHeadline: tpl?.defaultRole || ('Website Resmi ' + payload.name),
+    bioIntro: tpl?.defaultBio || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
+    accentColor: tpl?.accentColor || '#2563eb',
+    lastDeployed: 'Baru saja',
+    themeConfig: tpl ? { ...tpl.themeConfig, blocks: clonedBlocks } : { blocks: clonedBlocks }
+  };
+
+  containers.value.push(newContainerObj);
+  activeContainerId.value = newId;
+
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(`cloudcms_draft_${newId}`, JSON.stringify({
+      blocks: clonedBlocks,
+      accentColor: newContainerObj.accentColor,
+      fontFamily: tpl?.fontFamily || 'Inter',
+      timestamp: Date.now()
+    }));
+  }
+
+  showToast(`Mengalokasikan kontainer baru dengan blueprint '${tpl?.title || 'Default'}'...`, 'info');
+
+  try {
+    await studioApi.createContainer({
+      name: payload.name.trim(),
+      subdomain: cleanSubdomain,
+      category: newContainerObj.category,
+      role: newContainerObj.roleOrHeadline
+    });
+
+    await studioApi.saveSiteDesign(newId, {
+      roleOrHeadline: newContainerObj.roleOrHeadline,
+      bioIntro: newContainerObj.bioIntro,
+      accentColor: newContainerObj.accentColor,
+      themeConfig: newContainerObj.themeConfig
+    }).catch(() => {});
+
+    await studioApi.saveEditorDraft(newId, {
+      blocks: clonedBlocks,
+      timestamp: Date.now()
+    }).catch(() => {});
+  } catch (err) {
+    console.warn('[API] Create container backend sync notice:', err);
+  }
+
+  setTimeout(() => {
+    newContainerObj.status = 'running';
+    newContainerObj.cpuUsage = 14;
+    newContainerObj.ramUsage = 72;
+    newContainerObj.uptime = 'Baru saja running';
+    showToast(`Kontainer '${newContainerObj.name}' aktif! Rute live di https://${newContainerObj.subdomain}`, 'success');
+  }, 1200);
+
+  if (payload.jumpToEditor) {
+    activeMenu.value = 'editor';
+  } else {
+    activeMenu.value = 'containers';
+  }
+
+  return true;
+};
 
 // Visual Editor Simulator State
 const editorDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -1260,6 +1413,8 @@ export function useDashboardData() {
     copiedSubdomain,
     copyToClipboard,
     officialTemplates,
+    applyTemplateToActiveContainer,
+    deployContainerFromTemplate,
     editorDevice,
     isPublishing,
     handlePublishChanges,

@@ -8,17 +8,9 @@ import type {
   InvoiceItem,
   SupportTicketItem
 } from '../types/dashboard';
+import { officialTemplatesData, type OfficialTemplateItem } from './templates-data';
 
-export interface OfficialTemplateItem {
-  id: string;
-  title: string;
-  category: 'portfolio' | 'blog' | 'education' | 'business';
-  tier: string;
-  priceText: string;
-  isPro: boolean;
-  desc: string;
-  features: string[];
-}
+export type { OfficialTemplateItem };
 
 export const initialUserPlan: UserPlan = {
   name: 'Hero Pro Plan',
@@ -52,48 +44,7 @@ export const initialContainers: ContainerSite[] = [
   }
 ];
 
-export const officialTemplates: OfficialTemplateItem[] = [
-  {
-    id: 'tpl_portfolio_pro',
-    title: 'Portofolio Teknis & Engineer',
-    category: 'portfolio',
-    tier: 'Included in Plan',
-    priceText: 'Gratis dalam Kuota',
-    isPro: false,
-    desc: 'Dirancang untuk software engineer, cloud architect, dan desainer. Showcase studi kasus, GitHub telemetry, dan CV direct download.',
-    features: ['Studi Kasus Interaktif', 'Integrasi GitHub Repos', 'Formulir Kontak Webhook', 'Peringkat SEO Optimal']
-  },
-  {
-    id: 'tpl_blog_editorial',
-    title: 'Editorial Media & Tech Blog',
-    category: 'blog',
-    tier: 'Included in Plan',
-    priceText: 'Gratis dalam Kuota',
-    isPro: false,
-    desc: 'Platform publikasi artikel modern dengan editor visual, estimasi waktu baca, dan generator otomatis kartu media sosial OpenGraph.',
-    features: ['Editor Blok Modern', 'Multi-Author Support', 'OpenGraph Generator', 'Redis Top Views Stream']
-  },
-  {
-    id: 'tpl_edu_lms',
-    title: 'Pusat Edukasi & Dokumentasi LMS',
-    category: 'education',
-    tier: 'Pro Template',
-    priceText: 'Termasuk di Paket Pro',
-    isPro: true,
-    desc: 'Silabus modul bertingkat, publikasi materi ajar terstruktur, profil tutor, dan integrasi video tutorial interaktif.',
-    features: ['Silabus Modul Bertingkat', 'Pencarian Dokumentasi Instan', 'Profil Tutor & Dosen', 'Download Materi PDF']
-  },
-  {
-    id: 'tpl_business_catalog',
-    title: 'Showcase Bisnis Mikro & UMKM',
-    category: 'business',
-    tier: 'Pro Template',
-    priceText: 'Termasuk di Paket Pro',
-    isPro: true,
-    desc: 'Toko online mikro dan landing page jasa profesional dengan tombol order direct WhatsApp dan galeri produk responsif.',
-    features: ['Katalog Produk Responsif', 'Direct WhatsApp Ordering', 'Integrasi Payment Link', 'Statistik Konversi Kunjungan']
-  }
-];
+export const officialTemplates: OfficialTemplateItem[] = officialTemplatesData;
 
 export const initialInvoices: InvoiceItem[] = [
   {
