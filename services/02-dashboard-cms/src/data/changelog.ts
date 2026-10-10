@@ -62,6 +62,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'feature',
         scope: 'Realistic Physical Hardware Device Mockups (Mobile Phone & iPad Tablet)',
         description: 'Mengubah tampilan pratinjau mobile dan tablet menjadi mockup fisik perangkat keras yang otentik: Smartphone Flagship (speaker earpiece slit, Dynamic Island dengan lensa kamera & sensor, status bar 09:41, floating Safari address pill, home notch pill) dan iPad Pro Tablet (bezel camera, status bar iPadOS, Safari tab strip & SSL address box, home indicator), baik di Simulator Layar Penuh maupun Split Studio View.'
+      },
+      {
+        id: 'c-141-10',
+        type: 'improvement',
+        scope: 'Device Aspect Ratio & Screen Inner Scrolling Fix',
+        description: 'Memperbaiki proporsi fisik perangkat mobile dan tablet agar tidak melar/memanjang tanpa batas ke bawah: menetapkan batas tinggi fisik proporsional (iPhone ~780px, iPad ~860px) dengan scrollbar internal yang mulus di dalam layar perangkat dan perataan tengah vertikal pada panggung simulator.'
       }
     ]
   },

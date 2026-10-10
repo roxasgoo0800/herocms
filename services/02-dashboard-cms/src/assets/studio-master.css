@@ -10799,11 +10799,13 @@ html {
 
 .preview-simulator-stage {
   flex: 1;
-  overflow-y: auto;
-  padding: 24px 20px 48px;
+  overflow: auto;
+  padding: 24px 20px 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  min-height: 0;
   background-color: #0b0f19;
   background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
   background-size: 20px 20px;
@@ -10813,6 +10815,7 @@ html {
   padding: 0 !important;
   background-image: none !important;
   background-color: #ffffff !important;
+  display: block !important;
 }
 
 .preview-browser-chassis {
@@ -10822,8 +10825,9 @@ html {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: max-width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s ease;
   width: 100%;
+  margin: auto;
 }
 
 .preview-browser-chassis.device-desktop {
@@ -10831,13 +10835,18 @@ html {
   border-radius: 0;
   box-shadow: none;
   border: none;
+  height: auto;
+  min-height: 100%;
+  margin: 0;
 }
 
 .preview-browser-chassis.device-desktop.framed-mode {
   max-width: 1200px;
+  width: 100%;
+  height: min(840px, calc(88vh - 40px));
   border-radius: 12px;
   box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.12);
-  margin: 0 auto;
+  margin: auto;
 }
 
 .preview-browser-chassis.device-desktop:not(.framed-mode) .preview-chassis-chrome {
@@ -10848,21 +10857,31 @@ html {
 }
 
 .preview-browser-chassis.device-tablet {
-  max-width: 768px;
-  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.35s ease, transform 0.25s ease;
+  width: 740px;
+  max-width: 740px;
+  height: min(860px, calc(88vh - 40px));
+  margin: auto;
+  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s ease, border-radius 0.35s ease, transform 0.25s ease;
 }
 
 .preview-browser-chassis.device-tablet.orientation-landscape {
+  width: 1024px;
   max-width: 1024px;
+  height: min(640px, calc(88vh - 40px));
 }
 
 .preview-browser-chassis.device-mobile {
+  width: 390px;
   max-width: 390px;
-  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.35s ease, transform 0.25s ease;
+  height: min(780px, calc(88vh - 40px));
+  margin: auto;
+  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s ease, border-radius 0.35s ease, transform 0.25s ease;
 }
 
 .preview-browser-chassis.device-mobile.orientation-landscape {
+  width: 844px;
   max-width: 844px;
+  height: min(440px, calc(88vh - 40px));
 }
 
 .preview-chassis-chrome {
@@ -10906,10 +10925,38 @@ html {
 
 .preview-chassis-content {
   background: #ffffff;
-  min-height: 600px;
   display: flex;
   flex-direction: column;
   color: #0f172a;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+.preview-chassis-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.preview-chassis-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.preview-chassis-content::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 99px;
+}
+
+.preview-chassis-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+.preview-browser-chassis.device-desktop:not(.framed-mode) .preview-chassis-content {
+  overflow-y: visible;
+  height: auto;
 }
 
 /* Template Rendered Blocks Styling inside Simulator */
@@ -11463,9 +11510,35 @@ html {
 }
 
 .split-preview-scroll-viewport {
-  max-height: 640px;
+  max-height: 680px;
   overflow-y: auto;
-  background: #ffffff;
+  background: #0b0f19;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.split-preview-scroll-viewport .preview-browser-chassis.device-mobile {
+  height: 560px;
+}
+
+.split-preview-scroll-viewport .preview-browser-chassis.device-mobile.orientation-landscape {
+  height: 380px;
+}
+
+.split-preview-scroll-viewport .preview-browser-chassis.device-tablet {
+  height: 560px;
+}
+
+.split-preview-scroll-viewport .preview-browser-chassis.device-tablet.orientation-landscape {
+  height: 440px;
+}
+
+.split-preview-scroll-viewport .preview-browser-chassis.device-desktop {
+  width: 100%;
+  height: auto;
 }
 
 /* 5. Workflow Concept Roadmap Strip */
