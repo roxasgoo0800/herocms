@@ -2,11 +2,195 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.4.1',
+    releaseDate: '10 Oktober 2026',
+    title: 'Perombakan UI/UX Modal Blueprint Enterprise, Palet Aksen Interaktif & Sinkronisasi Reaktif Editor',
+    summary: 'Peningkatan estetika formulir modal Terapkan & Deploy Blueprint dengan diagram alur pipeline sumber-ke-target, pemilih palet warna aksen interaktif, switch toggle iOS kustom, perbaikan kebocoran styling CSS global .modal-body, serta sinkronisasi reaktif blok visual draft editor antara template catalog dan canvas Visual Editor Studio.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-141-1',
+        type: 'improvement',
+        scope: 'Modal Arsitektur Blueprint & Form UX',
+        description: 'Merombak tampilan modal Terapkan Blueprint menjadi visual pipeline transfer (kartu blueprint sumber -> flow connector -> kartu kontainer target), selector palet warna aksen identitas dengan 8 warna enterprise, switch toggle bergaya iOS halus, indikator snapshot cadangan otomatis, serta tombol CTA bergaya bespoke Deep Slate.'
+      },
+      {
+        id: 'c-141-2',
+        type: 'bugfix',
+        scope: 'CSS Architecture & Modal Body Scope Isolation',
+        description: 'Menghilangkan kebocoran aturan global .modal-body dari visual-editor.css yang sebelumnya menyebabkan latar belakang modal menghitam, dan menetapkan styling modal terpusat di studio-master.css sesuai standar desain HeroCMS Studio.'
+      },
+      {
+        id: 'c-141-3',
+        type: 'bugfix',
+        scope: 'Sinkronisasi Reaktif Visual Editor & State Draft',
+        description: 'Memperbaiki ketidaksesuaian kunci penyimpanan draf (herocms_editor_draft_ vs cloudcms_draft_), menangani ekstraksi payload res.draft dari Go backend, serta menambahkan watcher reaktif pada VisualEditorModule agar blok baru dari blueprint langsung diterapkan ke kanvas tanpa tertimpa draft lama.'
+      },
+      {
+        id: 'c-141-4',
+        type: 'improvement',
+        scope: 'Live Terminal Simulator & Visual Showcase',
+        description: 'Menambahkan mockup terminal macOS interaktif pada hero pratinjau live simulator untuk menampilkan telemetri Traefik v3, latensi TTFB sub-2ms, dan isolasi Linux cgroups v2 secara realistis.'
+      },
+      {
+        id: 'c-141-5',
+        type: 'improvement',
+        scope: 'Teleport Fullscreen Blur & Dead-Center Alignment',
+        description: 'Membungkus seluruh modal dan simulator pratinjau dengan Teleport to="body" dan z-index 100000 agar efek backdrop blur menyelimuti 100% seluruh layar viewport (melintasi sidebar dan header atas tanpa terisolasi di content area), serta posisi form dialog tepat berada di tengah layar.'
+      },
+      {
+        id: 'c-141-6',
+        type: 'feature',
+        scope: 'Desktop Simulator Fullscreen Edge-to-Edge',
+        description: 'Menjadikan pratinjau versi desktop tampil dalam mode Layar Penuh 100% (Edge-to-Edge Fullscreen) secara default tanpa ruang hitam kosong di kiri-kanan, serta menyediakan tombol pengalih mode Layar Penuh vs Bingkai Jendela (1200px) di toolbar simulator.'
+      },
+      {
+        id: 'c-141-7',
+        type: 'feature',
+        scope: 'Tablet Orientation Switcher (Portret 768px vs Lanskap 1024px)',
+        description: 'Menambahkan fitur rotasi orientasi tablet (Portret 768px dan Lanskap 1024px) baik pada Simulator Layar Penuh maupun Split Studio Preview dengan animasi transisi sasis yang mulus, tombol pengalih di toolbar atas, serta adaptasi rendering responsif secara langsung.'
+      },
+      {
+        id: 'c-141-8',
+        type: 'feature',
+        scope: 'Mobile Landscape Orientation Switcher (Portret 390px vs Lanskap 844px)',
+        description: 'Menambahkan opsi rotasi orientasi smartphone (Portret 390px dan Lanskap 844px) dengan bezel fisik elegan, Dynamic Island presisi, indikator gestur bar bawah, transisi sasis mulus, dan adaptasi tata letak konten responsif.'
+      },
+      {
+        id: 'c-141-9',
+        type: 'feature',
+        scope: 'Realistic Physical Hardware Device Mockups (Mobile Phone & iPad Tablet)',
+        description: 'Mengubah tampilan pratinjau mobile dan tablet menjadi mockup fisik perangkat keras yang otentik: Smartphone Flagship (speaker earpiece slit, Dynamic Island dengan lensa kamera & sensor, status bar 09:41, floating Safari address pill, home notch pill) dan iPad Pro Tablet (bezel camera, status bar iPadOS, Safari tab strip & SSL address box, home indicator), baik di Simulator Layar Penuh maupun Split Studio View.'
+      },
+      {
+        id: 'c-141-10',
+        type: 'improvement',
+        scope: 'Device Aspect Ratio & Screen Inner Scrolling Fix',
+        description: 'Memperbaiki proporsi fisik perangkat mobile dan tablet agar tidak melar/memanjang tanpa batas ke bawah: menetapkan batas tinggi fisik proporsional (iPhone ~780px, iPad ~860px) dengan scrollbar internal yang mulus di dalam layar perangkat dan perataan tengah vertikal pada panggung simulator.'
+      },
+      {
+        id: 'c-141-11',
+        type: 'improvement',
+        scope: 'Mobile Landscape Ergonomics & Hardware Orientation Realignment',
+        description: 'Memperbaiki tata letak hardware smartphone pada mode rotasi lanskap: memindahkan Dynamic Island fisik ke bezel samping kiri (sesuai arah rotasi 90 derajat alami), menghilangkan lubang speaker yang janggal di sisi panjang atas, memperluas tinggi viewport lanskap menjadi 520px agar konten lega, menyatukan URL bar ke status bar atas, dan mempertahankan gestur bar bawah yang elegan.'
+      },
+      {
+        id: 'c-141-12',
+        type: 'improvement',
+        scope: 'Stable Hardware Frame Preservation & Fluid Device Dimension Morphing',
+        description: 'Memperbaiki sasis fisik perangkat agar bingkai HP dan tablet tidak pernah hilang atau berkedip saat orientasi diubah: menghilangkan keyframe 3D yang sebelumnya menimpa multi-ring box-shadow, memastikan bezel titanium dan rounded corners tetap kokoh utuh, serta menerapkan transisi dimensi hardware yang mulus berbasis kurva cubic-bezier(0.16, 1, 0.3, 1) layaknya simulator kelas industri.'
+      },
+      {
+        id: 'c-141-13',
+        type: 'feature',
+        scope: 'Flagship Commercial Selling Store Blueprint (E-Commerce Jualan Retail)',
+        description: 'Menetapkan blueprint Toko Online & Penjualan Produk Retail sebagai blueprint unggulan #1 (default) menggantikan portofolio personal: dilengkapi etalase produk dengan harga Rupiah, promo flash sale, keranjang belanja, tombol direct checkout WhatsApp, dan jaminan belanja aman untuk mendukung ekosistem website komersial yang berorientasi pada penjualan produk nyata.'
+      }
+    ]
+  },
+  {
+    version: 'v1.4.0',
+    releaseDate: '10 Oktober 2026',
+    title: 'Katalog Template & Blueprint Store 100% Fungsional, Simulator Pratinjau Interaktif & Engine Deploy Satu-Klik',
+    summary: 'Transformasi menyeluruh modul Katalog Template dari sekadar rancangan visual menjadi Blueprint Engine operasional 100%: 6 blueprint resmi siap pakai (Portofolio, Editorial Blog, Edukasi LMS, Bisnis UMKM, SaaS Startup, Agensi Kreatif), Simulator Pratinjau Interaktif dengan switch perangkat Desktop/Tablet/Mobile dan live color palette testing, kapabilitas penerapan langsung ke situs kontainer aktif, alokasi kontainer mandiri satu-klik, serta sinkronisasi penuh dengan Visual Editor dan backend Go PostgreSQL.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-140-1',
+        type: 'feature',
+        scope: 'Blueprint Engine & Dataset Arsitektur',
+        description: 'Membuat dataset terpusat src/data/templates-data.ts berisi 6 blueprint arsitektur lengkap dengan skema blok visual native (navbar, hero, features, showcase, accordion FAQ, stats, cta, footer), konfigurasi tema, skor Lighthouse 100/100, dan metrik latensi TTFB sub-2ms.'
+      },
+      {
+        id: 'c-140-2',
+        type: 'feature',
+        scope: 'Simulator Pratinjau Interaktif Responsif',
+        description: 'Menghadirkan modal simulator pratinjau live fullscreen dengan simulasi viewport multi-perangkat (Desktop 1200px, Tablet 768px, Mobile 390px), pengujian palet warna aksen real-time, browser chassis realistis, serta tombol aksi cepat untuk menerapkan atau mendeploy blueprint.'
+      },
+      {
+        id: 'c-140-3',
+        type: 'feature',
+        scope: 'Engine Penerapan Template & Deploy Kontainer',
+        description: 'Menyediakan fitur Terapkan Blueprint ke Situs Aktif yang secara otomatis menimpa draft editor dan tema kontainer terpilih serta menyinkronkannya ke backend, dan fitur Deploy Blueprint Baru dengan formulir alokasi kontainer otomatis ber-subdomain cloudcms.app.'
+      },
+      {
+        id: 'c-140-4',
+        type: 'improvement',
+        scope: 'Backend Go Service & Repository Integration',
+        description: 'Memperluas CreateContainerInput pada Go backend agar mendukung parameter templateName, accentColor, dan bioIntro kustom serta menyimpannya ke database PostgreSQL dan cache RLS.'
+      },
+      {
+        id: 'c-140-5',
+        type: 'feature',
+        scope: 'Ecosystem Condiments & Dual View Mode',
+        description: 'Menambahkan banner Spotlight Blueprint Pilihan Editor, bar metrik Marketplace Pulse Telemetry, mode tampilan Dual View (Grid Catalog vs Split Studio Inspector berdampingan dengan live device preview instan), peta alur kerja filosofi blueprint (3 langkah), serta banner asisten AI Blueprint Architect.'
+      },
+      {
+        id: 'c-140-6',
+        type: 'improvement',
+        scope: 'Realistic Device Simulator & Dynamic Block Rendering',
+        description: 'Memperbaharui simulator pratinjau secara radikal: menghadirkan komponen TemplateLiveRenderer yang merender blok visual aktual (Accordion buka-tutup interaktif, toggle paket harga, ranking listgroup, showcase studi kasus), chassis smartphone realistis dengan Dynamic Island & status bar, macOS browser bar dengan live TTFB status, switch dark/light mode live, zoom scaler (100%, 85%, 70%), dan animasi muat ulang.'
+      }
+    ]
+  },
+  {
+    version: 'v1.3.9',
+    releaseDate: '10 Oktober 2026',
+    title: 'Isolasi Cache Multi-Tenant per User, Proteksi CSRF & Sinkronisasi Metrik Kapasitas',
+    summary: 'Perbaikan komprehensif pada integritas state multi-tenant: isolasi cache localStorage per user/tenant, perbaikan validasi array kosong (Array.isArray) agar menu tidak tertukar data mock antar-user, pencegahan reset kapasitas storage menjadi 0 MB saat beralih akun, penataan urutan CSRF saat login, dan penerapan NoCache HTTP header pada backend API.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-139-1',
+        type: 'bugfix',
+        scope: 'State Management & LocalStorage Cache',
+        description: 'Menerapkan scoping kunci cache localStorage berbasis user email (herocms_dashboard_cache_${email}) dan memperbaiki validasi sinkronisasi data dari Array.length menjadi Array.isArray pada containers, articles, custom domains, tickets, invoices, dan webhooks sehingga akun dengan 0 item menampilkan data asli kosong alih-alih tertukar data seed atau data user sebelumnya.'
+      },
+      {
+        id: 'c-139-2',
+        type: 'bugfix',
+        scope: 'Media Storage Telemetry & Client Recalculation',
+        description: 'Mencegah recalculateStorage klien menimpa telemetri kapasitas server S3 yang valid menjadi 0 MB saat beralih akun atau saat upload/delete berkas, serta mempertahankan angka kapasitas real-time yang dilaporkan oleh database dan MinIO S3.'
+      },
+      {
+        id: 'c-139-3',
+        type: 'bugfix',
+        scope: 'Auth Flow & Backend Cache Security',
+        description: 'Memperbaiki urutan pemanggilan resetDashboardState sebelum request login/register agar token CSRF dan sesi tidak terhapus pasca-login, menambahkan middleware NoCache pada seluruh rute /api/* untuk mencegah browser caching antar-akun, dan memastikan registrasi tenant baru selalu menghasilkan UUID valid.'
+      }
+    ]
+  },
+  {
+    version: 'v1.3.8',
+    releaseDate: '10 Oktober 2026',
+    title: 'Audit & Penyempurnaan Modul Media Assets S3 MinIO',
+    summary: 'Penyempurnaan arsitektur media assets: penambahan kolom bucket_name pada DDL & migrasi PostgreSQL, penyempurnaan unduhan file via blob fetch, filter sorting aset (Terbaru, Terlama, Nama, Ukuran), pratinjau interaktif dokumen PDF dalam modal inspector, penanganan gambar gagal muat, dan eliminasi flicker drag-and-drop.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-138-1',
+        type: 'bugfix',
+        scope: 'PostgreSQL Database & Repository',
+        description: 'Memperbaiki skema DDL media_assets dan menambahkan migrasi ALTER TABLE ADD COLUMN IF NOT EXISTS bucket_name agar query CreateAsset dan GetAssets berjalan tanpa kendala kolom tidak ditemukan.'
+      },
+      {
+        id: 'c-138-2',
+        type: 'improvement',
+        scope: 'Media Assets UI & UX',
+        description: 'Menambahkan fitur sort berkas (Terbaru, Terlama, Nama A-Z, Ukuran), pratinjau lembar PDF langsung di modal inspector, fallback thumbnail gambar gagal muat, dukungan filter GIF & TXT, dan download berkas langsung berbasis blob URL.'
+      }
+    ]
+  },
+  {
     version: 'v1.3.7',
     releaseDate: '28 September 2026',
     title: 'Dukungan Multi-Arsitektur CI/CD (linux/amd64 & linux/arm64/v8)',
     summary: 'Menerapkan setup QEMU dan kompilasi multi-arsitektur Buildx pada pipeline GitHub Actions agar image Docker di Docker Hub mendukung arsitektur ARM64 (Apple Silicon, Raspberry Pi, AWS Graviton) dan AMD64 secara native tanpa error manifest.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

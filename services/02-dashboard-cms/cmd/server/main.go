@@ -64,6 +64,7 @@ func main() {
 
 	// 7. API Routing Layer
 	api := router.Group("/api")
+	api.Use(middleware.NoCache())
 	{
 		api.GET("/healthz", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "api"})

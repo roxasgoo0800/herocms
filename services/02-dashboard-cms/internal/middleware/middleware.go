@@ -29,6 +29,16 @@ func SecurityHeaders() gin.HandlerFunc {
 	}
 }
 
+// NoCache ensures dynamic multi-tenant API responses are never cached by browsers or intermediate proxies
+func NoCache() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		c.Header("Pragma", "no-cache")
+		c.Header("Expires", "0")
+		c.Next()
+	}
+}
+
 func CORS(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")

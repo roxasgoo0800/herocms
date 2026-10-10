@@ -7,23 +7,124 @@ import {
   Sparkles,
   Zap,
   Search,
-  X
+  X,
+  Eye,
+  Rocket,
+  Sliders,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Palette,
+  Star,
+  Grid,
+  Columns,
+  Wand2,
+  RotateCw,
+  Sun,
+  Moon,
+  Lock,
+  Wifi,
+  ArrowDown,
+  ShieldCheck,
+  Check,
+  Globe,
+  FolderGit2,
+  Maximize2,
+  Minimize2
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
+import {
+  officialTemplatesData,
+  marketplacePulseMetrics,
+  blueprintWorkflowSteps,
+  type OfficialTemplateItem
+} from '../../data/templates-data';
+import TemplateLiveRenderer from './TemplateLiveRenderer.vue';
 
 const {
   officialTemplates,
-  openCreateModal
+  containers,
+  userPlan,
+  activeContainer,
+  applyTemplateToActiveContainer,
+  deployContainerFromTemplate
 } = useDashboardData();
 
 const selectedCategory = ref<'all' | 'portfolio' | 'blog' | 'education' | 'business'>('all');
 const searchTemplate = ref('');
 const searchInputRef = ref<HTMLInputElement | null>(null);
+const viewMode = ref<'grid' | 'split'>('grid');
+const selectedSplitTemplate = ref<OfficialTemplateItem>(officialTemplatesData[0]);
+const splitDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
 
+// -----------------------------------------------------------------------------
+// Interactive Fullscreen Preview Simulator State
+// -----------------------------------------------------------------------------
+const isPreviewOpen = ref(false);
+const activePreviewTemplate = ref<OfficialTemplateItem | null>(null);
+const previewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop');
+const isDesktopFramed = ref(false); // false = Layar Penuh 100% edge-to-edge
+const tabletOrientation = ref<'portrait' | 'landscape'>('portrait');
+const splitTabletOrientation = ref<'portrait' | 'landscape'>('portrait');
+const mobileOrientation = ref<'portrait' | 'landscape'>('portrait');
+const splitMobileOrientation = ref<'portrait' | 'landscape'>('portrait');
+
+// Orientation State
+const handleSetMobileOrientation = (target: 'portrait' | 'landscape') => {
+  mobileOrientation.value = target;
+};
+
+const handleSetTabletOrientation = (target: 'portrait' | 'landscape') => {
+  tabletOrientation.value = target;
+};
+
+const handleSetSplitMobileOrientation = (target: 'portrait' | 'landscape') => {
+  splitMobileOrientation.value = target;
+};
+
+const handleSetSplitTabletOrientation = (target: 'portrait' | 'landscape') => {
+  splitTabletOrientation.value = target;
+};
+
+const previewAccent = ref<string>('#2563eb');
+const isPreviewDarkMode = ref(false);
+const previewZoomScale = ref<number>(1);
+const isRefreshing = ref(false);
+
+const handleRefreshSimulator = () => {
+  isRefreshing.value = true;
+  setTimeout(() => {
+    isRefreshing.value = false;
+  }, 450);
+};
+
+const colorPresets = [
+  '#2563eb', // Royal Blue
+  '#059669', // Emerald
+  '#7c3aed', // Purple
+  '#ea580c', // Orange
+  '#0284c7', // Sky
+  '#db2777'  // Rose
+];
+
+const openPreviewModal = (tpl: OfficialTemplateItem) => {
+  activePreviewTemplate.value = tpl;
+  previewAccent.value = tpl.accentColor || '#2563eb';
+  previewDevice.value = 'desktop';
+  isPreviewDarkMode.value = false;
+  previewZoomScale.value = 1;
+  isPreviewOpen.value = true;
+};
+
+// Shortcut ⌘K / Ctrl+K & ESC
 const handleGlobalKeydown = (e: KeyboardEvent) => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault();
     searchInputRef.value?.focus();
+  } else if (e.key === 'Escape') {
+    if (isPreviewOpen.value) isPreviewOpen.value = false;
+    if (isApplyModalOpen.value) isApplyModalOpen.value = false;
+    if (isDeployModalOpen.value) isDeployModalOpen.value = false;
   }
 };
 
@@ -44,46 +145,211 @@ const filteredTemplates = computed(() => {
     const cat = (tpl.category || '').toLowerCase();
     const id = (tpl.id || '').toLowerCase();
     const tier = (tpl.tier || '').toLowerCase();
+    const author = (tpl.author || '').toLowerCase();
+    const tags = Array.isArray(tpl.tags) ? tpl.tags.join(' ').toLowerCase() : '';
     const matchFeatures = Array.isArray(tpl.features) && tpl.features.some((f: string) => f.toLowerCase().includes(q));
 
     const matchesSearch = !q ||
-                          title.includes(q) ||
-                          desc.includes(q) ||
-                          cat.includes(q) ||
-                          id.includes(q) ||
-                          tier.includes(q) ||
-                          matchFeatures;
+      title.includes(q) ||
+      desc.includes(q) ||
+      cat.includes(q) ||
+      id.includes(q) ||
+      tier.includes(q) ||
+      author.includes(q) ||
+      tags.includes(q) ||
+      matchFeatures;
 
     if (!matchesSearch) return false;
     if (selectedCategory.value === 'all') return true;
     return tpl.category === selectedCategory.value;
   });
 });
+
+const featuredSpotlight = computed(() => {
+  return officialTemplates.value.find(t => t.isFeatured) || officialTemplates.value[0];
+});
+
+// -----------------------------------------------------------------------------
+// Apply to Active Container Modal State
+// -----------------------------------------------------------------------------
+const isApplyModalOpen = ref(false);
+const templateToApply = ref<OfficialTemplateItem | null>(null);
+const applyJumpToEditor = ref(true);
+const applySelectedAccent = ref<string>('#2563eb');
+const isApplying = ref(false);
+
+const modalAccentPresets = [
+  '#2563eb', // Royal Blue
+  '#4f46e5', // Indigo
+  '#8b5cf6', // Violet
+  '#059669', // Emerald
+  '#d97706', // Amber
+  '#e11d48', // Rose
+  '#0284c7', // Cyan Sky
+  '#0f172a'  // Deep Slate
+];
+
+const openApplyModal = (tpl: OfficialTemplateItem) => {
+  templateToApply.value = tpl;
+  applySelectedAccent.value = tpl.accentColor || '#2563eb';
+  applyJumpToEditor.value = true;
+  isApplyModalOpen.value = true;
+};
+
+const handleConfirmApply = async () => {
+  if (!templateToApply.value) return;
+  isApplying.value = true;
+  const ok = await applyTemplateToActiveContainer(
+    templateToApply.value.id,
+    applyJumpToEditor.value,
+    applySelectedAccent.value
+  );
+  isApplying.value = false;
+  if (ok) {
+    isApplyModalOpen.value = false;
+    if (isPreviewOpen.value) isPreviewOpen.value = false;
+  }
+};
+
+// -----------------------------------------------------------------------------
+// Deploy New Container Modal State
+// -----------------------------------------------------------------------------
+const isDeployModalOpen = ref(false);
+const templateToDeploy = ref<OfficialTemplateItem | null>(null);
+const deployForm = ref({
+  name: '',
+  subdomain: '',
+  jumpToEditor: true
+});
+const isDeploying = ref(false);
+
+const openDeployModal = (tpl: OfficialTemplateItem) => {
+  templateToDeploy.value = tpl;
+  deployForm.value.name = tpl.title.split('&')[0].trim();
+  deployForm.value.subdomain = tpl.id.replace('tpl_', '').replace('_', '-');
+  deployForm.value.jumpToEditor = true;
+  isDeployModalOpen.value = true;
+};
+
+const handleConfirmDeploy = async () => {
+  if (!templateToDeploy.value) return;
+  isDeploying.value = true;
+  const ok = await deployContainerFromTemplate({
+    name: deployForm.value.name,
+    subdomain: deployForm.value.subdomain,
+    templateId: templateToDeploy.value.id,
+    jumpToEditor: deployForm.value.jumpToEditor
+  });
+  isDeploying.value = false;
+  if (ok) {
+    isDeployModalOpen.value = false;
+    if (isPreviewOpen.value) isPreviewOpen.value = false;
+  }
+};
 </script>
 
 <template>
   <section class="fade-in-section">
-    <!-- Header Intro -->
+    <!-- Header Intro & Breadcrumb -->
     <div class="page-intro-row">
       <div>
-        <h1 class="page-title">Katalog Template Resmi & Blueprint Store</h1>
-        <p class="page-desc">Pilih blueprint arsitektur web modern yang dioptimalkan untuk SEO, Lighthouse 100/100, dan integrasi PWA.</p>
+        <h1 class="page-title">Katalog Template & Blueprint Architecture Store</h1>
+        <p class="page-desc">Ekosistem arsitektur web modern siap pakai dengan integrasi Traefik v3, audit SEO 100/100, dan kesiapan deploy kontainer mandiri dalam hitungan detik.</p>
       </div>
       <div class="quota-quick-pills">
-        <span class="pill-metric">Engine: <strong>Vue 3 + Alpine Runtime</strong></span>
+        <span class="pill-metric">Engine: <strong>Vue 3 + Visual Blocks</strong></span>
         <span class="pill-metric-highlight">Lisensi: <strong>Commercial & Client Ready</strong></span>
       </div>
     </div>
 
-    <!-- Marketplace Filter & Search Toolbar -->
-    <div class="filter-toolbar" style="margin-bottom: 24px;">
+    <!-- 1. FEATURED SPOTLIGHT HERO BANNER -->
+    <div v-if="featuredSpotlight" class="blueprint-spotlight-hero">
+      <div class="spotlight-left-content">
+        <div class="spotlight-badge-row">
+          <span class="spotlight-badge-featured">
+            <Sparkles :size="12" /> Blueprint Pilihan Editor
+          </span>
+          <span class="spotlight-badge-rating">
+            <Star :size="11" fill="#fbbf24" stroke="none" /> {{ featuredSpotlight.rating || 4.98 }} ({{ featuredSpotlight.downloadsCount || 1420 }} deploy)
+          </span>
+          <span class="badge-status running" style="font-size: 0.7rem; padding: 2px 8px;">
+            <Zap :size="11" /> {{ featuredSpotlight.lighthouseScore }}/100 Lighthouse
+          </span>
+        </div>
+
+        <h2 class="spotlight-title">{{ featuredSpotlight.title }}</h2>
+        <p class="spotlight-desc">{{ featuredSpotlight.desc }}</p>
+
+        <div class="spotlight-spec-strip">
+          <span class="spotlight-spec-item">Arsitek: <strong>{{ featuredSpotlight.author || 'Hero Core Studio' }}</strong></span>
+          <span>•</span>
+          <span class="spotlight-spec-item">Latensi: <strong>{{ featuredSpotlight.stats?.ttfb || '1.2ms' }}</strong></span>
+          <span>•</span>
+          <span class="spotlight-spec-item">Tata Letak: <strong>{{ featuredSpotlight.layoutType || 'Single Page Pro' }}</strong></span>
+        </div>
+
+        <div class="spotlight-actions-row">
+          <button class="btn-preview-action-deploy" @click="openPreviewModal(featuredSpotlight)">
+            <Eye :size="14" />
+            <span>Pratinjau Interaktif</span>
+          </button>
+          <button class="btn-preview-action-apply" @click="openApplyModal(featuredSpotlight)">
+            <Sliders :size="14" />
+            <span>Terapkan ke Situs Ini</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="spotlight-right-preview">
+        <div class="spotlight-chassis-mockup">
+          <div class="spotlight-mockup-header">
+            <div class="preview-chrome-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span style="font-family: monospace; font-size: 0.68rem; color: #94a3b8;">
+              {{ featuredSpotlight.category }}.cloudcms.app
+            </span>
+          </div>
+          <div class="spotlight-mockup-body">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+              <strong style="color: #ffffff; font-size: 0.82rem;">{{ featuredSpotlight.title.split('&')[0] }}</strong>
+              <span class="badge-status running" style="font-size: 0.62rem;">Edge Ready</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 0.72rem; color: #94a3b8;">Headline:</span>
+              <p style="font-size: 0.78rem; color: #e2e8f0; margin: 0; line-height: 1.35;">{{ featuredSpotlight.defaultRole }}</p>
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 4px;">
+              <span v-for="(t, tIdx) in (featuredSpotlight.tags || []).slice(0, 3)" :key="tIdx" class="m-pill blue" style="font-size: 0.62rem;">
+                {{ t }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MARKETPLACE PULSE TELEMETRY GRID -->
+    <div class="blueprint-pulse-grid">
+      <div v-for="pulse in marketplacePulseMetrics" :key="pulse.id" class="pulse-card">
+        <div class="pulse-info-group">
+          <span class="pulse-label">{{ pulse.label }}</span>
+          <span class="pulse-value">{{ pulse.value }}</span>
+          <span class="pulse-sub">{{ pulse.sub }}</span>
+        </div>
+        <span class="pulse-badge">{{ pulse.badge }}</span>
+      </div>
+    </div>
+
+    <!-- 3. MARKETPLACE FILTER & SEARCH TOOLBAR -->
+    <div class="filter-toolbar" style="margin-bottom: 20px;">
       <div class="search-command-shell">
         <Search :size="15" class="search-lead-glyph" />
         <input
           ref="searchInputRef"
           v-model="searchTemplate"
           type="text"
-          placeholder="Cari template portofolio, blog editorial, kursus, UMKM..."
+          placeholder="Cari blueprint portofolio, media editorial, LMS, SaaS, agensi, tag teknologi..."
           class="search-command-input"
         />
         <button v-if="searchTemplate" class="btn-clear-search" @click="searchTemplate = ''" title="Bersihkan">
@@ -112,7 +378,7 @@ const filteredTemplates = computed(() => {
           :class="{ active: selectedCategory === 'blog' }"
           @click="selectedCategory = 'blog'"
         >
-          <span>Blog & Editorial</span>
+          <span>Blog & Media</span>
         </button>
         <button
           class="segment-pill"
@@ -126,21 +392,43 @@ const filteredTemplates = computed(() => {
           :class="{ active: selectedCategory === 'business' }"
           @click="selectedCategory = 'business'"
         >
-          <span>Bisnis & Toko</span>
+          <span>Bisnis & SaaS</span>
+        </button>
+      </div>
+
+      <!-- View Mode Toggle -->
+      <div class="view-mode-pill-group">
+        <button
+          class="btn-view-mode-pill"
+          :class="{ active: viewMode === 'grid' }"
+          @click="viewMode = 'grid'"
+          title="Tampilan Grid Katalog"
+        >
+          <Grid :size="14" />
+          <span>Grid</span>
+        </button>
+        <button
+          class="btn-view-mode-pill"
+          :class="{ active: viewMode === 'split' }"
+          @click="viewMode = 'split'"
+          title="Tampilan Split Studio Inspector (Live Preview Berdampingan)"
+        >
+          <Columns :size="14" />
+          <span>Live Studio</span>
         </button>
       </div>
     </div>
 
-    <!-- High-End Template Grid -->
-    <div class="template-market-grid">
+    <!-- =====================================================================
+         A. GRID VIEW MODE
+         ===================================================================== -->
+    <div v-if="viewMode === 'grid'" class="template-market-grid">
       <div
         v-for="tpl in filteredTemplates"
         :key="tpl.id"
         class="tpl-market-card-pro"
       >
-        <!-- Card Visual Mockup Header (Interactive preview canvas) -->
-        <div class="tpl-mockup-stage" :class="'stage-' + tpl.category">
-          <!-- Realistic UI simulation inside the card -->
+        <div class="tpl-mockup-stage" :class="'stage-' + tpl.category" :style="{ borderBottom: `2px solid ${tpl.accentColor}` }">
           <div class="mockup-browser-shell">
             <div class="mockup-dots">
               <span></span><span></span><span></span>
@@ -148,26 +436,25 @@ const filteredTemplates = computed(() => {
             <div class="mockup-url-pill">{{ tpl.category }}.cloudcms.app</div>
           </div>
 
-          <!-- Specific Rich Graphic per template -->
           <div v-if="tpl.category === 'portfolio'" class="mock-canvas-portfolio">
             <div class="portfolio-hero-mini">
-              <div class="avatar-badge-mini">RP</div>
+              <div class="avatar-badge-mini" :style="{ background: tpl.accentColor }">RP</div>
               <div class="headline-lines">
-                <span class="hl-bold">Senior Cloud Architect</span>
+                <span class="hl-bold">{{ tpl.defaultRole || 'Senior Engineer' }}</span>
                 <span class="hl-sub">Docker • Microservices • Traefik</span>
               </div>
             </div>
             <div class="mini-tag-strip">
-              <span class="m-pill blue">1.8ms TTFB</span>
-              <span class="m-pill emerald">100% SEO</span>
-              <span class="m-pill purple">PWA Active</span>
+              <span class="m-pill blue">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
+              <span class="m-pill emerald">{{ tpl.stats?.seo || '100%' }} SEO</span>
+              <span class="m-pill purple">{{ tpl.stats?.pwa || 'PWA' }}</span>
             </div>
           </div>
 
           <div v-else-if="tpl.category === 'blog'" class="mock-canvas-blog">
             <div class="blog-hero-mini">
-              <span class="b-cat-badge">TEKNOLOGI & CLOUD</span>
-              <h4>Arsitektur Terdistribusi dengan Traefik v3</h4>
+              <span class="b-cat-badge">TEKNOLOGI & PLATFORM</span>
+              <h4>Arsitektur Terdistribusi Traefik v3</h4>
               <p>Panduan teknis scaling multi-tenant container...</p>
             </div>
             <div class="mini-meta-strip">
@@ -177,31 +464,30 @@ const filteredTemplates = computed(() => {
 
           <div v-else-if="tpl.category === 'education'" class="mock-canvas-education">
             <div class="edu-hero-mini">
-              <div class="edu-icon-circ"><GraduationCap :size="16" /></div>
+              <div class="edu-icon-circ" :style="{ color: tpl.accentColor }"><GraduationCap :size="16" /></div>
               <div>
                 <strong>Masterclass Docker & Go SDK</strong>
                 <span>12 Modul • 48 Video Pembelajaran</span>
               </div>
             </div>
             <div class="edu-progress-bar">
-              <div class="edu-fill" style="width: 70%"></div>
+              <div class="edu-fill" :style="{ width: '70%', background: tpl.accentColor }"></div>
             </div>
           </div>
 
           <div v-else class="mock-canvas-business">
             <div class="biz-hero-mini">
               <div class="biz-product-card">
-                <div class="biz-prod-thumb">Product Showcase</div>
+                <div class="biz-prod-thumb">Paket Solusi IT</div>
                 <div class="biz-prod-info">
-                  <strong>Konsultasi Arsitektur IT</strong>
+                  <strong>Arsitektur Cloud</strong>
                   <span class="biz-price">Rp 4.500.000</span>
                 </div>
               </div>
-              <div class="biz-wa-cta">Order via WhatsApp Direct</div>
+              <div class="biz-wa-cta" :style="{ background: tpl.accentColor }">Order Direct WhatsApp</div>
             </div>
           </div>
 
-          <!-- Tier Badge Floating -->
           <div class="tpl-float-badges">
             <span class="tpl-type-pill">{{ tpl.category.toUpperCase() }}</span>
             <span class="tpl-tier-pill" :class="{ 'tier-pro': tpl.isPro }">
@@ -211,12 +497,11 @@ const filteredTemplates = computed(() => {
           </div>
         </div>
 
-        <!-- Card Body -->
         <div class="tpl-card-body-pro">
           <div class="tpl-title-row">
             <h3 class="tpl-card-title">{{ tpl.title }}</h3>
             <span class="lighthouse-score">
-              <Zap :size="11" /> 100/100
+              <Zap :size="11" /> {{ tpl.lighthouseScore || 100 }}/100
             </span>
           </div>
 
@@ -224,39 +509,942 @@ const filteredTemplates = computed(() => {
 
           <div class="tpl-feature-list-wrap">
             <div v-for="(feat, fIdx) in tpl.features" :key="fIdx" class="tpl-feat-item">
-              <CheckCircle2 :size="13" class="feat-check-icon" />
+              <CheckCircle2 :size="13" class="feat-check-icon" :style="{ color: tpl.accentColor }" />
               <span>{{ feat }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Card Footer Action -->
         <div class="tpl-card-footer-pro">
           <div class="tpl-price-info">
-            <span class="price-lbl">Lisensi Penggunaan:</span>
+            <span class="price-lbl">Status Lisensi:</span>
             <strong class="price-val">{{ tpl.priceText }}</strong>
           </div>
-          <button class="btn-deploy-template" @click="openCreateModal(tpl.category)">
-            <span>Gunakan Template</span>
-            <ChevronRight :size="14" />
-          </button>
+          <div class="tpl-card-actions-row">
+            <button class="btn-card-preview" @click="openPreviewModal(tpl)">
+              <Eye :size="14" />
+              <span>Pratinjau</span>
+            </button>
+            <button class="btn-deploy-template" @click="openApplyModal(tpl)">
+              <span>Gunakan</span>
+              <ChevronRight :size="14" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Empty State for Template Search / Filter -->
+    <!-- =====================================================================
+         B. SPLIT STUDIO INSPECTOR MODE (LIVE PREVIEW BERDAMPINGAN)
+         ===================================================================== -->
+    <div v-else class="split-studio-container">
+      <!-- Left: Compact Template List -->
+      <div class="split-catalog-sidebar">
+        <div
+          v-for="tpl in filteredTemplates"
+          :key="tpl.id"
+          class="split-template-card"
+          :class="{ active: selectedSplitTemplate?.id === tpl.id }"
+          @click="selectedSplitTemplate = tpl"
+        >
+          <div class="split-card-thumb" :style="{ background: `linear-gradient(135deg, #0f172a 0%, ${tpl.accentColor} 100%)` }">
+            <span>{{ tpl.category.slice(0, 2).toUpperCase() }}</span>
+          </div>
+          <div class="split-card-content">
+            <div class="split-card-title-row">
+              <h4 class="split-card-title">{{ tpl.title }}</h4>
+              <span class="spotlight-badge-rating" style="font-size: 0.65rem;">
+                ★ {{ tpl.rating || 4.95 }}
+              </span>
+            </div>
+            <p class="split-card-desc">{{ tpl.desc }}</p>
+            <div class="split-card-meta-row">
+              <span>{{ tpl.author || 'Hero Core' }}</span>
+              <span>•</span>
+              <span style="color: #2563eb; font-weight: 700;">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Sticky Live Browser Simulator Pane -->
+      <div class="split-preview-pane">
+        <div class="split-preview-topbar">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="preview-chrome-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span style="color: #ffffff; font-size: 0.85rem; font-weight: 700;">
+              {{ selectedSplitTemplate?.title }}
+            </span>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="preview-device-switchers">
+              <button class="btn-device-pill" :class="{ active: splitDevice === 'desktop' }" @click="splitDevice = 'desktop'" title="Desktop">
+                <Monitor :size="12" />
+              </button>
+              <button class="btn-device-pill" :class="{ active: splitDevice === 'tablet' }" @click="splitDevice = 'tablet'" title="Tablet">
+                <Tablet :size="12" />
+              </button>
+              <button class="btn-device-pill" :class="{ active: splitDevice === 'mobile' }" @click="splitDevice = 'mobile'" title="Mobile">
+                <Smartphone :size="12" />
+              </button>
+            </div>
+
+            <!-- Split Tablet Orientation Toggle -->
+            <div v-if="splitDevice === 'tablet'" class="preview-device-switchers" style="padding: 2px;">
+              <button
+                class="btn-device-pill"
+                :class="{ active: splitTabletOrientation === 'portrait' }"
+                style="padding: 3px 6px; font-size: 0.68rem;"
+                title="Tablet Portret (768px)"
+                @click="handleSetSplitTabletOrientation('portrait')"
+              >
+                <span>768px</span>
+              </button>
+              <button
+                class="btn-device-pill"
+                :class="{ active: splitTabletOrientation === 'landscape' }"
+                style="padding: 3px 6px; font-size: 0.68rem;"
+                title="Tablet Lanskap / Rotasi (1024px)"
+                @click="handleSetSplitTabletOrientation('landscape')"
+              >
+                <RotateCw :size="10" />
+                <span>1024px</span>
+              </button>
+            </div>
+
+            <!-- Split Mobile Orientation Toggle -->
+            <div v-if="splitDevice === 'mobile'" class="preview-device-switchers" style="padding: 2px;">
+              <button
+                class="btn-device-pill"
+                :class="{ active: splitMobileOrientation === 'portrait' }"
+                style="padding: 3px 6px; font-size: 0.68rem;"
+                title="Smartphone Portret (390px)"
+                @click="handleSetSplitMobileOrientation('portrait')"
+              >
+                <span>390px</span>
+              </button>
+              <button
+                class="btn-device-pill"
+                :class="{ active: splitMobileOrientation === 'landscape' }"
+                style="padding: 3px 6px; font-size: 0.68rem;"
+                title="Smartphone Lanskap / Rotasi (844px)"
+                @click="handleSetSplitMobileOrientation('landscape')"
+              >
+                <RotateCw :size="10" />
+                <span>844px</span>
+              </button>
+            </div>
+
+            <button class="btn-preview-action-apply" style="padding: 5px 10px; font-size: 0.75rem;" @click="openApplyModal(selectedSplitTemplate)">
+              Terapkan
+            </button>
+            <button class="btn-preview-action-deploy" style="padding: 5px 12px; font-size: 0.75rem;" @click="openDeployModal(selectedSplitTemplate)">
+              Deploy Baru
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="split-preview-scroll-viewport"
+          :style="{
+            maxWidth: splitDevice === 'mobile'
+              ? (splitMobileOrientation === 'landscape' ? '844px' : '390px')
+              : splitDevice === 'tablet'
+                ? (splitTabletOrientation === 'landscape' ? '1024px' : '768px')
+                : '100%',
+            margin: '0 auto',
+            padding: splitDevice !== 'desktop' ? '16px 0' : '0',
+            transition: 'max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          }"
+        >
+          <!-- 1. Real Smartphone Device Mockup in Split View -->
+          <div
+            v-if="splitDevice === 'mobile'"
+            class="preview-browser-chassis device-mobile"
+            :class="{
+              'orientation-landscape': splitMobileOrientation === 'landscape'
+            }"
+          >
+            <!-- Left-edge Rotated Dynamic Island when in Landscape -->
+            <div v-if="splitMobileOrientation === 'landscape'" class="mobile-landscape-island-left">
+              <div class="island-camera-lens"></div>
+              <div class="island-sensor-dot"></div>
+            </div>
+
+            <!-- Speaker Slit (Portrait only) -->
+            <div v-if="splitMobileOrientation === 'portrait'" class="mobile-speaker-slit"></div>
+
+            <!-- Portrait Hardware Bar with Centered Dynamic Island -->
+            <div v-if="splitMobileOrientation === 'portrait'" class="mobile-hardware-bar">
+              <span>09:41</span>
+              <div class="mobile-dynamic-island">
+                <div class="island-camera-lens"></div>
+                <div class="island-sensor-dot"></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <Wifi :size="11" />
+                <span>100%</span>
+              </div>
+            </div>
+
+            <!-- Landscape Status Bar (Sleek edge-to-edge status) -->
+            <div v-if="splitMobileOrientation === 'landscape'" class="mobile-landscape-status-bar">
+              <span>09:41</span>
+              <span style="font-size: 0.65rem; color: #94a3b8; font-family: monospace;">https://{{ selectedSplitTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <Wifi :size="11" />
+                <span>100%</span>
+              </div>
+            </div>
+
+            <div class="preview-chassis-content">
+              <TemplateLiveRenderer
+                :template="selectedSplitTemplate"
+                :accent-color="selectedSplitTemplate.accentColor"
+                :device="splitMobileOrientation === 'landscape' ? 'tablet' : 'mobile'"
+              />
+            </div>
+
+            <!-- Floating Safari Bar (Portrait only, in landscape URL is in status bar) -->
+            <div v-if="splitMobileOrientation === 'portrait'" class="mobile-safari-bar">
+              <div class="mobile-safari-pill">
+                <Lock :size="10" style="color: #10b981;" />
+                <span>{{ selectedSplitTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              </div>
+            </div>
+
+            <div class="mobile-home-indicator-bar">
+              <div class="home-notch-pill"></div>
+            </div>
+          </div>
+
+          <!-- 2. Real iPad Pro Tablet Device Mockup in Split View -->
+          <div
+            v-else-if="splitDevice === 'tablet'"
+            class="preview-browser-chassis device-tablet"
+            :class="{
+              'orientation-landscape': splitTabletOrientation === 'landscape'
+            }"
+          >
+            <div class="tablet-bezel-camera">
+              <div class="tablet-camera-lens"></div>
+              <div class="tablet-sensor-dot"></div>
+            </div>
+            <div class="tablet-status-bar">
+              <span>09:41 • Senin, 10 Okt</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <Wifi :size="12" />
+                <span>100%</span>
+              </div>
+            </div>
+            <div class="tablet-safari-bar">
+              <div class="tablet-safari-tab">
+                <Globe :size="11" style="color: #2563eb;" />
+                <span>{{ selectedSplitTemplate.title }}</span>
+              </div>
+              <div class="tablet-safari-address-box">
+                <Lock :size="11" style="color: #10b981;" />
+                <span>https://{{ selectedSplitTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              </div>
+            </div>
+
+            <div class="preview-chassis-content">
+              <TemplateLiveRenderer
+                :template="selectedSplitTemplate"
+                :accent-color="selectedSplitTemplate.accentColor"
+                :device="splitTabletOrientation === 'landscape' ? 'desktop' : 'tablet'"
+              />
+            </div>
+
+            <div class="tablet-home-indicator-bar">
+              <div class="home-notch-pill"></div>
+            </div>
+          </div>
+
+          <!-- 3. Desktop Chassis in Split View -->
+          <div v-else class="preview-browser-chassis device-desktop">
+            <div class="preview-chassis-content">
+              <TemplateLiveRenderer
+                :template="selectedSplitTemplate"
+                :accent-color="selectedSplitTemplate.accentColor"
+                device="desktop"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. BLUEPRINT WORKFLOW CONCEPT ROADMAP -->
+    <div class="blueprint-workflow-strip">
+      <div class="workflow-header-row">
+        <h3>Filosofi Blueprint & Alur Kerja Ekosistem</h3>
+        <p>Bagaimana cetak biru arsitektur HeroCMS mentransformasikan konsep desain menjadi layanan web otonom berkinerja tinggi.</p>
+      </div>
+      <div class="workflow-steps-grid">
+        <div v-for="step in blueprintWorkflowSteps" :key="step.step" class="workflow-step-card">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span class="workflow-step-num">{{ step.step }}</span>
+            <span class="workflow-step-badge">{{ step.badge }}</span>
+          </div>
+          <strong>{{ step.title }}</strong>
+          <p>{{ step.desc }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. AI BLUEPRINT ARCHITECT ASSISTANT BANNER -->
+    <div class="ai-blueprint-banner">
+      <div class="ai-blueprint-info">
+        <div class="ai-icon-circ">
+          <Wand2 :size="22" />
+        </div>
+        <div class="ai-blueprint-text">
+          <h4>Butuh Arsitektur Khusus Sesuai Karakter Bisnismu?</h4>
+          <p>Deskripsikan model bisnis Anda dalam bahasa sehari-hari. AI Blueprint Architect akan menyusun modul blok visual khusus secara instan.</p>
+        </div>
+      </div>
+      <button class="btn-ai-architect" @click="openPreviewModal(featuredSpotlight)">
+        <Sparkles :size="14" />
+        <span>Buka Generator AI</span>
+      </button>
+    </div>
+
+    <!-- Empty State -->
     <div v-if="filteredTemplates.length === 0" class="empty-state-card" style="margin-top: 10px;">
       <Search :size="34" style="color: #94a3b8; margin-bottom: 4px;" />
       <h3>Tidak ada blueprint template ditemukan</h3>
       <p v-if="searchTemplate">
-        Tidak ada template yang cocok dengan kata kunci pencarian "<strong>{{ searchTemplate }}</strong>".
+        Tidak ada blueprint yang cocok dengan kata kunci pencarian "<strong>{{ searchTemplate }}</strong>".
       </p>
       <p v-else>
         Tidak ada template untuk kategori terpilih.
       </p>
       <button class="btn-reset-filter" @click="searchTemplate = ''; selectedCategory = 'all'">
-        Lihat Semua Template
+        Lihat Semua Blueprint
       </button>
     </div>
+
+    <!-- =====================================================================
+         FULLSCREEN INTERACTIVE PREVIEW SIMULATOR MODAL (BESPOKE CHASSIS)
+         ===================================================================== -->
+    <Teleport to="body">
+      <div v-if="isPreviewOpen && activePreviewTemplate" class="preview-simulator-overlay">
+      <!-- Topbar Controls -->
+      <div class="preview-simulator-topbar">
+        <div class="preview-meta-info">
+          <div class="preview-title-wrap">
+            <div class="preview-template-name">
+              <span>{{ activePreviewTemplate.title }}</span>
+              <span class="badge-status running" style="font-size: 0.68rem; padding: 2px 8px;">
+                <Zap :size="11" /> 100/100 Lighthouse
+              </span>
+            </div>
+            <div class="preview-meta-tags">
+              <span>Kategori: <strong>{{ activePreviewTemplate.category.toUpperCase() }}</strong></span>
+              <span>•</span>
+              <span>Font: <strong>{{ activePreviewTemplate.fontFamily }}</strong></span>
+              <span>•</span>
+              <span>Latency: <strong>{{ activePreviewTemplate.stats?.ttfb || '1.2ms' }}</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center: Device Switcher, Color Picker, Zoom & Day/Night -->
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <!-- Device Switchers -->
+          <div class="preview-device-switchers">
+            <button
+              class="btn-device-pill"
+              :class="{ active: previewDevice === 'desktop' }"
+              @click="previewDevice = 'desktop'"
+              title="Layar Desktop (1200px)"
+            >
+              <Monitor :size="13" />
+              <span>Desktop</span>
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: previewDevice === 'tablet' }"
+              @click="previewDevice = 'tablet'"
+              title="Layar Tablet (768px)"
+            >
+              <Tablet :size="13" />
+              <span>Tablet</span>
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: previewDevice === 'mobile' }"
+              @click="previewDevice = 'mobile'"
+              title="Layar Smartphone (390px)"
+            >
+              <Smartphone :size="13" />
+              <span>Mobile</span>
+            </button>
+          </div>
+
+          <!-- Desktop Fullscreen vs Framed Toggle (Only shown when on Desktop mode) -->
+          <div v-if="previewDevice === 'desktop'" class="preview-device-switchers" style="padding: 2px;">
+            <button
+              class="btn-device-pill"
+              :class="{ active: !isDesktopFramed }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Tampilan Layar Penuh 100% (Edge-to-Edge)"
+              @click="isDesktopFramed = false"
+            >
+              <Maximize2 :size="12" />
+              <span>Layar Penuh</span>
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: isDesktopFramed }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Tampilan Bingkai Jendela (1200px)"
+              @click="isDesktopFramed = true"
+            >
+              <Minimize2 :size="12" />
+              <span>1200px</span>
+            </button>
+          </div>
+
+          <!-- Tablet Orientation Toggle (Portrait 768px vs Landscape 1024px) -->
+          <div v-if="previewDevice === 'tablet'" class="preview-device-switchers" style="padding: 2px;">
+            <button
+              class="btn-device-pill"
+              :class="{ active: tabletOrientation === 'portrait' }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Tablet Portret (768px)"
+              @click="handleSetTabletOrientation('portrait')"
+            >
+              <Tablet :size="12" />
+              <span>Portret (768px)</span>
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: tabletOrientation === 'landscape' }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Tablet Lanskap / Rotasi (1024px)"
+              @click="handleSetTabletOrientation('landscape')"
+            >
+              <RotateCw :size="12" />
+              <span>Lanskap (1024px)</span>
+            </button>
+          </div>
+
+          <!-- Mobile Orientation Toggle (Portrait 390px vs Landscape 844px) -->
+          <div v-if="previewDevice === 'mobile'" class="preview-device-switchers" style="padding: 2px;">
+            <button
+              class="btn-device-pill"
+              :class="{ active: mobileOrientation === 'portrait' }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Smartphone Portret (390px)"
+              @click="handleSetMobileOrientation('portrait')"
+            >
+              <Smartphone :size="12" />
+              <span>Portret (390px)</span>
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: mobileOrientation === 'landscape' }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              title="Smartphone Lanskap / Rotasi (844px)"
+              @click="handleSetMobileOrientation('landscape')"
+            >
+              <RotateCw :size="12" />
+              <span>Lanskap (844px)</span>
+            </button>
+          </div>
+
+          <!-- Color Accent Picker -->
+          <div class="preview-color-selector">
+            <Palette :size="14" style="color: #94a3b8; margin-right: 2px;" />
+            <button
+              v-for="c in colorPresets"
+              :key="c"
+              class="preview-color-dot"
+              :class="{ active: previewAccent === c }"
+              :style="{ backgroundColor: c }"
+              @click="previewAccent = c"
+              :title="'Uji Warna Aksen: ' + c"
+            ></button>
+          </div>
+
+          <!-- Day / Night Mode Simulation Switch -->
+          <button
+            class="btn-device-pill"
+            style="padding: 6px 10px;"
+            :title="isPreviewDarkMode ? 'Mode Terang (Light)' : 'Mode Gelap (Dark)'"
+            @click="isPreviewDarkMode = !isPreviewDarkMode"
+          >
+            <Sun v-if="isPreviewDarkMode" :size="14" style="color: #fbbf24;" />
+            <Moon v-else :size="14" style="color: #94a3b8;" />
+          </button>
+
+          <!-- Zoom Scale Switcher -->
+          <div class="preview-device-switchers" style="padding: 2px;">
+            <button
+              class="btn-device-pill"
+              :class="{ active: previewZoomScale === 1 }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              @click="previewZoomScale = 1"
+            >
+              100%
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: previewZoomScale === 0.85 }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              @click="previewZoomScale = 0.85"
+            >
+              85%
+            </button>
+            <button
+              class="btn-device-pill"
+              :class="{ active: previewZoomScale === 0.75 }"
+              style="padding: 4px 8px; font-size: 0.7rem;"
+              @click="previewZoomScale = 0.75"
+            >
+              75%
+            </button>
+          </div>
+
+          <!-- Reload Simulator Button -->
+          <button
+            class="btn-device-pill"
+            style="padding: 6px 9px;"
+            title="Muat Ulang Simulasi"
+            @click="handleRefreshSimulator"
+          >
+            <RotateCw :size="13" :class="{ 'spin-animation': isRefreshing }" />
+          </button>
+        </div>
+
+        <!-- Right Action Buttons -->
+        <div class="preview-actions-group">
+          <button
+            v-if="activeContainer"
+            class="btn-preview-action-apply"
+            @click="openApplyModal(activePreviewTemplate)"
+          >
+            <Sliders :size="14" />
+            <span>Terapkan ke '{{ activeContainer.name }}'</span>
+          </button>
+          <button
+            class="btn-preview-action-deploy"
+            @click="openDeployModal(activePreviewTemplate)"
+          >
+            <Rocket :size="14" />
+            <span>Deploy Baru</span>
+          </button>
+          <button class="btn-preview-close" @click="isPreviewOpen = false" title="Tutup Pratinjau (ESC)">
+            <X :size="16" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Simulator Viewport Stage with Zoom Scaling -->
+      <div
+        class="preview-simulator-stage"
+        :class="{
+          'stage-desktop-fullscreen': previewDevice === 'desktop' && !isDesktopFramed,
+          'stage-framed': previewDevice !== 'desktop' || isDesktopFramed
+        }"
+      >
+        <div
+          class="preview-browser-chassis"
+          :class="[
+            'device-' + previewDevice,
+            {
+              'framed-mode': isDesktopFramed && previewDevice === 'desktop',
+              'orientation-landscape': (previewDevice === 'tablet' && tabletOrientation === 'landscape') || (previewDevice === 'mobile' && mobileOrientation === 'landscape')
+            }
+          ]"
+          :style="{
+            transform: (previewDevice === 'desktop' && !isDesktopFramed && previewZoomScale === 1) ? 'none' : `scale(${previewZoomScale})`,
+            transformOrigin: 'top center'
+          }"
+        >
+          <!-- 1. Real macOS Chrome Bar (for Desktop Only) -->
+          <div v-if="previewDevice === 'desktop'" class="preview-chassis-chrome">
+            <div class="preview-chrome-dots">
+              <span></span><span></span><span></span>
+            </div>
+
+            <!-- Reload Icon & URL Bar -->
+            <button
+              style="background: transparent; border: none; color: #64748b; cursor: pointer; display: flex; align-items: center; padding: 2px;"
+              title="Refresh"
+              @click="handleRefreshSimulator"
+            >
+              <RotateCw :size="12" :class="{ 'spin-animation': isRefreshing }" />
+            </button>
+
+            <div class="preview-chrome-address-bar">
+              <Lock :size="11" style="color: #10b981;" />
+              <span style="color: #0f172a; font-weight: 600;">https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              <span style="margin-left: auto; font-size: 0.65rem; color: #10b981; font-weight: 700; background: #ecfdf5; padding: 1px 6px; border-radius: 4px;">
+                ● 1.2ms TTFB
+              </span>
+            </div>
+          </div>
+
+          <!-- 2. Realistic iPad Pro Hardware Header (for Tablet Only) -->
+          <div v-if="previewDevice === 'tablet'" class="tablet-bezel-camera">
+            <div class="tablet-camera-lens"></div>
+            <div class="tablet-sensor-dot"></div>
+          </div>
+
+          <div v-if="previewDevice === 'tablet'" class="tablet-status-bar">
+            <span>09:41 • Senin, 10 Okt</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <Wifi :size="12" />
+              <span>100%</span>
+            </div>
+          </div>
+
+          <div v-if="previewDevice === 'tablet'" class="tablet-safari-bar">
+            <div class="tablet-safari-tab">
+              <Globe :size="11" style="color: #2563eb;" />
+              <span>{{ activePreviewTemplate.title }}</span>
+            </div>
+            <div class="tablet-safari-address-box">
+              <Lock :size="11" style="color: #10b981;" />
+              <span>https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+            </div>
+            <button
+              style="background: transparent; border: none; color: #64748b; cursor: pointer; display: flex; align-items: center; padding: 2px;"
+              title="Refresh"
+              @click="handleRefreshSimulator"
+            >
+              <RotateCw :size="11" :class="{ 'spin-animation': isRefreshing }" />
+            </button>
+          </div>
+
+          <!-- 3. Realistic Smartphone Hardware Header (for Mobile Only) -->
+          <!-- Left-edge Rotated Dynamic Island when in Landscape -->
+          <div v-if="previewDevice === 'mobile' && mobileOrientation === 'landscape'" class="mobile-landscape-island-left">
+            <div class="island-camera-lens"></div>
+            <div class="island-sensor-dot"></div>
+          </div>
+
+          <!-- Speaker Slit (Portrait only) -->
+          <div v-if="previewDevice === 'mobile' && mobileOrientation === 'portrait'" class="mobile-speaker-slit"></div>
+
+          <!-- Portrait Hardware Bar with Centered Dynamic Island -->
+          <div v-if="previewDevice === 'mobile' && mobileOrientation === 'portrait'" class="mobile-hardware-bar">
+            <span>09:41</span>
+            <div class="mobile-dynamic-island">
+              <div class="island-camera-lens"></div>
+              <div class="island-sensor-dot"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <Wifi :size="11" />
+              <span>100%</span>
+            </div>
+          </div>
+
+          <!-- Landscape Status Bar (Sleek edge-to-edge status) -->
+          <div v-if="previewDevice === 'mobile' && mobileOrientation === 'landscape'" class="mobile-landscape-status-bar">
+            <span>09:41</span>
+            <span style="font-size: 0.65rem; color: #94a3b8; font-family: monospace;">https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <Wifi :size="11" />
+              <span>100%</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Live Renderer Content (Inside Screen) -->
+          <div
+            class="preview-chassis-content"
+            :style="{ opacity: isRefreshing ? 0.4 : 1, transition: 'opacity 0.2s ease' }"
+          >
+            <TemplateLiveRenderer
+              :template="activePreviewTemplate"
+              :accent-color="previewAccent"
+              :is-dark-mode="isPreviewDarkMode"
+              :device="previewDevice === 'tablet' && tabletOrientation === 'landscape' ? 'desktop' : (previewDevice === 'mobile' && mobileOrientation === 'landscape' ? 'tablet' : previewDevice)"
+            />
+          </div>
+
+          <!-- Smartphone Floating URL Bar (Portrait only, in landscape URL is in status bar) -->
+          <div v-if="previewDevice === 'mobile' && mobileOrientation === 'portrait'" class="mobile-safari-bar">
+            <div class="mobile-safari-pill">
+              <Lock :size="10" style="color: #10b981;" />
+              <span>{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+            </div>
+          </div>
+
+          <div v-if="previewDevice === 'mobile'" class="mobile-home-indicator-bar">
+            <div class="home-notch-pill"></div>
+          </div>
+
+          <!-- Tablet Bottom Home Indicator -->
+          <div v-if="previewDevice === 'tablet'" class="tablet-home-indicator-bar">
+            <div class="home-notch-pill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+    <!-- MODAL TERAPKAN KE SITUS AKTIF (BESPOKE PIPELINE DESIGN) -->
+    <Teleport to="body">
+      <div v-if="isApplyModalOpen && templateToApply" class="modal-backdrop">
+        <div class="modal-dialog blueprint-config-dialog">
+          <!-- Header -->
+          <div class="modal-header-bespoke">
+            <div class="modal-header-info">
+              <div class="modal-glyph-box" :style="{ background: `${applySelectedAccent}18`, color: applySelectedAccent }">
+                <Sliders :size="20" />
+              </div>
+              <div class="modal-header-text">
+                <h3>Terapkan Blueprint Arsitektur</h3>
+                <p>Perbarui susunan blok dan tema desain pada kontainer aktif</p>
+              </div>
+            </div>
+            <button class="btn-modal-close-bespoke" @click="isApplyModalOpen = false" title="Tutup">
+              <X :size="15" />
+            </button>
+          </div>
+
+          <div class="blueprint-modal-body">
+            <!-- 1. Pipeline Transfer Flow Diagram -->
+            <div class="pipeline-transfer-wrap">
+              <!-- Source Blueprint Card -->
+              <div class="blueprint-source-card" :style="{ borderLeft: `3px solid ${applySelectedAccent}` }">
+                <div class="pipeline-card-lead">
+                  <span class="pipeline-card-role-label">Blueprint Sumber</span>
+                  <span class="pipe-meta-pill" style="color: #2563eb; background: #eff6ff; border-color: #bfdbfe;">
+                    <Sparkles :size="10" /> {{ templateToApply.tier }}
+                  </span>
+                </div>
+
+                <div class="blueprint-source-title-row">
+                  <span class="blueprint-source-title">{{ templateToApply.title }}</span>
+                  <span class="badge-status info" style="font-size: 0.65rem;">{{ templateToApply.category.toUpperCase() }}</span>
+                </div>
+
+                <p class="blueprint-source-desc">{{ templateToApply.desc }}</p>
+
+                <div class="blueprint-source-meta-pills">
+                  <span class="pipe-meta-pill">
+                    <Zap :size="10" style="color: #10b981;" /> {{ templateToApply.lighthouseScore }}/100 SEO
+                  </span>
+                  <span class="pipe-meta-pill">
+                    ⚡ {{ templateToApply.stats?.ttfb || '1.2ms' }} Latensi
+                  </span>
+                  <span class="pipe-meta-pill">
+                    Aa {{ templateToApply.fontFamily }}
+                  </span>
+                  <span class="pipe-meta-pill">
+                    {{ templateToApply.blocks.length }} Blok Siap Pakai
+                  </span>
+                </div>
+              </div>
+
+              <!-- Connector Flow Node -->
+              <div class="pipeline-connector-node">
+                <span class="pipeline-connector-badge">
+                  <ArrowDown :size="12" class="pipeline-arrow-pulse" />
+                  <span>Menerapkan Struktur Blok & Styling Ke:</span>
+                </span>
+              </div>
+
+              <!-- Target Container Card -->
+              <div v-if="activeContainer" class="blueprint-target-card">
+                <div class="blueprint-target-header">
+                  <span class="pipeline-card-role-label" style="color: #1e40af;">Kontainer Target</span>
+                  <span class="target-badge-online">
+                    <span class="target-pulse-dot"></span>
+                    <span>Online / Siap Update</span>
+                  </span>
+                </div>
+                <h4 class="target-container-name">{{ activeContainer.name }}</h4>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="target-subdomain-pill">https://{{ activeContainer.subdomain }}.cloudcms.app</span>
+                  <span style="font-size: 0.72rem; color: #64748b;">(Port 80/443 Traefik)</span>
+                </div>
+              </div>
+              <div v-else class="modal-safety-banner" style="background: #fef2f2; border-color: #fecaca; color: #991b1b;">
+                <span>Peringatan: Belum ada situs kontainer yang dipilih. Silakan pilih kontainer aktif di menu Kontainer.</span>
+              </div>
+            </div>
+
+            <!-- 2. Accent Color Palette Selector -->
+            <div class="modal-palette-group">
+              <div class="modal-palette-header">
+                <span class="modal-palette-label">
+                  <Palette :size="13" /> Warna Aksen Identitas
+                </span>
+                <span class="modal-palette-hex">{{ applySelectedAccent }}</span>
+              </div>
+              <div class="modal-color-swatches-row">
+                <button
+                  v-for="color in modalAccentPresets"
+                  :key="color"
+                  class="modal-swatch-dot"
+                  :class="{ active: applySelectedAccent.toLowerCase() === color.toLowerCase() }"
+                  :style="{ backgroundColor: color }"
+                  @click="applySelectedAccent = color"
+                  :title="'Pilih warna aksen: ' + color"
+                >
+                  <Check v-if="applySelectedAccent.toLowerCase() === color.toLowerCase()" :size="13" class="swatch-check-glyph" />
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. iOS Style Toggle Switch -->
+            <div class="modal-toggle-row" @click="applyJumpToEditor = !applyJumpToEditor">
+              <div class="toggle-text-wrap">
+                <span class="toggle-label-title">Buka di Visual Editor Studio</span>
+                <span class="toggle-label-desc">Otomatis beralih ke kanvas visual editor untuk langsung menyunting konten</span>
+              </div>
+              <div class="ios-switch" :class="{ active: applyJumpToEditor }">
+                <div class="ios-switch-thumb"></div>
+              </div>
+            </div>
+
+            <!-- 4. Safety Assurance Notice -->
+            <div class="modal-safety-banner">
+              <ShieldCheck :size="16" style="flex-shrink: 0; color: #059669;" />
+              <span><strong>Snapshot Aman:</strong> Cadangan kontainer dibuat otomatis. Anda selalu dapat membatalkan atau menyunting setiap blok kapan saja.</span>
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="modal-footer-bespoke">
+            <button class="btn-modal-ghost-bespoke" @click="isApplyModalOpen = false" :disabled="isApplying">
+              Batal
+            </button>
+            <button
+              class="btn-modal-confirm-bespoke"
+              :disabled="!activeContainer || isApplying"
+              @click="handleConfirmApply"
+            >
+              <RotateCw v-if="isApplying" :size="14" class="spin-animation" />
+              <Sparkles v-else :size="14" />
+              <span v-if="isApplying">Menerapkan Blueprint...</span>
+              <span v-else>Terapkan Blueprint Sekarang</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- MODAL DEPLOY BLUEPRINT BARU (BESPOKE ENTERPRISE DESIGN) -->
+    <Teleport to="body">
+      <div v-if="isDeployModalOpen && templateToDeploy" class="modal-backdrop">
+        <div class="modal-dialog blueprint-config-dialog">
+          <!-- Header -->
+          <div class="modal-header-bespoke">
+            <div class="modal-header-info">
+              <div class="modal-glyph-box" style="background: rgba(37, 99, 235, 0.12); color: #2563eb;">
+                <Rocket :size="20" />
+              </div>
+              <div class="modal-header-text">
+                <h3>Deploy Blueprint Kontainer Baru</h3>
+                <p>Alokasikan kontainer mandiri terisolasi dengan cetak biru ini</p>
+              </div>
+            </div>
+            <button class="btn-modal-close-bespoke" @click="isDeployModalOpen = false" title="Tutup">
+              <X :size="15" />
+            </button>
+          </div>
+
+          <div class="blueprint-modal-body">
+            <!-- Blueprint Summary Strip -->
+            <div class="blueprint-source-card" :style="{ borderLeft: `3px solid ${templateToDeploy.accentColor}` }">
+              <div class="pipeline-card-lead">
+                <span class="pipeline-card-role-label">Basis Arsitektur</span>
+                <span class="badge-status running" style="font-size: 0.65rem;">
+                  <Zap :size="10" /> {{ templateToDeploy.lighthouseScore }}/100 Core Web Vitals
+                </span>
+              </div>
+              <strong style="color: #0f172a; font-size: 0.95rem;">{{ templateToDeploy.title }}</strong>
+              <p class="blueprint-source-desc" style="margin-bottom: 0;">{{ templateToDeploy.desc }}</p>
+            </div>
+
+            <!-- Quota Indicator Strip -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="font-size: 0.78rem; color: #475569;">
+                Status Kuota Paket: <strong>{{ userPlan?.name || 'HeroPro' }}</strong>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="badge-status running" style="font-size: 0.7rem;">
+                  {{ containers.length }} / {{ userPlan?.maxContainers || 3 }} Kontainer
+                </span>
+              </div>
+            </div>
+
+            <!-- Form Fields -->
+            <div class="form-group-field">
+              <label class="form-label" style="display: flex; align-items: center; gap: 6px;">
+                <FolderGit2 :size="13" style="color: #2563eb;" />
+                <span>Nama Situs / Brand</span>
+                <span style="color: #ef4444;">*</span>
+              </label>
+              <input
+                v-model="deployForm.name"
+                type="text"
+                class="form-input"
+                placeholder="Contoh: Portofolio Senior Architect"
+                style="font-size: 0.875rem;"
+              />
+            </div>
+
+            <div class="form-group-field">
+              <label class="form-label" style="display: flex; align-items: center; gap: 6px;">
+                <Globe :size="13" style="color: #2563eb;" />
+                <span>Subdomain Edge Cloud Traefik</span>
+                <span style="color: #ef4444;">*</span>
+              </label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <input
+                  v-model="deployForm.subdomain"
+                  type="text"
+                  class="form-input"
+                  placeholder="nama-proyek"
+                  style="font-family: monospace; font-size: 0.85rem;"
+                />
+                <span style="font-size: 0.82rem; color: #64748b; font-family: monospace; white-space: nowrap; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                  .cloudcms.app
+                </span>
+              </div>
+            </div>
+
+            <!-- iOS Toggle Switch -->
+            <div class="modal-toggle-row" @click="deployForm.jumpToEditor = !deployForm.jumpToEditor">
+              <div class="toggle-text-wrap">
+                <span class="toggle-label-title">Buka di Visual Editor Setelah Terdeploy</span>
+                <span class="toggle-label-desc">Langsung arahkan ke kanvas studio untuk menyunting teks dan susunan komponen</span>
+              </div>
+              <div class="ios-switch" :class="{ active: deployForm.jumpToEditor }">
+                <div class="ios-switch-thumb"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer-bespoke">
+            <button class="btn-modal-ghost-bespoke" @click="isDeployModalOpen = false" :disabled="isDeploying">
+              Batal
+            </button>
+            <button
+              class="btn-modal-confirm-bespoke"
+              :disabled="!deployForm.name.trim() || !deployForm.subdomain.trim() || isDeploying"
+              @click="handleConfirmDeploy"
+            >
+              <RotateCw v-if="isDeploying" :size="14" class="spin-animation" />
+              <Rocket v-else :size="14" />
+              <span v-if="isDeploying">Memulai Provisioning Kontainer...</span>
+              <span v-else>Mulai Alokasi & Deploy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </section>
 </template>

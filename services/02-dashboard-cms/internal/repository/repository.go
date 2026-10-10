@@ -156,6 +156,7 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		file_size_bytes BIGINT NOT NULL DEFAULT 0,
 		storage_url VARCHAR(512) NOT NULL,
 		s3_key VARCHAR(512) NOT NULL,
+		bucket_name VARCHAR(128) NOT NULL DEFAULT '',
 		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	);
 
@@ -222,6 +223,7 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 	);
 
 	ALTER TABLE media_assets ALTER COLUMN mime_type TYPE VARCHAR(255);
+	ALTER TABLE media_assets ADD COLUMN IF NOT EXISTS bucket_name VARCHAR(128) NOT NULL DEFAULT '';
 	`
 
 	if _, err := r.DB.Exec(schemaSQL); err != nil {
@@ -524,7 +526,10 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.Containers, nil
+	if tenantID == "99420000-0000-0000-0000-000000009942" {
+		return r.Containers, nil
+	}
+	return []gin.H{}, nil
 }
 
 func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H) error {
@@ -541,9 +546,8 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 			fmt.Sprintf("%v", site["category"]),
 			fmt.Sprintf("%v", site["templateName"]),
 			fmt.Sprintf("%v", site["subdomain"]),
-			fmt.Sprintf("%v", site["status"]),
 			14, 88, 256, "0.5 vCPU", "Baru saja aktif", 0,
-			"#2563eb",
+			fmt.Sprintf("%v", site["accentColor"]),
 			fmt.Sprintf("%v", site["roleOrHeadline"]),
 			fmt.Sprintf("%v", site["bioIntro"]),
 		)
@@ -707,6 +711,13 @@ func (r *Repository) GetTenantStorageUsageBytes(ctx context.Context, tenantID st
 	defer r.mu.RUnlock()
 	var total int64
 	for _, a := range r.Assets {
+		if tID, ok := a["tenant_id"].(string); ok && tID != "" {
+			if tID != tenantID {
+				continue
+			}
+		} else if tenantID != "99420000-0000-0000-0000-000000009942" {
+			continue
+		}
 		if sizeBytes, ok := a["fileSizeBytes"].(int64); ok {
 			total += sizeBytes
 		} else {
@@ -755,7 +766,17 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.Assets, nil
+	var filtered []gin.H
+	for _, a := range r.Assets {
+		if tID, ok := a["tenant_id"].(string); ok && tID != "" {
+			if tID == tenantID {
+				filtered = append(filtered, a)
+			}
+		} else if tenantID == "99420000-0000-0000-0000-000000009942" {
+			filtered = append(filtered, a)
+		}
+	}
+	return filtered, nil
 }
 
 func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, mimeType, dimensions, fileSize string, fileSizeBytes int64, storageURL, s3Key, bucketName string) (gin.H, error) {

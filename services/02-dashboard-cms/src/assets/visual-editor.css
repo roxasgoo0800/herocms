@@ -2743,6 +2743,11 @@
   flex: 1;
   overflow-y: auto;
   padding: 16px 20px;
+  background: #ffffff;
+}
+
+.schema-inspector-modal .modal-body,
+.modal-body-dark {
   background: #0f172a;
 }
 

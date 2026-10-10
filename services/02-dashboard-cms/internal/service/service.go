@@ -23,6 +23,7 @@ import (
 	"github.com/cloudcms/dashboard-cms-backend/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -169,8 +170,8 @@ func (s *Services) RegisterUser(fullName, identifier, password string) (*LoginRe
 		return nil, fmt.Errorf("Gagal mengenkripsi kata sandi: %w", err)
 	}
 
-	tenantID := fmt.Sprintf("tenant_%d", time.Now().UnixNano()%100000000)
-	userID := fmt.Sprintf("user_%d", time.Now().UnixNano()%100000000)
+	tenantID := uuid.New().String()
+	userID := uuid.New().String()
 	slug := strings.ReplaceAll(strings.ToLower(identifier), "@", "-at-")
 
 	if s.Repo != nil && s.Repo.DB != nil {
@@ -179,16 +180,18 @@ func (s *Services) RegisterUser(fullName, identifier, password string) (*LoginRe
 		err := s.Repo.DB.QueryRow(`
 			INSERT INTO tenants (slug, name, plan_tier, status, max_containers, storage_quota_mb)
 			VALUES ($1, $2, 'none', 'active', 0, 1024)
+			ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
 			RETURNING id
 		`, slug, "Hero Tenant "+fullName).Scan(&newTenantUUID)
-		if err == nil {
+		if err == nil && newTenantUUID != "" {
 			tenantID = newTenantUUID
 			errUser := s.Repo.DB.QueryRow(`
 				INSERT INTO users (tenant_id, email, password_hash, full_name, role, status)
 				VALUES ($1, $2, $3, $4, 'customer', 'active')
+				ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, full_name = EXCLUDED.full_name
 				RETURNING id
 			`, tenantID, identifier, string(hash), fullName).Scan(&newUserUUID)
-			if errUser == nil {
+			if errUser == nil && newUserUUID != "" {
 				userID = newUserUUID
 			}
 		}
@@ -294,10 +297,13 @@ func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, e
 }
 
 type CreateContainerInput struct {
-	Name      string `json:"name"`
-	Subdomain string `json:"subdomain"`
-	Category  string `json:"category"`
-	Role      string `json:"role"`
+	Name         string `json:"name"`
+	Subdomain    string `json:"subdomain"`
+	Category     string `json:"category"`
+	Role         string `json:"role"`
+	TemplateName string `json:"templateName"`
+	AccentColor  string `json:"accentColor"`
+	BioIntro     string `json:"bioIntro"`
 }
 
 func (s *Services) CreateContainer(ctx context.Context, tenantID string, input CreateContainerInput) (gin.H, error) {
@@ -321,12 +327,24 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 
 	newID := fmt.Sprintf("hero_tenant_%d", time.Now().Unix()%9000+1000)
 	tplName := "Portofolio Teknis Engineer"
-	if input.Category == "blog" {
+	if input.TemplateName != "" {
+		tplName = input.TemplateName
+	} else if input.Category == "blog" {
 		tplName = "Editorial Media & Blog"
 	} else if input.Category == "education" {
 		tplName = "Pusat Edukasi LMS"
 	} else if input.Category == "business" {
 		tplName = "Showcase Bisnis & UMKM"
+	}
+
+	accentColor := "#2563eb"
+	if input.AccentColor != "" {
+		accentColor = input.AccentColor
+	}
+
+	bioIntro := "Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio."
+	if input.BioIntro != "" {
+		bioIntro = input.BioIntro
 	}
 
 	newContainer := gin.H{
@@ -344,7 +362,8 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 		"visitsThisWeek": 0,
 		"ssl":            true,
 		"roleOrHeadline": input.Role,
-		"accentColor":    "#2563eb",
+		"bioIntro":       bioIntro,
+		"accentColor":    accentColor,
 		"lastDeployed":   "Baru saja",
 	}
 

@@ -21,7 +21,9 @@ import {
   ExternalLink,
   ShieldCheck,
   HardDrive,
-  Calendar
+  Calendar,
+  ArrowUpDown,
+  ChevronDown
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { MediaAssetItem } from '../../types/dashboard';
@@ -44,10 +46,22 @@ const {
 } = useDashboardData();
 
 const assetFilter = ref<'all' | 'image' | 'vector' | 'pdf' | 'excel' | 'doc'>('all');
+const sortBy = ref<'newest' | 'oldest' | 'name' | 'size'>('newest');
+const isSortDropdownOpen = ref(false);
+const sortOptions = [
+  { value: 'newest', label: 'Terbaru' },
+  { value: 'oldest', label: 'Terlama' },
+  { value: 'name', label: 'Nama (A-Z)' },
+  { value: 'size', label: 'Ukuran Terbesar' }
+] as const;
+
 const mediaSearch = ref('');
 const isDragging = ref(false);
+const failedImageIds = ref<Set<string>>(new Set());
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const searchInputRef = ref<HTMLInputElement | null>(null);
+
+let dragCounter = 0;
 
 const handleGlobalKeydown = (e: KeyboardEvent) => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -56,30 +70,56 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
   }
 };
 
+const handleSortDropdownOutsideClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement;
+  if (!target.closest('.custom-filter-dropdown-wrap')) {
+    isSortDropdownOpen.value = false;
+  }
+};
+
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown);
+  document.addEventListener('click', handleSortDropdownOutsideClick);
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown);
+  document.removeEventListener('click', handleSortDropdownOutsideClick);
 });
 
 // Document preview modal state
 const isPreviewModalOpen = ref(false);
+const showPdfPreview = ref(false);
 const selectedMediaForPreview = ref<MediaAssetItem | null>(null);
 
+const handleImageError = (id: string) => {
+  failedImageIds.value.add(id);
+};
+
 const filteredMedia = computed(() => {
-  return mediaAssets.value.filter(item => {
+  const filtered = mediaAssets.value.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(mediaSearch.value.toLowerCase()) ||
                           item.type.toLowerCase().includes(mediaSearch.value.toLowerCase());
     if (!matchesSearch) return false;
     if (assetFilter.value === 'all') return true;
-    if (assetFilter.value === 'image') return ['WEBP', 'JPG', 'JPEG', 'PNG', 'AVIF'].includes(item.type);
+    if (assetFilter.value === 'image') return ['WEBP', 'JPG', 'JPEG', 'PNG', 'AVIF', 'GIF'].includes(item.type);
     if (assetFilter.value === 'vector') return item.type === 'SVG';
     if (assetFilter.value === 'pdf') return item.type === 'PDF';
     if (assetFilter.value === 'excel') return ['XLSX', 'XLS', 'CSV'].includes(item.type);
-    if (assetFilter.value === 'doc') return ['DOCX', 'DOC'].includes(item.type);
+    if (assetFilter.value === 'doc') return ['DOCX', 'DOC', 'TXT'].includes(item.type);
     return true;
+  });
+
+  return [...filtered].sort((a, b) => {
+    if (sortBy.value === 'newest') return 0;
+    if (sortBy.value === 'oldest') return -1;
+    if (sortBy.value === 'name') return a.name.localeCompare(b.name);
+    if (sortBy.value === 'size') {
+      const sizeA = typeof a.sizeBytes === 'number' ? a.sizeBytes : 0;
+      const sizeB = typeof b.sizeBytes === 'number' ? b.sizeBytes : 0;
+      return sizeB - sizeA;
+    }
+    return 0;
   });
 });
 
@@ -95,28 +135,60 @@ const handleFileInputChange = (e: Event) => {
   }
 };
 
+const handleDragEnter = (e: DragEvent) => {
+  e.preventDefault();
+  dragCounter++;
+  isDragging.value = true;
+};
+
+const handleDragLeave = (e: DragEvent) => {
+  e.preventDefault();
+  dragCounter--;
+  if (dragCounter <= 0) {
+    dragCounter = 0;
+    isDragging.value = false;
+  }
+};
+
 const handleDropUpload = (e: DragEvent) => {
+  dragCounter = 0;
   isDragging.value = false;
-  if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
     uploadMediaFiles(e.dataTransfer.files);
   }
 };
 
 const openPreviewModal = (item: MediaAssetItem) => {
   selectedMediaForPreview.value = item;
+  showPdfPreview.value = false;
   isPreviewModalOpen.value = true;
 };
 
-const downloadMediaFile = (item: MediaAssetItem) => {
-  // Simulate download file
-  const element = document.createElement('a');
-  element.setAttribute('href', item.url);
-  element.setAttribute('download', item.name);
-  element.setAttribute('target', '_blank');
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
+const downloadMediaFile = async (item: MediaAssetItem) => {
   showToast(`Mengunduh berkas ${item.name}...`, 'info');
+  try {
+    const res = await fetch(item.url);
+    if (!res.ok) throw new Error('Download failed');
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const element = document.createElement('a');
+    element.href = blobUrl;
+    element.download = item.name;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    URL.revokeObjectURL(blobUrl);
+    showToast(`Berkas ${item.name} berhasil diunduh!`, 'success');
+  } catch {
+    // Cross-origin fallback langsung buka tab baru
+    const element = document.createElement('a');
+    element.setAttribute('href', item.url);
+    element.setAttribute('download', item.name);
+    element.setAttribute('target', '_blank');
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
 };
 
 const handleDeleteMedia = (item: MediaAssetItem) => {
@@ -210,8 +282,9 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
     <div
       class="upload-dropzone-pro"
       :class="{ dragging: isDragging }"
+      @dragenter="handleDragEnter"
       @dragover.prevent="isDragging = true"
-      @dragleave.prevent="isDragging = false"
+      @dragleave="handleDragLeave"
       @drop.prevent="handleDropUpload"
       @click="triggerFileInput"
     >
@@ -275,49 +348,78 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
         <kbd class="shortcut-tag">⌘K</kbd>
       </div>
 
-      <div class="segmented-filter-bar">
-        <button
-          class="segment-pill"
-          :class="{ active: assetFilter === 'all' }"
-          @click="assetFilter = 'all'"
-        >
-          <span>Semua ({{ mediaAssets.length }})</span>
-        </button>
-        <button
-          class="segment-pill"
-          :class="{ active: assetFilter === 'image' }"
-          @click="assetFilter = 'image'"
-        >
-          <span>Foto & Raster</span>
-        </button>
-        <button
-          class="segment-pill"
-          :class="{ active: assetFilter === 'pdf' }"
-          @click="assetFilter = 'pdf'"
-        >
-          <span>Dokumen PDF</span>
-        </button>
-        <button
-          class="segment-pill"
-          :class="{ active: assetFilter === 'excel' }"
-          @click="assetFilter = 'excel'"
-        >
-          <span>Excel Spreadsheet</span>
-        </button>
-        <button
-          class="segment-pill"
-          :class="{ active: assetFilter === 'doc' }"
-          @click="assetFilter = 'doc'"
-        >
-          <span>Word Docs</span>
-        </button>
-        <button
-          class="segment-pill"
-          :class="{ active: assetFilter === 'vector' }"
-          @click="assetFilter = 'vector'"
-        >
-          <span>Vektor SVG</span>
-        </button>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <!-- Bespoke Custom Sort Dropdown (HeroCMS Studio Theme) -->
+        <div class="custom-filter-dropdown-wrap">
+          <button
+            type="button"
+            class="custom-filter-trigger-btn"
+            @click.stop="isSortDropdownOpen = !isSortDropdownOpen"
+            title="Urutkan Berkas"
+          >
+            <ArrowUpDown :size="13" style="color: #64748b;" />
+            <span>{{ sortOptions.find(o => o.value === sortBy)?.label || 'Terbaru' }}</span>
+            <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isSortDropdownOpen }" />
+          </button>
+          <div v-if="isSortDropdownOpen" class="custom-filter-dropdown-menu">
+            <button
+              v-for="opt in sortOptions"
+              :key="opt.value"
+              type="button"
+              class="custom-filter-dropdown-item"
+              :class="{ active: sortBy === opt.value }"
+              @click="sortBy = opt.value; isSortDropdownOpen = false"
+            >
+              <span>{{ opt.label }}</span>
+              <Check v-if="sortBy === opt.value" :size="13" class="dropdown-check-icon" />
+            </button>
+          </div>
+        </div>
+
+        <div class="segmented-filter-bar">
+          <button
+            class="segment-pill"
+            :class="{ active: assetFilter === 'all' }"
+            @click="assetFilter = 'all'"
+          >
+            <span>Semua ({{ mediaAssets.length }})</span>
+          </button>
+          <button
+            class="segment-pill"
+            :class="{ active: assetFilter === 'image' }"
+            @click="assetFilter = 'image'"
+          >
+            <span>Foto & Raster</span>
+          </button>
+          <button
+            class="segment-pill"
+            :class="{ active: assetFilter === 'pdf' }"
+            @click="assetFilter = 'pdf'"
+          >
+            <span>Dokumen PDF</span>
+          </button>
+          <button
+            class="segment-pill"
+            :class="{ active: assetFilter === 'excel' }"
+            @click="assetFilter = 'excel'"
+          >
+            <span>Excel</span>
+          </button>
+          <button
+            class="segment-pill"
+            :class="{ active: assetFilter === 'doc' }"
+            @click="assetFilter = 'doc'"
+          >
+            <span>Word Docs</span>
+          </button>
+          <button
+            class="segment-pill"
+            :class="{ active: assetFilter === 'vector' }"
+            @click="assetFilter = 'vector'"
+          >
+            <span>Vektor SVG</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -382,13 +484,24 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
 
           <!-- 4. REAL RASTER IMAGES & SVGS -->
           <div v-else-if="isImage(med.type)" class="graphic-real-image">
-            <img :src="med.url" :alt="med.name" class="gallery-card-thumb" loading="lazy" />
+            <img
+              v-if="!failedImageIds.has(med.id)"
+              :src="med.url"
+              :alt="med.name"
+              class="gallery-card-thumb"
+              loading="lazy"
+              @error="handleImageError(med.id)"
+            />
+            <div v-else class="gallery-card-thumb-fallback">
+              <Eye :size="24" style="color: #64748b; margin-bottom: 4px;" />
+              <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">{{ med.type }} IMAGE</span>
+            </div>
             <span class="media-type-badge badge-img">{{ med.type }}</span>
           </div>
 
           <!-- 5. SVG VECTOR / FALLBACK -->
           <div v-else class="graphic-vector-preview">
-            <div class="vector-mark-symbol">◆ HC</div>
+            <div class="vector-mark-symbol">◆ {{ med.type }}</div>
             <span class="media-type-badge badge-svg">{{ med.type }}</span>
           </div>
 
@@ -481,6 +594,16 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
               <!-- Floating Header Pills -->
               <div class="canvas-floating-toolbar">
                 <span class="canvas-tag-pill">{{ selectedMediaForPreview.type }} • {{ selectedMediaForPreview.dimensions }}</span>
+                <button
+                  v-if="selectedMediaForPreview.type === 'PDF'"
+                  type="button"
+                  class="btn-canvas-action"
+                  @click="showPdfPreview = !showPdfPreview"
+                  :title="showPdfPreview ? 'Tampilkan info ringkas' : 'Pratinjau lembar PDF interaktif'"
+                >
+                  <Eye :size="12" />
+                  <span>{{ showPdfPreview ? 'Tutup Pratinjau' : 'Lihat Lembar PDF' }}</span>
+                </button>
                 <a :href="selectedMediaForPreview.url" target="_blank" rel="noopener noreferrer" class="btn-canvas-action" title="Buka berkas langsung di tab baru">
                   <ExternalLink :size="12" />
                   <span>Buka Tab Baru</span>
@@ -495,16 +618,31 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                 class="inspector-real-img"
               />
 
+              <!-- If PDF and PDF Viewer is Expanded: Render Embedded Frame -->
+              <div v-else-if="selectedMediaForPreview.type === 'PDF' && showPdfPreview" style="width: 100%; height: 320px; border-radius: 8px; overflow: hidden; background: #ffffff;">
+                <iframe :src="selectedMediaForPreview.url" style="width: 100%; height: 100%; border: none;"></iframe>
+              </div>
+
               <!-- If PDF / Document: Stylized Document Card -->
               <div v-else class="inspector-doc-canvas">
-                <div class="inspector-doc-icon-wrap" :class="'type-' + (['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type) ? 'excel' : ['DOCX', 'DOC'].includes(selectedMediaForPreview.type) ? 'word' : selectedMediaForPreview.type === 'PDF' ? 'pdf' : 'vector')">
+                <div class="inspector-doc-icon-wrap" :class="'type-' + (['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type) ? 'excel' : ['DOCX', 'DOC', 'TXT'].includes(selectedMediaForPreview.type) ? 'word' : selectedMediaForPreview.type === 'PDF' ? 'pdf' : 'vector')">
                   <FileSpreadsheet v-if="['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type)" :size="30" />
                   <FileText v-else-if="selectedMediaForPreview.type === 'PDF'" :size="30" />
-                  <File v-else-if="['DOCX', 'DOC'].includes(selectedMediaForPreview.type)" :size="30" />
+                  <File v-else-if="['DOCX', 'DOC', 'TXT'].includes(selectedMediaForPreview.type)" :size="30" />
                   <FileCode v-else :size="30" />
                 </div>
                 <h4>{{ selectedMediaForPreview.name }}</h4>
                 <p>{{ selectedMediaForPreview.dimensions }} • {{ selectedMediaForPreview.size }}</p>
+                <button
+                  v-if="selectedMediaForPreview.type === 'PDF'"
+                  type="button"
+                  class="btn-canvas-action"
+                  style="margin-top: 12px; background: rgba(37, 99, 235, 0.2); border-color: rgba(37, 99, 235, 0.4);"
+                  @click="showPdfPreview = true"
+                >
+                  <Eye :size="12" />
+                  <span>Pratinjau Lembar Dokumen PDF</span>
+                </button>
               </div>
             </div>
 

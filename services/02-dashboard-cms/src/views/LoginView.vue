@@ -21,7 +21,7 @@ import { useDashboardData } from '../composables/useDashboardData';
 
 const router = useRouter();
 const { triggerSplash } = useSplashTransition();
-const { resetDashboardState, updateUserEmail } = useDashboardData();
+const { resetDashboardState, updateUserEmail, hydrateFromCache, userPlan } = useDashboardData();
 
 // Auth Mode
 const authMode = ref<'login' | 'register'>('login');
@@ -67,12 +67,27 @@ const handleLogin = async (e?: Event) => {
   isLoading.value = true;
 
   try {
+    resetDashboardState();
     const res = await studioApi.login(idVal, passVal);
     if (res?.token) {
-      resetDashboardState();
+      const activeEmail = res.user?.email || idVal;
       localStorage.setItem('cloudcms_auth_token', res.token);
-      localStorage.setItem('cloudcms_user_email', res.user?.email || idVal);
-      updateUserEmail(res.user?.email || idVal);
+      localStorage.setItem('cloudcms_user_email', activeEmail);
+      if (res.csrf_token) {
+        localStorage.setItem('cloudcms_csrf_token', res.csrf_token);
+      }
+      updateUserEmail(activeEmail);
+      if (res.plan) {
+        userPlan.value = {
+          name: res.plan.name || 'Hero Pro Plan',
+          price: res.plan.price || 'Rp 149.000 / bln',
+          maxContainers: res.plan.maxContainers || 3,
+          cpuPerContainer: res.plan.cpuLimit || '0.5 vCPU',
+          ramPerContainer: res.plan.ramLimit || '256 MB',
+          storageQuota: res.plan.storageQuota || '2 GB SSD'
+        };
+      }
+      hydrateFromCache(activeEmail);
       successMessage.value = 'Kredensial terverifikasi! Mempersiapkan workspace studio...';
       
       // Step 1: Trigger login card cinematic drop-down and blur exit
@@ -125,12 +140,17 @@ const handleRegister = async (e?: Event) => {
   isLoading.value = true;
 
   try {
+    resetDashboardState();
     const res = await studioApi.register(nameVal, emailVal, passVal);
     if (res?.token) {
-      resetDashboardState();
+      const activeEmail = res.user?.email || emailVal;
       localStorage.setItem('cloudcms_auth_token', res.token);
-      localStorage.setItem('cloudcms_user_email', res.user?.email || emailVal);
-      updateUserEmail(res.user?.email || emailVal);
+      localStorage.setItem('cloudcms_user_email', activeEmail);
+      if (res.csrf_token) {
+        localStorage.setItem('cloudcms_csrf_token', res.csrf_token);
+      }
+      updateUserEmail(activeEmail);
+      hydrateFromCache(activeEmail);
       successMessage.value = 'Akun berhasil dibuat! Mengalihkan ke pemilihan kuota kontainer...';
 
       setTimeout(() => {
