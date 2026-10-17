@@ -13823,30 +13823,81 @@ html {
 }
 
 /* =============================================================================
-   POD & CLOUDFLARE EDGE ANALYTICS MODAL SYSTEM
+   POD & CLOUDFLARE EDGE ANALYTICS SYSTEM
    Bespoke Enterprise PaaS Telemetry, Geo Distribution & Live Edge Ingest
    ============================================================================= */
 
-.modal-pod-analytics {
-  max-width: 980px !important;
-  width: 95vw !important;
-  max-height: 92vh !important;
-  overflow-y: auto;
-  border-radius: 16px !important;
-  padding: 0 !important;
-  background: #ffffff !important;
-  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(226, 232, 240, 0.8) !important;
+/* Full-Page Detail View Container */
+.pod-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  animation: fadeIn 0.2s ease-out;
 }
 
-/* Modal Header Bar */
-.pod-modal-header {
-  padding: 20px 24px 16px 24px;
+.pod-breadcrumb-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   background: #ffffff;
-  border-bottom: 1px solid #f1f5f9;
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  backdrop-filter: blur(12px);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 18px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+.breadcrumb-left-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-back-to-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.btn-back-to-list:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.breadcrumb-trail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.breadcrumb-trail .divider {
+  color: #cbd5e1;
+}
+
+.breadcrumb-trail .current {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.pod-hero-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
 }
 
 .pod-header-top-flex {

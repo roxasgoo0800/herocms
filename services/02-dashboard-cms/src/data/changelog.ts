@@ -12,8 +12,8 @@ export const changelogReleases: ChangelogRelease[] = [
       {
         id: 'c-150-1',
         type: 'feature',
-        scope: 'Pod & Ingress Runtime Telemetry Inspector',
-        description: 'Menambahkan modal dialog inspeksi Pod terisolasi yang merinci spesifikasi container runtime, gateway IP Traefik internal, TLS 1.3 ALPN handshake, cgroups v2 limits, serta quick action bar.'
+        scope: 'Pod & Ingress Full-Page Sub-View Inspector',
+        description: 'Menyediakan halaman inspeksi Pod & Analitik Edge terdedikasi (Full-Page Sub-View) dengan bilah navigasi breadcrumb dan tombol kembali instan ke daftar kontainer, merinci spesifikasi container runtime, gateway IP Traefik internal, TLS 1.3 ALPN handshake, cgroups v2 limits, serta quick action bar.'
       },
       {
         id: 'c-150-2',

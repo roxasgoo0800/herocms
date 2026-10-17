@@ -28,7 +28,7 @@ import {
   Lock
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
-import PodAnalyticsModal from './PodAnalyticsModal.vue';
+import PodDetailAnalyticsView from './PodDetailAnalyticsView.vue';
 import type { ContainerSite } from '../../types/dashboard';
 
 const {
@@ -100,20 +100,31 @@ const selectForEditor = (containerId: string) => {
   activeMenu.value = 'editor';
 };
 
-// Pod & Cloudflare-Style Geo Analytics Modal State
-const isAnalyticsModalOpen = ref(false);
-const activeAnalyticsContainer = ref<ContainerSite | null>(null);
+// Pod & Cloudflare-Style Geo Analytics Full-Page Detail State
+const selectedContainerForDetail = ref<ContainerSite | null>(null);
 
-const openAnalyticsModal = (c: ContainerSite) => {
-  activeAnalyticsContainer.value = c;
-  isAnalyticsModalOpen.value = true;
+const openContainerDetail = (c: ContainerSite) => {
+  selectedContainerForDetail.value = c;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 </script>
 
 <template>
-  <section class="fade-in-section">
-    <!-- 1. Page Title & Quick Infrastructure Summary -->
-    <div class="page-intro-row">
+  <div class="containers-root-wrapper">
+    <!-- 1. Full-Page Pod Detail & Cloudflare Analytics View -->
+    <PodDetailAnalyticsView
+      v-if="selectedContainerForDetail"
+      :container="selectedContainerForDetail"
+      @back="selectedContainerForDetail = null"
+      @purge-cache="purgeEdgeCache"
+      @open-logs="openLogsModal"
+      @open-editor="(c) => selectForEditor(c.id)"
+    />
+
+    <!-- 2. Main Situs & Kontainer Overview List (Cards vs Table) -->
+    <section v-else class="fade-in-section">
+      <!-- Page Title & Quick Infrastructure Summary -->
+      <div class="page-intro-row">
       <div>
         <h1 class="page-title">Situs & Kontainer Docker</h1>
         <p class="page-desc">Kelola runtime mandiri multi-tenant, batasan Linux cgroups v2, dan rute edge proxy Traefik v3.</p>
@@ -296,7 +307,7 @@ const openAnalyticsModal = (c: ContainerSite) => {
             </div>
             <div class="site-branding-info">
               <div class="site-title-row">
-                <h3 class="site-title-text">{{ c.name }}</h3>
+                <h3 class="site-title-text" style="cursor: pointer;" @click="openContainerDetail(c)" title="Lihat Detail Pod & Analitik">{{ c.name }}</h3>
               </div>
               <div class="site-sub-row">
                 <span class="site-template-badge">{{ c.templateName }}</span>
@@ -402,7 +413,7 @@ const openAnalyticsModal = (c: ContainerSite) => {
         </div>
 
         <!-- Edge Performance Strip -->
-        <div class="edge-telemetry-strip" style="cursor: pointer;" @click="openAnalyticsModal(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
+        <div class="edge-telemetry-strip" style="cursor: pointer;" @click="openContainerDetail(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
           <span class="edge-badge emerald">
             <Zap :size="10" />
             <span>Traefik v3.1</span>
@@ -427,7 +438,7 @@ const openAnalyticsModal = (c: ContainerSite) => {
 
           <button
             class="btn-open-analytics-action"
-            @click="openAnalyticsModal(c)"
+            @click="openContainerDetail(c)"
             title="Lihat Detail Pod, Geo Analitik & Graph Cloudflare"
           >
             <Activity :size="13" />
@@ -543,7 +554,7 @@ const openAnalyticsModal = (c: ContainerSite) => {
                     <Server v-else :size="16" />
                   </div>
                   <div class="table-site-info">
-                    <span class="table-site-title">{{ c.name }}</span>
+                    <span class="table-site-title" style="cursor: pointer;" @click="openContainerDetail(c)" title="Lihat Detail Pod & Analitik">{{ c.name }}</span>
                     <div class="table-site-meta">
                       <span>{{ c.templateName }}</span>
                       <span class="site-id-tag">#{{ c.id }}</span>
@@ -629,7 +640,7 @@ const openAnalyticsModal = (c: ContainerSite) => {
               <!-- Latency & Protocol -->
               <td>
                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                  <span class="edge-badge blue" style="align-self: flex-start; cursor: pointer;" @click="openAnalyticsModal(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
+                  <span class="edge-badge blue" style="align-self: flex-start; cursor: pointer;" @click="openContainerDetail(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
                     ⚡ 1.2ms TTFB
                   </span>
                   <span style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Traefik v3.1 TLS 1.3</span>
@@ -656,7 +667,7 @@ const openAnalyticsModal = (c: ContainerSite) => {
                   <button
                     class="btn-open-analytics-action"
                     style="padding: 5px 9px; font-size: 0.72rem;"
-                    @click="openAnalyticsModal(c)"
+                    @click="openContainerDetail(c)"
                     title="Lihat Detail Pod, Geo Analitik & Graph Cloudflare"
                   >
                     <Activity :size="12" />
@@ -760,14 +771,6 @@ const openAnalyticsModal = (c: ContainerSite) => {
         Reset Pencarian & Filter
       </button>
     </div>
-
-    <!-- 6. Cloudflare-Style Pod & Container Detail Analytics Modal -->
-    <PodAnalyticsModal
-      :is-open="isAnalyticsModalOpen"
-      :container="activeAnalyticsContainer"
-      @close="isAnalyticsModalOpen = false"
-      @purge-cache="purgeEdgeCache"
-      @open-logs="openLogsModal"
-    />
   </section>
+</div>
 </template>
