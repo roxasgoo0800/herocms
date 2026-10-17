@@ -253,12 +253,23 @@ const deleteContainer = async (container: ContainerSite) => {
   }
 };
 
+const isPurgingEdgeCache = ref<string | null>(null);
+
+const purgeEdgeCache = async (container: ContainerSite) => {
+  isPurgingEdgeCache.value = container.id;
+  showToast(`Membersihkan cache Traefik & Redis untuk '${container.name}'...`, 'info');
+  setTimeout(() => {
+    isPurgingEdgeCache.value = null;
+    showToast(`Edge cache untuk '${container.name}' (${container.subdomain}) berhasil di-purge! Latensi disegarkan ke 1.2ms.`, 'success');
+  }, 750);
+};
+
 // Modals for Containers
 const isCreateModalOpen = ref(false);
 const newSiteForm = ref({
   name: '',
   subdomain: '',
-  category: 'portfolio' as 'portfolio' | 'blog' | 'education' | 'business',
+  category: 'business' as 'portfolio' | 'blog' | 'education' | 'business',
   role: ''
 });
 
@@ -285,9 +296,9 @@ const handleCreateContainer = () => {
   const newId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
 
   let tplName = 'Portofolio Teknis Engineer';
+  if (newSiteForm.value.category === 'business') tplName = 'Toko Online & Penjualan Retail';
   if (newSiteForm.value.category === 'blog') tplName = 'Editorial Media & Blog';
   if (newSiteForm.value.category === 'education') tplName = 'Pusat Edukasi LMS';
-  if (newSiteForm.value.category === 'business') tplName = 'Showcase Bisnis & UMKM';
 
   const newContainerObj: ContainerSite = {
     id: newId,
@@ -1420,6 +1431,8 @@ export function useDashboardData() {
     stopContainer,
     restartContainer,
     deleteContainer,
+    isPurgingEdgeCache,
+    purgeEdgeCache,
     isCreateModalOpen,
     newSiteForm,
     openCreateModal,

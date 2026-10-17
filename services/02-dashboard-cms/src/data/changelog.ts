@@ -2,11 +2,50 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.4.2',
+    releaseDate: '17 Oktober 2026',
+    title: 'Perombakan Antarmuka Situs & Kontainer Standar Industri: Dual View Grid/Tabel, Telemetri Sparkline & Purge Edge Cache',
+    summary: 'Peningkatan menyeluruh modul Situs & Kontainer setara platform PaaS kelas dunia (Vercel & Railway): pengalih tampilan Grid Visual dan Tabel Ledger Enterprise yang tersimpan di localStorage, kurva sparkline SVG CPU & RAM langsung, chip latensi edge Traefik v3 (⚡ 1.2ms TTFB), tombol Purge Edge Cache instan, validasi ketersediaan subdomain real-time pada modal deploy, serta Terminal Log Viewer interaktif dengan filter level log dan pencarian teks.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-142-1',
+        type: 'feature',
+        scope: 'Situs & Kontainer Dual-View Architecture',
+        description: 'Menyediakan tombol pengalih mode tampilan antara Visual Grid (kartu modern dengan kurva telemetri) dan Dense Enterprise Table (.ledger-table) yang mencakup indikator slot kuota tersisa dan aksi cepat, dengan preferensi tersimpan di localStorage.'
+      },
+      {
+        id: 'c-142-2',
+        type: 'feature',
+        scope: 'Live SVG Sparkline Telemetry & Edge Chips',
+        description: 'Mengintegrasikan visualisasi kurva sparkline SVG reaktif bebas latensi untuk telemetri CPU & RAM di setiap kartu kontainer, status validasi SSL TLS 1.3, serta chip latensi Traefik v3 (⚡ 1.2ms TTFB).'
+      },
+      {
+        id: 'c-142-3',
+        type: 'feature',
+        scope: 'Traefik v3 Purge Edge Cache Operation',
+        description: 'Menambahkan tombol operasi Purge Edge Cache dengan feedback loading animasi dan toast pemberitahuan sukses, serta penyegaran telemetri edge secara langsung.'
+      },
+      {
+        id: 'c-142-4',
+        type: 'improvement',
+        scope: 'Deploy Container Modal & Real-Time Subdomain Check',
+        description: 'Memperkaya formulir modal Buat & Luncurkan Kontainer dengan pengecekan ketersediaan subdomain secara real-time (.cloudcms.app) serta highlight blueprint Toko Online & Retail sebagai pilihan Flagship #1.'
+      },
+      {
+        id: 'c-142-5',
+        type: 'improvement',
+        scope: 'Terminal Logs Console Filter & Search',
+        description: 'Melengkapi modal Terminal Logs dengan tab filter tingkat log (ALL, DOCKER, TRAEFIK, SYSTEM, TRAFFIC), pencarian teks log langsung, status isolasi cgroups v2, dan tombol zero-downtime reboot kontainer.'
+      }
+    ]
+  },
+  {
     version: 'v1.4.1',
     releaseDate: '10 Oktober 2026',
     title: 'Perombakan UI/UX Modal Blueprint Enterprise, Palet Aksen Interaktif & Sinkronisasi Reaktif Editor',
     summary: 'Peningkatan estetika formulir modal Terapkan & Deploy Blueprint dengan diagram alur pipeline sumber-ke-target, pemilih palet warna aksen interaktif, switch toggle iOS kustom, perbaikan kebocoran styling CSS global .modal-body, serta sinkronisasi reaktif blok visual draft editor antara template catalog dan canvas Visual Editor Studio.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

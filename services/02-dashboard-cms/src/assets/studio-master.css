@@ -1518,6 +1518,367 @@ html {
   border-color: #27272a;
 }
 
+/* ==========================================================================
+   ENTERPRISE CONTAINER SUITE & TELEMETRY ADVANCED STYLING
+   ========================================================================== */
+
+/* View Mode Switcher Pill Group */
+.view-mode-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 9px;
+  border: 1px solid #e2e8f0;
+  gap: 2px;
+}
+
+.view-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.view-mode-btn:hover {
+  color: #0f172a;
+}
+
+.view-mode-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+/* Edge Protocol & Telemetry Strip on Cards */
+.edge-telemetry-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+.edge-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: -0.01em;
+}
+
+.edge-badge.emerald {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #d1fae5;
+}
+
+.edge-badge.blue {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+}
+
+.edge-badge.purple {
+  background: #faf5ff;
+  color: #7c3aed;
+  border: 1px solid #f3e8ff;
+}
+
+.edge-telemetry-sub {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Custom Domain Attached Pill */
+.custom-domain-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Telemetry Micro Sparkline Visualization */
+.gauge-header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sparkline-micro-svg {
+  width: 48px;
+  height: 14px;
+  display: block;
+}
+
+/* Purge Cache Button Highlight */
+.btn-purge {
+  color: #7c3aed;
+}
+
+.btn-purge:hover {
+  background: #faf5ff;
+  border-color: #ddd6fe;
+  color: #6d28d9;
+}
+
+/* Spinning Animation */
+.spin-anim {
+  animation: studioSpin 0.75s linear infinite;
+}
+
+@keyframes studioSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   ENTERPRISE DENSE TABLE VIEW FOR SITES & CONTAINERS
+   ========================================================================== */
+.container-table-card {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 16px -4px rgba(15, 23, 42, 0.03);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.container-table-card .ledger-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.container-table-card .ledger-table td {
+  padding: 16px 18px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.table-site-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.table-site-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.table-site-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.table-site-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.table-route-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+}
+
+.table-url-mono {
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.table-route-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.table-resource-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 170px;
+}
+
+.table-meter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.table-meter-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.table-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.table-slot-row {
+  background: #fafbfc;
+  transition: background 0.14s ease;
+  cursor: pointer;
+}
+
+.table-slot-row:hover td {
+  background: #f4f4f5 !important;
+}
+
+.table-slot-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.table-slot-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Subdomain Check Feedback in Modal */
+.subdomain-check-feedback {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.feedback-avail {
+  color: #059669;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+
+.feedback-taken {
+  color: #dc2626;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+
+/* Enhanced Terminal Log Filter Toolbar */
+.terminal-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #0f172a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terminal-level-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.terminal-level-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.terminal-level-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.terminal-level-pill.active {
+  background: #2563eb;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.terminal-search-shell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 3px 8px;
+  width: 180px;
+}
+
+.terminal-search-input {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 0.72rem;
+  width: 100%;
+  outline: none;
+}
+
+.terminal-search-input::placeholder {
+  color: #64748b;
+}
+
 /* Empty State */
 .empty-state-card {
   background: #ffffff;

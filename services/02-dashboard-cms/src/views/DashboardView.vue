@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, watch, defineAsyncComponent, computed } from 'vue';
+import { ref, onMounted, watch, defineAsyncComponent, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
@@ -33,7 +33,9 @@ import {
   PanelLeftOpen,
   ExternalLink,
   Check,
-  History
+  History,
+  RotateCw,
+  Search
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 
@@ -78,10 +80,47 @@ const {
   activeLogContainer,
   copyContainerLogs,
   syncWithBackend,
-  executeLogout
+  executeLogout,
+  restartContainer
 } = useDashboardData();
 
-const latestSystemVersion = computed(() => changelogReleases[0]?.version || 'v1.3.3');
+const latestSystemVersion = computed(() => changelogReleases[0]?.version || 'v1.4.1');
+
+interface BlueprintTemplate {
+  id: 'business' | 'portfolio' | 'blog' | 'education';
+  name: string;
+  desc: string;
+  icon: any;
+  badge?: string;
+}
+
+const blueprintOptions: BlueprintTemplate[] = [
+  { id: 'business', name: 'Toko Online & Retail', desc: 'Etalase produk, diskon & WhatsApp checkout', icon: ShoppingBag, badge: 'Flagship' },
+  { id: 'portfolio', name: 'Portofolio Teknis', desc: 'Studi kasus & cloud telemetry', icon: Briefcase },
+  { id: 'blog', name: 'Blog & Editorial', desc: 'Artikel, publikasi & berita', icon: BookOpen },
+  { id: 'education', name: 'Pusat Edukasi LMS', desc: 'Silabus kursus & modul', icon: GraduationCap }
+];
+
+// Real-time subdomain availability check
+const isSubdomainAvailable = (sub: string) => {
+  const clean = sub.toLowerCase().trim();
+  if (!clean) return true;
+  return !containers.value.some(c => c.subdomain.split('.')[0] === clean);
+};
+
+// Interactive Terminal Log Filters & Operations
+const logFilterLevel = ref<'all' | 'docker' | 'traefik' | 'system' | 'traffic'>('all');
+const logSearchQuery = ref('');
+const isTerminalRestarting = ref(false);
+
+const handleTerminalRestart = async () => {
+  if (!activeLogContainer.value) return;
+  isTerminalRestarting.value = true;
+  await restartContainer(activeLogContainer.value);
+  setTimeout(() => {
+    isTerminalRestarting.value = false;
+  }, 1200);
+};
 
 onMounted(async () => {
   await syncWithBackend();
@@ -448,16 +487,11 @@ const handleLogout = async () => {
           <form @submit.prevent="handleCreateContainer" class="modal-form">
             <!-- 1. Blueprint Selection -->
             <div class="form-field-group">
-              <label class="field-title">Pilih Template Awal</label>
+              <label class="field-title">Pilih Blueprint Awal</label>
               <div class="template-selector-grid">
                 <button
                   type="button"
-                  v-for="tpl in [
-                    { id: 'portfolio', name: 'Portofolio', desc: 'Studi kasus & CV online', icon: Briefcase },
-                    { id: 'blog', name: 'Blog & Media', desc: 'Artikel & publikasi berita', icon: BookOpen },
-                    { id: 'education', name: 'Pusat Edukasi', desc: 'Silabus kursus & LMS', icon: GraduationCap },
-                    { id: 'business', name: 'Bisnis & UMKM', desc: 'Showcase produk & kontak', icon: ShoppingBag }
-                  ]"
+                  v-for="tpl in blueprintOptions"
                   :key="tpl.id"
                   class="template-option"
                   :class="{ active: newSiteForm.category === tpl.id }"
@@ -467,7 +501,12 @@ const handleLogout = async () => {
                     <component :is="tpl.icon" :size="15" />
                   </div>
                   <div class="template-option-text">
-                    <div class="template-option-name">{{ tpl.name }}</div>
+                    <div class="template-option-name" style="display: flex; align-items: center; gap: 6px;">
+                      <span>{{ tpl.name }}</span>
+                      <span v-if="tpl.badge" style="font-size: 0.62rem; color: #ea580c; background: #fff7ed; border: 1px solid #fed7aa; padding: 1px 5px; border-radius: 4px; font-weight: 700;">
+                        {{ tpl.badge }}
+                      </span>
+                    </div>
                     <div class="template-option-desc">{{ tpl.desc }}</div>
                   </div>
                   <div class="template-option-radio">
@@ -514,7 +553,16 @@ const handleLogout = async () => {
                 />
                 <span class="url-addon-suffix">.cloudcms.app</span>
               </div>
-              <p class="field-helper-text">
+              <!-- Real-time Subdomain Availability Feedback -->
+              <div class="subdomain-check-feedback" v-if="newSiteForm.subdomain.trim()">
+                <span v-if="isSubdomainAvailable(newSiteForm.subdomain)" class="feedback-avail">
+                  <CheckCircle2 :size="12" /> Subdomain tersedia & rute edge Traefik siap dialokasikan
+                </span>
+                <span v-else class="feedback-taken">
+                  <AlertCircle :size="12" /> Subdomain sudah digunakan oleh kontainer lain
+                </span>
+              </div>
+              <p class="field-helper-text" v-else>
                 Rute edge Traefik otomatis menerbitkan sertifikat SSL TLS v1.3 Let's Encrypt.
               </p>
             </div>
@@ -597,25 +645,115 @@ const handleLogout = async () => {
               </div>
               <div class="terminal-meta-right">
                 <span class="pulse-green-sm"></span>
-                <span class="t-stream-tag">Stream Live (Kafka/Docker)</span>
+                <span class="t-stream-tag">Stream Live (Kafka/Docker cgroups v2)</span>
+              </div>
+            </div>
+
+            <!-- Enhanced Terminal Log Filter Toolbar -->
+            <div class="terminal-controls-row">
+              <div class="terminal-level-tabs">
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'all' }"
+                  @click="logFilterLevel = 'all'"
+                >
+                  Semua Log
+                </button>
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'docker' }"
+                  @click="logFilterLevel = 'docker'"
+                >
+                  Docker
+                </button>
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'traefik' }"
+                  @click="logFilterLevel = 'traefik'"
+                >
+                  Traefik
+                </button>
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'system' }"
+                  @click="logFilterLevel = 'system'"
+                >
+                  System
+                </button>
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'traffic' }"
+                  @click="logFilterLevel = 'traffic'"
+                >
+                  Inbound
+                </button>
+              </div>
+
+              <div class="terminal-search-shell">
+                <Search :size="12" style="color: #64748b;" />
+                <input
+                  v-model="logSearchQuery"
+                  type="text"
+                  placeholder="Filter teks log..."
+                  class="terminal-search-input"
+                />
+                <button
+                  v-if="logSearchQuery"
+                  @click="logSearchQuery = ''"
+                  style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0;"
+                >
+                  <X :size="11" />
+                </button>
               </div>
             </div>
 
             <div class="terminal-output-screen">
-              <div class="log-entry"><span class="log-ts">[09:20:11.204]</span> <span class="log-tag system">[system-init]</span> Spawning runtime sandbox for tenant {{ activeLogContainer.id }}</div>
-              <div class="log-entry"><span class="log-ts">[09:20:12.018]</span> <span class="log-tag docker">[docker-daemon]</span> Container {{ activeLogContainer.id }} initialized (cgroups v2: cpu_quota=50000/100000, mem_limit={{ activeLogContainer.ramLimit }}MB)</div>
-              <div class="log-entry"><span class="log-ts">[09:20:13.142]</span> <span class="log-tag traefik">[traefik-proxy]</span> Ingress router attached: Host(`{{ activeLogContainer.subdomain }}`) -> service '{{ activeLogContainer.id }}:80'</div>
-              <div class="log-entry"><span class="log-ts">[09:20:14.055]</span> <span class="log-tag tls">[lets-encrypt]</span> Wildcard challenge ACME TLS-ALPN-01 verified. Certificate auto-renewed</div>
-              <div class="log-entry"><span class="log-ts">[09:20:15.310]</span> <span class="log-tag nginx">[runtime-engine]</span> HTTP/2 & HTTP/3 (QUIC) fast-path listener initialized on 0.0.0.0:80</div>
-              <div class="log-entry"><span class="log-ts">[09:21:02.881]</span> <span class="log-tag health">[healthcheck]</span> Internal probe HTTP 127.0.0.1:80/healthz returned status 200 OK (0.4ms)</div>
-              <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:22:04.119]</span> <span class="log-tag traffic">[edge-inbound]</span> GET / 200 OK (TTFB: 1.6ms, 4.2KB) - Client IP: 103.144.20.12 - SSL TLS 1.3</div>
-              <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:24:18.490]</span> <span class="log-tag traffic">[edge-inbound]</span> GET /api/telemetry 204 No Content - Kafka event published</div>
-              <div class="log-entry" v-if="activeLogContainer.status === 'stopped'"><span class="log-ts">[09:22:30.501]</span> <span class="log-tag warn">[docker-daemon]</span> SIGTERM received from tenant dashboard. Container process halted cleanly (Standby)</div>
-              <div class="log-entry" v-if="activeLogContainer.status === 'provisioning'"><span class="log-ts">[09:25:01.002]</span> <span class="log-tag docker">[docker-daemon]</span> Re-allocating cgroups v2 resource tree and rebuilding Traefik route...</div>
+              <div class="log-entry" v-if="logFilterLevel === 'all' || logFilterLevel === 'system'">
+                <span class="log-ts">[09:20:11.204]</span> <span class="log-tag system">[system-init]</span> Spawning runtime sandbox for tenant {{ activeLogContainer.id }}
+              </div>
+              <div class="log-entry" v-if="logFilterLevel === 'all' || logFilterLevel === 'docker'">
+                <span class="log-ts">[09:20:12.018]</span> <span class="log-tag docker">[docker-daemon]</span> Container {{ activeLogContainer.id }} initialized (cgroups v2: cpu_quota=50000/100000, mem_limit={{ activeLogContainer.ramLimit }}MB)
+              </div>
+              <div class="log-entry" v-if="logFilterLevel === 'all' || logFilterLevel === 'traefik'">
+                <span class="log-ts">[09:20:13.142]</span> <span class="log-tag traefik">[traefik-proxy]</span> Ingress router attached: Host(`{{ activeLogContainer.subdomain }}`) -> service '{{ activeLogContainer.id }}:80'
+              </div>
+              <div class="log-entry" v-if="logFilterLevel === 'all' || logFilterLevel === 'traefik'">
+                <span class="log-ts">[09:20:14.055]</span> <span class="log-tag tls">[lets-encrypt]</span> Wildcard challenge ACME TLS-ALPN-01 verified. Certificate auto-renewed
+              </div>
+              <div class="log-entry" v-if="logFilterLevel === 'all' || logFilterLevel === 'system'">
+                <span class="log-ts">[09:20:15.310]</span> <span class="log-tag nginx">[runtime-engine]</span> HTTP/2 & HTTP/3 (QUIC) fast-path listener initialized on 0.0.0.0:80
+              </div>
+              <div class="log-entry" v-if="logFilterLevel === 'all' || logFilterLevel === 'system'">
+                <span class="log-ts">[09:21:02.881]</span> <span class="log-tag health">[healthcheck]</span> Internal probe HTTP 127.0.0.1:80/healthz returned status 200 OK (0.4ms)
+              </div>
+              <div class="log-entry" v-if="(logFilterLevel === 'all' || logFilterLevel === 'traffic') && activeLogContainer.status === 'running'">
+                <span class="log-ts">[09:22:04.119]</span> <span class="log-tag traffic">[edge-inbound]</span> GET / 200 OK (TTFB: 1.2ms, 4.2KB) - Client IP: 103.144.20.12 - SSL TLS 1.3
+              </div>
+              <div class="log-entry" v-if="(logFilterLevel === 'all' || logFilterLevel === 'traffic') && activeLogContainer.status === 'running'">
+                <span class="log-ts">[09:24:18.490]</span> <span class="log-tag traffic">[edge-inbound]</span> GET /api/telemetry 204 No Content - Kafka event published
+              </div>
+              <div class="log-entry" v-if="(logFilterLevel === 'all' || logFilterLevel === 'docker') && activeLogContainer.status === 'stopped'">
+                <span class="log-ts">[09:22:30.501]</span> <span class="log-tag warn">[docker-daemon]</span> SIGTERM received from tenant dashboard. Container process halted cleanly (Standby)
+              </div>
+              <div class="log-entry" v-if="(logFilterLevel === 'all' || logFilterLevel === 'docker') && activeLogContainer.status === 'provisioning'">
+                <span class="log-ts">[09:25:01.002]</span> <span class="log-tag docker">[docker-daemon]</span> Re-allocating cgroups v2 resource tree and rebuilding Traefik route...
+              </div>
+              <div class="log-entry" v-if="isTerminalRestarting">
+                <span class="log-ts">[09:25:05.112]</span> <span class="log-tag system">[system-reboot]</span> Container {{ activeLogContainer.id }} zero-downtime reboot sequence in progress...
+              </div>
             </div>
           </div>
 
           <div class="modal-footer-row">
+            <button type="button" class="btn-modal-ghost" @click="handleTerminalRestart" :disabled="isTerminalRestarting" title="Restart Kontainer Langsung">
+              <RotateCw :size="14" :class="{ 'spin-anim': isTerminalRestarting }" />
+              <span>{{ isTerminalRestarting ? 'Me-reboot...' : 'Restart Kontainer' }}</span>
+            </button>
             <button type="button" class="btn-modal-ghost" @click="copyContainerLogs">
               <Copy :size="14" />
               <span>Salin Log</span>
