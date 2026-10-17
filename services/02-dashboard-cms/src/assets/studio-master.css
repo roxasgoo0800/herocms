@@ -13821,3 +13821,668 @@ html {
   cursor: not-allowed;
   transform: none;
 }
+
+/* =============================================================================
+   POD & CLOUDFLARE EDGE ANALYTICS MODAL SYSTEM
+   Bespoke Enterprise PaaS Telemetry, Geo Distribution & Live Edge Ingest
+   ============================================================================= */
+
+.modal-pod-analytics {
+  max-width: 980px !important;
+  width: 95vw !important;
+  max-height: 92vh !important;
+  overflow-y: auto;
+  border-radius: 16px !important;
+  padding: 0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(226, 232, 240, 0.8) !important;
+}
+
+/* Modal Header Bar */
+.pod-modal-header {
+  padding: 20px 24px 16px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(12px);
+}
+
+.pod-header-top-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pod-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pod-avatar-glyph {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.pod-main-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pod-id-subtag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-weight: 500;
+}
+
+.pod-meta-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 0.76rem;
+}
+
+.pod-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-weight: 500;
+}
+
+.pod-meta-pill.status-green {
+  background: #ecfdf5;
+  border-color: #d1fae5;
+  color: #065f46;
+  font-weight: 600;
+}
+
+.pod-meta-pill.route-pill {
+  background: #eff6ff;
+  border-color: #dbeafe;
+  color: #1e40af;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-weight: 600;
+}
+
+/* Modal Body Scrollable Content */
+.pod-modal-body {
+  padding: 20px 24px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #f8fafc;
+}
+
+/* 1. Live Edge Traffic Ingest Ticker */
+.edge-live-ticker-shell {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+.ticker-pulse-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #047857;
+  flex-shrink: 0;
+}
+
+.ticker-live-dot {
+  width: 7px;
+  height: 7px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: radarPing 1.8s infinite;
+}
+
+.ticker-stream-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+  font-size: 0.75rem;
+}
+
+.ticker-stream-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.ticker-entry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #334155;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.72rem;
+}
+
+.ticker-entry-pill .flag {
+  font-size: 0.85rem;
+}
+
+.ticker-entry-pill .method {
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.ticker-entry-pill .status-200 {
+  color: #059669;
+  font-weight: 700;
+}
+
+/* 2. Top Cloudflare Metric Strips */
+.cf-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.cf-metric-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+.cf-metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cf-metric-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cf-metric-value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.cf-growth-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.cf-metric-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* 3. Cloudflare-Style Interactive Area Chart */
+.cf-chart-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+
+.cf-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.cf-chart-title-group h4 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cf-chart-title-group p {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.cf-timeframe-toggle {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  gap: 2px;
+}
+
+.cf-time-btn {
+  border: none;
+  background: transparent;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cf-time-btn:hover {
+  color: #0f172a;
+}
+
+.cf-time-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.cf-svg-chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 200px;
+}
+
+.cf-chart-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: #64748b;
+  justify-content: flex-end;
+}
+
+.cf-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.swatch-cached {
+  background: #2563eb;
+}
+
+.swatch-origin {
+  background: #93c5fd;
+}
+
+/* 4. Dual Columns: Geo Traffic vs Breakdown */
+.analytics-dual-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 16px;
+}
+
+.analytics-sub-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.card-title-row h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.card-title-subbadge {
+  font-size: 0.7rem;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-weight: 600;
+}
+
+/* Geo Country List */
+.country-stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.country-stat-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 90px;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.78rem;
+}
+
+.country-flag-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.country-flag-icon {
+  font-size: 1.05rem;
+}
+
+.country-bar-wrap {
+  width: 100%;
+  height: 7px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.country-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  border-radius: 10px;
+  transition: width 0.5s ease-out;
+}
+
+.country-bar-fill.bar-secondary {
+  background: linear-gradient(90deg, #60a5fa, #93c5fd);
+}
+
+.country-stat-numbers {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.country-req-count {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.78rem;
+}
+
+.country-pct-label {
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+/* Right Column Widgets: Devices, Core Web Vitals, HTTP Codes */
+.analytics-right-widgets {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Device Breakdown Bar */
+.device-progress-strip {
+  display: flex;
+  height: 8px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.dev-bar-mobile {
+  background: #2563eb;
+}
+
+.dev-bar-desktop {
+  background: #10b981;
+}
+
+.dev-bar-tablet {
+  background: #f59e0b;
+}
+
+.device-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.73rem;
+  color: #475569;
+}
+
+.dev-legend-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot-mobile { background: #2563eb; width: 8px; height: 8px; border-radius: 50%; }
+.dot-desktop { background: #10b981; width: 8px; height: 8px; border-radius: 50%; }
+.dot-tablet { background: #f59e0b; width: 8px; height: 8px; border-radius: 50%; }
+
+/* Core Web Vitals Row */
+.vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.vital-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.vital-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.vital-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #059669;
+  margin: 2px 0;
+}
+
+.vital-badge-good {
+  font-size: 0.62rem;
+  color: #047857;
+  background: #d1fae5;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+/* HTTP Status Code Grid */
+.http-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.http-code-chip {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.code-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.code-pct {
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+/* Bot Shield Card */
+.bot-shield-card {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.74rem;
+  color: #166534;
+}
+
+/* Modal Footer Actions */
+.pod-modal-footer {
+  padding: 14px 24px;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+}
+
+.footer-left-meta {
+  font-size: 0.74rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer-right-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-analytics-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.btn-analytics-export:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.btn-open-analytics-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.btn-open-analytics-action:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+@media (max-width: 768px) {
+  .cf-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .analytics-dual-grid {
+    grid-template-columns: 1fr;
+  }
+  .country-stat-row {
+    grid-template-columns: 110px 1fr 70px;
+  }
+}
+

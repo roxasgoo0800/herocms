@@ -28,6 +28,8 @@ import {
   Lock
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
+import PodAnalyticsModal from './PodAnalyticsModal.vue';
+import type { ContainerSite } from '../../types/dashboard';
 
 const {
   userPlan,
@@ -96,6 +98,15 @@ onUnmounted(() => {
 const selectForEditor = (containerId: string) => {
   activeContainerId.value = containerId;
   activeMenu.value = 'editor';
+};
+
+// Pod & Cloudflare-Style Geo Analytics Modal State
+const isAnalyticsModalOpen = ref(false);
+const activeAnalyticsContainer = ref<ContainerSite | null>(null);
+
+const openAnalyticsModal = (c: ContainerSite) => {
+  activeAnalyticsContainer.value = c;
+  isAnalyticsModalOpen.value = true;
 };
 </script>
 
@@ -391,7 +402,7 @@ const selectForEditor = (containerId: string) => {
         </div>
 
         <!-- Edge Performance Strip -->
-        <div class="edge-telemetry-strip">
+        <div class="edge-telemetry-strip" style="cursor: pointer;" @click="openAnalyticsModal(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
           <span class="edge-badge emerald">
             <Zap :size="10" />
             <span>Traefik v3.1</span>
@@ -411,7 +422,16 @@ const selectForEditor = (containerId: string) => {
             @click="selectForEditor(c.id)"
           >
             <Edit3 :size="14" />
-            <span>Buka Editor Studio</span>
+            <span>Editor</span>
+          </button>
+
+          <button
+            class="btn-open-analytics-action"
+            @click="openAnalyticsModal(c)"
+            title="Lihat Detail Pod, Geo Analitik & Graph Cloudflare"
+          >
+            <Activity :size="13" />
+            <span>Analitik</span>
           </button>
 
           <!-- Runtime Controls -->
@@ -609,7 +629,9 @@ const selectForEditor = (containerId: string) => {
               <!-- Latency & Protocol -->
               <td>
                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                  <span class="edge-badge blue" style="align-self: flex-start;">⚡ 1.2ms TTFB</span>
+                  <span class="edge-badge blue" style="align-self: flex-start; cursor: pointer;" @click="openAnalyticsModal(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
+                    ⚡ 1.2ms TTFB
+                  </span>
                   <span style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Traefik v3.1 TLS 1.3</span>
                 </div>
               </td>
@@ -629,6 +651,16 @@ const selectForEditor = (containerId: string) => {
                   >
                     <Edit3 :size="13" />
                     <span>Editor</span>
+                  </button>
+
+                  <button
+                    class="btn-open-analytics-action"
+                    style="padding: 5px 9px; font-size: 0.72rem;"
+                    @click="openAnalyticsModal(c)"
+                    title="Lihat Detail Pod, Geo Analitik & Graph Cloudflare"
+                  >
+                    <Activity :size="12" />
+                    <span>Analitik</span>
                   </button>
 
                   <div class="runtime-btn-group">
@@ -728,5 +760,14 @@ const selectForEditor = (containerId: string) => {
         Reset Pencarian & Filter
       </button>
     </div>
+
+    <!-- 6. Cloudflare-Style Pod & Container Detail Analytics Modal -->
+    <PodAnalyticsModal
+      :is-open="isAnalyticsModalOpen"
+      :container="activeAnalyticsContainer"
+      @close="isAnalyticsModalOpen = false"
+      @purge-cache="purgeEdgeCache"
+      @open-logs="openLogsModal"
+    />
   </section>
 </template>
