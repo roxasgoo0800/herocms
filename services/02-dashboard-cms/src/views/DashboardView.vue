@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, watch, defineAsyncComponent, computed } from 'vue';
+import { ref, onMounted, watch, defineAsyncComponent, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
@@ -33,9 +33,20 @@ import {
   PanelLeftOpen,
   ExternalLink,
   Check,
-  History
+  History,
+  RotateCw,
+  Search,
+  Maximize2,
+  Minimize2,
+  Pause,
+  Play,
+  Download,
+  Trash2,
+  Lock,
+  AlertTriangle
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
+import { generateContainerLogs, type ContainerLogEntry } from '../data/container-logs';
 
 // Modular View Components (Lazy Loaded On-Demand for Maximum Speed & Lean Memory)
 const ContainersModule = defineAsyncComponent(() => import('../components/dashboard/ContainersModule.vue'));
@@ -78,10 +89,157 @@ const {
   activeLogContainer,
   copyContainerLogs,
   syncWithBackend,
-  executeLogout
+  executeLogout,
+  restartContainer,
+  selectedContainerForDetail,
+  containerToDelete,
+  isDeleteContainerModalOpen,
+  isDeletingContainer,
+  cancelDeleteContainer,
+  confirmDeleteContainer
 } = useDashboardData();
 
-const latestSystemVersion = computed(() => changelogReleases[0]?.version || 'v1.3.3');
+const latestSystemVersion = computed(() => changelogReleases[0]?.version || 'v1.4.1');
+
+interface BlueprintTemplate {
+  id: 'business' | 'portfolio' | 'blog' | 'education';
+  name: string;
+  desc: string;
+  icon: any;
+  badge?: string;
+}
+
+const blueprintOptions: BlueprintTemplate[] = [
+  { id: 'business', name: 'Toko Online & Retail', desc: 'Etalase produk, diskon & WhatsApp checkout', icon: ShoppingBag, badge: 'Flagship' },
+  { id: 'portfolio', name: 'Portofolio Teknis', desc: 'Studi kasus & cloud telemetry', icon: Briefcase },
+  { id: 'blog', name: 'Blog & Editorial', desc: 'Artikel, publikasi & berita', icon: BookOpen },
+  { id: 'education', name: 'Pusat Edukasi LMS', desc: 'Silabus kursus & modul', icon: GraduationCap }
+];
+
+// Real-time subdomain availability check
+const isSubdomainAvailable = (sub: string) => {
+  const clean = sub.toLowerCase().trim();
+  if (!clean) return true;
+  return !containers.value.some(c => c.subdomain.split('.')[0] === clean);
+};
+
+// Interactive Terminal Log Filters & Pro Operations
+const isTerminalMaximized = ref(false);
+const isStreamPaused = ref(false);
+const isAutoScroll = ref(true);
+const terminalCleared = ref(false);
+const logFilterLevel = ref<'all' | 'traffic' | 'traefik' | 'engine' | 'docker' | 'system'>('all');
+const logSearchQuery = ref('');
+const isTerminalRestarting = ref(false);
+const dynamicRebootLogs = ref<ContainerLogEntry[]>([]);
+
+const containerLogs = computed<ContainerLogEntry[]>(() => {
+  if (!activeLogContainer.value || terminalCleared.value) return [];
+  const base = generateContainerLogs(activeLogContainer.value);
+  return [...base, ...dynamicRebootLogs.value];
+});
+
+const logCounts = computed(() => {
+  const logs = containerLogs.value;
+  return {
+    all: logs.length,
+    traffic: logs.filter(l => l.service === 'traffic').length,
+    traefik: logs.filter(l => l.service === 'traefik' || l.service === 'tls').length,
+    engine: logs.filter(l => l.service === 'engine').length,
+    docker: logs.filter(l => l.service === 'docker').length,
+    system: logs.filter(l => l.service === 'system' || l.service === 'health' || l.service === 'security').length
+  };
+});
+
+const filteredLogs = computed(() => {
+  let list = containerLogs.value;
+  if (logFilterLevel.value !== 'all') {
+    if (logFilterLevel.value === 'traefik') {
+      list = list.filter(l => l.service === 'traefik' || l.service === 'tls');
+    } else if (logFilterLevel.value === 'system') {
+      list = list.filter(l => l.service === 'system' || l.service === 'health' || l.service === 'security');
+    } else {
+      list = list.filter(l => l.service === logFilterLevel.value);
+    }
+  }
+
+  const q = logSearchQuery.value.trim().toLowerCase();
+  if (q) {
+    list = list.filter(l =>
+      l.message.toLowerCase().includes(q) ||
+      l.serviceLabel.toLowerCase().includes(q) ||
+      l.timestamp.toLowerCase().includes(q) ||
+      (l.meta?.ip && l.meta.ip.toLowerCase().includes(q)) ||
+      (l.meta?.path && l.meta.path.toLowerCase().includes(q))
+    );
+  }
+  return list;
+});
+
+const toggleAutoScroll = () => {
+  isAutoScroll.value = !isAutoScroll.value;
+};
+
+const toggleStreamPause = () => {
+  isStreamPaused.value = !isStreamPaused.value;
+};
+
+const clearTerminalScreen = () => {
+  terminalCleared.value = true;
+};
+
+const restoreTerminalScreen = () => {
+  terminalCleared.value = false;
+};
+
+const downloadLogFile = () => {
+  if (!activeLogContainer.value) return;
+  const content = filteredLogs.value
+    .map(l => `[${l.timestamp}] [${l.serviceLabel}] ${l.message}`)
+    .join('\n');
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `runtime-log-${activeLogContainer.value.subdomain}.log`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+const handleTerminalRestart = async () => {
+  if (!activeLogContainer.value) return;
+  isTerminalRestarting.value = true;
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
+  
+  dynamicRebootLogs.value.push({
+    id: `reboot-${Date.now()}-1`,
+    lineNum: containerLogs.value.length + 1,
+    timestamp: timeStr,
+    service: 'system',
+    serviceLabel: 'system-reboot',
+    level: 'warn',
+    message: `Received SIGTERM signal. Initiating graceful container drainage for [pod-${activeLogContainer.value.id.slice(0, 8)}]`
+  });
+
+  await restartContainer(activeLogContainer.value);
+  
+  setTimeout(() => {
+    const timeStr2 = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds() + 1).padStart(2, '0')}.112`;
+    dynamicRebootLogs.value.push({
+      id: `reboot-${Date.now()}-2`,
+      lineNum: containerLogs.value.length + 1,
+      timestamp: timeStr2,
+      service: 'docker',
+      serviceLabel: 'docker-daemon',
+      level: 'success',
+      message: 'Container process spawned successfully. cgroups v2 resource tree intact. Ingress route active.'
+    });
+    isTerminalRestarting.value = false;
+  }, 1200);
+};
 
 onMounted(async () => {
   await syncWithBackend();
@@ -319,9 +477,9 @@ const handleLogout = async () => {
           <span>HeroCMS Studio</span>
           <ChevronRight :size="14" class="crumb-sep" />
           <span
-            :class="activeMenu === 'content' && activeArticleForReader ? 'crumb-link' : 'crumb-current'"
-            @click="activeMenu === 'content' && activeArticleForReader ? (activeArticleForReader = null) : null"
-            :title="activeMenu === 'content' && activeArticleForReader ? 'Kembali ke Daftar Artikel' : undefined"
+            :class="(activeMenu === 'content' && activeArticleForReader) || (activeMenu === 'containers' && selectedContainerForDetail) ? 'crumb-link' : 'crumb-current'"
+            @click="(activeMenu === 'content' && activeArticleForReader) ? (activeArticleForReader = null) : (activeMenu === 'containers' && selectedContainerForDetail) ? (selectedContainerForDetail = null) : null"
+            :title="(activeMenu === 'content' && activeArticleForReader) ? 'Kembali ke Daftar Artikel' : (activeMenu === 'containers' && selectedContainerForDetail) ? 'Kembali ke Semua Kontainer' : undefined"
           >
             {{
               activeMenu === 'containers' ? 'Situs & Kontainer' :
@@ -342,6 +500,12 @@ const handleLogout = async () => {
             <ChevronRight :size="14" class="crumb-sep" />
             <span class="crumb-current crumb-article-title" :title="activeArticleForReader.title">
               {{ activeArticleForReader.title }}
+            </span>
+          </template>
+          <template v-if="activeMenu === 'containers' && selectedContainerForDetail">
+            <ChevronRight :size="14" class="crumb-sep" />
+            <span class="crumb-current crumb-article-title" :title="selectedContainerForDetail.name" style="color: #2563eb; font-weight: 700;">
+              {{ selectedContainerForDetail.subdomain }}
             </span>
           </template>
         </div>
@@ -448,16 +612,11 @@ const handleLogout = async () => {
           <form @submit.prevent="handleCreateContainer" class="modal-form">
             <!-- 1. Blueprint Selection -->
             <div class="form-field-group">
-              <label class="field-title">Pilih Template Awal</label>
+              <label class="field-title">Pilih Blueprint Awal</label>
               <div class="template-selector-grid">
                 <button
                   type="button"
-                  v-for="tpl in [
-                    { id: 'portfolio', name: 'Portofolio', desc: 'Studi kasus & CV online', icon: Briefcase },
-                    { id: 'blog', name: 'Blog & Media', desc: 'Artikel & publikasi berita', icon: BookOpen },
-                    { id: 'education', name: 'Pusat Edukasi', desc: 'Silabus kursus & LMS', icon: GraduationCap },
-                    { id: 'business', name: 'Bisnis & UMKM', desc: 'Showcase produk & kontak', icon: ShoppingBag }
-                  ]"
+                  v-for="tpl in blueprintOptions"
                   :key="tpl.id"
                   class="template-option"
                   :class="{ active: newSiteForm.category === tpl.id }"
@@ -467,7 +626,12 @@ const handleLogout = async () => {
                     <component :is="tpl.icon" :size="15" />
                   </div>
                   <div class="template-option-text">
-                    <div class="template-option-name">{{ tpl.name }}</div>
+                    <div class="template-option-name" style="display: flex; align-items: center; gap: 6px;">
+                      <span>{{ tpl.name }}</span>
+                      <span v-if="tpl.badge" style="font-size: 0.62rem; color: #ea580c; background: #fff7ed; border: 1px solid #fed7aa; padding: 1px 5px; border-radius: 4px; font-weight: 700;">
+                        {{ tpl.badge }}
+                      </span>
+                    </div>
                     <div class="template-option-desc">{{ tpl.desc }}</div>
                   </div>
                   <div class="template-option-radio">
@@ -514,7 +678,16 @@ const handleLogout = async () => {
                 />
                 <span class="url-addon-suffix">.cloudcms.app</span>
               </div>
-              <p class="field-helper-text">
+              <!-- Real-time Subdomain Availability Feedback -->
+              <div class="subdomain-check-feedback" v-if="newSiteForm.subdomain.trim()">
+                <span v-if="isSubdomainAvailable(newSiteForm.subdomain)" class="feedback-avail">
+                  <CheckCircle2 :size="12" /> Subdomain tersedia & rute edge Traefik siap dialokasikan
+                </span>
+                <span v-else class="feedback-taken">
+                  <AlertCircle :size="12" /> Subdomain sudah digunakan oleh kontainer lain
+                </span>
+              </div>
+              <p class="field-helper-text" v-else>
                 Rute edge Traefik otomatis menerbitkan sertifikat SSL TLS v1.3 Let's Encrypt.
               </p>
             </div>
@@ -559,27 +732,67 @@ const handleLogout = async () => {
     </Teleport>
 
     <!-- ============================================================= -->
-    <!-- MODAL: DOCKER & TRAEFIK RUNTIME LOGS                          -->
+    <!-- MODAL: DOCKER & TRAEFIK RUNTIME LOGS (PRO DEVELOPER TERMINAL)  -->
     <!-- ============================================================= -->
     <Teleport to="body">
       <div v-if="isLogsModalOpen && activeLogContainer" class="modal-backdrop" @click.self="isLogsModalOpen = false">
-        <div class="modal-dialog modal-dialog-lg">
-          <div class="modal-header">
-            <div class="modal-header-leading">
-              <div class="modal-header-icon-box">
-                <Terminal :size="18" />
+        <div class="modal-dialog terminal-modal-dialog" :class="{ 'is-maximized': isTerminalMaximized }">
+          <!-- Terminal Main Window Frame -->
+          <div class="terminal-container-view">
+            <!-- 1. Window Chrome Top Header (macOS Traffic Lights & Identity) -->
+            <div class="terminal-window-header">
+              <div class="terminal-window-left">
+                <!-- Mac Traffic Light Buttons -->
+                <div class="mac-traffic-lights">
+                  <button type="button" class="mac-light-dot red" title="Tutup Terminal (ESC)" @click="isLogsModalOpen = false"></button>
+                  <button type="button" class="mac-light-dot yellow" :title="isStreamPaused ? 'Lanjutkan Stream' : 'Jeda Stream'" @click="toggleStreamPause"></button>
+                  <button type="button" class="mac-light-dot green" :title="isTerminalMaximized ? 'Perkecil' : 'Layar Penuh'" @click="isTerminalMaximized = !isTerminalMaximized"></button>
+                </div>
+
+                <!-- Pod Identity Trail -->
+                <div class="terminal-target-title">
+                  <Terminal :size="14" style="color: #60a5fa;" />
+                  <span style="font-weight: 700; color: #f4f4f5;">Console Log Pod:</span>
+                  <span class="terminal-pod-badge">#pod-{{ activeLogContainer.id.slice(0, 8) }}</span>
+                  <span style="color: #71717a;">•</span>
+                  <span style="display: flex; align-items: center; gap: 4px; color: #34d399; font-size: 0.73rem;">
+                    <Lock :size="11" />
+                    <span>https://{{ activeLogContainer.subdomain }}</span>
+                  </span>
+                </div>
               </div>
-              <div>
-                <h3 class="modal-heading">Log Runtime Kontainer</h3>
-                <p class="modal-subheading">Telemetri Docker container #{{ activeLogContainer.id }} via proxy Traefik v3.</p>
+
+              <div class="terminal-window-right">
+                <!-- Live Beacon Indicator -->
+                <span class="terminal-live-beacon" :class="{ paused: isStreamPaused }">
+                  <span class="pulse-mini-dot" :style="{ backgroundColor: isStreamPaused ? '#fbbf24' : '#10b981' }"></span>
+                  <span>{{ isStreamPaused ? 'STREAM PAUSED' : 'STREAM LIVE' }}</span>
+                </span>
+
+                <!-- Fullscreen Toggle Button -->
+                <button
+                  type="button"
+                  class="terminal-tool-btn"
+                  :title="isTerminalMaximized ? 'Keluar dari Layar Penuh' : 'Mode Layar Penuh'"
+                  @click="isTerminalMaximized = !isTerminalMaximized"
+                >
+                  <Minimize2 v-if="isTerminalMaximized" :size="13" />
+                  <Maximize2 v-else :size="13" />
+                </button>
+
+                <!-- Close Button -->
+                <button
+                  type="button"
+                  class="terminal-tool-btn"
+                  title="Tutup Konsol"
+                  @click="isLogsModalOpen = false"
+                >
+                  <X :size="13" />
+                </button>
               </div>
             </div>
-            <button class="modal-close-button" @click="isLogsModalOpen = false" title="Tutup">
-              <X :size="16" />
-            </button>
-          </div>
 
-          <div class="terminal-container-view">
+            <!-- 2. Secondary Telemetry Specs Bar -->
             <div class="terminal-meta-bar">
               <div class="terminal-meta-left">
                 <div class="terminal-meta-item">
@@ -587,41 +800,329 @@ const handleLogout = async () => {
                   <span class="t-meta-val" :class="activeLogContainer.status">{{ activeLogContainer.status.toUpperCase() }}</span>
                 </div>
                 <div class="terminal-meta-item">
-                  <span class="t-meta-lbl">CGROUPS:</span>
+                  <span class="t-meta-lbl">CGROUPS V2:</span>
                   <span class="t-meta-val">{{ activeLogContainer.cpuLimit }} • {{ activeLogContainer.ramUsage }}MB / {{ activeLogContainer.ramLimit }}MB</span>
                 </div>
                 <div class="terminal-meta-item">
-                  <span class="t-meta-lbl">ROUTE:</span>
-                  <span class="t-meta-val">https://{{ activeLogContainer.subdomain }}</span>
+                  <span class="t-meta-lbl">INGRESS ROUTER:</span>
+                  <span class="t-meta-val">Traefik v3.1 (TLS 1.3 ALPN)</span>
+                </div>
+                <div class="terminal-meta-item">
+                  <span class="t-meta-lbl">UPTIME:</span>
+                  <span class="t-meta-val">{{ activeLogContainer.uptime }}</span>
                 </div>
               </div>
-              <div class="terminal-meta-right">
-                <span class="pulse-green-sm"></span>
-                <span class="t-stream-tag">Stream Live (Kafka/Docker)</span>
+
+              <div style="font-size: 0.7rem; color: #71717a;">
+                TCP Socket: <strong>Active</strong> • Linux Namespace Isolated
               </div>
             </div>
 
+            <!-- 3. Terminal Controls & Level Filter Toolbar -->
+            <div class="terminal-controls-row">
+              <!-- Service Category Tabs -->
+              <div class="terminal-level-tabs">
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'all' }"
+                  @click="logFilterLevel = 'all'"
+                >
+                  Semua ({{ logCounts.all }})
+                </button>
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'traffic' }"
+                  @click="logFilterLevel = 'traffic'"
+                >
+                  Inbound ({{ logCounts.traffic }})
+                </button>
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'traefik' }"
+                  @click="logFilterLevel = 'traefik'"
+                >
+                  Traefik & SSL ({{ logCounts.traefik }})
+                </button>
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'engine' }"
+                  @click="logFilterLevel = 'engine'"
+                >
+                  Engine ({{ logCounts.engine }})
+                </button>
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'docker' }"
+                  @click="logFilterLevel = 'docker'"
+                >
+                  Docker ({{ logCounts.docker }})
+                </button>
+                <button
+                  type="button"
+                  class="terminal-level-pill"
+                  :class="{ active: logFilterLevel === 'system' }"
+                  @click="logFilterLevel = 'system'"
+                >
+                  System ({{ logCounts.system }})
+                </button>
+              </div>
+
+              <!-- Search and Utility Action Buttons -->
+              <div class="terminal-actions-right">
+                <!-- Real-time Text Filter -->
+                <div class="terminal-search-shell">
+                  <Search :size="12" class="search-icon" />
+                  <input
+                    v-model="logSearchQuery"
+                    type="text"
+                    placeholder="Filter teks log (IP, status, path)..."
+                    class="terminal-search-input"
+                  />
+                  <button
+                    v-if="logSearchQuery"
+                    type="button"
+                    style="position: absolute; right: 6px; background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0;"
+                    title="Hapus pencarian"
+                    @click="logSearchQuery = ''"
+                  >
+                    <X :size="11" />
+                  </button>
+                </div>
+
+                <!-- Pause / Play Stream Toggle -->
+                <button
+                  type="button"
+                  class="terminal-tool-btn"
+                  :class="{ active: !isStreamPaused }"
+                  :title="isStreamPaused ? 'Lanjutkan stream live' : 'Jeda auto-stream'"
+                  @click="toggleStreamPause"
+                >
+                  <Pause v-if="!isStreamPaused" :size="12" />
+                  <Play v-else :size="12" />
+                  <span>{{ isStreamPaused ? 'Resume' : 'Pause' }}</span>
+                </button>
+
+                <!-- Auto-Scroll Toggle -->
+                <button
+                  type="button"
+                  class="terminal-tool-btn"
+                  :class="{ active: isAutoScroll }"
+                  :title="isAutoScroll ? 'Auto-scroll aktif: otomatis menggulir ke log terbaru' : 'Auto-scroll nonaktif'"
+                  @click="toggleAutoScroll"
+                >
+                  <span>Auto-Scroll: {{ isAutoScroll ? 'ON' : 'OFF' }}</span>
+                </button>
+
+                <!-- Download Log File -->
+                <button
+                  type="button"
+                  class="terminal-tool-btn"
+                  title="Unduh log runtime sebagai file .log"
+                  @click="downloadLogFile"
+                >
+                  <Download :size="12" />
+                  <span>Unduh .log</span>
+                </button>
+
+                <!-- Clear / Restore Screen -->
+                <button
+                  type="button"
+                  class="terminal-tool-btn"
+                  :title="terminalCleared ? 'Muat ulang log' : 'Bersihkan tampilan layar'"
+                  @click="terminalCleared ? restoreTerminalScreen() : clearTerminalScreen()"
+                >
+                  <RotateCw v-if="terminalCleared" :size="12" />
+                  <Trash2 v-else :size="12" />
+                  <span>{{ terminalCleared ? 'Restore' : 'Clear' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 4. Console Screen & Lines -->
             <div class="terminal-output-screen">
-              <div class="log-entry"><span class="log-ts">[09:20:11.204]</span> <span class="log-tag system">[system-init]</span> Spawning runtime sandbox for tenant {{ activeLogContainer.id }}</div>
-              <div class="log-entry"><span class="log-ts">[09:20:12.018]</span> <span class="log-tag docker">[docker-daemon]</span> Container {{ activeLogContainer.id }} initialized (cgroups v2: cpu_quota=50000/100000, mem_limit={{ activeLogContainer.ramLimit }}MB)</div>
-              <div class="log-entry"><span class="log-ts">[09:20:13.142]</span> <span class="log-tag traefik">[traefik-proxy]</span> Ingress router attached: Host(`{{ activeLogContainer.subdomain }}`) -> service '{{ activeLogContainer.id }}:80'</div>
-              <div class="log-entry"><span class="log-ts">[09:20:14.055]</span> <span class="log-tag tls">[lets-encrypt]</span> Wildcard challenge ACME TLS-ALPN-01 verified. Certificate auto-renewed</div>
-              <div class="log-entry"><span class="log-ts">[09:20:15.310]</span> <span class="log-tag nginx">[runtime-engine]</span> HTTP/2 & HTTP/3 (QUIC) fast-path listener initialized on 0.0.0.0:80</div>
-              <div class="log-entry"><span class="log-ts">[09:21:02.881]</span> <span class="log-tag health">[healthcheck]</span> Internal probe HTTP 127.0.0.1:80/healthz returned status 200 OK (0.4ms)</div>
-              <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:22:04.119]</span> <span class="log-tag traffic">[edge-inbound]</span> GET / 200 OK (TTFB: 1.6ms, 4.2KB) - Client IP: 103.144.20.12 - SSL TLS 1.3</div>
-              <div class="log-entry" v-if="activeLogContainer.status === 'running'"><span class="log-ts">[09:24:18.490]</span> <span class="log-tag traffic">[edge-inbound]</span> GET /api/telemetry 204 No Content - Kafka event published</div>
-              <div class="log-entry" v-if="activeLogContainer.status === 'stopped'"><span class="log-ts">[09:22:30.501]</span> <span class="log-tag warn">[docker-daemon]</span> SIGTERM received from tenant dashboard. Container process halted cleanly (Standby)</div>
-              <div class="log-entry" v-if="activeLogContainer.status === 'provisioning'"><span class="log-ts">[09:25:01.002]</span> <span class="log-tag docker">[docker-daemon]</span> Re-allocating cgroups v2 resource tree and rebuilding Traefik route...</div>
+              <div
+                v-for="entry in filteredLogs"
+                :key="entry.id"
+                class="terminal-log-row"
+              >
+                <!-- Line Number -->
+                <span class="log-ln">{{ String(entry.lineNum).padStart(2, '0') }}</span>
+
+                <!-- Timestamp -->
+                <span class="log-ts">[{{ entry.timestamp }}]</span>
+
+                <!-- Service Badge -->
+                <span class="log-service-badge" :class="entry.service">
+                  [{{ entry.serviceLabel }}]
+                </span>
+
+                <!-- Log Message Body with Syntax Highlights -->
+                <div class="log-text-body">
+                  <span>{{ entry.message }}</span>
+                  <!-- Metadata Pill Highlights if present -->
+                  <span v-if="entry.meta?.cache" class="cache-pill" :class="entry.meta.cache.toLowerCase()" style="margin-left: 6px; font-size: 0.64rem;">
+                    {{ entry.meta.cache }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Empty State if Filter doesn't match -->
+              <div v-if="filteredLogs.length === 0" style="padding: 40px 20px; text-align: center; color: #71717a;">
+                <Search :size="20" style="margin-bottom: 6px; color: #52525b;" />
+                <div style="font-weight: 600; color: #a1a1aa; font-size: 0.8rem;">
+                  {{ terminalCleared ? 'Layar konsol telah dibersihkan' : 'Tidak ada baris log yang cocok' }}
+                </div>
+                <div style="font-size: 0.72rem; margin-top: 3px;">
+                  {{ terminalCleared ? 'Klik tombol "Restore" di toolbar untuk menampilkan kembali riwayat log.' : `Kriteria pencarian "${logSearchQuery}" tidak ditemukan pada kategori ini.` }}
+                </div>
+              </div>
+
+              <!-- Live Blinking Terminal Cursor -->
+              <div v-if="!isStreamPaused && filteredLogs.length > 0" style="padding: 4px 0 4px 40px; color: #52525b; font-size: 0.72rem;">
+                <span style="color: #34d399;">●</span> Menunggu event berikutnya di socket Traefik/cgroups...
+                <span class="log-cursor-beacon"></span>
+              </div>
             </div>
           </div>
 
-          <div class="modal-footer-row">
-            <button type="button" class="btn-modal-ghost" @click="copyContainerLogs">
-              <Copy :size="14" />
-              <span>Salin Log</span>
+          <!-- 5. Modal Footer Actions -->
+          <div class="modal-footer-row" style="margin-top: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.73rem; color: #64748b;">
+              <span>Memori: <strong>{{ activeLogContainer.ramUsage }} MB</strong></span>
+              <span>•</span>
+              <span>Menampilkan <strong>{{ filteredLogs.length }}</strong> baris log aktif</span>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button
+                type="button"
+                class="btn-modal-ghost"
+                :disabled="isTerminalRestarting"
+                title="Restart Kontainer Langsung"
+                @click="handleTerminalRestart"
+              >
+                <RotateCw :size="13" :class="{ 'spin-anim': isTerminalRestarting }" />
+                <span>{{ isTerminalRestarting ? 'Me-reboot kontainer...' : 'Restart Kontainer' }}</span>
+              </button>
+              <button type="button" class="btn-modal-ghost" title="Salin seluruh log ke clipboard" @click="copyContainerLogs">
+                <Copy :size="13" />
+                <span>Salin Log</span>
+              </button>
+              <button type="button" class="btn-modal-confirm" @click="isLogsModalOpen = false">
+                Tutup Konsol
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- 3. Bespoke Danger Zone Modal: Delete Container Confirmation -->
+    <Teleport to="body">
+      <div
+        v-if="isDeleteContainerModalOpen && containerToDelete"
+        class="modal-backdrop"
+        @click.self="cancelDeleteContainer"
+      >
+        <div
+          class="modal-dialog modal-dialog-delete"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-dialog-title"
+        >
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box danger-icon-box">
+                <AlertTriangle :size="18" />
+              </div>
+              <div>
+                <h3 id="delete-dialog-title" class="modal-heading">Hapus Kontainer Runtime</h3>
+                <p class="modal-subheading">Tindakan ini permanen dan akan melepas rute ingress Traefik.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="modal-close-button"
+              :disabled="isDeletingContainer"
+              @click="cancelDeleteContainer"
+              title="Tutup dialog"
+            >
+              <X :size="16" />
             </button>
-            <button type="button" class="btn-modal-confirm" @click="isLogsModalOpen = false">
-              Tutup Konsol
+          </div>
+
+          <!-- Modal Body -->
+          <div class="delete-modal-body">
+            <!-- Target Pod Card -->
+            <div class="delete-target-card">
+              <div class="target-card-leading">
+                <div class="target-app-icon">
+                  <Server :size="17" />
+                </div>
+                <div class="target-app-info">
+                  <div class="target-app-name">{{ containerToDelete.name }}</div>
+                  <div class="target-app-subdomain">
+                    <Globe :size="11" />
+                    <span>https://{{ containerToDelete.subdomain }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="target-card-meta">
+                <span class="badge-target-spec">{{ containerToDelete.cpuLimit }} • {{ containerToDelete.ramLimit }} MB</span>
+                <span
+                  class="badge-target-status"
+                  :class="containerToDelete.status === 'running' ? 'status-emerald' : 'status-amber'"
+                >
+                  {{ containerToDelete.status === 'running' ? '● Running' : '○ Standby' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Danger Impact Callout -->
+            <div class="delete-impact-callout">
+              <div class="impact-callout-header">
+                <AlertCircle :size="13" />
+                <span>Konsekuensi penghapusan kontainer:</span>
+              </div>
+              <ul class="impact-list">
+                <li>
+                  <strong>Proses Pod Dihentikan:</strong> Runtime Docker & cgroups v2 akan dimatikan seketika.
+                </li>
+                <li>
+                  <strong>Rute Traefik & SSL Dicabut:</strong> Permintaan masuk ke <code>{{ containerToDelete.subdomain }}</code> akan langsung mengembalikan status HTTP 404.
+                </li>
+                <li>
+                  <strong>Pengembalian Kuota:</strong> 1 slot kuota ({{ containers.length }}/{{ userPlan.maxContainers }}) akan otomatis dikembalikan ke kuota langganan Anda.
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Modal Footer Actions -->
+          <div class="modal-footer-row delete-footer-row">
+            <button
+              type="button"
+              class="btn-modal-ghost"
+              :disabled="isDeletingContainer"
+              @click="cancelDeleteContainer"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              class="btn-modal-confirm-destructive"
+              :disabled="isDeletingContainer"
+              @click="confirmDeleteContainer"
+            >
+              <RotateCw v-if="isDeletingContainer" :size="13" class="spin-anim" />
+              <Trash2 v-else :size="13" />
+              <span>{{ isDeletingContainer ? 'Menghapus Kontainer...' : 'Ya, Hapus Kontainer' }}</span>
             </button>
           </div>
         </div>

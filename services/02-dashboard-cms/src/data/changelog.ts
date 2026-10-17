@@ -2,11 +2,335 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.8.2',
+    releaseDate: '17 Oktober 2026',
+    title: 'Modal Konfirmasi Hapus Kontainer (Bespoke Danger Zone Dialog): Menggantikan Native Browser Confirm dengan UI Studio Terpadu',
+    summary: 'Menghilangkan native browser confirm() dialog yang kaku pada penghapusan kontainer runtime, digantikan dengan HeroCMS Studio Danger Zone Modal yang elegan: kartu pratinjau pod target, rincian konsekuensi teknis destruktif (penghentian isolasi cgroups v2, pencabutan rute Traefik/SSL, pengembalian slot kuota), dan tombol aksi destruktif dengan status loading.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-182-1',
+        type: 'improvement',
+        scope: 'Eliminate Native Browser window.confirm()',
+        description: 'Mengganti dialog bawaan browser yang kaku dengan modal konfirmasi interaktif bergaya HeroCMS Studio Design System.'
+      },
+      {
+        id: 'c-182-2',
+        type: 'feature',
+        scope: 'Bespoke Danger Zone Delete Confirmation Modal',
+        description: 'Menampilkan detail lengkap pod yang akan dihapus, ringkasan dampak teknis (cgroups v2, Traefik edge unrouting, pengembalian kuota), serta proteksi aksi dengan tombol destruktif dan loading spinner.'
+      }
+    ]
+  },
+  {
+    version: 'v1.8.1',
+    releaseDate: '17 Oktober 2026',
+    title: 'Ekspansi Ukuran Konsol Terminal: Desain Super Lebar (1480px / 95vw), Layar 84vh, dan Tipografi Monospace Nyaman',
+    summary: 'Merespons masukan pengguna untuk memperbesar ukuran modal log terminal: memperlebar dialog menjadi 1480px (95vw) dengan tinggi 84vh, tinggi layar konsol ditingkatkan menjadi 540px+, ukuran font monospace dinaikkan menjadi 0.83rem, padding toolbar diperluas, serta mode layar penuh yang kini mencakup 99vw/97vh.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-181-1',
+        type: 'improvement',
+        scope: 'Terminal Console Viewport Enlargement (1480px / 95vw)',
+        description: 'Memperluas dimensi dialog konsol dari 980px menjadi 1480px (95vw) dan minimum height 84vh agar baris log telemetri dan URL panjang tidak terpotong atau wrap.'
+      },
+      {
+        id: 'c-181-2',
+        type: 'improvement',
+        scope: 'Output Screen Height & Typography Scaling',
+        description: 'Meningkatkan tinggi output screen konsol menjadi 540px+, menaikkan ukuran font baris log ke 0.83rem, serta memperbesar traffic lights dan tombol filter.'
+      }
+    ]
+  },
+  {
+    version: 'v1.8.0',
+    releaseDate: '17 Oktober 2026',
+    title: 'Perombakan Total Terminal Log Kontainer: Konsol Pengembang macOS-Style, Filter Interaktif, Line Numbers, dan Auto-Scroll',
+    summary: 'Merombak total jendela modal Log Runtime Kontainer menjadi konsol pengembang kelas dunia (setara Railway, Warp, dan Vercel Console): bingkai window macOS dengan traffic lights interaktif (tutup, jeda stream, layar penuh), penghapusan raw UUID digantikan identitas pod bersih ber-SSL, indikator beacon "STREAM LIVE" dengan status pause/resume, bilah filter level layanan (Inbound, Traefik & SSL, Engine, Docker, System) dengan pill counter, kolom line numbers bernomor presisi, pencarian log real-time dengan highlight, pengunduhan file .log fisik, serta sequence animasi live reboot.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-180-1',
+        type: 'feature',
+        scope: 'macOS Developer Console Window & Fullscreen Mode',
+        description: 'Menyematkan window chrome dengan traffic lights (🔴 tutup, 🟡 jeda, 🟢 fullscreen toggle), mode layar penuh 98vw/94vh, dan identitas pod bersih ber-SSL.'
+      },
+      {
+        id: 'c-180-2',
+        type: 'feature',
+        scope: 'Interactive Real-Time Log Search & Service Tabs',
+        description: 'Menerapkan pencarian log instan dengan tombol clear, tab kategori layanan dengan jumlah baris dinamis, serta dataset log runtime modular di src/data/container-logs.ts.'
+      },
+      {
+        id: 'c-180-3',
+        type: 'feature',
+        scope: 'Developer Utilities: Auto-Scroll, Log Download & Clear Screen',
+        description: 'Menyediakan tombol kendali auto-scroll (ON/OFF), jeda streaming live, unduhan berkas fisik .log, dan pembersihan/pemulihan layar konsol.'
+      },
+      {
+        id: 'c-180-4',
+        type: 'improvement',
+        scope: 'Line Numbers & High-DPI Obsidian Screen',
+        description: 'Menambahkan kolom line number dua digit (01, 02, 03...), service badges warna-warni, penyorotan status kode HTTP, dan kursor terminal berkedip.'
+      }
+    ]
+  },
+  {
+    version: 'v1.7.1',
+    releaseDate: '17 Oktober 2026',
+    title: 'Perombakan Filter Bar Log Akses: Segmented Pill Tabs Berikon, Pill Badges Counter, dan Input Search Interaktif',
+    summary: 'Merombak tampilan filter log akses pengunjung harian di Detail Kontainer dari tombol mentah menjadi bilah toolbar tingkat enterprise: segmented pills dengan ikon (Globe, Google Search, Media Sosial, Direct), indikator jumlah hit dinamis, input pencarian dengan clear button (X), tombol reset filter, serta empty state interaktif.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-171-1',
+        type: 'improvement',
+        scope: 'Segmented Filter Pills with Live Counter Badges',
+        description: 'Menerapkan tab segmented modern berperekat halus dengan ikon saluran, penanda active card putih berbayang lembut, dan pill badge jumlah log hit yang real-time.'
+      },
+      {
+        id: 'c-171-2',
+        type: 'improvement',
+        scope: 'Interactive Clearable Search Input & Reset Button',
+        description: 'Menyediakan input pencarian dengan fokus ring biru aksen, tombol hapus pencarian instan (X), dan tombol Reset Filter saat filter aktif atau pencarian menghasilkan 0 baris.'
+      }
+    ]
+  },
+  {
+    version: 'v1.7.0',
+    releaseDate: '17 Oktober 2026',
+    title: 'Bespoke CMS Content & Media Analytics Suite: Status Publikasi, Media Library WebP Health, Top Pages Engagement, dan Saluran Pengunjung Organik',
+    summary: 'Meluncurkan modul analisis khusus CMS ke dalam Detail Kontainer HeroCMS: menyajikan metrik esensial untuk situs berbasis konten tanpa beban database. Mencakup ringkasan status publikasi (halaman terbit vs draft, validitas /sitemap.xml, latensi purge cache instan 118ms), telemetri penyimpanan media library (rasio konversi WebP 93.8%, bandwidth terhemat, deteksi aset terbesar), proteksi form kontak & anti-spam edge tanpa captcha, tabel peringkat konten terpopuler (views, waktu baca, cache hit %, TTFB), dan visualisasi multi-warna saluran kedatangan pembaca (Google SEO, Media Sosial, Direct, Referral).',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-170-1',
+        type: 'feature',
+        scope: 'CMS Content Performance & Top Pages Table',
+        description: 'Menambahkan tabel interaktif halaman & konten terpopuler lengkap dengan ranking badge, URL path, total pembaca, estimasi waktu baca, cache hit ratio, dan kecepatan buka TTFB.'
+      },
+      {
+        id: 'c-170-2',
+        type: 'feature',
+        scope: 'Media Library Storage & WebP Optimization Health',
+        description: 'Menghadirkan kartu telemetri penyimpanan aset media dengan progress meter kapasitas, persentase konversi otomatis format WebP, penghematan bandwidth, serta audit berkas terbesar.'
+      },
+      {
+        id: 'c-170-3',
+        type: 'feature',
+        scope: 'Publishing Lifecycle & Edge Purge Latency',
+        description: 'Menampilkan status verifikasi sitemap XML, perbandingan halaman terbit vs draft, dan latensi pembersihan cache instan (instant edge cache invalidation) saat konten diperbarui.'
+      },
+      {
+        id: 'c-170-4',
+        type: 'feature',
+        scope: 'Traffic Acquisition Channels & Form Spam Shield',
+        description: 'Menyediakan widget visual saluran kedatangan pengunjung (SEO Google, Sosmed, Direct) serta indikator proteksi formulir kontak dari serangan bot spammer via Traefik edge rate limit.'
+      }
+    ]
+  },
+  {
+    version: 'v1.6.0',
+    releaseDate: '17 Oktober 2026',
+    title: 'Integrasi Enterprise Apache ECharts: Grafik Telemetri Edge & Cache Kelas Industri (Cloudflare & Datadog APM Standard)',
+    summary: 'Mengadopsi library visualisasi data industri terkemuka Apache ECharts (echarts) ke dalam HeroCMS Dashboard: menggantikan grafik SVG manual dengan engine canvas beresolusi tinggi, cubic hermite spline mulus, shading gradasi area presisi (#2563eb dan #10b981), axisPointer crosshair otomatis, interactive HTML glassmorphic tooltip card, responsive auto-resize via ResizeObserver, transisi animasi halus saat perpindahan timeframe (24 Jam / 7 Hari / 30 Hari), serta optimasi manual vendor chunks di Vite.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-160-1',
+        type: 'feature',
+        scope: 'Apache ECharts Engine Integration',
+        description: 'Menginstal dan mengintegrasikan pustaka visualisasi data tingkat enterprise Apache ECharts (echarts) dengan pemisahan chunk vendor terpisah di vite.config.ts untuk efisiensi HTTP long-term caching.'
+      },
+      {
+        id: 'c-160-2',
+        type: 'improvement',
+        scope: 'High-DPI Canvas Antialiasing & Dual Area Gradients',
+        description: 'Mengganti SVG rendering manual yang terdistorsi dengan canvas anti-aliasing tajam berskala rasio pixel perangkat (Retina ready), gradasi area linier transparan, dan bayangan garis kurva (drop shadow glow).'
+      },
+      {
+        id: 'c-160-3',
+        type: 'feature',
+        scope: 'Smart AxisPointer Crosshair & Glassmorphic Tooltip',
+        description: 'Menyediakan pelacak koordinat kursor axisPointer otomatis dan kartu tooltip gelap kaca (glassmorphic) yang merinci status edge ingress, cache hit %, origin pass, latensi, dan bandwidth secara interaktif.'
+      },
+      {
+        id: 'c-160-4',
+        type: 'performance',
+        scope: 'Fluid Timeframe Morphing & ResizeObserver',
+        description: 'Menerapkan transisi animasi morfologis halus (700ms cubicOut) saat beralih antara 24 Jam, 7 Hari, dan 30 Hari, serta sinkronisasi otomatis ukuran grafik dengan ResizeObserver.'
+      }
+    ]
+  },
+  {
+    version: 'v1.5.2',
+    releaseDate: '17 Oktober 2026',
+    title: 'PaaS Developer Card Overhaul: Railway & Vercel-Style Dynamic Identity, Top Accent Stripe & Live Traffic Sparkline',
+    summary: 'Merombak tampilan kartu kontainer di Situs & Kontainer agar dinamis, hidup, dan setara PaaS kelas dunia: menambahkan garis aksen gradasi 3px warna brand container, ambient glow di sudut atas, avatar ikon 44x44 dengan kategori badge, penghapusan raw UUID diganti short pod ID (#pod-000001), kapsul URL modern ber-SSL, widget mini-trend sparkline kurva area trafik 7 hari (+24% growth), gauge meter CPU/RAM presisi, serta toolbar aksi yang rapi.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-152-1',
+        type: 'improvement',
+        scope: 'Top Brand Accent Stripe & Ambient Glow',
+        description: 'Menyematkan garis aksen atas dinamis berdasarkan warna tema situs (--card-accent) dan radial glow halus saat hover, memberikan identitas visual unik pada setiap kontainer.'
+      },
+      {
+        id: 'c-152-2',
+        type: 'feature',
+        scope: 'Live Traffic Momentum & Area Sparkline Widget',
+        description: 'Menambahkan strip trafik 7 hari dengan mini SVG Area Sparkline curve bergradasi halus dan persentase pertumbuhan (+24%), membuat kartu terlihat aktif dan memancarkan data hidup.'
+      },
+      {
+        id: 'c-152-3',
+        type: 'improvement',
+        scope: 'Clean Identity & Short Pod ID Tag',
+        description: 'Menghapus string UUID panjang yang mengganggu dan menggantinya dengan pod tag rapi (mis. pod-000001) serta badge kategori situs (Portofolio, Bisnis, Publikasi, Edukasi).'
+      },
+      {
+        id: 'c-152-4',
+        type: 'improvement',
+        scope: 'Pro PaaS Dual Gauges & Unified Action Toolbar',
+        description: 'Merapikan bar meter CPU CFS Quota dan RAM memcg dengan ikon dan label yang bersih tanpa underline garis janggal, serta mengelompokkan tombol Editor, Analitik, dan 5 kontrol runtime secara proporsional.'
+      }
+    ]
+  },
+  {
+    version: 'v1.5.1',
+    releaseDate: '17 Oktober 2026',
+    title: 'Perombakan Visual Chart Edge & Cache: Industry Standard Catmull-Rom Spline, Y/X-Axis Scale & Scrub Tooltip',
+    summary: 'Merombak grafik volume traffic & cache edge Traefik menjadi setara standar visual Cloudflare Analytics & Vercel Web Analytics: menghilangkan titik lingkaran kaku (static circle beads), mengimplementasikan algoritma Catmull-Rom to Cubic Bézier spline dengan bayangan halus (drop shadow glow), skala vertikal Y-axis dinamis (formatted k/M), label horizontal X-axis waktu (WIB), hairline crosshair interaktif, serta floating glassmorphic tooltip yang responsif mengikuti kursor.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-151-1',
+        type: 'improvement',
+        scope: 'Clean Industry-Standard Spline & Elimination of Clunky Circles',
+        description: 'Menghapus titik lingkaran statis di sepanjang garis yang membuat tampilan kaku, menggantinya dengan kurva Catmull-Rom to Cubic Bézier spline mulus dengan gradasi area halus (#2563eb dan #10b981) dan glow effect.'
+      },
+      {
+        id: 'c-151-2',
+        type: 'improvement',
+        scope: 'Dynamic Y-Axis Scale Guides & X-Axis Timestamps',
+        description: 'Menambahkan 4 garis grid horizontal dan skala metrik sumbu Y otomatis (mis. 5.2k, 3.5k, 1.7k, 0) serta label waktu sumbu X presisi yang disinkronkan dengan interval filter 24 Jam, 7 Hari, dan 30 Hari.'
+      },
+      {
+        id: 'c-151-3',
+        type: 'feature',
+        scope: 'Interactive Crosshair Scrubber & Glassmorphic Tooltip',
+        description: 'Menyediakan hairline crosshair vertikal yang muncul saat scrubbing kursor mouse di atas grafik, pulsing halo dot pada titik koordinat aktif, serta floating glassmorphic tooltip kartu gelap yang merinci Total Permintaan, Edge Cache Hit %, Origin Pass, TTFB, dan Bandwidth.'
+      },
+      {
+        id: 'c-151-4',
+        type: 'improvement',
+        scope: 'Header Quick KPI Strip & Accessible Legend',
+        description: 'Menyematkan badge ringkasan telemetri langsung di header grafik (Total Volume, Cache Hit %, Puncak Traffic req/periode) serta legend yang membedakan Traefik Ingress, Edge Cache Hit, dan Container Cache Miss.'
+      }
+    ]
+  },
+  {
+    version: 'v1.5.0',
+    releaseDate: '17 Oktober 2026',
+    title: 'Cloudflare-Style Pod Detail & Geo Edge Analytics: Distribusi Pengunjung Berdasarkan Negara & Live Edge Ingest',
+    summary: 'Peluncuran modul inspeksi Pod & Container Telemetry kelas industri terinspirasi oleh Cloudflare Dashboard & Vercel Edge Analytics: visualisasi distribusi traffic pengunjung berdasarkan negara dengan bendera nasional & latensi regional, grafik area interaktif per jam/hari (requests, cache hit ratio 92.4%, bandwidth egress), live edge ingest ticker real-time, breakdown tipe perangkat (Mobile vs Desktop), Core Web Vitals (LCP, INP, CLS), HTTP status codes, serta tombol export dataset CSV.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-150-1',
+        type: 'feature',
+        scope: 'Pod & Ingress Full-Page Sub-View Inspector',
+        description: 'Menyediakan halaman inspeksi Pod & Analitik Edge terdedikasi (Full-Page Sub-View) dengan bilah navigasi breadcrumb dan tombol kembali instan ke daftar kontainer, merinci spesifikasi container runtime, gateway IP Traefik internal, TLS 1.3 ALPN handshake, cgroups v2 limits, serta quick action bar.'
+      },
+      {
+        id: 'c-150-2',
+        type: 'feature',
+        scope: 'Cloudflare-Style Geo Traffic by Country',
+        description: 'Menyajikan ranking distribusi negara pengakses lengkap dengan bendera nasional (🇮🇩 Indonesia, 🇸🇬 Singapura, 🇺🇸 Amerika Serikat, 🇲🇾 Malaysia, dll.), total request, persentase visual bar, dan latensi TTFB regional.'
+      },
+      {
+        id: 'c-150-3',
+        type: 'feature',
+        scope: 'Interactive Edge Area Chart & Timeframe Filter',
+        description: 'Menyematkan grafik kurva area SVG bergradasi halus dengan filter 24 Jam, 7 Hari, dan 30 Hari, memvisualisasikan volume request total vs request yang dilayani dari Traefik Edge Cache.'
+      },
+      {
+        id: 'c-150-4',
+        type: 'feature',
+        scope: 'Live Edge Ingest Streaming Ticker',
+        description: 'Menampilkan ticker live feed traffic real-time yang memancarkan request terkini lengkap dengan kota asal, metode HTTP, path rute, kode status, latensi, dan tipe perangkat.'
+      },
+      {
+        id: 'c-150-5',
+        type: 'improvement',
+        scope: 'Devices, Web Vitals, HTTP Codes & CSV Export',
+        description: 'Melengkapi analitik dengan rasio pengunjung Mobile (72.4%) vs Desktop (24.1%), skor Real Experience Core Web Vitals (LCP 0.7s, INP 14ms, CLS 0.01), distribusi status 200/304/404, serta kapabilitas 1-klik unduh berkas CSV analitik.'
+      },
+      {
+        id: 'c-150-6',
+        type: 'feature',
+        scope: 'Datadog & cgroups v2 Kernel Resource Telemetry & Process Tree',
+        description: 'Menambahkan grid telemetri resource mendalam (CPU CFS quota period, CPU throttling, Load Average, Memory RSS/Cache split, Swap 0MB, Disk IOPS, Active TCP sockets) serta tabel inspeksi pohon proses Linux worker (PID, CPU, Memory RSS, Threads).'
+      },
+      {
+        id: 'c-150-7',
+        type: 'feature',
+        scope: 'Vercel-Style Daily Visitor Hit & Access Attribution Ledger',
+        description: 'Menyediakan tabel log akses pengunjung harian dengan pencarian IP/ISP/Path, filter saluran referrer (Google Search, Media Sosial, Direct), indikator cache status (HIT/MISS/BYPASS), bendera negara, dan detail User Agent.'
+      },
+      {
+        id: 'c-150-8',
+        type: 'feature',
+        scope: 'Customer Peace-of-Mind & Reliability Suite',
+        description: 'Menambahkan suite ketenangan customer mencakup kalender Uptime SLA 30 hari (Statuspage/UptimeRobot style) dengan 0 menit downtime, kartu cadangan otomatis harian (snapshot verification & 1-klik restore), masa berlaku sertifikat SSL Wildcard auto-renew (89 hari tersisa), transparansi kuota bandwidth tanpa overage fee, serta riwayat publikasi build & deployment.'
+      }
+    ]
+  },
+  {
+    version: 'v1.4.2',
+    releaseDate: '17 Oktober 2026',
+    title: 'Perombakan Antarmuka Situs & Kontainer Standar Industri: Dual View Grid/Tabel, Telemetri Sparkline & Purge Edge Cache',
+    summary: 'Peningkatan menyeluruh modul Situs & Kontainer setara platform PaaS kelas dunia (Vercel & Railway): pengalih tampilan Grid Visual dan Tabel Ledger Enterprise yang tersimpan di localStorage, kurva sparkline SVG CPU & RAM langsung, chip latensi edge Traefik v3 (⚡ 1.2ms TTFB), tombol Purge Edge Cache instan, validasi ketersediaan subdomain real-time pada modal deploy, serta Terminal Log Viewer interaktif dengan filter level log dan pencarian teks.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-142-1',
+        type: 'feature',
+        scope: 'Situs & Kontainer Dual-View Architecture',
+        description: 'Menyediakan tombol pengalih mode tampilan antara Visual Grid (kartu modern dengan kurva telemetri) dan Dense Enterprise Table (.ledger-table) yang mencakup indikator slot kuota tersisa dan aksi cepat, dengan preferensi tersimpan di localStorage.'
+      },
+      {
+        id: 'c-142-2',
+        type: 'feature',
+        scope: 'Live SVG Sparkline Telemetry & Edge Chips',
+        description: 'Mengintegrasikan visualisasi kurva sparkline SVG reaktif bebas latensi untuk telemetri CPU & RAM di setiap kartu kontainer, status validasi SSL TLS 1.3, serta chip latensi Traefik v3 (⚡ 1.2ms TTFB).'
+      },
+      {
+        id: 'c-142-3',
+        type: 'feature',
+        scope: 'Traefik v3 Purge Edge Cache Operation',
+        description: 'Menambahkan tombol operasi Purge Edge Cache dengan feedback loading animasi dan toast pemberitahuan sukses, serta penyegaran telemetri edge secara langsung.'
+      },
+      {
+        id: 'c-142-4',
+        type: 'improvement',
+        scope: 'Deploy Container Modal & Real-Time Subdomain Check',
+        description: 'Memperkaya formulir modal Buat & Luncurkan Kontainer dengan pengecekan ketersediaan subdomain secara real-time (.cloudcms.app) serta highlight blueprint Toko Online & Retail sebagai pilihan Flagship #1.'
+      },
+      {
+        id: 'c-142-5',
+        type: 'improvement',
+        scope: 'Terminal Logs Console Filter & Search',
+        description: 'Melengkapi modal Terminal Logs dengan tab filter tingkat log (ALL, DOCKER, TRAEFIK, SYSTEM, TRAFFIC), pencarian teks log langsung, status isolasi cgroups v2, dan tombol zero-downtime reboot kontainer.'
+      }
+    ]
+  },
+  {
     version: 'v1.4.1',
     releaseDate: '10 Oktober 2026',
     title: 'Perombakan UI/UX Modal Blueprint Enterprise, Palet Aksen Interaktif & Sinkronisasi Reaktif Editor',
     summary: 'Peningkatan estetika formulir modal Terapkan & Deploy Blueprint dengan diagram alur pipeline sumber-ke-target, pemilih palet warna aksen interaktif, switch toggle iOS kustom, perbaikan kebocoran styling CSS global .modal-body, serta sinkronisasi reaktif blok visual draft editor antara template catalog dan canvas Visual Editor Studio.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

@@ -11,7 +11,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'lucide-icons': ['lucide-vue-next']
+          'lucide-icons': ['lucide-vue-next'],
+          'echarts': ['echarts']
         }
       }
     }

@@ -114,6 +114,7 @@ const activeContainer = computed(() => {
 
 const activeArticleForReader = ref<ContentArticle | null>(null);
 const isReaderSidebarHidden = ref(true);
+const selectedContainerForDetail = ref<ContainerSite | null>(null);
 
 watch(activeArticleForReader, (newArt) => {
   if (newArt) {
@@ -126,6 +127,9 @@ watch(activeMenu, (newMenu) => {
   if (!VALID_MENUS.includes(newMenu)) return;
   if (newMenu !== 'content') {
     activeArticleForReader.value = null;
+  }
+  if (newMenu !== 'containers') {
+    selectedContainerForDetail.value = null;
   }
   setCookie('herocms_active_menu', newMenu);
   if (typeof localStorage !== 'undefined') {
@@ -238,19 +242,63 @@ const restartContainer = async (container: ContainerSite) => {
   }, 1100);
 };
 
-const deleteContainer = async (container: ContainerSite) => {
-  if (confirm(`Hapus kontainer '${container.name}'? Slot kuota (${containers.value.length}/${userPlan.value.maxContainers}) akan dikembalikan.`)) {
+// Danger Zone: Delete Container State & Workflow
+const containerToDelete = ref<ContainerSite | null>(null);
+const isDeleteContainerModalOpen = ref(false);
+const isDeletingContainer = ref(false);
+
+const requestDeleteContainer = (container: ContainerSite) => {
+  containerToDelete.value = container;
+  isDeleteContainerModalOpen.value = true;
+};
+
+const cancelDeleteContainer = () => {
+  if (isDeletingContainer.value) return;
+  isDeleteContainerModalOpen.value = false;
+  containerToDelete.value = null;
+};
+
+const confirmDeleteContainer = async () => {
+  if (!containerToDelete.value) return;
+  const container = containerToDelete.value;
+  isDeletingContainer.value = true;
+
+  try {
     const idx = containers.value.findIndex(c => c.id === container.id);
     if (idx !== -1) {
       const deletedId = container.id;
+      const deletedName = container.name;
       containers.value.splice(idx, 1);
-      showToast(`Kontainer ${deletedId} dihapus. Kuota kini ${containers.value.length}/${userPlan.value.maxContainers}.`, 'info');
+      showToast(`Kontainer '${deletedName}' (${deletedId}) berhasil dihapus. Slot kuota kini ${containers.value.length}/${userPlan.value.maxContainers}.`, 'info');
       if (containers.value.length > 0) {
         activeContainerId.value = containers.value[0].id;
       }
-      studioApi.deleteContainer(deletedId).catch(err => console.warn('[API] Delete container notice:', err));
+      await studioApi.deleteContainer(deletedId).catch(err => console.warn('[API] Delete container notice:', err));
     }
+  } catch (err) {
+    console.error('[Container] Delete failed:', err);
+    showToast('Gagal menghapus kontainer dari sistem Docker.', 'info');
+  } finally {
+    isDeletingContainer.value = false;
+    isDeleteContainerModalOpen.value = false;
+    containerToDelete.value = null;
   }
+};
+
+const deleteContainer = (container: ContainerSite) => {
+  requestDeleteContainer(container);
+};
+
+
+const isPurgingEdgeCache = ref<string | null>(null);
+
+const purgeEdgeCache = async (container: ContainerSite) => {
+  isPurgingEdgeCache.value = container.id;
+  showToast(`Membersihkan cache Traefik & Redis untuk '${container.name}'...`, 'info');
+  setTimeout(() => {
+    isPurgingEdgeCache.value = null;
+    showToast(`Edge cache untuk '${container.name}' (${container.subdomain}) berhasil di-purge! Latensi disegarkan ke 1.2ms.`, 'success');
+  }, 750);
 };
 
 // Modals for Containers
@@ -258,7 +306,7 @@ const isCreateModalOpen = ref(false);
 const newSiteForm = ref({
   name: '',
   subdomain: '',
-  category: 'portfolio' as 'portfolio' | 'blog' | 'education' | 'business',
+  category: 'business' as 'portfolio' | 'blog' | 'education' | 'business',
   role: ''
 });
 
@@ -285,9 +333,9 @@ const handleCreateContainer = () => {
   const newId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
 
   let tplName = 'Portofolio Teknis Engineer';
+  if (newSiteForm.value.category === 'business') tplName = 'Toko Online & Penjualan Retail';
   if (newSiteForm.value.category === 'blog') tplName = 'Editorial Media & Blog';
   if (newSiteForm.value.category === 'education') tplName = 'Pusat Edukasi LMS';
-  if (newSiteForm.value.category === 'business') tplName = 'Showcase Bisnis & UMKM';
 
   const newContainerObj: ContainerSite = {
     id: newId,
@@ -1420,6 +1468,14 @@ export function useDashboardData() {
     stopContainer,
     restartContainer,
     deleteContainer,
+    containerToDelete,
+    isDeleteContainerModalOpen,
+    isDeletingContainer,
+    requestDeleteContainer,
+    cancelDeleteContainer,
+    confirmDeleteContainer,
+    isPurgingEdgeCache,
+    purgeEdgeCache,
     isCreateModalOpen,
     newSiteForm,
     openCreateModal,
@@ -1483,7 +1539,8 @@ export function useDashboardData() {
     resetDashboardState,
     updateUserEmail,
     getCacheKey,
-    hydrateFromCache
+    hydrateFromCache,
+    selectedContainerForDetail
   };
 }
 

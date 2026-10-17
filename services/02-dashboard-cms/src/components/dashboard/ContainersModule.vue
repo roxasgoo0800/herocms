@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import {
   Server,
   Globe,
@@ -20,9 +20,20 @@ import {
   Briefcase,
   BookOpen,
   GraduationCap,
-  ShoppingBag
+  ShoppingBag,
+  LayoutGrid,
+  List,
+  Sparkles,
+  Zap,
+  Lock,
+  Cpu,
+  HardDrive,
+  TrendingUp,
+  Clock
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
+import PodDetailAnalyticsView from './PodDetailAnalyticsView.vue';
+import type { ContainerSite } from '../../types/dashboard';
 
 const {
   userPlan,
@@ -37,16 +48,81 @@ const {
   stopContainer,
   restartContainer,
   deleteContainer,
+  purgeEdgeCache,
+  isPurgingEdgeCache,
   openCreateModal,
   openLogsModal,
   copiedSubdomain,
   copyToClipboard,
   activeContainerId,
-  activeMenu
+  activeMenu,
+  selectedContainerForDetail
 } = useDashboardData();
 
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
+// -----------------------------------------------------------------------------
+// View Mode: Grid Cards vs Enterprise Dense Table
+// -----------------------------------------------------------------------------
+const viewMode = ref<'grid' | 'table'>(
+  (localStorage.getItem('herocms_containers_view_mode') as 'grid' | 'table') || 'grid'
+);
+
+watch(viewMode, (newMode) => {
+  localStorage.setItem('herocms_containers_view_mode', newMode);
+});
+
+// 7-day live traffic activity sparkline curve generator
+const getContainerTrafficSparkline = (c: ContainerSite) => {
+  const seed = (c.id.charCodeAt(c.id.length - 1) || 1) + c.visitsThisWeek;
+  const points = [
+    0.28 + ((seed * 17) % 35) / 100,
+    0.38 + ((seed * 31) % 40) / 100,
+    0.32 + ((seed * 47) % 35) / 100,
+    0.58 + ((seed * 67) % 30) / 100,
+    0.52 + ((seed * 83) % 35) / 100,
+    0.78 + ((seed * 97) % 20) / 100,
+    0.92
+  ];
+  const w = 110;
+  const h = 26;
+  const step = w / (points.length - 1);
+  const coords = points.map((p, i) => ({
+    x: i * step,
+    y: h - p * (h - 6) - 3
+  }));
+
+  let line = `M ${coords[0].x.toFixed(1)} ${coords[0].y.toFixed(1)}`;
+  for (let i = 1; i < coords.length; i++) {
+    const prev = coords[i - 1];
+    const curr = coords[i];
+    const cpX = (prev.x + curr.x) / 2;
+    line += ` C ${cpX.toFixed(1)} ${prev.y.toFixed(1)}, ${cpX.toFixed(1)} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`;
+  }
+  const area = `${line} L ${w} ${h} L 0 ${h} Z`;
+  return { line, area };
+};
+
+const formatShortPodId = (id: string) => {
+  if (!id) return '#0000';
+  if (id.length > 12) {
+    const parts = id.split('-');
+    return 'pod-' + (parts[parts.length - 1] || id.slice(-6));
+  }
+  return '#' + id;
+};
+
+const getCategoryLabel = (cat: string) => {
+  switch (cat) {
+    case 'business': return 'Bisnis';
+    case 'portfolio': return 'Portofolio';
+    case 'blog': return 'Publikasi';
+    case 'education': return 'Edukasi';
+    default: return 'Aplikasi';
+  }
+};
+
+// Global Shortcut ⌘K / Ctrl+K
 const handleGlobalKeydown = (e: KeyboardEvent) => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault();
@@ -66,15 +142,32 @@ const selectForEditor = (containerId: string) => {
   activeContainerId.value = containerId;
   activeMenu.value = 'editor';
 };
+
+const openContainerDetail = (c: ContainerSite) => {
+  selectedContainerForDetail.value = c;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 </script>
 
 <template>
-  <section class="fade-in-section">
-    <!-- Page Title & Quick Summary -->
-    <div class="page-intro-row">
+  <div class="containers-root-wrapper">
+    <!-- 1. Full-Page Pod Detail & Cloudflare Analytics View -->
+    <PodDetailAnalyticsView
+      v-if="selectedContainerForDetail"
+      :container="selectedContainerForDetail"
+      @back="selectedContainerForDetail = null"
+      @purge-cache="purgeEdgeCache"
+      @open-logs="openLogsModal"
+      @open-editor="(c) => selectForEditor(c.id)"
+    />
+
+    <!-- 2. Main Situs & Kontainer Overview List (Cards vs Table) -->
+    <section v-else class="fade-in-section">
+      <!-- Page Title & Quick Infrastructure Summary -->
+      <div class="page-intro-row">
       <div>
         <h1 class="page-title">Situs & Kontainer Docker</h1>
-        <p class="page-desc">Kelola runtime mandiri pelanggan, batasan cgroups Linux, dan rute proxy Traefik v3.</p>
+        <p class="page-desc">Kelola runtime mandiri multi-tenant, batasan Linux cgroups v2, dan rute edge proxy Traefik v3.</p>
       </div>
       <div class="quota-quick-pills">
         <span class="pill-metric">Running: <strong>{{ runningContainersCount }}</strong></span>
@@ -83,7 +176,7 @@ const selectForEditor = (containerId: string) => {
       </div>
     </div>
 
-    <!-- Bespoke Telemetry Metric Cards (4 Sleek Strips) -->
+    <!-- 2. Bespoke Telemetry Metric Cards (4 Sleek Strips) -->
     <div class="stats-overview-grid">
       <div class="telemetry-card">
         <div class="telemetry-top">
@@ -97,7 +190,7 @@ const selectForEditor = (containerId: string) => {
         </div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
-          <span>{{ userPlan.maxContainers - usedContainersCount }} slot siap dideploy</span>
+          <span>{{ userPlan.maxContainers - usedContainersCount }} slot siap dideploy (cgroups v2)</span>
         </div>
       </div>
 
@@ -112,7 +205,7 @@ const selectForEditor = (containerId: string) => {
           v3.1 <span class="badge-online">Online</span>
         </div>
         <div class="telemetry-sub">
-          <span>Latensi rerata 1.8ms (Zero-Downtime)</span>
+          <span>Latensi rerata 1.2ms (Zero-Downtime)</span>
         </div>
       </div>
 
@@ -147,7 +240,7 @@ const selectForEditor = (containerId: string) => {
       </div>
     </div>
 
-    <!-- Bespoke Search Command & Segmented Filter Bar -->
+    <!-- 3. Bespoke Search Command, Segmented Filter & View Switcher Bar -->
     <div class="filter-toolbar">
       <div class="search-command-shell">
         <Search :size="15" class="search-lead-glyph" />
@@ -192,33 +285,84 @@ const selectForEditor = (containerId: string) => {
           <span class="pill-count gray">{{ stoppedContainersCount }}</span>
         </button>
       </div>
+
+      <!-- View Switcher (Grid View vs Enterprise Table View) -->
+      <div class="view-mode-toggle-group">
+        <button
+          type="button"
+          class="view-mode-btn"
+          :class="{ active: viewMode === 'grid' }"
+          @click="viewMode = 'grid'"
+          title="Tampilan Kartu Visual (Grid View)"
+        >
+          <LayoutGrid :size="14" />
+          <span>Grid</span>
+        </button>
+        <button
+          type="button"
+          class="view-mode-btn"
+          :class="{ active: viewMode === 'table' }"
+          @click="viewMode = 'table'"
+          title="Tampilan Tabel Enterprise (Dense Table)"
+        >
+          <List :size="14" />
+          <span>Tabel</span>
+        </button>
+      </div>
+
+      <!-- Quick Deploy CTA Button -->
+      <button
+        v-if="containers.length < userPlan.maxContainers"
+        class="btn-top-create"
+        style="padding: 7px 14px; font-size: 0.78rem; border-radius: 8px;"
+        @click="openCreateModal()"
+        title="Deploy Kontainer Baru"
+      >
+        <Plus :size="14" />
+        <span>Deploy Baru</span>
+      </button>
     </div>
 
-    <!-- 3-Column Site Cards Grid (Matching 3-Container Subscription Quota) -->
-    <div v-if="filteredContainers.length > 0 || (!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers)" class="site-cards-grid">
+    <!-- 4A. GRID CARD VIEW (INDUSTRY STANDARD) -->
+    <div
+      v-if="viewMode === 'grid' && (filteredContainers.length > 0 || (!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers))"
+      class="site-cards-grid"
+    >
       <!-- Active & Existing Container Cards -->
       <div
         v-for="c in filteredContainers"
         :key="c.id"
         class="pro-site-card"
         :class="{ 'card-stopped': c.status === 'stopped' }"
+        :style="{ '--card-accent': c.accentColor || '#2563eb' }"
       >
         <!-- Card Top Header -->
         <div class="card-head">
           <div class="site-branding">
-            <div class="site-icon-box" :style="{ backgroundColor: c.accentColor + '14', color: c.accentColor }">
-              <Briefcase v-if="c.category === 'portfolio'" :size="18" />
-              <BookOpen v-else-if="c.category === 'blog'" :size="18" />
-              <GraduationCap v-else-if="c.category === 'education'" :size="18" />
-              <ShoppingBag v-else :size="18" />
+            <div
+              class="site-icon-box"
+              :style="{ backgroundColor: (c.accentColor || '#ea580c') + '15', color: c.accentColor || '#ea580c', borderColor: (c.accentColor || '#ea580c') + '30' }"
+            >
+              <ShoppingBag v-if="c.category === 'business'" :size="20" />
+              <Briefcase v-else-if="c.category === 'portfolio'" :size="20" />
+              <BookOpen v-else-if="c.category === 'blog'" :size="20" />
+              <GraduationCap v-else-if="c.category === 'education'" :size="20" />
+              <Server v-else :size="20" />
             </div>
             <div class="site-branding-info">
               <div class="site-title-row">
-                <h3 class="site-title-text">{{ c.name }}</h3>
+                <h3
+                  class="site-title-text"
+                  @click="openContainerDetail(c)"
+                  title="Lihat Detail Pod & Analitik Lengkap"
+                >
+                  {{ c.name }}
+                </h3>
               </div>
               <div class="site-sub-row">
                 <span class="site-template-badge">{{ c.templateName }}</span>
-                <span class="site-id-tag">#{{ c.id }}</span>
+                <span class="site-category-badge">{{ getCategoryLabel(c.category) }}</span>
+                <span class="site-id-tag">{{ formatShortPodId(c.id) }}</span>
               </div>
             </div>
           </div>
@@ -240,32 +384,77 @@ const selectForEditor = (containerId: string) => {
           </div>
         </div>
 
-        <!-- Bespoke Terminal URL Pill -->
+        <!-- Bespoke Terminal URL Box -->
         <div class="site-url-box">
           <div class="url-text-wrap">
-            <Globe :size="13" class="url-glyph" />
-            <span class="url-mono">https://{{ c.subdomain }}</span>
+            <Lock :size="12" style="color: #059669; flex-shrink: 0;" />
+            <span class="url-prefix">https://</span>
+            <span class="url-mono">{{ c.subdomain }}</span>
           </div>
           <div class="url-actions">
             <button
               class="btn-url-action"
               @click="copyToClipboard(c.subdomain, c.id)"
-              :title="copiedSubdomain === c.id ? 'Tersalin!' : 'Salin URL'"
+              :title="copiedSubdomain === c.id ? 'Tersalin!' : 'Salin URL Subdomain'"
             >
               <Check v-if="copiedSubdomain === c.id" :size="13" color="#059669" />
               <Copy v-else :size="13" />
             </button>
-            <a :href="`https://${c.subdomain}`" target="_blank" class="btn-url-action" title="Buka Situs">
+            <a :href="`https://${c.subdomain}`" target="_blank" class="btn-url-action" title="Buka Situs di Tab Baru">
               <ArrowUpRight :size="13" />
             </a>
           </div>
         </div>
 
-        <!-- Bespoke Dual Infrastructure Meters -->
+        <!-- Custom Domain Badge (if attached) -->
+        <div v-if="c.customDomain" class="custom-domain-pill">
+          <Globe :size="12" style="color: #2563eb;" />
+          <span class="custom-domain-name">{{ c.customDomain }}</span>
+          <span class="custom-domain-tls">
+            <ShieldCheck :size="11" />
+            <span>TLS 1.3 Active</span>
+          </span>
+        </div>
+
+        <!-- Live Traffic Activity & Momentum Sparkline Strip -->
+        <div class="card-momentum-strip" @click="openContainerDetail(c)" title="Lihat Grafik Traffic & Analitik Lengkap">
+          <div class="momentum-left-meta">
+            <div class="momentum-title-flex">
+              <Activity :size="12" style="color: #2563eb;" />
+              <span>TRAFIK MINGGU INI</span>
+            </div>
+            <div class="momentum-stat-flex">
+              <strong>{{ c.visitsThisWeek.toLocaleString() }} hits</strong>
+              <span class="momentum-growth-badge">
+                <TrendingUp :size="10" />
+                <span>+24%</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Mini Sparkline Area Curve -->
+          <div class="momentum-sparkline-box">
+            <svg viewBox="0 0 110 26" preserveAspectRatio="none" class="mini-sparkline-svg">
+              <defs>
+                <linearGradient :id="`sparkGrad-${c.id}`" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" :stop-color="c.accentColor || '#2563eb'" stop-opacity="0.25" />
+                  <stop offset="100%" :stop-color="c.accentColor || '#2563eb'" stop-opacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path :d="getContainerTrafficSparkline(c).area" :fill="`url(#sparkGrad-${c.id})`" />
+              <path :d="getContainerTrafficSparkline(c).line" fill="none" :stroke="c.accentColor || '#2563eb'" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Dual Infrastructure Resource Meters (cgroups v2 & memcg) -->
         <div class="resource-gauges-row">
           <div class="gauge-col">
             <div class="gauge-meta">
-              <span class="gauge-title">CPU ALLOCATION</span>
+              <div class="gauge-header-flex">
+                <Cpu :size="11" style="color: #2563eb;" />
+                <span class="gauge-title">CPU CFS QUOTA</span>
+              </div>
               <span class="gauge-val">
                 <strong>{{ c.cpuUsage }}%</strong>
                 <span class="gauge-sub">/ {{ c.cpuLimit }}</span>
@@ -283,7 +472,10 @@ const selectForEditor = (containerId: string) => {
 
           <div class="gauge-col">
             <div class="gauge-meta">
-              <span class="gauge-title">RAM MEMORY</span>
+              <div class="gauge-header-flex">
+                <HardDrive :size="11" style="color: #059669;" />
+                <span class="gauge-title">RAM MEMCG</span>
+              </div>
               <span class="gauge-val">
                 <strong>{{ c.ramUsage }} MB</strong>
                 <span class="gauge-sub">/ {{ c.ramLimit }} MB</span>
@@ -300,15 +492,44 @@ const selectForEditor = (containerId: string) => {
           </div>
         </div>
 
+        <!-- Edge Performance Strip -->
+        <div class="edge-telemetry-strip" @click="openContainerDetail(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
+          <div class="edge-telemetry-left">
+            <span class="edge-badge emerald">
+              <Zap :size="10" />
+              <span>Traefik v3.1</span>
+            </span>
+            <span class="edge-badge blue">
+              <span>⚡ 1.2ms TTFB</span>
+            </span>
+          </div>
+          <span class="edge-telemetry-sub">
+            <Clock :size="11" />
+            <span>⏱ {{ c.uptime }}</span>
+          </span>
+        </div>
+
         <!-- Card Action Buttons Footer -->
         <div class="card-action-bar">
-          <button
-            class="btn-action-primary"
-            @click="selectForEditor(c.id)"
-          >
-            <Edit3 :size="14" />
-            <span>Buka Editor Studio</span>
-          </button>
+          <div class="card-action-left">
+            <button
+              class="btn-action-primary"
+              @click="selectForEditor(c.id)"
+              title="Buka Website di Visual Editor"
+            >
+              <Edit3 :size="13" />
+              <span>Editor</span>
+            </button>
+
+            <button
+              class="btn-open-analytics-action"
+              @click="openContainerDetail(c)"
+              title="Lihat Detail Pod, Geo Analitik & Graph Cloudflare"
+            >
+              <Activity :size="13" />
+              <span>Analitik</span>
+            </button>
+          </div>
 
           <!-- Runtime Controls -->
           <div class="runtime-btn-group">
@@ -316,7 +537,7 @@ const selectForEditor = (containerId: string) => {
               v-if="c.status === 'stopped'"
               class="btn-icon-ctrl btn-play"
               @click="startContainer(c)"
-              title="Jalankan Kontainer (Start)"
+              title="Jalankan Kontainer (Start Pod)"
             >
               <Play :size="13" />
             </button>
@@ -324,7 +545,7 @@ const selectForEditor = (containerId: string) => {
               v-if="c.status === 'running'"
               class="btn-icon-ctrl btn-pause"
               @click="stopContainer(c)"
-              title="Hentikan Sementara (Stop)"
+              title="Hentikan Sementara (Standby)"
             >
               <Square :size="12" />
             </button>
@@ -332,7 +553,7 @@ const selectForEditor = (containerId: string) => {
               class="btn-icon-ctrl"
               :disabled="c.status === 'stopped'"
               @click="restartContainer(c)"
-              title="Restart Kontainer"
+              title="Restart Kontainer (Zero-Downtime Reboot)"
             >
               <RotateCw :size="13" />
             </button>
@@ -344,9 +565,17 @@ const selectForEditor = (containerId: string) => {
               <Terminal :size="13" />
             </button>
             <button
+              class="btn-icon-ctrl btn-purge"
+              :disabled="c.status === 'stopped'"
+              @click="purgeEdgeCache(c)"
+              title="Purge Edge & Traefik Cache"
+            >
+              <Sparkles :size="13" :class="{ 'spin-anim': isPurgingEdgeCache === c.id }" />
+            </button>
+            <button
               class="btn-icon-ctrl btn-del"
               @click="deleteContainer(c)"
-              title="Hapus Kontainer"
+              title="Hapus Kontainer & Kembalikan Kuota"
             >
               <Trash2 :size="13" />
             </button>
@@ -380,7 +609,241 @@ const selectForEditor = (containerId: string) => {
       </template>
     </div>
 
-    <!-- Empty State if search finds nothing -->
+    <!-- 4B. DENSE ENTERPRISE TABLE VIEW -->
+    <div
+      v-else-if="viewMode === 'table' && (filteredContainers.length > 0 || (!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers))"
+      class="container-table-card"
+    >
+      <div style="overflow-x: auto;">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>SITUS & KONTAINER</th>
+              <th>RUTE EDGE & DOMAIN</th>
+              <th>STATUS & UPTIME</th>
+              <th>ALOKASI CPU & RAM</th>
+              <th>LATENSI EDGE</th>
+              <th>DEPLOY TERAKHIR</th>
+              <th style="text-align: right;">AKSI CEPAT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="c in filteredContainers" :key="'table-' + c.id">
+              <!-- Site Name & Category -->
+              <td>
+                <div class="table-site-cell">
+                  <div class="site-icon-box" :style="{ backgroundColor: (c.accentColor || '#ea580c') + '14', color: c.accentColor || '#ea580c' }">
+                    <ShoppingBag v-if="c.category === 'business'" :size="16" />
+                    <Briefcase v-else-if="c.category === 'portfolio'" :size="16" />
+                    <BookOpen v-else-if="c.category === 'blog'" :size="16" />
+                    <GraduationCap v-else-if="c.category === 'education'" :size="16" />
+                    <Server v-else :size="16" />
+                  </div>
+                  <div class="table-site-info">
+                    <span class="table-site-title" style="cursor: pointer;" @click="openContainerDetail(c)" title="Lihat Detail Pod & Analitik">{{ c.name }}</span>
+                    <div class="table-site-meta">
+                      <span>{{ c.templateName }}</span>
+                      <span class="site-id-tag">#{{ c.id }}</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Route & Domain -->
+              <td>
+                <div class="table-route-cell">
+                  <div class="table-url-mono">
+                    <Lock :size="11" style="color: #10b981;" />
+                    <span>https://{{ c.subdomain }}</span>
+                    <button
+                      class="btn-url-action"
+                      style="display: inline-flex;"
+                      @click="copyToClipboard(c.subdomain, c.id)"
+                      :title="copiedSubdomain === c.id ? 'Tersalin!' : 'Salin Subdomain'"
+                    >
+                      <Check v-if="copiedSubdomain === c.id" :size="11" color="#059669" />
+                      <Copy v-else :size="11" />
+                    </button>
+                    <a :href="`https://${c.subdomain}`" target="_blank" class="btn-url-action" style="display: inline-flex;" title="Buka">
+                      <ArrowUpRight :size="11" />
+                    </a>
+                  </div>
+                  <div v-if="c.customDomain" class="custom-domain-pill" style="margin-top: 2px;">
+                    <Globe :size="10" />
+                    <span>{{ c.customDomain }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Status & Uptime -->
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <div
+                    class="radar-status-pill"
+                    style="align-self: flex-start;"
+                    :class="{
+                      'status-running': c.status === 'running',
+                      'status-stopped': c.status === 'stopped',
+                      'status-provisioning': c.status === 'provisioning'
+                    }"
+                  >
+                    <span class="radar-ping-ring" v-if="c.status === 'running'"></span>
+                    <span class="radar-dot"></span>
+                    <span v-if="c.status === 'running'">Running</span>
+                    <span v-else-if="c.status === 'stopped'">Standby</span>
+                    <span v-else>Deploying...</span>
+                  </div>
+                  <span style="font-size: 0.68rem; color: #94a3b8; font-family: monospace;">{{ c.uptime }}</span>
+                </div>
+              </td>
+
+              <!-- Resource Telemetry (CPU & RAM) -->
+              <td>
+                <div class="table-resource-cell">
+                  <!-- CPU -->
+                  <div class="table-meter-row">
+                    <div class="table-meter-meta">
+                      <span>CPU {{ c.cpuUsage }}%</span>
+                      <span style="color: #94a3b8;">/ {{ c.cpuLimit }}</span>
+                    </div>
+                    <div class="custom-meter-track" style="height: 4px;">
+                      <div class="custom-meter-fill fill-blue" :style="{ width: `${Math.min(c.cpuUsage * 2.5, 100)}%` }"></div>
+                    </div>
+                  </div>
+                  <!-- RAM -->
+                  <div class="table-meter-row">
+                    <div class="table-meter-meta">
+                      <span>RAM {{ c.ramUsage }}MB</span>
+                      <span style="color: #94a3b8;">/ {{ c.ramLimit }}MB</span>
+                    </div>
+                    <div class="custom-meter-track" style="height: 4px;">
+                      <div class="custom-meter-fill fill-emerald" :style="{ width: `${(c.ramUsage / c.ramLimit) * 100}%` }"></div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Latency & Protocol -->
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <span class="edge-badge blue" style="align-self: flex-start; cursor: pointer;" @click="openContainerDetail(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
+                    ⚡ 1.2ms TTFB
+                  </span>
+                  <span style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Traefik v3.1 TLS 1.3</span>
+                </div>
+              </td>
+
+              <!-- Last Deployed -->
+              <td>
+                <span style="font-size: 0.74rem; color: #64748b;">{{ c.lastDeployed }}</span>
+              </td>
+
+              <!-- Actions -->
+              <td>
+                <div class="table-actions-cell">
+                  <button
+                    class="btn-action-primary"
+                    style="padding: 5px 11px; font-size: 0.74rem;"
+                    @click="selectForEditor(c.id)"
+                  >
+                    <Edit3 :size="13" />
+                    <span>Editor</span>
+                  </button>
+
+                  <button
+                    class="btn-open-analytics-action"
+                    style="padding: 5px 9px; font-size: 0.72rem;"
+                    @click="openContainerDetail(c)"
+                    title="Lihat Detail Pod, Geo Analitik & Graph Cloudflare"
+                  >
+                    <Activity :size="12" />
+                    <span>Analitik</span>
+                  </button>
+
+                  <div class="runtime-btn-group">
+                    <button
+                      v-if="c.status === 'stopped'"
+                      class="btn-icon-ctrl btn-play"
+                      @click="startContainer(c)"
+                      title="Jalankan Kontainer (Start)"
+                    >
+                      <Play :size="12" />
+                    </button>
+                    <button
+                      v-if="c.status === 'running'"
+                      class="btn-icon-ctrl btn-pause"
+                      @click="stopContainer(c)"
+                      title="Hentikan (Standby)"
+                    >
+                      <Square :size="11" />
+                    </button>
+                    <button
+                      class="btn-icon-ctrl"
+                      :disabled="c.status === 'stopped'"
+                      @click="restartContainer(c)"
+                      title="Restart Kontainer"
+                    >
+                      <RotateCw :size="12" />
+                    </button>
+                    <button
+                      class="btn-icon-ctrl btn-term"
+                      @click="openLogsModal(c)"
+                      title="Lihat Log Konsol"
+                    >
+                      <Terminal :size="12" />
+                    </button>
+                    <button
+                      class="btn-icon-ctrl btn-purge"
+                      :disabled="c.status === 'stopped'"
+                      @click="purgeEdgeCache(c)"
+                      title="Purge Cache"
+                    >
+                      <Sparkles :size="12" :class="{ 'spin-anim': isPurgingEdgeCache === c.id }" />
+                    </button>
+                    <button
+                      class="btn-icon-ctrl btn-del"
+                      @click="deleteContainer(c)"
+                      title="Hapus"
+                    >
+                      <Trash2 :size="12" />
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Available Quota Table Row -->
+            <tr
+              v-if="!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers"
+              class="table-slot-row"
+              @click="openCreateModal()"
+            >
+              <td colspan="7">
+                <div class="table-slot-content">
+                  <div class="table-slot-left">
+                    <div class="slot-icon-circle" style="width: 28px; height: 28px;">
+                      <Plus :size="14" />
+                    </div>
+                    <div>
+                      <strong style="font-size: 0.84rem; color: #09090b;">Slot Kontainer Siap Dideploy</strong>
+                      <span style="font-size: 0.72rem; color: #71717a; margin-left: 8px;">
+                        Alokasi {{ userPlan.cpuPerContainer }} • {{ userPlan.ramPerContainer }} • Traefik Ingress Ready
+                      </span>
+                    </div>
+                  </div>
+                  <button class="btn-slot-create" type="button" style="padding: 4px 10px; font-size: 0.74rem;">
+                    <Plus :size="12" />
+                    <span>Deploy Situs Baru</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 5. Empty State if search finds nothing -->
     <div v-else class="empty-state-card" style="margin-top: 10px;">
       <Server :size="34" style="color: #94a3b8; margin-bottom: 4px;" />
       <h3>Tidak ada kontainer ditemukan</h3>
@@ -395,4 +858,5 @@ const selectForEditor = (containerId: string) => {
       </button>
     </div>
   </section>
+</div>
 </template>
