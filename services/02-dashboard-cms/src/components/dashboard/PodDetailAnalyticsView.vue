@@ -22,7 +22,9 @@ import {
   Check,
   History,
   Database,
-  Calendar
+  Calendar,
+  Clock,
+  TrendingUp
 } from 'lucide-vue-next';
 import type { ContainerSite } from '../../types/dashboard';
 import { generatePodAnalytics } from '../../data/pod-analytics';
@@ -99,43 +101,185 @@ const filteredDailyHits = computed(() => {
   });
 });
 
-// Generate smooth SVG Area & Line Paths
+// Number formatting helper for Y-Axis and KPI labels
+const formatMetric = (val: number) => {
+  if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+  if (val >= 1000) return (val / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return Math.round(val).toLocaleString();
+};
+
+// High-precision Catmull-Rom to Cubic Bézier Spline Algorithm (Chart.js / Cloudflare standard)
+function getSplinePath(points: { x: number; y: number }[]): string {
+  if (points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i === 0 ? 0 : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2 >= points.length ? points.length - 1 : i + 2];
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+const chartSvgRef = ref<SVGSVGElement | null>(null);
+const tooltipPos = ref<{ xPct: number; yClient: number }>({ xPct: 50, yClient: 0 });
+
+const timeframeLabel = computed(() => {
+  if (timeframe.value === '7d') return '7 Hari Terakhir';
+  if (timeframe.value === '30d') return '30 Hari Terakhir';
+  return '24 Jam Terakhir';
+});
+
+// Summary Stats for Chart Header KPI strip
+const chartStats = computed(() => {
+  const pts = currentPoints.value;
+  if (!pts || pts.length === 0) return { total: 0, cached: 0, hitPct: '0.0', peak: 0 };
+  const total = pts.reduce((acc, p) => acc + p.requests, 0);
+  const cached = pts.reduce((acc, p) => acc + p.cachedRequests, 0);
+  const peak = Math.max(...pts.map(p => p.requests), 0);
+  const hitPct = total > 0 ? ((cached / total) * 100).toFixed(1) : '0.0';
+  return { total, cached, hitPct, peak };
+});
+
+// Dynamic SVG Chart Coordinates & Spline Generation
 const chartSvgData = computed(() => {
   const pts = currentPoints.value;
-  if (!pts || pts.length === 0) return { areaPath: '', linePath: '', cachedPath: '', maxVal: 100, coords: [], width: 920, height: 160 };
+  const width = 1000;
+  const height = 240;
+  const paddingLeft = 56;
+  const paddingRight = 24;
+  const paddingTop = 20;
+  const paddingBottom = 34;
+  const plotWidth = width - paddingLeft - paddingRight;
+  const plotHeight = height - paddingTop - paddingBottom;
+  const zeroY = paddingTop + plotHeight;
 
-  const maxVal = Math.max(...pts.map(p => p.requests)) * 1.15 || 100;
-  const width = 920;
-  const height = 160;
-  const step = width / (pts.length - 1);
+  if (!pts || pts.length === 0) {
+    return {
+      areaPath: '',
+      linePath: '',
+      cachedLinePath: '',
+      cachedAreaPath: '',
+      yTicks: [],
+      coords: [],
+      width,
+      height,
+      paddingLeft,
+      paddingRight,
+      paddingTop,
+      paddingBottom,
+      plotWidth,
+      plotHeight,
+      zeroY
+    };
+  }
 
+  // Calculate nice Y-max scale ceiling
+  const rawMax = Math.max(...pts.map(p => p.requests), 10) * 1.15;
+  const mag = Math.pow(10, Math.floor(Math.log10(rawMax)));
+  const norm = rawMax / mag;
+  let mult = 10;
+  if (norm <= 1.2) mult = 1.2;
+  else if (norm <= 2) mult = 2;
+  else if (norm <= 3) mult = 3;
+  else if (norm <= 5) mult = 5;
+  else if (norm <= 8) mult = 8;
+  const niceMaxVal = mult * mag;
+
+  // 4 Y-Axis scale tick marks (top to bottom)
+  const yTicks = [
+    { val: niceMaxVal, label: formatMetric(niceMaxVal), y: paddingTop },
+    { val: niceMaxVal * 0.67, label: formatMetric(niceMaxVal * 0.67), y: paddingTop + plotHeight * 0.33 },
+    { val: niceMaxVal * 0.33, label: formatMetric(niceMaxVal * 0.33), y: paddingTop + plotHeight * 0.67 },
+    { val: 0, label: '0', y: zeroY }
+  ];
+
+  const step = pts.length > 1 ? plotWidth / (pts.length - 1) : 0;
   const coords = pts.map((p, i) => {
-    const x = i * step;
-    const y = height - (p.requests / maxVal) * (height - 25) - 12;
-    const yCached = height - (p.cachedRequests / maxVal) * (height - 25) - 12;
+    const x = paddingLeft + i * step;
+    const y = zeroY - (p.requests / niceMaxVal) * plotHeight;
+    const yCached = zeroY - (p.cachedRequests / niceMaxVal) * plotHeight;
     return { x, y, yCached, point: p };
   });
 
-  // Smooth Bézier curve
-  let linePath = `M ${coords[0].x} ${coords[0].y}`;
-  for (let i = 1; i < coords.length; i++) {
-    const prev = coords[i - 1];
-    const curr = coords[i];
-    const cpX = (prev.x + curr.x) / 2;
-    linePath += ` C ${cpX} ${prev.y}, ${cpX} ${curr.y}, ${curr.x} ${curr.y}`;
+  const linePath = getSplinePath(coords.map(c => ({ x: c.x, y: c.y })));
+  const lastX = coords[coords.length - 1].x.toFixed(1);
+  const firstX = coords[0].x.toFixed(1);
+  const areaPath = `${linePath} L ${lastX} ${zeroY} L ${firstX} ${zeroY} Z`;
+
+  const cachedLinePath = getSplinePath(coords.map(c => ({ x: c.x, y: c.yCached })));
+  const cachedAreaPath = `${cachedLinePath} L ${lastX} ${zeroY} L ${firstX} ${zeroY} Z`;
+
+  return {
+    areaPath,
+    linePath,
+    cachedLinePath,
+    cachedAreaPath,
+    yTicks,
+    coords,
+    width,
+    height,
+    paddingLeft,
+    paddingRight,
+    paddingTop,
+    paddingBottom,
+    plotWidth,
+    plotHeight,
+    zeroY
+  };
+});
+
+// Interactive Scrubbing Handlers
+const handleChartMouseMove = (e: MouseEvent) => {
+  if (!chartSvgRef.value) return;
+  const rect = chartSvgRef.value.getBoundingClientRect();
+  const mouseX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+  const svgX = (mouseX / rect.width) * chartSvgData.value.width;
+
+  const coords = chartSvgData.value.coords;
+  if (!coords || coords.length === 0) return;
+
+  let closestIdx = 0;
+  let minDiff = Infinity;
+  for (let i = 0; i < coords.length; i++) {
+    const diff = Math.abs(coords[i].x - svgX);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closestIdx = i;
+    }
   }
+  hoveredPointIndex.value = closestIdx;
+  tooltipPos.value = {
+    xPct: (coords[closestIdx].x / chartSvgData.value.width) * 100,
+    yClient: coords[closestIdx].y
+  };
+};
 
-  const areaPath = `${linePath} L ${coords[coords.length - 1].x} ${height} L ${coords[0].x} ${height} Z`;
+const handleChartMouseLeave = () => {
+  hoveredPointIndex.value = null;
+};
 
-  let cachedPath = `M ${coords[0].x} ${coords[0].yCached}`;
-  for (let i = 1; i < coords.length; i++) {
-    const prev = coords[i - 1];
-    const curr = coords[i];
-    const cpX = (prev.x + curr.x) / 2;
-    cachedPath += ` C ${cpX} ${prev.yCached}, ${cpX} ${curr.yCached}, ${curr.x} ${curr.yCached}`;
-  }
+// Adaptive Tooltip Anchoring (prevents clipping on left/right screen edges)
+const tooltipStyle = computed(() => {
+  if (hoveredPointIndex.value === null) return {};
+  const xPct = tooltipPos.value.xPct;
+  let transform = 'translateX(-50%)';
+  if (xPct < 18) transform = 'translateX(10px)';
+  else if (xPct > 82) transform = 'translateX(calc(-100% - 10px))';
 
-  return { areaPath, linePath, cachedPath, maxVal, coords, width, height };
+  return {
+    left: `${xPct}%`,
+    transform
+  };
 });
 
 // CSV Export
@@ -740,6 +884,25 @@ const exportTelemetry = () => {
             <span>Permintaan Edge & Efisiensi Cache</span>
           </h4>
           <p>Volume request yang dilayani langsung dari cache edge Traefik vs Origin Pod</p>
+
+          <!-- Quick Telemetry KPI Badges -->
+          <div class="cf-chart-kpi-bar">
+            <span class="cf-kpi-pill">
+              <Activity :size="12" style="color: #2563eb;" />
+              <span>Total Volume:</span>
+              <strong>{{ formatMetric(chartStats.total) }}</strong>
+            </span>
+            <span class="cf-kpi-pill emerald-tint">
+              <Zap :size="12" style="color: #059669;" />
+              <span>Edge Cache Hit:</span>
+              <strong>{{ chartStats.hitPct }}%</strong>
+            </span>
+            <span class="cf-kpi-pill">
+              <TrendingUp :size="12" style="color: #7c3aed;" />
+              <span>Puncak (Peak):</span>
+              <strong>{{ formatMetric(chartStats.peak) }} req/periode</strong>
+            </span>
+          </div>
         </div>
 
         <!-- Timeframe Switcher -->
@@ -771,79 +934,220 @@ const exportTelemetry = () => {
         </div>
       </div>
 
-      <!-- SVG Smooth Area Curve -->
-      <div class="cf-svg-chart-wrapper" style="height: 220px;">
+      <!-- SVG Smooth Area Curve with Dynamic Axes & Gridlines -->
+      <div class="cf-svg-chart-wrapper">
         <svg
+          ref="chartSvgRef"
           :viewBox="`0 0 ${chartSvgData.width} ${chartSvgData.height}`"
           preserveAspectRatio="none"
-          style="width: 100%; height: 100%; overflow: visible;"
+          class="cf-main-svg"
+          @mousemove="handleChartMouseMove"
+          @mouseleave="handleChartMouseLeave"
         >
           <defs>
-            <linearGradient id="cfAreaGradFull" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#2563eb" stop-opacity="0.30" />
-              <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0" />
+            <linearGradient id="cfAreaTotal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2563eb" stop-opacity="0.22" />
+              <stop offset="100%" stop-color="#2563eb" stop-opacity="0.01" />
             </linearGradient>
+            <linearGradient id="cfAreaCached" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#10b981" stop-opacity="0.16" />
+              <stop offset="100%" stop-color="#10b981" stop-opacity="0.0" />
+            </linearGradient>
+            <filter id="chartLineGlow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#2563eb" flood-opacity="0.18" />
+            </filter>
           </defs>
 
-          <!-- Gridlines -->
-          <line x1="0" y1="30" :x2="chartSvgData.width" y2="30" stroke="#f1f5f9" stroke-dasharray="4 4" />
-          <line x1="0" y1="80" :x2="chartSvgData.width" y2="80" stroke="#f1f5f9" stroke-dasharray="4 4" />
-          <line x1="0" y1="130" :x2="chartSvgData.width" y2="130" stroke="#f1f5f9" stroke-dasharray="4 4" />
+          <!-- Horizontal Gridlines & Y-Axis Scale Numbers -->
+          <g class="chart-grid-group">
+            <template v-for="tick in chartSvgData.yTicks" :key="'ytick-' + tick.y">
+              <line
+                :x1="chartSvgData.paddingLeft"
+                :y1="tick.y"
+                :x2="chartSvgData.width - chartSvgData.paddingRight"
+                :y2="tick.y"
+                stroke="#e2e8f0"
+                stroke-dasharray="4 4"
+                stroke-width="1"
+              />
+              <text
+                :x="chartSvgData.paddingLeft - 10"
+                :y="tick.y + 4"
+                text-anchor="end"
+                class="chart-axis-text"
+              >
+                {{ tick.label }}
+              </text>
+            </template>
+          </g>
 
-          <!-- Filled Area -->
-          <path :d="chartSvgData.areaPath" fill="url(#cfAreaGradFull)" />
+          <!-- X-Axis Timestamps -->
+          <g class="chart-xaxis-group">
+            <text
+              v-for="(c, i) in chartSvgData.coords"
+              :key="'xlabel-' + i"
+              :x="c.x"
+              :y="chartSvgData.zeroY + 18"
+              text-anchor="middle"
+              class="chart-axis-text"
+            >
+              {{ c.point.label }}
+            </text>
+          </g>
 
-          <!-- Line Paths -->
-          <path :d="chartSvgData.cachedPath" fill="none" stroke="#93c5fd" stroke-width="2" stroke-dasharray="3 3" />
-          <path :d="chartSvgData.linePath" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" />
+          <!-- Filled Area Under Curve -->
+          <path :d="chartSvgData.areaPath" fill="url(#cfAreaTotal)" />
+          <path :d="chartSvgData.cachedAreaPath" fill="url(#cfAreaCached)" />
 
-          <!-- Data Points & Tooltip Targets -->
-          <g v-for="(c, i) in chartSvgData.coords" :key="i">
+          <!-- Line Paths (No static circle beads!) -->
+          <path
+            :d="chartSvgData.cachedLinePath"
+            fill="none"
+            stroke="#10b981"
+            stroke-width="2"
+            stroke-dasharray="4 3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            :d="chartSvgData.linePath"
+            fill="none"
+            stroke="#2563eb"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            filter="url(#chartLineGlow)"
+          />
+
+          <!-- Active Crosshair & Glowing Indicator Dots on Hover Only -->
+          <g v-if="hoveredPointIndex !== null && chartSvgData.coords[hoveredPointIndex]" class="chart-interactive-layer">
+            <!-- Vertical Hairline -->
+            <line
+              :x1="chartSvgData.coords[hoveredPointIndex].x"
+              :y1="chartSvgData.paddingTop"
+              :x2="chartSvgData.coords[hoveredPointIndex].x"
+              :y2="chartSvgData.zeroY"
+              stroke="#94a3b8"
+              stroke-width="1.2"
+              stroke-dasharray="3 3"
+              class="chart-crosshair-line"
+            />
+
+            <!-- Total Requests Active Dot -->
             <circle
-              :cx="c.x"
-              :cy="c.y"
-              r="4"
+              :cx="chartSvgData.coords[hoveredPointIndex].x"
+              :cy="chartSvgData.coords[hoveredPointIndex].y"
+              r="8"
+              fill="#2563eb"
+              fill-opacity="0.2"
+              class="chart-pulse-ring"
+            />
+            <circle
+              :cx="chartSvgData.coords[hoveredPointIndex].x"
+              :cy="chartSvgData.coords[hoveredPointIndex].y"
+              r="4.5"
               fill="#ffffff"
               stroke="#2563eb"
               stroke-width="2.5"
-              style="cursor: pointer;"
-              @mouseenter="hoveredPointIndex = i"
-              @mouseleave="hoveredPointIndex = null"
             />
-            <!-- Hover Pulse Marker -->
+
+            <!-- Cached Requests Active Dot -->
             <circle
-              v-if="hoveredPointIndex === i"
-              :cx="c.x"
-              :cy="c.y"
-              r="9"
-              fill="none"
-              stroke="#2563eb"
+              :cx="chartSvgData.coords[hoveredPointIndex].x"
+              :cy="chartSvgData.coords[hoveredPointIndex].yCached"
+              r="7"
+              fill="#10b981"
+              fill-opacity="0.2"
+            />
+            <circle
+              :cx="chartSvgData.coords[hoveredPointIndex].x"
+              :cy="chartSvgData.coords[hoveredPointIndex].yCached"
+              r="4"
+              fill="#ffffff"
+              stroke="#10b981"
               stroke-width="2"
-              opacity="0.6"
             />
           </g>
+
+          <!-- Transparent Scrub Plane to Capture Mouse Moves -->
+          <rect
+            :x="chartSvgData.paddingLeft"
+            :y="chartSvgData.paddingTop"
+            :width="chartSvgData.plotWidth"
+            :height="chartSvgData.plotHeight"
+            fill="transparent"
+            style="cursor: crosshair;"
+          />
         </svg>
 
-        <!-- Hover Tooltip -->
+        <!-- Dynamic Floating Glassmorphic Tooltip -->
         <div
           v-if="hoveredPointIndex !== null && chartSvgData.coords[hoveredPointIndex]"
-          style="position: absolute; top: 10px; right: 14px; background: #0f172a; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 0.74rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); pointer-events: none;"
+          class="cf-chart-floating-tooltip"
+          :style="tooltipStyle"
         >
-          <strong>{{ chartSvgData.coords[hoveredPointIndex].point.label }}</strong>:
-          {{ chartSvgData.coords[hoveredPointIndex].point.requests.toLocaleString() }} reqs
-          ({{ chartSvgData.coords[hoveredPointIndex].point.bandwidthMB }} MB) • {{ chartSvgData.coords[hoveredPointIndex].point.latencyMs }}ms TTFB
+          <div class="tooltip-header">
+            <Clock :size="12" style="color: #94a3b8;" />
+            <span>{{ chartSvgData.coords[hoveredPointIndex].point.label }} • {{ timeframeLabel }}</span>
+          </div>
+          <div class="tooltip-body">
+            <div class="tooltip-metric-row">
+              <div class="tooltip-label">
+                <span class="tooltip-dot blue"></span>
+                <span>Total Permintaan:</span>
+              </div>
+              <strong class="tooltip-value">
+                {{ chartSvgData.coords[hoveredPointIndex].point.requests.toLocaleString() }} reqs
+              </strong>
+            </div>
+            <div class="tooltip-metric-row">
+              <div class="tooltip-label">
+                <span class="tooltip-dot emerald"></span>
+                <span>Edge Cache Hit:</span>
+              </div>
+              <strong class="tooltip-value emerald">
+                {{ chartSvgData.coords[hoveredPointIndex].point.cachedRequests.toLocaleString() }} reqs
+                <span class="tooltip-pct">
+                  ({{ ((chartSvgData.coords[hoveredPointIndex].point.cachedRequests / chartSvgData.coords[hoveredPointIndex].point.requests) * 100).toFixed(1) }}%)
+                </span>
+              </strong>
+            </div>
+            <div class="tooltip-metric-row">
+              <div class="tooltip-label">
+                <span class="tooltip-dot orange"></span>
+                <span>Origin Pod Pass:</span>
+              </div>
+              <strong class="tooltip-value">
+                {{ (chartSvgData.coords[hoveredPointIndex].point.requests - chartSvgData.coords[hoveredPointIndex].point.cachedRequests).toLocaleString() }} reqs
+              </strong>
+            </div>
+            <div class="tooltip-footer">
+              <span>⚡ Latensi: <strong>{{ chartSvgData.coords[hoveredPointIndex].point.latencyMs }} ms</strong></span>
+              <span>📦 Bandwidth: <strong>{{ chartSvgData.coords[hoveredPointIndex].point.bandwidthMB }} MB</strong></span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Legend Row -->
+      <!-- Professional Legend Row -->
       <div class="cf-chart-legend-row">
-        <div class="cf-legend-item">
-          <span class="legend-swatch swatch-cached"></span>
-          <span>Total Permintaan Masuk</span>
+        <div class="cf-legend-left">
+          <div class="cf-legend-item">
+            <span class="legend-swatch swatch-total"></span>
+            <span>Total Permintaan Masuk (Traefik Ingress)</span>
+          </div>
+          <div class="cf-legend-item">
+            <span class="legend-swatch swatch-cached"></span>
+            <span>Dilayani dari Edge Cache (Hit {{ chartStats.hitPct }}%)</span>
+          </div>
+          <div class="cf-legend-item">
+            <span class="legend-swatch swatch-origin"></span>
+            <span>Diteruskan ke Container Pod (Cache Miss)</span>
+          </div>
         </div>
-        <div class="cf-legend-item">
-          <span class="legend-swatch swatch-origin"></span>
-          <span>Dilayani dari Edge Cache</span>
+
+        <div style="font-size: 0.72rem; color: #94a3b8; display: flex; align-items: center; gap: 4px;">
+          <span>Data telemetri edge proxy • Resolusi per interval WIB</span>
         </div>
       </div>
     </div>
