@@ -15304,5 +15304,159 @@ html {
   }
 }
 
+/* =============================================================================
+   TELEMETRY ACCESS LEDGER & ENTERPRISE FILTER TOOLBAR
+   ============================================================================= */
+
+.telemetry-filter-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+
+.telemetry-segmented-pills {
+  display: inline-flex;
+  align-items: center;
+  background: #e2e8f0;
+  padding: 3px;
+  border-radius: 10px;
+  gap: 3px;
+}
+
+.telemetry-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.telemetry-pill-btn:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.telemetry-pill-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  font-weight: 700;
+}
+
+.telemetry-pill-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #cbd5e1;
+  color: #334155;
+  transition: all 0.15s ease;
+}
+
+.telemetry-pill-btn.active .telemetry-pill-count {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.telemetry-filter-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.telemetry-search-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 260px;
+}
+
+.telemetry-search-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 28px 0 32px;
+  font-size: 0.74rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.telemetry-search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.telemetry-search-icon {
+  position: absolute;
+  left: 10px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.telemetry-search-clear {
+  position: absolute;
+  right: 7px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #64748b;
+  border: none;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.telemetry-search-clear:hover {
+  background: #cbd5e1;
+  color: #0f172a;
+}
+
+.btn-filter-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.btn-filter-reset:hover {
+  color: #ef4444;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
 
 

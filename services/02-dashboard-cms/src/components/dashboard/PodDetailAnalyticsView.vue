@@ -28,7 +28,9 @@ import {
   FileText,
   Image,
   Send,
-  Layers
+  Layers,
+  X,
+  RotateCcw
 } from 'lucide-vue-next';
 import type { ContainerSite } from '../../types/dashboard';
 import { generatePodAnalytics } from '../../data/pod-analytics';
@@ -103,6 +105,25 @@ const filteredDailyHits = computed(() => {
     return matchFilter && matchSearch;
   });
 });
+
+const filterCounts = computed(() => {
+  const hits = report.value?.dailyHits || [];
+  return {
+    all: hits.length,
+    search: hits.filter(h => h.referrerType === 'search').length,
+    social: hits.filter(h => h.referrerType === 'social').length,
+    direct: hits.filter(h => h.referrerType === 'direct').length
+  };
+});
+
+const isFilterActive = computed(() => {
+  return hitReferrerFilter.value !== 'all' || hitSearchQuery.value.trim().length > 0;
+});
+
+const resetFilters = () => {
+  hitReferrerFilter.value = 'all';
+  hitSearchQuery.value = '';
+};
 
 // Number formatting helper for KPI labels
 const formatMetric = (val: number) => {
@@ -1360,7 +1381,8 @@ const exportTelemetry = () => {
 
     <!-- 10. DAILY VISITOR HIT ATTRIBUTION LOG (YANG HIT PER HARI SIAPA AJA) -->
     <div class="telemetry-table-card">
-      <div class="telemetry-table-header">
+      <!-- Row 1: Header Title & Live Status -->
+      <div class="telemetry-table-header" style="border-bottom: none; padding-bottom: 4px;">
         <div class="table-header-title">
           <Compass :size="16" style="color: #2563eb;" />
           <div>
@@ -1371,55 +1393,97 @@ const exportTelemetry = () => {
           </div>
         </div>
 
-        <!-- Filter Controls -->
-        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <!-- Filter Tabs -->
-          <div class="year-toggle-group">
-            <button
-              type="button"
-              class="year-toggle-btn"
-              :class="{ active: hitReferrerFilter === 'all' }"
-              @click="hitReferrerFilter = 'all'"
-            >
-              Semua Hit
-            </button>
-            <button
-              type="button"
-              class="year-toggle-btn"
-              :class="{ active: hitReferrerFilter === 'search' }"
-              @click="hitReferrerFilter = 'search'"
-            >
-              Google Search
-            </button>
-            <button
-              type="button"
-              class="year-toggle-btn"
-              :class="{ active: hitReferrerFilter === 'social' }"
-              @click="hitReferrerFilter = 'social'"
-            >
-              Media Sosial
-            </button>
-            <button
-              type="button"
-              class="year-toggle-btn"
-              :class="{ active: hitReferrerFilter === 'direct' }"
-              @click="hitReferrerFilter = 'direct'"
-            >
-              Direct
-            </button>
-          </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="radar-status-pill status-running" style="padding: 3px 9px; font-size: 0.7rem;">
+            <span class="radar-dot"></span>
+            <span>Live Ingress Stream</span>
+          </span>
+          <span style="font-size: 0.72rem; color: #64748b; font-weight: 600; background: #f1f5f9; padding: 3px 8px; border-radius: 6px;">
+            {{ filteredDailyHits.length }} dari {{ report.dailyHits.length }} hits
+          </span>
+        </div>
+      </div>
 
-          <!-- Search Input -->
-          <div class="search-box" style="width: 220px;">
-            <Search :size="13" class="search-icon" />
+      <!-- Row 2: Dedicated Enterprise Filter & Search Toolbar -->
+      <div class="telemetry-filter-toolbar">
+        <!-- Left: Segmented Filter Pills with Icons and Count Badges -->
+        <div class="telemetry-segmented-pills">
+          <button
+            type="button"
+            class="telemetry-pill-btn"
+            :class="{ active: hitReferrerFilter === 'all' }"
+            @click="hitReferrerFilter = 'all'"
+          >
+            <Globe :size="13" />
+            <span>Semua Hit</span>
+            <span class="telemetry-pill-count">{{ filterCounts.all }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="telemetry-pill-btn"
+            :class="{ active: hitReferrerFilter === 'search' }"
+            @click="hitReferrerFilter = 'search'"
+          >
+            <Search :size="13" />
+            <span>Google Search</span>
+            <span class="telemetry-pill-count">{{ filterCounts.search }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="telemetry-pill-btn"
+            :class="{ active: hitReferrerFilter === 'social' }"
+            @click="hitReferrerFilter = 'social'"
+          >
+            <Share2 :size="13" />
+            <span>Media Sosial</span>
+            <span class="telemetry-pill-count">{{ filterCounts.social }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="telemetry-pill-btn"
+            :class="{ active: hitReferrerFilter === 'direct' }"
+            @click="hitReferrerFilter = 'direct'"
+          >
+            <Compass :size="13" />
+            <span>Direct</span>
+            <span class="telemetry-pill-count">{{ filterCounts.direct }}</span>
+          </button>
+        </div>
+
+        <!-- Right: Enhanced Search Box & Reset Button -->
+        <div class="telemetry-filter-right">
+          <div class="telemetry-search-shell">
+            <Search :size="13" class="telemetry-search-icon" />
             <input
               v-model="hitSearchQuery"
               type="text"
-              placeholder="Cari IP, ISP, path..."
-              class="search-input"
-              style="padding-left: 28px; font-size: 0.74rem;"
+              placeholder="Cari IP, kota, ISP, path (/catalog)..."
+              class="telemetry-search-input"
             />
+            <button
+              v-if="hitSearchQuery"
+              type="button"
+              class="telemetry-search-clear"
+              title="Hapus pencarian"
+              @click="hitSearchQuery = ''"
+            >
+              <X :size="11" />
+            </button>
           </div>
+
+          <button
+            v-if="isFilterActive"
+            type="button"
+            class="btn-filter-reset"
+            title="Reset semua filter dan pencarian"
+            @click="resetFilters"
+          >
+            <RotateCcw :size="11" />
+            <span>Reset</span>
+          </button>
         </div>
       </div>
 
@@ -1518,8 +1582,23 @@ const exportTelemetry = () => {
             </tr>
 
             <tr v-if="filteredDailyHits.length === 0">
-              <td colspan="8" style="text-align: center; padding: 24px; color: #94a3b8;">
-                Tidak ada log hit yang cocok dengan kriteria pencarian "<strong>{{ hitSearchQuery }}</strong>".
+              <td colspan="8" style="text-align: center; padding: 40px 20px; color: #64748b;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <Search :size="24" style="color: #94a3b8;" />
+                  <span style="font-weight: 600; color: #1e293b; font-size: 0.85rem;">Tidak ada log akses yang cocok</span>
+                  <span style="font-size: 0.74rem; color: #94a3b8; max-width: 420px;">
+                    Tidak ditemukan data pengunjung dengan kriteria filter atau kata kunci pencarian "{{ hitSearchQuery }}".
+                  </span>
+                  <button
+                    type="button"
+                    class="btn-modal-ghost"
+                    style="margin-top: 6px; padding: 6px 14px; font-size: 0.74rem;"
+                    @click="resetFilters"
+                  >
+                    <RotateCcw :size="12" />
+                    <span>Reset Filter Pencarian</span>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
