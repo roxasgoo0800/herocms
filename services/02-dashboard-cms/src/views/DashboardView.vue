@@ -42,7 +42,8 @@ import {
   Play,
   Download,
   Trash2,
-  Lock
+  Lock,
+  AlertTriangle
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 import { generateContainerLogs, type ContainerLogEntry } from '../data/container-logs';
@@ -90,7 +91,12 @@ const {
   syncWithBackend,
   executeLogout,
   restartContainer,
-  selectedContainerForDetail
+  selectedContainerForDetail,
+  containerToDelete,
+  isDeleteContainerModalOpen,
+  isDeletingContainer,
+  cancelDeleteContainer,
+  confirmDeleteContainer
 } = useDashboardData();
 
 const latestSystemVersion = computed(() => changelogReleases[0]?.version || 'v1.4.1');
@@ -1011,6 +1017,113 @@ const handleLogout = async () => {
                 Tutup Konsol
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- 3. Bespoke Danger Zone Modal: Delete Container Confirmation -->
+    <Teleport to="body">
+      <div
+        v-if="isDeleteContainerModalOpen && containerToDelete"
+        class="modal-backdrop"
+        @click.self="cancelDeleteContainer"
+      >
+        <div
+          class="modal-dialog modal-dialog-delete"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-dialog-title"
+        >
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box danger-icon-box">
+                <AlertTriangle :size="18" />
+              </div>
+              <div>
+                <h3 id="delete-dialog-title" class="modal-heading">Hapus Kontainer Runtime</h3>
+                <p class="modal-subheading">Tindakan ini permanen dan akan melepas rute ingress Traefik.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="modal-close-button"
+              :disabled="isDeletingContainer"
+              @click="cancelDeleteContainer"
+              title="Tutup dialog"
+            >
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="delete-modal-body">
+            <!-- Target Pod Card -->
+            <div class="delete-target-card">
+              <div class="target-card-leading">
+                <div class="target-app-icon">
+                  <Server :size="17" />
+                </div>
+                <div class="target-app-info">
+                  <div class="target-app-name">{{ containerToDelete.name }}</div>
+                  <div class="target-app-subdomain">
+                    <Globe :size="11" />
+                    <span>https://{{ containerToDelete.subdomain }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="target-card-meta">
+                <span class="badge-target-spec">{{ containerToDelete.cpuLimit }} • {{ containerToDelete.ramLimit }} MB</span>
+                <span
+                  class="badge-target-status"
+                  :class="containerToDelete.status === 'running' ? 'status-emerald' : 'status-amber'"
+                >
+                  {{ containerToDelete.status === 'running' ? '● Running' : '○ Standby' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Danger Impact Callout -->
+            <div class="delete-impact-callout">
+              <div class="impact-callout-header">
+                <AlertCircle :size="13" />
+                <span>Konsekuensi penghapusan kontainer:</span>
+              </div>
+              <ul class="impact-list">
+                <li>
+                  <strong>Proses Pod Dihentikan:</strong> Runtime Docker & cgroups v2 akan dimatikan seketika.
+                </li>
+                <li>
+                  <strong>Rute Traefik & SSL Dicabut:</strong> Permintaan masuk ke <code>{{ containerToDelete.subdomain }}</code> akan langsung mengembalikan status HTTP 404.
+                </li>
+                <li>
+                  <strong>Pengembalian Kuota:</strong> 1 slot kuota ({{ containers.length }}/{{ userPlan.maxContainers }}) akan otomatis dikembalikan ke kuota langganan Anda.
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Modal Footer Actions -->
+          <div class="modal-footer-row delete-footer-row">
+            <button
+              type="button"
+              class="btn-modal-ghost"
+              :disabled="isDeletingContainer"
+              @click="cancelDeleteContainer"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              class="btn-modal-confirm-destructive"
+              :disabled="isDeletingContainer"
+              @click="confirmDeleteContainer"
+            >
+              <RotateCw v-if="isDeletingContainer" :size="13" class="spin-anim" />
+              <Trash2 v-else :size="13" />
+              <span>{{ isDeletingContainer ? 'Menghapus Kontainer...' : 'Ya, Hapus Kontainer' }}</span>
+            </button>
           </div>
         </div>
       </div>
