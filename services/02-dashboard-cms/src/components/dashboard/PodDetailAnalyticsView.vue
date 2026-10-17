@@ -24,7 +24,11 @@ import {
   History,
   Database,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  FileText,
+  Image,
+  Send,
+  Layers
 } from 'lucide-vue-next';
 import type { ContainerSite } from '../../types/dashboard';
 import { generatePodAnalytics } from '../../data/pod-analytics';
@@ -644,7 +648,216 @@ const exportTelemetry = () => {
       </div>
     </div>
 
-    <!-- 5. DEPLOYMENT & VERSION HISTORY (RECENT BUILDS) -->
+    <!-- 5. BESPOKE CMS SUITE: Publishing, Media Library & Form Shield -->
+    <div class="cms-suite-grid">
+      <!-- Card 1: Publishing & Sitemap SEO Health -->
+      <div class="cms-suite-card">
+        <div class="cms-suite-head">
+          <span class="cms-suite-title">
+            <FileText :size="15" style="color: #2563eb;" />
+            <span>Status Publikasi & SEO</span>
+          </span>
+          <span class="confidence-status-badge green">{{ report.cmsPublishing.sitemapStatus }}</span>
+        </div>
+
+        <div class="cms-metric-strip">
+          <div class="cms-metric-row">
+            <span>Halaman Terbit / Draft</span>
+            <strong>{{ report.cmsPublishing.publishedPages }} Terbit <span style="color: #94a3b8; font-weight: normal;">({{ report.cmsPublishing.draftPages }} Draft)</span></strong>
+          </div>
+          <div class="cms-metric-row">
+            <span>Edge Purge Latency</span>
+            <strong style="color: #059669;">⚡ {{ report.cmsPublishing.lastPurgeLatency }} (Instan)</strong>
+          </div>
+          <div class="cms-metric-row">
+            <span>Arsitektur Rendering</span>
+            <strong>{{ report.cmsPublishing.engineMode }}</strong>
+          </div>
+        </div>
+
+        <div style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+          📅 Terakhir diperbarui: <strong>{{ report.cmsPublishing.lastModified }}</strong>
+        </div>
+      </div>
+
+      <!-- Card 2: Media Library & Image Optimization Health -->
+      <div class="cms-suite-card">
+        <div class="cms-suite-head">
+          <span class="cms-suite-title">
+            <Image :size="15" style="color: #059669;" />
+            <span>Penyimpanan Media & WebP</span>
+          </span>
+          <span class="confidence-status-badge green">{{ report.cmsMedia.webpOptimizedPct }}% WebP</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+            <span style="color: #64748b;">Media Terpakai</span>
+            <strong>{{ report.cmsMedia.usedMB }} MB / {{ report.cmsMedia.quotaMB }} MB</strong>
+          </div>
+          <div class="custom-meter-track" style="height: 6px;">
+            <div class="custom-meter-fill fill-emerald" :style="{ width: `${report.cmsMedia.percentage}%` }"></div>
+          </div>
+        </div>
+
+        <div class="cms-metric-strip">
+          <div class="cms-metric-row">
+            <span>Total Berkas Gambar</span>
+            <strong>{{ report.cmsMedia.totalFiles }} berkas</strong>
+          </div>
+          <div class="cms-metric-row">
+            <span>Bandwidth Terhemat</span>
+            <strong style="color: #059669;">{{ report.cmsMedia.bandwidthSavedMB }} MB (Kompresi Aktif)</strong>
+          </div>
+        </div>
+
+        <div style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 8px; display: flex; align-items: center; justify-content: space-between;">
+          <span>Aset Terbesar:</span>
+          <code style="font-size: 0.7rem; background: #f1f5f9; padding: 1px 5px; border-radius: 4px;">{{ report.cmsMedia.largestAsset.name }} ({{ report.cmsMedia.largestAsset.size }})</code>
+        </div>
+      </div>
+
+      <!-- Card 3: Form Shield & Bot Defense -->
+      <div class="cms-suite-card">
+        <div class="cms-suite-head">
+          <span class="cms-suite-title">
+            <Send :size="15" style="color: #7c3aed;" />
+            <span>Proteksi Formulir & Kontak</span>
+          </span>
+          <span class="confidence-status-badge blue">Zero Captcha</span>
+        </div>
+
+        <div class="cms-metric-strip">
+          <div class="cms-metric-row">
+            <span>Pesan Kontak Masuk</span>
+            <strong>{{ report.cmsFormProtection.legitimateCount }} terverifikasi</strong>
+          </div>
+          <div class="cms-metric-row">
+            <span>Spam Bot Dicegat</span>
+            <strong style="color: #059669;">🛡️ {{ report.cmsFormProtection.botSpamBlocked }} serangan diblokir</strong>
+          </div>
+          <div class="cms-metric-row">
+            <span>Kebijakan Shield</span>
+            <strong style="font-size: 0.72rem;">{{ report.cmsFormProtection.rateLimitPolicy }}</strong>
+          </div>
+        </div>
+
+        <div style="font-size: 0.72rem; color: #059669; font-weight: 600; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+          🟢 Formulir aman dari bot spammer tanpa mengganggu kenyamanan pengunjung
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. TOP CMS PAGES & CONTENT ENGAGEMENT + ACQUISITION CHANNELS -->
+    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px;">
+      <!-- Left: Top CMS Pages Table -->
+      <div class="telemetry-table-card" style="margin: 0; padding: 14px 18px;">
+        <div class="telemetry-table-header" style="padding-bottom: 8px;">
+          <div class="table-header-title">
+            <Layers :size="16" style="color: #2563eb;" />
+            <div>
+              <h4>Performa Konten & Halaman Terpopuler (Top Pages)</h4>
+              <span style="font-size: 0.72rem; color: #64748b;">
+                Halaman dengan jumlah pembaca terbanyak, waktu baca rata-rata, dan kecepatan TTFB
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="ledger-table" style="font-size: 0.76rem;">
+            <thead>
+              <tr>
+                <th style="width: 38px;">#</th>
+                <th>HALAMAN / JUDUL ARTIKEL</th>
+                <th>URL PATH</th>
+                <th style="text-align: right;">PEMBACA</th>
+                <th style="text-align: right;">WAKTU BACA</th>
+                <th style="text-align: right;">CACHE</th>
+                <th style="text-align: right;">TTFB</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(pg, idx) in report.cmsTopPages" :key="pg.id">
+                <td>
+                  <span class="top-page-rank-badge" :class="`top-${idx + 1}`">{{ idx + 1 }}</span>
+                </td>
+                <td>
+                  <strong style="color: #0f172a;">{{ pg.title }}</strong>
+                </td>
+                <td>
+                  <code style="font-size: 0.71rem; color: #2563eb; background: #eff6ff; padding: 1px 6px; border-radius: 4px;">{{ pg.path }}</code>
+                </td>
+                <td style="text-align: right;">
+                  <strong style="color: #0f172a;">{{ pg.views.toLocaleString() }}</strong>
+                  <span style="font-size: 0.68rem; color: #64748b; margin-left: 4px;">({{ pg.sharePct }}%)</span>
+                </td>
+                <td style="text-align: right; color: #64748b;">
+                  {{ pg.avgReadTime }}
+                </td>
+                <td style="text-align: right;">
+                  <span class="radar-status-pill status-running" style="display: inline-flex; padding: 1px 6px; font-size: 0.66rem;">
+                    {{ pg.cacheHitPct }}%
+                  </span>
+                </td>
+                <td style="text-align: right; font-weight: 600; color: #059669;">
+                  {{ pg.ttfb }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right: Traffic Acquisition Channels (Saluran Pengunjung) -->
+      <div class="cms-suite-card" style="margin: 0;">
+        <div class="cms-suite-head">
+          <span class="cms-suite-title">
+            <Compass :size="15" style="color: #2563eb;" />
+            <span>Saluran Kedatangan Pembaca</span>
+          </span>
+          <span style="font-size: 0.68rem; color: #64748b; font-weight: 600;">100% Organik</span>
+        </div>
+
+        <div>
+          <div style="font-size: 0.74rem; color: #64748b; margin-bottom: 8px;">
+            Distribusi sumber trafik pembaca website (SEO, Media Sosial, & Rujukan Langsung):
+          </div>
+
+          <!-- Multi-Color Progress Strip -->
+          <div class="cms-acquisition-strip">
+            <div
+              v-for="ch in report.cmsAcquisition"
+              :key="ch.name"
+              class="cms-acquisition-bar"
+              :style="{ width: `${ch.percentage}%`, backgroundColor: ch.color }"
+              :title="`${ch.name}: ${ch.percentage}% (${ch.visitors.toLocaleString()} pengunjung)`"
+            ></div>
+          </div>
+
+          <!-- Acquisition Legend List -->
+          <div class="cms-acquisition-legend">
+            <div
+              v-for="ch in report.cmsAcquisition"
+              :key="ch.name"
+              class="cms-channel-item"
+            >
+              <div class="cms-channel-left">
+                <span class="cms-channel-dot" :style="{ backgroundColor: ch.color }"></span>
+                <span>{{ ch.name }}</span>
+              </div>
+              <span class="cms-channel-val">{{ ch.percentage }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+          💡 <strong>Insight CMS:</strong> 44.3% pembaca datang via Google Search organik berkat arsitektur headless berkecepatan tinggi dan sitemap valid.
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. DEPLOYMENT & VERSION HISTORY (RECENT BUILDS) -->
     <div class="telemetry-table-card" style="padding: 14px 18px;">
       <div class="telemetry-table-header" style="padding-bottom: 8px;">
         <div class="table-header-title">

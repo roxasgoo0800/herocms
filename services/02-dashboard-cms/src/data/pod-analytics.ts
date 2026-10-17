@@ -122,6 +122,50 @@ export interface PodAnalyticsReport {
   sslCertificate: { issuer: string; protocol: string; validUntil: string; autoRenew: boolean; daysRemaining: number };
   bandwidthQuota: { usedGB: number; limitGB: number; percentage: number; extraCharge: string };
   deployHistory: { buildId: string; title: string; author: string; timeAgo: string; status: 'Live (Production)' | 'Superseded'; commitHash: string }[];
+  // Bespoke CMS Content, Media & SEO Telemetry
+  cmsPublishing: {
+    totalPages: number;
+    publishedPages: number;
+    draftPages: number;
+    sitemapStatus: 'Valid (200 OK)';
+    lastPurgeLatency: string;
+    lastModified: string;
+    engineMode: string;
+  };
+  cmsMedia: {
+    usedMB: number;
+    quotaMB: number;
+    percentage: number;
+    totalFiles: number;
+    webpOptimizedPct: number;
+    bandwidthSavedMB: number;
+    largestAsset: { name: string; size: string; path: string; status: 'Optimized' | 'Needs WebP' };
+  };
+  cmsTopPages: {
+    id: string;
+    title: string;
+    path: string;
+    views: number;
+    sharePct: number;
+    avgReadTime: string;
+    cacheHitPct: number;
+    ttfb: string;
+    isIndexed: boolean;
+  }[];
+  cmsAcquisition: {
+    name: string;
+    category: 'search' | 'social' | 'direct' | 'referral';
+    visitors: number;
+    percentage: number;
+    color: string;
+  }[];
+  cmsFormProtection: {
+    totalSubmissions: number;
+    legitimateCount: number;
+    botSpamBlocked: number;
+    rateLimitPolicy: string;
+    avgVerificationMs: number;
+  };
 }
 
 export const generatePodAnalytics = (container: ContainerSite): PodAnalyticsReport => {
@@ -452,6 +496,58 @@ export const generatePodAnalytics = (container: ContainerSite): PodAnalyticsRepo
         status: 'Superseded',
         commitHash: '1f44d90'
       }
-    ]
+    ],
+    // Bespoke CMS Content, Media & SEO Telemetry
+    cmsPublishing: {
+      totalPages: isShop ? 32 : 18,
+      publishedPages: isShop ? 28 : 15,
+      draftPages: isShop ? 4 : 3,
+      sitemapStatus: 'Valid (200 OK)',
+      lastPurgeLatency: '118 ms',
+      lastModified: 'Hari ini, 17:40 WIB',
+      engineMode: 'SSG & Edge In-Memory Cache'
+    },
+    cmsMedia: {
+      usedMB: Math.max(120, Math.round(180 * multiplier * 0.7)),
+      quotaMB: 5000,
+      percentage: Number(((Math.max(120, Math.round(180 * multiplier * 0.7)) / 5000) * 100).toFixed(1)),
+      totalFiles: 86 * multiplier,
+      webpOptimizedPct: 93.8,
+      bandwidthSavedMB: Math.round(540 * multiplier),
+      largestAsset: {
+        name: isShop ? 'hero-banner-summer-sale.webp' : 'portfolio-hero-showcase.webp',
+        size: '340 KB',
+        path: '/uploads/images/hero-banner-2026.webp',
+        status: 'Optimized'
+      }
+    },
+    cmsTopPages: isShop
+      ? [
+          { id: 'p-1', title: 'Beranda Toko (Homepage)', path: '/', views: 16400 * multiplier, sharePct: 34.0, avgReadTime: '2m 15s', cacheHitPct: 98.4, ttfb: '0.8 ms', isIndexed: true },
+          { id: 'p-2', title: 'Katalog Produk & Kategori', path: '/catalog', views: 13500 * multiplier, sharePct: 28.0, avgReadTime: '4m 30s', cacheHitPct: 94.2, ttfb: '1.1 ms', isIndexed: true },
+          { id: 'p-3', title: 'Promo & Flash Sale Spesial', path: '/promo', views: 9160 * multiplier, sharePct: 19.0, avgReadTime: '1m 45s', cacheHitPct: 96.0, ttfb: '0.9 ms', isIndexed: true },
+          { id: 'p-4', title: 'Panduan Ukuran & FAQ Belanja', path: '/panduan-belanja', views: 5790 * multiplier, sharePct: 12.0, avgReadTime: '3m 10s', cacheHitPct: 99.1, ttfb: '0.7 ms', isIndexed: true },
+          { id: 'p-5', title: 'Kontak & Bantuan WhatsApp', path: '/kontak', views: 3400 * multiplier, sharePct: 7.0, avgReadTime: '0m 55s', cacheHitPct: 91.5, ttfb: '1.2 ms', isIndexed: true }
+        ]
+      : [
+          { id: 'p-1', title: 'Beranda Utama & Featured Work', path: '/', views: 18200 * multiplier, sharePct: 37.7, avgReadTime: '2m 40s', cacheHitPct: 97.8, ttfb: '0.8 ms', isIndexed: true },
+          { id: 'p-2', title: 'Artikel: Panduan Desain & Arsitektur', path: '/blog', views: 14100 * multiplier, sharePct: 29.2, avgReadTime: '5m 12s', cacheHitPct: 95.4, ttfb: '1.0 ms', isIndexed: true },
+          { id: 'p-3', title: 'Showcase Proyek Unggulan', path: '/showcase', views: 8700 * multiplier, sharePct: 18.0, avgReadTime: '3m 50s', cacheHitPct: 98.2, ttfb: '0.9 ms', isIndexed: true },
+          { id: 'p-4', title: 'Layanan Konsultasi & Studio', path: '/layanan', views: 4800 * multiplier, sharePct: 10.0, avgReadTime: '1m 30s', cacheHitPct: 96.8, ttfb: '1.1 ms', isIndexed: true },
+          { id: 'p-5', title: 'Hubungi Studio & Formulir Kerjasama', path: '/contact', views: 2450 * multiplier, sharePct: 5.1, avgReadTime: '1m 10s', cacheHitPct: 92.0, ttfb: '1.3 ms', isIndexed: true }
+        ],
+    cmsAcquisition: [
+      { name: 'Google Search (Organik SEO)', category: 'search', visitors: Math.round(21400 * multiplier), percentage: 44.3, color: '#2563eb' },
+      { name: 'Media Sosial (WhatsApp, IG, X)', category: 'social', visitors: Math.round(14800 * multiplier), percentage: 30.7, color: '#10b981' },
+      { name: 'Kunjungan Langsung (Direct URL)', category: 'direct', visitors: Math.round(8900 * multiplier), percentage: 18.4, color: '#7c3aed' },
+      { name: 'Rujukan Web & Backlink', category: 'referral', visitors: Math.round(3150 * multiplier), percentage: 6.6, color: '#f59e0b' }
+    ],
+    cmsFormProtection: {
+      totalSubmissions: 84 * multiplier,
+      legitimateCount: 81 * multiplier,
+      botSpamBlocked: 164 * multiplier,
+      rateLimitPolicy: 'Traefik IP Shield (Max 5 req/min, 0 Captcha)',
+      avgVerificationMs: 12
+    }
   };
 };
