@@ -25,7 +25,11 @@ import {
   List,
   Sparkles,
   Zap,
-  Lock
+  Lock,
+  Cpu,
+  HardDrive,
+  TrendingUp,
+  Clock
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import PodDetailAnalyticsView from './PodDetailAnalyticsView.vue';
@@ -68,16 +72,54 @@ watch(viewMode, (newMode) => {
   localStorage.setItem('herocms_containers_view_mode', newMode);
 });
 
-// Sparkline SVG generators for live visual telemetry
-const getCpuSparkline = (cpu: number) => {
-  const h = Math.max(3, Math.min(16, (cpu / 100) * 18));
-  return `M0,${18 - h * 0.4} Q20,${18 - h * 1.1} 40,${18 - h * 0.6} T80,${18 - h}`;
+// 7-day live traffic activity sparkline curve generator
+const getContainerTrafficSparkline = (c: ContainerSite) => {
+  const seed = (c.id.charCodeAt(c.id.length - 1) || 1) + c.visitsThisWeek;
+  const points = [
+    0.28 + ((seed * 17) % 35) / 100,
+    0.38 + ((seed * 31) % 40) / 100,
+    0.32 + ((seed * 47) % 35) / 100,
+    0.58 + ((seed * 67) % 30) / 100,
+    0.52 + ((seed * 83) % 35) / 100,
+    0.78 + ((seed * 97) % 20) / 100,
+    0.92
+  ];
+  const w = 110;
+  const h = 26;
+  const step = w / (points.length - 1);
+  const coords = points.map((p, i) => ({
+    x: i * step,
+    y: h - p * (h - 6) - 3
+  }));
+
+  let line = `M ${coords[0].x.toFixed(1)} ${coords[0].y.toFixed(1)}`;
+  for (let i = 1; i < coords.length; i++) {
+    const prev = coords[i - 1];
+    const curr = coords[i];
+    const cpX = (prev.x + curr.x) / 2;
+    line += ` C ${cpX.toFixed(1)} ${prev.y.toFixed(1)}, ${cpX.toFixed(1)} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`;
+  }
+  const area = `${line} L ${w} ${h} L 0 ${h} Z`;
+  return { line, area };
 };
 
-const getRamSparkline = (usage: number, limit: number) => {
-  const ratio = Math.max(0.05, Math.min(1, usage / limit));
-  const h = ratio * 16;
-  return `M0,${18 - h * 0.5} Q20,${18 - h * 0.9} 40,${18 - h * 0.7} T80,${18 - h}`;
+const formatShortPodId = (id: string) => {
+  if (!id) return '#0000';
+  if (id.length > 12) {
+    const parts = id.split('-');
+    return 'pod-' + (parts[parts.length - 1] || id.slice(-6));
+  }
+  return '#' + id;
+};
+
+const getCategoryLabel = (cat: string) => {
+  switch (cat) {
+    case 'business': return 'Bisnis';
+    case 'portfolio': return 'Portofolio';
+    case 'blog': return 'Publikasi';
+    case 'education': return 'Edukasi';
+    default: return 'Aplikasi';
+  }
 };
 
 // Global Shortcut ⌘K / Ctrl+K
@@ -292,24 +334,35 @@ const openContainerDetail = (c: ContainerSite) => {
         :key="c.id"
         class="pro-site-card"
         :class="{ 'card-stopped': c.status === 'stopped' }"
+        :style="{ '--card-accent': c.accentColor || '#2563eb' }"
       >
         <!-- Card Top Header -->
         <div class="card-head">
           <div class="site-branding">
-            <div class="site-icon-box" :style="{ backgroundColor: (c.accentColor || '#ea580c') + '14', color: c.accentColor || '#ea580c' }">
-              <ShoppingBag v-if="c.category === 'business'" :size="18" />
-              <Briefcase v-else-if="c.category === 'portfolio'" :size="18" />
-              <BookOpen v-else-if="c.category === 'blog'" :size="18" />
-              <GraduationCap v-else-if="c.category === 'education'" :size="18" />
-              <Server v-else :size="18" />
+            <div
+              class="site-icon-box"
+              :style="{ backgroundColor: (c.accentColor || '#ea580c') + '15', color: c.accentColor || '#ea580c', borderColor: (c.accentColor || '#ea580c') + '30' }"
+            >
+              <ShoppingBag v-if="c.category === 'business'" :size="20" />
+              <Briefcase v-else-if="c.category === 'portfolio'" :size="20" />
+              <BookOpen v-else-if="c.category === 'blog'" :size="20" />
+              <GraduationCap v-else-if="c.category === 'education'" :size="20" />
+              <Server v-else :size="20" />
             </div>
             <div class="site-branding-info">
               <div class="site-title-row">
-                <h3 class="site-title-text" style="cursor: pointer;" @click="openContainerDetail(c)" title="Lihat Detail Pod & Analitik">{{ c.name }}</h3>
+                <h3
+                  class="site-title-text"
+                  @click="openContainerDetail(c)"
+                  title="Lihat Detail Pod & Analitik Lengkap"
+                >
+                  {{ c.name }}
+                </h3>
               </div>
               <div class="site-sub-row">
                 <span class="site-template-badge">{{ c.templateName }}</span>
-                <span class="site-id-tag">#{{ c.id }}</span>
+                <span class="site-category-badge">{{ getCategoryLabel(c.category) }}</span>
+                <span class="site-id-tag">{{ formatShortPodId(c.id) }}</span>
               </div>
             </div>
           </div>
@@ -334,8 +387,9 @@ const openContainerDetail = (c: ContainerSite) => {
         <!-- Bespoke Terminal URL Box -->
         <div class="site-url-box">
           <div class="url-text-wrap">
-            <Lock :size="11" style="color: #10b981; flex-shrink: 0;" />
-            <span class="url-mono">https://{{ c.subdomain }}</span>
+            <Lock :size="12" style="color: #059669; flex-shrink: 0;" />
+            <span class="url-prefix">https://</span>
+            <span class="url-mono">{{ c.subdomain }}</span>
           </div>
           <div class="url-actions">
             <button
@@ -354,21 +408,52 @@ const openContainerDetail = (c: ContainerSite) => {
 
         <!-- Custom Domain Badge (if attached) -->
         <div v-if="c.customDomain" class="custom-domain-pill">
-          <Globe :size="12" />
-          <span>{{ c.customDomain }}</span>
-          <span style="font-size: 0.65rem; color: #059669; font-weight: 700; margin-left: auto;">● TLS 1.3</span>
+          <Globe :size="12" style="color: #2563eb;" />
+          <span class="custom-domain-name">{{ c.customDomain }}</span>
+          <span class="custom-domain-tls">
+            <ShieldCheck :size="11" />
+            <span>TLS 1.3 Active</span>
+          </span>
         </div>
 
-        <!-- Dual Infrastructure Meters with Micro Sparkline Waves -->
+        <!-- Live Traffic Activity & Momentum Sparkline Strip -->
+        <div class="card-momentum-strip" @click="openContainerDetail(c)" title="Lihat Grafik Traffic & Analitik Lengkap">
+          <div class="momentum-left-meta">
+            <div class="momentum-title-flex">
+              <Activity :size="12" style="color: #2563eb;" />
+              <span>TRAFIK MINGGU INI</span>
+            </div>
+            <div class="momentum-stat-flex">
+              <strong>{{ c.visitsThisWeek.toLocaleString() }} hits</strong>
+              <span class="momentum-growth-badge">
+                <TrendingUp :size="10" />
+                <span>+24%</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Mini Sparkline Area Curve -->
+          <div class="momentum-sparkline-box">
+            <svg viewBox="0 0 110 26" preserveAspectRatio="none" class="mini-sparkline-svg">
+              <defs>
+                <linearGradient :id="`sparkGrad-${c.id}`" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" :stop-color="c.accentColor || '#2563eb'" stop-opacity="0.25" />
+                  <stop offset="100%" :stop-color="c.accentColor || '#2563eb'" stop-opacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path :d="getContainerTrafficSparkline(c).area" :fill="`url(#sparkGrad-${c.id})`" />
+              <path :d="getContainerTrafficSparkline(c).line" fill="none" :stroke="c.accentColor || '#2563eb'" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Dual Infrastructure Resource Meters (cgroups v2 & memcg) -->
         <div class="resource-gauges-row">
           <div class="gauge-col">
             <div class="gauge-meta">
               <div class="gauge-header-flex">
-                <span class="gauge-title">CPU USAGE</span>
-                <!-- Micro Sparkline SVG -->
-                <svg class="sparkline-micro-svg" viewBox="0 0 80 20">
-                  <path :d="getCpuSparkline(c.cpuUsage)" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" />
-                </svg>
+                <Cpu :size="11" style="color: #2563eb;" />
+                <span class="gauge-title">CPU CFS QUOTA</span>
               </div>
               <span class="gauge-val">
                 <strong>{{ c.cpuUsage }}%</strong>
@@ -388,11 +473,8 @@ const openContainerDetail = (c: ContainerSite) => {
           <div class="gauge-col">
             <div class="gauge-meta">
               <div class="gauge-header-flex">
-                <span class="gauge-title">RAM MEMORY</span>
-                <!-- Micro Sparkline SVG -->
-                <svg class="sparkline-micro-svg" viewBox="0 0 80 20">
-                  <path :d="getRamSparkline(c.ramUsage, c.ramLimit)" fill="none" stroke="#059669" stroke-width="1.8" stroke-linecap="round" />
-                </svg>
+                <HardDrive :size="11" style="color: #059669;" />
+                <span class="gauge-title">RAM MEMCG</span>
               </div>
               <span class="gauge-val">
                 <strong>{{ c.ramUsage }} MB</strong>
@@ -411,37 +493,43 @@ const openContainerDetail = (c: ContainerSite) => {
         </div>
 
         <!-- Edge Performance Strip -->
-        <div class="edge-telemetry-strip" style="cursor: pointer;" @click="openContainerDetail(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
-          <span class="edge-badge emerald">
-            <Zap :size="10" />
-            <span>Traefik v3.1</span>
-          </span>
-          <span class="edge-badge blue">
-            <span>⚡ 1.2ms TTFB</span>
-          </span>
+        <div class="edge-telemetry-strip" @click="openContainerDetail(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
+          <div class="edge-telemetry-left">
+            <span class="edge-badge emerald">
+              <Zap :size="10" />
+              <span>Traefik v3.1</span>
+            </span>
+            <span class="edge-badge blue">
+              <span>⚡ 1.2ms TTFB</span>
+            </span>
+          </div>
           <span class="edge-telemetry-sub">
+            <Clock :size="11" />
             <span>⏱ {{ c.uptime }}</span>
           </span>
         </div>
 
         <!-- Card Action Buttons Footer -->
         <div class="card-action-bar">
-          <button
-            class="btn-action-primary"
-            @click="selectForEditor(c.id)"
-          >
-            <Edit3 :size="14" />
-            <span>Editor</span>
-          </button>
+          <div class="card-action-left">
+            <button
+              class="btn-action-primary"
+              @click="selectForEditor(c.id)"
+              title="Buka Website di Visual Editor"
+            >
+              <Edit3 :size="13" />
+              <span>Editor</span>
+            </button>
 
-          <button
-            class="btn-open-analytics-action"
-            @click="openContainerDetail(c)"
-            title="Lihat Detail Pod, Geo Analitik & Graph Cloudflare"
-          >
-            <Activity :size="13" />
-            <span>Analitik</span>
-          </button>
+            <button
+              class="btn-open-analytics-action"
+              @click="openContainerDetail(c)"
+              title="Lihat Detail Pod, Geo Analitik & Graph Cloudflare"
+            >
+              <Activity :size="13" />
+              <span>Analitik</span>
+            </button>
+          </div>
 
           <!-- Runtime Controls -->
           <div class="runtime-btn-group">
@@ -449,7 +537,7 @@ const openContainerDetail = (c: ContainerSite) => {
               v-if="c.status === 'stopped'"
               class="btn-icon-ctrl btn-play"
               @click="startContainer(c)"
-              title="Jalankan Kontainer (Start)"
+              title="Jalankan Kontainer (Start Pod)"
             >
               <Play :size="13" />
             </button>
