@@ -2,11 +2,44 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.6.0',
+    releaseDate: '17 Oktober 2026',
+    title: 'Integrasi Enterprise Apache ECharts: Grafik Telemetri Edge & Cache Kelas Industri (Cloudflare & Datadog APM Standard)',
+    summary: 'Mengadopsi library visualisasi data industri terkemuka Apache ECharts (echarts) ke dalam HeroCMS Dashboard: menggantikan grafik SVG manual dengan engine canvas beresolusi tinggi, cubic hermite spline mulus, shading gradasi area presisi (#2563eb dan #10b981), axisPointer crosshair otomatis, interactive HTML glassmorphic tooltip card, responsive auto-resize via ResizeObserver, transisi animasi halus saat perpindahan timeframe (24 Jam / 7 Hari / 30 Hari), serta optimasi manual vendor chunks di Vite.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-160-1',
+        type: 'feature',
+        scope: 'Apache ECharts Engine Integration',
+        description: 'Menginstal dan mengintegrasikan pustaka visualisasi data tingkat enterprise Apache ECharts (echarts) dengan pemisahan chunk vendor terpisah di vite.config.ts untuk efisiensi HTTP long-term caching.'
+      },
+      {
+        id: 'c-160-2',
+        type: 'improvement',
+        scope: 'High-DPI Canvas Antialiasing & Dual Area Gradients',
+        description: 'Mengganti SVG rendering manual yang terdistorsi dengan canvas anti-aliasing tajam berskala rasio pixel perangkat (Retina ready), gradasi area linier transparan, dan bayangan garis kurva (drop shadow glow).'
+      },
+      {
+        id: 'c-160-3',
+        type: 'feature',
+        scope: 'Smart AxisPointer Crosshair & Glassmorphic Tooltip',
+        description: 'Menyediakan pelacak koordinat kursor axisPointer otomatis dan kartu tooltip gelap kaca (glassmorphic) yang merinci status edge ingress, cache hit %, origin pass, latensi, dan bandwidth secara interaktif.'
+      },
+      {
+        id: 'c-160-4',
+        type: 'perf',
+        scope: 'Fluid Timeframe Morphing & ResizeObserver',
+        description: 'Menerapkan transisi animasi morfologis halus (700ms cubicOut) saat beralih antara 24 Jam, 7 Hari, dan 30 Hari, serta sinkronisasi otomatis ukuran grafik dengan ResizeObserver.'
+      }
+    ]
+  },
+  {
     version: 'v1.5.2',
     releaseDate: '17 Oktober 2026',
     title: 'PaaS Developer Card Overhaul: Railway & Vercel-Style Dynamic Identity, Top Accent Stripe & Live Traffic Sparkline',
     summary: 'Merombak tampilan kartu kontainer di Situs & Kontainer agar dinamis, hidup, dan setara PaaS kelas dunia: menambahkan garis aksen gradasi 3px warna brand container, ambient glow di sudut atas, avatar ikon 44x44 dengan kategori badge, penghapusan raw UUID diganti short pod ID (#pod-000001), kapsul URL modern ber-SSL, widget mini-trend sparkline kurva area trafik 7 hari (+24% growth), gauge meter CPU/RAM presisi, serta toolbar aksi yang rapi.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
