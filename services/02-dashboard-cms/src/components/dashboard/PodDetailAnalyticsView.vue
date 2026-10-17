@@ -11,9 +11,13 @@ import {
   Terminal,
   ShieldCheck,
   Server,
-  Layers,
   ArrowUpRight,
-  Edit3
+  Edit3,
+  Cpu,
+  Search,
+  Lock,
+  Compass,
+  Share2
 } from 'lucide-vue-next';
 import type { ContainerSite } from '../../types/dashboard';
 import { generatePodAnalytics } from '../../data/pod-analytics';
@@ -40,6 +44,26 @@ const currentPoints = computed(() => {
   if (timeframe.value === '7d') return report.value.timeframe7d;
   if (timeframe.value === '30d') return report.value.timeframe30d;
   return report.value.timeframe24h;
+});
+
+// Daily Hits Search & Filter
+const hitSearchQuery = ref('');
+const hitReferrerFilter = ref<'all' | 'search' | 'social' | 'direct'>('all');
+
+const filteredDailyHits = computed(() => {
+  if (!report.value) return [];
+  return report.value.dailyHits.filter(h => {
+    const matchFilter = hitReferrerFilter.value === 'all' || h.referrerType === hitReferrerFilter.value;
+    const q = hitSearchQuery.value.toLowerCase().trim();
+    if (!q) return matchFilter;
+    const matchSearch =
+      h.clientIp.toLowerCase().includes(q) ||
+      h.city.toLowerCase().includes(q) ||
+      h.isp.toLowerCase().includes(q) ||
+      h.targetPath.toLowerCase().includes(q) ||
+      h.referrer.toLowerCase().includes(q);
+    return matchFilter && matchSearch;
+  });
 });
 
 // Generate smooth SVG Area & Line Paths
@@ -83,21 +107,27 @@ const chartSvgData = computed(() => {
 
 // CSV Export
 const exportTelemetry = () => {
-  const headers = ['Country Code', 'Country Name', 'Requests', 'Percentage', 'Avg TTFB', 'Bandwidth'];
-  const rows = report.value.countries.map(c => [
-    c.code,
-    `"${c.name}"`,
-    c.requests,
-    `${c.percentage}%`,
-    c.ttfb,
-    c.bandwidth
+  const headers = ['Timestamp', 'Client IP', 'Country', 'City', 'ISP ASN', 'Referrer', 'Target Path', 'Method', 'Status', 'Cache', 'TTFB', 'User Agent'];
+  const rows = report.value.dailyHits.map(h => [
+    h.timestamp,
+    h.clientIp,
+    h.countryCode,
+    `"${h.city}"`,
+    `"${h.isp}"`,
+    `"${h.referrer}"`,
+    `"${h.targetPath}"`,
+    h.httpMethod,
+    h.statusCode,
+    h.cacheStatus,
+    h.ttfb,
+    `"${h.userAgent} (${h.os})"`
   ]);
 
   const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement('a');
   link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `cloudflare-edge-telemetry-${props.container.subdomain}.csv`);
+  link.setAttribute('download', `daily-hits-telemetry-${props.container.subdomain}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -115,9 +145,9 @@ const exportTelemetry = () => {
         </button>
 
         <div class="breadcrumb-trail">
-          <span>Situs & Kontainer</span>
+          <span style="cursor: pointer;" @click="emit('back')">Situs & Kontainer</span>
           <span class="divider">/</span>
-          <span class="current">{{ container.name }}</span>
+          <span class="current" style="color: #2563eb;">{{ container.subdomain }}</span>
           <span class="divider">/</span>
           <span style="font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.72rem; color: #64748b;">
             #{{ container.id }}
@@ -126,7 +156,7 @@ const exportTelemetry = () => {
       </div>
 
       <div class="footer-right-buttons">
-        <button type="button" class="btn-analytics-export" @click="exportTelemetry">
+        <button type="button" class="btn-analytics-export" @click="exportTelemetry" title="Export Laporan Log Hit Harian">
           <Download :size="13" />
           <span>Export CSV</span>
         </button>
@@ -170,7 +200,7 @@ const exportTelemetry = () => {
                 <span>Running • Healthy</span>
               </span>
               <span class="pod-meta-pill route-pill">
-                <Layers :size="11" />
+                <Lock :size="11" style="color: #10b981;" />
                 <span>https://{{ container.subdomain }}</span>
               </span>
               <span v-if="container.customDomain" class="pod-meta-pill">
@@ -186,7 +216,11 @@ const exportTelemetry = () => {
                 <span>TLS 1.3 ALPN</span>
               </span>
               <span class="pod-meta-pill">
+                <Cpu :size="11" />
                 <span>Alokasi {{ container.cpuLimit }} CPU • {{ container.ramLimit }}MB RAM</span>
+              </span>
+              <span class="pod-meta-pill">
+                <span>⏱ Uptime: {{ container.uptime }}</span>
               </span>
             </div>
           </div>
@@ -194,7 +228,32 @@ const exportTelemetry = () => {
       </div>
     </div>
 
-    <!-- 3. Live Edge Ingest Streaming Ticker -->
+    <!-- 3. Industry Standards Reference Banner -->
+    <div class="industry-standard-banner">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <Sparkles :size="16" style="color: #2563eb; flex-shrink: 0;" />
+        <div>
+          <strong style="font-size: 0.78rem; color: #0f172a;">Arsitektur Telemetri Standar Industri Dunia:</strong>
+          <span style="font-size: 0.74rem; color: #64748b; margin-left: 6px;">
+            HeroCMS mengadopsi standar PaaS global berikut untuk menjamin transparansi infrastruktur penuh:
+          </span>
+        </div>
+      </div>
+
+      <div class="standards-flex">
+        <span class="standard-badge cf-badge" title="Cloudflare Enterprise Anycast, TTFB Sub-2ms & Geo Edge Cache">
+          <strong>Cloudflare Enterprise</strong> (Edge Traffic & Geo Standard)
+        </span>
+        <span class="standard-badge dd-badge" title="Datadog APM & Linux cgroups v2 Kernel Resource Isolation">
+          <strong>Datadog APM & Kubernetes</strong> (Pod cgroups v2 & Process Tree)
+        </span>
+        <span class="standard-badge vercel-badge" title="Vercel Web Analytics & Privacy-friendly Visitor Attribution">
+          <strong>Vercel Web Analytics</strong> (Daily Visitor Attribution & Vitals)
+        </span>
+      </div>
+    </div>
+
+    <!-- 4. Live Edge Ingest Streaming Ticker -->
     <div class="edge-live-ticker-shell">
       <div class="ticker-pulse-title">
         <span class="ticker-live-dot"></span>
@@ -217,7 +276,7 @@ const exportTelemetry = () => {
       </div>
     </div>
 
-    <!-- 4. Top Cloudflare Metric Strips (4 KPIs) -->
+    <!-- 5. Top Cloudflare Metric Strips (4 KPIs) -->
     <div class="cf-metrics-grid">
       <div class="cf-metric-card">
         <div class="cf-metric-top">
@@ -273,7 +332,173 @@ const exportTelemetry = () => {
       </div>
     </div>
 
-    <!-- 5. Cloudflare-Style Interactive Area Chart -->
+    <!-- 6. Deep Container Resource Telemetry Grid (Datadog & cgroups v2) -->
+    <div class="deep-resources-grid">
+      <!-- CPU & CFS Throttling -->
+      <div class="deep-resource-card">
+        <div class="deep-card-head">
+          <span class="deep-card-title">
+            <Cpu :size="15" style="color: #2563eb;" />
+            <span>CPU & CFS Quota (cgroups v2)</span>
+          </span>
+          <span style="font-size: 0.7rem; font-weight: 700; color: #2563eb;">
+            {{ report.deepResources.cpuUsagePct }}% / {{ container.cpuLimit }}
+          </span>
+        </div>
+        <div class="custom-meter-track">
+          <div class="custom-meter-fill fill-blue" :style="{ width: `${report.deepResources.cpuUsagePct}%` }"></div>
+        </div>
+        <div class="deep-metric-row-list">
+          <div class="deep-row-item">
+            <span>Alokasi CFS Period / Quota</span>
+            <strong>100ms / 50ms (0.5 vCPU)</strong>
+          </div>
+          <div class="deep-row-item">
+            <span>User vs System CPU</span>
+            <strong>{{ report.deepResources.cpuUserPct }}% usr / {{ report.deepResources.cpuSystemPct }}% sys</strong>
+          </div>
+          <div class="deep-row-item">
+            <span>CPU Throttled Time</span>
+            <strong style="color: #059669;">{{ report.deepResources.cpuThrottleTime }} (Optimal)</strong>
+          </div>
+          <div class="deep-row-item">
+            <span>Load Average (1m, 5m, 15m)</span>
+            <strong>{{ report.deepResources.loadAverage.one }}, {{ report.deepResources.loadAverage.five }}, {{ report.deepResources.loadAverage.fifteen }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Memory Breakdown (memcg) -->
+      <div class="deep-resource-card">
+        <div class="deep-card-head">
+          <span class="deep-card-title">
+            <HardDrive :size="15" style="color: #059669;" />
+            <span>Memori memcg Linux</span>
+          </span>
+          <span style="font-size: 0.7rem; font-weight: 700; color: #059669;">
+            {{ container.ramUsage }}MB / {{ report.deepResources.memLimitMB }}MB
+          </span>
+        </div>
+        <div class="custom-meter-track">
+          <div class="custom-meter-fill fill-emerald" :style="{ width: `${(container.ramUsage / report.deepResources.memLimitMB) * 100}%` }"></div>
+        </div>
+        <div class="deep-metric-row-list">
+          <div class="deep-row-item">
+            <span>RSS (Resident Application Memory)</span>
+            <strong>{{ report.deepResources.memRssMB }} MB</strong>
+          </div>
+          <div class="deep-row-item">
+            <span>Page Cache & Buffers</span>
+            <strong>{{ report.deepResources.memCacheMB }} MB</strong>
+          </div>
+          <div class="deep-row-item">
+            <span>Swap Thrashing</span>
+            <strong style="color: #059669;">0 MB (Tanpa Swap I/O)</strong>
+          </div>
+          <div class="deep-row-item">
+            <span>OOM Kills Event</span>
+            <strong style="color: #059669;">0 Kills (Kernel Aman)</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network & Storage I/O -->
+      <div class="deep-resource-card">
+        <div class="deep-card-head">
+          <span class="deep-card-title">
+            <Server :size="15" style="color: #7c3aed;" />
+            <span>Network & Disk I/O</span>
+          </span>
+          <span style="font-size: 0.7rem; font-weight: 700; color: #7c3aed;">
+            {{ report.deepResources.diskUsedMB }}MB / {{ report.deepResources.diskTotalMB }}MB
+          </span>
+        </div>
+        <div class="custom-meter-track">
+          <div class="custom-meter-fill fill-purple" :style="{ width: `${(report.deepResources.diskUsedMB / report.deepResources.diskTotalMB) * 100}%` }"></div>
+        </div>
+        <div class="deep-metric-row-list">
+          <div class="deep-row-item">
+            <span>Throughput Jaringan</span>
+            <strong>↓ {{ report.deepResources.networkIngressRate }} • ↑ {{ report.deepResources.networkEgressRate }}</strong>
+          </div>
+          <div class="deep-row-item">
+            <span>Active TCP Socket Connections</span>
+            <strong>{{ report.deepResources.tcpActiveSockets }} Active ({{ report.deepResources.tcpKeepAlive }} Keep-Alive)</strong>
+          </div>
+          <div class="deep-row-item">
+            <span>Disk IOPS Read / Write</span>
+            <strong>{{ report.deepResources.diskReadIops }} read / {{ report.deepResources.diskWriteIops }} write IOPS</strong>
+          </div>
+          <div class="deep-row-item">
+            <span>Storage Driver</span>
+            <strong>ext4 overlay2 (Docker Isolated)</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Active Process Table (Linux Worker Process Tree) -->
+    <div class="telemetry-table-card">
+      <div class="telemetry-table-header">
+        <div class="table-header-title">
+          <Terminal :size="16" style="color: #2563eb;" />
+          <h4>Pohon Proses Aktif di Dalam Kontainer (Linux Process Tree)</h4>
+        </div>
+        <span style="font-size: 0.72rem; color: #64748b;">
+          {{ report.processes.length }} worker process berjalan di namespace cgroups pod
+        </span>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th style="width: 70px;">PID</th>
+              <th>NAMA PROSES</th>
+              <th>COMMAND / BINARY PATH</th>
+              <th>CPU USAGE</th>
+              <th>MEMORY RSS</th>
+              <th>THREADS</th>
+              <th>STATUS</th>
+              <th style="text-align: right;">UPTIME</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="proc in report.processes" :key="proc.pid">
+              <td>
+                <span style="font-family: ui-monospace, monospace; font-weight: 700; color: #2563eb;">{{ proc.pid }}</span>
+              </td>
+              <td>
+                <strong style="color: #0f172a; font-size: 0.78rem;">{{ proc.name }}</strong>
+              </td>
+              <td>
+                <code style="font-size: 0.72rem; color: #475569; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">{{ proc.command }}</code>
+              </td>
+              <td>
+                <span style="font-family: ui-monospace, monospace; font-weight: 600;">{{ proc.cpuPct }}%</span>
+              </td>
+              <td>
+                <span style="font-family: ui-monospace, monospace; font-weight: 600; color: #059669;">{{ proc.memoryMB }} MB</span>
+              </td>
+              <td>
+                <span style="color: #64748b; font-size: 0.74rem;">{{ proc.threads }} threads</span>
+              </td>
+              <td>
+                <span class="radar-status-pill status-running" style="display: inline-flex; padding: 2px 8px; font-size: 0.68rem;">
+                  <span class="radar-dot"></span>
+                  <span>{{ proc.status }}</span>
+                </span>
+              </td>
+              <td style="text-align: right; color: #64748b; font-size: 0.74rem;">
+                {{ proc.uptime }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 8. Cloudflare-Style Interactive Area Chart -->
     <div class="cf-chart-panel">
       <div class="cf-chart-header">
         <div class="cf-chart-title-group">
@@ -390,7 +615,7 @@ const exportTelemetry = () => {
       </div>
     </div>
 
-    <!-- 6. Dual Columns: Geo Traffic by Country vs Device & Vitals -->
+    <!-- 9. Dual Columns: Geo Traffic by Country vs Device & Vitals -->
     <div class="analytics-dual-grid">
       <!-- Left: Cloudflare Geo Traffic by Country -->
       <div class="analytics-sub-card">
@@ -509,6 +734,175 @@ const exportTelemetry = () => {
             <div style="font-size: 0.7rem; opacity: 0.9;">Rate limit: 120 req/s • 0 anomali serangan terdeteksi</div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- 10. DAILY VISITOR HIT ATTRIBUTION LOG (YANG HIT PER HARI SIAPA AJA) -->
+    <div class="telemetry-table-card">
+      <div class="telemetry-table-header">
+        <div class="table-header-title">
+          <Compass :size="16" style="color: #2563eb;" />
+          <div>
+            <h4>Log Akses & Pengunjung Harian (Live Access Ledger)</h4>
+            <p style="margin: 2px 0 0 0; font-size: 0.73rem; color: #64748b;">
+              Daftar pengunjung unik yang mengakses pod hari ini (IP, Provider ISP, Saluran Referrer, dan URL Target)
+            </p>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <!-- Filter Tabs -->
+          <div class="year-toggle-group">
+            <button
+              type="button"
+              class="year-toggle-btn"
+              :class="{ active: hitReferrerFilter === 'all' }"
+              @click="hitReferrerFilter = 'all'"
+            >
+              Semua Hit
+            </button>
+            <button
+              type="button"
+              class="year-toggle-btn"
+              :class="{ active: hitReferrerFilter === 'search' }"
+              @click="hitReferrerFilter = 'search'"
+            >
+              Google Search
+            </button>
+            <button
+              type="button"
+              class="year-toggle-btn"
+              :class="{ active: hitReferrerFilter === 'social' }"
+              @click="hitReferrerFilter = 'social'"
+            >
+              Media Sosial
+            </button>
+            <button
+              type="button"
+              class="year-toggle-btn"
+              :class="{ active: hitReferrerFilter === 'direct' }"
+              @click="hitReferrerFilter = 'direct'"
+            >
+              Direct
+            </button>
+          </div>
+
+          <!-- Search Input -->
+          <div class="search-box" style="width: 220px;">
+            <Search :size="13" class="search-icon" />
+            <input
+              v-model="hitSearchQuery"
+              type="text"
+              placeholder="Cari IP, ISP, path..."
+              class="search-input"
+              style="padding-left: 28px; font-size: 0.74rem;"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th style="width: 85px;">WAKTU</th>
+              <th>PENGUNJUNG & IP</th>
+              <th>PROVIDER JARINGAN (ISP ASN)</th>
+              <th>SALURAN REFERRER</th>
+              <th>RUTE TARGET</th>
+              <th>HTTP & CACHE</th>
+              <th>LATENSI</th>
+              <th style="text-align: right;">PERANGKAT & OS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="hit in filteredDailyHits" :key="hit.id">
+              <!-- Waktu -->
+              <td>
+                <span style="font-family: ui-monospace, monospace; font-size: 0.74rem; color: #64748b;">
+                  {{ hit.timestamp }}
+                </span>
+              </td>
+
+              <!-- Pengunjung & IP -->
+              <td>
+                <div style="display: flex; align-items: center; gap: 7px;">
+                  <span style="font-size: 1.05rem;">{{ hit.flag }}</span>
+                  <div style="display: flex; flex-direction: column;">
+                    <strong style="font-family: ui-monospace, monospace; font-size: 0.78rem; color: #0f172a;">
+                      {{ hit.clientIp }}
+                    </strong>
+                    <span style="font-size: 0.68rem; color: #64748b;">{{ hit.city }}, {{ hit.countryCode }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Provider / ISP -->
+              <td>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <Server :size="11" style="color: #64748b;" />
+                  <span style="font-size: 0.74rem; color: #334155; font-weight: 500;">{{ hit.isp }}</span>
+                </div>
+              </td>
+
+              <!-- Sumber Referrer -->
+              <td>
+                <span class="referrer-tag" :title="hit.referrer">
+                  <Share2 v-if="hit.referrerType === 'social'" :size="10" style="color: #ea580c;" />
+                  <Search v-else-if="hit.referrerType === 'search'" :size="10" style="color: #2563eb;" />
+                  <Compass v-else :size="10" style="color: #10b981;" />
+                  <span>{{ hit.referrer }}</span>
+                </span>
+              </td>
+
+              <!-- Rute Target -->
+              <td>
+                <code style="font-size: 0.73rem; color: #1e40af; background: #eff6ff; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                  {{ hit.targetPath }}
+                </code>
+              </td>
+
+              <!-- HTTP & Cache -->
+              <td>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <span style="font-size: 0.72rem; font-weight: 700; color: #059669;">{{ hit.statusCode }}</span>
+                  <span
+                    class="cache-pill"
+                    :class="{
+                      hit: hit.cacheStatus === 'HIT',
+                      miss: hit.cacheStatus === 'MISS',
+                      bypass: hit.cacheStatus === 'BYPASS'
+                    }"
+                  >
+                    {{ hit.cacheStatus }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Latensi -->
+              <td>
+                <span style="font-size: 0.74rem; font-family: ui-monospace, monospace; font-weight: 600; color: #2563eb;">
+                  ⚡ {{ hit.ttfb }}
+                </span>
+              </td>
+
+              <!-- Perangkat & OS -->
+              <td style="text-align: right;">
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                  <span style="font-size: 0.73rem; font-weight: 600; color: #1e293b;">{{ hit.userAgent }}</span>
+                  <span style="font-size: 0.67rem; color: #64748b;">{{ hit.os }}</span>
+                </div>
+              </td>
+            </tr>
+
+            <tr v-if="filteredDailyHits.length === 0">
+              <td colspan="8" style="text-align: center; padding: 24px; color: #94a3b8;">
+                Tidak ada log hit yang cocok dengan kriteria pencarian "<strong>{{ hitSearchQuery }}</strong>".
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

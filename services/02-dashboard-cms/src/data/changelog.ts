@@ -38,6 +38,18 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Devices, Web Vitals, HTTP Codes & CSV Export',
         description: 'Melengkapi analitik dengan rasio pengunjung Mobile (72.4%) vs Desktop (24.1%), skor Real Experience Core Web Vitals (LCP 0.7s, INP 14ms, CLS 0.01), distribusi status 200/304/404, serta kapabilitas 1-klik unduh berkas CSV analitik.'
+      },
+      {
+        id: 'c-150-6',
+        type: 'feature',
+        scope: 'Datadog & cgroups v2 Kernel Resource Telemetry & Process Tree',
+        description: 'Menambahkan grid telemetri resource mendalam (CPU CFS quota period, CPU throttling, Load Average, Memory RSS/Cache split, Swap 0MB, Disk IOPS, Active TCP sockets) serta tabel inspeksi pohon proses Linux worker (PID, CPU, Memory RSS, Threads).'
+      },
+      {
+        id: 'c-150-7',
+        type: 'feature',
+        scope: 'Vercel-Style Daily Visitor Hit & Access Attribution Ledger',
+        description: 'Menyediakan tabel log akses pengunjung harian dengan pencarian IP/ISP/Path, filter saluran referrer (Google Search, Media Sosial, Direct), indikator cache status (HIT/MISS/BYPASS), bendera negara, dan detail User Agent.'
       }
     ]
   },

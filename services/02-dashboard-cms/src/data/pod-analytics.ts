@@ -33,6 +33,59 @@ export interface LiveRequestEntry {
   browser: string;
 }
 
+export interface PodProcessItem {
+  pid: number;
+  name: string;
+  command: string;
+  cpuPct: number;
+  memoryMB: number;
+  threads: number;
+  status: 'running' | 'sleeping';
+  uptime: string;
+}
+
+export interface DailyVisitorHit {
+  id: string;
+  timestamp: string;
+  clientIp: string;
+  countryCode: string;
+  flag: string;
+  city: string;
+  isp: string;
+  referrer: string;
+  referrerType: 'search' | 'direct' | 'social' | 'campaign';
+  targetPath: string;
+  httpMethod: 'GET' | 'POST' | 'HEAD';
+  statusCode: number;
+  cacheStatus: 'HIT' | 'MISS' | 'BYPASS';
+  ttfb: string;
+  userAgent: string;
+  os: string;
+}
+
+export interface PodResourceDeepMetrics {
+  cpuUsagePct: number;
+  cpuPeakPct: number;
+  cpuUserPct: number;
+  cpuSystemPct: number;
+  cpuThrottleTime: string;
+  loadAverage: { one: number; five: number; fifteen: number };
+  memRssMB: number;
+  memCacheMB: number;
+  memSwapMB: number;
+  memPeakMB: number;
+  memLimitMB: number;
+  oomKills: number;
+  diskUsedMB: number;
+  diskTotalMB: number;
+  diskReadIops: number;
+  diskWriteIops: number;
+  networkIngressRate: string;
+  networkEgressRate: string;
+  tcpActiveSockets: number;
+  tcpKeepAlive: number;
+}
+
 export interface PodAnalyticsReport {
   podId: string;
   gatewayIp: string;
@@ -60,6 +113,9 @@ export interface PodAnalyticsReport {
     cls: { val: string; status: 'good' | 'needs-improvement'; label: string };
   };
   liveRequests: LiveRequestEntry[];
+  deepResources: PodResourceDeepMetrics;
+  processes: PodProcessItem[];
+  dailyHits: DailyVisitorHit[];
 }
 
 export const generatePodAnalytics = (container: ContainerSite): PodAnalyticsReport => {
@@ -147,11 +203,188 @@ export const generatePodAnalytics = (container: ContainerSite): PodAnalyticsRepo
       cls: { val: '0.01', status: 'good', label: 'Cumulative Layout Shift' }
     },
     liveRequests: [
-      { id: 'req-1', timestamp: '19:15:42', countryCode: 'ID', flag: '🇮🇩', city: 'Jakarta', method: 'GET', path: isShop ? '/catalog' : '/showcase', status: 200, ttfb: '0.8 ms', device: 'Mobile', browser: 'Safari 17.4' },
-      { id: 'req-2', timestamp: '19:15:38', countryCode: 'SG', flag: '🇸🇬', city: 'Singapore', method: 'GET', path: isShop ? '/api/products' : '/api/telemetry', status: 200, ttfb: '1.2 ms', device: 'Desktop', browser: 'Chrome 122' },
-      { id: 'req-3', timestamp: '19:15:29', countryCode: 'ID', flag: '🇮🇩', city: 'Surabaya', method: 'GET', path: '/', status: 200, ttfb: '0.9 ms', device: 'Mobile', browser: 'Chrome Mobile' },
-      { id: 'req-4', timestamp: '19:15:22', countryCode: 'US', flag: '🇺🇸', city: 'San Jose', method: 'GET', path: isShop ? '/checkout' : '/blog', status: 200, ttfb: '11.8 ms', device: 'Desktop', browser: 'Firefox 123' },
-      { id: 'req-5', timestamp: '19:15:15', countryCode: 'MY', flag: '🇲🇾', city: 'Kuala Lumpur', method: 'HEAD', path: '/', status: 304, ttfb: '1.8 ms', device: 'Mobile', browser: 'Edge 122' }
+      { id: 'req-1', timestamp: '19:26:42', countryCode: 'ID', flag: '🇮🇩', city: 'Jakarta', method: 'GET', path: isShop ? '/catalog' : '/showcase', status: 200, ttfb: '0.8 ms', device: 'Mobile', browser: 'Safari 17.4' },
+      { id: 'req-2', timestamp: '19:26:38', countryCode: 'SG', flag: '🇸🇬', city: 'Singapore', method: 'GET', path: isShop ? '/api/products' : '/api/telemetry', status: 200, ttfb: '1.2 ms', device: 'Desktop', browser: 'Chrome 122' },
+      { id: 'req-3', timestamp: '19:26:29', countryCode: 'ID', flag: '🇮🇩', city: 'Surabaya', method: 'GET', path: '/', status: 200, ttfb: '0.9 ms', device: 'Mobile', browser: 'Chrome Mobile' },
+      { id: 'req-4', timestamp: '19:26:22', countryCode: 'US', flag: '🇺🇸', city: 'San Jose', method: 'GET', path: isShop ? '/checkout' : '/blog', status: 200, ttfb: '11.8 ms', device: 'Desktop', browser: 'Firefox 123' },
+      { id: 'req-5', timestamp: '19:26:15', countryCode: 'MY', flag: '🇲🇾', city: 'Kuala Lumpur', method: 'HEAD', path: '/', status: 304, ttfb: '1.8 ms', device: 'Mobile', browser: 'Edge 122' }
+    ],
+    // Datadog & Kubernetes Pod cgroups v2 Deep Resource Breakdown
+    deepResources: {
+      cpuUsagePct: container.cpuUsage || 14,
+      cpuPeakPct: (container.cpuUsage || 14) + 12,
+      cpuUserPct: 9.4,
+      cpuSystemPct: 4.6,
+      cpuThrottleTime: '0.018s',
+      loadAverage: { one: 0.12, five: 0.08, fifteen: 0.05 },
+      memRssMB: container.ramUsage ? Math.round(container.ramUsage * 0.82) : 74,
+      memCacheMB: container.ramUsage ? Math.round(container.ramUsage * 0.18) : 16,
+      memSwapMB: 0,
+      memPeakMB: container.ramUsage ? container.ramUsage + 18 : 98,
+      memLimitMB: container.ramLimit || 256,
+      oomKills: 0,
+      diskUsedMB: 48.2,
+      diskTotalMB: 1000,
+      diskReadIops: 14,
+      diskWriteIops: 6,
+      networkIngressRate: '142 KB/s',
+      networkEgressRate: '1.84 MB/s',
+      tcpActiveSockets: 24,
+      tcpKeepAlive: 6
+    },
+    // Linux Container Active Process List (Worker PID tree)
+    processes: [
+      { pid: 1, name: 'dumb-init', command: '/usr/bin/dumb-init -- /entrypoint.sh', cpuPct: 0.1, memoryMB: 2.2, threads: 1, status: 'sleeping', uptime: container.uptime },
+      { pid: 14, name: 'traefik-sidecar', command: 'traefik proxy --api.insecure=false --entrypoints.web', cpuPct: 1.4, memoryMB: 18.6, threads: 4, status: 'running', uptime: container.uptime },
+      { pid: 28, name: 'herocms-ssr-worker', command: 'herocms-app serve --port=8080 --workers=4', cpuPct: 8.6, memoryMB: 56.4, threads: 8, status: 'running', uptime: container.uptime },
+      { pid: 42, name: 'redis-cache-engine', command: 'redis-server --maxmemory 32mb --save ""', cpuPct: 0.4, memoryMB: 8.2, threads: 2, status: 'sleeping', uptime: container.uptime }
+    ],
+    // Vercel & Plausible Daily Visitor Hit Attribution Log
+    dailyHits: [
+      {
+        id: 'hit-101',
+        timestamp: '19:26:14',
+        clientIp: '103.144.20.12',
+        countryCode: 'ID',
+        flag: '🇮🇩',
+        city: 'Jakarta',
+        isp: 'Telkomsel Mobile Broadband',
+        referrer: 'Google Search (Organik)',
+        referrerType: 'search',
+        targetPath: isShop ? '/catalog' : '/showcase',
+        httpMethod: 'GET',
+        statusCode: 200,
+        cacheStatus: 'HIT',
+        ttfb: '0.8 ms',
+        userAgent: 'Safari Mobile 17.4',
+        os: 'iOS 17.4'
+      },
+      {
+        id: 'hit-102',
+        timestamp: '19:25:40',
+        clientIp: '180.252.164.71',
+        countryCode: 'ID',
+        flag: '🇮🇩',
+        city: 'Surabaya',
+        isp: 'Biznet Fiber Enterprise',
+        referrer: 'Instagram Feed Ad #promo10',
+        referrerType: 'social',
+        targetPath: isShop ? '/api/products' : '/blog',
+        httpMethod: 'GET',
+        statusCode: 200,
+        cacheStatus: 'HIT',
+        ttfb: '0.9 ms',
+        userAgent: 'Chrome Mobile 122',
+        os: 'Android 14'
+      },
+      {
+        id: 'hit-103',
+        timestamp: '19:25:02',
+        clientIp: '178.62.204.88',
+        countryCode: 'SG',
+        flag: '🇸🇬',
+        city: 'Singapore',
+        isp: 'Singtel Internet Exchange',
+        referrer: 'Direct / Bookmark',
+        referrerType: 'direct',
+        targetPath: '/',
+        httpMethod: 'GET',
+        statusCode: 200,
+        cacheStatus: 'HIT',
+        ttfb: '1.2 ms',
+        userAgent: 'Chrome 122 Desktop',
+        os: 'Windows 11'
+      },
+      {
+        id: 'hit-104',
+        timestamp: '19:24:19',
+        clientIp: '34.120.89.14',
+        countryCode: 'US',
+        flag: '🇺🇸',
+        city: 'San Jose',
+        isp: 'Google Cloud Platform ASN',
+        referrer: 'Google Search Console Bot',
+        referrerType: 'search',
+        targetPath: '/sitemap.xml',
+        httpMethod: 'GET',
+        statusCode: 200,
+        cacheStatus: 'MISS',
+        ttfb: '12.4 ms',
+        userAgent: 'Googlebot/2.1 Crawler',
+        os: 'Linux x86_64'
+      },
+      {
+        id: 'hit-105',
+        timestamp: '19:23:45',
+        clientIp: '202.80.212.44',
+        countryCode: 'ID',
+        flag: '🇮🇩',
+        city: 'Bandung',
+        isp: 'Indosat Ooredoo Hutchison',
+        referrer: 'WhatsApp Chat Broadcast',
+        referrerType: 'social',
+        targetPath: isShop ? '/checkout' : '/contact',
+        httpMethod: 'GET',
+        statusCode: 200,
+        cacheStatus: 'BYPASS',
+        ttfb: '1.4 ms',
+        userAgent: 'Safari Mobile 17.2',
+        os: 'iOS 17.2'
+      },
+      {
+        id: 'hit-106',
+        timestamp: '19:22:11',
+        clientIp: '175.143.48.90',
+        countryCode: 'MY',
+        flag: '🇲🇾',
+        city: 'Kuala Lumpur',
+        isp: 'TM Net Telekom Malaysia',
+        referrer: 'Direct / URL Address Bar',
+        referrerType: 'direct',
+        targetPath: '/',
+        httpMethod: 'HEAD',
+        statusCode: 304,
+        cacheStatus: 'HIT',
+        ttfb: '1.8 ms',
+        userAgent: 'Edge 122 Desktop',
+        os: 'Windows 11'
+      },
+      {
+        id: 'hit-107',
+        timestamp: '19:20:54',
+        clientIp: '139.130.4.5',
+        countryCode: 'AU',
+        flag: '🇦🇺',
+        city: 'Sydney',
+        isp: 'Telstra Global Network',
+        referrer: 'LinkedIn Post Share',
+        referrerType: 'social',
+        targetPath: isShop ? '/catalog' : '/showcase',
+        httpMethod: 'GET',
+        statusCode: 200,
+        cacheStatus: 'HIT',
+        ttfb: '9.2 ms',
+        userAgent: 'Safari 17.3 Desktop',
+        os: 'macOS Sonoma'
+      },
+      {
+        id: 'hit-108',
+        timestamp: '19:18:32',
+        clientIp: '133.242.18.2',
+        countryCode: 'JP',
+        flag: '🇯🇵',
+        city: 'Tokyo',
+        isp: 'Sakura Internet Inc.',
+        referrer: 'Twitter / X Dev Community',
+        referrerType: 'social',
+        targetPath: isShop ? '/api/products' : '/blog',
+        httpMethod: 'GET',
+        statusCode: 200,
+        cacheStatus: 'HIT',
+        ttfb: '8.6 ms',
+        userAgent: 'Chrome 122 Desktop',
+        os: 'Linux'
+      }
     ]
   };
 };

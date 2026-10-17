@@ -81,7 +81,8 @@ const {
   copyContainerLogs,
   syncWithBackend,
   executeLogout,
-  restartContainer
+  restartContainer,
+  selectedContainerForDetail
 } = useDashboardData();
 
 const latestSystemVersion = computed(() => changelogReleases[0]?.version || 'v1.4.1');
@@ -358,9 +359,9 @@ const handleLogout = async () => {
           <span>HeroCMS Studio</span>
           <ChevronRight :size="14" class="crumb-sep" />
           <span
-            :class="activeMenu === 'content' && activeArticleForReader ? 'crumb-link' : 'crumb-current'"
-            @click="activeMenu === 'content' && activeArticleForReader ? (activeArticleForReader = null) : null"
-            :title="activeMenu === 'content' && activeArticleForReader ? 'Kembali ke Daftar Artikel' : undefined"
+            :class="(activeMenu === 'content' && activeArticleForReader) || (activeMenu === 'containers' && selectedContainerForDetail) ? 'crumb-link' : 'crumb-current'"
+            @click="(activeMenu === 'content' && activeArticleForReader) ? (activeArticleForReader = null) : (activeMenu === 'containers' && selectedContainerForDetail) ? (selectedContainerForDetail = null) : null"
+            :title="(activeMenu === 'content' && activeArticleForReader) ? 'Kembali ke Daftar Artikel' : (activeMenu === 'containers' && selectedContainerForDetail) ? 'Kembali ke Semua Kontainer' : undefined"
           >
             {{
               activeMenu === 'containers' ? 'Situs & Kontainer' :
@@ -381,6 +382,12 @@ const handleLogout = async () => {
             <ChevronRight :size="14" class="crumb-sep" />
             <span class="crumb-current crumb-article-title" :title="activeArticleForReader.title">
               {{ activeArticleForReader.title }}
+            </span>
+          </template>
+          <template v-if="activeMenu === 'containers' && selectedContainerForDetail">
+            <ChevronRight :size="14" class="crumb-sep" />
+            <span class="crumb-current crumb-article-title" :title="selectedContainerForDetail.name" style="color: #2563eb; font-weight: 700;">
+              {{ selectedContainerForDetail.subdomain }}
             </span>
           </template>
         </div>

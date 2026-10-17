@@ -51,7 +51,8 @@ const {
   copiedSubdomain,
   copyToClipboard,
   activeContainerId,
-  activeMenu
+  activeMenu,
+  selectedContainerForDetail
 } = useDashboardData();
 
 const searchInputRef = ref<HTMLInputElement | null>(null);
@@ -99,9 +100,6 @@ const selectForEditor = (containerId: string) => {
   activeContainerId.value = containerId;
   activeMenu.value = 'editor';
 };
-
-// Pod & Cloudflare-Style Geo Analytics Full-Page Detail State
-const selectedContainerForDetail = ref<ContainerSite | null>(null);
 
 const openContainerDetail = (c: ContainerSite) => {
   selectedContainerForDetail.value = c;

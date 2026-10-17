@@ -114,6 +114,7 @@ const activeContainer = computed(() => {
 
 const activeArticleForReader = ref<ContentArticle | null>(null);
 const isReaderSidebarHidden = ref(true);
+const selectedContainerForDetail = ref<ContainerSite | null>(null);
 
 watch(activeArticleForReader, (newArt) => {
   if (newArt) {
@@ -126,6 +127,9 @@ watch(activeMenu, (newMenu) => {
   if (!VALID_MENUS.includes(newMenu)) return;
   if (newMenu !== 'content') {
     activeArticleForReader.value = null;
+  }
+  if (newMenu !== 'containers') {
+    selectedContainerForDetail.value = null;
   }
   setCookie('herocms_active_menu', newMenu);
   if (typeof localStorage !== 'undefined') {
@@ -1496,7 +1500,8 @@ export function useDashboardData() {
     resetDashboardState,
     updateUserEmail,
     getCacheKey,
-    hydrateFromCache
+    hydrateFromCache,
+    selectedContainerForDetail
   };
 }
 
