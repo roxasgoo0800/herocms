@@ -116,6 +116,12 @@ export interface PodAnalyticsReport {
   deepResources: PodResourceDeepMetrics;
   processes: PodProcessItem[];
   dailyHits: DailyVisitorHit[];
+  // Customer Peace-of-Mind & Reliability Additions
+  uptimeCalendar: { day: number; date: string; uptimePct: number; status: 'operational' | 'degraded'; latencyMs: number }[];
+  backupSnapshot: { id: string; timestamp: string; size: string; status: 'verified'; checksum: string };
+  sslCertificate: { issuer: string; protocol: string; validUntil: string; autoRenew: boolean; daysRemaining: number };
+  bandwidthQuota: { usedGB: number; limitGB: number; percentage: number; extraCharge: string };
+  deployHistory: { buildId: string; title: string; author: string; timeAgo: string; status: 'Live (Production)' | 'Superseded'; commitHash: string }[];
 }
 
 export const generatePodAnalytics = (container: ContainerSite): PodAnalyticsReport => {
@@ -384,6 +390,67 @@ export const generatePodAnalytics = (container: ContainerSite): PodAnalyticsRepo
         ttfb: '8.6 ms',
         userAgent: 'Chrome 122 Desktop',
         os: 'Linux'
+      }
+    ],
+    // 30 Days Uptime Statuspage Calendar
+    uptimeCalendar: Array.from({ length: 30 }, (_, i) => {
+      const dayNum = 30 - i;
+      return {
+        day: dayNum,
+        date: `${dayNum} hari lalu`,
+        uptimePct: 100,
+        status: 'operational' as const,
+        latencyMs: Number((0.8 + Math.random() * 0.5).toFixed(1))
+      };
+    }).reverse(),
+    // Automated Backup Snapshot
+    backupSnapshot: {
+      id: `snap-${container.id}-20261017-0400`,
+      timestamp: 'Hari ini, 04:00 WIB (Otomatis)',
+      size: `${(18.4 * multiplier).toFixed(1)} MB`,
+      status: 'verified',
+      checksum: 'sha256:8f4c2e...b901a'
+    },
+    // SSL Wildcard Certificate
+    sslCertificate: {
+      issuer: "Let's Encrypt Authority X3",
+      protocol: 'TLS 1.3 / ALPN HTTP/2',
+      validUntil: '15 Januari 2027',
+      autoRenew: true,
+      daysRemaining: 89
+    },
+    // Bandwidth Quota Usage
+    bandwidthQuota: {
+      usedGB: Number((1.84 * multiplier).toFixed(2)),
+      limitGB: 50,
+      percentage: Number(((1.84 * multiplier / 50) * 100).toFixed(1)),
+      extraCharge: 'Rp 0 (Termasuk Paket)'
+    },
+    // Deployment & Build History
+    deployHistory: [
+      {
+        buildId: `build-${container.id}-42`,
+        title: isShop ? 'Pembaruan Banner Promo & WhatsApp Checkout' : 'Penyelarasan Telemetri & Desain Portofolio',
+        author: 'Rizal Pratama (Owner)',
+        timeAgo: '2 jam lalu',
+        status: 'Live (Production)',
+        commitHash: '8459af2'
+      },
+      {
+        buildId: `build-${container.id}-41`,
+        title: 'Optimasi Gambar WebP & Minifikasi Skrip',
+        author: 'HeroCMS Auto-Optimizer',
+        timeAgo: 'Kemarin, 14:20 WIB',
+        status: 'Superseded',
+        commitHash: '7a12bc9'
+      },
+      {
+        buildId: `build-${container.id}-40`,
+        title: isShop ? 'Inisialisasi Blueprint Toko Retail' : 'Inisialisasi Blueprint Engineer',
+        author: 'Rizal Pratama (Owner)',
+        timeAgo: '4 hari lalu',
+        status: 'Superseded',
+        commitHash: '1f44d90'
       }
     ]
   };

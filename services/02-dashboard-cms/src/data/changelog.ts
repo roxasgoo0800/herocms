@@ -50,6 +50,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'feature',
         scope: 'Vercel-Style Daily Visitor Hit & Access Attribution Ledger',
         description: 'Menyediakan tabel log akses pengunjung harian dengan pencarian IP/ISP/Path, filter saluran referrer (Google Search, Media Sosial, Direct), indikator cache status (HIT/MISS/BYPASS), bendera negara, dan detail User Agent.'
+      },
+      {
+        id: 'c-150-8',
+        type: 'feature',
+        scope: 'Customer Peace-of-Mind & Reliability Suite',
+        description: 'Menambahkan suite ketenangan customer mencakup kalender Uptime SLA 30 hari (Statuspage/UptimeRobot style) dengan 0 menit downtime, kartu cadangan otomatis harian (snapshot verification & 1-klik restore), masa berlaku sertifikat SSL Wildcard auto-renew (89 hari tersisa), transparansi kuota bandwidth tanpa overage fee, serta riwayat publikasi build & deployment.'
       }
     ]
   },

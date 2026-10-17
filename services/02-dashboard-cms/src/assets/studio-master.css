@@ -14733,4 +14733,182 @@ html {
   }
 }
 
+/* =============================================================================
+   CUSTOMER PEACE-OF-MIND & BUSINESS RELIABILITY SUITE
+   Uptime 30d Calendar, Automated Backups, SSL Auto-Renew & Deployment History
+   ============================================================================= */
+
+.confidence-cards-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr 0.9fr 1fr;
+  gap: 14px;
+}
+
+.confidence-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+.confidence-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.confidence-card-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.confidence-status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.confidence-status-badge.green {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #d1fae5;
+}
+
+.confidence-status-badge.blue {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+}
+
+/* 30-Day Uptime Blocks */
+.uptime-calendar-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.uptime-bars-strip {
+  display: grid;
+  grid-template-columns: repeat(30, 1fr);
+  gap: 3px;
+  align-items: flex-end;
+  height: 32px;
+}
+
+.uptime-bar-item {
+  height: 100%;
+  background: #10b981;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.uptime-bar-item:hover {
+  background: #059669;
+  transform: scaleY(1.1);
+}
+
+.uptime-labels-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+/* Backup Snapshot Box */
+.snapshot-info-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.74rem;
+}
+
+.snapshot-id-code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.7rem;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+/* Deployment History Timeline */
+.deploy-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deploy-item-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.75rem;
+}
+
+.deploy-item-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.deploy-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.deploy-title-bold {
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deploy-hash-tag {
+  font-family: ui-monospace, monospace;
+  font-size: 0.68rem;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.deploy-meta-sub {
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+@media (max-width: 1100px) {
+  .confidence-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .confidence-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 

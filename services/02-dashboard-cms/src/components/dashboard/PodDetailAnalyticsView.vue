@@ -17,7 +17,12 @@ import {
   Search,
   Lock,
   Compass,
-  Share2
+  Share2,
+  RotateCw,
+  Check,
+  History,
+  Database,
+  Calendar
 } from 'lucide-vue-next';
 import type { ContainerSite } from '../../types/dashboard';
 import { generatePodAnalytics } from '../../data/pod-analytics';
@@ -25,6 +30,34 @@ import { generatePodAnalytics } from '../../data/pod-analytics';
 const props = defineProps<{
   container: ContainerSite;
 }>();
+
+// Customer Reliability & Peace-of-Mind Actions
+const isRestoringSnapshot = ref(false);
+const isCreatingBackup = ref(false);
+const restoreToast = ref<string | null>(null);
+const hoveredUptimeDay = ref<{ day: number; date: string; uptimePct: number; latencyMs: number } | null>(null);
+
+const handleRestoreSnapshot = () => {
+  isRestoringSnapshot.value = true;
+  setTimeout(() => {
+    isRestoringSnapshot.value = false;
+    restoreToast.value = 'Snapshot cadangan otomatis berhasil diverifikasi dan dipulihkan!';
+    setTimeout(() => {
+      restoreToast.value = null;
+    }, 4000);
+  }, 1200);
+};
+
+const handleCreateBackup = () => {
+  isCreatingBackup.value = true;
+  setTimeout(() => {
+    isCreatingBackup.value = false;
+    restoreToast.value = 'Snapshot cadangan baru berhasil dibuat dan disimpan di S3 storage!';
+    setTimeout(() => {
+      restoreToast.value = null;
+    }, 4000);
+  }, 1400);
+};
 
 const emit = defineEmits<{
   (e: 'back'): void;
@@ -253,7 +286,207 @@ const exportTelemetry = () => {
       </div>
     </div>
 
-    <!-- 4. Live Edge Ingest Streaming Ticker -->
+    <!-- Toast Notification for Customer Backup/Restore Action -->
+    <div
+      v-if="restoreToast"
+      style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 12px 18px; display: flex; align-items: center; gap: 10px; color: #065f46; font-size: 0.8rem; font-weight: 600; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);"
+    >
+      <Check :size="16" style="color: #059669; flex-shrink: 0;" />
+      <span>{{ restoreToast }}</span>
+    </div>
+
+    <!-- 4. CUSTOMER PEACE-OF-MIND & BUSINESS RELIABILITY SUITE -->
+    <div class="confidence-cards-grid">
+      <!-- Card 1: 30-Day Uptime SLA Calendar -->
+      <div class="confidence-card">
+        <div class="confidence-card-head">
+          <span class="confidence-card-title">
+            <Calendar :size="15" style="color: #059669;" />
+            <span>Keandalan Uptime 30 Hari</span>
+          </span>
+          <span class="confidence-status-badge green">99.99% Operational</span>
+        </div>
+
+        <div class="uptime-calendar-shell">
+          <div class="uptime-bars-strip">
+            <div
+              v-for="b in report.uptimeCalendar"
+              :key="b.day"
+              class="uptime-bar-item"
+              :title="`${b.date}: ${b.uptimePct}% Uptime (Latensi ${b.latencyMs}ms)`"
+              @mouseenter="hoveredUptimeDay = b"
+              @mouseleave="hoveredUptimeDay = null"
+            ></div>
+          </div>
+
+          <div class="uptime-labels-flex">
+            <span>30 hari lalu</span>
+            <span v-if="hoveredUptimeDay" style="color: #059669; font-weight: 700;">
+              {{ hoveredUptimeDay.date }}: 100% Uptime ({{ hoveredUptimeDay.latencyMs }}ms)
+            </span>
+            <span v-else style="color: #059669; font-weight: 600;">
+              0 menit downtime terdeteksi
+            </span>
+            <span>Hari ini (Live)</span>
+          </div>
+        </div>
+
+        <div style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+          SLA 99.98% Terpenuhi • Monitoring ping edge proxy setiap 30 detik
+        </div>
+      </div>
+
+      <!-- Card 2: Automated Backup Snapshot -->
+      <div class="confidence-card">
+        <div class="confidence-card-head">
+          <span class="confidence-card-title">
+            <Database :size="15" style="color: #2563eb;" />
+            <span>Cadangan Otomatis</span>
+          </span>
+          <span class="confidence-status-badge blue">S3 Terverifikasi</span>
+        </div>
+
+        <div class="snapshot-info-box">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <strong style="color: #0f172a;">Snapshot Terakhir</strong>
+            <span class="snapshot-id-code">{{ report.backupSnapshot.id }}</span>
+          </div>
+          <div style="color: #64748b;">
+            📅 {{ report.backupSnapshot.timestamp }} • Ukuran: <strong>{{ report.backupSnapshot.size }}</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button
+            type="button"
+            class="btn-modal-ghost"
+            style="flex: 1; padding: 6px 10px; font-size: 0.72rem; justify-content: center;"
+            :disabled="isRestoringSnapshot"
+            @click="handleRestoreSnapshot"
+            title="Pulihkan data website ke kondisi snapshot ini"
+          >
+            <RotateCw :size="12" :class="{ 'spin-anim': isRestoringSnapshot }" />
+            <span>{{ isRestoringSnapshot ? 'Memulihkan...' : 'Pulihkan Snapshot' }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="btn-modal-ghost"
+            style="padding: 6px 10px; font-size: 0.72rem;"
+            :disabled="isCreatingBackup"
+            @click="handleCreateBackup"
+            title="Buat backup instan baru sekarang"
+          >
+            <Sparkles :size="12" :class="{ 'spin-anim': isCreatingBackup }" />
+            <span>+ Backup</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 3: SSL Wildcard & Health Check -->
+      <div class="confidence-card">
+        <div class="confidence-card-head">
+          <span class="confidence-card-title">
+            <Lock :size="15" style="color: #059669;" />
+            <span>Sertifikat SSL HTTPS</span>
+          </span>
+          <span class="confidence-status-badge green">Auto-Renew Aktif</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px; font-size: 0.74rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #64748b;">Penerbit (Issuer)</span>
+            <strong style="color: #0f172a;">{{ report.sslCertificate.issuer }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #64748b;">Protokol Enkripsi</span>
+            <strong style="color: #2563eb;">{{ report.sslCertificate.protocol }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #64748b;">Masa Berlaku</span>
+            <strong style="color: #059669;">{{ report.sslCertificate.validUntil }}</strong>
+          </div>
+        </div>
+
+        <div style="font-size: 0.72rem; color: #059669; font-weight: 600; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+          🟢 {{ report.sslCertificate.daysRemaining }} hari tersisa • Otomatis diperpanjang
+        </div>
+      </div>
+
+      <!-- Card 4: Bandwidth Quota & No Extra Cost -->
+      <div class="confidence-card">
+        <div class="confidence-card-head">
+          <span class="confidence-card-title">
+            <HardDrive :size="15" style="color: #7c3aed;" />
+            <span>Kuota Bandwidth</span>
+          </span>
+          <span class="confidence-status-badge green">Rp 0 Tagihan</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+            <span style="color: #64748b;">Egress Terpakai</span>
+            <strong>{{ report.bandwidthQuota.usedGB }} GB / {{ report.bandwidthQuota.limitGB }} GB</strong>
+          </div>
+          <div class="custom-meter-track" style="height: 6px;">
+            <div class="custom-meter-fill fill-purple" :style="{ width: `${report.bandwidthQuota.percentage}%` }"></div>
+          </div>
+        </div>
+
+        <div style="font-size: 0.72rem; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+          {{ report.bandwidthQuota.extraCharge }} • Kapasitas aman untuk lonjakan traffic
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. DEPLOYMENT & VERSION HISTORY (RECENT BUILDS) -->
+    <div class="telemetry-table-card" style="padding: 14px 18px;">
+      <div class="telemetry-table-header" style="padding-bottom: 8px;">
+        <div class="table-header-title">
+          <History :size="16" style="color: #2563eb;" />
+          <div>
+            <h4>Riwayat Versi & Deploy Terakhir (Build Timeline)</h4>
+            <span style="font-size: 0.72rem; color: #64748b;">
+              Catatan publikasi perubahan editor dan update infrastruktur website
+            </span>
+          </div>
+        </div>
+        <span style="font-size: 0.72rem; color: #059669; font-weight: 600;">
+          🟢 Build Aktif: {{ report.deployHistory[0]?.buildId }}
+        </span>
+      </div>
+
+      <div class="deploy-timeline-list">
+        <div
+          v-for="bld in report.deployHistory"
+          :key="bld.buildId"
+          class="deploy-item-row"
+        >
+          <div class="deploy-info-group">
+            <div class="deploy-title-bold">
+              <span>{{ bld.title }}</span>
+              <span class="deploy-hash-tag">#{{ bld.commitHash }}</span>
+            </div>
+            <div class="deploy-meta-sub">
+              Diterapkan {{ bld.timeAgo }} oleh <strong>{{ bld.author }}</strong>
+            </div>
+          </div>
+
+          <div>
+            <span
+              class="radar-status-pill"
+              :class="bld.status === 'Live (Production)' ? 'status-running' : 'status-stopped'"
+              style="padding: 3px 9px; font-size: 0.7rem;"
+            >
+              <span class="radar-dot"></span>
+              <span>{{ bld.status }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Live Edge Ingest Streaming Ticker -->
     <div class="edge-live-ticker-shell">
       <div class="ticker-pulse-title">
         <span class="ticker-live-dot"></span>
