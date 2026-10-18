@@ -22,19 +22,10 @@ type DeployRequest struct {
 	VersionHash string `json:"version_hash" binding:"required"`
 }
 
-func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	// Initialize Docker Provisioner Client
-	provisioner, err := docker.NewProvisioner()
-	if err != nil {
-		log.Printf("[WARNING] Docker daemon client initialization notice: %v", err)
-	}
-
-	router := gin.Default()
+func setupRouter(provisioner *docker.Provisioner) *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	router.Use(gin.Recovery())
 
 	// CORS & Health check
 	router.GET("/healthz", func(c *gin.Context) {
@@ -162,6 +153,23 @@ func main() {
 			c.JSON(http.StatusOK, gin.H{"status": "destroyed", "container_id": id})
 		})
 	}
+
+	return router
+}
+
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	// Initialize Docker Provisioner Client
+	provisioner, err := docker.NewProvisioner()
+	if err != nil {
+		log.Printf("[WARNING] Docker daemon client initialization notice: %v", err)
+	}
+
+	router := setupRouter(provisioner)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

@@ -51,13 +51,17 @@ func (p *Provisioner) Close() error {
 	return nil
 }
 
-// DeployTenantContainer spins up an isolated Docker container with Traefik labels & strict cgroup limits
-func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDeployParams) (string, error) {
-	// Guard context timeout
-	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
-		defer cancel()
+// BuildContainerConfig generates the Docker container specifications adhering to enterprise sandboxing & Traefik v3 routing rules
+func BuildContainerConfig(params TenantDeployParams, edgeNetwork string) (*container.Config, *container.HostConfig, *network.NetworkingConfig, string, error) {
+	if params.TenantID == "" {
+		return nil, nil, nil, "", fmt.Errorf("tenant_id wajib diisi")
+	}
+	if params.Subdomain == "" {
+		return nil, nil, nil, "", fmt.Errorf("subdomain wajib diisi")
+	}
+
+	if edgeNetwork == "" {
+		edgeNetwork = "traefik_network"
 	}
 
 	version := "latest"
@@ -82,7 +86,7 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 	routerName := fmt.Sprintf("tenant-%s", sanitizedTenant)
 	labels := map[string]string{
 		"traefik.enable":                                                  "true",
-		"traefik.docker.network":                                          p.edgeNetwork,
+		"traefik.docker.network":                                          edgeNetwork,
 		fmt.Sprintf("traefik.http.routers.%s.rule", routerName):           rule,
 		fmt.Sprintf("traefik.http.routers.%s.entrypoints", routerName):    "web",
 		fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", routerName): "80",
@@ -125,8 +129,25 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 
 	networkConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
-			p.edgeNetwork: {},
+			edgeNetwork: {},
 		},
+	}
+
+	return config, hostConfig, networkConfig, containerName, nil
+}
+
+// DeployTenantContainer spins up an isolated Docker container with Traefik labels & strict cgroup limits
+func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDeployParams) (string, error) {
+	// Guard context timeout
+	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+	}
+
+	config, hostConfig, networkConfig, containerName, err := BuildContainerConfig(params, p.edgeNetwork)
+	if err != nil {
+		return "", err
 	}
 
 	// Stop & Remove existing container with the same name if exists (idempotent deploy)
@@ -142,7 +163,7 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 		return "", fmt.Errorf("failed to start container: %w", err)
 	}
 
-	log.Printf("[PROVISIONER] Container %s (%s) successfully started with Traefik rules: %s", containerName, resp.ID[:12], rule)
+	log.Printf("[PROVISIONER] Container %s (%s) successfully started", containerName, resp.ID[:12])
 	return resp.ID, nil
 }
 
