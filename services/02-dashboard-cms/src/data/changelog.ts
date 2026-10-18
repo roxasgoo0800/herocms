@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.12.2',
+    releaseDate: '18 Oktober 2026',
+    title: 'Pelebaran Viewport Imersif Modal Studio Media Inspector (1240px)',
+    summary: 'Menaikkan ukuran dialog modal Media Inspector Studio menjadi 1240px (95vw) dengan ketinggian kanvas 640px dan batas resolusi gambar 560px. Memberikan panggung visual sinematik yang megah untuk foto resolusi tinggi dan ilustrasi vektor SVG tanpa rasa sempit di layar desktop lebar.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1122-1',
+        type: 'improvement',
+        scope: 'Studio Modal Dimensions (.modal-dialog-media-studio & .studio-inspector-split)',
+        description: 'Memperlebar dialog dari 980px ke 1240px dan mempertinggi layout split-pane dari 520px ke 640px, dengan kolom inspektur 420px dan panggung visual ~800px.'
+      },
+      {
+        id: 'c-1122-2',
+        type: 'improvement',
+        scope: 'Visual Canvas Max Height (.stage-visual-img)',
+        description: 'Menaikkan batas maksimal ketinggian foto/vektor dari 420px ke 560px sehingga gambar resolusi tinggi tampil detail, tajam, dan megah.'
+      },
+      {
+        id: 'c-1122-3',
+        type: 'improvement',
+        scope: 'Typography & Header Comfort (.studio-modal-name-row)',
+        description: 'Memperlebar batas judul berkas menjadi 650px agar nama berkas panjang tidak terpotong elipsis di header.'
+      }
+    ]
+  },
+  {
     version: 'v1.12.1',
     releaseDate: '18 Oktober 2026',
     title: 'Pelebaran Kartu Galeri Media Gaya Google Photos & Rendering Vektor SVG',
     summary: 'Memperlebar kartu galeri media pada panggung utama (minmax 340px) dan mempertinggi kanvas pratinjau menjadi 220px seperti tata letak Google Photos / Unsplash. Menghilangkan text wrapping yang canggung pada spesifikasi berkas, serta menambahkan rendering nyata untuk vektor SVG langsung di kartu galeri dengan bayangan kedalaman sinematik.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
