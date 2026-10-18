@@ -200,13 +200,22 @@ func SessionOrJWTAuth(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 			}
 		}
 
-		// 3. Fallback for Local Dev / Default Seed Session if no auth header & no cookie
-		// To ensure uninterrupted development experience while enforcing security
-		c.Set("tenant_id", "99420000-0000-0000-0000-000000009942")
-		c.Set("user_id", "00000000-0000-0000-0000-000000000001")
-		c.Set("email", "admin")
-		c.Set("full_name", "Admin Developer")
-		c.Set("role", "customer")
-		c.Next()
+		// 3. Fallback for Local Dev / Seed Session (Enforced by 20 Security Pillars: Disabled in Production)
+		if cfg.AllowDevAuthBypass {
+			c.Set("tenant_id", "99420000-0000-0000-0000-000000009942")
+			c.Set("user_id", "00000000-0000-0000-0000-000000000001")
+			c.Set("email", "admin")
+			c.Set("full_name", "Admin Developer")
+			c.Set("role", "customer")
+			c.Next()
+			return
+		}
+
+		// Reject unauthenticated requests in production environments
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "Autentikasi diperlukan untuk mengakses resource ini. Silakan sertakan token atau login.",
+			"code":    "AUTH_REQUIRED",
+		})
 	}
 }
