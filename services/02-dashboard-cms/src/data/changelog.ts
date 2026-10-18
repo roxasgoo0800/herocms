@@ -2,11 +2,92 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.9.2',
+    releaseDate: '18 Oktober 2026',
+    title: 'Eksplorasi Ekosistem skills.sh: Integrasi Playwright E2E Testing & Web Performance Vitals Skill',
+    summary: 'Memperluas kapabilitas AI Agent dengan 2 skill operasional modern standar skills.sh: browser-e2e-playwright (pengujian browser otomatis, verifikasi visual modal destruktif, selector a11y-first) dan web-performance-vitals (optimasi Core Web Vitals, code-splitting Vite manualChunks, HTTP cache headers, dan mitigasi N+1 SQL). Seluruh integrasi dikembangkan pada branch mandiri feat/agent-skills-architecture.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-192-1',
+        type: 'feature',
+        scope: 'Browser Testing Skill (.agents/skills/browser-e2e-playwright)',
+        description: 'Standar pengujian E2E menggunakan Playwright: selector resilient berbasis teks/role, event-driven assertions, dan pengujian responsive mobile.'
+      },
+      {
+        id: 'c-192-2',
+        type: 'feature',
+        scope: 'Web Performance Skill (.agents/skills/web-performance-vitals)',
+        description: 'Standar tolok ukur TTFB, LCP, CLS, dan INP, optimasi vendor chunks di vite.config.ts, dan header caching Traefik/Go server.'
+      }
+    ]
+  },
+  {
+    version: 'v1.9.1',
+    releaseDate: '18 Oktober 2026',
+    title: 'Adopsi 20 Pilar Praktis Keamanan Web & Backend serta Modul Skill herocms-security-sandboxing',
+    summary: 'Memperkuat arsitektur keamanan platform dengan mendokumentasikan 20 Pilar Praktis Keamanan Web & Backend di SECURITY_AND_SANDBOXING.md serta menambahkan skill herocms-security-sandboxing (.agents/skills/) untuk memandu AI Agent dalam pengerasan kontainer Docker, isolasi multi-tenant, proteksi OWASP Top 10, sanitasi input, dan penegakan credential safety.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-191-1',
+        type: 'security',
+        scope: 'Dokumentasi Keamanan (docs/SECURITY_AND_SANDBOXING.md)',
+        description: 'Menambahkan Seksi 5 berisi matriks 20 pilar checklist keamanan praktis: proteksi API key, isolasi .env, anti-SQLi, anti-XSS, server-side auth, RLS database, sesi aman, hingga magic bytes upload scanning.'
+      },
+      {
+        id: 'c-191-2',
+        type: 'feature',
+        scope: 'Security Audit Skill (.agents/skills/herocms-security-sandboxing)',
+        description: 'Membuat modul skill baru untuk mengaudit setiap penulisan kode backend/frontend, parameter HostConfig Docker Engine SDK, dan pencegahan kebocoran data multi-tenant.'
+      }
+    ]
+  },
+  {
+    version: 'v1.9.0',
+    releaseDate: '18 Oktober 2026',
+    title: 'Integrasi 5 Modul Skill Agen Mandiri (Standar skills.sh): Frontend Studio, Go Orchestrator, Traefik Infra, Database RLS, & Changelog SemVer',
+    summary: 'Memperluas kapabilitas agen AI dengan 5 paket standar skill modular (.agents/skills/): herocms-frontend-studio (Zero-CSS duplication & master design tokens), herocms-go-orchestrator (Docker Engine SDK, cgroups quota, & graceful shutdown), herocms-traefik-infra (Traefik v3 dynamic routing & network topology), herocms-database-rls (PostgreSQL Row-Level Security & Redis caching), serta herocms-changelog-semver untuk kepatuhan tata kelola rilis.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-190-1',
+        type: 'feature',
+        scope: 'Frontend Studio Skill (.agents/skills/herocms-frontend-studio)',
+        description: 'Menetapkan kepatuhan desain DESIGN.md, Zero-CSS duplication di studio-master.css, dan on-demand lazy loading modul antar-menu.'
+      },
+      {
+        id: 'c-190-2',
+        type: 'feature',
+        scope: 'Go Provisioning Orchestrator Skill (.agents/skills/herocms-go-orchestrator)',
+        description: 'Standar idiomatik Golang 1.23, Docker Engine SDK lifecycle, konteks timeout, dan pembatasan isolasi cgroups v2 kontainer tenant.'
+      },
+      {
+        id: 'c-190-3',
+        type: 'feature',
+        scope: 'Traefik Edge Routing & Infra Skill (.agents/skills/herocms-traefik-infra)',
+        description: 'Standarisasi topologi 3 jaringan Docker (app-network, traefik_network, redis-net) dan injeksi label dinamis Traefik v3.'
+      },
+      {
+        id: 'c-190-4',
+        type: 'feature',
+        scope: 'PostgreSQL Multi-Tenant RLS Skill (.agents/skills/herocms-database-rls)',
+        description: 'Pola migrasi SQL dengan Row-Level Security berbasis app.current_tenant_id dan namespacing cache Redis.'
+      },
+      {
+        id: 'c-190-5',
+        type: 'feature',
+        scope: 'Changelog & SemVer Assistant Skill (.agents/skills/herocms-changelog-semver)',
+        description: 'Otomasi kepatuhan Semantic Versioning dan penulisan changelog terstruktur sesuai mandat AGENTS.md.'
+      }
+    ]
+  },
+  {
     version: 'v1.8.2',
     releaseDate: '17 Oktober 2026',
     title: 'Modal Konfirmasi Hapus Kontainer (Bespoke Danger Zone Dialog): Menggantikan Native Browser Confirm dengan UI Studio Terpadu',
     summary: 'Menghilangkan native browser confirm() dialog yang kaku pada penghapusan kontainer runtime, digantikan dengan HeroCMS Studio Danger Zone Modal yang elegan: kartu pratinjau pod target, rincian konsekuensi teknis destruktif (penghentian isolasi cgroups v2, pencabutan rute Traefik/SSL, pengembalian slot kuota), dan tombol aksi destruktif dengan status loading.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
