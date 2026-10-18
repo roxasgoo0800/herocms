@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"regexp"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,22 +25,18 @@ type TelemetryHitRequest struct {
 	Path      string `json:"path" binding:"required"`
 }
 
-func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8082"
-	}
+func setupRouter(rdb *redis.Client) *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	router.Use(gin.Recovery())
 
-	redisAddr := os.Getenv("REDIS_ADDR")
-	if redisAddr == "" {
-		redisAddr = "localhost:6379"
-	}
-
-	rdb := redis.NewClient(&redis.Options{
-		Addr: redisAddr,
+	// Security Headers
+	router.Use(func(c *gin.Context) {
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("X-XSS-Protection", "1; mode=block")
+		c.Next()
 	})
-
-	router := gin.Default()
 
 	router.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -54,7 +52,7 @@ func main() {
 		api.POST("/ai/template/generate", func(c *gin.Context) {
 			var req ThemeGenerateRequest
 			if err := c.ShouldBindJSON(&req); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Prompt wajib diisi"})
 				return
 			}
 
@@ -63,11 +61,11 @@ func main() {
 				"theme_id": "ai_gen_" + time.Now().Format("20060102150405"),
 				"vertical": req.Vertical,
 				"palette": gin.H{
-					"background":   "#080b12",
-					"surface":      "#0f1523",
-					"primary":      "#00e5ff",
-					"text_primary": "#f8fafc",
-					"accent":       "#a855f7",
+					"background":   "#ffffff",
+					"surface":      "#f8fafc",
+					"primary":      "#0f172a",
+					"text_primary": "#0f172a",
+					"accent":       "#2563eb",
 				},
 				"typography": gin.H{
 					"heading_font": "Space Grotesk",
@@ -98,9 +96,10 @@ func main() {
 				return
 			}
 
-			// Increment Sorted Set atomically in Redis
-			key := "tenant:" + hit.TenantID + ":top_views"
-			rdb.ZIncrBy(context.Background(), key, 1, hit.Path)
+			if rdb != nil {
+				key := "tenant:" + hit.TenantID + ":top_views"
+				rdb.ZIncrBy(c.Request.Context(), key, 1, hit.Path)
+			}
 
 			c.JSON(http.StatusOK, gin.H{"status": "recorded"})
 		})
@@ -118,25 +117,70 @@ func main() {
 				return
 			}
 
-			key := "tenant:" + tenantID + ":top_views"
-			results, err := rdb.ZRevRangeWithScores(c.Request.Context(), key, 0, 4).Result()
-			if err != nil || len(results) == 0 {
-				// Return default benchmark metrics if redis empty
-				c.JSON(http.StatusOK, gin.H{
-					"top_items": []gin.H{
-						{"path": "/blog/microservices-orchestration", "score": 1420},
-						{"path": "/projects/distributed-systems", "score": 890},
-						{"path": "/about", "score": 610},
-					},
-					"source": "simulated_cache",
-				})
-				return
+			if rdb != nil {
+				key := "tenant:" + tenantID + ":top_views"
+				results, err := rdb.ZRevRangeWithScores(c.Request.Context(), key, 0, 4).Result()
+				if err == nil && len(results) > 0 {
+					c.JSON(http.StatusOK, gin.H{"top_items": results, "source": "redis_live"})
+					return
+				}
 			}
 
-			c.JSON(http.StatusOK, gin.H{"top_items": results, "source": "redis_live"})
+			// Return default benchmark metrics if redis empty
+			c.JSON(http.StatusOK, gin.H{
+				"top_items": []gin.H{
+					{"path": "/blog/microservices-orchestration", "score": 1420},
+					{"path": "/projects/distributed-systems", "score": 890},
+					{"path": "/about", "score": 610},
+				},
+				"source": "simulated_cache",
+			})
 		})
 	}
 
-	log.Printf("[AI-SERVICE] Microservice listening on :%s", port)
-	router.Run(":" + port)
+	return router
+}
+
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8082"
+	}
+
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr: redisAddr,
+	})
+	defer rdb.Close()
+
+	router := setupRouter(rdb)
+
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: router,
+	}
+
+	go func() {
+		log.Printf("[AI-SERVICE] Microservice listening on http://127.0.0.1:%s", port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen error: %v\n", err)
+		}
+	}()
+
+	// Graceful Shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down AI Agent service gracefully...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+	log.Println("AI Agent service server exited cleanly")
 }

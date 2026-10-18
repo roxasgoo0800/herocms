@@ -4,11 +4,19 @@ import react from '@vitejs/plugin-react';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'motion': ['framer-motion'],
+          'lucide': ['lucide-react']
+        }
+      }
+    }
+  },
   server: {
     port: 3000,
-    host: '0.0.0.0',
-    fs: {
-      allow: ['..', '/home/rizal/dockerfile/docker-cms']
-    }
+    host: '0.0.0.0'
   }
 });

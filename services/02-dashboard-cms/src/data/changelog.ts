@@ -2,11 +2,44 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.9.3',
+    releaseDate: '18 Oktober 2026',
+    title: 'Penerapan Menyeluruh Standar Keamanan & Arsitektur di Seluruh 5 Services',
+    summary: 'Menerapkan standarisasi 20 pilar keamanan, graceful shutdown, healthcheck endpoints, pengerasan non-root container, optimasi bundling Vite, dan pembuatan unit test suite di seluruh microservices: 01-admin-console, 02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, dan 05-ai-agent-service.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-193-1',
+        type: 'improvement',
+        scope: 'Marketing Site (services/04-marketing-site)',
+        description: 'Menambahkan endpoint /healthz, graceful shutdown, security headers, dan konfigurasi manualChunks di vite.config.ts.'
+      },
+      {
+        id: 'c-193-2',
+        type: 'improvement',
+        scope: 'AI Agent Service (services/05-ai-agent-service)',
+        description: 'Menambahkan graceful shutdown server, security headers, redis client close cleanup, serta unit test suite di cmd/worker/main_test.go.'
+      },
+      {
+        id: 'c-193-3',
+        type: 'security',
+        scope: 'Admin Console (services/01-admin-console)',
+        description: 'Hardening Dockerfile dengan eksekusi user non-root www-data.'
+      },
+      {
+        id: 'c-193-4',
+        type: 'feature',
+        scope: 'Provision Orchestrator (services/03-provision-orchestrator)',
+        description: 'Penyempurnaan siklus hidup kontainer (Stop, Start, Destroy) dan penambahan unit test pengujian 100% lolos verifikasi.'
+      }
+    ]
+  },
+  {
     version: 'v1.9.2',
     releaseDate: '18 Oktober 2026',
     title: 'Eksplorasi Ekosistem skills.sh: Integrasi Playwright E2E Testing & Web Performance Vitals Skill',
     summary: 'Memperluas kapabilitas AI Agent dengan 2 skill operasional modern standar skills.sh: browser-e2e-playwright (pengujian browser otomatis, verifikasi visual modal destruktif, selector a11y-first) dan web-performance-vitals (optimasi Core Web Vitals, code-splitting Vite manualChunks, HTTP cache headers, dan mitigasi N+1 SQL). Seluruh integrasi dikembangkan pada branch mandiri feat/agent-skills-architecture.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

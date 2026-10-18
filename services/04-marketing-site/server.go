@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -19,18 +24,32 @@ func main() {
 	}
 
 	fs := http.FileServer(http.Dir(distDir))
+	mux := http.NewServeMux()
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// 1. Healthcheck Endpoint for Container Orchestration
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":  "healthy",
+			"service": "marketing-site",
+			"time":    time.Now().UTC().Format(time.RFC3339),
+		})
+	})
+
+	// 2. Static Assets & HTML5 History Fallback
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		cleanPath := filepath.Clean(r.URL.Path)
 		targetFile := filepath.Join(distDir, cleanPath)
 
-		// Security headers
+		// Enterprise Security Headers
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
 
-		// Serve static file if exists
+		// Serve static hashed assets with long-term caching
 		if fi, err := os.Stat(targetFile); err == nil && !fi.IsDir() {
 			if strings.HasPrefix(cleanPath, "/assets/") {
 				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
@@ -39,13 +58,37 @@ func main() {
 			return
 		}
 
-		// HTML5 SPA fallback for client-side routing
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		// HTML5 SPA fallback for client-side routing (Strict anti-cache on index.html)
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
 		http.ServeFile(w, r, filepath.Join(distDir, "index.html"))
 	})
 
-	log.Printf("[HEROCMS MARKETING] Native Golang Web Server running on http://0.0.0.0:%s (Zero Nginx)", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatalf("Server error: %v", err)
+	srv := &http.Server{
+		Addr:         ":" + port,
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
 	}
+
+	go func() {
+		log.Printf("[HEROCMS MARKETING] Web Server running on http://0.0.0.0:%s", port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server error: %v", err)
+		}
+	}()
+
+	// Graceful Shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down marketing site server gracefully...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+	log.Println("Marketing server exited cleanly")
 }
