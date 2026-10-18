@@ -712,8 +712,10 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
           </div>
         </div>
 
-        <!-- 1. GRID VIEW MODE: CINEMATIC MEDIA CARDS -->
-        <div v-if="viewMode === 'grid'" class="media-gallery-grid">
+        <!-- SCROLLABLE DEDICATED MEDIA STAGE PANEL (BOXED VIEWPORT) -->
+        <div class="dam-content-scroll-box">
+          <!-- 1. GRID VIEW MODE: CINEMATIC MEDIA CARDS -->
+          <div v-if="viewMode === 'grid'" class="media-gallery-grid">
           <div
             v-for="med in filteredMedia"
             :key="med.id"
@@ -1006,8 +1008,9 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             </tbody>
           </table>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
+  </div>
 
     <!-- MODAL: PREVIEW & DETAIL BERKAS S3 (BESPOKE MEDIA INSPECTOR) -->
     <Teleport to="body">

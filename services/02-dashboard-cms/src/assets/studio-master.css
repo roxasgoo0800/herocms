@@ -9678,16 +9678,48 @@ html {
 }
 
 /* ==========================================================================
+   SCROLLABLE DEDICATED MEDIA STAGE PANEL (BOXED VIEWPORT)
+   ========================================================================== */
+.dam-content-scroll-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  max-height: calc(100vh - 270px);
+  min-height: 520px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.dam-content-scroll-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dam-content-scroll-box::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dam-content-scroll-box::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.dam-content-scroll-box::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ==========================================================================
    CINEMATIC MEDIA GALLERY GRID (WOW FACTOR)
    ========================================================================== */
 .media-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-
-@media (max-width: 1360px) {
-  .media-gallery-grid { grid-template-columns: repeat(3, 1fr); }
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
 }
 
 @media (max-width: 960px) {
