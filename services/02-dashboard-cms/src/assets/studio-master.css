@@ -3473,6 +3473,67 @@ html {
   border-color: #d4d4d8;
 }
 
+/* Handcrafted Semantic Tinted Button Modifiers */
+.btn-accent-amber {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+  font-weight: 600 !important;
+}
+.btn-accent-amber:hover {
+  background: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #92400e !important;
+}
+
+.btn-accent-purple {
+  background: #faf5ff !important;
+  border-color: #e9d5ff !important;
+  color: #7e22ce !important;
+  font-weight: 600 !important;
+}
+.btn-accent-purple:hover {
+  background: #f3e8ff !important;
+  border-color: #d8b4fe !important;
+  color: #6b21a8 !important;
+}
+
+.btn-accent-blue {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #2563eb !important;
+  font-weight: 600 !important;
+}
+.btn-accent-blue:hover {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+  color: #1d4ed8 !important;
+}
+
+.btn-accent-emerald {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #059669 !important;
+  font-weight: 600 !important;
+}
+.btn-accent-emerald:hover {
+  background: #d1fae5 !important;
+  border-color: #6ee7b7 !important;
+  color: #047857 !important;
+}
+
+.btn-accent-slate {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+  font-weight: 600 !important;
+}
+.btn-accent-slate:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
 .btn-modal-confirm {
   background: #09090b;
   color: #ffffff;

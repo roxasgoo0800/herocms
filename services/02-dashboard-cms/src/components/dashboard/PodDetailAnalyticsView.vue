@@ -421,29 +421,28 @@ const exportTelemetry = () => {
       </div>
 
       <div class="footer-right-buttons">
-        <button type="button" class="btn-analytics-export" @click="exportTelemetry" title="Export Laporan Log Hit Harian">
+        <button type="button" class="btn-analytics-export btn-accent-slate" @click="exportTelemetry" title="Export Laporan Log Hit Harian">
           <Download :size="13" />
           <span>Export CSV</span>
         </button>
         <button
           type="button"
-          class="btn-modal-ghost"
-          :style="container.status === 'maintenance' ? 'background: #fffbeb; color: #b45309; border-color: #fde68a;' : ''"
+          class="btn-modal-ghost btn-accent-amber"
           @click="emit('toggleMaintenance', container)"
           :title="container.status === 'maintenance' ? 'Akhiri Pemeliharaan & Go-Live' : 'Aktifkan Mode Pemeliharaan'"
         >
           <Wrench :size="13" />
           <span>{{ container.status === 'maintenance' ? 'Akhiri Maintenance' : 'Mode Maintenance' }}</span>
         </button>
-        <button type="button" class="btn-modal-ghost" @click="emit('purgeCache', container)">
+        <button type="button" class="btn-modal-ghost btn-accent-purple" @click="emit('purgeCache', container)" title="Purge Edge Cloudflare Cache">
           <Sparkles :size="13" />
           <span>Purge Edge Cache</span>
         </button>
-        <button type="button" class="btn-modal-ghost" @click="emit('openLogs', container)">
+        <button type="button" class="btn-modal-ghost btn-accent-slate" @click="emit('openLogs', container)" title="Buka Log Terminal Docker">
           <Terminal :size="13" />
           <span>Log Terminal</span>
         </button>
-        <button type="button" class="btn-modal-ghost" @click="emit('openEditor', container)">
+        <button type="button" class="btn-modal-ghost btn-accent-blue" @click="emit('openEditor', container)" title="Edit Halaman di Visual Editor">
           <Edit3 :size="13" />
           <span>Buka di Editor</span>
         </button>
@@ -640,7 +639,7 @@ const exportTelemetry = () => {
         <div style="display: flex; align-items: center; gap: 8px;">
           <button
             type="button"
-            class="btn-modal-ghost"
+            class="btn-modal-ghost btn-accent-emerald"
             style="flex: 1; padding: 6px 10px; font-size: 0.72rem; justify-content: center;"
             :disabled="isRestoringSnapshot"
             @click="handleRestoreSnapshot"
@@ -652,7 +651,7 @@ const exportTelemetry = () => {
 
           <button
             type="button"
-            class="btn-modal-ghost"
+            class="btn-modal-ghost btn-accent-blue"
             style="padding: 6px 10px; font-size: 0.72rem;"
             :disabled="isCreatingBackup"
             @click="handleCreateBackup"
@@ -1642,7 +1641,7 @@ const exportTelemetry = () => {
                   </span>
                   <button
                     type="button"
-                    class="btn-modal-ghost"
+                    class="btn-modal-ghost btn-accent-slate"
                     style="margin-top: 6px; padding: 6px 14px; font-size: 0.74rem;"
                     @click="resetFilters"
                   >
