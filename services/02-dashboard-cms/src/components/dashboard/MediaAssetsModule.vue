@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import {
   UploadCloud,
   Search,
@@ -73,6 +73,14 @@ const {
 } = useDashboardData();
 
 const assetFilter = ref<'all' | 'image' | 'vector' | 'pdf' | 'excel' | 'doc'>('all');
+const filterAnimKey = ref(0);
+
+const setCategoryFilter = (category: 'all' | 'image' | 'vector' | 'pdf' | 'excel' | 'doc') => {
+  if (assetFilter.value === category) return;
+  assetFilter.value = category;
+  filterAnimKey.value++;
+};
+
 const sortBy = ref<'newest' | 'oldest' | 'name' | 'size'>('newest');
 const viewMode = ref<'grid' | 'list'>('grid');
 const isSortDropdownOpen = ref(false);
@@ -91,6 +99,10 @@ const searchInputRef = ref<HTMLInputElement | null>(null);
 
 // Batch Multi-Selection State
 const selectedAssetIds = ref<Set<string>>(new Set());
+
+watch([mediaSearch, sortBy], () => {
+  filterAnimKey.value++;
+});
 
 let dragCounter = 0;
 
@@ -620,7 +632,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             type="button"
             class="dam-folder-item"
             :class="{ active: assetFilter === 'all' }"
-            @click="assetFilter = 'all'"
+            @click="setCategoryFilter('all')"
           >
             <span class="dam-folder-leading">
               <Folder :size="15" />
@@ -633,7 +645,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             type="button"
             class="dam-folder-item"
             :class="{ active: assetFilter === 'image' }"
-            @click="assetFilter = 'image'"
+            @click="setCategoryFilter('image')"
           >
             <span class="dam-folder-leading">
               <ImageIcon :size="15" style="color: #2563eb;" />
@@ -646,7 +658,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             type="button"
             class="dam-folder-item"
             :class="{ active: assetFilter === 'pdf' }"
-            @click="assetFilter = 'pdf'"
+            @click="setCategoryFilter('pdf')"
           >
             <span class="dam-folder-leading">
               <FileText :size="15" style="color: #dc2626;" />
@@ -659,7 +671,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             type="button"
             class="dam-folder-item"
             :class="{ active: assetFilter === 'excel' }"
-            @click="assetFilter = 'excel'"
+            @click="setCategoryFilter('excel')"
           >
             <span class="dam-folder-leading">
               <FileSpreadsheet :size="15" style="color: #059669;" />
@@ -672,7 +684,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             type="button"
             class="dam-folder-item"
             :class="{ active: assetFilter === 'doc' }"
-            @click="assetFilter = 'doc'"
+            @click="setCategoryFilter('doc')"
           >
             <span class="dam-folder-leading">
               <File :size="15" style="color: #4f46e5;" />
@@ -685,7 +697,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             type="button"
             class="dam-folder-item"
             :class="{ active: assetFilter === 'vector' }"
-            @click="assetFilter = 'vector'"
+            @click="setCategoryFilter('vector')"
           >
             <span class="dam-folder-leading">
               <FileCode :size="15" style="color: #9333ea;" />
@@ -890,14 +902,20 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
         <!-- SCROLLABLE DEDICATED MEDIA STAGE PANEL (BOXED VIEWPORT) -->
         <div class="dam-content-scroll-box">
           <!-- 1. GRID VIEW MODE: CINEMATIC MEDIA CARDS -->
-          <div v-if="viewMode === 'grid'" class="media-gallery-grid">
-          <div
-            v-for="med in filteredMedia"
-            :key="med.id"
-            class="media-pro-card"
-            :class="{ 'is-selected': isAssetSelected(med.id) }"
-            @click="openPreviewModal(med)"
+          <TransitionGroup
+            v-if="viewMode === 'grid'"
+            name="dam-card-flip"
+            tag="div"
+            class="media-gallery-grid"
           >
+            <div
+              v-for="(med, idx) in filteredMedia"
+              :key="med.id + '_' + filterAnimKey"
+              class="media-pro-card animate-cascade"
+              :style="{ '--card-stagger-idx': Math.min(idx, 12) }"
+              :class="{ 'is-selected': isAssetSelected(med.id) }"
+              @click="openPreviewModal(med)"
+            >
             <!-- Card Visual Preview Area -->
             <div
               class="media-preview-canvas"
@@ -1045,9 +1063,10 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
               </div>
             </div>
           </div>
+        </TransitionGroup>
 
-          <!-- Empty State -->
-          <div v-if="filteredMedia.length === 0" class="empty-gallery-state">
+          <!-- Empty State in Grid Mode -->
+          <div v-if="filteredMedia.length === 0 && viewMode === 'grid'" class="empty-gallery-state">
             <UploadCloud :size="36" class="empty-icon" />
             <h4>Tidak ada berkas media ditemukan</h4>
             <p>Unggah berkas baru atau pilih kategori folder lain pada sidebar.</p>
@@ -1056,10 +1075,9 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
               Pilih Berkas untuk Diunggah
             </button>
           </div>
-        </div>
 
-        <!-- 2. LIST VIEW MODE: HIGH-TECH LEDGER TABLE -->
-        <div v-else class="media-list-container">
+          <!-- 2. LIST VIEW MODE: HIGH-TECH LEDGER TABLE -->
+          <div v-if="viewMode === 'list'" class="media-list-container">
           <table class="media-ledger-table">
             <thead>
               <tr>
@@ -1078,10 +1096,12 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                 <th style="text-align: right;">Aksi</th>
               </tr>
             </thead>
-            <tbody>
+            <TransitionGroup name="dam-row-flip" tag="tbody">
               <tr
-                v-for="med in filteredMedia"
-                :key="med.id"
+                v-for="(med, idx) in filteredMedia"
+                :key="med.id + '_' + filterAnimKey"
+                class="media-table-row animate-cascade"
+                :style="{ '--row-stagger-idx': Math.min(idx, 15) }"
                 @click="openPreviewModal(med)"
                 style="cursor: pointer;"
                 :class="{ 'is-selected': isAssetSelected(med.id) }"
@@ -1168,12 +1188,12 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                   </div>
                 </td>
               </tr>
-              <tr v-if="filteredMedia.length === 0">
+              <tr v-if="filteredMedia.length === 0" key="empty-row-item">
                 <td colspan="8" style="text-align: center; padding: 40px; color: #64748b;">
                   Tidak ada berkas media ditemukan.
                 </td>
               </tr>
-            </tbody>
+            </TransitionGroup>
           </table>
         </div>
       </div>

@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.13.1',
+    releaseDate: '18 Oktober 2026',
+    title: 'Animasi Transisi Staggered Cascade Saat Pergantian Kategori Media',
+    summary: 'Menerapkan sistem animasi transisi dinamis bergelombang (staggered cascade wave) menggunakan Vue TransitionGroup dan FLIP physics saat pengguna berpindah antar-kategori folder (Semua Berkas, Foto & Raster, Vektor SVG, Dokumen PDF, dll) maupun saat melakukan filter pencarian. Dilengkapi animasi spring pop pada tombol kategori aktif dan transisi halus pada status kosong.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1131-1',
+        type: 'improvement',
+        scope: 'DAM Media Cards Animation (.dam-card-flip & @keyframes mediaCardCascade)',
+        description: 'Menghadirkan efek transisi gelombang masuk berjenjang (stagger delay 45ms) dengan kurva cubic-bezier spring halus saat kategori folder dipilih, menghilangkan pergantian konten yang kaku.'
+      },
+      {
+        id: 'c-1131-2',
+        type: 'improvement',
+        scope: 'Sidebar Folder Active Pop (@keyframes folderActivePop)',
+        description: 'Menambahkan efek micro-animation spring scaling pada tombol kategori folder yang sedang diklik untuk memberikan feedback sentuhan interaktif yang responsif.'
+      },
+      {
+        id: 'c-1131-3',
+        type: 'improvement',
+        scope: 'List Table Row Cascade (.dam-row-flip & @keyframes mediaRowCascade)',
+        description: 'Animasi sliding horizontal halus pada baris tabel saat mode list view aktif dengan stagger index optimal.'
+      }
+    ]
+  },
+  {
     version: 'v1.13.0',
     releaseDate: '18 Oktober 2026',
     title: 'Deteksi Otomatis Dominansi Warna & Latar Belakang Kanvas Adaptif Cerdas',
     summary: 'Menambahkan mesin analitik luminansi visual otomatis berbasis HTML5 Canvas sampling dan SVG color inspection. Sistem otomatis mendeteksi rasio warna gelap vs terang pada berkas dengan background transparan (seperti logo Ubuntu hitam atau grafis putih), lalu secara cerdas menyesuaikan latar belakang kanvas pratinjau studio (Auto Terang / Gelap) agar kontras terlihat sempurna. Dilengkapi meteran persentase dominansi warna, HUD status adaptif, dan kontrol toggle 4-mode (Auto, Terang, Gelap, Catur).',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
