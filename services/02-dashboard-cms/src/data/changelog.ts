@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.4',
+    releaseDate: '18 Oktober 2026',
+    title: 'Contemporary Translucent Telemetry Glyphs & Ambient Watermark Icons',
+    summary: 'Meningkatkan estetika kartu telemetri atas menjadi berstandar visual kontemporer (kekinian). Memperbesar glyph ikon menjadi 42x42px dengan ikon 20px berbalut latar transparan berwarna cerah (opacity 11%) dan garis batas halus (opacity 24%). Menghadirkan watermark ikon besar 64px transparan di sudut kanan bawah kartu yang bereaksi dengan rotasi dan perbesaran dinamis saat kartu disentuh, dipadukan dengan ambient radial light di sudut kartu.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1144-1',
+        type: 'improvement',
+        scope: 'Enlarged Translucent Glyphs (.telemetry-glyph)',
+        description: 'Memperbesar ukuran wadah glyph menjadi 42x42px dengan ikon 20px, menggunakan background tinted transparan 11% dan border 24% per palet semantik.'
+      },
+      {
+        id: 'c-1144-2',
+        type: 'improvement',
+        scope: 'Ambient Watermark Icons (.telemetry-watermark)',
+        description: 'Menambahkan ikon watermark berukuran 64px semi-transparan (opacity 7%) di latar belakang kartu yang beranimasi membesar dan berputar halus saat dihover.'
+      },
+      {
+        id: 'c-1144-3',
+        type: 'improvement',
+        scope: 'Radial Ambient Corner Glow (.telemetry-card.accent-*)',
+        description: 'Memberikan gradasi radial halus di sudut kanan bawah setiap kartu telemetri untuk kedalaman visual yang mewah tanpa kesan murahan.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.3',
     releaseDate: '18 Oktober 2026',
     title: 'Architectural Wireframe Blueprint Cards & Telemetry Grid Elevation',
     summary: 'Merombak tampilan kartu Halaman Statis (CMS Pages) dari blok hitam monoton menjadi Mini-Browser Architectural Blueprint Mockup dengan chrome traffic lights, SSL omnibox address bar, dan visual wireframe layout nyata per arketipe (Hero Landing, About Bio & Timeline, Services Enterprise Grid, Contact Form, Legal Compliance Paper). Menyempurnakan 4 kartu Telemetri di bagian atas dengan aksen warna atas (Royal Blue, Emerald, Purple, Sky), icon glyph berkontras tajam dengan ambient ring, serta tipografi nilai tebal yang eye-catching dan profesional.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

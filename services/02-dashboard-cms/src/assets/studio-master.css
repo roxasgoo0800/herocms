@@ -782,16 +782,48 @@ html {
   transition: opacity 0.2s ease;
 }
 
-.telemetry-card.accent-blue::before { background: linear-gradient(90deg, #2563eb, #38bdf8); }
-.telemetry-card.accent-emerald::before { background: linear-gradient(90deg, #059669, #34d399); }
-.telemetry-card.accent-purple::before { background: linear-gradient(90deg, #7c3aed, #c084fc); }
-.telemetry-card.accent-amber::before { background: linear-gradient(90deg, #d97706, #fbbf24); }
-.telemetry-card.accent-sky::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.telemetry-card.accent-blue {
+  background: radial-gradient(circle at 92% 85%, rgba(37, 99, 235, 0.08) 0%, transparent 60%), #ffffff;
+}
+.telemetry-card.accent-emerald {
+  background: radial-gradient(circle at 92% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 60%), #ffffff;
+}
+.telemetry-card.accent-purple {
+  background: radial-gradient(circle at 92% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 60%), #ffffff;
+}
+.telemetry-card.accent-amber {
+  background: radial-gradient(circle at 92% 85%, rgba(245, 158, 11, 0.08) 0%, transparent 60%), #ffffff;
+}
+.telemetry-card.accent-sky {
+  background: radial-gradient(circle at 92% 85%, rgba(2, 132, 199, 0.08) 0%, transparent 60%), #ffffff;
+}
 
 .telemetry-card:hover {
   border-color: #cbd5e1;
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.09), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+}
+
+/* Large Translucent Ambient Watermark Icon */
+.telemetry-watermark {
+  position: absolute;
+  right: 4px;
+  bottom: -6px;
+  pointer-events: none;
+  opacity: 0.07;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
+}
+
+.telemetry-watermark.blue { color: #2563eb; }
+.telemetry-watermark.emerald { color: #059669; }
+.telemetry-watermark.purple { color: #7c3aed; }
+.telemetry-watermark.amber { color: #d97706; }
+.telemetry-watermark.sky { color: #0284c7; }
+
+.telemetry-card:hover .telemetry-watermark {
+  opacity: 0.17;
+  transform: scale(1.12) rotate(-5deg);
 }
 
 .telemetry-top {
@@ -799,6 +831,8 @@ html {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
+  position: relative;
+  z-index: 2;
 }
 
 .telemetry-label {
@@ -808,25 +842,51 @@ html {
   letter-spacing: 0.06em;
 }
 
+/* Modern Translucent & Colorful Glyph */
 .telemetry-glyph {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
 .telemetry-card:hover .telemetry-glyph {
-  transform: scale(1.08);
+  transform: scale(1.08) translateY(-1px);
 }
 
-.telemetry-glyph.blue { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-.telemetry-glyph.emerald { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-.telemetry-glyph.purple { background: #faf5ff; color: #9333ea; border: 1px solid #e9d5ff; }
-.telemetry-glyph.amber { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-.telemetry-glyph.sky { background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; }
+.telemetry-glyph.blue {
+  background: rgba(37, 99, 235, 0.11);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.24);
+}
+
+.telemetry-glyph.emerald {
+  background: rgba(16, 185, 129, 0.11);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.24);
+}
+
+.telemetry-glyph.purple {
+  background: rgba(139, 92, 246, 0.11);
+  color: #7c3aed;
+  border: 1px solid rgba(139, 92, 246, 0.24);
+}
+
+.telemetry-glyph.amber {
+  background: rgba(245, 158, 11, 0.11);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+}
+
+.telemetry-glyph.sky {
+  background: rgba(2, 132, 199, 0.11);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.24);
+}
 
 .telemetry-val {
   font-size: 1.55rem;
@@ -837,6 +897,8 @@ html {
   align-items: baseline;
   gap: 8px;
   margin: 4px 0 2px;
+  position: relative;
+  z-index: 2;
 }
 
 .telemetry-denom {
@@ -852,6 +914,8 @@ html {
   display: flex;
   align-items: center;
   gap: 5px;
+  position: relative;
+  z-index: 2;
 }
 
 .ready-state {
