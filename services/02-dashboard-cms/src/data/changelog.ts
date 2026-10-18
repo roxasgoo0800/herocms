@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.1',
+    releaseDate: '18 Oktober 2026',
+    title: 'Peningkatan Estetika Visual Editorial 3-Kolom & Palet Teknis Non-Slop',
+    summary: 'Menerapkan tata letak seimbang 3 data per baris (3-Column Grid) pada modul Artikel & Halaman Statis untuk memanfaatkan lebar layar secara proporsional. Menambahkan cover header visual berkelas dengan palet tematik teknis terkurasi per kategori (Engineering Deep Slate-Navy, Distributed Systems Indigo-Slate, DevOps Forest-Slate, Security Obsidian, Tutorial Warm Cedar) lengkap dengan watermark glif arsitektur transparan, pill kategori berkontras tajam, dan tombol aksi "Baca" & "Edit" yang ergonomis tanpa efek gradien murah atau AI-slop.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1141-1',
+        type: 'improvement',
+        scope: '3-Column Balanced Grid Layout (.editorial-card-grid & .cms-pages-grid)',
+        description: 'Menerapkan grid 3 kolom proporsional pada resolusi desktop sehingga kartu membagi ruang baris secara seimbang tanpa menyisakan ruang kosong lebar.'
+      },
+      {
+        id: 'c-1141-2',
+        type: 'improvement',
+        scope: 'Architectural Editorial Visual Covers (Non-AI-Slop Palettes)',
+        description: 'Menghadirkan top cover header berbobot visual dengan palet warna teknis yang solid dan berkarakter, watermark icon arsitektur halus, serta pratinjau slug URL yang jelas.'
+      },
+      {
+        id: 'c-1141-3',
+        type: 'improvement',
+        scope: 'Static CMS Pages Blueprint Cover',
+        description: 'Menambahkan top cover arsitektural dark-navy dengan rute URL terhighlight, badge layout template terkurasi, dan tombol aksi Edit instan.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.0',
     releaseDate: '18 Oktober 2026',
     title: 'Enterprise Dual-Content Engine & Content Studio Editor (Artikel & Halaman Statis)',
     summary: 'Merombak total modul "Artikel & Halaman CMS" menjadi Enterprise Dual-Content Engine yang sesungguhnya. Menghadirkan navigasi tab ganda untuk mengelola Artikel Editorial berkala (Blog Posts) dan Halaman Statis Website (CMS Pages seperti Beranda, Tentang Kami, Layanan, Kontak, Kebijakan Privasi). Mengeliminasi kartu spotlight gradien norak dan menggantinya dengan kartu editorial Ghost/Medium-style yang bersih, menyertakan kartu halaman statis dengan indikator rute URL, layout template, integrasi navigasi navbar/footer, serta menyediakan Content Editor Modal terpadu (Markdown editor, slug generator, dan SEO meta tags) dan mode membaca bebas distraksi (Distraction-Free Reader View).',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

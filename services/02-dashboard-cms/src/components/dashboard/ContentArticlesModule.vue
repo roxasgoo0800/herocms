@@ -23,7 +23,12 @@ import {
   Plus,
   Trash2,
   Layers,
-  Compass
+  Compass,
+  Terminal,
+  Network,
+  GitBranch,
+  ShieldCheck,
+  Cpu
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { ContentArticle, CmsPage } from '../../types/dashboard';
@@ -139,6 +144,33 @@ const getReadTime = (title: string) => {
   const words = title.length * 15;
   const mins = Math.max(3, Math.round(words / 150));
   return `${mins} min baca`;
+};
+
+const getCategoryThemeClass = (cat: string) => {
+  if (cat === 'Engineering') return 'editorial-theme-engineering';
+  if (cat === 'Distributed Systems') return 'editorial-theme-distributed';
+  if (cat === 'DevOps') return 'editorial-theme-devops';
+  if (cat === 'Security') return 'editorial-theme-security';
+  if (cat === 'Tutorial') return 'editorial-theme-tutorial';
+  return 'editorial-theme-default';
+};
+
+const getCategoryBadgeColor = (cat: string) => {
+  if (cat === 'Engineering') return 'cyan';
+  if (cat === 'Distributed Systems') return 'purple';
+  if (cat === 'DevOps') return 'emerald';
+  if (cat === 'Security') return 'rose';
+  if (cat === 'Tutorial') return 'amber';
+  return 'blue';
+};
+
+const getCategoryIconComponent = (cat: string) => {
+  if (cat === 'Engineering') return Terminal;
+  if (cat === 'Distributed Systems') return Network;
+  if (cat === 'DevOps') return GitBranch;
+  if (cat === 'Security') return ShieldCheck;
+  if (cat === 'Tutorial') return BookOpen;
+  return Cpu;
 };
 
 // -------------------------------------------------------------
@@ -941,22 +973,46 @@ onUnmounted(() => {
               v-for="art in filteredArticles"
               :key="art.id"
               class="editorial-article-card"
+              :class="getCategoryThemeClass(art.category)"
             >
-              <!-- Card Top Meta Bar -->
-              <div class="card-meta-bar">
-                <span class="editorial-cat-chip">{{ art.category }}</span>
-                <div class="card-meta-bar-right">
-                  <span class="cover-read-time">
-                    <Clock :size="11" />
-                    <span>{{ getReadTime(art.title) }}</span>
+              <!-- Card Top Editorial Cover with Architectural Theming -->
+              <div
+                class="art-card-editorial-cover"
+                @click="openArticleReader(art)"
+              >
+                <!-- Watermark Background Glyph -->
+                <div class="cover-watermark-glyph">
+                  <component :is="getCategoryIconComponent(art.category)" :size="64" />
+                </div>
+
+                <!-- Cover Top Meta Row -->
+                <div class="cover-top-meta-row">
+                  <span class="editorial-cat-chip" :class="'pill-' + getCategoryBadgeColor(art.category)">
+                    <span class="cat-dot"></span>
+                    {{ art.category }}
                   </span>
-                  <span
-                    class="art-status-chip"
-                    :class="art.status === 'published' ? 'chip-live' : 'chip-draft'"
-                  >
-                    <span class="dot"></span>
-                    {{ art.status === 'published' ? 'Live' : 'Draft' }}
-                  </span>
+
+                  <div class="cover-meta-badges">
+                    <span class="cover-read-time">
+                      <Clock :size="11" />
+                      <span>{{ getReadTime(art.title) }}</span>
+                    </span>
+                    <span
+                      class="art-status-chip"
+                      :class="art.status === 'published' ? 'chip-live' : 'chip-draft'"
+                    >
+                      <span class="dot"></span>
+                      {{ art.status === 'published' ? 'Live' : 'Draft' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Cover Bottom Slug & Site Preview -->
+                <div class="cover-bottom-path-preview">
+                  <Globe :size="11" />
+                  <span class="cover-site-text">{{ art.siteName }}</span>
+                  <span class="cover-path-sep">/</span>
+                  <span class="cover-slug-text">{{ art.slug }}</span>
                 </div>
               </div>
 
@@ -978,19 +1034,10 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <!-- Card Target Container & Slug -->
-              <div class="card-route-strip">
-                <span class="route-site-badge">
-                  <Globe :size="11" />
-                  <span>{{ art.siteName }}</span>
-                </span>
-                <code class="route-slug-code">/{{ art.slug }}</code>
-              </div>
-
               <!-- Card Footer: Author, Views & Action Buttons -->
               <div class="editorial-card-footer">
                 <div class="art-author-row">
-                  <div class="author-avatar-mini">RP</div>
+                  <div class="author-avatar-mini">{{ art.author.split(' ').map(n => n[0]).join('').slice(0, 2) }}</div>
                   <div class="author-details">
                     <span class="author-name">{{ art.author }}</span>
                     <span class="art-date">{{ art.publishedAt }}</span>
@@ -1004,11 +1051,12 @@ onUnmounted(() => {
                   </div>
 
                   <button
-                    class="btn-card-icon-action"
+                    class="btn-card-read-action"
                     @click="openArticleReader(art)"
                     title="Baca Artikel Lengkap"
                   >
                     <BookOpen :size="13" />
+                    <span>Baca</span>
                   </button>
 
                   <button
@@ -1132,20 +1180,31 @@ onUnmounted(() => {
               :key="page.id"
               class="cms-page-card"
             >
-              <!-- Card Top: Route Path Pill & Status -->
-              <div class="page-card-top-bar">
-                <div class="page-route-box">
-                  <code class="page-path-pill">{{ page.path }}</code>
+              <!-- Card Top: Architectural Blueprint Cover -->
+              <div class="cms-page-top-cover" @click="openEditPageModal(page)">
+                <div class="page-cover-watermark">
+                  <Layers :size="64" />
                 </div>
-                <div class="page-card-top-right">
-                  <span class="page-layout-badge">{{ page.templateLayout }}</span>
-                  <span
-                    class="art-status-chip"
-                    :class="page.status === 'published' ? 'chip-live' : 'chip-draft'"
-                  >
-                    <span class="dot"></span>
-                    {{ page.status === 'published' ? 'Live' : 'Draft' }}
-                  </span>
+
+                <div class="page-cover-header-row">
+                  <code class="page-path-pill">{{ page.path }}</code>
+                  <div class="page-cover-meta-right">
+                    <span class="page-layout-badge">{{ page.templateLayout }}</span>
+                    <span
+                      class="art-status-chip"
+                      :class="page.status === 'published' ? 'chip-live' : 'chip-draft'"
+                    >
+                      <span class="dot"></span>
+                      {{ page.status === 'published' ? 'Live' : 'Draft' }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="page-cover-site-preview">
+                  <Server :size="11" />
+                  <span class="page-site-name">{{ page.siteName }}</span>
+                  <span class="page-dot-sep">•</span>
+                  <span class="page-container-tag">{{ page.containerId }}</span>
                 </div>
               </div>
 
@@ -1181,31 +1240,23 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <!-- Card Target Container & Update Date -->
-              <div class="page-card-site-strip">
-                <span class="route-site-badge">
-                  <Server :size="11" />
-                  <span>{{ page.siteName }}</span>
-                </span>
-                <span class="page-update-time">
-                  <Clock :size="11" />
-                  <span>Update: {{ page.updatedAt }}</span>
-                </span>
-              </div>
-
               <!-- Card Footer: Actions -->
               <div class="page-card-footer">
                 <div class="page-footer-left">
-                  <code class="page-container-code">{{ page.containerId }}</code>
+                  <span class="page-update-time">
+                    <Clock :size="11" />
+                    <span>{{ page.updatedAt }}</span>
+                  </span>
                 </div>
 
                 <div class="page-card-actions">
                   <button
-                    class="btn-card-icon-action"
+                    class="btn-card-read-action"
                     @click="openEditPageModal(page)"
                     title="Edit Halaman Statis"
                   >
                     <Edit3 :size="13" />
+                    <span>Edit</span>
                   </button>
 
                   <button
