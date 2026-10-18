@@ -1005,6 +1005,8 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
               </tr>
             </tbody>
           </table>
+        </div>
+      </main>
     </div>
 
     <!-- MODAL: PREVIEW & DETAIL BERKAS S3 (BESPOKE MEDIA INSPECTOR) -->
