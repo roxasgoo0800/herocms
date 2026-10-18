@@ -76,6 +76,7 @@ const {
   usedContainersCount,
   containers,
   articles,
+  cmsPages,
   activeArticleForReader,
   mediaStorage,
   copyToClipboard,
@@ -316,7 +317,7 @@ const handleLogout = async () => {
           >
             <FileText :size="17" />
             <span class="nav-link-text">Artikel & Halaman</span>
-            <span class="nav-badge">{{ articles.length }}</span>
+            <span class="nav-badge">{{ articles.length + cmsPages.length }}</span>
           </button>
 
           <button

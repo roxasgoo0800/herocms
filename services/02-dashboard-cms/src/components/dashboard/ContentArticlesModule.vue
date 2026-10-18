@@ -12,7 +12,6 @@ import {
   List,
   Clock,
   Zap,
-  Flame,
   Copy,
   X,
   BookOpen,
@@ -20,18 +19,36 @@ import {
   ChevronDown,
   ArrowLeft,
   ChevronRight,
-  Server
+  Server,
+  Plus,
+  Trash2,
+  Layers,
+  Compass
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
-import type { ContentArticle } from '../../types/dashboard';
+import type { ContentArticle, CmsPage } from '../../types/dashboard';
 
 const {
   articles,
+  cmsPages,
+  containers,
   activeArticleForReader,
   copyToClipboard,
-  copiedSubdomain
+  copiedSubdomain,
+  saveArticle,
+  deleteArticle,
+  saveCmsPage,
+  deleteCmsPage
 } = useDashboardData();
 
+// -------------------------------------------------------------
+// Tab Switcher State: 'articles' vs 'pages'
+// -------------------------------------------------------------
+const activeContentTab = ref<'articles' | 'pages'>('articles');
+
+// -------------------------------------------------------------
+// Search & Filter State
+// -------------------------------------------------------------
 const searchQuery = ref('');
 const debouncedQuery = ref('');
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -49,10 +66,84 @@ watch(searchQuery, (val) => {
 });
 
 const selectedCategory = ref('all');
+const selectedLayout = ref('all');
 const selectedStatus = ref('all');
 const viewMode = ref<'grid' | 'table'>('grid');
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
+// Dropdown Toggles
+const isCategoryDropdownOpen = ref(false);
+const isLayoutDropdownOpen = ref(false);
+const isStatusDropdownOpen = ref(false);
+
+const categoryOptions = [
+  { value: 'all', label: 'Semua Kategori' },
+  { value: 'Engineering', label: 'Engineering' },
+  { value: 'Distributed Systems', label: 'Distributed Systems' },
+  { value: 'DevOps', label: 'DevOps' },
+  { value: 'Security', label: 'Security' },
+  { value: 'Tutorial', label: 'Tutorial' }
+];
+
+const layoutOptions = [
+  { value: 'all', label: 'Semua Template' },
+  { value: 'landing-page', label: 'Landing Page' },
+  { value: 'standard-prose', label: 'Standard Prose / Doc' },
+  { value: 'compact-form', label: 'Contact / Form' },
+  { value: 'legal-document', label: 'Legal Document' }
+];
+
+const statusOptions = [
+  { value: 'all', label: 'Semua Status' },
+  { value: 'published', label: 'Published (Live)' },
+  { value: 'draft', label: 'Draft (WIP)' }
+];
+
+// -------------------------------------------------------------
+// Filtered Computations
+// -------------------------------------------------------------
+const filteredArticles = computed(() => {
+  return articles.value.filter(art => {
+    const q = debouncedQuery.value.toLowerCase().trim();
+    const matchesSearch = !q ||
+      art.title.toLowerCase().includes(q) ||
+      art.slug.toLowerCase().includes(q) ||
+      art.category.toLowerCase().includes(q) ||
+      art.author.toLowerCase().includes(q) ||
+      art.siteName.toLowerCase().includes(q) ||
+      (art.excerpt && art.excerpt.toLowerCase().includes(q));
+    if (!matchesSearch) return false;
+    if (selectedCategory.value !== 'all' && art.category !== selectedCategory.value) return false;
+    if (selectedStatus.value !== 'all' && art.status !== selectedStatus.value) return false;
+    return true;
+  });
+});
+
+const filteredPages = computed(() => {
+  return cmsPages.value.filter(page => {
+    const q = debouncedQuery.value.toLowerCase().trim();
+    const matchesSearch = !q ||
+      page.title.toLowerCase().includes(q) ||
+      page.path.toLowerCase().includes(q) ||
+      page.templateLayout.toLowerCase().includes(q) ||
+      page.siteName.toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+    if (selectedLayout.value !== 'all' && page.templateLayout !== selectedLayout.value) return false;
+    if (selectedStatus.value !== 'all' && page.status !== selectedStatus.value) return false;
+    return true;
+  });
+});
+
+// Helper Read Time
+const getReadTime = (title: string) => {
+  const words = title.length * 15;
+  const mins = Math.max(3, Math.round(words / 150));
+  return `${mins} min baca`;
+};
+
+// -------------------------------------------------------------
+// Reader Navigation State
+// -------------------------------------------------------------
 const openArticleReader = (art: ContentArticle) => {
   activeArticleForReader.value = art;
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -65,7 +156,6 @@ const closeArticleReader = () => {
 
 const copyCodeSnippet = () => {
   const snippet = `func RecordArticleHit(ctx context.Context, slug string) error {
-    // Atomic increment via Redis Sorted Set (ZSET) - Sub-millisecond latency
     return redisClient.ZIncrBy(ctx, "herocms:articles:views", 1.0, slug).Err()
 }`;
   copyToClipboard(snippet, 'code_snippet');
@@ -86,72 +176,194 @@ const nextArticle = computed(() => {
   return articles.value[currentArticleIndex.value + 1];
 });
 
-const filteredArticles = computed(() => {
-  return articles.value.filter(art => {
-    const q = debouncedQuery.value.toLowerCase().trim();
-    const matchesSearch = !q ||
-      art.title.toLowerCase().includes(q) ||
-      art.slug.toLowerCase().includes(q) ||
-      art.category.toLowerCase().includes(q) ||
-      art.author.toLowerCase().includes(q) ||
-      art.siteName.toLowerCase().includes(q);
-    if (!matchesSearch) return false;
-    if (selectedCategory.value !== 'all' && art.category !== selectedCategory.value) return false;
-    if (selectedStatus.value !== 'all' && art.status !== selectedStatus.value) return false;
-    return true;
-  });
-});
+// -------------------------------------------------------------
+// Content Editor Modal State (Universal for Articles & Pages)
+// -------------------------------------------------------------
+const isEditorModalOpen = ref(false);
+const editorContentType = ref<'article' | 'page'>('article');
+const editingId = ref<string | null>(null);
 
-const trendingArticle = computed(() => {
-  return [...articles.value].sort((a, b) => b.views - a.views)[0];
-});
+// Form Fields
+const formTitle = ref('');
+const formSlug = ref('');
+const formPath = ref('/');
+const formContainerId = ref('');
+const formCategory = ref('Engineering');
+const formAuthor = ref('Rizal Pratama');
+const formStatus = ref<'published' | 'draft'>('published');
+const formExcerpt = ref('');
+const formTags = ref('');
+const formTemplateLayout = ref('standard-prose');
+const formIsInNavbar = ref(false);
+const formIsInFooter = ref(false);
+const formMetaTitle = ref('');
+const formMetaDesc = ref('');
+const formContent = ref('');
 
-const getReadTime = (title: string) => {
-  const words = title.length * 15;
-  const mins = Math.max(3, Math.round(words / 150));
-  return `${mins} min baca`;
+// Auto Slugify Helper
+const slugify = (text: string) => {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
 };
 
-const getCategoryColor = (cat: string) => {
-  if (cat === 'Engineering') return 'cyan';
-  if (cat === 'Distributed Systems') return 'purple';
-  if (cat === 'DevOps') return 'emerald';
-  if (cat === 'Security') return 'sapphire';
-  if (cat === 'Tutorial') return 'amber';
-  return 'slate';
+const handleTitleInput = () => {
+  if (!editingId.value) {
+    const slug = slugify(formTitle.value);
+    if (editorContentType.value === 'article') {
+      formSlug.value = slug;
+    } else {
+      formPath.value = slug ? `/${slug}` : '/';
+    }
+  }
 };
 
-const getCategoryTags = (cat: string) => {
-  if (cat === 'Engineering') return ['#GO-SDK', '#DOCKER', '#CGROUPS-V2'];
-  if (cat === 'Distributed Systems') return ['#KAFKA', '#REDIS-ZSET', '#EVENT-STREAM'];
-  if (cat === 'DevOps') return ['#TRAEFIK-V3', '#EDGE-PROXY', '#1.8MS-TTFB'];
-  if (cat === 'Security') return ['#RATE-LIMIT', '#DDOS-WAF', '#TLS-ALPN'];
-  if (cat === 'Tutorial') return ['#HEADLESS-CMS', '#VUE3', '#LIGHTHOUSE'];
-  return ['#HEROCMS', '#CLOUD-NATIVE', '#EDGE'];
+const openCreateArticleModal = () => {
+  editorContentType.value = 'article';
+  editingId.value = null;
+  formTitle.value = '';
+  formSlug.value = '';
+  formContainerId.value = containers.value[0]?.id || 'cnt-01';
+  formCategory.value = 'Engineering';
+  formAuthor.value = 'Rizal Pratama';
+  formStatus.value = 'published';
+  formExcerpt.value = '';
+  formTags.value = 'HeroCMS, CloudNative, Edge';
+  formMetaTitle.value = '';
+  formMetaDesc.value = '';
+  formContent.value = `## Pengantar Artikel\n\nTulis konten artikel teknis Anda di sini menggunakan format Markdown yang bersih dan terstruktur.\n\n### Sub-topik Utama\n\nPenjelasan detail arsitektur, implementasi kode, atau panduan konfigurasi sistem.`;
+  isEditorModalOpen.value = true;
 };
 
-const isCategoryDropdownOpen = ref(false);
-const isStatusDropdownOpen = ref(false);
+const openEditArticleModal = (art: ContentArticle) => {
+  editorContentType.value = 'article';
+  editingId.value = art.id;
+  formTitle.value = art.title;
+  formSlug.value = art.slug;
+  formContainerId.value = art.containerId;
+  formCategory.value = art.category;
+  formAuthor.value = art.author;
+  formStatus.value = art.status;
+  formExcerpt.value = art.excerpt || '';
+  formTags.value = art.tags ? art.tags.join(', ') : 'HeroCMS, Edge';
+  formMetaTitle.value = art.metaTitle || art.title;
+  formMetaDesc.value = art.metaDesc || (art.excerpt || '');
+  formContent.value = art.content || `## ${art.title}\n\nKonten artikel disunting melalui HeroCMS Content Studio.`;
+  isEditorModalOpen.value = true;
+};
 
-const categoryOptions = [
-  { value: 'all', label: 'Semua Kategori' },
-  { value: 'Engineering', label: 'Engineering' },
-  { value: 'Distributed Systems', label: 'Distributed Systems' },
-  { value: 'DevOps', label: 'DevOps' },
-  { value: 'Security', label: 'Security' },
-  { value: 'Tutorial', label: 'Tutorial' }
-];
+const openCreatePageModal = () => {
+  editorContentType.value = 'page';
+  editingId.value = null;
+  formTitle.value = '';
+  formPath.value = '/';
+  formContainerId.value = containers.value[0]?.id || 'cnt-01';
+  formTemplateLayout.value = 'standard-prose';
+  formStatus.value = 'published';
+  formIsInNavbar.value = true;
+  formIsInFooter.value = true;
+  formMetaTitle.value = '';
+  formMetaDesc.value = '';
+  formContent.value = `# Halaman Baru\n\nKonten halaman statis website Anda. Di-render dengan kecepatan instan via Nginx Alpine & Traefik v3.`;
+  isEditorModalOpen.value = true;
+};
 
-const statusOptions = [
-  { value: 'all', label: 'Semua Status' },
-  { value: 'published', label: 'Published (Live)' },
-  { value: 'draft', label: 'Draft (WIP)' }
-];
+const openEditPageModal = (page: CmsPage) => {
+  editorContentType.value = 'page';
+  editingId.value = page.id;
+  formTitle.value = page.title;
+  formPath.value = page.path;
+  formContainerId.value = page.containerId;
+  formTemplateLayout.value = page.templateLayout;
+  formStatus.value = page.status;
+  formIsInNavbar.value = page.isInNavbar;
+  formIsInFooter.value = page.isInFooter;
+  formMetaTitle.value = page.metaTitle || page.title;
+  formMetaDesc.value = page.metaDesc || '';
+  formContent.value = page.content || `# ${page.title}\n\nIsi konten halaman statis website.`;
+  isEditorModalOpen.value = true;
+};
 
-const handleContentDropdownOutsideClick = (e: MouseEvent) => {
+const closeEditorModal = () => {
+  isEditorModalOpen.value = false;
+  editingId.value = null;
+};
+
+const handleSaveContent = () => {
+  if (!formTitle.value.trim()) {
+    alert('Judul konten wajib diisi.');
+    return;
+  }
+
+  const selectedSite = containers.value.find(c => c.id === formContainerId.value);
+  const siteName = selectedSite ? (selectedSite.customDomain || selectedSite.subdomain) : 'rizalpratama.cloud';
+
+  if (editorContentType.value === 'article') {
+    const finalSlug = formSlug.value.trim() || slugify(formTitle.value);
+    const tagArray = formTags.value
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => Boolean(t));
+
+    const articlePayload: ContentArticle = {
+      id: editingId.value || `art-${Date.now()}`,
+      title: formTitle.value.trim(),
+      slug: finalSlug,
+      siteName,
+      containerId: formContainerId.value,
+      category: formCategory.value,
+      author: formAuthor.value.trim() || 'Rizal Pratama',
+      views: editingId.value ? (articles.value.find(a => a.id === editingId.value)?.views || 100) : 0,
+      status: formStatus.value,
+      publishedAt: editingId.value
+        ? (articles.value.find(a => a.id === editingId.value)?.publishedAt || 'Baru Saja')
+        : 'Baru Saja',
+      excerpt: formExcerpt.value.trim() || formTitle.value.trim(),
+      tags: tagArray,
+      metaTitle: formMetaTitle.value.trim() || formTitle.value.trim(),
+      metaDesc: formMetaDesc.value.trim() || formExcerpt.value.trim(),
+      content: formContent.value
+    };
+
+    saveArticle(articlePayload);
+
+    // If currently reading this article, update the active reader state
+    if (activeArticleForReader.value && activeArticleForReader.value.id === articlePayload.id) {
+      activeArticleForReader.value = { ...articlePayload };
+    }
+  } else {
+    let finalPath = formPath.value.trim();
+    if (!finalPath.startsWith('/')) finalPath = `/${finalPath}`;
+
+    const pagePayload: CmsPage = {
+      id: editingId.value || `page-${Date.now()}`,
+      title: formTitle.value.trim(),
+      path: finalPath,
+      siteName,
+      containerId: formContainerId.value,
+      templateLayout: formTemplateLayout.value,
+      status: formStatus.value,
+      updatedAt: 'Baru Saja',
+      isInNavbar: formIsInNavbar.value,
+      isInFooter: formIsInFooter.value,
+      metaTitle: formMetaTitle.value.trim() || formTitle.value.trim(),
+      metaDesc: formMetaDesc.value.trim(),
+      content: formContent.value
+    };
+
+    saveCmsPage(pagePayload);
+  }
+
+  closeEditorModal();
+};
+
+const handleDropdownOutsideClick = (e: MouseEvent) => {
   const target = e.target as HTMLElement;
   if (!target.closest('.custom-filter-dropdown-wrap')) {
     isCategoryDropdownOpen.value = false;
+    isLayoutDropdownOpen.value = false;
     isStatusDropdownOpen.value = false;
   }
 };
@@ -165,18 +377,22 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
     setTimeout(() => {
       searchInputRef.value?.focus();
     }, 50);
-  } else if (e.key === 'Escape' && activeArticleForReader.value) {
-    closeArticleReader();
+  } else if (e.key === 'Escape') {
+    if (isEditorModalOpen.value) {
+      closeEditorModal();
+    } else if (activeArticleForReader.value) {
+      closeArticleReader();
+    }
   }
 };
 
 onMounted(() => {
-  document.addEventListener('click', handleContentDropdownOutsideClick);
+  document.addEventListener('click', handleDropdownOutsideClick);
   window.addEventListener('keydown', handleGlobalKeydown);
 });
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleContentDropdownOutsideClick);
+  document.removeEventListener('click', handleDropdownOutsideClick);
   window.removeEventListener('keydown', handleGlobalKeydown);
 });
 </script>
@@ -184,32 +400,59 @@ onUnmounted(() => {
 <template>
   <section class="fade-in-section">
     <!-- ============================================================= -->
-    <!-- 1. DEDICATED FULL-PAGE ARTICLE READER VIEW (THEMED STUDIO)   -->
+    <!-- 1. DEDICATED ARTICLE READER VIEW (DISTRACTION-FREE EDITORIAL) -->
     <!-- ============================================================= -->
     <div v-if="activeArticleForReader" class="article-reader-page">
-      <!-- Hero Header (Themed with Obsidian + Category Accent Gradient) -->
-      <div class="reader-page-hero" :class="'cover-' + getCategoryColor(activeArticleForReader.category)">
-        <div class="reader-hero-decor-grid"></div>
+      <!-- Reader Header Bar -->
+      <div class="reader-header-nav-bar">
+        <button class="btn-reader-back" @click="closeArticleReader()">
+          <ArrowLeft :size="15" />
+          <span>Kembali ke Studio Konten</span>
+        </button>
+
+        <div class="reader-header-nav-actions">
+          <button
+            class="btn-reader-action-secondary"
+            @click="copyToClipboard(`https://rizalpratama.cloud/${activeArticleForReader.slug}`, activeArticleForReader.id)"
+            :title="copiedSubdomain === activeArticleForReader.id ? 'Tersalin!' : 'Salin URL Live'"
+          >
+            <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
+            <Copy v-else :size="13" />
+            <span>{{ copiedSubdomain === activeArticleForReader.id ? 'URL Tersalin' : 'Salin URL' }}</span>
+          </button>
+
+          <button
+            class="btn-reader-action-primary"
+            @click="openEditArticleModal(activeArticleForReader)"
+          >
+            <Edit3 :size="13" />
+            <span>Edit Artikel Ini</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Hero Header Editorial -->
+      <div class="reader-editorial-hero">
         <div class="reader-hero-inner">
           <div class="reader-hero-badges">
-            <span class="cover-cat-pill" :class="'pill-' + getCategoryColor(activeArticleForReader.category)">
+            <span class="editorial-cat-chip">
               {{ activeArticleForReader.category.toUpperCase() }}
             </span>
             <span class="cover-read-time">
               <Clock :size="12" />
               <span>{{ getReadTime(activeArticleForReader.title) }}</span>
             </span>
-            <span class="seo-score-pill">
-              <Zap :size="12" />
-              <span>SEO 100/100</span>
-            </span>
-            <span class="art-status-chip chip-live">
+            <span class="art-status-chip" :class="activeArticleForReader.status === 'published' ? 'chip-live' : 'chip-draft'">
               <span class="dot"></span>
-              {{ activeArticleForReader.status === 'published' ? 'Edge Live' : 'Draft' }}
+              {{ activeArticleForReader.status === 'published' ? 'Published (Live CDN)' : 'Draft (WIP)' }}
             </span>
           </div>
 
           <h1 class="reader-page-title">{{ activeArticleForReader.title }}</h1>
+
+          <p v-if="activeArticleForReader.excerpt" class="reader-hero-lead">
+            {{ activeArticleForReader.excerpt }}
+          </p>
 
           <div class="reader-hero-meta-row">
             <div class="reader-author-profile">
@@ -226,7 +469,7 @@ onUnmounted(() => {
 
             <div class="reader-hero-metrics-strip">
               <div class="hero-metric-item">
-                <Eye :size="14" class="text-cyan" />
+                <Eye :size="14" class="text-blue" />
                 <span class="metric-num">{{ activeArticleForReader.views.toLocaleString('id-ID') }}</span>
                 <span class="metric-label">Redis Views</span>
               </div>
@@ -251,11 +494,11 @@ onUnmounted(() => {
             </div>
             <div class="callout-text-box">
               <span class="callout-title">Edge URL Publikasi Live:</span>
-              <code class="callout-url">https://rizalpratama.cloud/{{ activeArticleForReader.slug }}</code>
+              <code class="callout-url">https://{{ activeArticleForReader.siteName }}/{{ activeArticleForReader.slug }}</code>
             </div>
             <button
               class="btn-copy-callout"
-              @click="copyToClipboard(`https://rizalpratama.cloud/${activeArticleForReader.slug}`, activeArticleForReader.id)"
+              @click="copyToClipboard(`https://${activeArticleForReader.siteName}/${activeArticleForReader.slug}`, activeArticleForReader.id)"
               :title="copiedSubdomain === activeArticleForReader.id ? 'Tersalin!' : 'Salin URL'"
             >
               <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
@@ -263,71 +506,69 @@ onUnmounted(() => {
             </button>
           </div>
 
-          <!-- Dynamic Editorial Body -->
+          <!-- Editorial Body -->
           <div class="reader-prose-body">
-            <p class="reader-lead-paragraph">
-              Dalam implementasi arsitektur cloud-native modern, kecepatan penyajian konten statis dan dinamis di level reverse proxy edge Traefik v3 menjadi faktor penentu utama pengalaman pengguna, ranking SEO Google Core Web Vitals, serta efisiensi penggunaan memori server.
-            </p>
+            <div class="reader-markdown-render">
+              <p class="reader-lead-paragraph">
+                {{ activeArticleForReader.excerpt || 'Dalam implementasi cloud-native modern, optimalisasi latensi edge Traefik v3 dan isolasi CPU cgroups v2 menjadi fondasi performa tinggi.' }}
+              </p>
 
-            <h2 id="section-1">1. Isolasi Resource Kernel Linux cgroups v2</h2>
-            <p>
-              Setiap tenant situs pada HeroCMS dialokasikan di dalam kontainer Docker Alpine Nginx mandiri yang terisolasi ketat. Menggunakan subsistem <strong>cgroups v2</strong> pada kernel Linux, sistem menerapkan batas memori hard-limit sebesar <code>256 MB</code> dan pembatasan alokasi CPU maksimum <code>0.5 vCPU</code>.
-            </p>
-            <p>
-              Dengan arsitektur ini, lonjakan trafik tiba-tiba pada satu tenant tidak akan pernah menyebabkan degradasi kinerja atau kondisi <em>out-of-memory (OOM)</em> pada tenant lainnya dalam kluster yang sama.
-            </p>
+              <h2 id="sec-1">1. Arsitektur Isolasi Kernel Linux & Kontainer Nginx</h2>
+              <p>
+                Setiap tenant HeroCMS beroperasi di dalam sandbox Docker Alpine terisolasi mandiri. Batas memori hard-limit <code>256 MB</code> dan pembatasan alokasi CPU maksimum <code>0.5 vCPU</code> memastikan lonjakan beban pada satu tenant tidak mengganggu stabilitas tenant lain.
+              </p>
 
-            <div class="reader-info-callout">
-              <div class="info-callout-icon"><Zap :size="16" /></div>
-              <div class="info-callout-body">
-                <strong>Catatan Arsitektur:</strong> Traefik v3 membaca label Docker secara dinamis melalui socket <code>/var/run/docker.sock</code>. Begitu kontainer tenant di-deploy, routing otomatis dibuat dalam hitungan milidetik tanpa perlu reload Nginx master.
-              </div>
-            </div>
-
-            <h2 id="section-2">2. Telemetri Real-Time Non-Blocking dengan Redis Sorted Sets (ZSET)</h2>
-            <p>
-              Setiap kali rute artikel ini diakses oleh browser pengunjung, edge middleware Traefik secara asinkron meneruskan sinyal telemetry ke antrian Kafka, yang kemudian diakumulasikan ke Redis Sorted Sets (<code>ZSET</code>) menggunakan perintah atomik:
-            </p>
-
-            <!-- Code Block Demonstration -->
-            <div class="reader-code-card">
-              <div class="code-card-header">
-                <div class="code-header-left">
-                  <span class="code-dot red"></span>
-                  <span class="code-dot yellow"></span>
-                  <span class="code-dot green"></span>
-                  <span class="code-filename">internal/telemetry/redis_counter.go</span>
+              <div class="reader-info-callout">
+                <div class="info-callout-icon"><Zap :size="16" /></div>
+                <div class="info-callout-body">
+                  <strong>Catatan Arsitektur:</strong> Traefik v3 membaca event Docker secara real-time via <code>/var/run/docker.sock</code>. Routing otomatis dibuat dalam hitungan milidetik tanpa reload Nginx master.
                 </div>
-                <button
-                  class="btn-code-copy"
-                  @click="copyCodeSnippet()"
-                >
-                  <Check v-if="copiedSubdomain === 'code_snippet'" :size="12" class="text-green" />
-                  <Copy v-else :size="12" />
-                  <span>{{ copiedSubdomain === 'code_snippet' ? 'Tersalin' : 'Salin Kode' }}</span>
-                </button>
               </div>
-              <pre class="code-pre"><code><span class="token-keyword">func</span> <span class="token-function">RecordArticleHit</span>(ctx context.Context, slug <span class="token-type">string</span>) <span class="token-type">error</span> {
+
+              <h2 id="sec-2">2. Telemetri Real-Time Non-Blocking Redis ZSET</h2>
+              <p>
+                Setiap request halaman dicatat secara asinkron ke Redis Sorted Sets (<code>ZSET</code>) menggunakan perintah atomik dengan latensi sub-millisecond:
+              </p>
+
+              <div class="reader-code-card">
+                <div class="code-card-header">
+                  <div class="code-header-left">
+                    <span class="code-dot red"></span>
+                    <span class="code-dot yellow"></span>
+                    <span class="code-dot green"></span>
+                    <span class="code-filename">internal/telemetry/redis_counter.go</span>
+                  </div>
+                  <button
+                    class="btn-code-copy"
+                    @click="copyCodeSnippet()"
+                  >
+                    <Check v-if="copiedSubdomain === 'code_snippet'" :size="12" class="text-green" />
+                    <Copy v-else :size="12" />
+                    <span>{{ copiedSubdomain === 'code_snippet' ? 'Tersalin' : 'Salin Kode' }}</span>
+                  </button>
+                </div>
+                <pre class="code-pre"><code><span class="token-keyword">func</span> <span class="token-function">RecordArticleHit</span>(ctx context.Context, slug <span class="token-type">string</span>) <span class="token-type">error</span> {
     <span class="token-comment">// Atomic increment via Redis Sorted Set (ZSET) - Sub-millisecond latency</span>
     <span class="token-keyword">return</span> redisClient.<span class="token-function">ZIncrBy</span>(ctx, <span class="token-string">"herocms:articles:views"</span>, <span class="token-number">1.0</span>, slug).<span class="token-function">Err</span>()
 }</code></pre>
-            </div>
+              </div>
 
-            <h2 id="section-3">3. Optimasi Cache Header & TLS ALPN Passthrough</h2>
-            <p>
-              Header <code>Cache-Control: public, max-age=31536000, immutable</code> secara otomatis diinjeksi pada file statis CSS, JS, dan gambar WebP. Sementara dokumen HTML halaman di-cache di level edge Traefik dengan strategi <code>stale-while-revalidate</code>, memastikan latensi <em>Time To First Byte (TTFB)</em> konsisten di bawah <strong>2ms</strong> bagi pengunjung global.
-            </p>
+              <h2 id="sec-3">3. Optimasi Cache Header & TLS ALPN</h2>
+              <p>
+                Header <code>Cache-Control: public, max-age=31536000, immutable</code> diinjeksi pada file statis CSS, JS, dan WebP. Dokumen HTML di-cache di level edge Traefik dengan strategi <code>stale-while-revalidate</code>, memastikan TTFB konsisten di bawah 2ms.
+              </p>
 
-            <!-- Tech Tags Cloud -->
-            <div class="reader-article-tags">
-              <span class="tag-lead">Topik Terkait:</span>
-              <span
-                v-for="tag in getCategoryTags(activeArticleForReader.category)"
-                :key="tag"
-                class="reader-tag-chip"
-              >
-                {{ tag }}
-              </span>
+              <!-- Tags Cloud -->
+              <div v-if="activeArticleForReader.tags && activeArticleForReader.tags.length" class="reader-article-tags">
+                <span class="tag-lead">Topik Terkait:</span>
+                <span
+                  v-for="tag in activeArticleForReader.tags"
+                  :key="tag"
+                  class="reader-tag-chip"
+                >
+                  #{{ tag }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -362,7 +603,7 @@ onUnmounted(() => {
 
         <!-- Sidebar Inspector (Right, 28%) -->
         <aside class="reader-sidebar-inspector">
-          <!-- Metadata Inspector Card -->
+          <!-- Metadata Card -->
           <div class="inspector-card">
             <h4 class="inspector-title">
               <Server :size="14" />
@@ -396,7 +637,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Real-Time Edge Telemetry Card -->
+          <!-- Telemetry Metric Card -->
           <div class="inspector-card">
             <h4 class="inspector-title">
               <Activity :size="14" />
@@ -412,7 +653,7 @@ onUnmounted(() => {
                 <span class="tc-lbl">Edge TTFB</span>
               </div>
               <div class="tc-metric">
-                <span class="tc-val text-cyan">99.4%</span>
+                <span class="tc-val text-blue">99.4%</span>
                 <span class="tc-lbl">Cache Hit</span>
               </div>
               <div class="tc-metric">
@@ -422,36 +663,80 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Quick Return Button -->
           <button class="btn-sidebar-back-list" @click="closeArticleReader()">
             <ArrowLeft :size="14" />
-            <span>Kembali ke Daftar Artikel</span>
+            <span>Kembali ke Studio Konten</span>
           </button>
         </aside>
       </div>
     </div>
 
     <!-- ============================================================= -->
-    <!-- 2. DEFAULT ARTICLES & PAGES LIST VIEW (WHEN NOT IN READER)     -->
+    <!-- 2. DEFAULT VIEW: DUAL-CONTENT ENGINE (ARTICLES & CMS PAGES)   -->
     <!-- ============================================================= -->
     <div v-else>
-      <!-- Header Intro -->
-      <div class="page-intro-row">
+      <!-- Header Baris 1: Judul Modul & Tombol Aksi Tambah -->
+      <div class="content-studio-header-row">
         <div>
-          <h1 class="page-title">Konten & Editorial Studio</h1>
-          <p class="page-desc">Jelajahi publikasi konten, postingan editorial teknis, dan landing page kontainer tenant Anda dengan sinkronisasi CDN Traefik dan OpenGraph otomatis.</p>
+          <h1 class="page-title">Artikel & Halaman CMS</h1>
+          <p class="page-desc">
+            Pusat manajemen konten enterprise: publikasikan artikel editorial berkala dan kelola halaman website statis tenant Anda.
+          </p>
+        </div>
+
+        <div class="content-studio-actions">
+          <button
+            v-if="activeContentTab === 'articles'"
+            class="btn-top-create"
+            @click="openCreateArticleModal()"
+          >
+            <Plus :size="15" />
+            <span>Tulis Artikel Baru</span>
+          </button>
+          <button
+            v-else
+            class="btn-top-create"
+            @click="openCreatePageModal()"
+          >
+            <Plus :size="15" />
+            <span>Tambah Halaman Baru</span>
+          </button>
         </div>
       </div>
 
-      <!-- 4 Content Telemetry Cards -->
-      <div class="stats-overview-grid">
+      <!-- Segmented Tab Nav: Artikel & Blog vs Halaman Statis -->
+      <div class="content-tab-navigation-bar">
+        <div class="segmented-tab-group">
+          <button
+            class="btn-segmented-tab"
+            :class="{ active: activeContentTab === 'articles' }"
+            @click="activeContentTab = 'articles'"
+          >
+            <BookOpen :size="14" />
+            <span>Artikel & Blog</span>
+            <span class="tab-count-badge">{{ articles.length }}</span>
+          </button>
+          <button
+            class="btn-segmented-tab"
+            :class="{ active: activeContentTab === 'pages' }"
+            @click="activeContentTab = 'pages'"
+          >
+            <Layers :size="14" />
+            <span>Halaman Statis (Pages)</span>
+            <span class="tab-count-badge">{{ cmsPages.length }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Telemetry Cards (Adaptive per Tab) -->
+      <div v-if="activeContentTab === 'articles'" class="stats-overview-grid">
         <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL ARTIKEL</span>
             <div class="telemetry-glyph blue"><FileText :size="15" /></div>
           </div>
           <div class="telemetry-val">{{ articles.length }} <span class="telemetry-denom">Artikel</span></div>
-          <div class="telemetry-sub"><span>8,450 kata terindeks di edge</span></div>
+          <div class="telemetry-sub"><span>8,450 kata terindeks di Edge CDN</span></div>
         </div>
 
         <div class="telemetry-card">
@@ -482,79 +767,54 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Featured Post Spotlight Card (Top Trending Post on Redis) -->
-      <div v-if="trendingArticle" class="spotlight-post-card">
-        <div class="spotlight-glow-layer"></div>
-        <div class="spotlight-content">
-          <div class="spotlight-tag-row">
-            <span class="spotlight-fire-pill">
-              <Flame :size="13" />
-              <span>#1 POPULER DI REDIS STREAM</span>
-            </span>
-            <span class="spotlight-site-tag">{{ trendingArticle.siteName }}</span>
+      <div v-else class="stats-overview-grid">
+        <div class="telemetry-card">
+          <div class="telemetry-top">
+            <span class="telemetry-label">TOTAL HALAMAN STATIS</span>
+            <div class="telemetry-glyph blue"><Layers :size="15" /></div>
           </div>
+          <div class="telemetry-val">{{ cmsPages.length }} <span class="telemetry-denom">Halaman</span></div>
+          <div class="telemetry-sub"><span>Rute web terisolasi di Nginx tenant</span></div>
+        </div>
 
-          <div class="spotlight-main-row">
-            <div class="spotlight-info">
-              <h2 class="spotlight-title" @click="openArticleReader(trendingArticle)" style="cursor: pointer;">
-                {{ trendingArticle.title }}
-              </h2>
-              <p class="spotlight-excerpt">
-                Eksplorasi mendalam mengenai arsitektur sistem otonom, isolasi resource CPU cgroups v2, integrasi event stream Kafka, dan latensi proxy Traefik v3 sub-2ms.
-              </p>
-
-              <div class="spotlight-meta-strip">
-                <span class="s-meta-item">
-                  <Eye :size="13" class="text-blue" />
-                  <strong>{{ trendingArticle.views.toLocaleString('id-ID') }}</strong> Views
-                </span>
-                <span class="s-meta-item">
-                  <Clock :size="13" />
-                  {{ getReadTime(trendingArticle.title) }}
-                </span>
-                <span class="s-meta-item seo-score-pill">
-                  <Zap :size="11" />
-                  SEO 99/100
-                </span>
-                <span class="s-meta-item">
-                  <Calendar :size="13" />
-                  {{ trendingArticle.publishedAt }}
-                </span>
-              </div>
-            </div>
-
-            <div class="spotlight-actions">
-              <button
-                class="btn-spotlight-edit"
-                @click="openArticleReader(trendingArticle)"
-              >
-                <Eye :size="14" />
-                <span>Baca Artikel Lengkap</span>
-              </button>
-              <button
-                class="btn-spotlight-copy"
-                @click="copyToClipboard(`https://rizalpratama.cloud/${trendingArticle.slug}`, trendingArticle.id)"
-                :title="copiedSubdomain === trendingArticle.id ? 'Tersalin!' : 'Salin URL Artikel'"
-              >
-                <Check v-if="copiedSubdomain === trendingArticle.id" :size="14" class="text-green" />
-                <Copy v-else :size="14" />
-                <span>{{ copiedSubdomain === trendingArticle.id ? 'URL Tersalin' : 'Salin URL' }}</span>
-              </button>
-            </div>
+        <div class="telemetry-card">
+          <div class="telemetry-top">
+            <span class="telemetry-label">HALAMAN LIVE</span>
+            <div class="telemetry-glyph emerald"><Check :size="15" /></div>
           </div>
+          <div class="telemetry-val">{{ cmsPages.filter(p => p.status === 'published').length }} <span class="badge-online">Live Route</span></div>
+          <div class="telemetry-sub"><span>Tersedia untuk traffic publik</span></div>
+        </div>
+
+        <div class="telemetry-card">
+          <div class="telemetry-top">
+            <span class="telemetry-label">NAVBAR MENU UTAMA</span>
+            <div class="telemetry-glyph purple"><Compass :size="15" /></div>
+          </div>
+          <div class="telemetry-val">{{ cmsPages.filter(p => p.isInNavbar).length }} <span class="badge-growth-pill">Header Nav</span></div>
+          <div class="telemetry-sub"><span>Tautkan otomatis pada navbar website</span></div>
+        </div>
+
+        <div class="telemetry-card">
+          <div class="telemetry-top">
+            <span class="telemetry-label">FOOTER LINKS</span>
+            <div class="telemetry-glyph blue"><Globe :size="15" /></div>
+          </div>
+          <div class="telemetry-val">{{ cmsPages.filter(p => p.isInFooter).length }} <span class="badge-growth-pill">Footer Nav</span></div>
+          <div class="telemetry-sub"><span>Kebijakan, kontak, dan tautan sekunder</span></div>
         </div>
       </div>
 
       <!-- Toolbar Filters & View Switcher -->
       <div class="editorial-toolbar">
-        <!-- Custom Clean Search Bar (Obsidian/Cyan Themed, No Collisions) -->
+        <!-- Search Input -->
         <div class="articles-search-bar">
           <Search :size="15" class="articles-search-icon" />
           <input
             ref="searchInputRef"
             v-model="searchQuery"
             type="text"
-            placeholder="Cari judul artikel, slug URL, kata kunci, topik..."
+            :placeholder="activeContentTab === 'articles' ? 'Cari judul artikel, slug, kategori, penulis...' : 'Cari judul halaman, URL path, template layout...'"
             class="articles-search-input"
           />
           <button
@@ -570,8 +830,8 @@ onUnmounted(() => {
         </div>
 
         <div class="toolbar-controls-right">
-          <!-- Custom Category Dropdown -->
-          <div class="custom-filter-dropdown-wrap">
+          <!-- Dropdown Kategori (Tab Artikel) -->
+          <div v-if="activeContentTab === 'articles'" class="custom-filter-dropdown-wrap">
             <button
               type="button"
               class="custom-filter-trigger-btn"
@@ -596,12 +856,38 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Custom Status Dropdown -->
+          <!-- Dropdown Template Layout (Tab Halaman Statis) -->
+          <div v-else class="custom-filter-dropdown-wrap">
+            <button
+              type="button"
+              class="custom-filter-trigger-btn"
+              @click.stop="isLayoutDropdownOpen = !isLayoutDropdownOpen; isStatusDropdownOpen = false"
+              title="Filter Template Layout"
+            >
+              <span>{{ layoutOptions.find(o => o.value === selectedLayout)?.label || 'Semua Template' }}</span>
+              <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isLayoutDropdownOpen }" />
+            </button>
+            <div v-if="isLayoutDropdownOpen" class="custom-filter-dropdown-menu">
+              <button
+                v-for="opt in layoutOptions"
+                :key="opt.value"
+                type="button"
+                class="custom-filter-dropdown-item"
+                :class="{ active: selectedLayout === opt.value }"
+                @click="selectedLayout = opt.value; isLayoutDropdownOpen = false"
+              >
+                <span>{{ opt.label }}</span>
+                <Check v-if="selectedLayout === opt.value" :size="13" class="dropdown-check-icon" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Dropdown Status (Published vs Draft) -->
           <div class="custom-filter-dropdown-wrap">
             <button
               type="button"
               class="custom-filter-trigger-btn"
-              @click.stop="isStatusDropdownOpen = !isStatusDropdownOpen; isCategoryDropdownOpen = false"
+              @click.stop="isStatusDropdownOpen = !isStatusDropdownOpen; isCategoryDropdownOpen = false; isLayoutDropdownOpen = false"
               title="Filter Status"
             >
               <span>{{ statusOptions.find(o => o.value === selectedStatus)?.label || 'Semua Status' }}</span>
@@ -644,86 +930,26 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- 1. GRID OF VISUAL ARTICLE CARDS -->
-      <div v-if="viewMode === 'grid'">
-        <div class="articles-card-grid">
-          <div
-            v-for="art in filteredArticles"
-            :key="art.id"
-            class="article-visual-card"
-          >
-            <!-- Visual Hero Cover with Theme Accent Gradient -->
+      <!-- ============================================================= -->
+      <!-- TAB 1: ARTIKEL & BLOG DISPLAY                                 -->
+      <!-- ============================================================= -->
+      <div v-if="activeContentTab === 'articles'">
+        <!-- Grid View: Editorial Clean Cards -->
+        <div v-if="viewMode === 'grid'">
+          <div class="editorial-card-grid">
             <div
-              class="art-card-cover"
-              :class="'cover-' + getCategoryColor(art.category)"
-              @click="openArticleReader(art)"
-              style="cursor: pointer;"
+              v-for="art in filteredArticles"
+              :key="art.id"
+              class="editorial-article-card"
             >
-              <div class="art-cover-glow"></div>
-              
-              <!-- Top Metadata Strip inside Cover -->
-              <div class="cover-top-meta">
-                <span class="cover-cat-pill" :class="'pill-' + getCategoryColor(art.category)">
-                  {{ art.category.toUpperCase() }}
-                </span>
-                <div class="cover-top-right">
+              <!-- Card Top Meta Bar -->
+              <div class="card-meta-bar">
+                <span class="editorial-cat-chip">{{ art.category }}</span>
+                <div class="card-meta-bar-right">
                   <span class="cover-read-time">
                     <Clock :size="11" />
                     <span>{{ getReadTime(art.title) }}</span>
                   </span>
-                  <span class="seo-score-pill">
-                    <Zap :size="11" />
-                    <span>SEO 100</span>
-                  </span>
-                </div>
-              </div>
-
-              <!-- Cover Center Tech Visual -->
-              <div class="art-cover-center">
-                <div class="art-floating-icon">
-                  <BookOpen :size="26" />
-                </div>
-                <div class="cover-dynamic-tags">
-                  <span
-                    v-for="tag in getCategoryTags(art.category)"
-                    :key="tag"
-                    class="tag-micro-badge"
-                  >
-                    {{ tag }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Target Site Chip on Cover Bottom -->
-              <div class="cover-bottom-bar">
-                <span class="cover-site-badge">
-                  <Globe :size="11" />
-                  <span>{{ art.siteName }}</span>
-                </span>
-                <span class="cover-slug-chip">/{{ art.slug }}</span>
-              </div>
-            </div>
-
-            <!-- Card Body Content -->
-            <div class="art-card-content">
-              <h3 class="art-card-title" @click="openArticleReader(art)" style="cursor: pointer;">
-                {{ art.title }}
-              </h3>
-
-              <div class="art-card-footer">
-                <div class="art-author-row">
-                  <div class="author-avatar-mini">RP</div>
-                  <div class="author-details">
-                    <span class="author-name">{{ art.author }}</span>
-                    <span class="art-date">{{ art.publishedAt }}</span>
-                  </div>
-                </div>
-
-                <div class="art-metrics-col">
-                  <div class="art-views-badge">
-                    <Eye :size="12" class="text-blue" />
-                    <span>{{ art.views.toLocaleString('id-ID') }}</span>
-                  </div>
                   <span
                     class="art-status-chip"
                     :class="art.status === 'published' ? 'chip-live' : 'chip-draft'"
@@ -734,101 +960,534 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <!-- Card Action Bar -->
-              <div class="art-card-actions-bar">
-                <button
-                  class="btn-card-action primary"
-                  @click="openArticleReader(art)"
-                >
-                  <Eye :size="13" />
-                  <span>Baca Artikel</span>
-                </button>
-                <button
-                  class="btn-card-action"
-                  @click="copyToClipboard(`https://rizalpratama.cloud/${art.slug}`, art.id)"
-                  :title="copiedSubdomain === art.id ? 'Tersalin!' : 'Salin Tautan'"
-                >
-                  <Check v-if="copiedSubdomain === art.id" :size="13" class="text-green" />
-                  <Copy v-else :size="13" />
-                </button>
+              <!-- Card Body Content -->
+              <div class="card-main-body">
+                <h3 class="editorial-card-title" @click="openArticleReader(art)">
+                  {{ art.title }}
+                </h3>
+
+                <p class="editorial-card-excerpt">
+                  {{ art.excerpt || 'Eksplorasi mendalam arsitektur cloud-native, isolasi cgroups v2, dan routing Traefik v3.' }}
+                </p>
+
+                <!-- Tags Row -->
+                <div v-if="art.tags && art.tags.length" class="editorial-tags-row">
+                  <span v-for="tag in art.tags.slice(0, 3)" :key="tag" class="tag-subtle-badge">
+                    #{{ tag }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Card Target Container & Slug -->
+              <div class="card-route-strip">
+                <span class="route-site-badge">
+                  <Globe :size="11" />
+                  <span>{{ art.siteName }}</span>
+                </span>
+                <code class="route-slug-code">/{{ art.slug }}</code>
+              </div>
+
+              <!-- Card Footer: Author, Views & Action Buttons -->
+              <div class="editorial-card-footer">
+                <div class="art-author-row">
+                  <div class="author-avatar-mini">RP</div>
+                  <div class="author-details">
+                    <span class="author-name">{{ art.author }}</span>
+                    <span class="art-date">{{ art.publishedAt }}</span>
+                  </div>
+                </div>
+
+                <div class="editorial-card-actions">
+                  <div class="art-views-badge" title="Redis Atomic Views">
+                    <Eye :size="12" class="text-blue" />
+                    <span>{{ art.views.toLocaleString('id-ID') }}</span>
+                  </div>
+
+                  <button
+                    class="btn-card-icon-action"
+                    @click="openArticleReader(art)"
+                    title="Baca Artikel Lengkap"
+                  >
+                    <BookOpen :size="13" />
+                  </button>
+
+                  <button
+                    class="btn-card-icon-action"
+                    @click="openEditArticleModal(art)"
+                    title="Edit Artikel"
+                  >
+                    <Edit3 :size="13" />
+                  </button>
+
+                  <button
+                    class="btn-card-icon-action"
+                    @click="copyToClipboard(`https://${art.siteName}/${art.slug}`, art.id)"
+                    :title="copiedSubdomain === art.id ? 'Tersalin!' : 'Salin URL Artikel'"
+                  >
+                    <Check v-if="copiedSubdomain === art.id" :size="13" class="text-green" />
+                    <Copy v-else :size="13" />
+                  </button>
+
+                  <button
+                    class="btn-card-icon-action btn-danger-action"
+                    @click="deleteArticle(art)"
+                    title="Hapus Artikel"
+                  >
+                    <Trash2 :size="13" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+
+          <div v-if="filteredArticles.length === 0" class="empty-state-box">
+            <FileText :size="38" class="empty-icon" />
+            <h4>Tidak ada artikel yang cocok</h4>
+            <p>Sesuaikan kata kunci pencarian atau filter kategori Anda.</p>
+          </div>
         </div>
 
-        <div v-if="filteredArticles.length === 0" class="empty-state-box">
-          <FileText :size="38" class="empty-icon" />
-          <h4>Tidak ada artikel yang cocok dengan filter</h4>
-          <p>Sesuaikan kata kunci pencarian atau filter kategori Anda.</p>
+        <!-- Table View: Professional Ledger -->
+        <div v-else class="articles-panel">
+          <div class="table-responsive">
+            <table class="ledger-table">
+              <thead>
+                <tr>
+                  <th>JUDUL ARTIKEL & SLUG</th>
+                  <th>TARGET SITUS</th>
+                  <th>KATEGORI</th>
+                  <th>STATUS</th>
+                  <th>VIEWS (REDIS)</th>
+                  <th>TANGGAL RILIS</th>
+                  <th style="text-align: right">AKSI</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="art in filteredArticles" :key="art.id">
+                  <td>
+                    <div class="art-title-cell" @click="openArticleReader(art)" style="cursor: pointer;">
+                      <div class="art-title-text">{{ art.title }}</div>
+                      <div class="art-slug-box">
+                        <code>/{{ art.slug }}</code>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="site-tag">{{ art.siteName }}</span>
+                  </td>
+                  <td>
+                    <span class="editorial-cat-chip">{{ art.category }}</span>
+                  </td>
+                  <td>
+                    <span class="art-status-chip" :class="art.status === 'published' ? 'chip-live' : 'chip-draft'">
+                      <span class="dot"></span>
+                      {{ art.status === 'published' ? 'Live' : 'Draft' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="views-cell">
+                      <Eye :size="12" class="view-icon" />
+                      <span>{{ art.views.toLocaleString('id-ID') }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="date-cell">
+                      <Calendar :size="12" />
+                      <span>{{ art.publishedAt }}</span>
+                    </div>
+                  </td>
+                  <td style="text-align: right">
+                    <div class="row-actions">
+                      <button class="btn-action-icon" @click="openArticleReader(art)" title="Baca Artikel">
+                        <BookOpen :size="13" />
+                      </button>
+                      <button class="btn-action-icon" @click="openEditArticleModal(art)" title="Edit Artikel">
+                        <Edit3 :size="13" />
+                      </button>
+                      <button class="btn-action-icon" @click="copyToClipboard(`https://${art.siteName}/${art.slug}`, art.id)" :title="copiedSubdomain === art.id ? 'Tersalin!' : 'Salin Tautan'">
+                        <Check v-if="copiedSubdomain === art.id" :size="13" class="text-green" />
+                        <Copy v-else :size="13" />
+                      </button>
+                      <button class="btn-action-icon danger" @click="deleteArticle(art)" title="Hapus Artikel">
+                        <Trash2 :size="13" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- 2. DATA TABLE VIEW (WHEN TOGGLED) -->
-      <div v-else class="articles-panel">
-        <div class="table-responsive">
-          <table class="articles-table">
-            <thead>
-              <tr>
-                <th>JUDUL ARTIKEL & SLUG</th>
-                <th>TARGET SITUS</th>
-                <th>KATEGORI</th>
-                <th>STATUS</th>
-                <th>VIEWS (REDIS)</th>
-                <th>TANGGAL RILIS</th>
-                <th style="text-align: right">AKSI</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="art in filteredArticles" :key="art.id">
-                <td>
-                  <div class="art-title-cell" @click="openArticleReader(art)" style="cursor: pointer;">
-                    <div class="art-title-text">{{ art.title }}</div>
-                    <div class="art-slug-box">
-                      <code>/{{ art.slug }}</code>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <span class="site-tag">{{ art.siteName }}</span>
-                </td>
-                <td>
-                  <span class="category-pill">{{ art.category }}</span>
-                </td>
-                <td>
-                  <span class="status-badge" :class="art.status === 'published' ? 'badge-published' : 'badge-draft'">
-                    <span class="status-dot"></span>
-                    {{ art.status === 'published' ? 'Published' : 'Draft' }}
+      <!-- ============================================================= -->
+      <!-- TAB 2: HALAMAN STATIS (CMS PAGES) DISPLAY                     -->
+      <!-- ============================================================= -->
+      <div v-else>
+        <!-- Grid View: Architectural Page Cards -->
+        <div v-if="viewMode === 'grid'">
+          <div class="cms-pages-grid">
+            <div
+              v-for="page in filteredPages"
+              :key="page.id"
+              class="cms-page-card"
+            >
+              <!-- Card Top: Route Path Pill & Status -->
+              <div class="page-card-top-bar">
+                <div class="page-route-box">
+                  <code class="page-path-pill">{{ page.path }}</code>
+                </div>
+                <div class="page-card-top-right">
+                  <span class="page-layout-badge">{{ page.templateLayout }}</span>
+                  <span
+                    class="art-status-chip"
+                    :class="page.status === 'published' ? 'chip-live' : 'chip-draft'"
+                  >
+                    <span class="dot"></span>
+                    {{ page.status === 'published' ? 'Live' : 'Draft' }}
                   </span>
-                </td>
-                <td>
-                  <div class="views-cell">
-                    <Eye :size="12" class="view-icon" />
-                    <span>{{ art.views.toLocaleString('id-ID') }}</span>
-                  </div>
-                </td>
-                <td>
-                  <div class="date-cell">
-                    <Calendar :size="12" />
-                    <span>{{ art.publishedAt }}</span>
-                  </div>
-                </td>
-                <td style="text-align: right">
-                  <div class="row-actions">
-                    <button class="btn-action-icon" @click="openArticleReader(art)" title="Baca Artikel">
-                      <Eye :size="13" />
-                    </button>
-                    <button class="btn-action-icon" @click="copyToClipboard(`https://rizalpratama.cloud/${art.slug}`, art.id)" :title="copiedSubdomain === art.id ? 'Tersalin!' : 'Salin Tautan'">
-                      <Check v-if="copiedSubdomain === art.id" :size="13" class="text-green" />
-                      <Copy v-else :size="13" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </div>
+              </div>
+
+              <!-- Card Body: Title & Meta -->
+              <div class="page-card-body">
+                <h3 class="page-card-title" @click="openEditPageModal(page)">
+                  {{ page.title }}
+                </h3>
+
+                <p class="page-card-desc">
+                  {{ page.metaDesc || 'Halaman statis siap saji dengan isolasi Nginx Alpine dan optimasi cache Traefik edge.' }}
+                </p>
+
+                <!-- Navigation Integration Indicators -->
+                <div class="page-nav-indicators">
+                  <span
+                    class="nav-indicator-pill"
+                    :class="{ active: page.isInNavbar }"
+                    :title="page.isInNavbar ? 'Ditampilkan di Header Navbar' : 'Tidak tampil di Navbar'"
+                  >
+                    <Compass :size="11" />
+                    <span>Navbar Header {{ page.isInNavbar ? '✓' : '—' }}</span>
+                  </span>
+
+                  <span
+                    class="nav-indicator-pill"
+                    :class="{ active: page.isInFooter }"
+                    :title="page.isInFooter ? 'Ditampilkan di Footer Navigasi' : 'Tidak tampil di Footer'"
+                  >
+                    <Globe :size="11" />
+                    <span>Footer Links {{ page.isInFooter ? '✓' : '—' }}</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Card Target Container & Update Date -->
+              <div class="page-card-site-strip">
+                <span class="route-site-badge">
+                  <Server :size="11" />
+                  <span>{{ page.siteName }}</span>
+                </span>
+                <span class="page-update-time">
+                  <Clock :size="11" />
+                  <span>Update: {{ page.updatedAt }}</span>
+                </span>
+              </div>
+
+              <!-- Card Footer: Actions -->
+              <div class="page-card-footer">
+                <div class="page-footer-left">
+                  <code class="page-container-code">{{ page.containerId }}</code>
+                </div>
+
+                <div class="page-card-actions">
+                  <button
+                    class="btn-card-icon-action"
+                    @click="openEditPageModal(page)"
+                    title="Edit Halaman Statis"
+                  >
+                    <Edit3 :size="13" />
+                  </button>
+
+                  <button
+                    class="btn-card-icon-action"
+                    @click="copyToClipboard(`https://${page.siteName}${page.path}`, page.id)"
+                    :title="copiedSubdomain === page.id ? 'Tersalin!' : 'Salin URL Lengkap'"
+                  >
+                    <Check v-if="copiedSubdomain === page.id" :size="13" class="text-green" />
+                    <Copy v-else :size="13" />
+                  </button>
+
+                  <button
+                    class="btn-card-icon-action btn-danger-action"
+                    @click="deleteCmsPage(page)"
+                    title="Hapus Halaman"
+                  >
+                    <Trash2 :size="13" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="filteredPages.length === 0" class="empty-state-box">
+            <Layers :size="38" class="empty-icon" />
+            <h4>Tidak ada halaman statis yang cocok</h4>
+            <p>Sesuaikan filter atau klik tombol "Tambah Halaman Baru" di atas.</p>
+          </div>
+        </div>
+
+        <!-- Table View: CMS Pages -->
+        <div v-else class="articles-panel">
+          <div class="table-responsive">
+            <table class="ledger-table">
+              <thead>
+                <tr>
+                  <th>JUDUL HALAMAN & PATH</th>
+                  <th>TARGET SITUS</th>
+                  <th>TEMPLATE LAYOUT</th>
+                  <th>NAVIGASI (NAV/FOOTER)</th>
+                  <th>STATUS</th>
+                  <th>TERAKHIR DIUBAH</th>
+                  <th style="text-align: right">AKSI</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="page in filteredPages" :key="page.id">
+                  <td>
+                    <div class="art-title-cell" @click="openEditPageModal(page)" style="cursor: pointer;">
+                      <div class="art-title-text">{{ page.title }}</div>
+                      <div class="art-slug-box">
+                        <code>{{ page.path }}</code>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="site-tag">{{ page.siteName }}</span>
+                  </td>
+                  <td>
+                    <span class="page-layout-badge">{{ page.templateLayout }}</span>
+                  </td>
+                  <td>
+                    <div class="nav-indicators-table-cell">
+                      <span class="badge-nav-indicator" :class="{ on: page.isInNavbar }">Nav</span>
+                      <span class="badge-nav-indicator" :class="{ on: page.isInFooter }">Footer</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="art-status-chip" :class="page.status === 'published' ? 'chip-live' : 'chip-draft'">
+                      <span class="dot"></span>
+                      {{ page.status === 'published' ? 'Live' : 'Draft' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="date-cell">
+                      <Calendar :size="12" />
+                      <span>{{ page.updatedAt }}</span>
+                    </div>
+                  </td>
+                  <td style="text-align: right">
+                    <div class="row-actions">
+                      <button class="btn-action-icon" @click="openEditPageModal(page)" title="Edit Halaman">
+                        <Edit3 :size="13" />
+                      </button>
+                      <button class="btn-action-icon" @click="copyToClipboard(`https://${page.siteName}${page.path}`, page.id)" :title="copiedSubdomain === page.id ? 'Tersalin!' : 'Salin Tautan'">
+                        <Check v-if="copiedSubdomain === page.id" :size="13" class="text-green" />
+                        <Copy v-else :size="13" />
+                      </button>
+                      <button class="btn-action-icon danger" @click="deleteCmsPage(page)" title="Hapus Halaman">
+                        <Trash2 :size="13" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- ============================================================= -->
+    <!-- 3. UNIVERSAL CONTENT STUDIO MODAL EDITOR (ARTICLE & CMS PAGE) -->
+    <!-- ============================================================= -->
+    <div v-if="isEditorModalOpen" class="modal-backdrop" @click.self="closeEditorModal">
+      <div class="modal-dialog modal-dialog-lg content-editor-dialog">
+        <div class="modal-header">
+          <div class="modal-header-leading">
+            <div class="modal-icon-badge">
+              <BookOpen v-if="editorContentType === 'article'" :size="18" />
+              <Layers v-else :size="18" />
+            </div>
+            <div>
+              <h3 class="modal-title">
+                {{ editingId ? 'Edit ' + (editorContentType === 'article' ? 'Artikel Editorial' : 'Halaman Statis') : 'Buat ' + (editorContentType === 'article' ? 'Artikel Baru' : 'Halaman Statis Baru') }}
+              </h3>
+              <p class="modal-subtitle">
+                {{ editorContentType === 'article' ? 'Kelola publikasi konten berkala, slug URL, dan metadata SEO.' : 'Atur halaman website tenant, layout template, dan tautan navigasi.' }}
+              </p>
+            </div>
+          </div>
+          <button class="btn-modal-close" @click="closeEditorModal">
+            <X :size="18" />
+          </button>
+        </div>
+
+        <form class="editor-modal-form" @submit.prevent="handleSaveContent">
+          <!-- Row 1: Title & Slug/Path -->
+          <div class="form-row-2col">
+            <div class="form-field-group">
+              <label class="form-field-label">Judul {{ editorContentType === 'article' ? 'Artikel' : 'Halaman' }} *</label>
+              <input
+                v-model="formTitle"
+                type="text"
+                class="studio-input"
+                :placeholder="editorContentType === 'article' ? 'Contoh: Arsitektur Cloud-Native dengan Golang' : 'Contoh: Tentang Kami & Visi Perusahaan'"
+                @input="handleTitleInput"
+                required
+              />
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label">{{ editorContentType === 'article' ? 'Slug URL (/artikel-slug)' : 'Path URL (contoh: /about)' }} *</label>
+              <input
+                v-if="editorContentType === 'article'"
+                v-model="formSlug"
+                type="text"
+                class="studio-input"
+                placeholder="arsitektur-cloud-native"
+                required
+              />
+              <input
+                v-else
+                v-model="formPath"
+                type="text"
+                class="studio-input"
+                placeholder="/about"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Row 2: Target Container & Status -->
+          <div class="form-row-2col">
+            <div class="form-field-group">
+              <label class="form-field-label">Target Kontainer Website</label>
+              <select v-model="formContainerId" class="studio-select">
+                <option v-for="c in containers" :key="c.id" :value="c.id">
+                  {{ c.name }} ({{ c.customDomain || c.subdomain }})
+                </option>
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label">Status Publikasi</label>
+              <select v-model="formStatus" class="studio-select">
+                <option value="published">Published (Live di Edge CDN)</option>
+                <option value="draft">Draft (Disimpan Sementara / WIP)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Specific Fields for Article -->
+          <div v-if="editorContentType === 'article'" class="form-row-3col">
+            <div class="form-field-group">
+              <label class="form-field-label">Kategori</label>
+              <select v-model="formCategory" class="studio-select">
+                <option value="Engineering">Engineering</option>
+                <option value="Distributed Systems">Distributed Systems</option>
+                <option value="DevOps">DevOps</option>
+                <option value="Security">Security</option>
+                <option value="Tutorial">Tutorial</option>
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label">Penulis (Author)</label>
+              <input v-model="formAuthor" type="text" class="studio-input" placeholder="Rizal Pratama" />
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label">Tags (Pisahkan koma)</label>
+              <input v-model="formTags" type="text" class="studio-input" placeholder="GO-SDK, Docker, Edge" />
+            </div>
+          </div>
+
+          <!-- Specific Fields for Page -->
+          <div v-else class="form-row-3col">
+            <div class="form-field-group">
+              <label class="form-field-label">Template Layout</label>
+              <select v-model="formTemplateLayout" class="studio-select">
+                <option value="landing-page">Landing Page</option>
+                <option value="standard-prose">Standard Prose / Document</option>
+                <option value="compact-form">Contact / Form</option>
+                <option value="legal-document">Legal Document</option>
+              </select>
+            </div>
+
+            <div class="form-field-group form-checkbox-group">
+              <label class="form-field-label">Integrasi Navigasi</label>
+              <div class="checkbox-pair-row">
+                <label class="studio-checkbox-label">
+                  <input v-model="formIsInNavbar" type="checkbox" />
+                  <span>Navbar Header</span>
+                </label>
+                <label class="studio-checkbox-label">
+                  <input v-model="formIsInFooter" type="checkbox" />
+                  <span>Footer Links</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label">Meta Title (SEO)</label>
+              <input v-model="formMetaTitle" type="text" class="studio-input" placeholder="Judul untuk Google Search" />
+            </div>
+          </div>
+
+          <!-- Excerpt / Meta Description -->
+          <div class="form-field-group">
+            <label class="form-field-label">Ringkasan Singkat / Meta Description (SEO)</label>
+            <input
+              v-if="editorContentType === 'article'"
+              v-model="formExcerpt"
+              type="text"
+              class="studio-input"
+              placeholder="Deskripsi singkat konten untuk tampilan kartu dan snippet Google..."
+            />
+            <input
+              v-else
+              v-model="formMetaDesc"
+              type="text"
+              class="studio-input"
+              placeholder="Deskripsi ringkas halaman untuk OpenGraph dan mesin pencari..."
+            />
+          </div>
+
+          <!-- Content Markdown Textarea -->
+          <div class="form-field-group">
+            <div class="label-with-hint">
+              <label class="form-field-label">Konten Dokumen (Markdown)</label>
+              <span class="field-hint">Mendukung heading (#), bold, list, dan link</span>
+            </div>
+            <textarea
+              v-model="formContent"
+              class="studio-textarea content-markdown-area"
+              rows="9"
+              placeholder="Tuliskan konten Anda di sini..."
+            ></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-modal-ghost" @click="closeEditorModal">
+              Batal
+            </button>
+            <button type="submit" class="btn-modal-confirm">
+              <Check :size="15" />
+              <span>Simpan {{ editorContentType === 'article' ? 'Artikel' : 'Halaman' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </section>
 </template>
