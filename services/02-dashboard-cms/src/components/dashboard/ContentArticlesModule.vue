@@ -33,7 +33,8 @@ import {
   Lock,
   CheckCircle2,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  FileCode
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { ContentArticle, CmsPage } from '../../types/dashboard';
@@ -227,6 +228,7 @@ const closeArticleReader = () => {
 
 const copyCodeSnippet = () => {
   const snippet = `func RecordArticleHit(ctx context.Context, slug string) error {
+    // Atomic increment via Redis Sorted Set (ZSET) - Sub-millisecond latency
     return redisClient.ZIncrBy(ctx, "herocms:articles:views", 1.0, slug).Err()
 }`;
   copyToClipboard(snippet, 'code_snippet');
@@ -646,24 +648,49 @@ onUnmounted(() => {
               <div class="reader-code-card">
                 <div class="code-card-header">
                   <div class="code-header-left">
-                    <span class="code-dot red"></span>
-                    <span class="code-dot yellow"></span>
-                    <span class="code-dot green"></span>
-                    <span class="code-filename">internal/telemetry/redis_counter.go</span>
+                    <div class="code-window-dots">
+                      <span class="code-dot red"></span>
+                      <span class="code-dot yellow"></span>
+                      <span class="code-dot green"></span>
+                    </div>
+                    <div class="code-file-tab">
+                      <FileCode :size="13" class="code-file-icon" />
+                      <span class="code-filename">internal/telemetry/redis_counter.go</span>
+                    </div>
                   </div>
-                  <button
-                    class="btn-code-copy"
-                    @click="copyCodeSnippet()"
-                  >
-                    <Check v-if="copiedSubdomain === 'code_snippet'" :size="12" class="text-green" />
-                    <Copy v-else :size="12" />
-                    <span>{{ copiedSubdomain === 'code_snippet' ? 'Tersalin' : 'Salin Kode' }}</span>
-                  </button>
+                  <div class="code-header-right">
+                    <span class="code-lang-badge">GO 1.22</span>
+                    <button
+                      class="btn-code-copy"
+                      :class="{ copied: copiedSubdomain === 'code_snippet' }"
+                      @click="copyCodeSnippet()"
+                      title="Salin kode cuplikan"
+                    >
+                      <Check v-if="copiedSubdomain === 'code_snippet'" :size="12" class="text-green" />
+                      <Copy v-else :size="12" />
+                      <span>{{ copiedSubdomain === 'code_snippet' ? 'Tersalin!' : 'Salin Kode' }}</span>
+                    </button>
+                  </div>
                 </div>
-                <pre class="code-pre"><code><span class="token-keyword">func</span> <span class="token-function">RecordArticleHit</span>(ctx context.Context, slug <span class="token-type">string</span>) <span class="token-type">error</span> {
-    <span class="token-comment">// Atomic increment via Redis Sorted Set (ZSET) - Sub-millisecond latency</span>
-    <span class="token-keyword">return</span> redisClient.<span class="token-function">ZIncrBy</span>(ctx, <span class="token-string">"herocms:articles:views"</span>, <span class="token-number">1.0</span>, slug).<span class="token-function">Err</span>()
-}</code></pre>
+                <div class="code-editor-viewport">
+                  <div class="code-line-numbers" aria-hidden="true">
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
+                    <span>4</span>
+                  </div>
+                  <pre class="code-pre"><code><span class="code-line"><span class="token-keyword">func</span> <span class="token-function">RecordArticleHit</span>(ctx context.Context, slug <span class="token-type">string</span>) <span class="token-type">error</span> {</span>
+<span class="code-line"><span class="token-indent">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="token-comment">// Atomic increment via Redis Sorted Set (ZSET) - Sub-millisecond latency</span></span>
+<span class="code-line"><span class="token-indent">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="token-keyword">return</span> redisClient.<span class="token-function">ZIncrBy</span>(ctx, <span class="token-string">"herocms:articles:views"</span>, <span class="token-number">1.0</span>, slug).<span class="token-function">Err</span>()</span>
+<span class="code-line">}</span></code></pre>
+                </div>
+                <div class="code-card-footer">
+                  <div class="code-footer-stat">
+                    <span class="footer-dot-live"></span>
+                    <span>Redis Sorted Set Atomic Counter (0.3ms latency)</span>
+                  </div>
+                  <span class="code-footer-engine">go1.22 • redis-v9</span>
+                </div>
               </div>
 
               <h2 id="sec-3">

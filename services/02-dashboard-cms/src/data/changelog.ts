@@ -2,11 +2,32 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.13',
+    releaseDate: '18 Oktober 2026',
+    title: 'Fix Code Block Background Leak & Upgrade to Ray.so / VS Code Terminal Editor Styling',
+    summary: 'Memperbaiki dan meningkatkan tampilan cuplikan kode di Reader Mode artikel: (1) Memperbaiki selector CSS inline code (.reader-prose-body code) yang sebelumnya bocor ke dalam blok <pre><code> sehingga menghasilkan highlight putih/abu-abu yang mengganggu di balik baris teks; (2) Merombak kartu kode (.reader-code-card) menjadi antarmuka terminal/editor modern setara Ray.so dan VS Code: tab file aktif dengan ikon FileCode, language badge GO 1.22, gutter nomor baris digital (01-04), palet syntax highlighting Tokyo Night / One Dark Pro, dan status footer real-time dengan pulsing live dot Redis counter.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11413-1',
+        type: 'bugfix',
+        scope: 'Code Snippet Inline Background Isolation',
+        description: 'Mengisolasi selector .reader-prose-body :not(pre) > code agar tidak merusak elemen code di dalam kartu editor gelap.'
+      },
+      {
+        id: 'c-11413-2',
+        type: 'improvement',
+        scope: 'Ray.so / VS Code Editor Aesthetics with Gutter Numbers',
+        description: 'Menambahkan gutter line numbers, tab file aktif berikon FileCode, badge bahasa GO 1.22, dan footer status telemetri latensi 0.3ms.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.12',
     releaseDate: '18 Oktober 2026',
     title: 'Stunning Executive Editorial Reader Experience (Obsidian Ambient Glow, Watermark, & Telemetry Tiles)',
     summary: 'Merombak tampilan Reader Mode artikel editorial menjadi sangat memukau (eye-catching), modern, dan berkelas enterprise APM (Vercel / Linear / Stripe Press Grade): (1) Banner Hero Obsidian dengan ambient radial glow biru royal (#2563eb) dan indigo, kisi dot-matrix halus, watermark ikon transparan 96px di pojok kanan atas, serta tipografi judul tebal 2.25rem putih elegan; (2) Kartu artikel utama dengan border berkelas, callout URL publik interaktif bergradasi hijau-biru dengan tombol "Buka Tab Baru" dan "Salin URL", serta nomor bab berseri (01, 02, 03) dengan badge gradasi biru modern; (3) Sidebar inspektor dengan kartu telemetri edge real-time beraksen 4 mini tiles taktil lengkap dengan watermark ikon transparan berwarna semantik (Eye, Zap, Sparkles, Cpu), serta launchpad aksi cepat (Buka Halaman Live & Sunting Dokumen).',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
