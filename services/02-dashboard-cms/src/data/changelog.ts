@@ -2,11 +2,473 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.13.4',
+    releaseDate: '18 Oktober 2026',
+    title: 'Transformasi Enterprise DAM Inspector Telemetry & Kanvas Bersih',
+    summary: 'Menghilangkan widget Dominansi Warna & Kontras agar antarmuka fokus dan profesional, menyederhanakan kanvas switcher ke mode mandiri (Latar Terang, Latar Gelap, Papan Catur), serta merombak panel detail inspector menjadi Enterprise Digital Asset Management (DAM) Hub yang kaya informasi: ekstraksi MIME-type presisi, ukuran byte tepat S3, resolusi & kalkulasi aspek rasio dinamis, integrasi referensi penggunaan konten CMS, checksum integritas SHA-256/ETag, parameter kompresi & cache HTTP, serta tombol sematan cepat (Markdown, HTML, CSS, Direct URL).',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1134-1',
+        type: 'improvement',
+        scope: 'DAM Inspector Rail (Enterprise Telemetry & Metadata)',
+        description: 'Menyajikan panel spesifikasi teknis lengkap mencakup MIME-Type spesifik, byte presisi, aspek rasio resolusi dinamis, pelacakan referensi artikel/halaman CMS yang menggunakan berkas, dan verifikasi checksum SHA-256.'
+      },
+      {
+        id: 'c-1134-2',
+        type: 'improvement',
+        scope: 'Media Stage Canvas & Quick Embeds',
+        description: 'Menghapus komputasi dominansi warna dan menyederhanakan switcher kanvas menjadi 3 mode praktis tanpa auto-flash, serta menambahkan opsi sematan 1-klik untuk Markdown, tag <img> HTML, dan CSS background-image.'
+      }
+    ]
+  },
+  {
+    version: 'v1.13.3',
+    releaseDate: '18 Oktober 2026',
+    title: 'Eliminasi Total Delay Transisi Kategori & Navigasi Folder Instan 0ms',
+    summary: 'Menghilangkan latensi dan jeda waktu klik saat berpindah kategori folder DAM (Semua Berkas, Foto & Raster, Vektor SVG, Dokumen PDF, Excel, dsb). Menghapus pembungkus Transition mode="out-in" yang sebelumnya memblokir render konten baru secara serial, menonaktifkan scale bounce delay pada tombol folder aktif, serta menerapkan micro-fade instan 120ms pada kartu media untuk interaksi secepat kilat (0ms input latency).',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1133-1',
+        type: 'performance',
+        scope: 'DAM Category Navigation (Zero-Latency Rendering)',
+        description: 'Menghilangkan serial leave-then-enter transition delay (mode="out-in") pada grid dan list view sehingga konten baru dirender seketika (0ms) saat kategori folder diklik.'
+      },
+      {
+        id: 'c-1133-2',
+        type: 'bugfix',
+        scope: 'Folder Button & Card Settle Animation (.dam-folder-item & cardInstantFade)',
+        description: 'Menghapus keyframe folderActivePop yang menunda visual feedback pada tab aktif dan menggantinya dengan micro-fade ultra-cepat 120ms tanpa jeda.'
+      }
+    ]
+  },
+  {
+    version: 'v1.13.2',
+    releaseDate: '18 Oktober 2026',
+    title: 'Perbaikan Transisi Kategori Galeri & Eliminasi Flash Hitam Modal Inspector',
+    summary: 'Memperbaiki masalah animasi duplikasi kartu galeri dan latensi saat pemilihan kategori folder dengan mengganti TransitionGroup keyed dinamis menjadi transisi view terpadu (dam-category-switch, mode="out-in") dengan key stabil. Memperbaiki masalah flash latar belakang hitam sebelum putih pada modal pratinjau SVG dengan menerapkan caching luminansi instan (assetLuminanceCache), fallback awal otomatis light canvas untuk SVG, dan penghapusan delay transisi CSS pada initial mount.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1132-1',
+        type: 'bugfix',
+        scope: 'DAM Modal Inspector (assetLuminanceCache & Instant SVG Theme)',
+        description: 'Menghilangkan visual flash background hitam-ke-putih saat modal dibuka dengan menginisialisasi SVG langsung pada theme-light-canvas secara instan dan menyimpan hasil komputasi luminansi ke dalam memori cache.'
+      },
+      {
+        id: 'c-1132-2',
+        type: 'bugfix',
+        scope: 'Category View Transition (Transition mode="out-in")',
+        description: 'Menghapus key dinamis yang memicu duplikasi elemen kartu di dalam CSS Grid, menggantinya dengan transisi kategori yang ringan, cepat (140ms), dan responsif tanpa lag.'
+      }
+    ]
+  },
+  {
+    version: 'v1.13.1',
+    releaseDate: '18 Oktober 2026',
+    title: 'Animasi Transisi Staggered Cascade Saat Pergantian Kategori Media',
+    summary: 'Menerapkan sistem animasi transisi dinamis bergelombang (staggered cascade wave) menggunakan Vue TransitionGroup dan FLIP physics saat pengguna berpindah antar-kategori folder (Semua Berkas, Foto & Raster, Vektor SVG, Dokumen PDF, dll) maupun saat melakukan filter pencarian. Dilengkapi animasi spring pop pada tombol kategori aktif dan transisi halus pada status kosong.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1131-1',
+        type: 'improvement',
+        scope: 'DAM Media Cards Animation (.dam-card-flip & @keyframes mediaCardCascade)',
+        description: 'Menghadirkan efek transisi gelombang masuk berjenjang (stagger delay 45ms) dengan kurva cubic-bezier spring halus saat kategori folder dipilih, menghilangkan pergantian konten yang kaku.'
+      },
+      {
+        id: 'c-1131-2',
+        type: 'improvement',
+        scope: 'Sidebar Folder Active Pop (@keyframes folderActivePop)',
+        description: 'Menambahkan efek micro-animation spring scaling pada tombol kategori folder yang sedang diklik untuk memberikan feedback sentuhan interaktif yang responsif.'
+      },
+      {
+        id: 'c-1131-3',
+        type: 'improvement',
+        scope: 'List Table Row Cascade (.dam-row-flip & @keyframes mediaRowCascade)',
+        description: 'Animasi sliding horizontal halus pada baris tabel saat mode list view aktif dengan stagger index optimal.'
+      }
+    ]
+  },
+  {
+    version: 'v1.13.0',
+    releaseDate: '18 Oktober 2026',
+    title: 'Deteksi Otomatis Dominansi Warna & Latar Belakang Kanvas Adaptif Cerdas',
+    summary: 'Menambahkan mesin analitik luminansi visual otomatis berbasis HTML5 Canvas sampling dan SVG color inspection. Sistem otomatis mendeteksi rasio warna gelap vs terang pada berkas dengan background transparan (seperti logo Ubuntu hitam atau grafis putih), lalu secara cerdas menyesuaikan latar belakang kanvas pratinjau studio (Auto Terang / Gelap) agar kontras terlihat sempurna. Dilengkapi meteran persentase dominansi warna, HUD status adaptif, dan kontrol toggle 4-mode (Auto, Terang, Gelap, Catur).',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1130-1',
+        type: 'feature',
+        scope: 'Visual Luminance Engine (analyzeAssetLuminance)',
+        description: 'Implementasi sampling piksel HTML5 Canvas 48x48 offscreen dan inspeksi fill/stroke SVG untuk menghitung persentase luminansi non-transparan secara instan (<5ms) tanpa pembatasan CORS via blob URL streaming.'
+      },
+      {
+        id: 'c-1130-2',
+        type: 'feature',
+        scope: 'Adaptive Dynamic Studio Canvas (.theme-light-canvas & .theme-dark-canvas)',
+        description: 'Otomatis mengaktifkan kanvas Pure Slate dot-grid (#f8fafc) jika objek transparan dominan gelap/hitam (seperti SVG Ubuntu), dan kanvas Deep Slate dot-grid (#0b1120) jika objek dominan putih/terang.'
+      },
+      {
+        id: 'c-1130-3',
+        type: 'feature',
+        scope: 'Interactive Backdrop Toolbar (.canvas-theme-switcher) & HUD Dominance Pill',
+        description: 'Menyediakan tombol segmented toggle (Auto Adaptif, Terang, Gelap, Papan Catur) di pojok panggung, meteran persentase visual di panel spesifikasi, dan floating HUD pill status dominansi warna.'
+      }
+    ]
+  },
+  {
+    version: 'v1.12.4',
+    releaseDate: '18 Oktober 2026',
+    title: 'Perbaikan Clickability Checkbox Seleksi Kartu Media Galeri',
+    summary: 'Memperbaiki masalah checkbox seleksi kartu media yang tidak dapat diklik akibat tertutup layer glassmorphic hover overlay. Menaikkan z-index checkbox ke level 30 dengan pointer-events aktif, serta mengubah elemen menjadi tombol semantik yang berada di atas layer hover.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1124-1',
+        type: 'bugfix',
+        scope: 'Interactive Multi-Select Checkbox (.media-card-checkbox)',
+        description: 'Menaikkan z-index dari 6 ke 30 dengan pointer-events: auto, memindahkan elemen button checkbox setelah layer hover di DOM tree sehingga klik seleksi selalu terpicu tanpa terhalang dock aksi.'
+      }
+    ]
+  },
+  {
+    version: 'v1.12.3',
+    releaseDate: '18 Oktober 2026',
+    title: 'Penyesuaian Warna Status Terpilih Kategori Folder Menjadi Deep Slate Hitam',
+    summary: 'Mengubah warna status aktif/terpilih pada item navigasi Kategori & Folder sidebar DAM dari warna biru muda menjadi Deep Slate hitam pekat (#0f172a) dengan teks putih bersih, ikon monokrom kontras tinggi, dan counter badge semi-transparan yang selaras dengan tema utama HeroCMS Studio.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1123-1',
+        type: 'improvement',
+        scope: 'DAM Sidebar Navigation (.dam-folder-item.active)',
+        description: 'Menerapkan background Deep Slate (#0f172a), warna teks dan icon putih (#ffffff), bayangan halus, serta counter badge bernuansa kontras tinggi saat kategori folder dipilih.'
+      }
+    ]
+  },
+  {
+    version: 'v1.12.2',
+    releaseDate: '18 Oktober 2026',
+    title: 'Pelebaran Viewport Imersif Modal Studio Media Inspector (1240px)',
+    summary: 'Menaikkan ukuran dialog modal Media Inspector Studio menjadi 1240px (95vw) dengan ketinggian kanvas 640px dan batas resolusi gambar 560px. Memberikan panggung visual sinematik yang megah untuk foto resolusi tinggi dan ilustrasi vektor SVG tanpa rasa sempit di layar desktop lebar.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1122-1',
+        type: 'improvement',
+        scope: 'Studio Modal Dimensions (.modal-dialog-media-studio & .studio-inspector-split)',
+        description: 'Memperlebar dialog dari 980px ke 1240px dan mempertinggi layout split-pane dari 520px ke 640px, dengan kolom inspektur 420px dan panggung visual ~800px.'
+      },
+      {
+        id: 'c-1122-2',
+        type: 'improvement',
+        scope: 'Visual Canvas Max Height (.stage-visual-img)',
+        description: 'Menaikkan batas maksimal ketinggian foto/vektor dari 420px ke 560px sehingga gambar resolusi tinggi tampil detail, tajam, dan megah.'
+      },
+      {
+        id: 'c-1122-3',
+        type: 'improvement',
+        scope: 'Typography & Header Comfort (.studio-modal-name-row)',
+        description: 'Memperlebar batas judul berkas menjadi 650px agar nama berkas panjang tidak terpotong elipsis di header.'
+      }
+    ]
+  },
+  {
+    version: 'v1.12.1',
+    releaseDate: '18 Oktober 2026',
+    title: 'Pelebaran Kartu Galeri Media Gaya Google Photos & Rendering Vektor SVG',
+    summary: 'Memperlebar kartu galeri media pada panggung utama (minmax 340px) dan mempertinggi kanvas pratinjau menjadi 220px seperti tata letak Google Photos / Unsplash. Menghilangkan text wrapping yang canggung pada spesifikasi berkas, serta menambahkan rendering nyata untuk vektor SVG langsung di kartu galeri dengan bayangan kedalaman sinematik.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1121-1',
+        type: 'improvement',
+        scope: 'Expansive Gallery Cards (.media-gallery-grid & .media-preview-canvas)',
+        description: 'Menaikkan ukuran minimum kartu dari 240px ke 340px dan ketinggian kanvas pratinjau ke 220px, memberikan visual impact yang lapang dan proporsional layaknya Google Photos.'
+      },
+      {
+        id: 'c-1121-2',
+        type: 'improvement',
+        scope: 'Card Metadata Clean Row (.media-sub-meta)',
+        description: 'Menata ulang baris ukuran berkas, dimensi, dan status CDN Ready ke dalam satu baris fleksibel tanpa pemotongan atau text-wrapping yang terpecah.'
+      },
+      {
+        id: 'c-1121-3',
+        type: 'feature',
+        scope: 'Direct SVG Vector Thumbnails (.svg-vector-thumb)',
+        description: 'Menampilkan berkas ilustrasi dan icon SVG secara nyata di kartu galeri tanpa menggunakan kotak blueprint statis.'
+      }
+    ]
+  },
+  {
+    version: 'v1.12.0',
+    releaseDate: '18 Oktober 2026',
+    title: 'Bespoke Split-Pane Media Inspector Studio & Universal SVG Vector Renderer',
+    summary: 'Refaktor menyeluruh modal rincian berkas S3 menjadi Split-Pane Studio Media Inspector berstandar Figma dan Cloudflare R2. Menghadirkan panggung pratinjau visual berdinding kanvas ambient dot-grid dengan rendering instan untuk berkas vektor SVG & gambar raster, HUD status resolusi dan kuota S3 di bagian bawah, serta rail inspektur metadata teknis terpadu lengkap dengan fitur 1-klik salin Markdown/HTML embed code untuk CMS editor.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1120-1',
+        type: 'feature',
+        scope: 'Studio Split-Pane Architecture (.modal-dialog-media-studio)',
+        description: 'Merombak modal satu kolom yang bertumpuk menjadi tata letak 2-Kolom Split-Pane: Media Viewport Stage di sisi kiri dengan kanvas kontras tinggi, dan Properties Inspector Rail di sisi kanan dengan scroll independen.'
+      },
+      {
+        id: 'c-1120-2',
+        type: 'improvement',
+        scope: 'Vector & Visual Asset Rendering (MediaAssetsModule.vue)',
+        description: 'Memperluas deteksi aset visual (isVisualAsset) sehingga berkas vektor SVG, ilustrasi, dan icon tampil jernih dalam resolusi penuh dengan bayangan kedalaman sinematik di kanvas pratinjau.'
+      },
+      {
+        id: 'c-1120-3',
+        type: 'feature',
+        scope: 'CMS Quick Embed Snippets (MediaAssetsModule.vue)',
+        description: 'Menambahkan fitur salin instan kode sematan Markdown (![alt](url)) dan HTML (<img>) dengan feedback visual real-time untuk mempercepat alur penulisan artikel di CMS.'
+      },
+      {
+        id: 'c-1120-4',
+        type: 'improvement',
+        scope: 'Header Dock & Direct Actions (.studio-modal-topbar)',
+        description: 'Menyediakan bilah aksi cepat di header modal: tombol Buka Berkas di tab baru, Salin URL CDN langsung, pill ekstensi tipe berkas, dan indikator status CDN Edge Traefik v3.'
+      }
+    ]
+  },
+  {
+    version: 'v1.11.1',
+    releaseDate: '18 Oktober 2026',
+    title: 'Dedicated Boxed Scrollable Stage Panel untuk Media Assets DAM',
+    summary: 'Membungkus galeri kartu media dan tabel ledger berkas ke dalam container viewport independen ber-border bersih (Boxed Viewport Panel) dengan dedicated vertical scrollbar. Memastikan sidebar navigasi, storage meter, ringkasan telemetri, dan bar pencarian/filter tetap tenang dan terkunci di tempat saat pengguna menelusuri katalog aset.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1111-1',
+        type: 'improvement',
+        scope: 'DAM Stage Viewport (.dam-content-scroll-box)',
+        description: 'Menambahkan container kotak berbatas halus (#e2e8f0, radius 14px, bayangan lembut) dengan scroll internal yang halus (thin custom scrollbar) dan responsive auto-fill grid untuk kartu aset.'
+      },
+      {
+        id: 'c-1111-2',
+        type: 'improvement',
+        scope: 'Layout Ergonomics (MediaAssetsModule.vue)',
+        description: 'Mengunci posisi bilah aksi, pencarian terpadu, dan batch toolbar di atas viewport media sehingga kontrol filter selalu terlihat tanpa harus menggulir halaman ke atas.'
+      }
+    ]
+  },
+  {
+    version: 'v1.11.0',
+    releaseDate: '18 Oktober 2026',
+    title: 'Arsitektur Digital Asset Management (DAM) 2-Kolom & Studio S3 Storage',
+    summary: 'Refaktor besar penataan tata letak Media Assets menjadi arsitektur 2-Kolom Digital Asset Management (DAM) modern berdensitas tinggi. Mengintegrasikan S3 Storage Quota Health Hub, navigasi folder/kategori cerdas, compact drag-and-drop uploader di sidebar kiri, strip telemetri mini ringkas, fitur seleksi massal (Batch Multi-Selection) dengan floating action dock, serta galeri media di area panggung utama yang langsung tampil di atas layar tanpa scroll vertikal berlebih.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1110-1',
+        type: 'feature',
+        scope: 'DAM Architecture & Layout (MediaAssetsModule.vue)',
+        description: 'Merombak penataan vertikal bertumpuk menjadi 2-Kolom DAM: Sidebar Rail (310px) berisi widget kuota S3, navigasi folder kategori cerdas dengan counter dinamis, dan compact uploader, serta Main Stage yang lapang.'
+      },
+      {
+        id: 'c-1110-2',
+        type: 'feature',
+        scope: 'Batch Operations & Multi-Select (MediaAssetsModule.vue)',
+        description: 'Menyediakan fitur seleksi berkas ganda (checkbox per kartu dan Select All), dilengkapi Floating Batch Action Dock untuk salin semua URL CDN, unduh terpilih, dan hapus massal dari S3 bucket.'
+      },
+      {
+        id: 'c-1110-3',
+        type: 'feature',
+        scope: 'UI / UX & Dual View Mode (MediaAssetsModule.vue)',
+        description: 'Menyediakan tombol pengubah tampilan interaktif antara Galeri Kartu Sinematik (Grid Mode) dan Tabel Ledger Berkas Berstandar Enterprise (List Mode) lengkap dengan thumbnail mini, spesifikasi berkas, dan aksi inline instan.'
+      },
+      {
+        id: 'c-1110-4',
+        type: 'improvement',
+        scope: 'Master Stylesheet & Compact Metrics (studio-master.css)',
+        description: 'Menghadirkan strip telemetri mini 4-kolom kompak di atas panggung utama, Glassmorphic Floating Action Dock, mikro-animasi checkerboard background pada aset transparan, dan optimasi ruang vertikal.'
+      }
+    ]
+  },
+  {
+    version: 'v1.10.0',
+    releaseDate: '18 Oktober 2026',
+    title: 'Peluncuran Fitur Enterprise Maintenance Mode (Mode Pemeliharaan)',
+    summary: 'Menambahkan kapabilitas Mode Pemeliharaan (Maintenance Mode) terpadu di Dashboard Situs dan Pod Detail Analytics. Memungkinkan pengelola website mengalihkan trafik publik ke pesan pemeliharaan HTTP 503 bersahabat secara instan, dilengkapi badge status semantic Amber, tab filter dedicated, modal konfigurasi estimasi waktu (ETA), dan endpoint API PUT /containers/:id/maintenance.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1100-1',
+        type: 'feature',
+        scope: 'Containers & Sites Hub (ContainersModule.vue)',
+        description: 'Menambahkan kontrol toggle Mode Pemeliharaan pada kartu situs dan tabel data, badge status semantic Amber dengan radar pulsing amber, filter tab Pemeliharaan, dan modal dialog konfigurasi pesan kustom serta estimasi durasi pemeliharaan.'
+      },
+      {
+        id: 'c-1100-2',
+        type: 'feature',
+        scope: 'Pod Detail & Analytics (PodDetailAnalyticsView.vue)',
+        description: 'Menyediakan banner peringatan pemeliharaan aktif dengan tombol aksi Go-Live cepat dan status pill telemetri pemeliharaan berstandar Cloudflare & Datadog APM.'
+      },
+      {
+        id: 'c-1100-3',
+        type: 'feature',
+        scope: 'Backend API & Repository (cmd/server, internal/handler, service, repository)',
+        description: 'Menyediakan endpoint PUT /containers/:id/maintenance dengan validasi tenant ID, persistensi status ke basis data/in-memory repository, serta unit test suite komprehensif.'
+      }
+    ]
+  },
+  {
+    version: 'v1.9.4',
+    releaseDate: '18 Oktober 2026',
+    title: 'Unit Test Suite Komprehensif & Pengerasan Ketahanan Kode di Seluruh Services',
+    summary: 'Penyempurnaan total unit test di seluruh microservices HeroCMS (02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, 05-ai-agent-service). Memperbaiki potensi nil-pointer dereference, data race pada repository, menambahkan in-memory test mocks instan tanpa TCP dial latency, serta pengujian validasi input, sanitasi regex, dan security headers dengan hasil 100% lulus di seluruh package.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-194-1',
+        type: 'improvement',
+        scope: 'Dashboard CMS Backend (services/02-dashboard-cms)',
+        description: 'Menambahkan test suite komprehensif di cmd/server, internal/config, handler, middleware, redis, repository, service, dan storage (coverage hingga 93.5%). Memperbaiki nil pointer safety pada S3 client, Redis in-memory mock, dan data race pada invoices repo.'
+      },
+      {
+        id: 'c-194-2',
+        type: 'improvement',
+        scope: 'Provision Orchestrator (services/03-provision-orchestrator)',
+        description: 'Menambahkan pengujian simulasi lifecycle tenant container dan nil pointer checks pada Docker provisioner close dan deploy (coverage 65.4%).'
+      },
+      {
+        id: 'c-194-3',
+        type: 'improvement',
+        scope: 'Marketing Site (services/04-marketing-site)',
+        description: 'Mengekstrak SetupMarketingMux dan menambahkan unit test untuk healthz, enterprise security headers, immutable static cache, dan HTML5 SPA routing fallback (coverage 55.8%).'
+      },
+      {
+        id: 'c-194-4',
+        type: 'security',
+        scope: 'AI Agent Service (services/05-ai-agent-service)',
+        description: 'Memperluas unit test untuk validasi tenant_id injection regex, path validation, AI template generation, telemetry hits, dan security headers (coverage 45.5%).'
+      }
+    ]
+  },
+  {
+    version: 'v1.9.3',
+    releaseDate: '18 Oktober 2026',
+    title: 'Penerapan Menyeluruh Standar Keamanan & Arsitektur di Seluruh 5 Services',
+    summary: 'Menerapkan standarisasi 20 pilar keamanan, graceful shutdown, healthcheck endpoints, pengerasan non-root container, optimasi bundling Vite, dan pembuatan unit test suite di seluruh microservices: 01-admin-console, 02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, dan 05-ai-agent-service.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-193-1',
+        type: 'improvement',
+        scope: 'Marketing Site (services/04-marketing-site)',
+        description: 'Menambahkan endpoint /healthz, graceful shutdown, security headers, dan konfigurasi manualChunks di vite.config.ts.'
+      },
+      {
+        id: 'c-193-2',
+        type: 'improvement',
+        scope: 'AI Agent Service (services/05-ai-agent-service)',
+        description: 'Menambahkan graceful shutdown server, security headers, redis client close cleanup, serta unit test suite di cmd/worker/main_test.go.'
+      },
+      {
+        id: 'c-193-3',
+        type: 'security',
+        scope: 'Admin Console (services/01-admin-console)',
+        description: 'Hardening Dockerfile dengan eksekusi user non-root www-data.'
+      },
+      {
+        id: 'c-193-4',
+        type: 'feature',
+        scope: 'Provision Orchestrator (services/03-provision-orchestrator)',
+        description: 'Penyempurnaan siklus hidup kontainer (Stop, Start, Destroy) dan penambahan unit test pengujian 100% lolos verifikasi.'
+      }
+    ]
+  },
+  {
+    version: 'v1.9.2',
+    releaseDate: '18 Oktober 2026',
+    title: 'Eksplorasi Ekosistem skills.sh: Integrasi Playwright E2E Testing & Web Performance Vitals Skill',
+    summary: 'Memperluas kapabilitas AI Agent dengan 2 skill operasional modern standar skills.sh: browser-e2e-playwright (pengujian browser otomatis, verifikasi visual modal destruktif, selector a11y-first) dan web-performance-vitals (optimasi Core Web Vitals, code-splitting Vite manualChunks, HTTP cache headers, dan mitigasi N+1 SQL). Seluruh integrasi dikembangkan pada branch mandiri feat/agent-skills-architecture.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-192-1',
+        type: 'feature',
+        scope: 'Browser Testing Skill (.agents/skills/browser-e2e-playwright)',
+        description: 'Standar pengujian E2E menggunakan Playwright: selector resilient berbasis teks/role, event-driven assertions, dan pengujian responsive mobile.'
+      },
+      {
+        id: 'c-192-2',
+        type: 'feature',
+        scope: 'Web Performance Skill (.agents/skills/web-performance-vitals)',
+        description: 'Standar tolok ukur TTFB, LCP, CLS, dan INP, optimasi vendor chunks di vite.config.ts, dan header caching Traefik/Go server.'
+      }
+    ]
+  },
+  {
+    version: 'v1.9.1',
+    releaseDate: '18 Oktober 2026',
+    title: 'Adopsi 20 Pilar Praktis Keamanan Web & Backend serta Modul Skill herocms-security-sandboxing',
+    summary: 'Memperkuat arsitektur keamanan platform dengan mendokumentasikan 20 Pilar Praktis Keamanan Web & Backend di SECURITY_AND_SANDBOXING.md serta menambahkan skill herocms-security-sandboxing (.agents/skills/) untuk memandu AI Agent dalam pengerasan kontainer Docker, isolasi multi-tenant, proteksi OWASP Top 10, sanitasi input, dan penegakan credential safety.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-191-1',
+        type: 'security',
+        scope: 'Dokumentasi Keamanan (docs/SECURITY_AND_SANDBOXING.md)',
+        description: 'Menambahkan Seksi 5 berisi matriks 20 pilar checklist keamanan praktis: proteksi API key, isolasi .env, anti-SQLi, anti-XSS, server-side auth, RLS database, sesi aman, hingga magic bytes upload scanning.'
+      },
+      {
+        id: 'c-191-2',
+        type: 'feature',
+        scope: 'Security Audit Skill (.agents/skills/herocms-security-sandboxing)',
+        description: 'Membuat modul skill baru untuk mengaudit setiap penulisan kode backend/frontend, parameter HostConfig Docker Engine SDK, dan pencegahan kebocoran data multi-tenant.'
+      }
+    ]
+  },
+  {
+    version: 'v1.9.0',
+    releaseDate: '18 Oktober 2026',
+    title: 'Integrasi 5 Modul Skill Agen Mandiri (Standar skills.sh): Frontend Studio, Go Orchestrator, Traefik Infra, Database RLS, & Changelog SemVer',
+    summary: 'Memperluas kapabilitas agen AI dengan 5 paket standar skill modular (.agents/skills/): herocms-frontend-studio (Zero-CSS duplication & master design tokens), herocms-go-orchestrator (Docker Engine SDK, cgroups quota, & graceful shutdown), herocms-traefik-infra (Traefik v3 dynamic routing & network topology), herocms-database-rls (PostgreSQL Row-Level Security & Redis caching), serta herocms-changelog-semver untuk kepatuhan tata kelola rilis.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-190-1',
+        type: 'feature',
+        scope: 'Frontend Studio Skill (.agents/skills/herocms-frontend-studio)',
+        description: 'Menetapkan kepatuhan desain DESIGN.md, Zero-CSS duplication di studio-master.css, dan on-demand lazy loading modul antar-menu.'
+      },
+      {
+        id: 'c-190-2',
+        type: 'feature',
+        scope: 'Go Provisioning Orchestrator Skill (.agents/skills/herocms-go-orchestrator)',
+        description: 'Standar idiomatik Golang 1.23, Docker Engine SDK lifecycle, konteks timeout, dan pembatasan isolasi cgroups v2 kontainer tenant.'
+      },
+      {
+        id: 'c-190-3',
+        type: 'feature',
+        scope: 'Traefik Edge Routing & Infra Skill (.agents/skills/herocms-traefik-infra)',
+        description: 'Standarisasi topologi 3 jaringan Docker (app-network, traefik_network, redis-net) dan injeksi label dinamis Traefik v3.'
+      },
+      {
+        id: 'c-190-4',
+        type: 'feature',
+        scope: 'PostgreSQL Multi-Tenant RLS Skill (.agents/skills/herocms-database-rls)',
+        description: 'Pola migrasi SQL dengan Row-Level Security berbasis app.current_tenant_id dan namespacing cache Redis.'
+      },
+      {
+        id: 'c-190-5',
+        type: 'feature',
+        scope: 'Changelog & SemVer Assistant Skill (.agents/skills/herocms-changelog-semver)',
+        description: 'Otomasi kepatuhan Semantic Versioning dan penulisan changelog terstruktur sesuai mandat AGENTS.md.'
+      }
+    ]
+  },
+  {
     version: 'v1.8.2',
     releaseDate: '17 Oktober 2026',
     title: 'Modal Konfirmasi Hapus Kontainer (Bespoke Danger Zone Dialog): Menggantikan Native Browser Confirm dengan UI Studio Terpadu',
     summary: 'Menghilangkan native browser confirm() dialog yang kaku pada penghapusan kontainer runtime, digantikan dengan HeroCMS Studio Danger Zone Modal yang elegan: kartu pratinjau pod target, rincian konsekuensi teknis destruktif (penghentian isolasi cgroups v2, pencabutan rute Traefik/SSL, pengembalian slot kuota), dan tombol aksi destruktif dengan status loading.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

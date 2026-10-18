@@ -176,12 +176,13 @@ if (typeof window !== 'undefined') {
 
 const usedContainersCount = computed(() => containers.value.length);
 const runningContainersCount = computed(() => containers.value.filter(c => c.status === 'running').length);
+const maintenanceContainersCount = computed(() => containers.value.filter(c => c.status === 'maintenance').length);
 const stoppedContainersCount = computed(() => containers.value.filter(c => c.status === 'stopped').length);
 const isQuotaExceeded = computed(() => containers.value.length >= userPlan.value.maxContainers);
 
 // Search & Filter
 const searchQuery = ref('');
-const statusFilter = ref<'all' | 'running' | 'stopped'>('all');
+const statusFilter = ref<'all' | 'running' | 'maintenance' | 'stopped'>('all');
 
 const filteredContainers = computed(() => {
   const q = (searchQuery.value || '').trim().toLowerCase();
@@ -228,6 +229,42 @@ const stopContainer = async (container: ContainerSite) => {
     container.ramUsage = 12;
     showToast(`Kontainer ${container.name} telah dihentikan (standby).`, 'info');
   }, 800);
+};
+
+const toggleMaintenance = async (container: ContainerSite, message?: string, estimatedEndTime?: string) => {
+  const willEnable = container.status !== 'maintenance';
+  container.status = 'provisioning';
+  showToast(
+    willEnable
+      ? `Mengaktifkan Mode Pemeliharaan untuk ${container.name}...`
+      : `Mengakhiri Mode Pemeliharaan untuk ${container.name}...`,
+    'info'
+  );
+
+  studioApi
+    .toggleMaintenance(container.id, willEnable, message, estimatedEndTime)
+    .catch(err => console.warn('[API] Maintenance notice:', err));
+
+  setTimeout(() => {
+    if (willEnable) {
+      container.status = 'maintenance';
+      container.maintenanceConfig = {
+        enabled: true,
+        message: message || 'Situs sedang dalam pemeliharaan berkala untuk peningkatan performa. Kami akan segera kembali.',
+        estimatedEndTime: estimatedEndTime || '30 menit'
+      };
+      showToast(
+        `Mode Pemeliharaan aktif untuk ${container.name}! Trafik publik dialihkan ke respons HTTP 503.`,
+        'info'
+      );
+    } else {
+      container.status = 'running';
+      if (container.maintenanceConfig) {
+        container.maintenanceConfig.enabled = false;
+      }
+      showToast(`Situs ${container.name} kembali Go-Live dan melayani trafik normal!`, 'success');
+    }
+  }, 700);
 };
 
 const restartContainer = async (container: ContainerSite) => {
@@ -1459,6 +1496,7 @@ export function useDashboardData() {
     activeContainer,
     usedContainersCount,
     runningContainersCount,
+    maintenanceContainersCount,
     stoppedContainersCount,
     isQuotaExceeded,
     searchQuery,
@@ -1466,6 +1504,7 @@ export function useDashboardData() {
     filteredContainers,
     startContainer,
     stopContainer,
+    toggleMaintenance,
     restartContainer,
     deleteContainer,
     containerToDelete,

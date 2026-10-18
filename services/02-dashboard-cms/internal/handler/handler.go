@@ -81,17 +81,25 @@ func (h *Handler) Login(c *gin.Context) {
 		CreatedAt: time.Now(),
 		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
 	}
-	h.Services.Redis.SaveSession(c.Request.Context(), sess, 30*24*time.Hour)
+	if h.Services != nil && h.Services.Redis != nil {
+		_ = h.Services.Redis.SaveSession(c.Request.Context(), sess, 30*24*time.Hour)
+	}
 
 	// 1. Set HttpOnly Cookie for PWA / Browser Session (30 days)
 	c.SetCookie("herocms_session", sessionID, 2592000, "/", "", false, true)
 
 	// 2. Set readable Cookie for CSRF Token (Double Submit Pattern)
-	csrfCookieName := h.Services.Config.CSRFCookieName
-	if csrfCookieName == "" {
-		csrfCookieName = "csrf_token"
+	csrfCookieName := "csrf_token"
+	var csrfCookieDomain string
+	var csrfCookieSecure bool
+	if h.Services != nil && h.Services.Config != nil {
+		if h.Services.Config.CSRFCookieName != "" {
+			csrfCookieName = h.Services.Config.CSRFCookieName
+		}
+		csrfCookieDomain = h.Services.Config.CSRFCookieDomain
+		csrfCookieSecure = h.Services.Config.CSRFCookieSecure
 	}
-	c.SetCookie(csrfCookieName, csrfToken, 2592000, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
+	c.SetCookie(csrfCookieName, csrfToken, 2592000, "/", csrfCookieDomain, csrfCookieSecure, false)
 
 	// 3. Set response headers & return payload
 	c.Header("X-CSRF-Token", csrfToken)
@@ -106,10 +114,11 @@ func (h *Handler) Login(c *gin.Context) {
 }
 
 type RegisterPayload struct {
-	FullName string `json:"full_name" binding:"required"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Password string `json:"password" binding:"required"`
+	FullName   string `json:"full_name" binding:"required"`
+	Email      string `json:"email"`
+	Username   string `json:"username"`
+	Identifier string `json:"identifier"`
+	Password   string `json:"password" binding:"required"`
 }
 
 func (h *Handler) Register(c *gin.Context) {
@@ -122,6 +131,9 @@ func (h *Handler) Register(c *gin.Context) {
 	userKey := req.Email
 	if userKey == "" {
 		userKey = req.Username
+	}
+	if userKey == "" {
+		userKey = req.Identifier
 	}
 	if userKey == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username atau email wajib diisi"})
@@ -155,14 +167,22 @@ func (h *Handler) Register(c *gin.Context) {
 		CreatedAt: time.Now(),
 		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
 	}
-	h.Services.Redis.SaveSession(c.Request.Context(), sess, 30*24*time.Hour)
+	if h.Services != nil && h.Services.Redis != nil {
+		_ = h.Services.Redis.SaveSession(c.Request.Context(), sess, 30*24*time.Hour)
+	}
 
-	csrfCookieName := h.Services.Config.CSRFCookieName
-	if csrfCookieName == "" {
-		csrfCookieName = "csrf_token"
+	csrfCookieName := "csrf_token"
+	var csrfCookieDomain string
+	var csrfCookieSecure bool
+	if h.Services != nil && h.Services.Config != nil {
+		if h.Services.Config.CSRFCookieName != "" {
+			csrfCookieName = h.Services.Config.CSRFCookieName
+		}
+		csrfCookieDomain = h.Services.Config.CSRFCookieDomain
+		csrfCookieSecure = h.Services.Config.CSRFCookieSecure
 	}
 	c.SetCookie("herocms_session", sessionID, 2592000, "/", "", false, true)
-	c.SetCookie(csrfCookieName, csrfToken, 2592000, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
+	c.SetCookie(csrfCookieName, csrfToken, 2592000, "/", csrfCookieDomain, csrfCookieSecure, false)
 	c.Header("X-CSRF-Token", csrfToken)
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -205,23 +225,29 @@ func (h *Handler) Me(c *gin.Context) {
 func (h *Handler) Logout(c *gin.Context) {
 	// Revoke Redis session
 	sessionCookie, _ := c.Cookie("herocms_session")
-	if sessionCookie != "" {
-		h.Services.Redis.DeleteSession(c.Request.Context(), sessionCookie)
+	if sessionCookie != "" && h.Services != nil && h.Services.Redis != nil {
+		_ = h.Services.Redis.DeleteSession(c.Request.Context(), sessionCookie)
 	}
 
 	// Revoke JWT token blacklist if present
 	tokenHash, exists := c.Get("token_hash")
-	if exists {
-		h.Services.RevokeSession(c.Request.Context(), tokenHash.(string))
+	if exists && h.Services != nil {
+		_ = h.Services.RevokeSession(c.Request.Context(), tokenHash.(string))
 	}
 
 	// Clear all session & tracking cookies
-	csrfCookieName := h.Services.Config.CSRFCookieName
-	if csrfCookieName == "" {
-		csrfCookieName = "csrf_token"
+	csrfCookieName := "csrf_token"
+	var csrfCookieDomain string
+	var csrfCookieSecure bool
+	if h.Services != nil && h.Services.Config != nil {
+		if h.Services.Config.CSRFCookieName != "" {
+			csrfCookieName = h.Services.Config.CSRFCookieName
+		}
+		csrfCookieDomain = h.Services.Config.CSRFCookieDomain
+		csrfCookieSecure = h.Services.Config.CSRFCookieSecure
 	}
 	c.SetCookie("herocms_session", "", -1, "/", "", false, true)
-	c.SetCookie(csrfCookieName, "", -1, "/", h.Services.Config.CSRFCookieDomain, h.Services.Config.CSRFCookieSecure, false)
+	c.SetCookie(csrfCookieName, "", -1, "/", csrfCookieDomain, csrfCookieSecure, false)
 	c.SetCookie("herocms_active_menu", "", -1, "/", "", false, false)
 	c.SetCookie("herocms_active_container_id", "", -1, "/", "", false, false)
 
@@ -300,6 +326,38 @@ func (h *Handler) StopContainer(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "stopped", "id": id})
+}
+
+type SiteMaintenancePayload struct {
+	Enabled          bool   `json:"enabled"`
+	Message          string `json:"message"`
+	EstimatedEndTime string `json:"estimated_end_time"`
+}
+
+func (h *Handler) ToggleMaintenance(c *gin.Context) {
+	id := c.Param("id")
+	var payload SiteMaintenancePayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		// Default to toggle on if body empty or invalid
+		payload.Enabled = true
+	}
+
+	ok, err := h.Services.ToggleSiteMaintenance(c.Request.Context(), getTenantID(c), id, payload.Enabled, payload.Message, payload.EstimatedEndTime)
+	if !ok || err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	status := "running"
+	if payload.Enabled {
+		status = "maintenance"
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status":             status,
+		"id":                 id,
+		"message":            payload.Message,
+		"estimated_end_time": payload.EstimatedEndTime,
+	})
 }
 
 func (h *Handler) DeleteContainer(c *gin.Context) {

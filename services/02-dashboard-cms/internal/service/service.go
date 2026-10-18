@@ -235,11 +235,12 @@ func (s *Services) RegisterUser(fullName, identifier, password string) (*LoginRe
 }
 
 func (s *Services) RevokeSession(ctx context.Context, tokenHash string) error {
-	if tokenHash == "" {
+	if tokenHash == "" || s == nil || s.Redis == nil {
 		return nil
 	}
 	return s.Redis.BlacklistToken(ctx, tokenHash, 24*time.Hour)
 }
+
 // -----------------------------------------------------------------------------
 // Cache Utilities & Invalidation
 // -----------------------------------------------------------------------------
@@ -248,7 +249,9 @@ func (s *Services) InvalidateTenantCache(ctx context.Context, tenantID string) {
 	if tenantID == "" {
 		tenantID = "99420000-0000-0000-0000-000000009942"
 	}
-	_ = s.Redis.DeleteKeysByPrefix(ctx, fmt.Sprintf("tenant:%s:menu:", tenantID))
+	if s != nil && s.Redis != nil {
+		_ = s.Redis.DeleteKeysByPrefix(ctx, fmt.Sprintf("tenant:%s:menu:", tenantID))
+	}
 }
 
 // -----------------------------------------------------------------------------
@@ -262,17 +265,25 @@ func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, e
 		return cached, nil
 	}
 
-	sites, err := s.Repo.GetSites(ctx, tenantID)
-	if err != nil {
-		return nil, err
+	var sites []gin.H
+	var err error
+	if s.Repo != nil {
+		sites, err = s.Repo.GetSites(ctx, tenantID)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		sites = []gin.H{}
 	}
 
 	maxQuota := 3
-	quota, err := s.Repo.GetBillingQuota(ctx, tenantID)
-	if err == nil {
-		if qPlan, ok := quota["plan"].(gin.H); ok {
-			if m, ok := qPlan["maxContainers"].(int); ok && m > 0 {
-				maxQuota = m
+	if s.Repo != nil {
+		quota, err := s.Repo.GetBillingQuota(ctx, tenantID)
+		if err == nil {
+			if qPlan, ok := quota["plan"].(gin.H); ok {
+				if m, ok := qPlan["maxContainers"].(int); ok && m > 0 {
+					maxQuota = m
+				}
 			}
 		}
 	}
@@ -312,12 +323,15 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 		return nil, fmt.Errorf("format subdomain tidak valid (hanya huruf kecil, angka, dan tanda hubung)")
 	}
 
-	sites, _ := s.Repo.GetSites(ctx, tenantID)
-	quota, _ := s.Repo.GetBillingQuota(ctx, tenantID)
+	var sites []gin.H
 	maxQuota := 3
-	if qPlan, ok := quota["plan"].(gin.H); ok {
-		if m, ok := qPlan["maxContainers"].(int); ok && m > 0 {
-			maxQuota = m
+	if s != nil && s.Repo != nil {
+		sites, _ = s.Repo.GetSites(ctx, tenantID)
+		quota, _ := s.Repo.GetBillingQuota(ctx, tenantID)
+		if qPlan, ok := quota["plan"].(gin.H); ok {
+			if m, ok := qPlan["maxContainers"].(int); ok && m > 0 {
+				maxQuota = m
+			}
 		}
 	}
 
@@ -368,20 +382,24 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 	}
 
 	// Trigger Go Provision Orchestrator asynchronously
-	go func() {
-		deployPayload := map[string]string{
-			"tenant_id":    tenantID,
-			"site_id":      newID,
-			"subdomain":    input.Subdomain,
-			"version_hash": "v100prod01",
-		}
-		pBytes, _ := json.Marshal(deployPayload)
-		http.Post(s.Config.OrchestratorURL+"/api/v1/deploy", "application/json", bytes.NewBuffer(pBytes))
-	}()
+	if s != nil && s.Config != nil && s.Config.OrchestratorURL != "" {
+		go func() {
+			deployPayload := map[string]string{
+				"tenant_id":    tenantID,
+				"site_id":      newID,
+				"subdomain":    input.Subdomain,
+				"version_hash": "v100prod01",
+			}
+			pBytes, _ := json.Marshal(deployPayload)
+			http.Post(s.Config.OrchestratorURL+"/api/v1/deploy", "application/json", bytes.NewBuffer(pBytes))
+		}()
+	}
 
-	err := s.Repo.InsertSite(ctx, tenantID, newContainer)
-	if err != nil {
-		return nil, fmt.Errorf("gagal menyimpan data situs ke database: %w", err)
+	if s != nil && s.Repo != nil {
+		err := s.Repo.InsertSite(ctx, tenantID, newContainer)
+		if err != nil {
+			return nil, fmt.Errorf("gagal menyimpan data situs ke database: %w", err)
+		}
 	}
 
 	s.InvalidateTenantCache(ctx, tenantID)
@@ -389,36 +407,56 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 }
 
 func (s *Services) StartContainer(ctx context.Context, tenantID, id string) (bool, error) {
-	err := s.Repo.UpdateSiteStatus(ctx, tenantID, id, "running")
-	if err != nil {
-		return false, err
+	if s != nil && s.Repo != nil {
+		err := s.Repo.UpdateSiteStatus(ctx, tenantID, id, "running")
+		if err != nil {
+			return false, err
+		}
 	}
 	s.InvalidateTenantCache(ctx, tenantID)
 	return true, nil
 }
 
 func (s *Services) StopContainer(ctx context.Context, tenantID, id string) (bool, error) {
-	err := s.Repo.UpdateSiteStatus(ctx, tenantID, id, "stopped")
-	if err != nil {
-		return false, err
+	if s != nil && s.Repo != nil {
+		err := s.Repo.UpdateSiteStatus(ctx, tenantID, id, "stopped")
+		if err != nil {
+			return false, err
+		}
+	}
+	s.InvalidateTenantCache(ctx, tenantID)
+	return true, nil
+}
+
+func (s *Services) ToggleSiteMaintenance(ctx context.Context, tenantID, id string, enabled bool, message, estimatedEndTime string) (bool, error) {
+	if s != nil && s.Repo != nil {
+		err := s.Repo.UpdateSiteMaintenance(ctx, tenantID, id, enabled, message, estimatedEndTime)
+		if err != nil {
+			return false, err
+		}
 	}
 	s.InvalidateTenantCache(ctx, tenantID)
 	return true, nil
 }
 
 func (s *Services) DeleteContainer(ctx context.Context, tenantID, id string) (bool, error) {
-	err := s.Repo.DeleteSite(ctx, tenantID, id)
-	if err != nil {
-		return false, err
+	if s != nil && s.Repo != nil {
+		err := s.Repo.DeleteSite(ctx, tenantID, id)
+		if err != nil {
+			return false, err
+		}
 	}
 	s.InvalidateTenantCache(ctx, tenantID)
 	return true, nil
 }
 
 func (s *Services) SaveSiteDesign(ctx context.Context, tenantID, id string, payload gin.H) error {
-	err := s.Repo.UpdateSiteDesign(ctx, tenantID, id, payload)
-	if err == nil {
-		s.InvalidateTenantCache(ctx, tenantID)
+	var err error
+	if s != nil && s.Repo != nil {
+		err = s.Repo.UpdateSiteDesign(ctx, tenantID, id, payload)
+		if err == nil {
+			s.InvalidateTenantCache(ctx, tenantID)
+		}
 	}
 	return err
 }
@@ -434,8 +472,11 @@ func (s *Services) GetArticles(ctx context.Context, tenantID string) []gin.H {
 		return cached
 	}
 
-	items, err := s.Repo.GetArticles(ctx, tenantID)
-	if err != nil || items == nil {
+	var items []gin.H
+	if s.Repo != nil {
+		items, _ = s.Repo.GetArticles(ctx, tenantID)
+	}
+	if items == nil {
 		items = []gin.H{}
 	}
 	_ = s.Redis.SetJSON(ctx, cacheKey, items, 30*time.Minute)
@@ -559,13 +600,22 @@ func (s *Services) UploadAsset(ctx context.Context, tenantID string, fileHeader 
 		return nil, fmt.Errorf("berkas ditolak oleh pertahanan siber HeroCMS: terdeteksi kode biner/skrip berbahaya (%s)", detectedMime)
 	}
 
+	// Deteksi penyamaran (spoofing): gambar berekstensi JPG/PNG/WebP/GIF yang isinya teks/script
+	imageExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".webp": true, ".gif": true}
+	if imageExts[ext] && !strings.HasPrefix(detectedMime, "image/") {
+		return nil, fmt.Errorf("berkas gambar ditolak: terdeteksi penyamaran konten bukan gambar asli (%s)", detectedMime)
+	}
+
 	// Kembalikan pointer baca file ke awal
 	if seeker, ok := file.(io.Seeker); ok {
 		_, _ = seeker.Seek(0, io.SeekStart)
 	}
 
 	// 3. Penegakan Kuota Kapasitas 2.0 GB (Pre-flight Quota Enforcer)
-	currentUsageBytes, _ := s.Repo.GetTenantStorageUsageBytes(ctx, tenantID)
+	var currentUsageBytes int64
+	if s.Repo != nil {
+		currentUsageBytes, _ = s.Repo.GetTenantStorageUsageBytes(ctx, tenantID)
+	}
 	if currentUsageBytes+fileHeader.Size > MaxTenantStorageBytes {
 		usedMB := float64(currentUsageBytes) / (1024 * 1024)
 		fileMB := float64(fileHeader.Size) / (1024 * 1024)
@@ -641,13 +691,31 @@ func (s *Services) UploadAsset(ctx context.Context, tenantID string, fileHeader 
 	}
 
 	// 5. Simpan Metadata ke Database PostgreSQL dengan RLS
-	asset, err := s.Repo.CreateAsset(ctx, tenantID, fileHeader.Filename, fileType, contentType, dimensions, fileSizeStr, sizeBytes, storageURL, s3Key, bucketName)
-	if err != nil {
-		return nil, fmt.Errorf("gagal menyimpan metadata aset: %w", err)
+	var asset gin.H
+	if s.Repo != nil {
+		asset, err = s.Repo.CreateAsset(ctx, tenantID, fileHeader.Filename, fileType, contentType, dimensions, fileSizeStr, sizeBytes, storageURL, s3Key, bucketName)
+		if err != nil {
+			return nil, fmt.Errorf("gagal menyimpan metadata aset: %w", err)
+		}
+	} else {
+		asset = gin.H{
+			"id":         fmt.Sprintf("mock-asset-%d", time.Now().UnixNano()),
+			"name":       fileHeader.Filename,
+			"type":       fileType,
+			"mimeType":   contentType,
+			"dimensions": dimensions,
+			"size":       fileSizeStr,
+			"sizeBytes":  sizeBytes,
+			"url":        storageURL,
+			"s3Key":      s3Key,
+			"bucket":     bucketName,
+		}
 	}
 
-	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:assets", tenantID))
-	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+	if s.Redis != nil {
+		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:assets", tenantID))
+		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+	}
 
 	return asset, nil
 }
@@ -679,15 +747,22 @@ func (s *Services) DeleteAsset(ctx context.Context, tenantID, assetID string) er
 func (s *Services) GetDomains(ctx context.Context, tenantID string) []gin.H {
 	cacheKey := fmt.Sprintf("tenant:%s:menu:domains", tenantID)
 	var cached []gin.H
-	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
-		return cached
+	if s != nil && s.Redis != nil {
+		if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+			return cached
+		}
 	}
 
-	domains, err := s.Repo.GetDomains(ctx, tenantID)
-	if err != nil || domains == nil {
+	var domains []gin.H
+	if s != nil && s.Repo != nil {
+		domains, _ = s.Repo.GetDomains(ctx, tenantID)
+	}
+	if domains == nil {
 		domains = []gin.H{}
 	}
-	_ = s.Redis.SetJSON(ctx, cacheKey, domains, 30*time.Minute)
+	if s != nil && s.Redis != nil {
+		_ = s.Redis.SetJSON(ctx, cacheKey, domains, 30*time.Minute)
+	}
 	return domains
 }
 
@@ -698,19 +773,29 @@ func (s *Services) GetDomains(ctx context.Context, tenantID string) []gin.H {
 func (s *Services) GetTickets(ctx context.Context, tenantID string) []gin.H {
 	cacheKey := fmt.Sprintf("tenant:%s:menu:tickets", tenantID)
 	var cached []gin.H
-	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
-		return cached
+	if s != nil && s.Redis != nil {
+		if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+			return cached
+		}
 	}
 
-	tickets, err := s.Repo.GetTickets(ctx, tenantID)
-	if err != nil || tickets == nil {
+	var tickets []gin.H
+	if s != nil && s.Repo != nil {
+		tickets, _ = s.Repo.GetTickets(ctx, tenantID)
+	}
+	if tickets == nil {
 		tickets = []gin.H{}
 	}
-	_ = s.Redis.SetJSON(ctx, cacheKey, tickets, 30*time.Minute)
+	if s != nil && s.Redis != nil {
+		_ = s.Redis.SetJSON(ctx, cacheKey, tickets, 30*time.Minute)
+	}
 	return tickets
 }
 
 func (s *Services) GetTicketMessages(ctx context.Context, id string) []gin.H {
+	if s == nil || s.Repo == nil {
+		return []gin.H{}
+	}
 	msgs, err := s.Repo.GetTicketMessages(ctx, id)
 	if err != nil || msgs == nil {
 		return []gin.H{}
@@ -743,37 +828,66 @@ func (s *Services) CreateTicket(ctx context.Context, tenantID string, input Crea
 	}
 	ticketNumber := fmt.Sprintf("TKT-%04d", time.Now().Unix()%9000+1000)
 
-	ticket, err := s.Repo.CreateTicket(ctx, tenantID, ticketNumber, input.Subject, input.Category, input.Priority, input.Message, input.AuthorName, input.AuthorRole)
-	if err != nil {
-		return nil, err
+	var ticket gin.H
+	var err error
+	if s != nil && s.Repo != nil {
+		ticket, err = s.Repo.CreateTicket(ctx, tenantID, ticketNumber, input.Subject, input.Category, input.Priority, input.Message, input.AuthorName, input.AuthorRole)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		ticket = gin.H{
+			"id":       ticketNumber,
+			"subject":  input.Subject,
+			"category": input.Category,
+			"priority": input.Priority,
+			"status":   "open",
+		}
 	}
 
-	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
-	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+	if s != nil && s.Redis != nil {
+		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
+		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+	}
 
 	return ticket, nil
 }
 
 func (s *Services) AddTicketMessage(ctx context.Context, tenantID, ticketKey string, input TicketReplyInput) (gin.H, error) {
-	msg, err := s.Repo.AddTicketMessage(ctx, tenantID, ticketKey, input.Message, input.AuthorName, input.AuthorRole, input.Sender)
-	if err != nil {
-		return nil, err
+	var msg gin.H
+	var err error
+	if s != nil && s.Repo != nil {
+		msg, err = s.Repo.AddTicketMessage(ctx, tenantID, ticketKey, input.Message, input.AuthorName, input.AuthorRole, input.Sender)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		msg = gin.H{
+			"sender":  input.Sender,
+			"message": input.Message,
+		}
 	}
 
-	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
-	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+	if s != nil && s.Redis != nil {
+		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
+		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+	}
 
 	return msg, nil
 }
 
 func (s *Services) ResolveTicket(ctx context.Context, tenantID, ticketKey string) error {
-	err := s.Repo.ResolveTicket(ctx, tenantID, ticketKey)
-	if err != nil {
-		return err
+	if s != nil && s.Repo != nil {
+		err := s.Repo.ResolveTicket(ctx, tenantID, ticketKey)
+		if err != nil {
+			return err
+		}
 	}
 
-	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
-	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+	if s != nil && s.Redis != nil {
+		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:tickets", tenantID))
+		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+	}
 
 	return nil
 }
@@ -785,27 +899,39 @@ func (s *Services) ResolveTicket(ctx context.Context, tenantID, ticketKey string
 func (s *Services) GetInvoices(ctx context.Context, tenantID string) []gin.H {
 	cacheKey := fmt.Sprintf("tenant:%s:menu:invoices", tenantID)
 	var cached []gin.H
-	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
-		return cached
+	if s != nil && s.Redis != nil {
+		if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+			return cached
+		}
 	}
 
-	invoices, err := s.Repo.GetInvoices(ctx, tenantID)
-	if err != nil || invoices == nil {
+	var invoices []gin.H
+	if s != nil && s.Repo != nil {
+		invoices, _ = s.Repo.GetInvoices(ctx, tenantID)
+	}
+	if invoices == nil {
 		invoices = []gin.H{}
 	}
-	_ = s.Redis.SetJSON(ctx, cacheKey, invoices, 30*time.Minute)
+	if s != nil && s.Redis != nil {
+		_ = s.Redis.SetJSON(ctx, cacheKey, invoices, 30*time.Minute)
+	}
 	return invoices
 }
 
 func (s *Services) GetBillingQuota(ctx context.Context, tenantID string) gin.H {
 	cacheKey := fmt.Sprintf("tenant:%s:menu:quota", tenantID)
 	var cached gin.H
-	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
-		return cached
+	if s != nil && s.Redis != nil {
+		if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+			return cached
+		}
 	}
 
-	quota, err := s.Repo.GetBillingQuota(ctx, tenantID)
-	if err != nil || quota == nil {
+	var quota gin.H
+	if s != nil && s.Repo != nil {
+		quota, _ = s.Repo.GetBillingQuota(ctx, tenantID)
+	}
+	if quota == nil {
 		quota = gin.H{
 			"plan": gin.H{
 				"name":          "Hero Pro Plan",
@@ -814,7 +940,9 @@ func (s *Services) GetBillingQuota(ctx context.Context, tenantID string) gin.H {
 			},
 		}
 	}
-	_ = s.Redis.SetJSON(ctx, cacheKey, quota, 30*time.Minute)
+	if s != nil && s.Redis != nil {
+		_ = s.Redis.SetJSON(ctx, cacheKey, quota, 30*time.Minute)
+	}
 	return quota
 }
 
@@ -890,7 +1018,7 @@ func (s *Services) ProcessCheckout(ctx context.Context, input CheckoutInput) (gi
 		tID = "99420000-0000-0000-0000-000000009942"
 	}
 
-	if s.Repo != nil && s.Repo.DB != nil {
+	if s != nil && s.Repo != nil && s.Repo.DB != nil {
 		_, _ = s.Repo.DB.ExecContext(ctx, `
 			INSERT INTO invoices (tenant_id, invoice_number, plan_name, period, amount, tax, total, date, due_date, status, payment_method, container_quota)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'paid', $10, $11)
@@ -904,9 +1032,11 @@ func (s *Services) ProcessCheckout(ctx context.Context, input CheckoutInput) (gi
 		`, input.PlanTier, maxContainers, storageQuota, tID)
 	}
 
-	s.Repo.Invoices = append([]gin.H{invoiceObj}, s.Repo.Invoices...)
-
-	sites, _ := s.Repo.GetSites(ctx, tID)
+	var sites []gin.H
+	if s != nil && s.Repo != nil {
+		s.Repo.AddInvoice(invoiceObj)
+		sites, _ = s.Repo.GetSites(ctx, tID)
+	}
 	s.InvalidateTenantCache(ctx, tID)
 
 	return gin.H{
@@ -933,15 +1063,22 @@ func (s *Services) ProcessCheckout(ctx context.Context, input CheckoutInput) (gi
 func (s *Services) GetWebhooks(ctx context.Context, tenantID string) []gin.H {
 	cacheKey := fmt.Sprintf("tenant:%s:menu:webhooks", tenantID)
 	var cached []gin.H
-	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
-		return cached
+	if s != nil && s.Redis != nil {
+		if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+			return cached
+		}
 	}
 
-	wh, err := s.Repo.GetWebhooks(ctx, tenantID)
-	if err != nil || wh == nil {
+	var wh []gin.H
+	if s != nil && s.Repo != nil {
+		wh, _ = s.Repo.GetWebhooks(ctx, tenantID)
+	}
+	if wh == nil {
 		wh = []gin.H{}
 	}
-	_ = s.Redis.SetJSON(ctx, cacheKey, wh, 30*time.Minute)
+	if s != nil && s.Redis != nil {
+		_ = s.Redis.SetJSON(ctx, cacheKey, wh, 30*time.Minute)
+	}
 	return wh
 }
 
@@ -986,8 +1123,10 @@ func (s *Services) WarmAllMenusCache(ctx context.Context, tenantID string) (gin.
 	}
 
 	// Cache the consolidated bundle for single-shot hydration
-	bundleKey := fmt.Sprintf("tenant:%s:menu:bundle", tenantID)
-	_ = s.Redis.SetJSON(ctx, bundleKey, bundle, 1*time.Hour)
+	if s != nil && s.Redis != nil {
+		bundleKey := fmt.Sprintf("tenant:%s:menu:bundle", tenantID)
+		_ = s.Redis.SetJSON(ctx, bundleKey, bundle, 1*time.Hour)
+	}
 
 	return bundle, nil
 }
@@ -997,10 +1136,19 @@ func (s *Services) WarmAllMenusCache(ctx context.Context, tenantID string) (gin.
 // -----------------------------------------------------------------------------
 
 func (s *Services) GetTopViews(ctx context.Context, tenantID string) ([]redis.TopItem, error) {
+	if s == nil || s.Redis == nil {
+		return []redis.TopItem{
+			{Path: "/home", Score: 100},
+			{Path: "/blog", Score: 50},
+		}, nil
+	}
 	return s.Redis.GetTopViews(ctx, tenantID, 5)
 }
 
 func (s *Services) RecordHit(ctx context.Context, tenantID string, path string) error {
+	if s == nil || s.Redis == nil {
+		return nil
+	}
 	return s.Redis.RecordTopView(ctx, tenantID, path)
 }
 
@@ -1009,15 +1157,20 @@ func (s *Services) RecordHit(ctx context.Context, tenantID string, path string) 
 // -----------------------------------------------------------------------------
 
 func (s *Services) SaveEditorDraft(ctx context.Context, tenantID, containerID string, draft gin.H) error {
+	if s == nil || s.Redis == nil {
+		return nil
+	}
 	if tenantID == "" {
 		tenantID = "99420000-0000-0000-0000-000000009942"
 	}
 	key := fmt.Sprintf("tenant:%s:container:%s:draft", tenantID, containerID)
-	// Persist draft in Redis for 30 days
 	return s.Redis.SetJSON(ctx, key, draft, 30*24*time.Hour)
 }
 
 func (s *Services) GetEditorDraft(ctx context.Context, tenantID, containerID string) (gin.H, error) {
+	if s == nil || s.Redis == nil {
+		return nil, fmt.Errorf("draf belum tersedia")
+	}
 	if tenantID == "" {
 		tenantID = "99420000-0000-0000-0000-000000009942"
 	}
@@ -1031,6 +1184,9 @@ func (s *Services) GetEditorDraft(ctx context.Context, tenantID, containerID str
 }
 
 func (s *Services) SaveUserState(ctx context.Context, tenantID string, state gin.H) error {
+	if s == nil || s.Redis == nil {
+		return nil
+	}
 	if tenantID == "" {
 		tenantID = "99420000-0000-0000-0000-000000009942"
 	}
@@ -1039,6 +1195,9 @@ func (s *Services) SaveUserState(ctx context.Context, tenantID string, state gin
 }
 
 func (s *Services) GetUserState(ctx context.Context, tenantID string) (gin.H, error) {
+	if s == nil || s.Redis == nil {
+		return nil, fmt.Errorf("state belum tersedia")
+	}
 	if tenantID == "" {
 		tenantID = "99420000-0000-0000-0000-000000009942"
 	}

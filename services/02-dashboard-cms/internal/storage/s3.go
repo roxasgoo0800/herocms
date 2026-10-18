@@ -73,6 +73,9 @@ func NewS3Client(cfg *config.Config) *S3Client {
 // EnsureTenantBucket verifies if a dedicated bucket for the tenant exists, or creates it with public-read policy.
 func (s *S3Client) EnsureTenantBucket(ctx context.Context, tenantID string) (string, error) {
 	bucketName := GetTenantBucketName(tenantID)
+	if s == nil {
+		return bucketName, nil
+	}
 
 	s.mu.RLock()
 	client := s.Client
@@ -114,16 +117,20 @@ func (s *S3Client) EnsureTenantBucket(ctx context.Context, tenantID string) (str
 }
 
 func (s *S3Client) UploadFile(ctx context.Context, tenantID, originalFilename string, reader io.Reader, size int64, contentType string) (string, string, string, error) {
-	s.mu.RLock()
-	client := s.Client
-	s.mu.RUnlock()
-
 	cleanName := filepath.Base(originalFilename)
 	cleanName = strings.ReplaceAll(cleanName, " ", "-")
 	timestamp := time.Now().UnixNano()
 	s3Key := fmt.Sprintf("%d-%s", timestamp, cleanName)
-
 	bucketName := GetTenantBucketName(tenantID)
+
+	if s == nil {
+		mockURL := fmt.Sprintf("/media/%s/%s", bucketName, s3Key)
+		return mockURL, s3Key, bucketName, nil
+	}
+
+	s.mu.RLock()
+	client := s.Client
+	s.mu.RUnlock()
 
 	if client == nil {
 		// Mock storage URL fallback when S3 is completely offline
@@ -154,11 +161,15 @@ func (s *S3Client) UploadFile(ctx context.Context, tenantID, originalFilename st
 }
 
 func (s *S3Client) DeleteFile(ctx context.Context, tenantID, s3Key string) error {
+	if s == nil || s3Key == "" {
+		return nil
+	}
+
 	s.mu.RLock()
 	client := s.Client
 	s.mu.RUnlock()
 
-	if client == nil || s3Key == "" {
+	if client == nil {
 		return nil
 	}
 

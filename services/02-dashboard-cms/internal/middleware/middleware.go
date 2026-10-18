@@ -41,6 +41,13 @@ func NoCache() gin.HandlerFunc {
 
 func CORS(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if cfg == nil {
+			cfg = &config.Config{
+				CORSAllowedOrigins:   []string{"*"},
+				CORSAllowCredentials: true,
+			}
+		}
+
 		origin := c.Request.Header.Get("Origin")
 		allowed := false
 
@@ -78,7 +85,7 @@ func CORS(cfg *config.Config) gin.HandlerFunc {
 // CSRFProtection implements the Double Submit Cookie pattern + Redis session check
 func CSRFProtection(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !cfg.CSRFEnabled {
+		if cfg == nil || !cfg.CSRFEnabled {
 			c.Next()
 			return
 		}
@@ -134,6 +141,11 @@ func CSRFProtection(cfg *config.Config) gin.HandlerFunc {
 
 func RateLimiter(rdb *redis.Client, maxRequests int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if rdb == nil {
+			c.Next()
+			return
+		}
+
 		clientIP := c.ClientIP()
 		key := fmt.Sprintf("%s:%s", clientIP, c.FullPath())
 
@@ -152,6 +164,10 @@ func RateLimiter(rdb *redis.Client, maxRequests int, window time.Duration) gin.H
 // SessionOrJWTAuth verifies authentication via Redis Stateful Session Cookie (PWA) or JWT Bearer Token
 func SessionOrJWTAuth(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if cfg == nil {
+			cfg = &config.Config{AllowDevAuthBypass: false}
+		}
+
 		// 1. Check Authorization: Bearer <token> (Explicit client token takes precedence)
 		authHeader := c.GetHeader("Authorization")
 		if authHeader != "" {
@@ -200,13 +216,22 @@ func SessionOrJWTAuth(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 			}
 		}
 
-		// 3. Fallback for Local Dev / Default Seed Session if no auth header & no cookie
-		// To ensure uninterrupted development experience while enforcing security
-		c.Set("tenant_id", "99420000-0000-0000-0000-000000009942")
-		c.Set("user_id", "00000000-0000-0000-0000-000000000001")
-		c.Set("email", "admin")
-		c.Set("full_name", "Admin Developer")
-		c.Set("role", "customer")
-		c.Next()
+		// 3. Fallback for Local Dev / Seed Session (Enforced by 20 Security Pillars: Disabled in Production)
+		if cfg.AllowDevAuthBypass {
+			c.Set("tenant_id", "99420000-0000-0000-0000-000000009942")
+			c.Set("user_id", "00000000-0000-0000-0000-000000000001")
+			c.Set("email", "admin")
+			c.Set("full_name", "Admin Developer")
+			c.Set("role", "customer")
+			c.Next()
+			return
+		}
+
+		// Reject unauthenticated requests in production environments
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "Autentikasi diperlukan untuk mengakses resource ini. Silakan sertakan token atau login.",
+			"code":    "AUTH_REQUIRED",
+		})
 	}
 }

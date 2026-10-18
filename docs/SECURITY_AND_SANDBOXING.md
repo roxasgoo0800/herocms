@@ -197,3 +197,33 @@ sequenceDiagram
 ### Pembatasan Laju Trafik (Rate Limiting)
 - Pembatasan Ingress: Maksimal 120 permintaan per menit per IP address untuk penelusuran normal; dan maksimal 5 permintaan per menit untuk endpoint sensitif (login dan reset password).
 - Proteksi DDoS: Menggunakan Cloudflare di layer terdepan untuk menyaring serangan Layer 3, Layer 4, dan Layer 7 sebelum mencapai Traefik server kita.
+
+---
+
+## 5. Checklist Praktis Keamanan Web & Backend (20 Pilar Standar Keamanan)
+
+Untuk mempermudah audit harian developer dan AI Agent, berikut adalah 20 pilar keamanan praktis yang wajib divalidasi pada setiap baris kode, deployment, dan konfigurasi server di HeroCMS:
+
+| No | Pilar Keamanan | Kebijakan & Standar Penegakan di HeroCMS |
+| :--- | :--- | :--- |
+| **1** | **API Key Aman** | Disimpan terenkripsi di database, menggunakan prefix unik (contoh: `hc_live_...`), dan hanya ditampilkan satu kali saat digenerate (*one-time view*). |
+| **2** | **.env Jangan Public** | File `.env` wajib terdaftar di `.gitignore`. Di Traefik dan Nginx, direktori/file tersembunyi berawalan titik (`/\.`) otomatis diblokir dengan HTTP 403. |
+| **3** | **No Hardcode Secret** | Dilarang keras menaruh password, secret key JWT, atau token API di dalam kode sumber (`.go`, `.vue`, `.ts`, `.php`, atau `.yml`). Gunakan environment variables. |
+| **4** | **Cek Secret di Git** | Pemindaian berkala pada riwayat commit Git untuk mencegah kebocoran kredensial tanpa sengaja. |
+| **5** | **Debug Mode OFF** | Di lingkungan staging dan produksi, seluruh service wajib mematikan mode debug (`GIN_MODE=release`, `APP_DEBUG=false`, `NODE_ENV=production`). |
+| **6** | **Error Jangan Bocor** | Stack trace internal, query database mentah, dan path server dilarang dikirimkan ke respon browser/klien. Gunakan respon kesalahan generik ber-ID korelasi (*Request ID*). |
+| **7** | **Validasi Input** | Seluruh payload HTTP (`req.body`, `req.query`, `req.params`) divalidasi skemanya (tipe data, format UUID, panjang string, batas nilai numerik) sebelum diproses. |
+| **8** | **Sanitasi Input** | Melakukan pemangkasan spasi (*trim*), *escaping* karakter berbahaya, dan normalisasi format untuk mencegah manipulasi data. |
+| **9** | **Anti SQL Injection** | 100% kueri database menggunakan parameter binding terstruktur (`pgx` / ORM). Dilarang menyambung string manual (`raw string concatenation`). |
+| **10** | **Anti XSS** | Konten kaya disimpan dalam bentuk JSON AST (ProseMirror), disanitasi ketat dengan **DOMPurify** sebelum render, dan dilindungi header CSP Traefik. |
+| **11** | **Server-side Auth** | Seluruh verifikasi otentikasi wajib dieksekusi di backend server. Jangan pernah mempercayai klaim autentikasi murni dari state frontend klien. |
+| **12** | **Cek Akses User** | Setiap endpoint yang mengakses resource memvalidasi kepemilikan tenant (`tenant_id`) untuk mencegah *Insecure Direct Object Reference* (IDOR). |
+| **13** | **Role Admin Aman** | Penerapan Role-Based Access Control (RBAC) ketat: pemisahan hak akses antara SuperAdmin, Tenant Owner, Admin, dan Editor Konten. |
+| **14** | **DB Jangan Public** | Port database PostgreSQL (5432) dan Redis (6379) hanya berjalan di jaringan internal Docker (`app-network`). Dilarang membuka port langsung ke internet (`0.0.0.0`). |
+| **15** | **DB Permission Ketat** | User database aplikasi (`cloudcms_user`) hanya diberikan hak akses tabel yang dibutuhkan (*Principle of Least Privilege*) dan dikunci dengan RLS. |
+| **16** | **Hash Password** | Seluruh password disimpan menggunakan fungsi hash berkekuatan tinggi (Argon2id atau bcrypt dengan *cost factor* minimal 12) dengan *salt* unik otomatis. |
+| **17** | **Session Aman** | Menggunakan cookie sesi dengan atribut `HttpOnly; Secure; SameSite=Lax`, rotasi token sesi secara berkala, dan penyimpanan stateful di Redis ber-TTL. |
+| **18** | **Reset Password Aman** | Token reset password bersifat sekali pakai (*single-use*), dibuat dari generator acak kriptografis (CSPRNG), dan kadaluarsa dalam waktu singkat (maksimal 15 menit). |
+| **19** | **Batasi Upload File** | Pembatasan ukuran file maksimal (misal 25 MB per file), kuota total akun (2 GB per tenant), serta whitelist ekstensi dan MIME type yang diizinkan. |
+| **20** | **Scan Upload File** | Verifikasi *Magic Bytes* (512 byte awal) untuk mendeteksi biner berbahaya yang menyamar, pembersihan nama file (anti path-traversal `../`), dan isolasi ke S3 MinIO. |
+

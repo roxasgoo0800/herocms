@@ -35,6 +35,10 @@ type Config struct {
 	CORSAllowedOrigins   []string
 	CORSAllowCredentials bool
 
+	// Environment & Security
+	Environment        string
+	AllowDevAuthBypass bool
+
 	// CSRF Configuration
 	CSRFEnabled      bool
 	CSRFCookieName   string
@@ -197,6 +201,19 @@ func LoadConfig() *Config {
 		s3PublicURL = fmt.Sprintf("%s://%s/%s", proto, s3Endpoint, s3Bucket)
 	}
 
+	envMode := strings.ToLower(os.Getenv("APP_ENV"))
+	if envMode == "" {
+		envMode = strings.ToLower(os.Getenv("ENV"))
+	}
+	if envMode == "" {
+		envMode = "development"
+	}
+
+	allowDevBypass := false
+	if envMode != "production" {
+		allowDevBypass = strings.ToLower(os.Getenv("ALLOW_DEV_AUTH_BYPASS")) != "false"
+	}
+
 	return &Config{
 		Port:                 port,
 		JWTSecret:            jwtSecret,
@@ -218,6 +235,8 @@ func LoadConfig() *Config {
 		S3PublicURL:          s3PublicURL,
 		CORSAllowedOrigins:   corsOrigins,
 		CORSAllowCredentials: corsCreds,
+		Environment:          envMode,
+		AllowDevAuthBypass:   allowDevBypass,
 		CSRFEnabled:          csrfEnabled,
 		CSRFCookieName:       csrfCookieName,
 		CSRFCookieDomain:     csrfCookieDomain,

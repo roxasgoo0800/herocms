@@ -22,19 +22,10 @@ type DeployRequest struct {
 	VersionHash string `json:"version_hash" binding:"required"`
 }
 
-func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	// Initialize Docker Provisioner Client
-	provisioner, err := docker.NewProvisioner()
-	if err != nil {
-		log.Printf("[WARNING] Docker daemon client initialization notice: %v", err)
-	}
-
-	router := gin.Default()
+func setupRouter(provisioner *docker.Provisioner) *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	router.Use(gin.Recovery())
 
 	// CORS & Health check
 	router.GET("/healthz", func(c *gin.Context) {
@@ -117,7 +108,7 @@ func main() {
 				"containers": []gin.H{
 					{
 						"tenant_id": "t_sample_101",
-						"subdomain": "demo.cloudcms.app",
+						"subdomain": "demo.herocms.stackbyte.id",
 						"status":    "running",
 						"cpu_limit": "0.5 vCPU",
 						"memory":    "256 MB",
@@ -125,7 +116,60 @@ func main() {
 				},
 			})
 		})
+
+		// Stop container
+		api.POST("/containers/:id/stop", func(c *gin.Context) {
+			id := c.Param("id")
+			if provisioner != nil {
+				if err := provisioner.StopContainer(c.Request.Context(), id); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "stopped", "container_id": id})
+		})
+
+		// Start container
+		api.POST("/containers/:id/start", func(c *gin.Context) {
+			id := c.Param("id")
+			if provisioner != nil {
+				if err := provisioner.StartContainer(c.Request.Context(), id); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "running", "container_id": id})
+		})
+
+		// Destroy container (Danger Zone Action)
+		api.DELETE("/containers/:id", func(c *gin.Context) {
+			id := c.Param("id")
+			if provisioner != nil {
+				if err := provisioner.DestroyContainer(c.Request.Context(), id); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "destroyed", "container_id": id})
+		})
 	}
+
+	return router
+}
+
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	// Initialize Docker Provisioner Client
+	provisioner, err := docker.NewProvisioner()
+	if err != nil {
+		log.Printf("[WARNING] Docker daemon client initialization notice: %v", err)
+	}
+
+	router := setupRouter(provisioner)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
@@ -144,6 +188,10 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutting down orchestrator server gracefully...")
+
+	if provisioner != nil {
+		_ = provisioner.Close()
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

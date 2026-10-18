@@ -66,6 +66,16 @@ func NewRepository(cfg *config.Config) *Repository {
 	return repo
 }
 
+// NewInMemoryRepository creates an isolated, in-memory repository instance for testing and offline execution.
+func NewInMemoryRepository() *Repository {
+	repo := &Repository{
+		DB:       nil,
+		Messages: make(map[string][]gin.H),
+	}
+	repo.seedInitialData()
+	return repo
+}
+
 // -----------------------------------------------------------------------------
 // Database Schema & Seed Bootstrap
 // -----------------------------------------------------------------------------
@@ -454,6 +464,9 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 // -----------------------------------------------------------------------------
 
 func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, error) {
+	if r == nil {
+		return []gin.H{}, nil
+	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
 			SELECT id, name, category, template_name, subdomain, status, 
@@ -517,6 +530,9 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -533,6 +549,9 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 }
 
 func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H) error {
+	if r == nil {
+		return nil
+	}
 	if r.DB != nil {
 		_, err := r.DB.ExecContext(ctx, `
 			INSERT INTO sites (
@@ -565,6 +584,9 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 }
 
 func (r *Repository) UpdateSiteStatus(ctx context.Context, tenantID, siteID, status string) error {
+	if r == nil {
+		return nil
+	}
 	if r.DB != nil {
 		_, err := r.DB.ExecContext(ctx, `
 			UPDATE sites SET status = $1, updated_at = NOW()
@@ -584,7 +606,47 @@ func (r *Repository) UpdateSiteStatus(ctx context.Context, tenantID, siteID, sta
 	return nil
 }
 
+func (r *Repository) UpdateSiteMaintenance(ctx context.Context, tenantID, siteID string, enabled bool, message, estimatedEndTime string) error {
+	if r == nil {
+		return nil
+	}
+	status := "running"
+	if enabled {
+		status = "maintenance"
+	}
+
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			UPDATE sites SET status = $1, updated_at = NOW()
+			WHERE tenant_id = $2 AND (id::text = $3 OR subdomain LIKE $4)
+		`, status, tenantID, siteID, siteID+"%")
+		return err
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, c := range r.Containers {
+		if c["id"] == siteID {
+			c["status"] = status
+			if enabled {
+				c["maintenanceConfig"] = gin.H{
+					"enabled":          true,
+					"message":          message,
+					"estimatedEndTime": estimatedEndTime,
+				}
+			} else {
+				delete(c, "maintenanceConfig")
+			}
+			return nil
+		}
+	}
+	return nil
+}
+
 func (r *Repository) UpdateSiteDesign(ctx context.Context, tenantID, siteID string, payload gin.H) error {
+	if r == nil {
+		return nil
+	}
 	if r.DB != nil {
 		roleHeadline := fmt.Sprintf("%v", payload["roleOrHeadline"])
 		bioIntro := fmt.Sprintf("%v", payload["bioIntro"])
@@ -635,6 +697,9 @@ func (r *Repository) UpdateSiteDesign(ctx context.Context, tenantID, siteID stri
 }
 
 func (r *Repository) DeleteSite(ctx context.Context, tenantID, siteID string) error {
+	if r == nil {
+		return nil
+	}
 	if r.DB != nil {
 		_, err := r.DB.ExecContext(ctx, `
 			DELETE FROM sites WHERE tenant_id = $1 AND (id::text = $2 OR subdomain LIKE $3)
@@ -654,6 +719,9 @@ func (r *Repository) DeleteSite(ctx context.Context, tenantID, siteID string) er
 }
 
 func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H, error) {
+	if r == nil {
+		return []gin.H{}, nil
+	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
 			SELECT id, title, slug, category, author, status, views, published_at
@@ -682,6 +750,9 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -695,6 +766,9 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 }
 
 func (r *Repository) GetTenantStorageUsageBytes(ctx context.Context, tenantID string) (int64, error) {
+	if r == nil {
+		return 0, nil
+	}
 	if r.DB != nil {
 		var totalBytes int64
 		err := r.DB.QueryRowContext(ctx, `
@@ -728,6 +802,9 @@ func (r *Repository) GetTenantStorageUsageBytes(ctx context.Context, tenantID st
 }
 
 func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, error) {
+	if r == nil {
+		return []gin.H{}, nil
+	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
 			SELECT id, name, file_type, file_size, file_size_bytes, dimensions, storage_url, s3_key, COALESCE(bucket_name, ''), created_at
@@ -757,6 +834,9 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -780,6 +860,9 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 }
 
 func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, mimeType, dimensions, fileSize string, fileSizeBytes int64, storageURL, s3Key, bucketName string) (gin.H, error) {
+	if r == nil {
+		return gin.H{}, nil
+	}
 	now := time.Now()
 	nowStr := now.Format("2 Jan 2006")
 
@@ -833,6 +916,9 @@ func (r *Repository) CreateAsset(ctx context.Context, tenantID, name, fileType, 
 }
 
 func (r *Repository) DeleteAsset(ctx context.Context, tenantID, assetID string) (string, error) {
+	if r == nil {
+		return "", nil
+	}
 	var s3Key string
 
 	if r.DB != nil {
@@ -861,6 +947,9 @@ func (r *Repository) DeleteAsset(ctx context.Context, tenantID, assetID string) 
 }
 
 func (r *Repository) GetDomains(ctx context.Context, tenantID string) ([]gin.H, error) {
+	if r == nil {
+		return []gin.H{}, nil
+	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
 			SELECT id, domain, target_cname, target_ip, dns_status, ssl_status, created_at
@@ -886,6 +975,9 @@ func (r *Repository) GetDomains(ctx context.Context, tenantID string) ([]gin.H, 
 						"createdAt":   createdAt.Format("2 Jan 2006"),
 					})
 				}
+			}
+			if err := rows.Err(); err != nil {
+				return nil, err
 			}
 			if list != nil {
 				return list, nil
@@ -922,6 +1014,9 @@ func normalizeStatus(s string) string {
 }
 
 func (r *Repository) GetTickets(ctx context.Context, tenantID string) ([]gin.H, error) {
+	if r == nil {
+		return []gin.H{}, nil
+	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
 			SELECT id, ticket_number, subject, category, priority, status, last_reply, created_at
@@ -964,6 +1059,9 @@ func (r *Repository) GetTickets(ctx context.Context, tenantID string) ([]gin.H, 
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -1002,6 +1100,9 @@ func (r *Repository) GetTickets(ctx context.Context, tenantID string) ([]gin.H, 
 }
 
 func (r *Repository) GetTicketMessages(ctx context.Context, ticketKey string) ([]gin.H, error) {
+	if r == nil {
+		return []gin.H{}, nil
+	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
 			SELECT tm.id, tm.sender_name, tm.sender_role, tm.message, tm.created_at
@@ -1037,6 +1138,9 @@ func (r *Repository) GetTicketMessages(ctx context.Context, ticketKey string) ([
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -1054,6 +1158,9 @@ func (r *Repository) GetTicketMessages(ctx context.Context, ticketKey string) ([
 }
 
 func (r *Repository) CreateTicket(ctx context.Context, tenantID, ticketNumber, subject, category, priority, message, authorName, authorRole string) (gin.H, error) {
+	if r == nil {
+		return gin.H{}, nil
+	}
 	if authorName == "" {
 		authorName = "Tenant Administrator"
 	}
@@ -1135,6 +1242,9 @@ func (r *Repository) CreateTicket(ctx context.Context, tenantID, ticketNumber, s
 }
 
 func (r *Repository) AddTicketMessage(ctx context.Context, tenantID, ticketKey, message, authorName, authorRole, sender string) (gin.H, error) {
+	if r == nil {
+		return gin.H{}, nil
+	}
 	if authorName == "" {
 		authorName = "Tenant Administrator"
 	}
@@ -1214,6 +1324,9 @@ func (r *Repository) AddTicketMessage(ctx context.Context, tenantID, ticketKey, 
 }
 
 func (r *Repository) ResolveTicket(ctx context.Context, tenantID, ticketKey string) error {
+	if r == nil {
+		return nil
+	}
 	if r.DB != nil {
 		_, err := r.DB.ExecContext(ctx, `
 			UPDATE support_tickets
@@ -1238,6 +1351,9 @@ func (r *Repository) ResolveTicket(ctx context.Context, tenantID, ticketKey stri
 }
 
 func (r *Repository) GetInvoices(ctx context.Context, tenantID string) ([]gin.H, error) {
+	if r == nil {
+		return []gin.H{}, nil
+	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
 			SELECT id, invoice_number, plan_name, period, amount, tax, total, 
@@ -1271,6 +1387,9 @@ func (r *Repository) GetInvoices(ctx context.Context, tenantID string) ([]gin.H,
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -1283,7 +1402,20 @@ func (r *Repository) GetInvoices(ctx context.Context, tenantID string) ([]gin.H,
 	return r.Invoices, nil
 }
 
+// AddInvoice safely appends an invoice into in-memory storage with mutex protection
+func (r *Repository) AddInvoice(invoice gin.H) {
+	if r == nil {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.Invoices = append([]gin.H{invoice}, r.Invoices...)
+}
+
 func (r *Repository) GetWebhooks(ctx context.Context, tenantID string) ([]gin.H, error) {
+	if r == nil {
+		return []gin.H{}, nil
+	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
 			SELECT id, name, url, events::text, status, last_triggered
@@ -1307,6 +1439,9 @@ func (r *Repository) GetWebhooks(ctx context.Context, tenantID string) ([]gin.H,
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -1326,6 +1461,22 @@ func (r *Repository) GetBillingQuota(ctx context.Context, tenantID string) (gin.
 	storageQuota := 2048
 	usedContainers := 0
 
+	if r == nil {
+		return gin.H{
+			"plan": gin.H{
+				"name":            planName,
+				"price":           priceText,
+				"maxContainers":   maxContainers,
+				"usedContainers":  0,
+				"cpuPerContainer": "0.5 vCPU",
+				"ramPerContainer": "256 MB",
+				"storageQuota":    "2048 MB",
+				"usedStorage":     "0 MB",
+				"nextBillingDate": time.Now().AddDate(0, 1, 0).Format("2 Jan 2006"),
+			},
+		}, nil
+	}
+
 	if r.DB != nil {
 		var planTier string
 		_ = r.DB.QueryRowContext(ctx, `
@@ -1333,10 +1484,11 @@ func (r *Repository) GetBillingQuota(ctx context.Context, tenantID string) (gin.
 			FROM tenants WHERE id = $1 LIMIT 1
 		`, tenantID).Scan(&planTier, &maxContainers, &storageQuota)
 
-		if planTier == "starter" {
+		switch planTier {
+		case "starter":
 			planName = "Hero Starter Plan"
 			priceText = "Rp 49.000 / bln"
-		} else if planTier == "agency" {
+		case "agency":
 			planName = "Hero Agency Plan"
 			priceText = "Rp 399.000 / bln"
 		}

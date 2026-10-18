@@ -90,6 +90,11 @@ export const studioApi = {
     apiFetch(`/containers/${id}/draft`, { method: 'PUT', body: JSON.stringify(draft) }),
   startContainer: (id: string) => apiFetch(`/containers/${id}/start`, { method: 'POST' }),
   stopContainer: (id: string) => apiFetch(`/containers/${id}/stop`, { method: 'POST' }),
+  toggleMaintenance: (id: string, enabled: boolean, message?: string, estimatedEndTime?: string) =>
+    apiFetch(`/containers/${id}/maintenance`, {
+      method: 'PUT',
+      body: JSON.stringify({ enabled, message, estimated_end_time: estimatedEndTime })
+    }),
   deleteContainer: (id: string) => apiFetch(`/containers/${id}`, { method: 'DELETE' }),
 
   // Articles

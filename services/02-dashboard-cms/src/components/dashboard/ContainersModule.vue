@@ -29,7 +29,8 @@ import {
   Cpu,
   HardDrive,
   TrendingUp,
-  Clock
+  Clock,
+  Wrench
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import PodDetailAnalyticsView from './PodDetailAnalyticsView.vue';
@@ -40,12 +41,14 @@ const {
   containers,
   usedContainersCount,
   runningContainersCount,
+  maintenanceContainersCount,
   stoppedContainersCount,
   searchQuery,
   statusFilter,
   filteredContainers,
   startContainer,
   stopContainer,
+  toggleMaintenance,
   restartContainer,
   deleteContainer,
   purgeEdgeCache,
@@ -58,6 +61,37 @@ const {
   activeMenu,
   selectedContainerForDetail
 } = useDashboardData();
+
+const targetContainerForMaintenance = ref<ContainerSite | null>(null);
+const isMaintenanceModalOpen = ref(false);
+const maintenanceMessageInput = ref('Situs sedang dalam pemeliharaan berkala untuk peningkatan performa. Kami akan segera kembali.');
+const estimatedEndTimeInput = ref('30 menit');
+
+const openMaintenanceModal = (c: ContainerSite) => {
+  if (c.status === 'maintenance') {
+    toggleMaintenance(c);
+    return;
+  }
+  targetContainerForMaintenance.value = c;
+  maintenanceMessageInput.value = c.maintenanceConfig?.message || 'Situs sedang dalam pemeliharaan berkala untuk peningkatan performa. Kami akan segera kembali.';
+  estimatedEndTimeInput.value = c.maintenanceConfig?.estimatedEndTime || '30 menit';
+  isMaintenanceModalOpen.value = true;
+};
+
+const confirmEnableMaintenance = () => {
+  if (!targetContainerForMaintenance.value) return;
+  toggleMaintenance(
+    targetContainerForMaintenance.value,
+    maintenanceMessageInput.value,
+    estimatedEndTimeInput.value
+  );
+  isMaintenanceModalOpen.value = false;
+  targetContainerForMaintenance.value = null;
+};
+
+const setEtaPreset = (val: string) => {
+  estimatedEndTimeInput.value = val;
+};
 
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
@@ -158,6 +192,7 @@ const openContainerDetail = (c: ContainerSite) => {
       @back="selectedContainerForDetail = null"
       @purge-cache="purgeEdgeCache"
       @open-logs="openLogsModal"
+      @toggle-maintenance="openMaintenanceModal"
       @open-editor="(c) => selectForEditor(c.id)"
     />
 
@@ -171,6 +206,9 @@ const openContainerDetail = (c: ContainerSite) => {
       </div>
       <div class="quota-quick-pills">
         <span class="pill-metric">Running: <strong>{{ runningContainersCount }}</strong></span>
+        <span v-if="maintenanceContainersCount > 0" class="pill-metric" style="color: #b45309; background: #fffbeb; border-color: #fde68a;">
+          Maintenance: <strong>{{ maintenanceContainersCount }}</strong>
+        </span>
         <span class="pill-metric">Standby: <strong>{{ stoppedContainersCount }}</strong></span>
         <span class="pill-metric-highlight">Sisa Kuota: <strong>{{ userPlan.maxContainers - usedContainersCount }} Slot</strong></span>
       </div>
@@ -277,6 +315,15 @@ const openContainerDetail = (c: ContainerSite) => {
         </button>
         <button
           class="segment-pill"
+          :class="{ active: statusFilter === 'maintenance' }"
+          @click="statusFilter = 'maintenance'"
+        >
+          <span class="mini-status-dot maintenance"></span>
+          <span>Pemeliharaan</span>
+          <span class="pill-count amber">{{ maintenanceContainersCount }}</span>
+        </button>
+        <button
+          class="segment-pill"
           :class="{ active: statusFilter === 'stopped' }"
           @click="statusFilter = 'stopped'"
         >
@@ -372,16 +419,25 @@ const openContainerDetail = (c: ContainerSite) => {
             class="radar-status-pill"
             :class="{
               'status-running': c.status === 'running',
+              'status-maintenance': c.status === 'maintenance',
               'status-stopped': c.status === 'stopped',
               'status-provisioning': c.status === 'provisioning'
             }"
           >
             <span class="radar-ping-ring" v-if="c.status === 'running'"></span>
+            <span class="radar-ping-ring amber" v-if="c.status === 'maintenance'"></span>
             <span class="radar-dot"></span>
             <span v-if="c.status === 'running'">Running</span>
+            <span v-else-if="c.status === 'maintenance'">Maintenance</span>
             <span v-else-if="c.status === 'stopped'">Standby</span>
             <span v-else>Deploying...</span>
           </div>
+        </div>
+
+        <!-- Maintenance Mode Active Notice -->
+        <div v-if="c.status === 'maintenance'" class="maintenance-alert-strip">
+          <Wrench :size="12" style="flex-shrink: 0;" />
+          <span>Mode Pemeliharaan Aktif: Pengunjung publik dialihkan ke respons HTTP 503.</span>
         </div>
 
         <!-- Bespoke Terminal URL Box -->
@@ -550,6 +606,15 @@ const openContainerDetail = (c: ContainerSite) => {
               <Square :size="12" />
             </button>
             <button
+              class="btn-icon-ctrl btn-maintenance"
+              :class="{ 'in-maintenance': c.status === 'maintenance' }"
+              :disabled="c.status === 'stopped'"
+              @click="openMaintenanceModal(c)"
+              :title="c.status === 'maintenance' ? 'Akhiri Mode Pemeliharaan (Go Live)' : 'Aktifkan Mode Pemeliharaan (Maintenance)'"
+            >
+              <Wrench :size="12" />
+            </button>
+            <button
               class="btn-icon-ctrl"
               :disabled="c.status === 'stopped'"
               @click="restartContainer(c)"
@@ -683,13 +748,16 @@ const openContainerDetail = (c: ContainerSite) => {
                     style="align-self: flex-start;"
                     :class="{
                       'status-running': c.status === 'running',
+                      'status-maintenance': c.status === 'maintenance',
                       'status-stopped': c.status === 'stopped',
                       'status-provisioning': c.status === 'provisioning'
                     }"
                   >
                     <span class="radar-ping-ring" v-if="c.status === 'running'"></span>
+                    <span class="radar-ping-ring amber" v-if="c.status === 'maintenance'"></span>
                     <span class="radar-dot"></span>
                     <span v-if="c.status === 'running'">Running</span>
+                    <span v-else-if="c.status === 'maintenance'">Maintenance</span>
                     <span v-else-if="c.status === 'stopped'">Standby</span>
                     <span v-else>Deploying...</span>
                   </div>
@@ -778,6 +846,15 @@ const openContainerDetail = (c: ContainerSite) => {
                       <Square :size="11" />
                     </button>
                     <button
+                      class="btn-icon-ctrl btn-maintenance"
+                      :class="{ 'in-maintenance': c.status === 'maintenance' }"
+                      :disabled="c.status === 'stopped'"
+                      @click="openMaintenanceModal(c)"
+                      :title="c.status === 'maintenance' ? 'Akhiri Mode Pemeliharaan (Go Live)' : 'Aktifkan Mode Pemeliharaan'"
+                    >
+                      <Wrench :size="11" />
+                    </button>
+                    <button
                       class="btn-icon-ctrl"
                       :disabled="c.status === 'stopped'"
                       @click="restartContainer(c)"
@@ -858,5 +935,141 @@ const openContainerDetail = (c: ContainerSite) => {
       </button>
     </div>
   </section>
+
+  <!-- 6. Maintenance Mode Configuration Dialog -->
+  <Teleport to="body">
+    <div
+      v-if="isMaintenanceModalOpen && targetContainerForMaintenance"
+      class="modal-backdrop"
+      @click.self="isMaintenanceModalOpen = false"
+    >
+      <div
+        class="modal-dialog"
+        style="max-width: 480px;"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="modal-header">
+          <div class="modal-header-leading">
+            <div class="modal-header-icon-box" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">
+              <Wrench :size="18" />
+            </div>
+            <div>
+              <h3 class="modal-heading">Aktifkan Mode Pemeliharaan</h3>
+              <p class="modal-subheading">Trafik publik akan dialihkan ke pesan pemeliharaan 503.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="modal-close-button"
+            @click="isMaintenanceModalOpen = false"
+            title="Tutup dialog"
+          >
+            <X :size="16" />
+          </button>
+        </div>
+
+        <div class="modal-body" style="padding: 20px 24px;">
+          <!-- Target Site Overview Card -->
+          <div class="modal-target-site-card">
+            <div class="modal-target-site-left">
+              <div class="modal-target-icon-box">
+                <Globe :size="16" />
+              </div>
+              <div>
+                <div class="modal-target-site-name">{{ targetContainerForMaintenance.name }}</div>
+                <div class="modal-target-site-url">https://{{ targetContainerForMaintenance.subdomain }}</div>
+              </div>
+            </div>
+            <span class="modal-target-site-badge">
+              <Wrench :size="11" />
+              <span>HTTP 503 Service</span>
+            </span>
+          </div>
+
+          <!-- Form Fields -->
+          <div class="modal-form-group">
+            <label class="modal-field-label">
+              <span>Pesan Pemeliharaan untuk Pengunjung</span>
+              <span class="modal-field-hint">Akan tampil di layar publik</span>
+            </label>
+            <textarea
+              v-model="maintenanceMessageInput"
+              rows="3"
+              class="field-textarea-input"
+              placeholder="Contoh: Kami sedang melakukan pemeliharaan berkala untuk peningkatan performa. Kami akan segera kembali."
+            ></textarea>
+          </div>
+
+          <div class="modal-form-group" style="margin-bottom: 6px;">
+            <label class="modal-field-label">
+              <span>Estimasi Selesai (ETA)</span>
+              <span class="modal-field-hint">Estimasi durasi downtime</span>
+            </label>
+            <input
+              v-model="estimatedEndTimeInput"
+              type="text"
+              class="field-text-input"
+              placeholder="Contoh: 30 menit atau 14:00 WIB"
+            />
+            <!-- Quick ETA Presets -->
+            <div class="eta-preset-chips">
+              <button
+                type="button"
+                class="eta-chip-btn"
+                :class="{ active: estimatedEndTimeInput === '15 menit' }"
+                @click="setEtaPreset('15 menit')"
+              >
+                15 Menit
+              </button>
+              <button
+                type="button"
+                class="eta-chip-btn"
+                :class="{ active: estimatedEndTimeInput === '30 menit' }"
+                @click="setEtaPreset('30 menit')"
+              >
+                30 Menit
+              </button>
+              <button
+                type="button"
+                class="eta-chip-btn"
+                :class="{ active: estimatedEndTimeInput === '1 jam' }"
+                @click="setEtaPreset('1 jam')"
+              >
+                1 Jam
+              </button>
+              <button
+                type="button"
+                class="eta-chip-btn"
+                :class="{ active: estimatedEndTimeInput === '2 jam' }"
+                @click="setEtaPreset('2 jam')"
+              >
+                2 Jam
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px;">
+          <button
+            type="button"
+            class="btn-modal-ghost"
+            @click="isMaintenanceModalOpen = false"
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            class="btn-modal-confirm"
+            style="background: #b45309; border-color: #92400e; padding: 8px 16px; font-size: 0.82rem;"
+            @click="confirmEnableMaintenance"
+          >
+            <Wrench :size="13" />
+            <span>Aktifkan Maintenance</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </div>
 </template>
