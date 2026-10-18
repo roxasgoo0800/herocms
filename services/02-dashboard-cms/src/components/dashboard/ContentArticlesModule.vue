@@ -30,7 +30,10 @@ import {
   ShieldCheck,
   Cpu,
   ArrowUpRight,
-  Lock
+  Lock,
+  CheckCircle2,
+  ExternalLink,
+  Sparkles
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { ContentArticle, CmsPage } from '../../types/dashboard';
@@ -489,6 +492,17 @@ onUnmounted(() => {
             <span>{{ copiedSubdomain === activeArticleForReader.id ? 'URL Tersalin' : 'Salin URL' }}</span>
           </button>
 
+          <a
+            :href="getArticleLiveUrl(activeArticleForReader)"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-reader-action-secondary"
+            title="Buka Halaman Live di Tab Baru"
+          >
+            <ExternalLink :size="13" />
+            <span>Buka Tab Baru</span>
+          </a>
+
           <button
             class="btn-reader-action-primary"
             @click="openEditArticleModal(activeArticleForReader)"
@@ -499,8 +513,11 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Hero Header Editorial -->
+      <!-- Hero Header Editorial (Eye-Catching Obsidian & Ambient Glow Canvas) -->
       <div class="reader-editorial-hero">
+        <div class="reader-hero-watermark">
+          <BookOpen :size="96" />
+        </div>
         <div class="reader-hero-inner">
           <div class="reader-hero-badges">
             <span class="editorial-cat-chip">
@@ -511,8 +528,8 @@ onUnmounted(() => {
               <span>{{ getReadTime(activeArticleForReader.title) }}</span>
             </span>
             <span class="art-status-chip" :class="activeArticleForReader.status === 'published' ? 'chip-live' : 'chip-draft'">
-              <span class="dot"></span>
-              {{ activeArticleForReader.status === 'published' ? 'Published (Live CDN)' : 'Draft (WIP)' }}
+              <span class="pulse-mini-dot"></span>
+              <span>{{ activeArticleForReader.status === 'published' ? 'Published (Live Edge CDN)' : 'Draft (WIP)' }}</span>
             </span>
           </div>
 
@@ -526,7 +543,10 @@ onUnmounted(() => {
             <div class="reader-author-profile">
               <div class="author-avatar-large">RP</div>
               <div class="author-info-group">
-                <div class="author-primary-name">{{ activeArticleForReader.author }}</div>
+                <div class="author-primary-name">
+                  <span>{{ activeArticleForReader.author }}</span>
+                  <CheckCircle2 :size="14" style="color: #38bdf8;" />
+                </div>
                 <div class="author-secondary-sub">
                   <span>{{ activeArticleForReader.publishedAt }}</span>
                   <span class="sub-sep">•</span>
@@ -536,13 +556,13 @@ onUnmounted(() => {
             </div>
 
             <div class="reader-hero-metrics-strip">
-              <div class="hero-metric-item">
-                <Eye :size="14" class="text-blue" />
+              <div class="hero-metric-item hero-metric-blue">
+                <Eye :size="14" style="color: #38bdf8;" />
                 <span class="metric-num">{{ activeArticleForReader.views.toLocaleString('id-ID') }}</span>
                 <span class="metric-label">Redis Views</span>
               </div>
-              <div class="hero-metric-item">
-                <Activity :size="14" class="text-green" />
+              <div class="hero-metric-item hero-metric-emerald">
+                <Zap :size="14" style="color: #34d399;" />
                 <span class="metric-num">1.8ms</span>
                 <span class="metric-label">TTFB Traefik</span>
               </div>
@@ -557,21 +577,40 @@ onUnmounted(() => {
         <article class="reader-main-content">
           <!-- Edge URL Callout -->
           <div class="reader-edge-callout">
-            <div class="callout-icon-box">
-              <Globe :size="16" />
+            <div class="callout-left-lead">
+              <div class="callout-icon-box">
+                <Lock :size="16" />
+              </div>
+              <div class="callout-text-box">
+                <div class="callout-top-meta">
+                  <span class="callout-title">Edge Ingress Active (TLS v1.3)</span>
+                  <span class="callout-proto-badge">HTTPS / HTTP/3 QUIC</span>
+                </div>
+                <a :href="getArticleLiveUrl(activeArticleForReader)" target="_blank" rel="noopener noreferrer" class="callout-url">
+                  {{ getArticleLiveUrl(activeArticleForReader) }}
+                </a>
+              </div>
             </div>
-            <div class="callout-text-box">
-              <span class="callout-title">Edge URL Publikasi Live:</span>
-              <code class="callout-url">{{ getArticleLiveUrl(activeArticleForReader) }}</code>
+            <div class="callout-action-buttons">
+              <button
+                class="btn-copy-callout"
+                @click="copyToClipboard(getArticleLiveUrl(activeArticleForReader), activeArticleForReader.id)"
+                :title="copiedSubdomain === activeArticleForReader.id ? 'Tersalin!' : 'Salin URL'"
+              >
+                <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
+                <Copy v-else :size="13" />
+                <span>{{ copiedSubdomain === activeArticleForReader.id ? 'Tersalin' : 'Salin' }}</span>
+              </button>
+              <a
+                :href="getArticleLiveUrl(activeArticleForReader)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-open-callout"
+                title="Buka Halaman Live di Tab Baru"
+              >
+                <ExternalLink :size="13" />
+              </a>
             </div>
-            <button
-              class="btn-copy-callout"
-              @click="copyToClipboard(getArticleLiveUrl(activeArticleForReader), activeArticleForReader.id)"
-              :title="copiedSubdomain === activeArticleForReader.id ? 'Tersalin!' : 'Salin URL'"
-            >
-              <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
-              <Copy v-else :size="13" />
-            </button>
           </div>
 
           <!-- Editorial Body -->
@@ -581,7 +620,10 @@ onUnmounted(() => {
                 {{ activeArticleForReader.excerpt || 'Dalam implementasi cloud-native modern, optimalisasi latensi edge Traefik v3 dan isolasi CPU cgroups v2 menjadi fondasi performa tinggi.' }}
               </p>
 
-              <h2 id="sec-1">1. Arsitektur Isolasi Kernel Linux & Kontainer Nginx</h2>
+              <h2 id="sec-1">
+                <span class="section-num-badge">01</span>
+                <span>Arsitektur Isolasi Kernel Linux & Kontainer Nginx</span>
+              </h2>
               <p>
                 Setiap tenant HeroCMS beroperasi di dalam sandbox Docker Alpine terisolasi mandiri. Batas memori hard-limit <code>256 MB</code> dan pembatasan alokasi CPU maksimum <code>0.5 vCPU</code> memastikan lonjakan beban pada satu tenant tidak mengganggu stabilitas tenant lain.
               </p>
@@ -593,7 +635,10 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <h2 id="sec-2">2. Telemetri Real-Time Non-Blocking Redis ZSET</h2>
+              <h2 id="sec-2">
+                <span class="section-num-badge">02</span>
+                <span>Telemetri Real-Time Non-Blocking Redis ZSET</span>
+              </h2>
               <p>
                 Setiap request halaman dicatat secara asinkron ke Redis Sorted Sets (<code>ZSET</code>) menggunakan perintah atomik dengan latensi sub-millisecond:
               </p>
@@ -621,7 +666,10 @@ onUnmounted(() => {
 }</code></pre>
               </div>
 
-              <h2 id="sec-3">3. Optimasi Cache Header & TLS ALPN</h2>
+              <h2 id="sec-3">
+                <span class="section-num-badge">03</span>
+                <span>Optimasi Cache Header & TLS ALPN</span>
+              </h2>
               <p>
                 Header <code>Cache-Control: public, max-age=31536000, immutable</code> diinjeksi pada file statis CSS, JS, dan WebP. Dokumen HTML di-cache di level edge Traefik dengan strategi <code>stale-while-revalidate</code>, memastikan TTFB konsisten di bawah 2ms.
               </p>
@@ -672,19 +720,20 @@ onUnmounted(() => {
         <!-- Sidebar Inspector (Right, 28%) -->
         <aside class="reader-sidebar-inspector">
           <!-- Metadata Card -->
-          <div class="inspector-card">
+          <div class="inspector-card accent-card-blue">
+            <div class="card-top-stripe blue"></div>
             <h4 class="inspector-title">
-              <Server :size="14" />
+              <div class="inspector-title-icon blue"><Server :size="14" /></div>
               <span>Spesifikasi Deployment</span>
             </h4>
             <div class="inspector-specs-list">
               <div class="spec-row">
                 <span class="spec-k">Target Kontainer</span>
-                <span class="spec-v">{{ activeArticleForReader.siteName }}</span>
+                <span class="spec-v font-bold">{{ activeArticleForReader.siteName }}</span>
               </div>
               <div class="spec-row">
                 <span class="spec-k">Container ID</span>
-                <code class="spec-code">{{ activeArticleForReader.containerId }}</code>
+                <code class="spec-code">{{ activeArticleForReader.containerId || 'hero_tenant_9942' }}</code>
               </div>
               <div class="spec-row">
                 <span class="spec-k">Slug URL</span>
@@ -692,11 +741,11 @@ onUnmounted(() => {
               </div>
               <div class="spec-row">
                 <span class="spec-k">Status Routing</span>
-                <span class="spec-live-pill"><span class="dot"></span> Active in Traefik</span>
+                <span class="spec-live-pill"><span class="pulse-mini-dot"></span> Active in Traefik</span>
               </div>
               <div class="spec-row">
                 <span class="spec-k">Auto-SSL</span>
-                <span class="spec-v">Let's Encrypt TLS v1.3</span>
+                <span class="spec-v text-emerald" style="font-size: 0.78rem; font-weight: 700;">Let's Encrypt TLS v1.3</span>
               </div>
               <div class="spec-row">
                 <span class="spec-k">Tanggal Rilis</span>
@@ -705,30 +754,56 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Telemetry Metric Card -->
-          <div class="inspector-card">
+          <!-- Telemetry Metric Card (4 Mini Tactile Tiles with Colored Watermarks) -->
+          <div class="inspector-card accent-card-emerald">
+            <div class="card-top-stripe emerald"></div>
             <h4 class="inspector-title">
-              <Activity :size="14" />
+              <div class="inspector-title-icon emerald"><Activity :size="14" /></div>
               <span>Metrik Edge Real-Time</span>
             </h4>
             <div class="telemetry-compact-grid">
-              <div class="tc-metric">
+              <div class="tc-metric tc-accent-blue">
+                <div class="tc-watermark blue"><Eye :size="28" /></div>
                 <span class="tc-val">{{ activeArticleForReader.views.toLocaleString('id-ID') }}</span>
                 <span class="tc-lbl">Redis Views</span>
               </div>
-              <div class="tc-metric">
+              <div class="tc-metric tc-accent-emerald">
+                <div class="tc-watermark emerald"><Zap :size="28" /></div>
                 <span class="tc-val text-green">1.8 ms</span>
                 <span class="tc-lbl">Edge TTFB</span>
               </div>
-              <div class="tc-metric">
+              <div class="tc-metric tc-accent-sky">
+                <div class="tc-watermark sky"><Sparkles :size="28" /></div>
                 <span class="tc-val text-blue">99.4%</span>
                 <span class="tc-lbl">Cache Hit</span>
               </div>
-              <div class="tc-metric">
+              <div class="tc-metric tc-accent-purple">
+                <div class="tc-watermark purple"><Cpu :size="28" /></div>
                 <span class="tc-val text-purple">0.5 vCPU</span>
                 <span class="tc-lbl">cgroups v2</span>
               </div>
             </div>
+          </div>
+
+          <!-- Quick Action Launchpad -->
+          <div class="inspector-card action-launchpad-card">
+            <a
+              :href="getArticleLiveUrl(activeArticleForReader)"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn-sidebar-cta primary"
+            >
+              <ExternalLink :size="14" />
+              <span>Buka Halaman Live</span>
+            </a>
+            <button
+              type="button"
+              class="btn-sidebar-cta secondary"
+              @click="openEditArticleModal(activeArticleForReader)"
+            >
+              <Edit3 :size="14" />
+              <span>Sunting Dokumen Ini</span>
+            </button>
           </div>
         </aside>
       </div>

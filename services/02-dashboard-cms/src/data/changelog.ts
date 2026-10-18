@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.12',
+    releaseDate: '18 Oktober 2026',
+    title: 'Stunning Executive Editorial Reader Experience (Obsidian Ambient Glow, Watermark, & Telemetry Tiles)',
+    summary: 'Merombak tampilan Reader Mode artikel editorial menjadi sangat memukau (eye-catching), modern, dan berkelas enterprise APM (Vercel / Linear / Stripe Press Grade): (1) Banner Hero Obsidian dengan ambient radial glow biru royal (#2563eb) dan indigo, kisi dot-matrix halus, watermark ikon transparan 96px di pojok kanan atas, serta tipografi judul tebal 2.25rem putih elegan; (2) Kartu artikel utama dengan border berkelas, callout URL publik interaktif bergradasi hijau-biru dengan tombol "Buka Tab Baru" dan "Salin URL", serta nomor bab berseri (01, 02, 03) dengan badge gradasi biru modern; (3) Sidebar inspektor dengan kartu telemetri edge real-time beraksen 4 mini tiles taktil lengkap dengan watermark ikon transparan berwarna semantik (Eye, Zap, Sparkles, Cpu), serta launchpad aksi cepat (Buka Halaman Live & Sunting Dokumen).',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11412-1',
+        type: 'improvement',
+        scope: 'Executive Obsidian Editorial Hero Banner',
+        description: 'Menerapkan kanvas hero obsidian mendalam dengan ambient radial glow, watermark BookOpen 96px transparan, avatar verified badge, dan glowing glass KPI pills.'
+      },
+      {
+        id: 'c-11412-2',
+        type: 'improvement',
+        scope: 'Interactive Live Ingress URL Callout & Badges',
+        description: 'Menyematkan bar URL live bergradasi dengan status HTTPS/HTTP3, tombol aksi satu klik, dan penomoran bab 01-03 beraksen gradasi biru royal.'
+      },
+      {
+        id: 'c-11412-3',
+        type: 'improvement',
+        scope: 'Tactile Watermark Telemetry Tiles in Sidebar',
+        description: 'Mendesain ulang grid telemetri sidebar menjadi 4 mini tiles taktil dengan efek hover elevasi dan watermark ikon berwarna semantik.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.11',
     releaseDate: '18 Oktober 2026',
     title: 'Fix Teleport Viewport Backdrops, Reader View Text Contrast, and Navigation Redundancies',
     summary: 'Memperbaiki 4 masalah visual dan fungsional penting: (1) Membungkus seluruh modal (DNS Propagation Tester, SSL X.509 Inspector di Custom Domains, serta Content Editor Modal di Artikel & Halaman) dengan Teleport to="body" sehingga efek backdrop blur menutupi 100% viewport layar secara merata melintasi sidebar dan top bar tanpa terpotong di content area; (2) Memperbaiki kontras tipografi judul (.reader-page-title), profil penulis, tanggal, dan metrik pill pada reader view editorial agar tampil tajam dan elegan dengan warna teks gelap (#0f172a) di atas kartu putih; (3) Memperbaiki resolver hostname URL artikel publik live (getArticleLiveUrl) agar selalu menghasilkan domain/subdomain FQDN yang valid tanpa spasi nama kontainer; (4) Menghapus duplikasi tombol navigasi kembali ganda di topbar dan sidebar saat mode pembaca aktif.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
