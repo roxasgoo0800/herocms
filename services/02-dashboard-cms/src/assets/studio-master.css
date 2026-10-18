@@ -9255,9 +9255,14 @@ html {
 }
 
 .dam-folder-item.active {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #0f172a;
+  color: #ffffff;
   font-weight: 600;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16);
+}
+
+.dam-folder-item.active svg {
+  color: #ffffff !important;
 }
 
 .dam-folder-leading {
@@ -9273,11 +9278,12 @@ html {
   border-radius: 999px;
   background: #f1f5f9;
   color: #64748b;
+  transition: all 0.15s ease;
 }
 
 .dam-folder-item.active .dam-folder-badge {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 /* 3. Compact Drag & Drop Ingestion Widget */
