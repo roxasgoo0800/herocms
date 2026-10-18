@@ -123,6 +123,12 @@ const handleSortDropdownOutsideClick = (e: MouseEvent) => {
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown);
   document.addEventListener('click', handleSortDropdownOutsideClick);
+  // Pre-analisis berkas visual di latar belakang agar saat dibuka pratinjau sudah siap tanpa jeda
+  for (const item of mediaAssets.value) {
+    if (isVisualAsset(item.type)) {
+      analyzeAssetLuminance(item);
+    }
+  }
 });
 
 onUnmounted(() => {
@@ -343,6 +349,7 @@ interface AssetLuminanceData {
 const canvasBgMode = ref<'auto' | 'dark' | 'light' | 'checker'>('auto');
 const assetLuminance = ref<AssetLuminanceData | null>(null);
 const isAnalyzingLuminance = ref(false);
+const assetLuminanceCache = new Map<string, AssetLuminanceData>();
 
 const effectiveCanvasTheme = computed(() => {
   if (canvasBgMode.value === 'dark') return 'theme-dark-canvas';
@@ -353,6 +360,12 @@ const effectiveCanvasTheme = computed(() => {
   if (assetLuminance.value && assetLuminance.value.isAnalyzed) {
     return assetLuminance.value.suggestedTheme === 'light' ? 'theme-light-canvas' : 'theme-dark-canvas';
   }
+
+  // Fallback instan: jika berkas adalah SVG, awali langsung dengan light canvas agar tidak pernah flash hitam
+  if (selectedMediaForPreview.value?.type.toUpperCase() === 'SVG') {
+    return 'theme-light-canvas';
+  }
+
   return 'theme-dark-canvas';
 });
 
@@ -362,8 +375,13 @@ const analyzeAssetLuminance = async (item: MediaAssetItem) => {
     return;
   }
 
+  // Jika sudah ada di cache, gunakan langsung
+  if (assetLuminanceCache.has(item.id)) {
+    assetLuminance.value = assetLuminanceCache.get(item.id)!;
+    return;
+  }
+
   isAnalyzingLuminance.value = true;
-  assetLuminance.value = null;
 
   try {
     // 1. Ambil blob berkas untuk bypass CORS pada HTML5 Canvas sampling
@@ -437,17 +455,17 @@ const analyzeAssetLuminance = async (item: MediaAssetItem) => {
       const avgLum = Math.round(totalLuminance / totalVisible);
       const isDark = darkPct >= 50;
 
-      assetLuminance.value = {
+      const result: AssetLuminanceData = {
         isAnalyzed: true,
         isDark,
         darkPct,
         lightPct,
         avgLuminance: avgLum,
         label: isDark ? `Dominan Gelap (${darkPct}%)` : `Dominan Terang (${lightPct}%)`,
-        // Jika gambar dominan gelap (seperti SVG Ubuntu hitam), rekomendasikan background terang (light)
-        // Jika gambar dominan terang (seperti ikon putih), rekomendasikan background gelap (dark)
         suggestedTheme: isDark ? 'light' : 'dark'
       };
+      assetLuminance.value = result;
+      assetLuminanceCache.set(item.id, result);
       return;
     }
   } catch (err) {
@@ -463,7 +481,7 @@ const analyzeAssetLuminance = async (item: MediaAssetItem) => {
           const darkPct = darkMatches + lightMatches > 0 ? Math.round((darkMatches / (darkMatches + lightMatches)) * 100) : 90;
           const lightPct = 100 - darkPct;
 
-          assetLuminance.value = {
+          const result: AssetLuminanceData = {
             isAnalyzed: true,
             isDark,
             darkPct,
@@ -472,6 +490,8 @@ const analyzeAssetLuminance = async (item: MediaAssetItem) => {
             label: isDark ? `Dominan Gelap (~${darkPct}%)` : `Dominan Terang (~${lightPct}%)`,
             suggestedTheme: isDark ? 'light' : 'dark'
           };
+          assetLuminance.value = result;
+          assetLuminanceCache.set(item.id, result);
           return;
         }
       } catch (svgErr) {
@@ -487,9 +507,29 @@ const analyzeAssetLuminance = async (item: MediaAssetItem) => {
 const openPreviewModal = (item: MediaAssetItem) => {
   selectedMediaForPreview.value = item;
   showPdfPreview.value = false;
-  isPreviewModalOpen.value = true;
   canvasBgMode.value = 'auto';
-  analyzeAssetLuminance(item);
+
+  // Pengambilan instan dari cache untuk mencegah flash warna
+  if (assetLuminanceCache.has(item.id)) {
+    assetLuminance.value = assetLuminanceCache.get(item.id)!;
+  } else if (item.type.toUpperCase() === 'SVG') {
+    // Inisialisasi awal khusus SVG langsung ke latar terang agar tidak pernah flash hitam
+    assetLuminance.value = {
+      isAnalyzed: true,
+      isDark: true,
+      darkPct: 95,
+      lightPct: 5,
+      avgLuminance: 25,
+      label: 'Dominan Gelap (95%)',
+      suggestedTheme: 'light'
+    };
+    analyzeAssetLuminance(item);
+  } else {
+    assetLuminance.value = null;
+    analyzeAssetLuminance(item);
+  }
+
+  isPreviewModalOpen.value = true;
 };
 
 const downloadMediaFile = async (item: MediaAssetItem) => {
@@ -902,20 +942,19 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
         <!-- SCROLLABLE DEDICATED MEDIA STAGE PANEL (BOXED VIEWPORT) -->
         <div class="dam-content-scroll-box">
           <!-- 1. GRID VIEW MODE: CINEMATIC MEDIA CARDS -->
-          <TransitionGroup
-            v-if="viewMode === 'grid'"
-            name="dam-card-flip"
-            tag="div"
-            class="media-gallery-grid"
-          >
+          <Transition name="dam-category-switch" mode="out-in">
             <div
-              v-for="(med, idx) in filteredMedia"
-              :key="med.id + '_' + filterAnimKey"
-              class="media-pro-card animate-cascade"
-              :style="{ '--card-stagger-idx': Math.min(idx, 12) }"
-              :class="{ 'is-selected': isAssetSelected(med.id) }"
-              @click="openPreviewModal(med)"
+              v-if="viewMode === 'grid'"
+              :key="assetFilter + '_' + sortBy + '_' + (mediaSearch ? 's' : '')"
+              class="media-gallery-grid"
             >
+              <div
+                v-for="med in filteredMedia"
+                :key="med.id"
+                class="media-pro-card"
+                :class="{ 'is-selected': isAssetSelected(med.id) }"
+                @click="openPreviewModal(med)"
+              >
             <!-- Card Visual Preview Area -->
             <div
               class="media-preview-canvas"
@@ -1063,7 +1102,8 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
               </div>
             </div>
           </div>
-        </TransitionGroup>
+        </div>
+      </Transition>
 
           <!-- Empty State in Grid Mode -->
           <div v-if="filteredMedia.length === 0 && viewMode === 'grid'" class="empty-gallery-state">
@@ -1077,35 +1117,38 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
           </div>
 
           <!-- 2. LIST VIEW MODE: HIGH-TECH LEDGER TABLE -->
-          <div v-if="viewMode === 'list'" class="media-list-container">
-          <table class="media-ledger-table">
-            <thead>
-              <tr>
-                <th style="width: 40px; text-align: center;">
-                  <button type="button" @click="toggleSelectAll" style="background: none; border: none; cursor: pointer; color: #64748b; display: inline-flex; align-items: center;">
-                    <CheckSquare v-if="isAllSelected" :size="15" style="color: #2563eb;" />
-                    <Square v-else :size="15" />
-                  </button>
-                </th>
-                <th>Berkas</th>
-                <th>Tipe</th>
-                <th>Ukuran</th>
-                <th>Dimensi</th>
-                <th>Status Edge</th>
-                <th>Tanggal Unggah</th>
-                <th style="text-align: right;">Aksi</th>
-              </tr>
-            </thead>
-            <TransitionGroup name="dam-row-flip" tag="tbody">
-              <tr
-                v-for="(med, idx) in filteredMedia"
-                :key="med.id + '_' + filterAnimKey"
-                class="media-table-row animate-cascade"
-                :style="{ '--row-stagger-idx': Math.min(idx, 15) }"
-                @click="openPreviewModal(med)"
-                style="cursor: pointer;"
-                :class="{ 'is-selected': isAssetSelected(med.id) }"
-              >
+          <Transition name="dam-category-switch" mode="out-in">
+            <div
+              v-if="viewMode === 'list'"
+              :key="assetFilter + '_' + sortBy + '_list'"
+              class="media-list-container"
+            >
+              <table class="media-ledger-table">
+                <thead>
+                  <tr>
+                    <th style="width: 40px; text-align: center;">
+                      <button type="button" @click="toggleSelectAll" style="background: none; border: none; cursor: pointer; color: #64748b; display: inline-flex; align-items: center;">
+                        <CheckSquare v-if="isAllSelected" :size="15" style="color: #2563eb;" />
+                        <Square v-else :size="15" />
+                      </button>
+                    </th>
+                    <th>Berkas</th>
+                    <th>Tipe</th>
+                    <th>Ukuran</th>
+                    <th>Dimensi</th>
+                    <th>Status Edge</th>
+                    <th>Tanggal Unggah</th>
+                    <th style="text-align: right;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="med in filteredMedia"
+                    :key="med.id"
+                    @click="openPreviewModal(med)"
+                    style="cursor: pointer;"
+                    :class="{ 'is-selected': isAssetSelected(med.id) }"
+                  >
                 <td style="text-align: center;" @click.stop="toggleSelectAsset(med.id, $event)">
                   <button type="button" style="background: none; border: none; cursor: pointer; color: #64748b; display: inline-flex; align-items: center;">
                     <CheckSquare v-if="isAssetSelected(med.id)" :size="15" style="color: #2563eb;" />
@@ -1188,14 +1231,15 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                   </div>
                 </td>
               </tr>
-              <tr v-if="filteredMedia.length === 0" key="empty-row-item">
+              <tr v-if="filteredMedia.length === 0">
                 <td colspan="8" style="text-align: center; padding: 40px; color: #64748b;">
                   Tidak ada berkas media ditemukan.
                 </td>
               </tr>
-            </TransitionGroup>
+            </tbody>
           </table>
         </div>
+      </Transition>
       </div>
     </main>
   </div>

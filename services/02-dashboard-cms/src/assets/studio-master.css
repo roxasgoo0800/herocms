@@ -9766,72 +9766,30 @@ html {
   box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.12);
 }
 
-/* Media Card Cascade Entrance Animation (Staggered Wave) */
-@keyframes mediaCardCascade {
-  0% {
-    opacity: 0;
-    transform: translateY(18px) scale(0.95);
-    filter: blur(3px);
-  }
-  60% {
-    opacity: 0.95;
-    transform: translateY(-2px) scale(1.008);
-    filter: blur(0px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0px);
-  }
+/* Snappy Fluid Category Transition */
+.dam-category-switch-enter-active {
+  transition: opacity 0.16s cubic-bezier(0.16, 1, 0.3, 1), transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.media-pro-card.animate-cascade {
-  animation: mediaCardCascade 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--card-stagger-idx, 0) * 45ms);
+.dam-category-switch-leave-active {
+  transition: opacity 0.1s ease, transform 0.1s ease;
 }
 
-/* FLIP Layout Transition for Vue TransitionGroup */
-.dam-card-flip-move {
-  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.dam-card-flip-enter-active {
-  transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: calc(var(--card-stagger-idx, 0) * 45ms);
-}
-
-.dam-card-flip-leave-active {
-  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+.dam-category-switch-enter-from {
   opacity: 0;
-  transform: scale(0.92);
+  transform: translateY(6px) scale(0.99);
 }
 
-/* List Table Row Cascade */
-@keyframes mediaRowCascade {
-  0% {
-    opacity: 0;
-    transform: translateX(-14px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.media-table-row.animate-cascade {
-  animation: mediaRowCascade 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--row-stagger-idx, 0) * 30ms);
-}
-
-.dam-row-flip-move {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.dam-category-switch-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.99);
 }
 
 /* Empty State Fluid Entrance */
 @keyframes emptyStateCascade {
   0% {
     opacity: 0;
-    transform: translateY(14px) scale(0.96);
+    transform: translateY(12px) scale(0.97);
   }
   100% {
     opacity: 1;
@@ -9840,7 +9798,7 @@ html {
 }
 
 .empty-gallery-state {
-  animation: emptyStateCascade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: emptyStateCascade 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Visual Canvas Area with Generous Google Photos Height */
@@ -10812,7 +10770,6 @@ html {
     radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 1.2px),
     linear-gradient(135deg, #090d16 0%, #0f172a 100%);
   background-size: 18px 18px, 100% 100%;
-  transition: background-color 0.25s ease, background-image 0.25s ease;
 }
 
 /* Dark Theme Canvas (Deep slate studio dot-grid) */
