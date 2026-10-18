@@ -2,11 +2,44 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.12.0',
+    releaseDate: '18 Oktober 2026',
+    title: 'Bespoke Split-Pane Media Inspector Studio & Universal SVG Vector Renderer',
+    summary: 'Refaktor menyeluruh modal rincian berkas S3 menjadi Split-Pane Studio Media Inspector berstandar Figma dan Cloudflare R2. Menghadirkan panggung pratinjau visual berdinding kanvas ambient dot-grid dengan rendering instan untuk berkas vektor SVG & gambar raster, HUD status resolusi dan kuota S3 di bagian bawah, serta rail inspektur metadata teknis terpadu lengkap dengan fitur 1-klik salin Markdown/HTML embed code untuk CMS editor.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1120-1',
+        type: 'feature',
+        scope: 'Studio Split-Pane Architecture (.modal-dialog-media-studio)',
+        description: 'Merombak modal satu kolom yang bertumpuk menjadi tata letak 2-Kolom Split-Pane: Media Viewport Stage di sisi kiri dengan kanvas kontras tinggi, dan Properties Inspector Rail di sisi kanan dengan scroll independen.'
+      },
+      {
+        id: 'c-1120-2',
+        type: 'improvement',
+        scope: 'Vector & Visual Asset Rendering (MediaAssetsModule.vue)',
+        description: 'Memperluas deteksi aset visual (isVisualAsset) sehingga berkas vektor SVG, ilustrasi, dan icon tampil jernih dalam resolusi penuh dengan bayangan kedalaman sinematik di kanvas pratinjau.'
+      },
+      {
+        id: 'c-1120-3',
+        type: 'feature',
+        scope: 'CMS Quick Embed Snippets (MediaAssetsModule.vue)',
+        description: 'Menambahkan fitur salin instan kode sematan Markdown (![alt](url)) dan HTML (<img>) dengan feedback visual real-time untuk mempercepat alur penulisan artikel di CMS.'
+      },
+      {
+        id: 'c-1120-4',
+        type: 'improvement',
+        scope: 'Header Dock & Direct Actions (.studio-modal-topbar)',
+        description: 'Menyediakan bilah aksi cepat di header modal: tombol Buka Berkas di tab baru, Salin URL CDN langsung, pill ekstensi tipe berkas, dan indikator status CDN Edge Traefik v3.'
+      }
+    ]
+  },
+  {
     version: 'v1.11.1',
     releaseDate: '18 Oktober 2026',
     title: 'Dedicated Boxed Scrollable Stage Panel untuk Media Assets DAM',
     summary: 'Membungkus galeri kartu media dan tabel ledger berkas ke dalam container viewport independen ber-border bersih (Boxed Viewport Panel) dengan dedicated vertical scrollbar. Memastikan sidebar navigasi, storage meter, ringkasan telemetri, dan bar pencarian/filter tetap tenang dan terkunci di tempat saat pengguna menelusuri katalog aset.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

@@ -32,7 +32,8 @@ import {
   Image as ImageIcon,
   CheckSquare,
   Square,
-  Plus
+  Plus,
+  Code
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { MediaAssetItem } from '../../types/dashboard';
@@ -40,6 +41,21 @@ import type { MediaAssetItem } from '../../types/dashboard';
 const isImage = (type?: string) => {
   if (!type) return false;
   return ['JPG', 'JPEG', 'PNG', 'WEBP', 'GIF', 'AVIF'].includes(type.toUpperCase());
+};
+
+const isVisualAsset = (type?: string) => {
+  if (!type) return false;
+  return isImage(type) || type.toUpperCase() === 'SVG';
+};
+
+const copyEmbedCode = (format: 'markdown' | 'html', item: MediaAssetItem) => {
+  let snippet = '';
+  if (format === 'markdown') {
+    snippet = `![${item.name}](${item.url})`;
+  } else {
+    snippet = `<img src="${item.url}" alt="${item.name}" loading="lazy" />`;
+  }
+  copyToClipboard(snippet, item.id + '_' + format);
 };
 
 const {
@@ -1012,179 +1028,300 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
     </main>
   </div>
 
-    <!-- MODAL: PREVIEW & DETAIL BERKAS S3 (BESPOKE MEDIA INSPECTOR) -->
+    <!-- MODAL: BESPOKE STUDIO MEDIA INSPECTOR & TELEMETRY HUB -->
     <Teleport to="body">
       <div v-if="isPreviewModalOpen && selectedMediaForPreview" class="modal-backdrop" @click.self="isPreviewModalOpen = false">
-        <div class="modal-dialog modal-dialog-media-inspector">
-          <div class="modal-header">
-            <div class="modal-header-leading">
-              <div class="modal-header-icon-box" :class="'type-' + selectedMediaForPreview.type.toLowerCase()">
-                <FileSpreadsheet v-if="['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type)" :size="18" />
-                <FileText v-else-if="selectedMediaForPreview.type === 'PDF'" :size="18" />
-                <File v-else-if="['DOCX', 'DOC'].includes(selectedMediaForPreview.type)" :size="18" />
-                <FileCode v-else :size="18" />
+        <div class="modal-dialog modal-dialog-media-studio">
+          <!-- MODAL TOP BAR -->
+          <div class="studio-modal-topbar">
+            <div class="studio-modal-title-group">
+              <div class="studio-modal-format-badge" :class="'type-' + selectedMediaForPreview.type.toLowerCase()">
+                <FileSpreadsheet v-if="['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type)" :size="16" />
+                <FileText v-else-if="selectedMediaForPreview.type === 'PDF'" :size="16" />
+                <File v-else-if="['DOCX', 'DOC', 'TXT'].includes(selectedMediaForPreview.type)" :size="16" />
+                <FileCode v-else-if="selectedMediaForPreview.type === 'SVG'" :size="16" />
+                <ImageIcon v-else :size="16" />
               </div>
-              <div style="min-width: 0; flex: 1;">
-                <h3 class="modal-heading" :title="selectedMediaForPreview.name" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 500px;">
-                  {{ selectedMediaForPreview.name }}
-                </h3>
-                <p class="modal-subheading">Aset tersimpan di S3 MinIO dengan proteksi TLS dan CDN Edge Caching.</p>
+              <div class="studio-modal-meta-text">
+                <div class="studio-modal-name-row">
+                  <h3 :title="selectedMediaForPreview.name">{{ selectedMediaForPreview.name }}</h3>
+                  <span class="studio-format-pill">{{ selectedMediaForPreview.type }}</span>
+                  <span class="studio-status-edge">
+                    <span class="pulse-green-dot"></span>
+                    <span>CDN Ready</span>
+                  </span>
+                </div>
+                <p class="studio-modal-subtitle">MinIO Dedicated S3 • Traefik Edge Proxy • TLS 1.3 Strict</p>
               </div>
             </div>
-            <button class="modal-close-button" @click="isPreviewModalOpen = false" title="Tutup">
-              <X :size="16" />
-            </button>
+
+            <!-- Header Quick Actions -->
+            <div class="studio-modal-top-actions">
+              <a
+                :href="selectedMediaForPreview.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-studio-header-action"
+                title="Buka berkas di tab browser baru"
+              >
+                <ExternalLink :size="13" />
+                <span>Buka Berkas</span>
+              </a>
+              <button
+                type="button"
+                class="btn-studio-header-action"
+                @click="copyToClipboard(selectedMediaForPreview.url, selectedMediaForPreview.id + '_top')"
+                :title="copiedSubdomain === selectedMediaForPreview.id + '_top' ? 'Tersalin!' : 'Salin URL CDN'"
+              >
+                <Check v-if="copiedSubdomain === selectedMediaForPreview.id + '_top'" :size="13" class="text-green" />
+                <Copy v-else :size="13" />
+                <span>{{ copiedSubdomain === selectedMediaForPreview.id + '_top' ? 'Tersalin' : 'Salin URL' }}</span>
+              </button>
+              <button
+                type="button"
+                class="modal-close-button"
+                @click="isPreviewModalOpen = false"
+                title="Tutup Modal"
+              >
+                <X :size="16" />
+              </button>
+            </div>
           </div>
 
-          <div class="preview-modal-body">
-            <!-- 1. Real Visual Hero Canvas Viewport -->
-            <div class="inspector-canvas-box">
-              <!-- Floating Header Pills -->
-              <div class="canvas-floating-toolbar">
-                <span class="canvas-tag-pill">{{ selectedMediaForPreview.type }} • {{ selectedMediaForPreview.dimensions }}</span>
-                <button
-                  v-if="selectedMediaForPreview.type === 'PDF'"
-                  type="button"
-                  class="btn-canvas-action"
-                  @click="showPdfPreview = !showPdfPreview"
-                  :title="showPdfPreview ? 'Tampilkan info ringkas' : 'Pratinjau lembar PDF interaktif'"
-                >
-                  <Eye :size="12" />
-                  <span>{{ showPdfPreview ? 'Tutup Pratinjau' : 'Lihat Lembar PDF' }}</span>
-                </button>
-                <a :href="selectedMediaForPreview.url" target="_blank" rel="noopener noreferrer" class="btn-canvas-action" title="Buka berkas langsung di tab baru">
-                  <ExternalLink :size="12" />
-                  <span>Buka Tab Baru</span>
-                </a>
-              </div>
-
-              <!-- If Image / Graphic: Render REAL Image -->
-              <img
-                v-if="isImage(selectedMediaForPreview.type)"
-                :src="selectedMediaForPreview.url"
-                :alt="selectedMediaForPreview.name"
-                class="inspector-real-img"
-              />
-
-              <!-- If PDF and PDF Viewer is Expanded: Render Embedded Frame -->
-              <div v-else-if="selectedMediaForPreview.type === 'PDF' && showPdfPreview" style="width: 100%; height: 320px; border-radius: 8px; overflow: hidden; background: #ffffff;">
-                <iframe :src="selectedMediaForPreview.url" style="width: 100%; height: 100%; border: none;"></iframe>
-              </div>
-
-              <!-- If PDF / Document: Stylized Document Card -->
-              <div v-else class="inspector-doc-canvas">
-                <div class="inspector-doc-icon-wrap" :class="'type-' + (['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type) ? 'excel' : ['DOCX', 'DOC', 'TXT'].includes(selectedMediaForPreview.type) ? 'word' : selectedMediaForPreview.type === 'PDF' ? 'pdf' : 'vector')">
-                  <FileSpreadsheet v-if="['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type)" :size="30" />
-                  <FileText v-else-if="selectedMediaForPreview.type === 'PDF'" :size="30" />
-                  <File v-else-if="['DOCX', 'DOC', 'TXT'].includes(selectedMediaForPreview.type)" :size="30" />
-                  <FileCode v-else :size="30" />
+          <!-- SPLIT STAGE & INSPECTOR BODY -->
+          <div class="studio-inspector-split">
+            <!-- 1. LEFT: MEDIA VIEWPORT STAGE -->
+            <div class="studio-media-stage">
+              <!-- Background / Canvas Layer -->
+              <div class="stage-canvas-inner">
+                <!-- If Image or SVG: Render crisp visual element -->
+                <div v-if="isVisualAsset(selectedMediaForPreview.type)" class="stage-visual-container">
+                  <img
+                    v-if="!failedImageIds.has(selectedMediaForPreview.id)"
+                    :src="selectedMediaForPreview.url"
+                    :alt="selectedMediaForPreview.name"
+                    class="stage-visual-img"
+                    @error="handleImageError(selectedMediaForPreview.id)"
+                  />
+                  <div v-else class="stage-fallback-box">
+                    <ImageIcon :size="40" style="color: #64748b;" />
+                    <p>Pratinjau visual tidak dapat dimuat</p>
+                  </div>
                 </div>
-                <h4>{{ selectedMediaForPreview.name }}</h4>
-                <p>{{ selectedMediaForPreview.dimensions }} • {{ selectedMediaForPreview.size }}</p>
-                <button
-                  v-if="selectedMediaForPreview.type === 'PDF'"
-                  type="button"
-                  class="btn-canvas-action"
-                  style="margin-top: 12px; background: rgba(37, 99, 235, 0.2); border-color: rgba(37, 99, 235, 0.4);"
-                  @click="showPdfPreview = true"
-                >
-                  <Eye :size="12" />
-                  <span>Pratinjau Lembar Dokumen PDF</span>
-                </button>
+
+                <!-- If PDF: Interactive Viewer or Adobe Doc Sheet -->
+                <div v-else-if="selectedMediaForPreview.type === 'PDF'" class="stage-pdf-container">
+                  <div v-if="showPdfPreview" class="stage-pdf-frame-shell">
+                    <iframe :src="selectedMediaForPreview.url" class="stage-pdf-frame"></iframe>
+                  </div>
+                  <div v-else class="stage-doc-card doc-pdf">
+                    <div class="stage-doc-art">
+                      <FileText :size="48" style="color: #ef4444;" />
+                    </div>
+                    <h4>Dokumen Portable Document Format (PDF)</h4>
+                    <p>{{ selectedMediaForPreview.dimensions }} • {{ selectedMediaForPreview.size }}</p>
+                    <button type="button" class="btn-canvas-action" @click="showPdfPreview = true" style="margin-top: 10px;">
+                      <Eye :size="13" />
+                      <span>Buka Pratinjau Interaktif Lembar PDF</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- If Spreadsheet (Excel / CSV) -->
+                <div v-else-if="['XLSX', 'XLS', 'CSV'].includes(selectedMediaForPreview.type)" class="stage-doc-card doc-excel">
+                  <div class="stage-doc-art">
+                    <FileSpreadsheet :size="48" style="color: #10b981;" />
+                  </div>
+                  <h4>Spreadsheet Buku Kerja Excel ({{ selectedMediaForPreview.type }})</h4>
+                  <p>{{ selectedMediaForPreview.size }} • Siap diunduh untuk kalkulasi angka</p>
+                </div>
+
+                <!-- If Document (DOCX / DOC / TXT) -->
+                <div v-else class="stage-doc-card doc-word">
+                  <div class="stage-doc-art">
+                    <File :size="48" style="color: #3b82f6;" />
+                  </div>
+                  <h4>Dokumen Teks / Pengolah Kata ({{ selectedMediaForPreview.type }})</h4>
+                  <p>{{ selectedMediaForPreview.size }} • Terisolasi di bucket MinIO</p>
+                </div>
+              </div>
+
+              <!-- Stage Floating Bottom HUD Strip -->
+              <div class="stage-bottom-hud">
+                <div class="hud-left">
+                  <span class="hud-pill">
+                    <span class="hud-label">Dimensi:</span>
+                    <strong>{{ selectedMediaForPreview.dimensions }}</strong>
+                  </span>
+                  <span class="hud-pill">
+                    <span class="hud-label">Ukuran:</span>
+                    <strong>{{ selectedMediaForPreview.size }}</strong>
+                  </span>
+                </div>
+                <div class="hud-right">
+                  <span class="hud-badge-s3">MinIO Protected</span>
+                </div>
               </div>
             </div>
 
-            <!-- 2. High-Tech 2x2 Telemetry Grid for File Specs -->
-            <div class="inspector-grid-telemetry">
-              <div class="inspector-telemetry-cell">
-                <div class="telemetry-cell-label">
+            <!-- 2. RIGHT: INSPECTOR & PROPERTIES RAIL -->
+            <div class="studio-inspector-rail">
+              <!-- Section A: Technical Specs Grid -->
+              <div class="inspector-card-section">
+                <div class="section-header-title">
                   <HardDrive :size="13" />
-                  <span>Ukuran & Dimensi</span>
+                  <span>Spesifikasi Berkas</span>
                 </div>
-                <div class="telemetry-cell-val">{{ selectedMediaForPreview.size }} <span style="font-weight: 500; font-size: 11.5px; color: #64748b;">({{ selectedMediaForPreview.dimensions }})</span></div>
-                <div class="telemetry-cell-sub">Format: {{ selectedMediaForPreview.type }} File Object</div>
+                <div class="inspector-metrics-compact-grid">
+                  <div class="compact-metric-tile">
+                    <span class="tile-caption">Tipe Format</span>
+                    <strong class="tile-value">{{ selectedMediaForPreview.type }} Object</strong>
+                  </div>
+                  <div class="compact-metric-tile">
+                    <span class="tile-caption">Ukuran Berkas</span>
+                    <strong class="tile-value">{{ selectedMediaForPreview.size }}</strong>
+                  </div>
+                  <div class="compact-metric-tile">
+                    <span class="tile-caption">Dimensi Resolusi</span>
+                    <strong class="tile-value">{{ selectedMediaForPreview.dimensions }}</strong>
+                  </div>
+                  <div class="compact-metric-tile">
+                    <span class="tile-caption" style="display: flex; align-items: center; gap: 4px;">
+                      <Calendar :size="10" />
+                      <span>Diunggah Pada</span>
+                    </span>
+                    <strong class="tile-value">{{ selectedMediaForPreview.uploadedAt }}</strong>
+                  </div>
+                </div>
               </div>
 
-              <div class="inspector-telemetry-cell">
-                <div class="telemetry-cell-label">
+              <!-- Section B: S3 Storage Location -->
+              <div class="inspector-card-section">
+                <div class="section-header-title">
                   <Database :size="13" />
-                  <span>S3 Dedicated Bucket</span>
+                  <span>Penyimpanan S3 MinIO</span>
                 </div>
-                <div class="telemetry-cell-val" style="color: #2563eb; font-family: ui-monospace, monospace; font-size: 12.5px;">
-                  {{ selectedMediaForPreview.bucketName || mediaBucketName }}
+                <div class="inspector-field-group">
+                  <label class="inspector-field-label">Dedicated S3 Bucket</label>
+                  <div class="bucket-display-pill">
+                    <Database :size="12" style="color: #2563eb;" />
+                    <code>{{ selectedMediaForPreview.bucketName || mediaBucketName }}</code>
+                    <span class="bucket-isolated-tag">Multi-Tenant</span>
+                  </div>
                 </div>
-                <div class="telemetry-cell-sub">Isolasi Fisik Multi-Tenant</div>
+                <div class="inspector-field-group" style="margin-top: 10px;">
+                  <label class="inspector-field-label">S3 URI Berkas</label>
+                  <div class="inspector-copy-input-row">
+                    <span class="copy-input-text" :title="'s3://' + (selectedMediaForPreview.bucketName || mediaBucketName) + '/' + (selectedMediaForPreview.s3Key || selectedMediaForPreview.name)">
+                      s3://{{ selectedMediaForPreview.bucketName || mediaBucketName }}/{{ selectedMediaForPreview.s3Key || selectedMediaForPreview.name }}
+                    </span>
+                    <button
+                      type="button"
+                      class="btn-inspector-copy"
+                      @click="copyToClipboard('s3://' + (selectedMediaForPreview.bucketName || mediaBucketName) + '/' + (selectedMediaForPreview.s3Key || selectedMediaForPreview.name), selectedMediaForPreview.id + '_s3')"
+                    >
+                      <Check v-if="copiedSubdomain === selectedMediaForPreview.id + '_s3'" :size="12" class="text-green" />
+                      <Copy v-else :size="12" />
+                      <span>{{ copiedSubdomain === selectedMediaForPreview.id + '_s3' ? 'Tersalin' : 'Salin URI' }}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <div class="inspector-telemetry-cell">
-                <div class="telemetry-cell-label">
-                  <Calendar :size="13" />
-                  <span>Tanggal Diunggah</span>
+              <!-- Section C: CDN Public URL & Quick Embed Code -->
+              <div class="inspector-card-section">
+                <div class="section-header-title">
+                  <Globe :size="13" />
+                  <span>Tautan CDN & Kode Sematan</span>
                 </div>
-                <div class="telemetry-cell-val">{{ selectedMediaForPreview.uploadedAt }}</div>
-                <div class="telemetry-cell-sub">Waktu Sinkronisasi Database</div>
+                <div class="inspector-field-group">
+                  <label class="inspector-field-label">Edge Public CDN URL</label>
+                  <div class="inspector-copy-input-row">
+                    <span class="copy-input-text" :title="selectedMediaForPreview.url">
+                      {{ selectedMediaForPreview.url }}
+                    </span>
+                    <button
+                      type="button"
+                      class="btn-inspector-copy"
+                      @click="copyToClipboard(selectedMediaForPreview.url, selectedMediaForPreview.id + '_cdn')"
+                    >
+                      <Check v-if="copiedSubdomain === selectedMediaForPreview.id + '_cdn'" :size="12" class="text-green" />
+                      <Copy v-else :size="12" />
+                      <span>{{ copiedSubdomain === selectedMediaForPreview.id + '_cdn' ? 'Tersalin' : 'Salin URL' }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Quick Embed Snippets for Markdown & HTML -->
+                <div class="inspector-field-group" style="margin-top: 10px;">
+                  <label class="inspector-field-label">Salin Format Sematan Cepat (Untuk Artikel & CMS)</label>
+                  <div class="embed-format-btn-group">
+                    <button
+                      type="button"
+                      class="btn-embed-chip"
+                      @click="copyEmbedCode('markdown', selectedMediaForPreview)"
+                      :title="'Salin kode Markdown ![' + selectedMediaForPreview.name + '](' + selectedMediaForPreview.url + ')'"
+                    >
+                      <Check v-if="copiedSubdomain === selectedMediaForPreview.id + '_markdown'" :size="12" class="text-green" />
+                      <Code v-else :size="12" />
+                      <span>{{ copiedSubdomain === selectedMediaForPreview.id + '_markdown' ? 'Markdown Tersalin!' : 'Salin Markdown' }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-embed-chip"
+                      @click="copyEmbedCode('html', selectedMediaForPreview)"
+                      :title="'Salin tag HTML <img>'"
+                    >
+                      <Check v-if="copiedSubdomain === selectedMediaForPreview.id + '_html'" :size="12" class="text-green" />
+                      <Code v-else :size="12" />
+                      <span>{{ copiedSubdomain === selectedMediaForPreview.id + '_html' ? 'HTML Tersalin!' : 'Salin HTML <img>' }}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <div class="inspector-telemetry-cell">
-                <div class="telemetry-cell-label">
+              <!-- Section D: Security & Edge Cache Health -->
+              <div class="inspector-card-section">
+                <div class="section-header-title">
                   <ShieldCheck :size="13" />
-                  <span>Keamanan & CDN Edge</span>
+                  <span>Keamanan & Integritas S3</span>
                 </div>
-                <div class="telemetry-cell-val">
-                  <span class="badge-online">Cached Traefik v3 (1.2ms)</span>
+                <div class="security-badges-flex">
+                  <span class="sec-badge green">
+                    <span class="pulse-green-dot"></span>
+                    <span>Traefik Edge (1.2ms TTFB)</span>
+                  </span>
+                  <span class="sec-badge blue">TLS 1.3 Strict</span>
+                  <span class="sec-badge slate">Magic Bytes Verified</span>
                 </div>
-                <div class="telemetry-cell-sub">Magic Bytes Passed • Anti-RCE Clean</div>
-              </div>
-            </div>
-
-            <!-- 3. Copyable S3 URI & Edge CDN URL Strips -->
-            <div class="inspector-url-bar">
-              <span class="url-bar-label">
-                <Database :size="13" />
-                <span>S3 Bucket URI:</span>
-              </span>
-              <div class="url-bar-shell">
-                <span class="url-bar-text">s3://{{ selectedMediaForPreview.bucketName || mediaBucketName }}/{{ selectedMediaForPreview.s3Key || selectedMediaForPreview.name }}</span>
-                <button
-                  class="btn-url-copy"
-                  @click="copyToClipboard('s3://' + (selectedMediaForPreview.bucketName || mediaBucketName) + '/' + (selectedMediaForPreview.s3Key || selectedMediaForPreview.name), selectedMediaForPreview.id + '_s3')"
-                >
-                  <Check v-if="copiedSubdomain === selectedMediaForPreview.id + '_s3'" :size="13" class="text-green" />
-                  <Copy v-else :size="13" />
-                  <span>{{ copiedSubdomain === selectedMediaForPreview.id + '_s3' ? 'Tersalin' : 'Salin URI' }}</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="inspector-url-bar">
-              <span class="url-bar-label">
-                <Globe :size="13" />
-                <span>Edge Public CDN URL:</span>
-              </span>
-              <div class="url-bar-shell">
-                <span class="url-bar-text">{{ selectedMediaForPreview.url }}</span>
-                <button
-                  class="btn-url-copy"
-                  @click="copyToClipboard(selectedMediaForPreview.url, selectedMediaForPreview.id)"
-                >
-                  <Check v-if="copiedSubdomain === selectedMediaForPreview.id" :size="13" class="text-green" />
-                  <Copy v-else :size="13" />
-                  <span>{{ copiedSubdomain === selectedMediaForPreview.id ? 'Tersalin' : 'Salin URL' }}</span>
-                </button>
               </div>
             </div>
           </div>
 
-          <div class="modal-footer-row">
-            <button type="button" class="btn-modal-danger" @click="handleDeleteFromModal(selectedMediaForPreview)">
+          <!-- MODAL BOTTOM FOOTER -->
+          <div class="studio-modal-footer">
+            <button
+              type="button"
+              class="btn-modal-danger"
+              @click="handleDeleteFromModal(selectedMediaForPreview)"
+              title="Hapus berkas ini secara permanen dari bucket S3"
+            >
               <Trash2 :size="14" />
               <span>Hapus Berkas</span>
             </button>
             <div style="flex: 1;"></div>
-            <button type="button" class="btn-modal-ghost" @click="isPreviewModalOpen = false">
+            <button
+              type="button"
+              class="btn-modal-ghost"
+              @click="isPreviewModalOpen = false"
+            >
               Tutup
             </button>
-            <button type="button" class="btn-modal-confirm" @click="downloadMediaFile(selectedMediaForPreview)">
+            <button
+              type="button"
+              class="btn-modal-confirm"
+              @click="downloadMediaFile(selectedMediaForPreview)"
+            >
               <Download :size="14" />
               <span>Unduh Berkas</span>
             </button>
