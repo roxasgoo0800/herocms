@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import {
   UploadCloud,
   Search,
@@ -73,12 +73,9 @@ const {
 } = useDashboardData();
 
 const assetFilter = ref<'all' | 'image' | 'vector' | 'pdf' | 'excel' | 'doc'>('all');
-const filterAnimKey = ref(0);
 
 const setCategoryFilter = (category: 'all' | 'image' | 'vector' | 'pdf' | 'excel' | 'doc') => {
-  if (assetFilter.value === category) return;
   assetFilter.value = category;
-  filterAnimKey.value++;
 };
 
 const sortBy = ref<'newest' | 'oldest' | 'name' | 'size'>('newest');
@@ -99,10 +96,6 @@ const searchInputRef = ref<HTMLInputElement | null>(null);
 
 // Batch Multi-Selection State
 const selectedAssetIds = ref<Set<string>>(new Set());
-
-watch([mediaSearch, sortBy], () => {
-  filterAnimKey.value++;
-});
 
 let dragCounter = 0;
 
@@ -942,19 +935,14 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
         <!-- SCROLLABLE DEDICATED MEDIA STAGE PANEL (BOXED VIEWPORT) -->
         <div class="dam-content-scroll-box">
           <!-- 1. GRID VIEW MODE: CINEMATIC MEDIA CARDS -->
-          <Transition name="dam-category-switch" mode="out-in">
+          <div v-if="viewMode === 'grid'" class="media-gallery-grid">
             <div
-              v-if="viewMode === 'grid'"
-              :key="assetFilter + '_' + sortBy + '_' + (mediaSearch ? 's' : '')"
-              class="media-gallery-grid"
+              v-for="med in filteredMedia"
+              :key="med.id"
+              class="media-pro-card"
+              :class="{ 'is-selected': isAssetSelected(med.id) }"
+              @click="openPreviewModal(med)"
             >
-              <div
-                v-for="med in filteredMedia"
-                :key="med.id"
-                class="media-pro-card"
-                :class="{ 'is-selected': isAssetSelected(med.id) }"
-                @click="openPreviewModal(med)"
-              >
             <!-- Card Visual Preview Area -->
             <div
               class="media-preview-canvas"
@@ -1103,7 +1091,6 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             </div>
           </div>
         </div>
-      </Transition>
 
           <!-- Empty State in Grid Mode -->
           <div v-if="filteredMedia.length === 0 && viewMode === 'grid'" class="empty-gallery-state">
@@ -1117,12 +1104,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
           </div>
 
           <!-- 2. LIST VIEW MODE: HIGH-TECH LEDGER TABLE -->
-          <Transition name="dam-category-switch" mode="out-in">
-            <div
-              v-if="viewMode === 'list'"
-              :key="assetFilter + '_' + sortBy + '_list'"
-              class="media-list-container"
-            >
+          <div v-if="viewMode === 'list'" class="media-list-container">
               <table class="media-ledger-table">
                 <thead>
                   <tr>
@@ -1239,7 +1221,6 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             </tbody>
           </table>
         </div>
-      </Transition>
       </div>
     </main>
   </div>

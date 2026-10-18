@@ -9244,7 +9244,7 @@ html {
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.1s ease, color 0.1s ease;
   width: 100%;
   text-align: left;
 }
@@ -9254,18 +9254,11 @@ html {
   color: #0f172a;
 }
 
-@keyframes folderActivePop {
-  0% { transform: scale(0.97); }
-  60% { transform: scale(1.02); }
-  100% { transform: scale(1); }
-}
-
 .dam-folder-item.active {
   background: #0f172a;
   color: #ffffff;
   font-weight: 600;
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16);
-  animation: folderActivePop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dam-folder-item.active svg {
@@ -9758,31 +9751,24 @@ html {
   position: relative;
   display: flex;
   flex-direction: column;
+  animation: cardInstantFade 0.12s ease-out;
+}
+
+@keyframes cardInstantFade {
+  0% {
+    opacity: 0.7;
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .media-pro-card:hover {
   transform: translateY(-4px);
   border-color: #cbd5e1;
   box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.12);
-}
-
-/* Snappy Fluid Category Transition */
-.dam-category-switch-enter-active {
-  transition: opacity 0.16s cubic-bezier(0.16, 1, 0.3, 1), transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.dam-category-switch-leave-active {
-  transition: opacity 0.1s ease, transform 0.1s ease;
-}
-
-.dam-category-switch-enter-from {
-  opacity: 0;
-  transform: translateY(6px) scale(0.99);
-}
-
-.dam-category-switch-leave-to {
-  opacity: 0;
-  transform: translateY(-4px) scale(0.99);
 }
 
 /* Empty State Fluid Entrance */
