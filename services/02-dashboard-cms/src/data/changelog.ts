@@ -2,11 +2,32 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.5',
+    releaseDate: '18 Oktober 2026',
+    title: 'Minimalist Single Translucent Corner Watermark for Telemetry Cards',
+    summary: 'Menyederhanakan tampilan kartu telemetri dengan mengeliminasi ikon ganda (menghilangkan glyph box kecil). Kini hanya menggunakan satu ikon besar berukuran 58px transparan berwarna (opacity 20%, hover 38%) yang diposisikan rapi di pojok kanan atas kartu, menciptakan tampilan minimalis, bersih, dan mewah tanpa kesan menumpuk.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1145-1',
+        type: 'improvement',
+        scope: 'Single Top-Right Translucent Icon (.telemetry-corner-watermark)',
+        description: 'Menghilangkan glyph box kecil sehingga hanya ada satu ikon tunggal transparan berwarna di pojok kanan atas kartu dengan ukuran 58px.'
+      },
+      {
+        id: 'c-1145-2',
+        type: 'improvement',
+        scope: 'Focused Top-Right Radial Glow (.telemetry-card.accent-*)',
+        description: 'Mengarahkan fokus pendaran gradasi radial ke koordinat 92% 18% untuk menyatu mulus dengan ikon pojok kanan atas.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.4',
     releaseDate: '18 Oktober 2026',
     title: 'Contemporary Translucent Telemetry Glyphs & Ambient Watermark Icons',
     summary: 'Meningkatkan estetika kartu telemetri atas menjadi berstandar visual kontemporer (kekinian). Memperbesar glyph ikon menjadi 42x42px dengan ikon 20px berbalut latar transparan berwarna cerah (opacity 11%) dan garis batas halus (opacity 24%). Menghadirkan watermark ikon besar 64px transparan di sudut kanan bawah kartu yang bereaksi dengan rotasi dan perbesaran dinamis saat kartu disentuh, dipadukan dengan ambient radial light di sudut kartu.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

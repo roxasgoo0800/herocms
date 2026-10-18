@@ -783,19 +783,19 @@ html {
 }
 
 .telemetry-card.accent-blue {
-  background: radial-gradient(circle at 92% 85%, rgba(37, 99, 235, 0.08) 0%, transparent 60%), #ffffff;
+  background: radial-gradient(circle at 92% 18%, rgba(37, 99, 235, 0.09) 0%, transparent 60%), #ffffff;
 }
 .telemetry-card.accent-emerald {
-  background: radial-gradient(circle at 92% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 60%), #ffffff;
+  background: radial-gradient(circle at 92% 18%, rgba(16, 185, 129, 0.09) 0%, transparent 60%), #ffffff;
 }
 .telemetry-card.accent-purple {
-  background: radial-gradient(circle at 92% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 60%), #ffffff;
+  background: radial-gradient(circle at 92% 18%, rgba(139, 92, 246, 0.09) 0%, transparent 60%), #ffffff;
 }
 .telemetry-card.accent-amber {
-  background: radial-gradient(circle at 92% 85%, rgba(245, 158, 11, 0.08) 0%, transparent 60%), #ffffff;
+  background: radial-gradient(circle at 92% 18%, rgba(245, 158, 11, 0.09) 0%, transparent 60%), #ffffff;
 }
 .telemetry-card.accent-sky {
-  background: radial-gradient(circle at 92% 85%, rgba(2, 132, 199, 0.08) 0%, transparent 60%), #ffffff;
+  background: radial-gradient(circle at 92% 18%, rgba(2, 132, 199, 0.09) 0%, transparent 60%), #ffffff;
 }
 
 .telemetry-card:hover {
@@ -804,26 +804,26 @@ html {
   box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.09), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
 }
 
-/* Large Translucent Ambient Watermark Icon */
-.telemetry-watermark {
+/* Single Translucent Colored Icon at Top Right Corner */
+.telemetry-corner-watermark {
   position: absolute;
-  right: 4px;
-  bottom: -6px;
+  top: 8px;
+  right: 12px;
   pointer-events: none;
-  opacity: 0.07;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.20;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1;
 }
 
-.telemetry-watermark.blue { color: #2563eb; }
-.telemetry-watermark.emerald { color: #059669; }
-.telemetry-watermark.purple { color: #7c3aed; }
-.telemetry-watermark.amber { color: #d97706; }
-.telemetry-watermark.sky { color: #0284c7; }
+.telemetry-corner-watermark.blue { color: #2563eb; }
+.telemetry-corner-watermark.emerald { color: #059669; }
+.telemetry-corner-watermark.purple { color: #7c3aed; }
+.telemetry-corner-watermark.amber { color: #d97706; }
+.telemetry-corner-watermark.sky { color: #0284c7; }
 
-.telemetry-card:hover .telemetry-watermark {
-  opacity: 0.17;
-  transform: scale(1.12) rotate(-5deg);
+.telemetry-card:hover .telemetry-corner-watermark {
+  opacity: 0.38;
+  transform: scale(1.1) rotate(-4deg);
 }
 
 .telemetry-top {
