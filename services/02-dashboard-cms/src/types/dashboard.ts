@@ -153,6 +153,8 @@ export interface MediaAssetItem {
   bucketName?: string;
   s3Key?: string;
   mimeType?: string;
+  sha256?: string;
+  etag?: string;
 }
 
 export interface CustomDomainItem {

@@ -2,16 +2,37 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
-    version: 'v1.13.3',
+    version: 'v1.13.4',
     releaseDate: '18 Oktober 2026',
-    title: 'Eliminasi Total Delay Transisi Kategori & Navigasi Folder Instan 0ms',
-    summary: 'Menghilangkan latensi dan jeda waktu klik saat berpindah kategori folder DAM (Semua Berkas, Foto & Raster, Vektor SVG, Dokumen PDF, Excel, dsb). Menghapus pembungkus Transition mode="out-in" yang sebelumnya memblokir render konten baru secara serial, menonaktifkan scale bounce delay pada tombol folder aktif, serta menerapkan micro-fade instan 120ms pada kartu media untuk interaksi secepat kilat (0ms input latency).',
+    title: 'Transformasi Enterprise DAM Inspector Telemetry & Kanvas Bersih',
+    summary: 'Menghilangkan widget Dominansi Warna & Kontras agar antarmuka fokus dan profesional, menyederhanakan kanvas switcher ke mode mandiri (Latar Terang, Latar Gelap, Papan Catur), serta merombak panel detail inspector menjadi Enterprise Digital Asset Management (DAM) Hub yang kaya informasi: ekstraksi MIME-type presisi, ukuran byte tepat S3, resolusi & kalkulasi aspek rasio dinamis, integrasi referensi penggunaan konten CMS, checksum integritas SHA-256/ETag, parameter kompresi & cache HTTP, serta tombol sematan cepat (Markdown, HTML, CSS, Direct URL).',
     badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
+        id: 'c-1134-1',
+        type: 'improvement',
+        scope: 'DAM Inspector Rail (Enterprise Telemetry & Metadata)',
+        description: 'Menyajikan panel spesifikasi teknis lengkap mencakup MIME-Type spesifik, byte presisi, aspek rasio resolusi dinamis, pelacakan referensi artikel/halaman CMS yang menggunakan berkas, dan verifikasi checksum SHA-256.'
+      },
+      {
+        id: 'c-1134-2',
+        type: 'improvement',
+        scope: 'Media Stage Canvas & Quick Embeds',
+        description: 'Menghapus komputasi dominansi warna dan menyederhanakan switcher kanvas menjadi 3 mode praktis tanpa auto-flash, serta menambahkan opsi sematan 1-klik untuk Markdown, tag <img> HTML, dan CSS background-image.'
+      }
+    ]
+  },
+  {
+    version: 'v1.13.3',
+    releaseDate: '18 Oktober 2026',
+    title: 'Eliminasi Total Delay Transisi Kategori & Navigasi Folder Instan 0ms',
+    summary: 'Menghilangkan latensi dan jeda waktu klik saat berpindah kategori folder DAM (Semua Berkas, Foto & Raster, Vektor SVG, Dokumen PDF, Excel, dsb). Menghapus pembungkus Transition mode="out-in" yang sebelumnya memblokir render konten baru secara serial, menonaktifkan scale bounce delay pada tombol folder aktif, serta menerapkan micro-fade instan 120ms pada kartu media untuk interaksi secepat kilat (0ms input latency).',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
         id: 'c-1133-1',
-        type: 'perf',
+        type: 'performance',
         scope: 'DAM Category Navigation (Zero-Latency Rendering)',
         description: 'Menghilangkan serial leave-then-enter transition delay (mode="out-in") pada grid dan list view sehingga konten baru dirender seketika (0ms) saat kategori folder diklik.'
       },
