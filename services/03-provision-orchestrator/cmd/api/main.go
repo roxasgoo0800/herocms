@@ -117,13 +117,49 @@ func main() {
 				"containers": []gin.H{
 					{
 						"tenant_id": "t_sample_101",
-						"subdomain": "demo.cloudcms.app",
+						"subdomain": "demo.herocms.stackbyte.id",
 						"status":    "running",
 						"cpu_limit": "0.5 vCPU",
 						"memory":    "256 MB",
 					},
 				},
 			})
+		})
+
+		// Stop container
+		api.POST("/containers/:id/stop", func(c *gin.Context) {
+			id := c.Param("id")
+			if provisioner != nil {
+				if err := provisioner.StopContainer(c.Request.Context(), id); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "stopped", "container_id": id})
+		})
+
+		// Start container
+		api.POST("/containers/:id/start", func(c *gin.Context) {
+			id := c.Param("id")
+			if provisioner != nil {
+				if err := provisioner.StartContainer(c.Request.Context(), id); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "running", "container_id": id})
+		})
+
+		// Destroy container (Danger Zone Action)
+		api.DELETE("/containers/:id", func(c *gin.Context) {
+			id := c.Param("id")
+			if provisioner != nil {
+				if err := provisioner.DestroyContainer(c.Request.Context(), id); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "destroyed", "container_id": id})
 		})
 	}
 
@@ -144,6 +180,10 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutting down orchestrator server gracefully...")
+
+	if provisioner != nil {
+		_ = provisioner.Close()
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
