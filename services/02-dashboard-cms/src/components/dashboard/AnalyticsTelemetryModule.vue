@@ -60,10 +60,10 @@ const streamLogs = ref([
 
     <!-- 1. Top Telemetry Strips (4 High-Tech Cards) -->
     <div class="stats-overview-grid">
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-blue">
+        <div class="telemetry-corner-watermark blue"><Activity :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">TOTAL KUNJUNGAN MINGGU INI</span>
-          <div class="telemetry-glyph blue"><Activity :size="15" /></div>
         </div>
         <div class="telemetry-val">3,892 <span class="badge-growth-pill">+28%</span></div>
         <div class="telemetry-sub ready-state">
@@ -72,28 +72,28 @@ const streamLogs = ref([
         </div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-emerald">
+        <div class="telemetry-corner-watermark emerald"><Globe :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">LATENSI EDGE TRAEFIK</span>
-          <div class="telemetry-glyph emerald"><Globe :size="15" /></div>
         </div>
         <div class="telemetry-val">1.8 ms <span class="badge-online">Fast</span></div>
         <div class="telemetry-sub"><span>Cache proxy edge v3 aktif</span></div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-purple">
+        <div class="telemetry-corner-watermark purple"><Zap :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">KAFKA CONSUMER LAG</span>
-          <div class="telemetry-glyph purple"><Zap :size="15" /></div>
         </div>
         <div class="telemetry-val">0 Pesan <span class="badge-online">Sync</span></div>
         <div class="telemetry-sub"><span>Sinkronisasi real-time 100%</span></div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-sky">
+        <div class="telemetry-corner-watermark sky"><Database :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">MEMORI REDIS SORTED SET</span>
-          <div class="telemetry-glyph blue"><Database :size="15" /></div>
         </div>
         <div class="telemetry-val">18.4 MB <span class="telemetry-denom">/ 128 MB</span></div>
         <div class="telemetry-sub"><span>1,420 kunci terindeks di RAM</span></div>

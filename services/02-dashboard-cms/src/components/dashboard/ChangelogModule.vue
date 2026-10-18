@@ -128,12 +128,10 @@ const getTypeIcon = (type: ChangelogType) => {
 
     <!-- Row 2: Telemetry Metrics Cards -->
     <div class="stats-overview-grid">
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-blue">
+        <div class="telemetry-corner-watermark blue"><Tag :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">VERSI SAAT INI</span>
-          <div class="telemetry-glyph blue">
-            <Tag :size="15" />
-          </div>
         </div>
         <div class="telemetry-val">
           {{ latestVersion }} <span class="badge-online">Produksi Stabil</span>
@@ -144,12 +142,10 @@ const getTypeIcon = (type: ChangelogType) => {
         </div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-emerald">
+        <div class="telemetry-corner-watermark emerald"><History :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">TOTAL RILIS TERTATA</span>
-          <div class="telemetry-glyph emerald">
-            <History :size="15" />
-          </div>
         </div>
         <div class="telemetry-val">
           {{ totalReleasesCount }} <span class="telemetry-denom">Versi Dirilis</span>
@@ -159,12 +155,10 @@ const getTypeIcon = (type: ChangelogType) => {
         </div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-purple">
+        <div class="telemetry-corner-watermark purple"><GitCommit :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">TOTAL CATATAN PERUBAHAN</span>
-          <div class="telemetry-glyph purple">
-            <GitCommit :size="15" />
-          </div>
         </div>
         <div class="telemetry-val">
           {{ totalItemsCount }} <span class="telemetry-denom">Catatan Log</span>
@@ -174,12 +168,10 @@ const getTypeIcon = (type: ChangelogType) => {
         </div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-sky">
+        <div class="telemetry-corner-watermark sky"><CheckCircle2 :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">INTEGRITAS REPOSITORY</span>
-          <div class="telemetry-glyph sapphire">
-            <CheckCircle2 :size="15" />
-          </div>
         </div>
         <div class="telemetry-val">
           100% <span class="badge-growth-pill">Terverifikasi</span>

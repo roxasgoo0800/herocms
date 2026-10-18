@@ -87,37 +87,37 @@ const handlePrintInvoice = () => {
 
     <!-- 4 Commercial Summary Cards -->
     <div class="stats-overview-grid">
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-blue">
+        <div class="telemetry-corner-watermark blue"><Clock :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">TAGIHAN BERIKUTNYA</span>
-          <div class="telemetry-glyph blue"><Clock :size="15" /></div>
         </div>
         <div class="telemetry-val">Rp 149.000 <span class="badge-online">15 Okt 2026</span></div>
         <div class="telemetry-sub"><span>Perpanjangan otomatis via BCA VA</span></div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-emerald">
+        <div class="telemetry-corner-watermark emerald"><CheckCircle2 :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">STATUS KELAYAKAN</span>
-          <div class="telemetry-glyph emerald"><CheckCircle2 :size="15" /></div>
         </div>
         <div class="telemetry-val">100% <span class="badge-online">Lunas</span></div>
         <div class="telemetry-sub"><span>3 Transaksi lunas tanpa tunggakan</span></div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-purple">
+        <div class="telemetry-corner-watermark purple"><CreditCard :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">METODE PEMBAYARAN UTAMA</span>
-          <div class="telemetry-glyph purple"><CreditCard :size="15" /></div>
         </div>
         <div class="telemetry-val">BCA VA <span class="badge-growth-pill">Auto-Debit</span></div>
         <div class="telemetry-sub"><span>VA No: 8802 9942 1089</span></div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-sky">
+        <div class="telemetry-corner-watermark sky"><ShieldCheck :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">PAJAK & LEGAL</span>
-          <div class="telemetry-glyph emerald"><ShieldCheck :size="15" /></div>
         </div>
         <div class="telemetry-val">E-Faktur <span class="badge-online">PPN 11%</span></div>
         <div class="telemetry-sub"><span>NPWP: 01.889.341.2-021.000</span></div>

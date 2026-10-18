@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.6',
+    releaseDate: '18 Oktober 2026',
+    title: 'Universal Rollout: Single Translucent Corner Watermark Cards across All Dashboard Modules',
+    summary: 'Menerapkan desain kartu telemetri minimalis modern secara universal ke seluruh modul dashboard HeroCMS (ContainersModule, MediaAssetsModule, SupportTicketingModule, InvoicesHistoryModule, AnalyticsTelemetryModule, ChangelogModule). Menghilangkan glyph box kecil dan menyematkan satu ikon transparan berwarna berukuran 48px-58px di pojok kanan atas kartu yang responsif saat disentuh (hover), menciptakan konsistensi tema visual yang harmonis di seluruh studio.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1146-1',
+        type: 'improvement',
+        scope: 'Containers & Websites Module (.stats-overview-grid)',
+        description: 'Menerapkan kartu telemetri beraksen warna atas dengan ikon tunggal transparan Server, Globe, Activity, dan ShieldCheck di pojok kanan atas.'
+      },
+      {
+        id: 'c-1146-2',
+        type: 'improvement',
+        scope: 'DAM Media Assets Module (.dam-mini-stat-card)',
+        description: 'Merombak 4 kartu stat DAM Media menjadi kartu beraksen dengan watermark transparan Layers, Zap, Globe, dan Server.'
+      },
+      {
+        id: 'c-1146-3',
+        type: 'improvement',
+        scope: 'Support, Invoices, Analytics, & Changelog Modules',
+        description: 'Menstandarkan seluruh modul lainnya dengan kartu telemetri berikon tunggal transparan di pojok kanan atas.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.5',
     releaseDate: '18 Oktober 2026',
     title: 'Minimalist Single Translucent Corner Watermark for Telemetry Cards',
     summary: 'Menyederhanakan tampilan kartu telemetri dengan mengeliminasi ikon ganda (menghilangkan glyph box kecil). Kini hanya menggunakan satu ikon besar berukuran 58px transparan berwarna (opacity 20%, hover 38%) yang diposisikan rapi di pojok kanan atas kartu, menciptakan tampilan minimalis, bersih, dan mewah tanpa kesan menumpuk.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

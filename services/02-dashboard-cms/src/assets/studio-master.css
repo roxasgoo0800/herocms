@@ -9472,6 +9472,7 @@ html {
 }
 
 .dam-mini-stat-card {
+  position: relative;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -9480,10 +9481,58 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dam-mini-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: transparent;
+}
+
+.dam-mini-stat-card.accent-blue::before { background: linear-gradient(90deg, #2563eb, #38bdf8); }
+.dam-mini-stat-card.accent-emerald::before { background: linear-gradient(90deg, #059669, #34d399); }
+.dam-mini-stat-card.accent-purple::before { background: linear-gradient(90deg, #7c3aed, #c084fc); }
+.dam-mini-stat-card.accent-sky::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+
+.dam-mini-stat-card.accent-blue {
+  background: radial-gradient(circle at 92% 18%, rgba(37, 99, 235, 0.09) 0%, transparent 60%), #ffffff;
+}
+.dam-mini-stat-card.accent-emerald {
+  background: radial-gradient(circle at 92% 18%, rgba(16, 185, 129, 0.09) 0%, transparent 60%), #ffffff;
+}
+.dam-mini-stat-card.accent-purple {
+  background: radial-gradient(circle at 92% 18%, rgba(139, 92, 246, 0.09) 0%, transparent 60%), #ffffff;
+}
+.dam-mini-stat-card.accent-sky {
+  background: radial-gradient(circle at 92% 18%, rgba(2, 132, 199, 0.09) 0%, transparent 60%), #ffffff;
+}
+
+.dam-mini-stat-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -3px rgba(15, 23, 42, 0.08);
+}
+
+.dam-mini-stat-card .telemetry-corner-watermark {
+  top: 4px;
+  right: 8px;
+}
+
+.dam-mini-stat-card:hover .telemetry-corner-watermark {
+  opacity: 0.38;
+  transform: scale(1.1) rotate(-4deg);
 }
 
 .dam-mini-stat-info {
   min-width: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .dam-mini-stat-label {
@@ -9504,21 +9553,6 @@ html {
   align-items: center;
   gap: 6px;
 }
-
-.dam-mini-stat-glyph {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.dam-mini-stat-glyph.blue { background: #eff6ff; color: #2563eb; }
-.dam-mini-stat-glyph.emerald { background: #ecfdf5; color: #059669; }
-.dam-mini-stat-glyph.purple { background: #f5f3ff; color: #7c3aed; }
-.dam-mini-stat-glyph.slate { background: #f8fafc; color: #475569; }
 
 /* Floating Batch Action Bar */
 .dam-batch-bar {

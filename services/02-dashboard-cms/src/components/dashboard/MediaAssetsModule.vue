@@ -726,19 +726,18 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
       <main class="dam-main-stage">
         <!-- Top Metrics Strip (4 Mini Inline Cards) -->
         <div class="dam-mini-stats-strip">
-          <div class="dam-mini-stat-card">
+          <div class="dam-mini-stat-card accent-blue">
+            <div class="telemetry-corner-watermark blue"><Layers :size="48" /></div>
             <div class="dam-mini-stat-info">
               <span class="dam-mini-stat-label">Total Objek Berkas</span>
               <div class="dam-mini-stat-val">
                 <span>{{ mediaAssets.length }} File</span>
               </div>
             </div>
-            <div class="dam-mini-stat-glyph blue">
-              <Layers :size="16" />
-            </div>
           </div>
 
-          <div class="dam-mini-stat-card">
+          <div class="dam-mini-stat-card accent-emerald">
+            <div class="telemetry-corner-watermark emerald"><Zap :size="48" /></div>
             <div class="dam-mini-stat-info">
               <span class="dam-mini-stat-label">CDN Edge Hit Ratio</span>
               <div class="dam-mini-stat-val">
@@ -746,32 +745,25 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                 <span class="badge-online" style="font-size: 10px;">Optimal</span>
               </div>
             </div>
-            <div class="dam-mini-stat-glyph emerald">
-              <Zap :size="16" />
-            </div>
           </div>
 
-          <div class="dam-mini-stat-card">
+          <div class="dam-mini-stat-card accent-purple">
+            <div class="telemetry-corner-watermark purple"><Globe :size="48" /></div>
             <div class="dam-mini-stat-info">
               <span class="dam-mini-stat-label">Serving Latency</span>
               <div class="dam-mini-stat-val">
                 <span>1.2ms TTFB</span>
               </div>
             </div>
-            <div class="dam-mini-stat-glyph purple">
-              <Globe :size="16" />
-            </div>
           </div>
 
-          <div class="dam-mini-stat-card">
+          <div class="dam-mini-stat-card accent-sky">
+            <div class="telemetry-corner-watermark sky"><Server :size="48" /></div>
             <div class="dam-mini-stat-info">
               <span class="dam-mini-stat-label">Dedicated S3 Storage</span>
-              <div class="dam-mini-stat-val" style="font-size: 13px; font-family: ui-monospace, monospace; color: #2563eb;">
+              <div class="dam-mini-stat-val" style="font-size: 13px; font-family: ui-monospace, monospace; color: #0284c7;">
                 <span>MinIO Isolated</span>
               </div>
-            </div>
-            <div class="dam-mini-stat-glyph slate">
-              <Server :size="16" />
             </div>
           </div>
         </div>
