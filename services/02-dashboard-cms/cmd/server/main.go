@@ -140,6 +140,7 @@ func SetupRouter(cfg *config.Config, repo *repository.Repository, rdb *redis.Cli
 			protected.PUT("/containers/:id/draft", h.SaveEditorDraft)
 			protected.POST("/containers/:id/start", h.StartContainer)
 			protected.POST("/containers/:id/stop", h.StopContainer)
+			protected.PUT("/containers/:id/maintenance", h.ToggleMaintenance)
 			protected.DELETE("/containers/:id", h.DeleteContainer)
 
 			// Publishing Engine (Articles & Content)

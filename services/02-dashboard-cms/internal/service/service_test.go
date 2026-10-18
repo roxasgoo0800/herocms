@@ -149,6 +149,16 @@ func TestContainers_Lifecycle(t *testing.T) {
 		t.Errorf("StartContainer failed: %v", err)
 	}
 
+	// 4b. ToggleSiteMaintenance
+	ok, err = s.ToggleSiteMaintenance(ctx, tenantID, containerID, true, "Dalam perbaikan", "20 menit")
+	if !ok || err != nil {
+		t.Errorf("ToggleSiteMaintenance on failed: %v", err)
+	}
+	ok, err = s.ToggleSiteMaintenance(ctx, tenantID, containerID, false, "", "")
+	if !ok || err != nil {
+		t.Errorf("ToggleSiteMaintenance off failed: %v", err)
+	}
+
 	err = s.SaveSiteDesign(ctx, tenantID, containerID, gin.H{
 		"roleOrHeadline": "Lead Technical Author",
 		"accentColor":    "#10b981",

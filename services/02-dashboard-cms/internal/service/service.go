@@ -428,6 +428,17 @@ func (s *Services) StopContainer(ctx context.Context, tenantID, id string) (bool
 	return true, nil
 }
 
+func (s *Services) ToggleSiteMaintenance(ctx context.Context, tenantID, id string, enabled bool, message, estimatedEndTime string) (bool, error) {
+	if s != nil && s.Repo != nil {
+		err := s.Repo.UpdateSiteMaintenance(ctx, tenantID, id, enabled, message, estimatedEndTime)
+		if err != nil {
+			return false, err
+		}
+	}
+	s.InvalidateTenantCache(ctx, tenantID)
+	return true, nil
+}
+
 func (s *Services) DeleteContainer(ctx context.Context, tenantID, id string) (bool, error) {
 	if s != nil && s.Repo != nil {
 		err := s.Repo.DeleteSite(ctx, tenantID, id)

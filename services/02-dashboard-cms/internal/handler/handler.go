@@ -328,6 +328,38 @@ func (h *Handler) StopContainer(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "stopped", "id": id})
 }
 
+type SiteMaintenancePayload struct {
+	Enabled          bool   `json:"enabled"`
+	Message          string `json:"message"`
+	EstimatedEndTime string `json:"estimated_end_time"`
+}
+
+func (h *Handler) ToggleMaintenance(c *gin.Context) {
+	id := c.Param("id")
+	var payload SiteMaintenancePayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		// Default to toggle on if body empty or invalid
+		payload.Enabled = true
+	}
+
+	ok, err := h.Services.ToggleSiteMaintenance(c.Request.Context(), getTenantID(c), id, payload.Enabled, payload.Message, payload.EstimatedEndTime)
+	if !ok || err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	status := "running"
+	if payload.Enabled {
+		status = "maintenance"
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status":             status,
+		"id":                 id,
+		"message":            payload.Message,
+		"estimated_end_time": payload.EstimatedEndTime,
+	})
+}
+
 func (h *Handler) DeleteContainer(c *gin.Context) {
 	id := c.Param("id")
 	ok, err := h.Services.DeleteContainer(c.Request.Context(), getTenantID(c), id)

@@ -142,6 +142,16 @@ func TestRepository_InMemoryLifecycle(t *testing.T) {
 		t.Fatalf("UpdateSiteDesign error: %v", err)
 	}
 
+	err = repo.UpdateSiteMaintenance(ctx, defaultTenantID, "site_custom_1", true, "Perawatan berkala", "1 jam")
+	if err != nil {
+		t.Fatalf("UpdateSiteMaintenance on error: %v", err)
+	}
+
+	err = repo.UpdateSiteMaintenance(ctx, defaultTenantID, "site_custom_1", false, "", "")
+	if err != nil {
+		t.Fatalf("UpdateSiteMaintenance off error: %v", err)
+	}
+
 	err = repo.DeleteSite(ctx, defaultTenantID, "site_custom_1")
 	if err != nil {
 		t.Fatalf("DeleteSite error: %v", err)

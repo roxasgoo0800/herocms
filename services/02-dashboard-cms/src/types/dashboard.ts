@@ -30,7 +30,7 @@ export interface ContainerSite {
   templateName: string;
   subdomain: string;
   customDomain?: string;
-  status: 'running' | 'stopped' | 'provisioning';
+  status: 'running' | 'stopped' | 'provisioning' | 'maintenance';
   cpuUsage: number;
   ramUsage: number;
   ramLimit: number;
@@ -43,6 +43,11 @@ export interface ContainerSite {
   accentColor: string;
   lastDeployed: string;
   themeConfig?: Record<string, any>;
+  maintenanceConfig?: {
+    enabled: boolean;
+    message?: string;
+    estimatedEndTime?: string;
+  };
 }
 
 export interface VisualBlock {

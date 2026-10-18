@@ -606,6 +606,43 @@ func (r *Repository) UpdateSiteStatus(ctx context.Context, tenantID, siteID, sta
 	return nil
 }
 
+func (r *Repository) UpdateSiteMaintenance(ctx context.Context, tenantID, siteID string, enabled bool, message, estimatedEndTime string) error {
+	if r == nil {
+		return nil
+	}
+	status := "running"
+	if enabled {
+		status = "maintenance"
+	}
+
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			UPDATE sites SET status = $1, updated_at = NOW()
+			WHERE tenant_id = $2 AND (id::text = $3 OR subdomain LIKE $4)
+		`, status, tenantID, siteID, siteID+"%")
+		return err
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, c := range r.Containers {
+		if c["id"] == siteID {
+			c["status"] = status
+			if enabled {
+				c["maintenanceConfig"] = gin.H{
+					"enabled":          true,
+					"message":          message,
+					"estimatedEndTime": estimatedEndTime,
+				}
+			} else {
+				delete(c, "maintenanceConfig")
+			}
+			return nil
+		}
+	}
+	return nil
+}
+
 func (r *Repository) UpdateSiteDesign(ctx context.Context, tenantID, siteID string, payload gin.H) error {
 	if r == nil {
 		return nil

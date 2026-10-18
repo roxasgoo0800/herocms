@@ -30,7 +30,8 @@ import {
   Send,
   Layers,
   X,
-  RotateCcw
+  RotateCcw,
+  Wrench
 } from 'lucide-vue-next';
 import type { ContainerSite } from '../../types/dashboard';
 import { generatePodAnalytics } from '../../data/pod-analytics';
@@ -72,6 +73,7 @@ const emit = defineEmits<{
   (e: 'purgeCache', container: ContainerSite): void;
   (e: 'openLogs', container: ContainerSite): void;
   (e: 'openEditor', container: ContainerSite): void;
+  (e: 'toggleMaintenance', container: ContainerSite): void;
 }>();
 
 const timeframe = ref<'24h' | '7d' | '30d'>('24h');
@@ -423,6 +425,16 @@ const exportTelemetry = () => {
           <Download :size="13" />
           <span>Export CSV</span>
         </button>
+        <button
+          type="button"
+          class="btn-modal-ghost"
+          :style="container.status === 'maintenance' ? 'background: #fffbeb; color: #b45309; border-color: #fde68a;' : ''"
+          @click="emit('toggleMaintenance', container)"
+          :title="container.status === 'maintenance' ? 'Akhiri Pemeliharaan & Go-Live' : 'Aktifkan Mode Pemeliharaan'"
+        >
+          <Wrench :size="13" />
+          <span>{{ container.status === 'maintenance' ? 'Akhiri Maintenance' : 'Mode Maintenance' }}</span>
+        </button>
         <button type="button" class="btn-modal-ghost" @click="emit('purgeCache', container)">
           <Sparkles :size="13" />
           <span>Purge Edge Cache</span>
@@ -442,6 +454,38 @@ const exportTelemetry = () => {
       </div>
     </div>
 
+    <!-- Maintenance Banner Alert -->
+    <div
+      v-if="container.status === 'maintenance'"
+      style="margin-bottom: 14px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px;"
+    >
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 36px; height: 36px; border-radius: 8px; background: #fef3c7; color: #b45309; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <Wrench :size="18" />
+        </div>
+        <div>
+          <div style="font-size: 0.84rem; font-weight: 700; color: #92400e;">
+            Mode Pemeliharaan Sedang Aktif (HTTP 503 Service Unavailable)
+          </div>
+          <div style="font-size: 0.74rem; color: #b45309; margin-top: 2px;">
+            Pengunjung publik tidak dapat mengakses situs ini secara langsung. Pesan aktif:
+            <em>"{{ container.maintenanceConfig?.message || 'Situs sedang dalam pemeliharaan berkala...' }}"</em>
+            <span v-if="container.maintenanceConfig?.estimatedEndTime" style="margin-left: 6px; font-weight: 600;">
+              • Estimasi: {{ container.maintenanceConfig.estimatedEndTime }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn-modal-confirm"
+        style="background: #059669; border-color: #047857; flex-shrink: 0; padding: 6px 14px; font-size: 0.78rem;"
+        @click="emit('toggleMaintenance', container)"
+      >
+        <span>Akhiri Pemeliharaan (Go Live)</span>
+      </button>
+    </div>
+
     <!-- 2. Hero Banner Card -->
     <div class="pod-hero-card">
       <div class="pod-header-top-flex">
@@ -458,9 +502,16 @@ const exportTelemetry = () => {
               <span class="pod-id-subtag">{{ report.podId }}</span>
             </div>
             <div class="pod-meta-bar">
-              <span class="pod-meta-pill status-green">
+              <span v-if="container.status === 'maintenance'" class="pod-meta-pill" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">
+                <Wrench :size="11" />
+                <span>Maintenance Mode • HTTP 503 Active</span>
+              </span>
+              <span v-else-if="container.status === 'running'" class="pod-meta-pill status-green">
                 <span class="pulse-mini-dot"></span>
                 <span>Running • Healthy</span>
+              </span>
+              <span v-else class="pod-meta-pill" style="background: #f1f5f9; color: #64748b;">
+                <span>Standby</span>
               </span>
               <span class="pod-meta-pill route-pill">
                 <Lock :size="11" style="color: #10b981;" />

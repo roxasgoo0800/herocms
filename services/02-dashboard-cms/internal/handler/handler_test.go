@@ -57,6 +57,7 @@ func setupTestHandler() (*Handler, *gin.Engine) {
 		protected.PUT("/containers/:id/draft", h.SaveEditorDraft)
 		protected.POST("/containers/:id/start", h.StartContainer)
 		protected.POST("/containers/:id/stop", h.StopContainer)
+		protected.PUT("/containers/:id/maintenance", h.ToggleMaintenance)
 		protected.DELETE("/containers/:id", h.DeleteContainer)
 
 		protected.GET("/articles", h.ListArticles)
@@ -192,6 +193,29 @@ func TestHandler_Containers(t *testing.T) {
 	router.ServeHTTP(wStart, reqStart)
 	if wStart.Code != http.StatusOK {
 		t.Errorf("StartContainer failed: %d", wStart.Code)
+	}
+
+	// 3b. Maintenance Mode Toggle On & Off
+	mBodyOn, _ := json.Marshal(gin.H{
+		"enabled":            true,
+		"message":            "Situs sedang dalam pemeliharaan berkala",
+		"estimated_end_time": "15 menit",
+	})
+	reqMOn, _ := http.NewRequest(http.MethodPut, "/api/containers/"+cID+"/maintenance", bytes.NewReader(mBodyOn))
+	reqMOn.Header.Set("Content-Type", "application/json")
+	wMOn := httptest.NewRecorder()
+	router.ServeHTTP(wMOn, reqMOn)
+	if wMOn.Code != http.StatusOK {
+		t.Errorf("ToggleMaintenance on failed: %d", wMOn.Code)
+	}
+
+	mBodyOff, _ := json.Marshal(gin.H{"enabled": false})
+	reqMOff, _ := http.NewRequest(http.MethodPut, "/api/containers/"+cID+"/maintenance", bytes.NewReader(mBodyOff))
+	reqMOff.Header.Set("Content-Type", "application/json")
+	wMOff := httptest.NewRecorder()
+	router.ServeHTTP(wMOff, reqMOff)
+	if wMOff.Code != http.StatusOK {
+		t.Errorf("ToggleMaintenance off failed: %d", wMOff.Code)
 	}
 
 	// 4. Save Site Design

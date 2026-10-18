@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.10.0',
+    releaseDate: '18 Oktober 2026',
+    title: 'Peluncuran Fitur Enterprise Maintenance Mode (Mode Pemeliharaan)',
+    summary: 'Menambahkan kapabilitas Mode Pemeliharaan (Maintenance Mode) terpadu di Dashboard Situs dan Pod Detail Analytics. Memungkinkan pengelola website mengalihkan trafik publik ke pesan pemeliharaan HTTP 503 bersahabat secara instan, dilengkapi badge status semantic Amber, tab filter dedicated, modal konfigurasi estimasi waktu (ETA), dan endpoint API PUT /containers/:id/maintenance.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1100-1',
+        type: 'feature',
+        scope: 'Containers & Sites Hub (ContainersModule.vue)',
+        description: 'Menambahkan kontrol toggle Mode Pemeliharaan pada kartu situs dan tabel data, badge status semantic Amber dengan radar pulsing amber, filter tab Pemeliharaan, dan modal dialog konfigurasi pesan kustom serta estimasi durasi pemeliharaan.'
+      },
+      {
+        id: 'c-1100-2',
+        type: 'feature',
+        scope: 'Pod Detail & Analytics (PodDetailAnalyticsView.vue)',
+        description: 'Menyediakan banner peringatan pemeliharaan aktif dengan tombol aksi Go-Live cepat dan status pill telemetri pemeliharaan berstandar Cloudflare & Datadog APM.'
+      },
+      {
+        id: 'c-1100-3',
+        type: 'feature',
+        scope: 'Backend API & Repository (cmd/server, internal/handler, service, repository)',
+        description: 'Menyediakan endpoint PUT /containers/:id/maintenance dengan validasi tenant ID, persistensi status ke basis data/in-memory repository, serta unit test suite komprehensif.'
+      }
+    ]
+  },
+  {
     version: 'v1.9.4',
     releaseDate: '18 Oktober 2026',
     title: 'Unit Test Suite Komprehensif & Pengerasan Ketahanan Kode di Seluruh Services',
     summary: 'Penyempurnaan total unit test di seluruh microservices HeroCMS (02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, 05-ai-agent-service). Memperbaiki potensi nil-pointer dereference, data race pada repository, menambahkan in-memory test mocks instan tanpa TCP dial latency, serta pengujian validasi input, sanitasi regex, dan security headers dengan hasil 100% lulus di seluruh package.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
