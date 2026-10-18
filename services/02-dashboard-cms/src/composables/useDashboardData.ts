@@ -124,6 +124,17 @@ watch(activeArticleForReader, (newArt) => {
   }
 });
 
+const getArticleLiveUrl = (art: ContentArticle | null): string => {
+  if (!art) return '#';
+  const container = containers.value.find(c => c.id === art.containerId);
+  if (container) {
+    const domain = container.customDomain || `${container.subdomain}.cloudcms.app`;
+    return `https://${domain}/${art.slug}`;
+  }
+  const slugified = (art.siteName || 'portal').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return `https://${slugified}.cloudcms.app/${art.slug}`;
+};
+
 // Watch activeMenu and persist across refresh (Cookies, LocalStorage, URL Hash, & Redis)
 watch(activeMenu, (newMenu) => {
   if (!VALID_MENUS.includes(newMenu)) return;
@@ -1601,6 +1612,7 @@ export function useDashboardData() {
     articles,
     cmsPages,
     activeArticleForReader,
+    getArticleLiveUrl,
     isReaderSidebarHidden,
     isCreateArticleModalOpen,
     newArticleForm,

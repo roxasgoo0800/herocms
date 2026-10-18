@@ -40,6 +40,7 @@ const {
   cmsPages,
   containers,
   activeArticleForReader,
+  getArticleLiveUrl,
   copyToClipboard,
   copiedSubdomain,
   saveArticle,
@@ -480,7 +481,7 @@ onUnmounted(() => {
         <div class="reader-header-nav-actions">
           <button
             class="btn-reader-action-secondary"
-            @click="copyToClipboard(`https://rizalpratama.cloud/${activeArticleForReader.slug}`, activeArticleForReader.id)"
+            @click="copyToClipboard(getArticleLiveUrl(activeArticleForReader), activeArticleForReader.id)"
             :title="copiedSubdomain === activeArticleForReader.id ? 'Tersalin!' : 'Salin URL Live'"
           >
             <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
@@ -561,11 +562,11 @@ onUnmounted(() => {
             </div>
             <div class="callout-text-box">
               <span class="callout-title">Edge URL Publikasi Live:</span>
-              <code class="callout-url">https://{{ activeArticleForReader.siteName }}/{{ activeArticleForReader.slug }}</code>
+              <code class="callout-url">{{ getArticleLiveUrl(activeArticleForReader) }}</code>
             </div>
             <button
               class="btn-copy-callout"
-              @click="copyToClipboard(`https://${activeArticleForReader.siteName}/${activeArticleForReader.slug}`, activeArticleForReader.id)"
+              @click="copyToClipboard(getArticleLiveUrl(activeArticleForReader), activeArticleForReader.id)"
               :title="copiedSubdomain === activeArticleForReader.id ? 'Tersalin!' : 'Salin URL'"
             >
               <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
@@ -729,11 +730,6 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
-
-          <button class="btn-sidebar-back-list" @click="closeArticleReader()">
-            <ArrowLeft :size="14" />
-            <span>Kembali ke Studio Konten</span>
-          </button>
         </aside>
       </div>
     </div>
@@ -1610,8 +1606,9 @@ onUnmounted(() => {
     <!-- ============================================================= -->
     <!-- 3. UNIVERSAL CONTENT STUDIO MODAL EDITOR (ARTICLE & CMS PAGE) -->
     <!-- ============================================================= -->
-    <div v-if="isEditorModalOpen" class="modal-backdrop" @click.self="closeEditorModal">
-      <div class="modal-dialog modal-dialog-lg content-editor-dialog">
+    <Teleport to="body">
+      <div v-if="isEditorModalOpen" class="modal-backdrop" @click.self="closeEditorModal">
+        <div class="modal-dialog modal-dialog-lg content-editor-dialog">
         <div class="modal-header">
           <div class="modal-header-leading">
             <div class="modal-icon-badge">
@@ -1789,5 +1786,6 @@ onUnmounted(() => {
         </form>
       </div>
     </div>
+    </Teleport>
   </section>
 </template>

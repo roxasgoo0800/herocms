@@ -528,7 +528,8 @@ ${dom.domain}.        3600    IN    A        ${a}`;
     </div>
 
     <!-- MODAL 1: Global Edge DNS Live Propagation Tester -->
-    <div v-if="isDnsModalOpen" class="modal-backdrop" @click="isDnsModalOpen = false">
+    <Teleport to="body">
+      <div v-if="isDnsModalOpen" class="modal-backdrop" @click="isDnsModalOpen = false">
       <div class="modal-dialog modal-dialog-lg" @click.stop>
         <div class="modal-header">
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -600,10 +601,12 @@ ${dom.domain}.        3600    IN    A        ${a}`;
         </div>
       </div>
     </div>
+    </Teleport>
 
     <!-- MODAL 2: SSL X.509 Certificate Inspector -->
-    <div v-if="isSslModalOpen" class="modal-backdrop" @click="isSslModalOpen = false">
-      <div class="modal-dialog" @click.stop>
+    <Teleport to="body">
+      <div v-if="isSslModalOpen" class="modal-backdrop" @click="isSslModalOpen = false">
+        <div class="modal-dialog" @click.stop>
         <div class="modal-header">
           <div style="display: flex; align-items: center; gap: 10px;">
             <div class="connect-icon-box" style="width: 38px; height: 38px; background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
@@ -661,5 +664,6 @@ ${dom.domain}.        3600    IN    A        ${a}`;
         </div>
       </div>
     </div>
+    </Teleport>
   </section>
 </template>

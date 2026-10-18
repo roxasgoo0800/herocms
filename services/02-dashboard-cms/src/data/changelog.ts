@@ -2,11 +2,44 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.11',
+    releaseDate: '18 Oktober 2026',
+    title: 'Fix Teleport Viewport Backdrops, Reader View Text Contrast, and Navigation Redundancies',
+    summary: 'Memperbaiki 4 masalah visual dan fungsional penting: (1) Membungkus seluruh modal (DNS Propagation Tester, SSL X.509 Inspector di Custom Domains, serta Content Editor Modal di Artikel & Halaman) dengan Teleport to="body" sehingga efek backdrop blur menutupi 100% viewport layar secara merata melintasi sidebar dan top bar tanpa terpotong di content area; (2) Memperbaiki kontras tipografi judul (.reader-page-title), profil penulis, tanggal, dan metrik pill pada reader view editorial agar tampil tajam dan elegan dengan warna teks gelap (#0f172a) di atas kartu putih; (3) Memperbaiki resolver hostname URL artikel publik live (getArticleLiveUrl) agar selalu menghasilkan domain/subdomain FQDN yang valid tanpa spasi nama kontainer; (4) Menghapus duplikasi tombol navigasi kembali ganda di topbar dan sidebar saat mode pembaca aktif.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11411-1',
+        type: 'bugfix',
+        scope: 'Modal Viewport Backdrop Teleportation',
+        description: 'Membungkus dialog modal di Custom Domains dan Content Articles dengan Teleport to="body" agar backdrop overlay menutupi seluruh layar secara penuh dan konsisten.'
+      },
+      {
+        id: 'c-11411-2',
+        type: 'bugfix',
+        scope: 'Editorial Reader View Typography & Contrast',
+        description: 'Mengatasi warna teks putih pada hero reader view kartu putih (.reader-editorial-hero), menjadikan judul artikel, nama penulis, tanggal, dan metrik telemetri tajam dengan kontras optimal.'
+      },
+      {
+        id: 'c-11411-3',
+        type: 'bugfix',
+        scope: 'Dynamic Article Live FQDN Resolution',
+        description: 'Menyematkan helper getArticleLiveUrl untuk meresolusi hostname target kontainer secara dinamis, mencegah kemunculan spasi pada URL publik.'
+      },
+      {
+        id: 'c-11411-4',
+        type: 'improvement',
+        scope: 'Reader Mode Single Navigation Standard',
+        description: 'Mengharmonisasi tata letak navigasi mode baca sesuai mandat AGENTS.md dengan menghilangkan duplikasi tombol kembali dan tautan ganda di top bar.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.10',
     releaseDate: '18 Oktober 2026',
     title: 'Harmonize Telemetry Card Typography, Badges, and Structure Across All Studio Modules',
     summary: 'Menyelaraskan tipografi, struktur HTML, dan styling kartu telemetri di Custom Domains dan Media Assets (DAM) agar 100% konsisten dengan kartu telemetri Situs & Kontainer. Menghapus variasi font kustom dan inline monospace, menerapkan kelas standar master (.telemetry-card, .telemetry-val, .telemetry-denom, .badge-online, .badge-growth-pill, dan .telemetry-sub .pulse-mini-dot), serta memastikan hierarki teks, ukuran font 1.75rem, bobot 800, dan padding kartu tampil presisi tanpa perbedaan.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
