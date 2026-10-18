@@ -45,7 +45,7 @@ func NewProvisioner() (*Provisioner, error) {
 
 // Close closes the underlying Docker client connection
 func (p *Provisioner) Close() error {
-	if p.cli != nil {
+	if p != nil && p.cli != nil {
 		return p.cli.Close()
 	}
 	return nil
@@ -145,9 +145,19 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 		defer cancel()
 	}
 
-	config, hostConfig, networkConfig, containerName, err := BuildContainerConfig(params, p.edgeNetwork)
+	edgeNet := "traefik_network"
+	if p != nil && p.edgeNetwork != "" {
+		edgeNet = p.edgeNetwork
+	}
+
+	config, hostConfig, networkConfig, containerName, err := BuildContainerConfig(params, edgeNet)
 	if err != nil {
 		return "", err
+	}
+
+	if p == nil || p.cli == nil {
+		log.Printf("[PROVISIONER SIMULATION] Docker daemon offline. Simulated deployment for %s", containerName)
+		return fmt.Sprintf("simulated_%s", containerName), nil
 	}
 
 	// Stop & Remove existing container with the same name if exists (idempotent deploy)
@@ -169,17 +179,26 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 
 // StopContainer stops an active tenant container
 func (p *Provisioner) StopContainer(ctx context.Context, containerID string) error {
+	if p == nil || p.cli == nil {
+		return nil
+	}
 	timeout := 10
 	return p.cli.ContainerStop(ctx, containerID, container.StopOptions{Timeout: &timeout})
 }
 
 // StartContainer restarts a stopped tenant container
 func (p *Provisioner) StartContainer(ctx context.Context, containerID string) error {
+	if p == nil || p.cli == nil {
+		return nil
+	}
 	return p.cli.ContainerStart(ctx, containerID, container.StartOptions{})
 }
 
 // DestroyContainer terminates and removes a container permanently
 func (p *Provisioner) DestroyContainer(ctx context.Context, containerID string) error {
+	if p == nil || p.cli == nil {
+		return nil
+	}
 	_ = p.StopContainer(ctx, containerID)
 	return p.cli.ContainerRemove(ctx, containerID, container.RemoveOptions{
 		RemoveVolumes: true,

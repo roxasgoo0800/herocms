@@ -41,6 +41,13 @@ func NoCache() gin.HandlerFunc {
 
 func CORS(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if cfg == nil {
+			cfg = &config.Config{
+				CORSAllowedOrigins:   []string{"*"},
+				CORSAllowCredentials: true,
+			}
+		}
+
 		origin := c.Request.Header.Get("Origin")
 		allowed := false
 
@@ -78,7 +85,7 @@ func CORS(cfg *config.Config) gin.HandlerFunc {
 // CSRFProtection implements the Double Submit Cookie pattern + Redis session check
 func CSRFProtection(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !cfg.CSRFEnabled {
+		if cfg == nil || !cfg.CSRFEnabled {
 			c.Next()
 			return
 		}
@@ -134,6 +141,11 @@ func CSRFProtection(cfg *config.Config) gin.HandlerFunc {
 
 func RateLimiter(rdb *redis.Client, maxRequests int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if rdb == nil {
+			c.Next()
+			return
+		}
+
 		clientIP := c.ClientIP()
 		key := fmt.Sprintf("%s:%s", clientIP, c.FullPath())
 
@@ -152,6 +164,10 @@ func RateLimiter(rdb *redis.Client, maxRequests int, window time.Duration) gin.H
 // SessionOrJWTAuth verifies authentication via Redis Stateful Session Cookie (PWA) or JWT Bearer Token
 func SessionOrJWTAuth(cfg *config.Config, rdb *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if cfg == nil {
+			cfg = &config.Config{AllowDevAuthBypass: false}
+		}
+
 		// 1. Check Authorization: Bearer <token> (Explicit client token takes precedence)
 		authHeader := c.GetHeader("Authorization")
 		if authHeader != "" {

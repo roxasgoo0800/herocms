@@ -40,7 +40,37 @@ func main() {
 	// 6. Initialize HTTP Handlers
 	h := handler.NewHandler(services)
 
-	// 7. Setup Gin Router
+	// 7. Setup Router
+	router := SetupRouter(cfg, repo, rdb, s3Client, h)
+
+	// 8. Launch Server with Graceful Shutdown
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: router,
+	}
+
+	go func() {
+		log.Printf("[HEROCMS STUDIO] Golang Backend & Vue Host listening on http://127.0.0.1:%s", cfg.Port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server error: %v\n", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down HeroCMS Studio server gracefully...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+	log.Println("Server exiting cleanly")
+}
+
+// SetupRouter builds and configures the Gin router with all middleware and routes
+func SetupRouter(cfg *config.Config, repo *repository.Repository, rdb *redis.Client, s3Client *storage.S3Client, h *handler.Handler) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery())
@@ -52,17 +82,30 @@ func main() {
 
 	// Health Check
 	router.GET("/healthz", func(c *gin.Context) {
+		dbConnected := false
+		if repo != nil && repo.DB != nil {
+			dbConnected = true
+		}
+		redisConnected := false
+		if rdb != nil && rdb.Rdb != nil {
+			redisConnected = true
+		}
+		s3Available := false
+		if s3Client != nil && s3Client.Available {
+			s3Available = true
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"service":  "HeroCMS Studio Backend & Static Host",
 			"status":   "healthy",
-			"database": repo.DB != nil,
-			"redis":    rdb.Rdb != nil,
-			"s3":       s3Client.Available,
+			"database": dbConnected,
+			"redis":    redisConnected,
+			"s3":       s3Available,
 			"time":     time.Now().UTC().Format(time.RFC3339),
 		})
 	})
 
-	// 7. API Routing Layer
+	// API Routing Layer
 	api := router.Group("/api")
 	api.Use(middleware.NoCache())
 	{
@@ -135,7 +178,7 @@ func main() {
 		}
 	}
 
-	// 8. Single-Binary Static Vue 3 SPA Host & HTML5 Fallback
+	// Single-Binary Static Vue 3 SPA Host & HTML5 Fallback
 	distDir := findDistDir(cfg.DistDir)
 	if distDir != "" {
 		assetsDir := filepath.Join(distDir, "assets")
@@ -181,30 +224,7 @@ func main() {
 		log.Println("[STATIC NOTICE] No dist directory found. Running in API-only mode.")
 	}
 
-	// 9. Launch Server with Graceful Shutdown
-	srv := &http.Server{
-		Addr:    ":" + cfg.Port,
-		Handler: router,
-	}
-
-	go func() {
-		log.Printf("[HEROCMS STUDIO] Golang Backend & Vue Host listening on http://127.0.0.1:%s", cfg.Port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server error: %v\n", err)
-		}
-	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutting down HeroCMS Studio server gracefully...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
-	}
-	log.Println("Server exiting cleanly")
+	return router
 }
 
 // findDistDir resolves the dist directory location across different execution paths
@@ -214,10 +234,12 @@ func findDistDir(preferred string) string {
 		"./dist",
 		"../../dist",
 		"../dist",
-		"/home/rizal/dockerfile/docker-cms/services/02-dashboard-cms/dist",
 	}
 
 	for _, cand := range candidates {
+		if cand == "" {
+			continue
+		}
 		idx := filepath.Join(cand, "index.html")
 		if _, err := os.Stat(idx); err == nil {
 			return cand

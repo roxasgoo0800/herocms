@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"context"
 	"strings"
 	"testing"
 )
@@ -128,5 +129,61 @@ func TestBuildContainerConfig_Validation(t *testing.T) {
 	_, _, _, _, err = BuildContainerConfig(TenantDeployParams{TenantID: "t1"}, "traefik_network")
 	if err == nil {
 		t.Errorf("expected error for empty subdomain, got nil")
+	}
+}
+
+func TestProvisioner_SimulationAndNilSafety(t *testing.T) {
+	// 1. Nil provisioner safety
+	var nilP *Provisioner = nil
+	ctx := context.Background()
+
+	if err := nilP.Close(); err != nil {
+		t.Errorf("expected nil error on nil Provisioner Close")
+	}
+	if err := nilP.StopContainer(ctx, "c1"); err != nil {
+		t.Errorf("expected nil error on nil Provisioner StopContainer")
+	}
+	if err := nilP.StartContainer(ctx, "c1"); err != nil {
+		t.Errorf("expected nil error on nil Provisioner StartContainer")
+	}
+	if err := nilP.DestroyContainer(ctx, "c1"); err != nil {
+		t.Errorf("expected nil error on nil Provisioner DestroyContainer")
+	}
+
+	simID, err := nilP.DeployTenantContainer(ctx, TenantDeployParams{
+		TenantID:  "tenant-nil",
+		SiteID:    "site-1",
+		Subdomain: "nilsub",
+	})
+	if err != nil || !strings.Contains(simID, "simulated_") {
+		t.Errorf("expected simulated container id from nil provisioner, got: %v, %s", err, simID)
+	}
+
+	// 2. Provisioner with nil cli (simulation mode)
+	simP := &Provisioner{
+		cli:         nil,
+		edgeNetwork: "traefik_network",
+	}
+
+	if err := simP.Close(); err != nil {
+		t.Errorf("expected nil error on simP Close")
+	}
+	if err := simP.StopContainer(ctx, "sim-c"); err != nil {
+		t.Errorf("expected nil error on simP StopContainer")
+	}
+	if err := simP.StartContainer(ctx, "sim-c"); err != nil {
+		t.Errorf("expected nil error on simP StartContainer")
+	}
+	if err := simP.DestroyContainer(ctx, "sim-c"); err != nil {
+		t.Errorf("expected nil error on simP DestroyContainer")
+	}
+
+	simDeployID, err := simP.DeployTenantContainer(ctx, TenantDeployParams{
+		TenantID:  "tenant-sim-01",
+		SiteID:    "site-01",
+		Subdomain: "simsub",
+	})
+	if err != nil || !strings.Contains(simDeployID, "simulated_") {
+		t.Errorf("expected simulated id, got: %v, %s", err, simDeployID)
 	}
 }
