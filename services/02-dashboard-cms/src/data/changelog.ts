@@ -2,11 +2,32 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.8',
+    releaseDate: '18 Oktober 2026',
+    title: 'Enlarged & Prominent Telemetry Cards with Enhanced Typography and Status Footers',
+    summary: 'Memperbesar proporsi dan kehadiran visual kartu telemetri di seluruh dashboard, khususnya pada modul Media Assets DAM (.dam-mini-stat-card) dan modul-modul studio (.telemetry-card). Meningkatkan ukuran font angka nilai menjadi 1.65rem–1.75rem, memperluas padding kartu menjadi 18px-22px dengan min-height 122px, memperbesar ikon transparan pojok kanan atas menjadi 58px, serta menyematkan status footer informatif untuk memberikan keseimbangan visual yang sempurna.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1148-1',
+        type: 'improvement',
+        scope: 'DAM Media Assets Module (.dam-mini-stat-card)',
+        description: 'Memperbesar ukuran kartu mini stat DAM agar seimbang dengan widget kapasitas storage S3 di sidebar, menampilkan angka metrik besar (1.65rem), badge status aksen, watermark 58px, dan footer telemetri aktif.'
+      },
+      {
+        id: 'c-1148-2',
+        type: 'improvement',
+        scope: 'Universal Studio Telemetry (.telemetry-card)',
+        description: 'Meningkatkan padding kartu (20px 22px 18px), min-height 122px, dan ukuran tipografi angka nilai (.telemetry-val: 1.75rem) agar lebih eye-catching dan kokoh di seluruh layar desktop.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.7',
     releaseDate: '18 Oktober 2026',
     title: 'Custom Domain & Edge DNS Ingress: Enterprise Telemetry, Interactive Registrar Guides & Workflow Pipeline',
     summary: 'Merombak total modul Custom Domain & Edge DNS Ingress dengan standar visual HeroCMS Studio terkini: penambahan baris 4 kartu telemetri berikon tunggal transparan pojok kanan atas (Domain Terhubung, Sertifikat TLS 1.3, Edge Ingress Cluster, dan Latensi DNS TTFB), selector registrar interaktif dengan panduan spesifik (Cloudflare, Niagahoster, Domainesia, IDwebhost, Namecheap), alur pipeline 3 langkah konfigurasi DNS, DNS routing workbench berpresisi tinggi dengan one-click copy, serta diagnostik live handshake Traefik edge.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

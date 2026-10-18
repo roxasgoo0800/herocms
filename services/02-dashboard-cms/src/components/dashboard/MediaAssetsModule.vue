@@ -724,46 +724,62 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
 
       <!-- MAIN STAGE (Kanan Fleksibel) -->
       <main class="dam-main-stage">
-        <!-- Top Metrics Strip (4 Mini Inline Cards) -->
+        <!-- Top Metrics Strip (4 Prominent Telemetry Cards) -->
         <div class="dam-mini-stats-strip">
           <div class="dam-mini-stat-card accent-blue">
-            <div class="telemetry-corner-watermark blue"><Layers :size="48" /></div>
+            <div class="telemetry-corner-watermark blue"><Layers :size="58" /></div>
             <div class="dam-mini-stat-info">
               <span class="dam-mini-stat-label">Total Objek Berkas</span>
               <div class="dam-mini-stat-val">
-                <span>{{ mediaAssets.length }} File</span>
+                <span class="telemetry-number">{{ mediaAssets.length }}</span>
+                <span class="telemetry-unit">File</span>
               </div>
+            </div>
+            <div class="dam-mini-stat-footer">
+              <span class="status-indicator-dot dot-emerald"></span>
+              <span>S3 Object Storage Active</span>
             </div>
           </div>
 
           <div class="dam-mini-stat-card accent-emerald">
-            <div class="telemetry-corner-watermark emerald"><Zap :size="48" /></div>
+            <div class="telemetry-corner-watermark emerald"><Zap :size="58" /></div>
             <div class="dam-mini-stat-info">
               <span class="dam-mini-stat-label">CDN Edge Hit Ratio</span>
               <div class="dam-mini-stat-val">
-                <span>99.4%</span>
-                <span class="badge-online" style="font-size: 10px;">Optimal</span>
+                <span class="telemetry-number">99.4%</span>
+                <span class="badge-telemetry-emerald">Optimal</span>
               </div>
+            </div>
+            <div class="dam-mini-stat-footer">
+              <span>Cache Zero-Miss Edge Traefik</span>
             </div>
           </div>
 
           <div class="dam-mini-stat-card accent-purple">
-            <div class="telemetry-corner-watermark purple"><Globe :size="48" /></div>
+            <div class="telemetry-corner-watermark purple"><Globe :size="58" /></div>
             <div class="dam-mini-stat-info">
               <span class="dam-mini-stat-label">Serving Latency</span>
               <div class="dam-mini-stat-val">
-                <span>1.2ms TTFB</span>
+                <span class="telemetry-number">1.2ms</span>
+                <span class="badge-telemetry-purple">TTFB</span>
               </div>
+            </div>
+            <div class="dam-mini-stat-footer">
+              <span>Anycast PoP Global Edge</span>
             </div>
           </div>
 
           <div class="dam-mini-stat-card accent-sky">
-            <div class="telemetry-corner-watermark sky"><Server :size="48" /></div>
+            <div class="telemetry-corner-watermark sky"><Server :size="58" /></div>
             <div class="dam-mini-stat-info">
               <span class="dam-mini-stat-label">Dedicated S3 Storage</span>
-              <div class="dam-mini-stat-val" style="font-size: 13px; font-family: ui-monospace, monospace; color: #0284c7;">
-                <span>MinIO Isolated</span>
+              <div class="dam-mini-stat-val">
+                <span class="telemetry-number" style="font-size: 1.35rem; font-family: ui-monospace, monospace; color: #0284c7;">MinIO</span>
+                <span class="badge-telemetry-sky">Isolated</span>
               </div>
+            </div>
+            <div class="dam-mini-stat-footer">
+              <span>Tenant Bucket S3 ID-JKT-1</span>
             </div>
           </div>
         </div>

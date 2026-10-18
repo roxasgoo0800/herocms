@@ -761,8 +761,9 @@ html {
   position: relative;
   background: #ffffff;
   border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 12px;
-  padding: 16px 18px 15px;
+  border-radius: 14px;
+  padding: 20px 22px 18px;
+  min-height: 122px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 4px 12px -2px rgba(15, 23, 42, 0.02);
   display: flex;
   flex-direction: column;
@@ -889,28 +890,28 @@ html {
 }
 
 .telemetry-val {
-  font-size: 1.55rem;
+  font-size: 1.75rem;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.025em;
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin: 4px 0 2px;
+  margin: 6px 0 4px;
   position: relative;
   z-index: 2;
 }
 
 .telemetry-denom {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: #64748b;
 }
 
 .telemetry-sub {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   color: #64748b;
-  margin-top: 4px;
+  margin-top: 6px;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -9694,10 +9695,10 @@ html {
 .dam-mini-stats-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .dam-mini-stats-strip {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -9707,12 +9708,14 @@ html {
   position: relative;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 14px;
+  padding: 18px 20px 16px;
+  min-height: 122px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
+  align-items: flex-start;
   overflow: hidden;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -9723,7 +9726,7 @@ html {
   top: 0;
   left: 0;
   right: 0;
-  height: 2.5px;
+  height: 3px;
   background: transparent;
 }
 
@@ -9748,12 +9751,12 @@ html {
 .dam-mini-stat-card:hover {
   border-color: #cbd5e1;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px -3px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.09);
 }
 
 .dam-mini-stat-card .telemetry-corner-watermark {
-  top: 4px;
-  right: 8px;
+  top: 8px;
+  right: 12px;
 }
 
 .dam-mini-stat-card:hover .telemetry-corner-watermark {
@@ -9762,28 +9765,42 @@ html {
 }
 
 .dam-mini-stat-info {
-  min-width: 0;
+  width: 100%;
   position: relative;
   z-index: 2;
 }
 
 .dam-mini-stat-label {
-  font-size: 11px;
+  font-size: 0.7rem;
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .dam-mini-stat-val {
-  font-size: 15px;
+  font-size: 1.65rem;
   font-weight: 800;
   color: #0f172a;
+  letter-spacing: -0.025em;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 4px 0 2px;
+}
+
+.dam-mini-stat-footer {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 6px;
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 8px;
+  position: relative;
+  z-index: 2;
 }
 
 /* Floating Batch Action Bar */
