@@ -216,12 +216,10 @@ const openContainerDetail = (c: ContainerSite) => {
 
     <!-- 2. Bespoke Telemetry Metric Cards (4 Sleek Strips) -->
     <div class="stats-overview-grid">
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-blue">
+        <div class="telemetry-corner-watermark blue"><Server :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">KUOTA KONTAINER</span>
-          <div class="telemetry-glyph blue">
-            <Server :size="15" />
-          </div>
         </div>
         <div class="telemetry-val">
           {{ usedContainersCount }} <span class="telemetry-denom">/ {{ userPlan.maxContainers }} Aktif</span>
@@ -232,12 +230,10 @@ const openContainerDetail = (c: ContainerSite) => {
         </div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-emerald">
+        <div class="telemetry-corner-watermark emerald"><Globe :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">EDGE ROUTING TRAEFIK</span>
-          <div class="telemetry-glyph emerald">
-            <Globe :size="15" />
-          </div>
         </div>
         <div class="telemetry-val">
           v3.1 <span class="badge-online">Online</span>
@@ -247,12 +243,10 @@ const openContainerDetail = (c: ContainerSite) => {
         </div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-purple">
+        <div class="telemetry-corner-watermark purple"><Activity :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">TRAFIK PENGUNJUNG</span>
-          <div class="telemetry-glyph purple">
-            <Activity :size="15" />
-          </div>
         </div>
         <div class="telemetry-val">
           3,892 <span class="badge-growth-pill">+28%</span>
@@ -262,12 +256,10 @@ const openContainerDetail = (c: ContainerSite) => {
         </div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-sky">
+        <div class="telemetry-corner-watermark sky"><ShieldCheck :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">KEAMANAN TLS / SSL</span>
-          <div class="telemetry-glyph blue">
-            <ShieldCheck :size="15" />
-          </div>
         </div>
         <div class="telemetry-val">
           100% <span class="badge-online">Aktif</span>

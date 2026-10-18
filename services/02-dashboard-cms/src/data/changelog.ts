@@ -2,11 +2,383 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.13',
+    releaseDate: '18 Oktober 2026',
+    title: 'Fix Code Block Background Leak & Upgrade to Ray.so / VS Code Terminal Editor Styling',
+    summary: 'Memperbaiki dan meningkatkan tampilan cuplikan kode di Reader Mode artikel: (1) Memperbaiki selector CSS inline code (.reader-prose-body code) yang sebelumnya bocor ke dalam blok <pre><code> sehingga menghasilkan highlight putih/abu-abu yang mengganggu di balik baris teks; (2) Merombak kartu kode (.reader-code-card) menjadi antarmuka terminal/editor modern setara Ray.so dan VS Code: tab file aktif dengan ikon FileCode, language badge GO 1.22, gutter nomor baris digital (01-04), palet syntax highlighting Tokyo Night / One Dark Pro, dan status footer real-time dengan pulsing live dot Redis counter.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11413-1',
+        type: 'bugfix',
+        scope: 'Code Snippet Inline Background Isolation',
+        description: 'Mengisolasi selector .reader-prose-body :not(pre) > code agar tidak merusak elemen code di dalam kartu editor gelap.'
+      },
+      {
+        id: 'c-11413-2',
+        type: 'improvement',
+        scope: 'Ray.so / VS Code Editor Aesthetics with Gutter Numbers',
+        description: 'Menambahkan gutter line numbers, tab file aktif berikon FileCode, badge bahasa GO 1.22, dan footer status telemetri latensi 0.3ms.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.12',
+    releaseDate: '18 Oktober 2026',
+    title: 'Stunning Executive Editorial Reader Experience (Obsidian Ambient Glow, Watermark, & Telemetry Tiles)',
+    summary: 'Merombak tampilan Reader Mode artikel editorial menjadi sangat memukau (eye-catching), modern, dan berkelas enterprise APM (Vercel / Linear / Stripe Press Grade): (1) Banner Hero Obsidian dengan ambient radial glow biru royal (#2563eb) dan indigo, kisi dot-matrix halus, watermark ikon transparan 96px di pojok kanan atas, serta tipografi judul tebal 2.25rem putih elegan; (2) Kartu artikel utama dengan border berkelas, callout URL publik interaktif bergradasi hijau-biru dengan tombol "Buka Tab Baru" dan "Salin URL", serta nomor bab berseri (01, 02, 03) dengan badge gradasi biru modern; (3) Sidebar inspektor dengan kartu telemetri edge real-time beraksen 4 mini tiles taktil lengkap dengan watermark ikon transparan berwarna semantik (Eye, Zap, Sparkles, Cpu), serta launchpad aksi cepat (Buka Halaman Live & Sunting Dokumen).',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11412-1',
+        type: 'improvement',
+        scope: 'Executive Obsidian Editorial Hero Banner',
+        description: 'Menerapkan kanvas hero obsidian mendalam dengan ambient radial glow, watermark BookOpen 96px transparan, avatar verified badge, dan glowing glass KPI pills.'
+      },
+      {
+        id: 'c-11412-2',
+        type: 'improvement',
+        scope: 'Interactive Live Ingress URL Callout & Badges',
+        description: 'Menyematkan bar URL live bergradasi dengan status HTTPS/HTTP3, tombol aksi satu klik, dan penomoran bab 01-03 beraksen gradasi biru royal.'
+      },
+      {
+        id: 'c-11412-3',
+        type: 'improvement',
+        scope: 'Tactile Watermark Telemetry Tiles in Sidebar',
+        description: 'Mendesain ulang grid telemetri sidebar menjadi 4 mini tiles taktil dengan efek hover elevasi dan watermark ikon berwarna semantik.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.11',
+    releaseDate: '18 Oktober 2026',
+    title: 'Fix Teleport Viewport Backdrops, Reader View Text Contrast, and Navigation Redundancies',
+    summary: 'Memperbaiki 4 masalah visual dan fungsional penting: (1) Membungkus seluruh modal (DNS Propagation Tester, SSL X.509 Inspector di Custom Domains, serta Content Editor Modal di Artikel & Halaman) dengan Teleport to="body" sehingga efek backdrop blur menutupi 100% viewport layar secara merata melintasi sidebar dan top bar tanpa terpotong di content area; (2) Memperbaiki kontras tipografi judul (.reader-page-title), profil penulis, tanggal, dan metrik pill pada reader view editorial agar tampil tajam dan elegan dengan warna teks gelap (#0f172a) di atas kartu putih; (3) Memperbaiki resolver hostname URL artikel publik live (getArticleLiveUrl) agar selalu menghasilkan domain/subdomain FQDN yang valid tanpa spasi nama kontainer; (4) Menghapus duplikasi tombol navigasi kembali ganda di topbar dan sidebar saat mode pembaca aktif.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11411-1',
+        type: 'bugfix',
+        scope: 'Modal Viewport Backdrop Teleportation',
+        description: 'Membungkus dialog modal di Custom Domains dan Content Articles dengan Teleport to="body" agar backdrop overlay menutupi seluruh layar secara penuh dan konsisten.'
+      },
+      {
+        id: 'c-11411-2',
+        type: 'bugfix',
+        scope: 'Editorial Reader View Typography & Contrast',
+        description: 'Mengatasi warna teks putih pada hero reader view kartu putih (.reader-editorial-hero), menjadikan judul artikel, nama penulis, tanggal, dan metrik telemetri tajam dengan kontras optimal.'
+      },
+      {
+        id: 'c-11411-3',
+        type: 'bugfix',
+        scope: 'Dynamic Article Live FQDN Resolution',
+        description: 'Menyematkan helper getArticleLiveUrl untuk meresolusi hostname target kontainer secara dinamis, mencegah kemunculan spasi pada URL publik.'
+      },
+      {
+        id: 'c-11411-4',
+        type: 'improvement',
+        scope: 'Reader Mode Single Navigation Standard',
+        description: 'Mengharmonisasi tata letak navigasi mode baca sesuai mandat AGENTS.md dengan menghilangkan duplikasi tombol kembali dan tautan ganda di top bar.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.10',
+    releaseDate: '18 Oktober 2026',
+    title: 'Harmonize Telemetry Card Typography, Badges, and Structure Across All Studio Modules',
+    summary: 'Menyelaraskan tipografi, struktur HTML, dan styling kartu telemetri di Custom Domains dan Media Assets (DAM) agar 100% konsisten dengan kartu telemetri Situs & Kontainer. Menghapus variasi font kustom dan inline monospace, menerapkan kelas standar master (.telemetry-card, .telemetry-val, .telemetry-denom, .badge-online, .badge-growth-pill, dan .telemetry-sub .pulse-mini-dot), serta memastikan hierarki teks, ukuran font 1.75rem, bobot 800, dan padding kartu tampil presisi tanpa perbedaan.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11410-1',
+        type: 'bugfix',
+        scope: 'Custom Domains & Media Assets Telemetry Typography',
+        description: 'Menstandarkan hierarki tipografi nilai metrik, satuan pembagi (.telemetry-denom), pill badge status (.badge-online / .badge-growth-pill), dan subtitle ready-state agar identik dengan kartu telemetri Kontainer.'
+      },
+      {
+        id: 'c-11410-2',
+        type: 'improvement',
+        scope: 'Master Grid Uniformity in Media Assets DAM',
+        description: 'Mengintegrasikan Media Assets ke .stats-overview-grid dan .telemetry-card standar, menghapus penyesuaian CSS terpisah untuk menjaga konsistensi tampilan lintas modul.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.9',
+    releaseDate: '18 Oktober 2026',
+    title: 'Custom Domains Polish: Multi-PoP Anycast Diagnostic Modal, SSL X.509 Inspector, and Typography Fixes',
+    summary: 'Menyempurnakan modul Custom Domain & Edge DNS Ingress: memperbaiki tipografi metrik telemetri atas (.telemetry-val) sehingga teks nilai dan badge tidak menempel, menyematkan watermark pojok kanan atas 58px berwarna semantik (blue, emerald, purple, sky), menambahkan validasi live FQDN format domain secara real-time, tombol "Salin DNS" 1-klik format zone file, modal interaktif inspeksi propagasi DNS 14 node Anycast global (Jakarta, Singapura, Tokyo, San Jose, Frankfurt, Sydney), serta modal inspeksi sertifikat SSL X.509 TLS v1.3 Let\'s Encrypt.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1149-1',
+        type: 'bugfix',
+        scope: 'Custom Domains Telemetry Spacing & Watermarks',
+        description: 'Memperbaiki layout flex pada .telemetry-val agar angka metrik dan badge status memiliki jarak bernafas ideal (gap: 8px) dan menyematkan ikon watermark 58px beraksen warna.'
+      },
+      {
+        id: 'c-1149-2',
+        type: 'feature',
+        scope: 'Global Anycast PoP DNS Live Inspector Modal',
+        description: 'Menambahkan modal interaktif untuk simulasi kueri dan inspeksi propagasi DNS CNAME/A Record ke 6 node global utama dengan indikator latency TTFB dan status PASS.'
+      },
+      {
+        id: 'c-1149-3',
+        type: 'feature',
+        scope: 'SSL X.509 Certificate Inspector & One-Click Zone Export',
+        description: 'Menambahkan modal inspeksi sertifikat SSL Let\'s Encrypt (Common Name, SANs, cipher, auto-renewal) dan tombol ekspor salin semua record DNS ke clipboard.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.8',
+    releaseDate: '18 Oktober 2026',
+    title: 'Enlarged & Prominent Telemetry Cards with Enhanced Typography and Status Footers',
+    summary: 'Memperbesar proporsi dan kehadiran visual kartu telemetri di seluruh dashboard, khususnya pada modul Media Assets DAM (.dam-mini-stat-card) dan modul-modul studio (.telemetry-card). Meningkatkan ukuran font angka nilai menjadi 1.65rem–1.75rem, memperluas padding kartu menjadi 18px-22px dengan min-height 122px, memperbesar ikon transparan pojok kanan atas menjadi 58px, serta menyematkan status footer informatif untuk memberikan keseimbangan visual yang sempurna.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1148-1',
+        type: 'improvement',
+        scope: 'DAM Media Assets Module (.dam-mini-stat-card)',
+        description: 'Memperbesar ukuran kartu mini stat DAM agar seimbang dengan widget kapasitas storage S3 di sidebar, menampilkan angka metrik besar (1.65rem), badge status aksen, watermark 58px, dan footer telemetri aktif.'
+      },
+      {
+        id: 'c-1148-2',
+        type: 'improvement',
+        scope: 'Universal Studio Telemetry (.telemetry-card)',
+        description: 'Meningkatkan padding kartu (20px 22px 18px), min-height 122px, dan ukuran tipografi angka nilai (.telemetry-val: 1.75rem) agar lebih eye-catching dan kokoh di seluruh layar desktop.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.7',
+    releaseDate: '18 Oktober 2026',
+    title: 'Custom Domain & Edge DNS Ingress: Enterprise Telemetry, Interactive Registrar Guides & Workflow Pipeline',
+    summary: 'Merombak total modul Custom Domain & Edge DNS Ingress dengan standar visual HeroCMS Studio terkini: penambahan baris 4 kartu telemetri berikon tunggal transparan pojok kanan atas (Domain Terhubung, Sertifikat TLS 1.3, Edge Ingress Cluster, dan Latensi DNS TTFB), selector registrar interaktif dengan panduan spesifik (Cloudflare, Niagahoster, Domainesia, IDwebhost, Namecheap), alur pipeline 3 langkah konfigurasi DNS, DNS routing workbench berpresisi tinggi dengan one-click copy, serta diagnostik live handshake Traefik edge.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1147-1',
+        type: 'feature',
+        scope: 'Custom Domains Module (.stats-overview-grid)',
+        description: 'Menambahkan 4 kartu metrik telemetri modern berikon tunggal transparan di pojok kanan atas untuk pemantauan kuota domain kustom, status SSL Let\'s Encrypt, cluster Anycast edge, dan latensi TTFB.'
+      },
+      {
+        id: 'c-1147-2',
+        type: 'improvement',
+        scope: 'Connect Domain Hero Card & Registrar Presets',
+        description: 'Memperbarui kartu penghubung domain dengan registrar chip interaktif yang memunculkan tips konfigurasi DNS khusus (Cloudflare DNS-only, cPanel Zone Editor, dsb) dan estimasi TTL.'
+      },
+      {
+        id: 'c-1147-3',
+        type: 'improvement',
+        scope: 'DNS Records Workbench & Traefik Diagnostics',
+        description: 'Menyempurnakan kartu domain terhubung dengan DNS record table baru (CNAME & A Record), feedback salin target instan, dan diagnostik protokol TLS 1.3 ALPN / HTTP/2 multiplexing.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.6',
+    releaseDate: '18 Oktober 2026',
+    title: 'Universal Rollout: Single Translucent Corner Watermark Cards across All Dashboard Modules',
+    summary: 'Menerapkan desain kartu telemetri minimalis modern secara universal ke seluruh modul dashboard HeroCMS (ContainersModule, MediaAssetsModule, SupportTicketingModule, InvoicesHistoryModule, AnalyticsTelemetryModule, ChangelogModule). Menghilangkan glyph box kecil dan menyematkan satu ikon transparan berwarna berukuran 48px-58px di pojok kanan atas kartu yang responsif saat disentuh (hover), menciptakan konsistensi tema visual yang harmonis di seluruh studio.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1146-1',
+        type: 'improvement',
+        scope: 'Containers & Websites Module (.stats-overview-grid)',
+        description: 'Menerapkan kartu telemetri beraksen warna atas dengan ikon tunggal transparan Server, Globe, Activity, dan ShieldCheck di pojok kanan atas.'
+      },
+      {
+        id: 'c-1146-2',
+        type: 'improvement',
+        scope: 'DAM Media Assets Module (.dam-mini-stat-card)',
+        description: 'Merombak 4 kartu stat DAM Media menjadi kartu beraksen dengan watermark transparan Layers, Zap, Globe, dan Server.'
+      },
+      {
+        id: 'c-1146-3',
+        type: 'improvement',
+        scope: 'Support, Invoices, Analytics, & Changelog Modules',
+        description: 'Menstandarkan seluruh modul lainnya dengan kartu telemetri berikon tunggal transparan di pojok kanan atas.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.5',
+    releaseDate: '18 Oktober 2026',
+    title: 'Minimalist Single Translucent Corner Watermark for Telemetry Cards',
+    summary: 'Menyederhanakan tampilan kartu telemetri dengan mengeliminasi ikon ganda (menghilangkan glyph box kecil). Kini hanya menggunakan satu ikon besar berukuran 58px transparan berwarna (opacity 20%, hover 38%) yang diposisikan rapi di pojok kanan atas kartu, menciptakan tampilan minimalis, bersih, dan mewah tanpa kesan menumpuk.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1145-1',
+        type: 'improvement',
+        scope: 'Single Top-Right Translucent Icon (.telemetry-corner-watermark)',
+        description: 'Menghilangkan glyph box kecil sehingga hanya ada satu ikon tunggal transparan berwarna di pojok kanan atas kartu dengan ukuran 58px.'
+      },
+      {
+        id: 'c-1145-2',
+        type: 'improvement',
+        scope: 'Focused Top-Right Radial Glow (.telemetry-card.accent-*)',
+        description: 'Mengarahkan fokus pendaran gradasi radial ke koordinat 92% 18% untuk menyatu mulus dengan ikon pojok kanan atas.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.4',
+    releaseDate: '18 Oktober 2026',
+    title: 'Contemporary Translucent Telemetry Glyphs & Ambient Watermark Icons',
+    summary: 'Meningkatkan estetika kartu telemetri atas menjadi berstandar visual kontemporer (kekinian). Memperbesar glyph ikon menjadi 42x42px dengan ikon 20px berbalut latar transparan berwarna cerah (opacity 11%) dan garis batas halus (opacity 24%). Menghadirkan watermark ikon besar 64px transparan di sudut kanan bawah kartu yang bereaksi dengan rotasi dan perbesaran dinamis saat kartu disentuh, dipadukan dengan ambient radial light di sudut kartu.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1144-1',
+        type: 'improvement',
+        scope: 'Enlarged Translucent Glyphs (.telemetry-glyph)',
+        description: 'Memperbesar ukuran wadah glyph menjadi 42x42px dengan ikon 20px, menggunakan background tinted transparan 11% dan border 24% per palet semantik.'
+      },
+      {
+        id: 'c-1144-2',
+        type: 'improvement',
+        scope: 'Ambient Watermark Icons (.telemetry-watermark)',
+        description: 'Menambahkan ikon watermark berukuran 64px semi-transparan (opacity 7%) di latar belakang kartu yang beranimasi membesar dan berputar halus saat dihover.'
+      },
+      {
+        id: 'c-1144-3',
+        type: 'improvement',
+        scope: 'Radial Ambient Corner Glow (.telemetry-card.accent-*)',
+        description: 'Memberikan gradasi radial halus di sudut kanan bawah setiap kartu telemetri untuk kedalaman visual yang mewah tanpa kesan murahan.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.3',
+    releaseDate: '18 Oktober 2026',
+    title: 'Architectural Wireframe Blueprint Cards & Telemetry Grid Elevation',
+    summary: 'Merombak tampilan kartu Halaman Statis (CMS Pages) dari blok hitam monoton menjadi Mini-Browser Architectural Blueprint Mockup dengan chrome traffic lights, SSL omnibox address bar, dan visual wireframe layout nyata per arketipe (Hero Landing, About Bio & Timeline, Services Enterprise Grid, Contact Form, Legal Compliance Paper). Menyempurnakan 4 kartu Telemetri di bagian atas dengan aksen warna atas (Royal Blue, Emerald, Purple, Sky), icon glyph berkontras tajam dengan ambient ring, serta tipografi nilai tebal yang eye-catching dan profesional.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1143-1',
+        type: 'improvement',
+        scope: 'Mini-Browser Blueprint Window Mockup (.cms-page-window-mockup)',
+        description: 'Menggantikan blok gelap kaku dengan jendela mini-browser realistis berisikan traffic light dots, SSL route bar, dan kanvas preview dot-grid.'
+      },
+      {
+        id: 'c-1143-2',
+        type: 'improvement',
+        scope: 'Archetype Wireframe Illustrations (.wf-landing, .wf-about, .wf-services, .wf-contact, .wf-legal)',
+        description: 'Menerapkan ilustrasi blueprint arsitektural spesifik sesuai tata letak halaman asli, memberikan identitas visual instan tanpa AI-slop.'
+      },
+      {
+        id: 'c-1143-3',
+        type: 'improvement',
+        scope: 'Telemetry Card Polish & Accent Border Headers (.telemetry-card.accent-*)',
+        description: 'Menambahkan aksen warna atas, glyph 32x32px dengan border ambient lembut, dan tipografi 1.55rem tebal berkontras tinggi pada 4 kartu telemetri.'
+      },
+      {
+        id: 'c-1143-4',
+        type: 'improvement',
+        scope: 'High-End Page Card Actions & Navigation Tags',
+        description: 'Menghadirkan tombol aksi primer Edit Halaman berbalut Deep Slate 900 dengan hover Royal Blue, serta badge navigasi navbar dan footer yang kontras.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.2',
+    releaseDate: '18 Oktober 2026',
+    title: 'Senior Staff UI/UX Redesign: High-End Editorial Composition & Device Glass Centerpieces',
+    summary: 'Merombak visual kartu editorial menjadi standar industri top-tier (Vercel, Stripe, Linear). Memperbesar proporsi hero visual cover menjadi 175px (aspect ratio 16:9), menambahkan ambient dot matrix grid overlay, floating glassmorphic device badges dengan glowing technical icons, telemetry chip berdenyut live (cgroups v2, Kafka Redis ZSET, Traefik TTFB), dateline metadata terstruktur, tipografi judul ekstra tegas (19px/weight 800/-0.022em), kutipan 3 baris yang bernapas, serta tombol CTA modern dengan ikon ArrowUpRight.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1142-1',
+        type: 'improvement',
+        scope: 'Editorial Cover Architectural Composition (Height 175px & Mesh Matrix)',
+        description: 'Meningkatkan proporsi vertikal cover menjadi 175px dengan dot-matrix grid overlay halus dan ambient radial lighting berkarakter kuat.'
+      },
+      {
+        id: 'c-1142-2',
+        type: 'improvement',
+        scope: 'Glassmorphic Device Badges & Dynamic Telemetry Chips',
+        description: 'Menghadirkan centerpiece frosted glass badge 50x50px di tengah cover yang memuat glif teknis bersinar dan micro-pill telemetri dengan pulsing status dot.'
+      },
+      {
+        id: 'c-1142-3',
+        type: 'improvement',
+        scope: 'Card Typography Hierarchy & Modern Action CTA',
+        description: 'Menyempurnakan tipografi dateline, judul berbobot 800, excerpt lapang 3 baris, target container bar terisolasi, profil avatar elegan, dan tombol CTA Baca Artikel dengan ArrowUpRight.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.1',
+    releaseDate: '18 Oktober 2026',
+    title: 'Peningkatan Estetika Visual Editorial 3-Kolom & Palet Teknis Non-Slop',
+    summary: 'Menerapkan tata letak seimbang 3 data per baris (3-Column Grid) pada modul Artikel & Halaman Statis untuk memanfaatkan lebar layar secara proporsional. Menambahkan cover header visual berkelas dengan palet tematik teknis terkurasi per kategori (Engineering Deep Slate-Navy, Distributed Systems Indigo-Slate, DevOps Forest-Slate, Security Obsidian, Tutorial Warm Cedar) lengkap dengan watermark glif arsitektur transparan, pill kategori berkontras tajam, dan tombol aksi "Baca" & "Edit" yang ergonomis tanpa efek gradien murah atau AI-slop.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1141-1',
+        type: 'improvement',
+        scope: '3-Column Balanced Grid Layout (.editorial-card-grid & .cms-pages-grid)',
+        description: 'Menerapkan grid 3 kolom proporsional pada resolusi desktop sehingga kartu membagi ruang baris secara seimbang tanpa menyisakan ruang kosong lebar.'
+      },
+      {
+        id: 'c-1141-2',
+        type: 'improvement',
+        scope: 'Architectural Editorial Visual Covers (Non-AI-Slop Palettes)',
+        description: 'Menghadirkan top cover header berbobot visual dengan palet warna teknis yang solid dan berkarakter, watermark icon arsitektur halus, serta pratinjau slug URL yang jelas.'
+      },
+      {
+        id: 'c-1141-3',
+        type: 'improvement',
+        scope: 'Static CMS Pages Blueprint Cover',
+        description: 'Menambahkan top cover arsitektural dark-navy dengan rute URL terhighlight, badge layout template terkurasi, dan tombol aksi Edit instan.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.0',
+    releaseDate: '18 Oktober 2026',
+    title: 'Enterprise Dual-Content Engine & Content Studio Editor (Artikel & Halaman Statis)',
+    summary: 'Merombak total modul "Artikel & Halaman CMS" menjadi Enterprise Dual-Content Engine yang sesungguhnya. Menghadirkan navigasi tab ganda untuk mengelola Artikel Editorial berkala (Blog Posts) dan Halaman Statis Website (CMS Pages seperti Beranda, Tentang Kami, Layanan, Kontak, Kebijakan Privasi). Mengeliminasi kartu spotlight gradien norak dan menggantinya dengan kartu editorial Ghost/Medium-style yang bersih, menyertakan kartu halaman statis dengan indikator rute URL, layout template, integrasi navigasi navbar/footer, serta menyediakan Content Editor Modal terpadu (Markdown editor, slug generator, dan SEO meta tags) dan mode membaca bebas distraksi (Distraction-Free Reader View).',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1140-1',
+        type: 'feature',
+        scope: 'Dual-Content Architecture (Articles & Static CMS Pages)',
+        description: 'Menambahkan tab navigasi terpadu untuk memisahkan manajemen Artikel Editorial berkala dengan Halaman Statis website (Pages), lengkap dengan persistensi state dan telemetri adaptif.'
+      },
+      {
+        id: 'c-1140-2',
+        type: 'improvement',
+        scope: 'Ghost & Medium Editorial Card Aesthetics',
+        description: 'Menghapus banner spotlight neon raksasa dan menyajikan desain kartu editorial modern dengan kutipan nyata (excerpt), waktu baca, avatar penulis, metrik views Redis ZSET, dan visual minimalis enterprise.'
+      },
+      {
+        id: 'c-1140-3',
+        type: 'feature',
+        scope: 'Universal Content Studio Modal Editor',
+        description: 'Menyediakan modal editor lengkap untuk membuat dan mengedit Artikel maupun Halaman Statis dengan auto-slug generator, integrasi layout template, toggle navbar/footer, SEO meta description, dan editor Markdown.'
+      },
+      {
+        id: 'c-1140-4',
+        type: 'improvement',
+        scope: 'Distraction-Free Editorial Reader View',
+        description: 'Memperbarui tampilan pembaca artikel dengan tipografi elegan, tombol sunting cepat langsung dari reader, salin tautan live CDN, dan tombol navigasi kembali yang intuitif.'
+      }
+    ]
+  },
+  {
     version: 'v1.13.4',
     releaseDate: '18 Oktober 2026',
     title: 'Transformasi Enterprise DAM Inspector Telemetry & Kanvas Bersih',
     summary: 'Menghilangkan widget Dominansi Warna & Kontras agar antarmuka fokus dan profesional, menyederhanakan kanvas switcher ke mode mandiri (Latar Terang, Latar Gelap, Papan Catur), serta merombak panel detail inspector menjadi Enterprise Digital Asset Management (DAM) Hub yang kaya informasi: ekstraksi MIME-type presisi, ukuran byte tepat S3, resolusi & kalkulasi aspek rasio dinamis, integrasi referensi penggunaan konten CMS, checksum integritas SHA-256/ETag, parameter kompresi & cache HTTP, serta tombol sematan cepat (Markdown, HTML, CSS, Direct URL).',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

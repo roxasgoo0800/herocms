@@ -724,54 +724,58 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
 
       <!-- MAIN STAGE (Kanan Fleksibel) -->
       <main class="dam-main-stage">
-        <!-- Top Metrics Strip (4 Mini Inline Cards) -->
-        <div class="dam-mini-stats-strip">
-          <div class="dam-mini-stat-card">
-            <div class="dam-mini-stat-info">
-              <span class="dam-mini-stat-label">Total Objek Berkas</span>
-              <div class="dam-mini-stat-val">
-                <span>{{ mediaAssets.length }} File</span>
-              </div>
+        <!-- Top Metrics Strip (4 Prominent Telemetry Cards) -->
+        <div class="stats-overview-grid">
+          <div class="telemetry-card accent-blue">
+            <div class="telemetry-corner-watermark blue"><Layers :size="58" /></div>
+            <div class="telemetry-top">
+              <span class="telemetry-label">TOTAL OBJEK BERKAS</span>
             </div>
-            <div class="dam-mini-stat-glyph blue">
-              <Layers :size="16" />
+            <div class="telemetry-val">
+              {{ mediaAssets.length }} <span class="telemetry-denom">File</span>
             </div>
-          </div>
-
-          <div class="dam-mini-stat-card">
-            <div class="dam-mini-stat-info">
-              <span class="dam-mini-stat-label">CDN Edge Hit Ratio</span>
-              <div class="dam-mini-stat-val">
-                <span>99.4%</span>
-                <span class="badge-online" style="font-size: 10px;">Optimal</span>
-              </div>
-            </div>
-            <div class="dam-mini-stat-glyph emerald">
-              <Zap :size="16" />
+            <div class="telemetry-sub ready-state">
+              <span class="pulse-mini-dot"></span>
+              <span>S3 Object Storage Active</span>
             </div>
           </div>
 
-          <div class="dam-mini-stat-card">
-            <div class="dam-mini-stat-info">
-              <span class="dam-mini-stat-label">Serving Latency</span>
-              <div class="dam-mini-stat-val">
-                <span>1.2ms TTFB</span>
-              </div>
+          <div class="telemetry-card accent-emerald">
+            <div class="telemetry-corner-watermark emerald"><Zap :size="58" /></div>
+            <div class="telemetry-top">
+              <span class="telemetry-label">CDN EDGE HIT RATIO</span>
             </div>
-            <div class="dam-mini-stat-glyph purple">
-              <Globe :size="16" />
+            <div class="telemetry-val">
+              99.4% <span class="badge-online">Optimal</span>
+            </div>
+            <div class="telemetry-sub">
+              <span>Cache Zero-Miss Edge Traefik</span>
             </div>
           </div>
 
-          <div class="dam-mini-stat-card">
-            <div class="dam-mini-stat-info">
-              <span class="dam-mini-stat-label">Dedicated S3 Storage</span>
-              <div class="dam-mini-stat-val" style="font-size: 13px; font-family: ui-monospace, monospace; color: #2563eb;">
-                <span>MinIO Isolated</span>
-              </div>
+          <div class="telemetry-card accent-purple">
+            <div class="telemetry-corner-watermark purple"><Globe :size="58" /></div>
+            <div class="telemetry-top">
+              <span class="telemetry-label">SERVING LATENCY</span>
             </div>
-            <div class="dam-mini-stat-glyph slate">
-              <Server :size="16" />
+            <div class="telemetry-val">
+              1.2ms <span class="badge-growth-pill" style="color: #7c3aed; background: #faf5ff; border-color: #e9d5ff;">TTFB</span>
+            </div>
+            <div class="telemetry-sub">
+              <span>Anycast PoP Global Edge</span>
+            </div>
+          </div>
+
+          <div class="telemetry-card accent-sky">
+            <div class="telemetry-corner-watermark sky"><Server :size="58" /></div>
+            <div class="telemetry-top">
+              <span class="telemetry-label">DEDICATED S3 STORAGE</span>
+            </div>
+            <div class="telemetry-val">
+              MinIO <span class="badge-online" style="color: #0284c7; background: #f0f9ff; border-color: #bae6fd;">Isolated</span>
+            </div>
+            <div class="telemetry-sub">
+              <span>Tenant Bucket S3 ID-JKT-1</span>
             </div>
           </div>
         </div>

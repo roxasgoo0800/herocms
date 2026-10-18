@@ -28,11 +28,9 @@ import {
   Terminal,
   Copy,
   LifeBuoy,
-  ArrowLeft,
   PanelLeftClose,
   PanelLeftOpen,
   ExternalLink,
-  Check,
   History,
   RotateCw,
   Search,
@@ -76,10 +74,10 @@ const {
   usedContainersCount,
   containers,
   articles,
+  cmsPages,
   activeArticleForReader,
+  getArticleLiveUrl,
   mediaStorage,
-  copyToClipboard,
-  copiedSubdomain,
   openCreateModal,
   toastMessage,
   isCreateModalOpen,
@@ -316,7 +314,7 @@ const handleLogout = async () => {
           >
             <FileText :size="17" />
             <span class="nav-link-text">Artikel & Halaman</span>
-            <span class="nav-badge">{{ articles.length }}</span>
+            <span class="nav-badge">{{ articles.length + cmsPages.length }}</span>
           </button>
 
           <button
@@ -462,18 +460,6 @@ const handleLogout = async () => {
       <!-- Sticky Glassmorphism Header -->
       <header class="top-nav-header">
         <div class="breadcrumbs">
-          <!-- Back button if in reader mode -->
-          <button
-            v-if="activeMenu === 'content' && activeArticleForReader"
-            class="btn-top-back-reader"
-            @click="activeArticleForReader = null"
-            title="Kembali ke Daftar Artikel"
-          >
-            <ArrowLeft :size="13" />
-            <span>Kembali ke Daftar</span>
-          </button>
-          <span v-if="activeMenu === 'content' && activeArticleForReader" class="crumb-sep">/</span>
-
           <span>HeroCMS Studio</span>
           <ChevronRight :size="14" class="crumb-sep" />
           <span
@@ -523,20 +509,9 @@ const handleLogout = async () => {
             <span>{{ isReaderSidebarHidden ? 'Tampilkan Menu' : 'Sembunyikan Menu' }}</span>
           </button>
 
-          <!-- Copy Link -->
-          <button
-            class="btn-top-reader-action"
-            @click="copyToClipboard(`https://rizalpratama.cloud/${activeArticleForReader.slug}`, activeArticleForReader.id)"
-            :title="copiedSubdomain === activeArticleForReader.id ? 'Tersalin!' : 'Salin URL Publik'"
-          >
-            <Check v-if="copiedSubdomain === activeArticleForReader.id" :size="13" class="text-green" />
-            <Copy v-else :size="13" />
-            <span>{{ copiedSubdomain === activeArticleForReader.id ? 'Tersalin' : 'Salin Tautan' }}</span>
-          </button>
-
           <!-- Open Live URL -->
           <a
-            :href="`https://rizalpratama.cloud/${activeArticleForReader.slug}`"
+            :href="getArticleLiveUrl(activeArticleForReader)"
             target="_blank"
             rel="noopener noreferrer"
             class="btn-top-reader-action"

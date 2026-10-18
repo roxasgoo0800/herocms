@@ -139,6 +139,28 @@ export interface ContentArticle {
   views: number;
   status: 'published' | 'draft';
   publishedAt: string;
+  excerpt?: string;
+  coverImage?: string;
+  content?: string;
+  tags?: string[];
+  metaTitle?: string;
+  metaDesc?: string;
+}
+
+export interface CmsPage {
+  id: string;
+  title: string;
+  path: string;
+  siteName: string;
+  containerId: string;
+  templateLayout: string;
+  status: 'published' | 'draft';
+  updatedAt: string;
+  isInNavbar: boolean;
+  isInFooter: boolean;
+  metaTitle?: string;
+  metaDesc?: string;
+  content?: string;
 }
 
 export interface MediaAssetItem {

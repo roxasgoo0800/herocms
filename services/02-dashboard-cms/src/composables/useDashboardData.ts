@@ -12,7 +12,8 @@ import type {
   ToastMessage,
   SupportTicketItem,
   TicketMessage,
-  VisualBlock
+  VisualBlock,
+  CmsPage
 } from '../types/dashboard';
 import {
   initialUserPlan,
@@ -21,6 +22,7 @@ import {
   initialInvoices,
   initialCustomDomains,
   initialArticles,
+  initialCmsPages,
   initialMediaAssets,
   initialWebhooks,
   initialSupportTickets
@@ -121,6 +123,17 @@ watch(activeArticleForReader, (newArt) => {
     isReaderSidebarHidden.value = true;
   }
 });
+
+const getArticleLiveUrl = (art: ContentArticle | null): string => {
+  if (!art) return '#';
+  const container = containers.value.find(c => c.id === art.containerId);
+  if (container) {
+    const domain = container.customDomain || `${container.subdomain}.cloudcms.app`;
+    return `https://${domain}/${art.slug}`;
+  }
+  const slugified = (art.siteName || 'portal').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return `https://${slugified}.cloudcms.app/${art.slug}`;
+};
 
 // Watch activeMenu and persist across refresh (Cookies, LocalStorage, URL Hash, & Redis)
 watch(activeMenu, (newMenu) => {
@@ -713,7 +726,21 @@ sistem penagihan otomatis HeroCMS Cloud Platform.`;
 };
 
 // Custom Domains State
-const customDomains = ref<CustomDomainItem[]>([...initialCustomDomains]);
+const normalizeCustomDomain = (dom: any): CustomDomainItem => {
+  return {
+    id: dom.id || `dom_${Date.now()}`,
+    domain: dom.domain || 'domainku.id',
+    targetContainer: dom.targetContainer || (containers.value.find(c => c.id === dom.containerId)?.name) || 'Portofolio Rizal Pratama',
+    containerId: dom.containerId || 'hero_tenant_9942',
+    status: dom.status === 'verified' ? 'active' : (dom.status || dom.dnsStatus || 'active'),
+    sslStatus: dom.sslStatus === 'active' ? 'issued' : (dom.sslStatus || 'issued'),
+    cnameRecord: dom.cnameRecord || dom.targetCname || 'edge.cloudcms.app',
+    aRecord: dom.aRecord || dom.targetIp || '103.144.20.1',
+    addedDate: dom.addedDate || dom.createdAt || '12 Sep 2026'
+  };
+};
+
+const customDomains = ref<CustomDomainItem[]>([...initialCustomDomains].map(normalizeCustomDomain));
 
 const newDomainInput = ref('');
 const targetContainerForDomain = ref('hero_tenant_9942');
@@ -756,8 +783,9 @@ const deleteDomain = (dom: CustomDomainItem) => {
   }
 };
 
-// Content Articles State
+// Content Articles & CMS Pages State
 const articles = ref<ContentArticle[]>([...initialArticles]);
+const cmsPages = ref<CmsPage[]>([...initialCmsPages]);
 
 const isCreateArticleModalOpen = ref(false);
 const newArticleForm = ref({
@@ -782,7 +810,9 @@ const handleCreateArticle = () => {
     author: 'Rizal Pratama',
     views: 0,
     status: newArticleForm.value.status,
-    publishedAt: newArticleForm.value.status === 'published' ? 'Baru saja' : 'Draft'
+    publishedAt: newArticleForm.value.status === 'published' ? 'Baru saja' : 'Draft',
+    excerpt: `Ringkasan publikasi konten untuk ${newArticleForm.value.title}.`,
+    content: `## ${newArticleForm.value.title}\n\nKonten artikel baru telah dibuat dan siap disunting melalui HeroCMS Content Studio.`
   };
   articles.value.unshift(newArt);
   isCreateArticleModalOpen.value = false;
@@ -790,12 +820,44 @@ const handleCreateArticle = () => {
   showToast(`Artikel '${newArt.title}' berhasil disimpan!`, 'success');
 };
 
+const saveArticle = (art: ContentArticle) => {
+  const idx = articles.value.findIndex(a => a.id === art.id);
+  if (idx !== -1) {
+    articles.value[idx] = { ...art };
+    showToast(`Artikel '${art.title}' berhasil diperbarui!`, 'success');
+  } else {
+    articles.value.unshift({ ...art });
+    showToast(`Artikel '${art.title}' berhasil ditambahkan!`, 'success');
+  }
+};
+
 const deleteArticle = (art: ContentArticle) => {
-  if (confirm(`Hapus artikel '${art.title}'?`)) {
+  if (confirm(`Apakah Anda yakin ingin menghapus artikel '${art.title}'?`)) {
     const idx = articles.value.findIndex(a => a.id === art.id);
     if (idx !== -1) {
       articles.value.splice(idx, 1);
-      showToast(`Artikel '${art.title}' dihapus.`, 'info');
+      showToast(`Artikel '${art.title}' berhasil dihapus.`, 'info');
+    }
+  }
+};
+
+const saveCmsPage = (page: CmsPage) => {
+  const idx = cmsPages.value.findIndex(p => p.id === page.id);
+  if (idx !== -1) {
+    cmsPages.value[idx] = { ...page };
+    showToast(`Halaman '${page.title}' berhasil diperbarui!`, 'success');
+  } else {
+    cmsPages.value.unshift({ ...page });
+    showToast(`Halaman baru '${page.title}' berhasil ditambahkan!`, 'success');
+  }
+};
+
+const deleteCmsPage = (page: CmsPage) => {
+  if (confirm(`Apakah Anda yakin ingin menghapus halaman '${page.title}' (${page.path})?`)) {
+    const idx = cmsPages.value.findIndex(p => p.id === page.id);
+    if (idx !== -1) {
+      cmsPages.value.splice(idx, 1);
+      showToast(`Halaman '${page.title}' telah dihapus.`, 'info');
     }
   }
 };
@@ -1230,7 +1292,7 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
           }
         }
         if (Array.isArray(b.domains?.domains)) {
-          customDomains.value = b.domains.domains;
+          customDomains.value = b.domains.domains.map(normalizeCustomDomain);
         }
         if (Array.isArray(b.tickets?.tickets)) {
           supportTickets.value = b.tickets.tickets.map((t: any) => normalizeTicket(t));
@@ -1259,6 +1321,7 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
             user: userEmail.value,
             containers: containers.value,
             articles: articles.value,
+            cmsPages: cmsPages.value,
             mediaAssets: mediaAssets.value,
             mediaStorage: mediaStorage.value,
             mediaBucketName: mediaBucketName.value,
@@ -1323,7 +1386,7 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
       }
     }
     if (dRes.status === 'fulfilled' && Array.isArray(dRes.value?.domains)) {
-      customDomains.value = dRes.value.domains;
+      customDomains.value = dRes.value.domains.map(normalizeCustomDomain);
     }
     if (tRes.status === 'fulfilled' && Array.isArray(tRes.value?.tickets)) {
       supportTickets.value = tRes.value.tickets.map((t: any) => normalizeTicket(t));
@@ -1378,6 +1441,7 @@ const hydrateFromCache = (overrideEmail?: string) => {
         }
       }
       if (Array.isArray(data.articles)) articles.value = data.articles;
+      if (Array.isArray(data.cmsPages)) cmsPages.value = data.cmsPages;
       if (Array.isArray(data.mediaAssets)) {
         mediaAssets.value = data.mediaAssets;
         if (data.mediaStorage) {
@@ -1389,7 +1453,7 @@ const hydrateFromCache = (overrideEmail?: string) => {
           mediaBucketName.value = data.mediaBucketName;
         }
       }
-      if (Array.isArray(data.customDomains)) customDomains.value = data.customDomains;
+      if (Array.isArray(data.customDomains)) customDomains.value = data.customDomains.map(normalizeCustomDomain);
       if (Array.isArray(data.supportTickets)) supportTickets.value = data.supportTickets.map((t: any) => normalizeTicket(t));
       if (Array.isArray(data.invoices)) invoices.value = data.invoices;
       if (Array.isArray(data.webhooks)) webhooks.value = data.webhooks;
@@ -1413,6 +1477,7 @@ const resetDashboardState = () => {
   containers.value = [...initialContainers];
   activeContainerId.value = 'hero_tenant_9942';
   articles.value = [...initialArticles];
+  cmsPages.value = [...initialCmsPages];
   activeArticleForReader.value = null;
   mediaAssets.value = [...initialMediaAssets];
   recalculateStorage();
@@ -1545,12 +1610,17 @@ export function useDashboardData() {
     handleAddDomain,
     deleteDomain,
     articles,
+    cmsPages,
     activeArticleForReader,
+    getArticleLiveUrl,
     isReaderSidebarHidden,
     isCreateArticleModalOpen,
     newArticleForm,
     handleCreateArticle,
+    saveArticle,
     deleteArticle,
+    saveCmsPage,
+    deleteCmsPage,
     mediaAssets,
     mediaBucketName,
     mediaStorage,

@@ -104,10 +104,10 @@ watch(
 
     <!-- 4 Telemetry Metrics Cards -->
     <div class="stats-overview-grid">
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-emerald">
+        <div class="telemetry-corner-watermark emerald"><Clock :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">RATA-RATA WAKTU RESPONS</span>
-          <div class="telemetry-glyph emerald"><Clock :size="15" /></div>
         </div>
         <div class="telemetry-val">11 Menit <span class="badge-online">&lt; 15m SLA</span></div>
         <div class="telemetry-sub ready-state">
@@ -116,10 +116,10 @@ watch(
         </div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-blue">
+        <div class="telemetry-corner-watermark blue"><MessageSquare :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">TIKET SEDANG AKTIF</span>
-          <div class="telemetry-glyph blue"><MessageSquare :size="15" /></div>
         </div>
         <div class="telemetry-val">
           {{ supportTickets.filter(t => t.status !== 'resolved').length }} Tiket
@@ -128,10 +128,10 @@ watch(
         <div class="telemetry-sub"><span>1 Menunggu respons • 1 In Progress</span></div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-emerald">
+        <div class="telemetry-corner-watermark emerald"><CheckCircle2 :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">TIKET TERATASI (RESOLVED)</span>
-          <div class="telemetry-glyph emerald"><CheckCircle2 :size="15" /></div>
         </div>
         <div class="telemetry-val">
           {{ supportTickets.filter(t => t.status === 'resolved').length + 6 }} Selesai
@@ -140,10 +140,10 @@ watch(
         <div class="telemetry-sub"><span>Tingkat kepuasan solusi optimal</span></div>
       </div>
 
-      <div class="telemetry-card">
+      <div class="telemetry-card accent-purple">
+        <div class="telemetry-corner-watermark purple"><Headphones :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">STATUS DEDICATED SUPPORT</span>
-          <div class="telemetry-glyph purple"><Headphones :size="15" /></div>
         </div>
         <div class="telemetry-val">Online 24/7 <span class="badge-growth-pill">Hero Pro</span></div>
         <div class="telemetry-sub"><span>Hotline & monitoring real-time aktif</span></div>
