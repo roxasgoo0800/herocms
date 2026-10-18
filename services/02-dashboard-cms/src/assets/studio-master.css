@@ -10728,6 +10728,99 @@ html {
     radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 1.2px),
     linear-gradient(135deg, #090d16 0%, #0f172a 100%);
   background-size: 18px 18px, 100% 100%;
+  transition: background-color 0.25s ease, background-image 0.25s ease;
+}
+
+/* Dark Theme Canvas (Deep slate studio dot-grid) */
+.stage-canvas-inner.theme-dark-canvas {
+  background-color: #0b1120;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 1.2px),
+    linear-gradient(135deg, #090d16 0%, #0f172a 100%);
+  background-size: 18px 18px, 100% 100%;
+}
+
+.stage-canvas-inner.theme-dark-canvas .stage-visual-img {
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.55));
+}
+
+/* Light Theme Canvas (Pure Slate Dot-Grid - Perfect contrast for dark/black SVGs & icons) */
+.stage-canvas-inner.theme-light-canvas {
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(#cbd5e1 1.2px, transparent 1.2px),
+    linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+  background-size: 18px 18px, 100% 100%;
+}
+
+.stage-canvas-inner.theme-light-canvas .stage-visual-img {
+  filter: drop-shadow(0 12px 24px rgba(15, 23, 42, 0.14));
+}
+
+/* Checkerboard Pattern (Transparency verification) */
+.stage-canvas-inner.theme-checker-canvas {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+    linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+    linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+  background-size: 18px 18px;
+  background-position: 0 0, 0 9px, 9px -9px, -9px 0px;
+}
+
+.stage-canvas-inner.theme-checker-canvas .stage-visual-img {
+  filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.2));
+}
+
+/* Floating Stage Canvas Theme Controls */
+.stage-top-controls {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.canvas-theme-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 3px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.btn-canvas-theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.btn-canvas-theme:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-canvas-theme.active {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
 }
 
 .stage-visual-container {
@@ -10744,8 +10837,7 @@ html {
   max-height: 560px;
   object-fit: contain;
   border-radius: 8px;
-  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.55));
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, filter 0.25s ease;
   animation: fadeInModal 0.25s ease;
 }
 
@@ -10852,6 +10944,29 @@ html {
   backdrop-filter: blur(8px);
 }
 
+.hud-pill-luminance {
+  border-color: rgba(59, 130, 246, 0.35) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.luminance-color-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.hud-auto-tag {
+  color: #93c5fd;
+  font-size: 10px;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
 /* Right: Inspector & Properties Rail */
 .studio-inspector-rail {
   background: #f8fafc;
@@ -10905,6 +11020,34 @@ html {
   border: 1px solid #f1f5f9;
   border-radius: 8px;
   padding: 7px 9px;
+}
+
+.compact-metric-tile.full-width {
+  grid-column: 1 / -1;
+}
+
+.compact-metric-tile-highlight {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.luminance-preview-bar {
+  display: flex;
+  height: 6px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 6px;
+  background: #e2e8f0;
+}
+
+.lum-segment-dark {
+  background: #0f172a;
+  transition: width 0.3s ease;
+}
+
+.lum-segment-light {
+  background: #3b82f6;
+  transition: width 0.3s ease;
 }
 
 .tile-caption {

@@ -33,7 +33,9 @@ import {
   CheckSquare,
   Square,
   Plus,
-  Code
+  Code,
+  Sun,
+  Moon
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { MediaAssetItem } from '../../types/dashboard';
@@ -315,10 +317,167 @@ const handleDropUpload = (e: DragEvent) => {
   }
 };
 
+// Intelligent Canvas & Luminance Dominance Analysis
+interface AssetLuminanceData {
+  isAnalyzed: boolean;
+  isDark: boolean;
+  darkPct: number;
+  lightPct: number;
+  avgLuminance: number;
+  label: string;
+  suggestedTheme: 'light' | 'dark';
+}
+
+const canvasBgMode = ref<'auto' | 'dark' | 'light' | 'checker'>('auto');
+const assetLuminance = ref<AssetLuminanceData | null>(null);
+const isAnalyzingLuminance = ref(false);
+
+const effectiveCanvasTheme = computed(() => {
+  if (canvasBgMode.value === 'dark') return 'theme-dark-canvas';
+  if (canvasBgMode.value === 'light') return 'theme-light-canvas';
+  if (canvasBgMode.value === 'checker') return 'theme-checker-canvas';
+
+  // Mode Auto: beradaptasi dengan warna dominan objek visual
+  if (assetLuminance.value && assetLuminance.value.isAnalyzed) {
+    return assetLuminance.value.suggestedTheme === 'light' ? 'theme-light-canvas' : 'theme-dark-canvas';
+  }
+  return 'theme-dark-canvas';
+});
+
+const analyzeAssetLuminance = async (item: MediaAssetItem) => {
+  if (!isVisualAsset(item.type)) {
+    assetLuminance.value = null;
+    return;
+  }
+
+  isAnalyzingLuminance.value = true;
+  assetLuminance.value = null;
+
+  try {
+    // 1. Ambil blob berkas untuk bypass CORS pada HTML5 Canvas sampling
+    let blobUrl = '';
+    let isBlobCreated = false;
+
+    try {
+      const response = await fetch(item.url);
+      if (response.ok) {
+        const blob = await response.blob();
+        blobUrl = URL.createObjectURL(blob);
+        isBlobCreated = true;
+      }
+    } catch {
+      blobUrl = item.url;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Image failed to load for luminance analysis'));
+      img.src = blobUrl;
+    });
+
+    // Sample kanvas 48x48 piksel untuk komputasi cepat (<5ms)
+    const sampleDim = 48;
+    const canvas = document.createElement('canvas');
+    canvas.width = sampleDim;
+    canvas.height = sampleDim;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    if (!ctx) throw new Error('Canvas 2D context unavailable');
+
+    ctx.drawImage(img, 0, 0, sampleDim, sampleDim);
+    const imgData = ctx.getImageData(0, 0, sampleDim, sampleDim).data;
+
+    let totalVisible = 0;
+    let darkCount = 0;
+    let lightCount = 0;
+    let totalLuminance = 0;
+
+    for (let i = 0; i < imgData.length; i += 4) {
+      const r = imgData[i];
+      const g = imgData[i + 1];
+      const b = imgData[i + 2];
+      const a = imgData[i + 3];
+
+      // Abaikan piksel transparan / semi-transparan
+      if (a > 30) {
+        totalVisible++;
+        // Formula standar persepsi luminansi ITU-R BT.601
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        totalLuminance += lum;
+        if (lum < 128) {
+          darkCount++;
+        } else {
+          lightCount++;
+        }
+      }
+    }
+
+    if (isBlobCreated && blobUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(blobUrl);
+    }
+
+    if (totalVisible > 0) {
+      const darkPct = Math.round((darkCount / totalVisible) * 100);
+      const lightPct = 100 - darkPct;
+      const avgLum = Math.round(totalLuminance / totalVisible);
+      const isDark = darkPct >= 50;
+
+      assetLuminance.value = {
+        isAnalyzed: true,
+        isDark,
+        darkPct,
+        lightPct,
+        avgLuminance: avgLum,
+        label: isDark ? `Dominan Gelap (${darkPct}%)` : `Dominan Terang (${lightPct}%)`,
+        // Jika gambar dominan gelap (seperti SVG Ubuntu hitam), rekomendasikan background terang (light)
+        // Jika gambar dominan terang (seperti ikon putih), rekomendasikan background gelap (dark)
+        suggestedTheme: isDark ? 'light' : 'dark'
+      };
+      return;
+    }
+  } catch (err) {
+    // Fallback khusus berkas SVG: analisis kode warna fill / stroke jika canvas dibatasi
+    if (item.type.toUpperCase() === 'SVG') {
+      try {
+        const res = await fetch(item.url);
+        if (res.ok) {
+          const svgContent = (await res.text()).toLowerCase();
+          const darkMatches = (svgContent.match(/#000|#111|#222|black|rgb\(0|rgba\(0|currentColor/g) || []).length;
+          const lightMatches = (svgContent.match(/#fff|#eee|#ddd|white|rgb\(255|rgba\(255/g) || []).length;
+          const isDark = darkMatches >= lightMatches;
+          const darkPct = darkMatches + lightMatches > 0 ? Math.round((darkMatches / (darkMatches + lightMatches)) * 100) : 90;
+          const lightPct = 100 - darkPct;
+
+          assetLuminance.value = {
+            isAnalyzed: true,
+            isDark,
+            darkPct,
+            lightPct,
+            avgLuminance: isDark ? 30 : 230,
+            label: isDark ? `Dominan Gelap (~${darkPct}%)` : `Dominan Terang (~${lightPct}%)`,
+            suggestedTheme: isDark ? 'light' : 'dark'
+          };
+          return;
+        }
+      } catch (svgErr) {
+        console.warn('SVG text luminance fallback error:', svgErr);
+      }
+    }
+    console.warn('Gagal menghitung luminansi visual berkas:', err);
+  } finally {
+    isAnalyzingLuminance.value = false;
+  }
+};
+
 const openPreviewModal = (item: MediaAssetItem) => {
   selectedMediaForPreview.value = item;
   showPdfPreview.value = false;
   isPreviewModalOpen.value = true;
+  canvasBgMode.value = 'auto';
+  analyzeAssetLuminance(item);
 };
 
 const downloadMediaFile = async (item: MediaAssetItem) => {
@@ -1085,8 +1244,54 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
           <div class="studio-inspector-split">
             <!-- 1. LEFT: MEDIA VIEWPORT STAGE -->
             <div class="studio-media-stage">
+              <!-- Top Stage Floating Backdrop Controls (Visible for Visual & Vector Assets) -->
+              <div v-if="isVisualAsset(selectedMediaForPreview.type)" class="stage-top-controls">
+                <div class="canvas-theme-switcher">
+                  <button
+                    type="button"
+                    class="btn-canvas-theme"
+                    :class="{ active: canvasBgMode === 'auto' }"
+                    @click="canvasBgMode = 'auto'"
+                    title="Otomatis sesuaikan latar belakang berdasarkan warna dominan gambar"
+                  >
+                    <Sparkles :size="12" />
+                    <span>Auto Adaptif</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-canvas-theme"
+                    :class="{ active: canvasBgMode === 'light' }"
+                    @click="canvasBgMode = 'light'"
+                    title="Latar Belakang Terang (Slate Canvas untuk objek/SVG hitam)"
+                  >
+                    <Sun :size="12" />
+                    <span>Terang</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-canvas-theme"
+                    :class="{ active: canvasBgMode === 'dark' }"
+                    @click="canvasBgMode = 'dark'"
+                    title="Latar Belakang Gelap (Studio Dark untuk objek/SVG putih)"
+                  >
+                    <Moon :size="12" />
+                    <span>Gelap</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-canvas-theme"
+                    :class="{ active: canvasBgMode === 'checker' }"
+                    @click="canvasBgMode = 'checker'"
+                    title="Pola Papan Catur Transparansi"
+                  >
+                    <LayoutGrid :size="12" />
+                    <span>Catur</span>
+                  </button>
+                </div>
+              </div>
+
               <!-- Background / Canvas Layer -->
-              <div class="stage-canvas-inner">
+              <div class="stage-canvas-inner" :class="effectiveCanvasTheme">
                 <!-- If Image or SVG: Render crisp visual element -->
                 <div v-if="isVisualAsset(selectedMediaForPreview.type)" class="stage-visual-container">
                   <img
@@ -1150,6 +1355,21 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                     <span class="hud-label">Ukuran:</span>
                     <strong>{{ selectedMediaForPreview.size }}</strong>
                   </span>
+                  <!-- Intelligent Luminance & Dominant Color Pill -->
+                  <span v-if="assetLuminance && assetLuminance.isAnalyzed" class="hud-pill hud-pill-luminance">
+                    <span
+                      class="luminance-color-dot"
+                      :style="{
+                        backgroundColor: assetLuminance.isDark ? '#0f172a' : '#ffffff',
+                        borderColor: assetLuminance.isDark ? '#475569' : '#cbd5e1'
+                      }"
+                    ></span>
+                    <span class="hud-label">Dominan:</span>
+                    <strong>{{ assetLuminance.isDark ? `${assetLuminance.darkPct}% Gelap` : `${assetLuminance.lightPct}% Terang` }}</strong>
+                    <span v-if="canvasBgMode === 'auto'" class="hud-auto-tag">
+                      (Auto: {{ assetLuminance.suggestedTheme === 'light' ? 'Kanvas Terang' : 'Kanvas Gelap' }})
+                    </span>
+                  </span>
                 </div>
                 <div class="hud-right">
                   <span class="hud-badge-s3">MinIO Protected</span>
@@ -1184,6 +1404,38 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                       <span>Diunggah Pada</span>
                     </span>
                     <strong class="tile-value">{{ selectedMediaForPreview.uploadedAt }}</strong>
+                  </div>
+                  <!-- Tile Dominansi Warna Luminansi jika visual asset -->
+                  <div v-if="assetLuminance && assetLuminance.isAnalyzed" class="compact-metric-tile compact-metric-tile-highlight full-width">
+                    <span class="tile-caption" style="display: flex; align-items: center; justify-content: space-between;">
+                      <span style="display: flex; align-items: center; gap: 4px;">
+                        <Sparkles :size="11" style="color: #2563eb;" />
+                        <span>Dominansi Warna & Kontras</span>
+                      </span>
+                      <span style="font-size: 9.5px; font-weight: 700; color: #2563eb;">
+                        {{ assetLuminance.suggestedTheme === 'light' ? 'Latar Terang Adaptif' : 'Latar Gelap Adaptif' }}
+                      </span>
+                    </span>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+                      <strong class="tile-value" style="display: flex; align-items: center; gap: 6px;">
+                        <span
+                          class="luminance-color-dot"
+                          :style="{
+                            backgroundColor: assetLuminance.isDark ? '#0f172a' : '#ffffff',
+                            borderColor: assetLuminance.isDark ? '#475569' : '#cbd5e1'
+                          }"
+                        ></span>
+                        <span>{{ assetLuminance.isDark ? `Dominan Gelap (${assetLuminance.darkPct}%)` : `Dominan Terang (${assetLuminance.lightPct}%)` }}</span>
+                      </strong>
+                      <span style="font-size: 11px; color: #64748b; font-weight: 600;">
+                        {{ assetLuminance.isDark ? `${assetLuminance.lightPct}% Terang` : `${assetLuminance.darkPct}% Gelap` }}
+                      </span>
+                    </div>
+                    <!-- Mini dynamic meter bar -->
+                    <div class="luminance-preview-bar">
+                      <div class="lum-segment-dark" :style="{ width: `${assetLuminance.darkPct}%` }" title="Porsi Gelap"></div>
+                      <div class="lum-segment-light" :style="{ width: `${assetLuminance.lightPct}%` }" title="Porsi Terang"></div>
+                    </div>
                   </div>
                 </div>
               </div>

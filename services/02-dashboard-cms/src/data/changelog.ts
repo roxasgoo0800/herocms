@@ -2,16 +2,43 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
-    version: 'v1.12.4',
+    version: 'v1.13.0',
     releaseDate: '18 Oktober 2026',
-    title: 'Perbaikan Clickability Checkbox Seleksi Kartu Media Galeri',
-    summary: 'Memperbaiki masalah checkbox seleksi kartu media yang tidak dapat diklik akibat tertutup layer glassmorphic hover overlay. Menaikkan z-index checkbox ke level 30 dengan pointer-events aktif, serta mengubah elemen menjadi tombol semantik yang berada di atas layer hover.',
+    title: 'Deteksi Otomatis Dominansi Warna & Latar Belakang Kanvas Adaptif Cerdas',
+    summary: 'Menambahkan mesin analitik luminansi visual otomatis berbasis HTML5 Canvas sampling dan SVG color inspection. Sistem otomatis mendeteksi rasio warna gelap vs terang pada berkas dengan background transparan (seperti logo Ubuntu hitam atau grafis putih), lalu secara cerdas menyesuaikan latar belakang kanvas pratinjau studio (Auto Terang / Gelap) agar kontras terlihat sempurna. Dilengkapi meteran persentase dominansi warna, HUD status adaptif, dan kontrol toggle 4-mode (Auto, Terang, Gelap, Catur).',
     badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
+        id: 'c-1130-1',
+        type: 'feature',
+        scope: 'Visual Luminance Engine (analyzeAssetLuminance)',
+        description: 'Implementasi sampling piksel HTML5 Canvas 48x48 offscreen dan inspeksi fill/stroke SVG untuk menghitung persentase luminansi non-transparan secara instan (<5ms) tanpa pembatasan CORS via blob URL streaming.'
+      },
+      {
+        id: 'c-1130-2',
+        type: 'feature',
+        scope: 'Adaptive Dynamic Studio Canvas (.theme-light-canvas & .theme-dark-canvas)',
+        description: 'Otomatis mengaktifkan kanvas Pure Slate dot-grid (#f8fafc) jika objek transparan dominan gelap/hitam (seperti SVG Ubuntu), dan kanvas Deep Slate dot-grid (#0b1120) jika objek dominan putih/terang.'
+      },
+      {
+        id: 'c-1130-3',
+        type: 'feature',
+        scope: 'Interactive Backdrop Toolbar (.canvas-theme-switcher) & HUD Dominance Pill',
+        description: 'Menyediakan tombol segmented toggle (Auto Adaptif, Terang, Gelap, Papan Catur) di pojok panggung, meteran persentase visual di panel spesifikasi, dan floating HUD pill status dominansi warna.'
+      }
+    ]
+  },
+  {
+    version: 'v1.12.4',
+    releaseDate: '18 Oktober 2026',
+    title: 'Perbaikan Clickability Checkbox Seleksi Kartu Media Galeri',
+    summary: 'Memperbaiki masalah checkbox seleksi kartu media yang tidak dapat diklik akibat tertutup layer glassmorphic hover overlay. Menaikkan z-index checkbox ke level 30 dengan pointer-events aktif, serta mengubah elemen menjadi tombol semantik yang berada di atas layer hover.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
         id: 'c-1124-1',
-        type: 'fix',
+        type: 'bugfix',
         scope: 'Interactive Multi-Select Checkbox (.media-card-checkbox)',
         description: 'Menaikkan z-index dari 6 ke 30 dengan pointer-events: auto, memindahkan elemen button checkbox setelah layer hover di DOM tree sehingga klik seleksi selalu terpicu tanpa terhalang dock aksi.'
       }
