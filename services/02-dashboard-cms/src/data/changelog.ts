@@ -2,11 +2,44 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.3',
+    releaseDate: '18 Oktober 2026',
+    title: 'Architectural Wireframe Blueprint Cards & Telemetry Grid Elevation',
+    summary: 'Merombak tampilan kartu Halaman Statis (CMS Pages) dari blok hitam monoton menjadi Mini-Browser Architectural Blueprint Mockup dengan chrome traffic lights, SSL omnibox address bar, dan visual wireframe layout nyata per arketipe (Hero Landing, About Bio & Timeline, Services Enterprise Grid, Contact Form, Legal Compliance Paper). Menyempurnakan 4 kartu Telemetri di bagian atas dengan aksen warna atas (Royal Blue, Emerald, Purple, Sky), icon glyph berkontras tajam dengan ambient ring, serta tipografi nilai tebal yang eye-catching dan profesional.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1143-1',
+        type: 'improvement',
+        scope: 'Mini-Browser Blueprint Window Mockup (.cms-page-window-mockup)',
+        description: 'Menggantikan blok gelap kaku dengan jendela mini-browser realistis berisikan traffic light dots, SSL route bar, dan kanvas preview dot-grid.'
+      },
+      {
+        id: 'c-1143-2',
+        type: 'improvement',
+        scope: 'Archetype Wireframe Illustrations (.wf-landing, .wf-about, .wf-services, .wf-contact, .wf-legal)',
+        description: 'Menerapkan ilustrasi blueprint arsitektural spesifik sesuai tata letak halaman asli, memberikan identitas visual instan tanpa AI-slop.'
+      },
+      {
+        id: 'c-1143-3',
+        type: 'improvement',
+        scope: 'Telemetry Card Polish & Accent Border Headers (.telemetry-card.accent-*)',
+        description: 'Menambahkan aksen warna atas, glyph 32x32px dengan border ambient lembut, dan tipografi 1.55rem tebal berkontras tinggi pada 4 kartu telemetri.'
+      },
+      {
+        id: 'c-1143-4',
+        type: 'improvement',
+        scope: 'High-End Page Card Actions & Navigation Tags',
+        description: 'Menghadirkan tombol aksi primer Edit Halaman berbalut Deep Slate 900 dengan hover Royal Blue, serta badge navigasi navbar dan footer yang kontras.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.2',
     releaseDate: '18 Oktober 2026',
     title: 'Senior Staff UI/UX Redesign: High-End Editorial Composition & Device Glass Centerpieces',
     summary: 'Merombak visual kartu editorial menjadi standar industri top-tier (Vercel, Stripe, Linear). Memperbesar proporsi hero visual cover menjadi 175px (aspect ratio 16:9), menambahkan ambient dot matrix grid overlay, floating glassmorphic device badges dengan glowing technical icons, telemetry chip berdenyut live (cgroups v2, Kafka Redis ZSET, Traefik TTFB), dateline metadata terstruktur, tipografi judul ekstra tegas (19px/weight 800/-0.022em), kutipan 3 baris yang bernapas, serta tombol CTA modern dengan ikon ArrowUpRight.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

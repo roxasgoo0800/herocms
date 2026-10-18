@@ -29,7 +29,8 @@ import {
   GitBranch,
   ShieldCheck,
   Cpu,
-  ArrowUpRight
+  ArrowUpRight,
+  Lock
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { ContentArticle, CmsPage } from '../../types/dashboard';
@@ -181,6 +182,30 @@ const getCategoryTelemetryTag = (cat: string) => {
   if (cat === 'Security') return 'WAF • TLS 1.3 ALPN';
   if (cat === 'Tutorial') return 'Headless Architecture';
   return 'Cloud-Native Edge';
+};
+
+// -------------------------------------------------------------
+// CMS Pages Blueprint Archetypes & Color Mapping
+// -------------------------------------------------------------
+const getPageArchetype = (path: string, layout: string) => {
+  const p = (path || '').toLowerCase();
+  const l = (layout || '').toLowerCase();
+  if (p === '/' || l.includes('hero') || l.includes('landing') || l.includes('beranda')) return 'landing';
+  if (p === '/about' || l.includes('profile') || l.includes('bio') || l.includes('tentang')) return 'about';
+  if (p === '/services' || l.includes('service') || l.includes('catalog') || l.includes('solution') || l.includes('layanan')) return 'services';
+  if (p === '/contact' || l.includes('form') || l.includes('inquiry') || l.includes('kontak')) return 'contact';
+  if (p.includes('privacy') || p.includes('terms') || l.includes('legal') || l.includes('compliance') || l.includes('privasi')) return 'legal';
+  return 'default';
+};
+
+const getPageLayoutColor = (path: string, layout: string) => {
+  const arc = getPageArchetype(path, layout);
+  if (arc === 'landing') return 'blue';
+  if (arc === 'about') return 'indigo';
+  if (arc === 'services') return 'emerald';
+  if (arc === 'contact') return 'amber';
+  if (arc === 'legal') return 'slate';
+  return 'blue';
 };
 
 // -------------------------------------------------------------
@@ -772,7 +797,7 @@ onUnmounted(() => {
 
       <!-- 4 Telemetry Cards (Adaptive per Tab) -->
       <div v-if="activeContentTab === 'articles'" class="stats-overview-grid">
-        <div class="telemetry-card">
+        <div class="telemetry-card accent-blue">
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL ARTIKEL</span>
             <div class="telemetry-glyph blue"><FileText :size="15" /></div>
@@ -781,7 +806,7 @@ onUnmounted(() => {
           <div class="telemetry-sub"><span>8,450 kata terindeks di Edge CDN</span></div>
         </div>
 
-        <div class="telemetry-card">
+        <div class="telemetry-card accent-emerald">
           <div class="telemetry-top">
             <span class="telemetry-label">TERPUBLIKASI (LIVE)</span>
             <div class="telemetry-glyph emerald"><Check :size="15" /></div>
@@ -790,7 +815,7 @@ onUnmounted(() => {
           <div class="telemetry-sub"><span>Lighthouse 100/100 SEO ready</span></div>
         </div>
 
-        <div class="telemetry-card">
+        <div class="telemetry-card accent-purple">
           <div class="telemetry-top">
             <span class="telemetry-label">DRAFT PENULISAN</span>
             <div class="telemetry-glyph purple"><Edit3 :size="15" /></div>
@@ -799,10 +824,10 @@ onUnmounted(() => {
           <div class="telemetry-sub"><span>Belum dipublikasikan ke publik</span></div>
         </div>
 
-        <div class="telemetry-card">
+        <div class="telemetry-card accent-sky">
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL PEMBACA (VIEWS)</span>
-            <div class="telemetry-glyph blue"><Activity :size="15" /></div>
+            <div class="telemetry-glyph sky"><Activity :size="15" /></div>
           </div>
           <div class="telemetry-val">{{ articles.reduce((acc, a) => acc + a.views, 0).toLocaleString('id-ID') }} <span class="badge-online">+24%</span></div>
           <div class="telemetry-sub"><span>Dihitung non-blocking via Redis ZSET</span></div>
@@ -810,7 +835,7 @@ onUnmounted(() => {
       </div>
 
       <div v-else class="stats-overview-grid">
-        <div class="telemetry-card">
+        <div class="telemetry-card accent-blue">
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL HALAMAN STATIS</span>
             <div class="telemetry-glyph blue"><Layers :size="15" /></div>
@@ -819,7 +844,7 @@ onUnmounted(() => {
           <div class="telemetry-sub"><span>Rute web terisolasi di Nginx tenant</span></div>
         </div>
 
-        <div class="telemetry-card">
+        <div class="telemetry-card accent-emerald">
           <div class="telemetry-top">
             <span class="telemetry-label">HALAMAN LIVE</span>
             <div class="telemetry-glyph emerald"><Check :size="15" /></div>
@@ -828,7 +853,7 @@ onUnmounted(() => {
           <div class="telemetry-sub"><span>Tersedia untuk traffic publik</span></div>
         </div>
 
-        <div class="telemetry-card">
+        <div class="telemetry-card accent-purple">
           <div class="telemetry-top">
             <span class="telemetry-label">NAVBAR MENU UTAMA</span>
             <div class="telemetry-glyph purple"><Compass :size="15" /></div>
@@ -837,10 +862,10 @@ onUnmounted(() => {
           <div class="telemetry-sub"><span>Tautkan otomatis pada navbar website</span></div>
         </div>
 
-        <div class="telemetry-card">
+        <div class="telemetry-card accent-sky">
           <div class="telemetry-top">
             <span class="telemetry-label">FOOTER LINKS</span>
-            <div class="telemetry-glyph blue"><Globe :size="15" /></div>
+            <div class="telemetry-glyph sky"><Globe :size="15" /></div>
           </div>
           <div class="telemetry-val">{{ cmsPages.filter(p => p.isInFooter).length }} <span class="badge-growth-pill">Footer Nav</span></div>
           <div class="telemetry-sub"><span>Kebijakan, kontak, dan tautan sekunder</span></div>
@@ -1221,7 +1246,7 @@ onUnmounted(() => {
       <!-- TAB 2: HALAMAN STATIS (CMS PAGES) DISPLAY                     -->
       <!-- ============================================================= -->
       <div v-else>
-        <!-- Grid View: Architectural Page Cards -->
+        <!-- Grid View: Architectural Blueprint Page Cards -->
         <div v-if="viewMode === 'grid'">
           <div class="cms-pages-grid">
             <div
@@ -1229,36 +1254,212 @@ onUnmounted(() => {
               :key="page.id"
               class="cms-page-card"
             >
-              <!-- Card Top: Architectural Blueprint Cover -->
-              <div class="cms-page-top-cover" @click="openEditPageModal(page)">
-                <div class="page-cover-watermark">
-                  <Layers :size="64" />
-                </div>
+              <!-- Card Top: Interactive Mini-Browser Blueprint Window -->
+              <div class="cms-page-window-mockup" @click="openEditPageModal(page)">
+                <!-- Browser Chrome Top Bar -->
+                <div class="browser-chrome-bar">
+                  <div class="browser-traffic-lights">
+                    <span class="traffic-dot dot-close"></span>
+                    <span class="traffic-dot dot-minimize"></span>
+                    <span class="traffic-dot dot-expand"></span>
+                  </div>
 
-                <div class="page-cover-header-row">
-                  <code class="page-path-pill">{{ page.path }}</code>
-                  <div class="page-cover-meta-right">
-                    <span class="page-layout-badge">{{ page.templateLayout }}</span>
+                  <div class="browser-address-omnibox">
+                    <Lock :size="9.5" class="ssl-shield-icon" />
+                    <span class="address-origin">{{ page.siteName }}</span>
+                    <span class="address-path">{{ page.path }}</span>
+                  </div>
+
+                  <div class="browser-status-wrapper">
                     <span
                       class="art-status-chip"
                       :class="page.status === 'published' ? 'chip-live' : 'chip-draft'"
                     >
                       <span class="dot"></span>
-                      {{ page.status === 'published' ? 'Live' : 'Draft' }}
+                      {{ page.status === 'published' ? 'Live Route' : 'Draft' }}
                     </span>
                   </div>
                 </div>
 
-                <div class="page-cover-site-preview">
-                  <Server :size="11" />
-                  <span class="page-site-name">{{ page.siteName }}</span>
-                  <span class="page-dot-sep">•</span>
-                  <span class="page-container-tag">{{ page.containerId }}</span>
+                <!-- Browser Viewport Canvas with Blueprint Wireframe -->
+                <div class="browser-viewport-canvas">
+                  <div class="blueprint-canvas-grid"></div>
+
+                  <!-- Archetype 1: Landing Page (Hero Showcase) -->
+                  <div v-if="getPageArchetype(page.path, page.templateLayout) === 'landing'" class="wireframe-blueprint wf-landing">
+                    <div class="wf-landing-header">
+                      <div class="wf-logo-dot"></div>
+                      <div class="wf-nav-lines">
+                        <span class="wf-nav-line"></span>
+                        <span class="wf-nav-line"></span>
+                        <span class="wf-nav-line"></span>
+                      </div>
+                    </div>
+                    <div class="wf-landing-hero">
+                      <div class="wf-hero-badge"></div>
+                      <div class="wf-hero-title"></div>
+                      <div class="wf-hero-subtitle"></div>
+                      <div class="wf-hero-cta-group">
+                        <div class="wf-btn-primary"></div>
+                        <div class="wf-btn-ghost"></div>
+                      </div>
+                    </div>
+                    <div class="wf-landing-cards">
+                      <div class="wf-mini-card"></div>
+                      <div class="wf-mini-card active"></div>
+                      <div class="wf-mini-card"></div>
+                    </div>
+                  </div>
+
+                  <!-- Archetype 2: About / Profile Bio -->
+                  <div v-else-if="getPageArchetype(page.path, page.templateLayout) === 'about'" class="wireframe-blueprint wf-about">
+                    <div class="wf-about-split">
+                      <div class="wf-about-avatar-col">
+                        <div class="wf-avatar-circle">
+                          <span class="wf-avatar-initials">RP</span>
+                        </div>
+                        <div class="wf-avatar-subline"></div>
+                        <div class="wf-avatar-pill"></div>
+                      </div>
+                      <div class="wf-about-timeline-col">
+                        <div class="wf-timeline-row">
+                          <span class="wf-t-dot"></span>
+                          <div class="wf-t-bar primary"></div>
+                        </div>
+                        <div class="wf-timeline-row">
+                          <span class="wf-t-dot"></span>
+                          <div class="wf-t-bar"></div>
+                        </div>
+                        <div class="wf-timeline-row">
+                          <span class="wf-t-dot"></span>
+                          <div class="wf-t-bar"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="wf-about-skills-strip">
+                      <span class="wf-skill-tag"></span>
+                      <span class="wf-skill-tag"></span>
+                      <span class="wf-skill-tag"></span>
+                      <span class="wf-skill-tag"></span>
+                    </div>
+                  </div>
+
+                  <!-- Archetype 3: Services Catalog -->
+                  <div v-else-if="getPageArchetype(page.path, page.templateLayout) === 'services'" class="wireframe-blueprint wf-services">
+                    <div class="wf-section-bar">
+                      <div class="wf-sec-badge"></div>
+                      <div class="wf-sec-heading"></div>
+                    </div>
+                    <div class="wf-services-grid">
+                      <div class="wf-service-col sc-blue">
+                        <div class="wf-sc-icon"></div>
+                        <div class="wf-sc-title"></div>
+                        <div class="wf-sc-desc"></div>
+                        <div class="wf-sc-check"></div>
+                      </div>
+                      <div class="wf-service-col sc-indigo">
+                        <div class="wf-sc-icon"></div>
+                        <div class="wf-sc-title"></div>
+                        <div class="wf-sc-desc"></div>
+                        <div class="wf-sc-check"></div>
+                      </div>
+                      <div class="wf-service-col sc-emerald">
+                        <div class="wf-sc-icon"></div>
+                        <div class="wf-sc-title"></div>
+                        <div class="wf-sc-desc"></div>
+                        <div class="wf-sc-check"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Archetype 4: Contact / Inquiry Form -->
+                  <div v-else-if="getPageArchetype(page.path, page.templateLayout) === 'contact'" class="wireframe-blueprint wf-contact">
+                    <div class="wf-contact-split">
+                      <div class="wf-contact-info-panel">
+                        <div class="wf-ci-badge"></div>
+                        <div class="wf-ci-line"></div>
+                        <div class="wf-ci-line short"></div>
+                        <div class="wf-ci-pill"></div>
+                      </div>
+                      <div class="wf-contact-form-panel">
+                        <div class="wf-input-box"></div>
+                        <div class="wf-input-box"></div>
+                        <div class="wf-input-box textarea"></div>
+                        <div class="wf-form-submit-btn"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Archetype 5: Legal / Compliance Document -->
+                  <div v-else-if="getPageArchetype(page.path, page.templateLayout) === 'legal'" class="wireframe-blueprint wf-legal">
+                    <div class="wf-legal-paper">
+                      <div class="wf-legal-watermark">
+                        <ShieldCheck :size="48" />
+                      </div>
+                      <div class="wf-legal-header-line"></div>
+                      <div class="wf-legal-sub-line"></div>
+                      <div class="wf-legal-paragraphs">
+                        <div class="wf-legal-p-line"></div>
+                        <div class="wf-legal-p-line"></div>
+                        <div class="wf-legal-p-line short"></div>
+                      </div>
+                      <div class="wf-legal-signature-box">
+                        <div class="wf-legal-seal"></div>
+                        <div class="wf-legal-sig-line"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Fallback Archetype for newly created custom pages -->
+                  <div v-else class="wireframe-blueprint wf-default">
+                    <div class="wf-landing-header">
+                      <div class="wf-logo-dot"></div>
+                      <div class="wf-nav-lines">
+                        <span class="wf-nav-line"></span>
+                        <span class="wf-nav-line"></span>
+                      </div>
+                    </div>
+                    <div class="wf-default-body">
+                      <div class="wf-default-content">
+                        <div class="wf-hero-title"></div>
+                        <div class="wf-hero-subtitle"></div>
+                        <div class="wf-hero-subtitle"></div>
+                      </div>
+                      <div class="wf-default-aside">
+                        <div class="wf-mini-card"></div>
+                        <div class="wf-mini-card"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Floating Bottom Template Pill & Container Tag -->
+                  <div class="browser-viewport-bottom-bar">
+                    <div class="viewport-template-pill" :class="'pill-' + getPageLayoutColor(page.path, page.templateLayout)">
+                      <Layers :size="10.5" />
+                      <span>{{ page.templateLayout }}</span>
+                    </div>
+                    <div class="viewport-container-tag">
+                      <Server :size="10.5" />
+                      <code>{{ page.containerId }}</code>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <!-- Card Body: Title & Meta -->
               <div class="page-card-body">
+                <div class="card-dateline-row">
+                  <span class="date-item">
+                    <Clock :size="11.5" />
+                    <span>Diperbarui: {{ page.updatedAt }}</span>
+                  </span>
+                  <span class="dateline-sep">•</span>
+                  <span class="runtime-item">
+                    <Zap :size="11.5" class="text-amber" />
+                    <span>Nginx Alpine Edge</span>
+                  </span>
+                </div>
+
                 <h3 class="page-card-title" @click="openEditPageModal(page)">
                   {{ page.title }}
                 </h3>
@@ -1270,20 +1471,20 @@ onUnmounted(() => {
                 <!-- Navigation Integration Indicators -->
                 <div class="page-nav-indicators">
                   <span
-                    class="nav-indicator-pill"
+                    class="nav-indicator-pill nav-header"
                     :class="{ active: page.isInNavbar }"
                     :title="page.isInNavbar ? 'Ditampilkan di Header Navbar' : 'Tidak tampil di Navbar'"
                   >
-                    <Compass :size="11" />
+                    <Compass :size="11.5" />
                     <span>Navbar Header {{ page.isInNavbar ? '✓' : '—' }}</span>
                   </span>
 
                   <span
-                    class="nav-indicator-pill"
+                    class="nav-indicator-pill nav-footer"
                     :class="{ active: page.isInFooter }"
                     :title="page.isInFooter ? 'Ditampilkan di Footer Navigasi' : 'Tidak tampil di Footer'"
                   >
-                    <Globe :size="11" />
+                    <Globe :size="11.5" />
                     <span>Footer Links {{ page.isInFooter ? '✓' : '—' }}</span>
                   </span>
                 </div>
@@ -1292,20 +1493,19 @@ onUnmounted(() => {
               <!-- Card Footer: Actions -->
               <div class="page-card-footer">
                 <div class="page-footer-left">
-                  <span class="page-update-time">
-                    <Clock :size="11" />
-                    <span>{{ page.updatedAt }}</span>
+                  <span class="page-site-slug-preview">
+                    <code>{{ page.path }}</code>
                   </span>
                 </div>
 
                 <div class="page-card-actions">
                   <button
-                    class="btn-card-read-action"
+                    class="btn-primary-card-action"
                     @click="openEditPageModal(page)"
                     title="Edit Halaman Statis"
                   >
                     <Edit3 :size="13" />
-                    <span>Edit</span>
+                    <span>Edit Halaman</span>
                   </button>
 
                   <button
