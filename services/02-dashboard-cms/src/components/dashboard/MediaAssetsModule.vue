@@ -806,24 +806,14 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                 <span class="media-type-badge badge-docx">{{ med.type }}</span>
               </div>
 
-              <!-- 4. SVG VECTOR CANVAS -->
-              <div v-else-if="med.type === 'SVG'" class="graphic-vector-preview">
-                <div class="vector-blueprint-box">
-                  <div class="vector-glyph-symbol">
-                    <FileCode :size="28" />
-                  </div>
-                  <span class="vector-mark-text">SVG SCALABLE VECTOR</span>
-                </div>
-                <span class="media-type-badge badge-svg">SVG</span>
-              </div>
-
-              <!-- 5. REAL RASTER IMAGES (JPG, PNG, WEBP, AVIF) -->
-              <div v-else-if="isImage(med.type)" style="width: 100%; height: 100%;">
+              <!-- 4. REAL VISUAL ASSETS (JPG, PNG, WEBP, AVIF, SVG) -->
+              <div v-else-if="isVisualAsset(med.type)" class="gallery-visual-wrapper">
                 <img
                   v-if="!failedImageIds.has(med.id)"
                   :src="med.url"
                   :alt="med.name"
                   class="gallery-card-thumb"
+                  :class="{ 'svg-vector-thumb': med.type === 'SVG' }"
                   loading="lazy"
                   @error="handleImageError(med.id)"
                 />
@@ -831,7 +821,7 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                   <Eye :size="24" style="color: #64748b; margin-bottom: 4px;" />
                   <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">{{ med.type }} IMAGE</span>
                 </div>
-                <span class="media-type-badge badge-img">{{ med.type }}</span>
+                <span class="media-type-badge" :class="med.type === 'SVG' ? 'badge-svg' : 'badge-img'">{{ med.type }}</span>
               </div>
 
               <!-- Fallback Generic Object -->
@@ -883,9 +873,11 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                 {{ med.name }}
               </div>
               <div class="media-sub-meta">
-                <span class="file-size-tag">{{ med.size }}</span>
-                <span class="dot-sep">•</span>
-                <span>{{ med.dimensions }}</span>
+                <div class="media-sub-left">
+                  <span class="file-size-tag">{{ med.size }}</span>
+                  <span class="dot-sep">•</span>
+                  <span class="dimensions-tag">{{ med.dimensions }}</span>
+                </div>
                 <span class="edge-cached-tag">
                   <span class="pulse-green-dot"></span>
                   <span>CDN Ready</span>

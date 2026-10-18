@@ -9684,7 +9684,7 @@ html {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
-  padding: 18px;
+  padding: 22px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   max-height: calc(100vh - 270px);
   min-height: 520px;
@@ -9714,16 +9714,16 @@ html {
 }
 
 /* ==========================================================================
-   CINEMATIC MEDIA GALLERY GRID (WOW FACTOR)
+   CINEMATIC MEDIA GALLERY GRID (GOOGLE PHOTOS PRO EXPANSIVE CARDS)
    ========================================================================== */
 .media-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 22px;
 }
 
 @media (max-width: 960px) {
-  .media-gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  .media-gallery-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 }
 
 @media (max-width: 580px) {
@@ -9749,10 +9749,10 @@ html {
   box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.12);
 }
 
-/* Visual Canvas Area with Cinematic 16:10 Ratio */
+/* Visual Canvas Area with Generous Google Photos Height */
 .media-preview-canvas {
   position: relative;
-  height: 180px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9772,6 +9772,16 @@ html {
   background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
 }
 
+.gallery-visual-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
 .gallery-card-thumb {
   width: 100%;
   height: 100%;
@@ -9779,7 +9789,19 @@ html {
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.media-pro-card:hover .gallery-card-thumb {
+.svg-vector-thumb {
+  object-fit: contain !important;
+  padding: 24px;
+  max-width: 85%;
+  max-height: 85%;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.media-pro-card:hover .svg-vector-thumb {
+  transform: scale(1.08);
+}
+
+.media-pro-card:hover .gallery-card-thumb:not(.svg-vector-thumb) {
   transform: scale(1.05);
 }
 
@@ -10154,16 +10176,16 @@ html {
 
 /* Card Info Block (Footer) */
 .media-info-block {
-  padding: 13px 15px;
+  padding: 14px 18px;
   background: #ffffff;
   border-top: 1px solid #f1f5f9;
 }
 
 .media-title-line {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #0f172a;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -10172,26 +10194,52 @@ html {
 .media-sub-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
   color: #64748b;
+  white-space: nowrap;
+}
+
+.media-sub-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .file-size-tag {
-  font-weight: 600;
-  color: #334155;
+  font-weight: 700;
+  color: #0f172a;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
-.dot-sep { color: #cbd5e1; }
+.dimensions-tag {
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+}
+
+.dot-sep {
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
 
 .edge-cached-tag {
   margin-left: auto;
-  font-size: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 10.5px;
   font-weight: 700;
   color: #059669;
   background: #ecfdf5;
   border: 1px solid #d1fae5;
-  padding: 1px 7px;
+  padding: 2px 8px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;

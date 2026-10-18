@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.12.1',
+    releaseDate: '18 Oktober 2026',
+    title: 'Pelebaran Kartu Galeri Media Gaya Google Photos & Rendering Vektor SVG',
+    summary: 'Memperlebar kartu galeri media pada panggung utama (minmax 340px) dan mempertinggi kanvas pratinjau menjadi 220px seperti tata letak Google Photos / Unsplash. Menghilangkan text wrapping yang canggung pada spesifikasi berkas, serta menambahkan rendering nyata untuk vektor SVG langsung di kartu galeri dengan bayangan kedalaman sinematik.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1121-1',
+        type: 'improvement',
+        scope: 'Expansive Gallery Cards (.media-gallery-grid & .media-preview-canvas)',
+        description: 'Menaikkan ukuran minimum kartu dari 240px ke 340px dan ketinggian kanvas pratinjau ke 220px, memberikan visual impact yang lapang dan proporsional layaknya Google Photos.'
+      },
+      {
+        id: 'c-1121-2',
+        type: 'improvement',
+        scope: 'Card Metadata Clean Row (.media-sub-meta)',
+        description: 'Menata ulang baris ukuran berkas, dimensi, dan status CDN Ready ke dalam satu baris fleksibel tanpa pemotongan atau text-wrapping yang terpecah.'
+      },
+      {
+        id: 'c-1121-3',
+        type: 'feature',
+        scope: 'Direct SVG Vector Thumbnails (.svg-vector-thumb)',
+        description: 'Menampilkan berkas ilustrasi dan icon SVG secara nyata di kartu galeri tanpa menggunakan kotak blueprint statis.'
+      }
+    ]
+  },
+  {
     version: 'v1.12.0',
     releaseDate: '18 Oktober 2026',
     title: 'Bespoke Split-Pane Media Inspector Studio & Universal SVG Vector Renderer',
     summary: 'Refaktor menyeluruh modal rincian berkas S3 menjadi Split-Pane Studio Media Inspector berstandar Figma dan Cloudflare R2. Menghadirkan panggung pratinjau visual berdinding kanvas ambient dot-grid dengan rendering instan untuk berkas vektor SVG & gambar raster, HUD status resolusi dan kuota S3 di bagian bawah, serta rail inspektur metadata teknis terpadu lengkap dengan fitur 1-klik salin Markdown/HTML embed code untuk CMS editor.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
