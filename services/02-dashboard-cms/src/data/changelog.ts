@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.11.0',
+    releaseDate: '18 Oktober 2026',
+    title: 'Redesign Total Media Assets & S3 Storage Studio (Next-Gen Bespoke UI)',
+    summary: 'Merombak total visual dan pengalaman pengguna (UX) pada modul Media Assets & Storage S3 MinIO. Menghadirkan S3 Storage Command Console dengan visual multi-segment progress bar, Smart Ingestion Dropzone dengan micro-animations, kartu media sinematik berasio 16:10 dengan checkerboard background untuk aset transparan, glassmorphic floating action dock, serta integrasi Dual View Switcher (Galeri Kartu Grid vs Tabel Ledger Berkas).',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1110-1',
+        type: 'feature',
+        scope: 'Media Assets Hub (MediaAssetsModule.vue)',
+        description: 'Menambahkan S3 Storage Command Console dengan telemetri multi-kategori (Foto/Raster, Dokumen PDF/Office, Vektor SVG), progress bar multi-segmen berwarna cerdas, dan spesifikasi infrastruktur TLS 1.3 & MinIO multi-tenant isolation.'
+      },
+      {
+        id: 'c-1110-2',
+        type: 'feature',
+        scope: 'UI / UX & Dual View Mode (MediaAssetsModule.vue)',
+        description: 'Menyediakan tombol pengubah tampilan interaktif antara Galeri Kartu Sinematik (Grid Mode) dan Tabel Ledger Berkas Berstandar Enterprise (List Mode) lengkap dengan thumbnail mini, spesifikasi berkas, dan aksi inline instan.'
+      },
+      {
+        id: 'c-1110-3',
+        type: 'improvement',
+        scope: 'Master Stylesheet & Micro-Interactions (studio-master.css)',
+        description: 'Menggantikan hover overlay kaku dengan Glassmorphic Floating Action Dock, menambahkan efek micro-scale halus saat kartu di-hover, latar belakang berpola transparan (checkerboard) untuk PNG/SVG, serta Smart Ingestion Upload Dropzone yang lebih hidup.'
+      }
+    ]
+  },
+  {
     version: 'v1.10.0',
     releaseDate: '18 Oktober 2026',
     title: 'Peluncuran Fitur Enterprise Maintenance Mode (Mode Pemeliharaan)',
     summary: 'Menambahkan kapabilitas Mode Pemeliharaan (Maintenance Mode) terpadu di Dashboard Situs dan Pod Detail Analytics. Memungkinkan pengelola website mengalihkan trafik publik ke pesan pemeliharaan HTTP 503 bersahabat secara instan, dilengkapi badge status semantic Amber, tab filter dedicated, modal konfigurasi estimasi waktu (ETA), dan endpoint API PUT /containers/:id/maintenance.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
