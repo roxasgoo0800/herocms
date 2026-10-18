@@ -89,6 +89,10 @@ const confirmEnableMaintenance = () => {
   targetContainerForMaintenance.value = null;
 };
 
+const setEtaPreset = (val: string) => {
+  estimatedEndTimeInput.value = val;
+};
+
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
 // -----------------------------------------------------------------------------
@@ -965,42 +969,88 @@ const openContainerDetail = (c: ContainerSite) => {
           </button>
         </div>
 
-        <div class="modal-body" style="padding: 18px 24px;">
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-            <div style="font-weight: 600; font-size: 0.82rem; color: #0f172a;">{{ targetContainerForMaintenance.name }}</div>
-            <div style="font-size: 0.72rem; color: #64748b; font-family: monospace;">https://{{ targetContainerForMaintenance.subdomain }}</div>
+        <div class="modal-body" style="padding: 20px 24px;">
+          <!-- Target Site Overview Card -->
+          <div class="modal-target-site-card">
+            <div class="modal-target-site-left">
+              <div class="modal-target-icon-box">
+                <Globe :size="16" />
+              </div>
+              <div>
+                <div class="modal-target-site-name">{{ targetContainerForMaintenance.name }}</div>
+                <div class="modal-target-site-url">https://{{ targetContainerForMaintenance.subdomain }}</div>
+              </div>
+            </div>
+            <span class="modal-target-site-badge">
+              <Wrench :size="11" />
+              <span>HTTP 503 Service</span>
+            </span>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <div>
-              <label style="font-size: 0.74rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">
-                Pesan Pemeliharaan untuk Pengunjung
-              </label>
-              <textarea
-                v-model="maintenanceMessageInput"
-                rows="3"
-                class="pro-input"
-                style="width: 100%; font-size: 0.78rem; resize: vertical; border-radius: 8px; padding: 8px 10px;"
-                placeholder="Contoh: Kami sedang melakukan pemeliharaan berkala..."
-              ></textarea>
-            </div>
+          <!-- Form Fields -->
+          <div class="modal-form-group">
+            <label class="modal-field-label">
+              <span>Pesan Pemeliharaan untuk Pengunjung</span>
+              <span class="modal-field-hint">Akan tampil di layar publik</span>
+            </label>
+            <textarea
+              v-model="maintenanceMessageInput"
+              rows="3"
+              class="field-textarea-input"
+              placeholder="Contoh: Kami sedang melakukan pemeliharaan berkala untuk peningkatan performa. Kami akan segera kembali."
+            ></textarea>
+          </div>
 
-            <div>
-              <label style="font-size: 0.74rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">
-                Estimasi Selesai (ETA)
-              </label>
-              <input
-                v-model="estimatedEndTimeInput"
-                type="text"
-                class="pro-input"
-                style="width: 100%; font-size: 0.78rem; border-radius: 8px; padding: 7px 10px;"
-                placeholder="Contoh: 30 menit atau 14:00 WIB"
-              />
+          <div class="modal-form-group" style="margin-bottom: 6px;">
+            <label class="modal-field-label">
+              <span>Estimasi Selesai (ETA)</span>
+              <span class="modal-field-hint">Estimasi durasi downtime</span>
+            </label>
+            <input
+              v-model="estimatedEndTimeInput"
+              type="text"
+              class="field-text-input"
+              placeholder="Contoh: 30 menit atau 14:00 WIB"
+            />
+            <!-- Quick ETA Presets -->
+            <div class="eta-preset-chips">
+              <button
+                type="button"
+                class="eta-chip-btn"
+                :class="{ active: estimatedEndTimeInput === '15 menit' }"
+                @click="setEtaPreset('15 menit')"
+              >
+                15 Menit
+              </button>
+              <button
+                type="button"
+                class="eta-chip-btn"
+                :class="{ active: estimatedEndTimeInput === '30 menit' }"
+                @click="setEtaPreset('30 menit')"
+              >
+                30 Menit
+              </button>
+              <button
+                type="button"
+                class="eta-chip-btn"
+                :class="{ active: estimatedEndTimeInput === '1 jam' }"
+                @click="setEtaPreset('1 jam')"
+              >
+                1 Jam
+              </button>
+              <button
+                type="button"
+                class="eta-chip-btn"
+                :class="{ active: estimatedEndTimeInput === '2 jam' }"
+                @click="setEtaPreset('2 jam')"
+              >
+                2 Jam
+              </button>
             </div>
           </div>
         </div>
 
-        <div class="modal-footer" style="padding: 14px 24px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 8px;">
+        <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px;">
           <button
             type="button"
             class="btn-modal-ghost"
@@ -1011,7 +1061,7 @@ const openContainerDetail = (c: ContainerSite) => {
           <button
             type="button"
             class="btn-modal-confirm"
-            style="background: #b45309; border-color: #92400e;"
+            style="background: #b45309; border-color: #92400e; padding: 8px 16px; font-size: 0.82rem;"
             @click="confirmEnableMaintenance"
           >
             <Wrench :size="13" />
