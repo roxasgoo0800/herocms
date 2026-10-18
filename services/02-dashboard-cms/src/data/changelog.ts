@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.2',
+    releaseDate: '18 Oktober 2026',
+    title: 'Senior Staff UI/UX Redesign: High-End Editorial Composition & Device Glass Centerpieces',
+    summary: 'Merombak visual kartu editorial menjadi standar industri top-tier (Vercel, Stripe, Linear). Memperbesar proporsi hero visual cover menjadi 175px (aspect ratio 16:9), menambahkan ambient dot matrix grid overlay, floating glassmorphic device badges dengan glowing technical icons, telemetry chip berdenyut live (cgroups v2, Kafka Redis ZSET, Traefik TTFB), dateline metadata terstruktur, tipografi judul ekstra tegas (19px/weight 800/-0.022em), kutipan 3 baris yang bernapas, serta tombol CTA modern dengan ikon ArrowUpRight.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1142-1',
+        type: 'improvement',
+        scope: 'Editorial Cover Architectural Composition (Height 175px & Mesh Matrix)',
+        description: 'Meningkatkan proporsi vertikal cover menjadi 175px dengan dot-matrix grid overlay halus dan ambient radial lighting berkarakter kuat.'
+      },
+      {
+        id: 'c-1142-2',
+        type: 'improvement',
+        scope: 'Glassmorphic Device Badges & Dynamic Telemetry Chips',
+        description: 'Menghadirkan centerpiece frosted glass badge 50x50px di tengah cover yang memuat glif teknis bersinar dan micro-pill telemetri dengan pulsing status dot.'
+      },
+      {
+        id: 'c-1142-3',
+        type: 'improvement',
+        scope: 'Card Typography Hierarchy & Modern Action CTA',
+        description: 'Menyempurnakan tipografi dateline, judul berbobot 800, excerpt lapang 3 baris, target container bar terisolasi, profil avatar elegan, dan tombol CTA Baca Artikel dengan ArrowUpRight.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.1',
     releaseDate: '18 Oktober 2026',
     title: 'Peningkatan Estetika Visual Editorial 3-Kolom & Palet Teknis Non-Slop',
     summary: 'Menerapkan tata letak seimbang 3 data per baris (3-Column Grid) pada modul Artikel & Halaman Statis untuk memanfaatkan lebar layar secara proporsional. Menambahkan cover header visual berkelas dengan palet tematik teknis terkurasi per kategori (Engineering Deep Slate-Navy, Distributed Systems Indigo-Slate, DevOps Forest-Slate, Security Obsidian, Tutorial Warm Cedar) lengkap dengan watermark glif arsitektur transparan, pill kategori berkontras tajam, dan tombol aksi "Baca" & "Edit" yang ergonomis tanpa efek gradien murah atau AI-slop.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

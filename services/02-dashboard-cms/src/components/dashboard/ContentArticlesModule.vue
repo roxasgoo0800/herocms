@@ -28,7 +28,8 @@ import {
   Network,
   GitBranch,
   ShieldCheck,
-  Cpu
+  Cpu,
+  ArrowUpRight
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { ContentArticle, CmsPage } from '../../types/dashboard';
@@ -171,6 +172,15 @@ const getCategoryIconComponent = (cat: string) => {
   if (cat === 'Security') return ShieldCheck;
   if (cat === 'Tutorial') return BookOpen;
   return Cpu;
+};
+
+const getCategoryTelemetryTag = (cat: string) => {
+  if (cat === 'Engineering') return 'Kernel cgroups v2';
+  if (cat === 'Distributed Systems') return 'Kafka • Redis ZSET';
+  if (cat === 'DevOps') return 'Traefik v3 • 1.8ms TTFB';
+  if (cat === 'Security') return 'WAF • TLS 1.3 ALPN';
+  if (cat === 'Tutorial') return 'Headless Architecture';
+  return 'Cloud-Native Edge';
 };
 
 // -------------------------------------------------------------
@@ -975,17 +985,20 @@ onUnmounted(() => {
               class="editorial-article-card"
               :class="getCategoryThemeClass(art.category)"
             >
-              <!-- Card Top Editorial Cover with Architectural Theming -->
+              <!-- Card Top Editorial Cover: High-End Architectural Visual Composition -->
               <div
                 class="art-card-editorial-cover"
                 @click="openArticleReader(art)"
               >
-                <!-- Watermark Background Glyph -->
+                <!-- Subtle Ambient Grid Overlay -->
+                <div class="cover-mesh-grid"></div>
+
+                <!-- Watermark Background Tech Glyph -->
                 <div class="cover-watermark-glyph">
-                  <component :is="getCategoryIconComponent(art.category)" :size="64" />
+                  <component :is="getCategoryIconComponent(art.category)" :size="88" />
                 </div>
 
-                <!-- Cover Top Meta Row -->
+                <!-- Floating Top Meta Bar -->
                 <div class="cover-top-meta-row">
                   <span class="editorial-cat-chip" :class="'pill-' + getCategoryBadgeColor(art.category)">
                     <span class="cat-dot"></span>
@@ -1002,22 +1015,47 @@ onUnmounted(() => {
                       :class="art.status === 'published' ? 'chip-live' : 'chip-draft'"
                     >
                       <span class="dot"></span>
-                      {{ art.status === 'published' ? 'Live' : 'Draft' }}
+                      {{ art.status === 'published' ? 'Live CDN' : 'Draft' }}
                     </span>
                   </div>
                 </div>
 
-                <!-- Cover Bottom Slug & Site Preview -->
+                <!-- Centerpiece: Glassmorphic Technical Badge with Live Telemetry -->
+                <div class="cover-center-stage">
+                  <div class="glass-device-badge">
+                    <component :is="getCategoryIconComponent(art.category)" :size="28" />
+                  </div>
+                  <div class="cover-telemetry-pill">
+                    <span class="pulse-telemetry-dot"></span>
+                    <span>{{ getCategoryTelemetryTag(art.category) }}</span>
+                  </div>
+                </div>
+
+                <!-- Floating Bottom URL Slug Preview -->
                 <div class="cover-bottom-path-preview">
-                  <Globe :size="11" />
-                  <span class="cover-site-text">{{ art.siteName }}</span>
-                  <span class="cover-path-sep">/</span>
-                  <span class="cover-slug-text">{{ art.slug }}</span>
+                  <div class="path-preview-inner">
+                    <Globe :size="11" class="text-blue-light" />
+                    <span class="cover-site-text">{{ art.siteName }}</span>
+                    <span class="cover-path-sep">/</span>
+                    <span class="cover-slug-text">{{ art.slug }}</span>
+                  </div>
                 </div>
               </div>
 
               <!-- Card Body Content -->
               <div class="card-main-body">
+                <div class="card-dateline-row">
+                  <span class="date-item">
+                    <Calendar :size="12" />
+                    <span>{{ art.publishedAt }}</span>
+                  </span>
+                  <span class="dateline-sep">•</span>
+                  <span class="read-item">
+                    <Clock :size="12" />
+                    <span>{{ getReadTime(art.title) }}</span>
+                  </span>
+                </div>
+
                 <h3 class="editorial-card-title" @click="openArticleReader(art)">
                   {{ art.title }}
                 </h3>
@@ -1032,15 +1070,26 @@ onUnmounted(() => {
                     #{{ tag }}
                   </span>
                 </div>
+
+                <!-- Route & Container Bar -->
+                <div class="card-route-strip">
+                  <div class="route-strip-left">
+                    <Server :size="12" />
+                    <span class="route-domain-text">{{ art.siteName }}</span>
+                  </div>
+                  <code class="route-slug-code">/{{ art.slug }}</code>
+                </div>
               </div>
 
               <!-- Card Footer: Author, Views & Action Buttons -->
               <div class="editorial-card-footer">
                 <div class="art-author-row">
-                  <div class="author-avatar-mini">{{ art.author.split(' ').map(n => n[0]).join('').slice(0, 2) }}</div>
+                  <div class="author-avatar-styled">
+                    {{ art.author.split(' ').map(n => n[0]).join('').slice(0, 2) }}
+                  </div>
                   <div class="author-details">
                     <span class="author-name">{{ art.author }}</span>
-                    <span class="art-date">{{ art.publishedAt }}</span>
+                    <span class="author-role-sub">Lead Platform Architect</span>
                   </div>
                 </div>
 
@@ -1055,8 +1104,8 @@ onUnmounted(() => {
                     @click="openArticleReader(art)"
                     title="Baca Artikel Lengkap"
                   >
-                    <BookOpen :size="13" />
                     <span>Baca</span>
+                    <ArrowUpRight :size="13" />
                   </button>
 
                   <button
