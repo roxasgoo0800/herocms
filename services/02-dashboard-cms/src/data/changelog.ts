@@ -2,16 +2,37 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
-    version: 'v1.14.9',
+    version: 'v1.14.10',
     releaseDate: '18 Oktober 2026',
-    title: 'Custom Domains Polish: Multi-PoP Anycast Diagnostic Modal, SSL X.509 Inspector, and Typography Fixes',
-    summary: 'Menyempurnakan modul Custom Domain & Edge DNS Ingress: memperbaiki tipografi metrik telemetri atas (.telemetry-val) sehingga teks nilai dan badge tidak menempel, menyematkan watermark pojok kanan atas 58px berwarna semantik (blue, emerald, purple, sky), menambahkan validasi live FQDN format domain secara real-time, tombol "Salin DNS" 1-klik format zone file, modal interaktif inspeksi propagasi DNS 14 node Anycast global (Jakarta, Singapura, Tokyo, San Jose, Frankfurt, Sydney), serta modal inspeksi sertifikat SSL X.509 TLS v1.3 Let\'s Encrypt.',
+    title: 'Harmonize Telemetry Card Typography, Badges, and Structure Across All Studio Modules',
+    summary: 'Menyelaraskan tipografi, struktur HTML, dan styling kartu telemetri di Custom Domains dan Media Assets (DAM) agar 100% konsisten dengan kartu telemetri Situs & Kontainer. Menghapus variasi font kustom dan inline monospace, menerapkan kelas standar master (.telemetry-card, .telemetry-val, .telemetry-denom, .badge-online, .badge-growth-pill, dan .telemetry-sub .pulse-mini-dot), serta memastikan hierarki teks, ukuran font 1.75rem, bobot 800, dan padding kartu tampil presisi tanpa perbedaan.',
     badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
+        id: 'c-11410-1',
+        type: 'bugfix',
+        scope: 'Custom Domains & Media Assets Telemetry Typography',
+        description: 'Menstandarkan hierarki tipografi nilai metrik, satuan pembagi (.telemetry-denom), pill badge status (.badge-online / .badge-growth-pill), dan subtitle ready-state agar identik dengan kartu telemetri Kontainer.'
+      },
+      {
+        id: 'c-11410-2',
+        type: 'improvement',
+        scope: 'Master Grid Uniformity in Media Assets DAM',
+        description: 'Mengintegrasikan Media Assets ke .stats-overview-grid dan .telemetry-card standar, menghapus penyesuaian CSS terpisah untuk menjaga konsistensi tampilan lintas modul.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.9',
+    releaseDate: '18 Oktober 2026',
+    title: 'Custom Domains Polish: Multi-PoP Anycast Diagnostic Modal, SSL X.509 Inspector, and Typography Fixes',
+    summary: 'Menyempurnakan modul Custom Domain & Edge DNS Ingress: memperbaiki tipografi metrik telemetri atas (.telemetry-val) sehingga teks nilai dan badge tidak menempel, menyematkan watermark pojok kanan atas 58px berwarna semantik (blue, emerald, purple, sky), menambahkan validasi live FQDN format domain secara real-time, tombol "Salin DNS" 1-klik format zone file, modal interaktif inspeksi propagasi DNS 14 node Anycast global (Jakarta, Singapura, Tokyo, San Jose, Frankfurt, Sydney), serta modal inspeksi sertifikat SSL X.509 TLS v1.3 Let\'s Encrypt.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
         id: 'c-1149-1',
-        type: 'fix',
+        type: 'bugfix',
         scope: 'Custom Domains Telemetry Spacing & Watermarks',
         description: 'Memperbaiki layout flex pada .telemetry-val agar angka metrik dan badge status memiliki jarak bernafas ideal (gap: 8px) dan menyematkan ikon watermark 58px beraksen warna.'
       },
