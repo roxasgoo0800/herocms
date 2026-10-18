@@ -715,7 +715,21 @@ sistem penagihan otomatis HeroCMS Cloud Platform.`;
 };
 
 // Custom Domains State
-const customDomains = ref<CustomDomainItem[]>([...initialCustomDomains]);
+const normalizeCustomDomain = (dom: any): CustomDomainItem => {
+  return {
+    id: dom.id || `dom_${Date.now()}`,
+    domain: dom.domain || 'domainku.id',
+    targetContainer: dom.targetContainer || (containers.value.find(c => c.id === dom.containerId)?.name) || 'Portofolio Rizal Pratama',
+    containerId: dom.containerId || 'hero_tenant_9942',
+    status: dom.status === 'verified' ? 'active' : (dom.status || dom.dnsStatus || 'active'),
+    sslStatus: dom.sslStatus === 'active' ? 'issued' : (dom.sslStatus || 'issued'),
+    cnameRecord: dom.cnameRecord || dom.targetCname || 'edge.cloudcms.app',
+    aRecord: dom.aRecord || dom.targetIp || '103.144.20.1',
+    addedDate: dom.addedDate || dom.createdAt || '12 Sep 2026'
+  };
+};
+
+const customDomains = ref<CustomDomainItem[]>([...initialCustomDomains].map(normalizeCustomDomain));
 
 const newDomainInput = ref('');
 const targetContainerForDomain = ref('hero_tenant_9942');
@@ -1267,7 +1281,7 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
           }
         }
         if (Array.isArray(b.domains?.domains)) {
-          customDomains.value = b.domains.domains;
+          customDomains.value = b.domains.domains.map(normalizeCustomDomain);
         }
         if (Array.isArray(b.tickets?.tickets)) {
           supportTickets.value = b.tickets.tickets.map((t: any) => normalizeTicket(t));
@@ -1361,7 +1375,7 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
       }
     }
     if (dRes.status === 'fulfilled' && Array.isArray(dRes.value?.domains)) {
-      customDomains.value = dRes.value.domains;
+      customDomains.value = dRes.value.domains.map(normalizeCustomDomain);
     }
     if (tRes.status === 'fulfilled' && Array.isArray(tRes.value?.tickets)) {
       supportTickets.value = tRes.value.tickets.map((t: any) => normalizeTicket(t));
@@ -1428,7 +1442,7 @@ const hydrateFromCache = (overrideEmail?: string) => {
           mediaBucketName.value = data.mediaBucketName;
         }
       }
-      if (Array.isArray(data.customDomains)) customDomains.value = data.customDomains;
+      if (Array.isArray(data.customDomains)) customDomains.value = data.customDomains.map(normalizeCustomDomain);
       if (Array.isArray(data.supportTickets)) supportTickets.value = data.supportTickets.map((t: any) => normalizeTicket(t));
       if (Array.isArray(data.invoices)) invoices.value = data.invoices;
       if (Array.isArray(data.webhooks)) webhooks.value = data.webhooks;

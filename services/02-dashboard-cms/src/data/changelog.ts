@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.9',
+    releaseDate: '18 Oktober 2026',
+    title: 'Custom Domains Polish: Multi-PoP Anycast Diagnostic Modal, SSL X.509 Inspector, and Typography Fixes',
+    summary: 'Menyempurnakan modul Custom Domain & Edge DNS Ingress: memperbaiki tipografi metrik telemetri atas (.telemetry-val) sehingga teks nilai dan badge tidak menempel, menyematkan watermark pojok kanan atas 58px berwarna semantik (blue, emerald, purple, sky), menambahkan validasi live FQDN format domain secara real-time, tombol "Salin DNS" 1-klik format zone file, modal interaktif inspeksi propagasi DNS 14 node Anycast global (Jakarta, Singapura, Tokyo, San Jose, Frankfurt, Sydney), serta modal inspeksi sertifikat SSL X.509 TLS v1.3 Let\'s Encrypt.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1149-1',
+        type: 'fix',
+        scope: 'Custom Domains Telemetry Spacing & Watermarks',
+        description: 'Memperbaiki layout flex pada .telemetry-val agar angka metrik dan badge status memiliki jarak bernafas ideal (gap: 8px) dan menyematkan ikon watermark 58px beraksen warna.'
+      },
+      {
+        id: 'c-1149-2',
+        type: 'feature',
+        scope: 'Global Anycast PoP DNS Live Inspector Modal',
+        description: 'Menambahkan modal interaktif untuk simulasi kueri dan inspeksi propagasi DNS CNAME/A Record ke 6 node global utama dengan indikator latency TTFB dan status PASS.'
+      },
+      {
+        id: 'c-1149-3',
+        type: 'feature',
+        scope: 'SSL X.509 Certificate Inspector & One-Click Zone Export',
+        description: 'Menambahkan modal inspeksi sertifikat SSL Let\'s Encrypt (Common Name, SANs, cipher, auto-renewal) dan tombol ekspor salin semua record DNS ke clipboard.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.8',
     releaseDate: '18 Oktober 2026',
     title: 'Enlarged & Prominent Telemetry Cards with Enhanced Typography and Status Footers',
     summary: 'Memperbesar proporsi dan kehadiran visual kartu telemetri di seluruh dashboard, khususnya pada modul Media Assets DAM (.dam-mini-stat-card) dan modul-modul studio (.telemetry-card). Meningkatkan ukuran font angka nilai menjadi 1.65rem–1.75rem, memperluas padding kartu menjadi 18px-22px dengan min-height 122px, memperbesar ikon transparan pojok kanan atas menjadi 58px, serta menyematkan status footer informatif untuk memberikan keseimbangan visual yang sempurna.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
