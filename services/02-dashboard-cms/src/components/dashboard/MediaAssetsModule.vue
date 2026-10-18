@@ -747,16 +747,6 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                 { 'checkerboard-bg': isImage(med.type) || med.type === 'SVG' }
               ]"
             >
-              <!-- Multi-Select Checkbox -->
-              <div
-                class="media-card-checkbox"
-                :class="{ selected: isAssetSelected(med.id) }"
-                @click.stop="toggleSelectAsset(med.id, $event)"
-                title="Pilih berkas untuk aksi massal"
-              >
-                <Check v-if="isAssetSelected(med.id)" :size="13" />
-              </div>
-
               <!-- 1. PDF DOCUMENT PREVIEW CANVAS -->
               <div v-if="med.type === 'PDF'" class="graphic-pdf-preview">
                 <div class="pdf-watermark-symbol">
@@ -865,6 +855,17 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                   </button>
                 </div>
               </div>
+
+              <!-- Multi-Select Checkbox (Elevated Button) -->
+              <button
+                type="button"
+                class="media-card-checkbox"
+                :class="{ selected: isAssetSelected(med.id) }"
+                @click.stop="toggleSelectAsset(med.id, $event)"
+                title="Pilih berkas untuk aksi massal"
+              >
+                <Check v-if="isAssetSelected(med.id)" :size="14" />
+              </button>
             </div>
 
             <!-- Card Meta Details -->
