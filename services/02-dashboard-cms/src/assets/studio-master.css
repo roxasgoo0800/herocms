@@ -5365,21 +5365,29 @@ html {
    ========================================================================== */
 /* Hero Connect Card */
 .connect-domain-hero {
-  padding: 22px 24px;
-  background: #ffffff;
+  padding: 24px 26px;
+  background: radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.05) 0%, transparent 45%), #ffffff;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
   margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.connect-domain-hero:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
 }
 
 .connect-domain-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
 }
 
 .connect-lead {
@@ -5389,50 +5397,113 @@ html {
 }
 
 .connect-icon-box {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 12px;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
   flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .connect-title {
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   font-weight: 700;
   color: #0f172a;
   margin-bottom: 2px;
+  letter-spacing: -0.01em;
 }
 
 .connect-desc {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: #64748b;
   margin: 0;
 }
 
 .registrar-pills {
   display: flex;
+  align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
+}
+
+.reg-pill-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-right: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .reg-pill {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #475569;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.reg-pill:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.reg-pill.active {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #93c5fd;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12);
+}
+
+.registrar-quick-tip-banner {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #2563eb;
+  border-radius: 9px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.76rem;
+  color: #334155;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.registrar-tip-lead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.registrar-tip-ttl {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
 }
 
 .connect-form-grid {
   display: grid;
   grid-template-columns: 1.6fr 1.2fr auto;
-  gap: 14px;
+  gap: 16px;
   align-items: flex-end;
 }
 
@@ -5454,7 +5525,7 @@ html {
   align-items: center;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 9px;
+  border-radius: 10px;
   overflow: hidden;
   transition: all 0.15s ease;
 }
@@ -5465,11 +5536,11 @@ html {
 }
 
 .domain-protocol {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
   background: #f8fafc;
-  padding: 9px 12px;
+  padding: 10px 13px;
   border-right: 1px solid #e2e8f0;
   user-select: none;
 }
@@ -5478,9 +5549,14 @@ html {
   flex: 1;
   border: none;
   outline: none;
-  font-size: 0.84rem;
-  padding: 9px 12px;
+  font-size: 0.86rem;
+  padding: 10px 14px;
   color: #0f172a;
+  font-weight: 500;
+}
+
+.domain-core-field::placeholder {
+  color: #94a3b8;
 }
 
 .select-target-shell {
@@ -5491,21 +5567,26 @@ html {
 
 .select-lead-glyph {
   position: absolute;
-  left: 12px;
+  left: 13px;
   color: #64748b;
   pointer-events: none;
 }
 
 .select-target-field {
   width: 100%;
-  padding: 9px 12px 9px 34px;
-  border-radius: 9px;
+  padding: 10px 14px 10px 38px;
+  border-radius: 10px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   color: #0f172a;
+  font-weight: 500;
   outline: none;
   transition: all 0.15s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
 }
 
 .select-target-field:focus {
@@ -5516,26 +5597,74 @@ html {
 .btn-connect-domain {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #ffffff;
   border: none;
-  padding: 10px 18px;
-  border-radius: 9px;
-  font-size: 0.82rem;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
 }
 
 .btn-connect-domain:hover {
   background: #2563eb;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.28);
+}
+
+/* Ingress Workflow Steps Strip */
+.connect-flow-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+@media (max-width: 768px) {
+  .connect-flow-strip { grid-template-columns: 1fr; }
+}
+
+.flow-step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.flow-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  flex-shrink: 0;
+  border: 1px solid #bfdbfe;
+}
+
+.flow-step-txt strong {
+  color: #1e293b;
+  display: block;
+  margin-bottom: 1px;
 }
 
 /* Connected Domains Section */
+.connected-domains-section {
+  margin-top: 28px;
+}
+
 .section-title-strip {
   display: flex;
   justify-content: space-between;
@@ -5544,7 +5673,7 @@ html {
 }
 
 .section-title-strip h3 {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 800;
   color: #64748b;
   letter-spacing: 0.06em;
@@ -5557,16 +5686,28 @@ html {
   color: #059669;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 3px 9px;
+  border-radius: 6px;
 }
 
 .domain-profile-card {
-  background: #ffffff;
+  background: radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.03) 0%, transparent 50%), #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
-  padding: 20px 24px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-  margin-bottom: 20px;
+  padding: 22px 24px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+  margin-bottom: 22px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.domain-profile-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .domain-card-header {
@@ -5587,25 +5728,27 @@ html {
 }
 
 .domain-glyph-box {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 12px;
-  background: #eff6ff;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   color: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 1px solid #bfdbfe;
 }
 
 .domain-main-row {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .domain-headline {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.02em;
@@ -5618,65 +5761,74 @@ html {
   color: #2563eb;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .domain-created-txt {
-  font-size: 0.72rem;
+  font-size: 0.73rem;
   color: #94a3b8;
+  display: block;
+  margin-top: 3px;
 }
 
 .domain-created-txt code {
   color: #475569;
+  background: #f8fafc;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.7rem;
 }
 
 .domain-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .ssl-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.72rem;
+  gap: 6px;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #059669;
   background: #ecfdf5;
   border: 1px solid #a7f3d0;
-  padding: 5px 10px;
-  border-radius: 8px;
+  padding: 6px 12px;
+  border-radius: 9px;
 }
 
 .btn-ping-dns {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.74rem;
+  gap: 6px;
+  font-size: 0.76rem;
   font-weight: 600;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   color: #334155;
-  padding: 6px 11px;
-  border-radius: 8px;
+  padding: 7px 13px;
+  border-radius: 9px;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.15s ease;
 }
 
 .btn-ping-dns:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 .btn-visit-site, .btn-del-domain {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   border: 1px solid #e2e8f0;
   background: #ffffff;
   color: #64748b;
@@ -5684,12 +5836,13 @@ html {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.15s ease;
 }
 
 .btn-visit-site:hover {
   color: #0f172a;
   background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .btn-del-domain:hover {
@@ -5702,16 +5855,19 @@ html {
 .dns-table-box {
   background: #fafbfc;
   border: 1px solid #f1f5f9;
-  border-radius: 12px;
-  padding: 16px 18px;
-  margin-bottom: 14px;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
 }
 
 .dns-table-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
-  font-size: 0.74rem;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 0.76rem;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .table-title {
@@ -5726,30 +5882,36 @@ html {
 .dns-records-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .dns-row-item {
   display: grid;
-  grid-template-columns: 110px 180px 1fr 180px;
+  grid-template-columns: 120px 170px 1fr 140px 170px;
   align-items: center;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 10px 14px;
-  gap: 12px;
+  border-radius: 10px;
+  padding: 12px 16px;
+  gap: 14px;
+  transition: all 0.15s ease;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1050px) {
   .dns-row-item { grid-template-columns: 1fr; }
 }
 
+.dns-row-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+}
+
 .record-badge {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.05em;
-  padding: 3px 8px;
-  border-radius: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
   display: inline-block;
   text-align: center;
 }
@@ -5759,16 +5921,22 @@ html {
 
 .col-lbl {
   display: block;
-  font-size: 0.62rem;
+  font-size: 0.64rem;
   font-weight: 700;
   color: #94a3b8;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .dns-col-host code, .val-copy-group code {
-  font-family: ui-monospace, monospace;
-  font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
   color: #0f172a;
+  background: #f8fafc;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
 }
 
 .val-copy-group {
@@ -5779,21 +5947,23 @@ html {
 
 .btn-mini-copy {
   border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  background: #ffffff;
   color: #64748b;
-  border-radius: 5px;
-  width: 24px;
-  height: 24px;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.1s ease;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .btn-mini-copy:hover {
   background: #f1f5f9;
   color: #0f172a;
+  border-color: #cbd5e1;
 }
 
 .dns-valid-pill {
@@ -5804,8 +5974,34 @@ html {
   font-weight: 700;
   color: #059669;
   background: #ecfdf5;
-  padding: 3px 8px;
+  border: 1px solid #a7f3d0;
+  padding: 4px 9px;
   border-radius: 6px;
+}
+
+/* Ingress Telemetry Diagnostics Bar */
+.domain-diagnostics-bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  font-size: 0.72rem;
+  color: #475569;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.diag-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.diag-item strong {
+  color: #0f172a;
 }
 
 .domain-tip-footer {
@@ -5815,13 +6011,49 @@ html {
   font-size: 0.74rem;
   color: #475569;
   background: #f8fafc;
-  padding: 10px 14px;
-  border-radius: 8px;
+  padding: 11px 16px;
+  border-radius: 10px;
   border: 1px solid #e2e8f0;
 }
 
 .tip-icon {
   flex-shrink: 0;
+}
+
+/* Empty State */
+.empty-domains-card {
+  padding: 56px 24px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  margin-top: 16px;
+}
+
+.empty-domain-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #f1f5f9;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.empty-domain-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.empty-domain-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  max-width: 440px;
+  margin: 0 auto;
 }
 
 

@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.7',
+    releaseDate: '18 Oktober 2026',
+    title: 'Custom Domain & Edge DNS Ingress: Enterprise Telemetry, Interactive Registrar Guides & Workflow Pipeline',
+    summary: 'Merombak total modul Custom Domain & Edge DNS Ingress dengan standar visual HeroCMS Studio terkini: penambahan baris 4 kartu telemetri berikon tunggal transparan pojok kanan atas (Domain Terhubung, Sertifikat TLS 1.3, Edge Ingress Cluster, dan Latensi DNS TTFB), selector registrar interaktif dengan panduan spesifik (Cloudflare, Niagahoster, Domainesia, IDwebhost, Namecheap), alur pipeline 3 langkah konfigurasi DNS, DNS routing workbench berpresisi tinggi dengan one-click copy, serta diagnostik live handshake Traefik edge.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-1147-1',
+        type: 'feature',
+        scope: 'Custom Domains Module (.stats-overview-grid)',
+        description: 'Menambahkan 4 kartu metrik telemetri modern berikon tunggal transparan di pojok kanan atas untuk pemantauan kuota domain kustom, status SSL Let\'s Encrypt, cluster Anycast edge, dan latensi TTFB.'
+      },
+      {
+        id: 'c-1147-2',
+        type: 'improvement',
+        scope: 'Connect Domain Hero Card & Registrar Presets',
+        description: 'Memperbarui kartu penghubung domain dengan registrar chip interaktif yang memunculkan tips konfigurasi DNS khusus (Cloudflare DNS-only, cPanel Zone Editor, dsb) dan estimasi TTL.'
+      },
+      {
+        id: 'c-1147-3',
+        type: 'improvement',
+        scope: 'DNS Records Workbench & Traefik Diagnostics',
+        description: 'Menyempurnakan kartu domain terhubung dengan DNS record table baru (CNAME & A Record), feedback salin target instan, dan diagnostik protokol TLS 1.3 ALPN / HTTP/2 multiplexing.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.6',
     releaseDate: '18 Oktober 2026',
     title: 'Universal Rollout: Single Translucent Corner Watermark Cards across All Dashboard Modules',
     summary: 'Menerapkan desain kartu telemetri minimalis modern secara universal ke seluruh modul dashboard HeroCMS (ContainersModule, MediaAssetsModule, SupportTicketingModule, InvoicesHistoryModule, AnalyticsTelemetryModule, ChangelogModule). Menghilangkan glyph box kecil dan menyematkan satu ikon transparan berwarna berukuran 48px-58px di pojok kanan atas kartu yang responsif saat disentuh (hover), menciptakan konsistensi tema visual yang harmonis di seluruh studio.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
