@@ -9047,112 +9047,112 @@ html {
 }
 
 /* ==========================================================================
-   HEROCMS S3 ASSET STUDIO & MEDIA STORAGE CONSOLE (NEXT-GEN BESPOKE DESIGN)
+   HEROCMS S3 ASSET STUDIO & DIGITAL ASSET MANAGEMENT (DAM ARCHITECTURE)
    ========================================================================== */
 
-/* Modern S3 Storage Breakdown Console */
-.storage-breakdown-panel {
-  padding: 20px 24px;
-  margin-bottom: 24px;
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04);
-  position: relative;
-  overflow: hidden;
-}
-
-.storage-breakdown-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #2563eb, #3b82f6, #10b981, #8b5cf6);
-}
-
-.storage-console-top-row {
+/* Main 2-Column Studio DAM Container */
+.dam-studio-container {
   display: flex;
-  justify-content: space-between;
+  gap: 22px;
   align-items: flex-start;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 16px;
+  margin-top: 16px;
 }
 
-.storage-gauge-headline {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+@media (max-width: 1080px) {
+  .dam-studio-container {
+    flex-direction: column;
+  }
 }
 
-.storage-gauge-icon-box {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #dbeafe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Sidebar Rail (Left Column 310px) */
+.dam-sidebar-rail {
+  width: 310px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 80px;
 }
 
-.storage-gauge-titles strong {
-  font-size: 14.5px;
-  font-weight: 700;
-  color: #0f172a;
+@media (max-width: 1080px) {
+  .dam-sidebar-rail {
+    width: 100%;
+    position: static;
+  }
+}
+
+/* 1. S3 Storage & Health Hub Widget */
+.dam-storage-widget {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.dam-storage-widget-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.dam-widget-title {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-.storage-gauge-titles span {
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 2px;
-  display: block;
+.dam-widget-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  padding: 1px 6px;
+  border-radius: 4px;
 }
 
-.storage-usage-counter {
-  text-align: right;
+.dam-storage-val-row {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
 }
 
-.storage-usage-val {
-  font-size: 18px;
+.dam-storage-num {
+  font-size: 17px;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.02em;
 }
 
-.storage-usage-denom {
-  font-size: 13px;
+.dam-storage-denom {
+  font-size: 12px;
   font-weight: 500;
   color: #64748b;
 }
 
-.storage-usage-sub {
-  font-size: 11.5px;
-  color: #059669;
-  font-weight: 600;
-  margin-top: 2px;
+.dam-storage-pct {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2563eb;
 }
 
 /* Multi-Segment Storage Progress Meter */
 .storage-meter-shell {
-  height: 12px;
+  height: 9px;
   background: #f1f5f9;
   border-radius: 999px;
   overflow: hidden;
   display: flex;
   position: relative;
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .meter-fill-segment {
@@ -9174,130 +9174,350 @@ html {
   background: linear-gradient(90deg, #7c3aed, #9333ea);
 }
 
-/* Storage Category Distribution Chips */
-.storage-distribution-chips {
+.dam-storage-mini-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #475569;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 10px;
+}
+
+.dam-legend-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
 }
 
-.storage-chips-left {
+.dam-legend-label {
   display: flex;
   align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.storage-cat-chip {
-  display: inline-flex;
-  align-items: center;
   gap: 6px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #475569;
-  background: #f8fafc;
-  padding: 4px 10px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
 }
 
-.storage-cat-chip .chip-dot {
-  width: 8px;
-  height: 8px;
+.dam-legend-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
 }
 
-.storage-cat-chip .chip-dot.blue { background: #2563eb; }
-.storage-cat-chip .chip-dot.emerald { background: #10b981; }
-.storage-cat-chip .chip-dot.purple { background: #9333ea; }
-.storage-cat-chip .chip-dot.slate { background: #94a3b8; }
+.dam-legend-dot.blue { background: #2563eb; }
+.dam-legend-dot.emerald { background: #10b981; }
+.dam-legend-dot.purple { background: #9333ea; }
+.dam-legend-dot.slate { background: #cbd5e1; }
 
-.storage-infra-pills {
+.dam-legend-val {
+  font-weight: 600;
+  color: #334155;
+  font-size: 11px;
+}
+
+/* 2. Virtual Folder & Category Tree Navigation */
+.dam-folder-nav {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.dam-nav-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px 10px 4px 10px;
+  margin: 0;
+}
+
+.dam-folder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.dam-folder-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.dam-folder-item.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.dam-folder-leading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dam-folder-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.dam-folder-item.active .dam-folder-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* 3. Compact Drag & Drop Ingestion Widget */
+.dam-compact-uploader {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+}
+
+.dam-compact-uploader:hover, .dam-compact-uploader.dragging {
+  border-color: #2563eb;
+  background: #eff6ff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -3px rgba(37, 99, 235, 0.15);
+}
+
+.dam-compact-uploader-icon {
+  width: 40px;
+  height: 40px;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px auto;
+  transition: transform 0.2s ease;
+}
+
+.dam-compact-uploader:hover .dam-compact-uploader-icon {
+  transform: scale(1.08);
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.dam-compact-uploader h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 3px 0;
+}
+
+.dam-compact-uploader p {
+  font-size: 11px;
+  color: #64748b;
+  margin: 0 0 10px 0;
+}
+
+.btn-dam-browse {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dam-compact-uploader:hover .btn-dam-browse {
+  background: #2563eb;
+}
+
+/* ==========================================================================
+   MAIN CONTENT STAGE (RIGHT COLUMN)
+   ========================================================================== */
+.dam-main-stage {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Compact Top Metrics Strip (4 Mini Inline Cards) */
+.dam-mini-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .dam-mini-stats-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.dam-mini-stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dam-mini-stat-info {
+  min-width: 0;
+}
+
+.dam-mini-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.dam-mini-stat-val {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dam-mini-stat-glyph {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dam-mini-stat-glyph.blue { background: #eff6ff; color: #2563eb; }
+.dam-mini-stat-glyph.emerald { background: #ecfdf5; color: #059669; }
+.dam-mini-stat-glyph.purple { background: #f5f3ff; color: #7c3aed; }
+.dam-mini-stat-glyph.slate { background: #f8fafc; color: #475569; }
+
+/* Floating Batch Action Bar */
+.dam-batch-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 10px 16px;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.3);
+  animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.batch-selection-tag {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.batch-action-buttons {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.infra-spec-badge {
+.btn-batch-action {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 10.5px;
+  gap: 6px;
+  font-size: 12px;
   font-weight: 600;
-  color: #334155;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  padding: 3px 8px;
+  padding: 6px 12px;
   border-radius: 6px;
-  letter-spacing: 0.02em;
-}
-
-.infra-spec-badge.shield { color: #0284c7; background: #f0f9ff; border-color: #bae6fd; }
-.infra-spec-badge.speed { color: #059669; background: #ecfdf5; border-color: #a7f3d0; }
-
-/* ==========================================================================
-   SMART INGESTION ZONE (HIGH-TECH DRAG & DROP UPLOADER)
-   ========================================================================== */
-.upload-dropzone-pro {
-  position: relative;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  border: 1.5px dashed #cbd5e1;
-  border-radius: 18px;
-  padding: 34px 24px;
-  text-align: center;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+  transition: all 0.15s ease;
 }
 
-.upload-dropzone-pro::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
-  background-size: 20px 20px;
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-.upload-dropzone-pro:hover {
-  border-color: #2563eb;
-  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px -6px rgba(37, 99, 235, 0.12);
-}
-
-.upload-dropzone-pro.dragging {
-  border-color: #2563eb;
-  border-style: solid;
-  background: #eff6ff;
-  transform: scale(1.01);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15), 0 16px 36px -6px rgba(37, 99, 235, 0.2);
-}
-
-.dropzone-content {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.dropzone-icon-box {
-  width: 58px;
-  height: 58px;
+.btn-batch-action:hover {
   background: #ffffff;
-  color: #2563eb;
-  border-radius: 16px;
-  border: 1px solid #dbeafe;
+  color: #0f172a;
+}
+
+.btn-batch-action.danger:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+/* Card Selection Checkbox */
+.media-card-checkbox {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid #cbd5e1;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 6;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.media-card-checkbox:hover {
+  border-color: #2563eb;
+  transform: scale(1.08);
+}
+
+.media-card-checkbox.selected {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.media-pro-card.is-selected {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+}
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);

@@ -4,28 +4,34 @@ export const changelogReleases: ChangelogRelease[] = [
   {
     version: 'v1.11.0',
     releaseDate: '18 Oktober 2026',
-    title: 'Redesign Total Media Assets & S3 Storage Studio (Next-Gen Bespoke UI)',
-    summary: 'Merombak total visual dan pengalaman pengguna (UX) pada modul Media Assets & Storage S3 MinIO. Menghadirkan S3 Storage Command Console dengan visual multi-segment progress bar, Smart Ingestion Dropzone dengan micro-animations, kartu media sinematik berasio 16:10 dengan checkerboard background untuk aset transparan, glassmorphic floating action dock, serta integrasi Dual View Switcher (Galeri Kartu Grid vs Tabel Ledger Berkas).',
+    title: 'Arsitektur Digital Asset Management (DAM) 2-Kolom & Studio S3 Storage',
+    summary: 'Refaktor besar penataan tata letak Media Assets menjadi arsitektur 2-Kolom Digital Asset Management (DAM) modern berdensitas tinggi. Mengintegrasikan S3 Storage Quota Health Hub, navigasi folder/kategori cerdas, compact drag-and-drop uploader di sidebar kiri, strip telemetri mini ringkas, fitur seleksi massal (Batch Multi-Selection) dengan floating action dock, serta galeri media di area panggung utama yang langsung tampil di atas layar tanpa scroll vertikal berlebih.',
     badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
         id: 'c-1110-1',
         type: 'feature',
-        scope: 'Media Assets Hub (MediaAssetsModule.vue)',
-        description: 'Menambahkan S3 Storage Command Console dengan telemetri multi-kategori (Foto/Raster, Dokumen PDF/Office, Vektor SVG), progress bar multi-segmen berwarna cerdas, dan spesifikasi infrastruktur TLS 1.3 & MinIO multi-tenant isolation.'
+        scope: 'DAM Architecture & Layout (MediaAssetsModule.vue)',
+        description: 'Merombak penataan vertikal bertumpuk menjadi 2-Kolom DAM: Sidebar Rail (310px) berisi widget kuota S3, navigasi folder kategori cerdas dengan counter dinamis, dan compact uploader, serta Main Stage yang lapang.'
       },
       {
         id: 'c-1110-2',
+        type: 'feature',
+        scope: 'Batch Operations & Multi-Select (MediaAssetsModule.vue)',
+        description: 'Menyediakan fitur seleksi berkas ganda (checkbox per kartu dan Select All), dilengkapi Floating Batch Action Dock untuk salin semua URL CDN, unduh terpilih, dan hapus massal dari S3 bucket.'
+      },
+      {
+        id: 'c-1110-3',
         type: 'feature',
         scope: 'UI / UX & Dual View Mode (MediaAssetsModule.vue)',
         description: 'Menyediakan tombol pengubah tampilan interaktif antara Galeri Kartu Sinematik (Grid Mode) dan Tabel Ledger Berkas Berstandar Enterprise (List Mode) lengkap dengan thumbnail mini, spesifikasi berkas, dan aksi inline instan.'
       },
       {
-        id: 'c-1110-3',
+        id: 'c-1110-4',
         type: 'improvement',
-        scope: 'Master Stylesheet & Micro-Interactions (studio-master.css)',
-        description: 'Menggantikan hover overlay kaku dengan Glassmorphic Floating Action Dock, menambahkan efek micro-scale halus saat kartu di-hover, latar belakang berpola transparan (checkerboard) untuk PNG/SVG, serta Smart Ingestion Upload Dropzone yang lebih hidup.'
+        scope: 'Master Stylesheet & Compact Metrics (studio-master.css)',
+        description: 'Menghadirkan strip telemetri mini 4-kolom kompak di atas panggung utama, Glassmorphic Floating Action Dock, mikro-animasi checkerboard background pada aset transparan, dan optimasi ruang vertikal.'
       }
     ]
   },

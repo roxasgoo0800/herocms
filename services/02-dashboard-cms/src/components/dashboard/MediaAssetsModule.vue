@@ -27,7 +27,12 @@ import {
   LayoutGrid,
   List,
   Sparkles,
-  Server
+  Server,
+  Folder,
+  Image as ImageIcon,
+  CheckSquare,
+  Square,
+  Plus
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { MediaAssetItem } from '../../types/dashboard';
@@ -65,6 +70,9 @@ const isDragging = ref(false);
 const failedImageIds = ref<Set<string>>(new Set());
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const searchInputRef = ref<HTMLInputElement | null>(null);
+
+// Batch Multi-Selection State
+const selectedAssetIds = ref<Set<string>>(new Set());
 
 let dragCounter = 0;
 
@@ -131,6 +139,33 @@ const storageCategoryStats = computed(() => {
   };
 });
 
+// Folder category asset count
+const categoryCounts = computed(() => {
+  const counts = {
+    all: mediaAssets.value.length,
+    image: 0,
+    pdf: 0,
+    excel: 0,
+    doc: 0,
+    vector: 0
+  };
+  for (const item of mediaAssets.value) {
+    const t = item.type.toUpperCase();
+    if (['JPG', 'JPEG', 'PNG', 'WEBP', 'GIF', 'AVIF'].includes(t)) {
+      counts.image++;
+    } else if (t === 'PDF') {
+      counts.pdf++;
+    } else if (['XLSX', 'XLS', 'CSV'].includes(t)) {
+      counts.excel++;
+    } else if (['DOCX', 'DOC', 'TXT'].includes(t)) {
+      counts.doc++;
+    } else if (t === 'SVG') {
+      counts.vector++;
+    }
+  }
+  return counts;
+});
+
 // Document preview modal state
 const isPreviewModalOpen = ref(false);
 const showPdfPreview = ref(false);
@@ -166,6 +201,68 @@ const filteredMedia = computed(() => {
     return 0;
   });
 });
+
+// Multi-Selection Methods
+const isAssetSelected = (id: string) => selectedAssetIds.value.has(id);
+
+const toggleSelectAsset = (id: string, e?: Event) => {
+  if (e) e.stopPropagation();
+  const next = new Set(selectedAssetIds.value);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  selectedAssetIds.value = next;
+};
+
+const isAllSelected = computed(() => {
+  if (filteredMedia.value.length === 0) return false;
+  return filteredMedia.value.every(item => selectedAssetIds.value.has(item.id));
+});
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedAssetIds.value = new Set();
+  } else {
+    selectedAssetIds.value = new Set(filteredMedia.value.map(item => item.id));
+  }
+};
+
+const clearSelection = () => {
+  selectedAssetIds.value = new Set();
+};
+
+const batchCopyUrls = () => {
+  const urls = filteredMedia.value
+    .filter(item => selectedAssetIds.value.has(item.id))
+    .map(item => item.url)
+    .join('\n');
+  if (urls) {
+    navigator.clipboard.writeText(urls);
+    showToast(`${selectedAssetIds.value.size} URL CDN berhasil disalin ke clipboard!`, 'success');
+  }
+};
+
+const batchDownload = async () => {
+  const selectedItems = filteredMedia.value.filter(item => selectedAssetIds.value.has(item.id));
+  showToast(`Mengunduh ${selectedItems.length} berkas...`, 'info');
+  for (const item of selectedItems) {
+    await downloadMediaFile(item);
+  }
+};
+
+const batchDelete = () => {
+  const count = selectedAssetIds.value.size;
+  if (confirm(`Apakah Anda yakin ingin menghapus ${count} berkas terpilih dari S3 bucket?`)) {
+    const selectedItems = filteredMedia.value.filter(item => selectedAssetIds.value.has(item.id));
+    for (const item of selectedItems) {
+      deleteMedia(item);
+    }
+    clearSelection();
+    showToast(`${count} berkas berhasil dihapus dari S3 bucket.`, 'success');
+  }
+};
 
 const triggerFileInput = () => {
   fileInputRef.value?.click();
@@ -254,558 +351,660 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
     <div class="page-intro-row">
       <div>
         <h1 class="page-title">Media Assets & Dokumen S3 MinIO</h1>
-        <p class="page-desc">Penyimpanan objek S3 multi-region terisolasi untuk foto, vektor, berkas PDF, spreadsheet Excel (.xlsx), dan dokumen Word (.docx) dengan CDN edge proxy Traefik v3.</p>
+        <p class="page-desc">Pusat Digital Asset Management (DAM) terisolasi untuk foto, vektor, berkas PDF, spreadsheet Excel (.xlsx), dan dokumen Word (.docx) dengan CDN edge proxy Traefik v3.</p>
       </div>
-      <div class="quota-quick-pills">
-        <span class="pill-metric">Region: <strong>ID-JKT-1 (MinIO S3)</strong></span>
-        <span class="pill-metric-highlight">S3 Dedicated Bucket: <strong>{{ mediaBucketName }}</strong></span>
-      </div>
-    </div>
-
-    <!-- Storage Telemetry Strip (4 High-Tech Cards) -->
-    <div class="stats-overview-grid">
-      <div class="telemetry-card">
-        <div class="telemetry-top">
-          <span class="telemetry-label">KAPASITAS S3 BUCKET</span>
-          <div class="telemetry-glyph blue"><Database :size="15" /></div>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <div class="quota-quick-pills">
+          <span class="pill-metric">Region: <strong>ID-JKT-1</strong></span>
+          <span class="pill-metric-highlight">S3 Bucket: <strong>{{ mediaBucketName }}</strong></span>
         </div>
-        <div class="telemetry-val">{{ mediaStorage.usedStorage }} <span class="telemetry-denom">/ 2.0 GB</span></div>
-        <div class="telemetry-sub ready-state">
-          <span class="pulse-mini-dot"></span>
-          <span>{{ mediaStorage.freeStorage }} kuota tersedia (SSD NVMe)</span>
-        </div>
-      </div>
-
-      <div class="telemetry-card">
-        <div class="telemetry-top">
-          <span class="telemetry-label">CDN EDGE HIT RATIO</span>
-          <div class="telemetry-glyph emerald"><Zap :size="15" /></div>
-        </div>
-        <div class="telemetry-val">99.4% <span class="badge-online">Optimal</span></div>
-        <div class="telemetry-sub"><span>Rerata latensi serving: 1.2ms TTFB</span></div>
-      </div>
-
-      <div class="telemetry-card">
-        <div class="telemetry-top">
-          <span class="telemetry-label">UTILISASI KUOTA AKUN</span>
-          <div class="telemetry-glyph purple"><Globe :size="15" /></div>
-        </div>
-        <div class="telemetry-val">{{ mediaStorage.usagePercentage }} <span class="badge-growth-pill">Max 2 GB</span></div>
-        <div class="telemetry-sub"><span>Terisolasi per customer account</span></div>
-      </div>
-
-      <div class="telemetry-card">
-        <div class="telemetry-top">
-          <span class="telemetry-label">TOTAL OBJEK BERKAS</span>
-          <div class="telemetry-glyph blue"><Layers :size="15" /></div>
-        </div>
-        <div class="telemetry-val">{{ mediaAssets.length }} File <span class="badge-online">Sync</span></div>
-        <div class="telemetry-sub"><span>Mendukung Raster, SVG, PDF, XLSX, DOCX</span></div>
-      </div>
-    </div>
-
-    <!-- Next-Gen S3 Storage Command Console -->
-    <div class="storage-breakdown-panel">
-      <div class="storage-console-top-row">
-        <div class="storage-gauge-headline">
-          <div class="storage-gauge-icon-box">
-            <Server :size="20" />
-          </div>
-          <div class="storage-gauge-titles">
-            <strong>
-              Distribusi Penyimpanan Objek S3 Terisolasi
-              <span class="badge-online" style="font-size: 10px;">AES-256 Encrypted</span>
-            </strong>
-            <span>Alokasi kapasitas objek media pelanggan (Batas Kuota: 2.00 GB SSD NVMe)</span>
-          </div>
-        </div>
-
-        <div class="storage-usage-counter">
-          <div class="storage-usage-val">
-            {{ mediaStorage.usedStorage }} <span class="storage-usage-denom">/ 2.00 GB</span>
-          </div>
-          <div class="storage-usage-sub">
-            {{ mediaStorage.freeStorage }} kuota tersisa ({{ mediaStorage.usagePercentage }} terpakai)
-          </div>
-        </div>
-      </div>
-
-      <!-- Multi-Segment Visual Progress Bar -->
-      <div class="storage-meter-shell" :title="'Total terpakai: ' + mediaStorage.usedStorage">
-        <div class="meter-fill-segment seg-images" :style="{ width: storageCategoryStats.imagesPct }" title="Foto & Raster"></div>
-        <div class="meter-fill-segment seg-docs" :style="{ width: storageCategoryStats.docsPct }" title="Dokumen (PDF, XLSX, DOCX)"></div>
-        <div class="meter-fill-segment seg-vector" :style="{ width: storageCategoryStats.vectorPct }" title="Vektor SVG"></div>
-      </div>
-
-      <!-- Storage Breakdown Categories & Infra Pills -->
-      <div class="storage-distribution-chips">
-        <div class="storage-chips-left">
-          <span class="storage-cat-chip" title="Foto (WebP, PNG, JPG)">
-            <span class="chip-dot blue"></span>
-            <span>Foto & Raster ({{ storageCategoryStats.imagesFormatted }})</span>
-          </span>
-          <span class="storage-cat-chip" title="Dokumen PDF, Excel, Word">
-            <span class="chip-dot emerald"></span>
-            <span>Dokumen ({{ storageCategoryStats.docsFormatted }})</span>
-          </span>
-          <span class="storage-cat-chip" title="Vektor SVG">
-            <span class="chip-dot purple"></span>
-            <span>Vektor SVG ({{ storageCategoryStats.vectorFormatted }})</span>
-          </span>
-          <span class="storage-cat-chip" title="Kapasitas Bebas">
-            <span class="chip-dot slate"></span>
-            <span>Kuota Bebas ({{ mediaStorage.freeStorage }})</span>
-          </span>
-        </div>
-
-        <div class="storage-infra-pills">
-          <span class="infra-spec-badge shield">
-            <ShieldCheck :size="12" />
-            <span>MinIO Multi-Tenant</span>
-          </span>
-          <span class="infra-spec-badge speed">
-            <Zap :size="12" />
-            <span>Traefik Edge 1.2ms TTFB</span>
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Smart Ingestion Dropzone -->
-    <div
-      class="upload-dropzone-pro"
-      :class="{ dragging: isDragging }"
-      @dragenter="handleDragEnter"
-      @dragover.prevent="isDragging = true"
-      @dragleave="handleDragLeave"
-      @drop.prevent="handleDropUpload"
-      @click="triggerFileInput"
-    >
-      <!-- Hidden Native File Input -->
-      <input
-        ref="fileInputRef"
-        type="file"
-        multiple
-        accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.csv,.svg"
-        style="display: none"
-        @change="handleFileInputChange"
-      />
-
-      <div v-if="isUploadingMedia" class="dropzone-content">
-        <div class="dropzone-icon-box">
-          <Loader2 :size="30" class="spin-animation" style="color: #2563eb;" />
-        </div>
-        <div>
-          <h3 class="dropzone-heading">Mengunggah ke MinIO S3...</h3>
-          <p class="dropzone-sub">Menyimpan objek terisolasi dan memvalidasi magic bytes keamanan.</p>
-        </div>
-      </div>
-      <div v-else class="dropzone-content">
-        <div class="dropzone-icon-box">
-          <UploadCloud :size="30" />
-        </div>
-        <div>
-          <h3 class="dropzone-heading">
-            Tarik & Lepas File ke Sini atau 
-            <button type="button" class="btn-upload-browse-action" @click.stop="triggerFileInput">
-              <Sparkles :size="13" />
-              <span>Pilih dari Komputer</span>
-            </button>
-          </h3>
-          <p class="dropzone-sub">
-            Mendukung <strong>Foto (WebP, PNG, JPG)</strong>, <strong>PDF</strong>, <strong>Excel (.xlsx, .csv)</strong>, <strong>Word (.docx)</strong>, & <strong>SVG</strong> (Batas maks. 50MB per file)
-          </p>
-        </div>
-        <div class="format-badges-row">
-          <span class="format-pill pill-img">🖼️ WEBP / PNG / JPG</span>
-          <span class="format-pill pill-pdf">📕 PDF DOCUMENT</span>
-          <span class="format-pill pill-excel">📊 EXCEL .XLSX</span>
-          <span class="format-pill pill-doc">📝 WORD .DOCX</span>
-          <span class="format-pill pill-svg">📐 SVG VECTOR</span>
-          <span class="format-pill pill-cdn">⚡ EDGE CDN CACHED</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Filter & View Controls Toolbar -->
-    <div class="filter-toolbar" style="margin-top: 24px;">
-      <div class="search-command-shell">
-        <Search :size="15" class="search-lead-glyph" />
-        <input
-          ref="searchInputRef"
-          v-model="mediaSearch"
-          type="text"
-          placeholder="Cari berkas gambar, dokumen PDF, spreadsheet Excel..."
-          class="search-command-input"
-        />
-        <button v-if="mediaSearch" class="btn-clear-search" @click="mediaSearch = ''" title="Bersihkan">
-          <X :size="13" />
+        <button type="button" class="btn-top-create" @click="triggerFileInput">
+          <Plus :size="15" />
+          <span>Unggah Berkas Baru</span>
         </button>
-        <kbd class="shortcut-tag">⌘K</kbd>
       </div>
+    </div>
 
-      <div class="filter-controls-group">
-        <!-- Bespoke Custom Sort Dropdown -->
-        <div class="custom-filter-dropdown-wrap">
+    <!-- Hidden Native File Input -->
+    <input
+      ref="fileInputRef"
+      type="file"
+      multiple
+      accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.csv,.svg"
+      style="display: none"
+      @change="handleFileInputChange"
+    />
+
+    <!-- STUDIO DIGITAL ASSET MANAGEMENT (DAM) 2-COLUMN LAYOUT -->
+    <div class="dam-studio-container">
+      <!-- SIDEBAR RAIL (Kiri ~310px) -->
+      <aside class="dam-sidebar-rail">
+        <!-- 1. Storage Quota & Engine Widget -->
+        <div class="dam-storage-widget">
+          <div class="dam-storage-widget-top">
+            <div class="dam-widget-title">
+              <Database :size="16" style="color: #2563eb;" />
+              <span>Kapasitas S3 Bucket</span>
+            </div>
+            <span class="dam-widget-badge">AES-256 TLS</span>
+          </div>
+
+          <div class="dam-storage-val-row">
+            <div>
+              <span class="dam-storage-num">{{ mediaStorage.usedStorage }}</span>
+              <span class="dam-storage-denom"> / 2.00 GB</span>
+            </div>
+            <span class="dam-storage-pct">{{ mediaStorage.usagePercentage }}</span>
+          </div>
+
+          <!-- Multi-Segment Visual Progress Bar -->
+          <div class="storage-meter-shell" :title="'Total terpakai: ' + mediaStorage.usedStorage">
+            <div class="meter-fill-segment seg-images" :style="{ width: storageCategoryStats.imagesPct }" title="Foto & Raster"></div>
+            <div class="meter-fill-segment seg-docs" :style="{ width: storageCategoryStats.docsPct }" title="Dokumen (PDF, XLSX, DOCX)"></div>
+            <div class="meter-fill-segment seg-vector" :style="{ width: storageCategoryStats.vectorPct }" title="Vektor SVG"></div>
+          </div>
+
+          <!-- Breakdown List -->
+          <div class="dam-storage-mini-legend">
+            <div class="dam-legend-row">
+              <span class="dam-legend-label">
+                <span class="dam-legend-dot blue"></span>
+                <span>Foto & Raster</span>
+              </span>
+              <span class="dam-legend-val">{{ storageCategoryStats.imagesFormatted }}</span>
+            </div>
+            <div class="dam-legend-row">
+              <span class="dam-legend-label">
+                <span class="dam-legend-dot emerald"></span>
+                <span>Dokumen & Sheets</span>
+              </span>
+              <span class="dam-legend-val">{{ storageCategoryStats.docsFormatted }}</span>
+            </div>
+            <div class="dam-legend-row">
+              <span class="dam-legend-label">
+                <span class="dam-legend-dot purple"></span>
+                <span>Vektor SVG</span>
+              </span>
+              <span class="dam-legend-val">{{ storageCategoryStats.vectorFormatted }}</span>
+            </div>
+            <div class="dam-legend-row">
+              <span class="dam-legend-label">
+                <span class="dam-legend-dot slate"></span>
+                <span>Sisa Kuota Bebas</span>
+              </span>
+              <span class="dam-legend-val">{{ mediaStorage.freeStorage }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Virtual Folder & Category Navigation -->
+        <nav class="dam-folder-nav">
+          <p class="dam-nav-section-title">Kategori & Folder</p>
+
           <button
             type="button"
-            class="custom-filter-trigger-btn"
-            @click.stop="isSortDropdownOpen = !isSortDropdownOpen"
-            title="Urutkan Berkas"
-          >
-            <ArrowUpDown :size="13" style="color: #64748b;" />
-            <span>{{ sortOptions.find(o => o.value === sortBy)?.label || 'Terbaru' }}</span>
-            <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isSortDropdownOpen }" />
-          </button>
-          <div v-if="isSortDropdownOpen" class="custom-filter-dropdown-menu">
-            <button
-              v-for="opt in sortOptions"
-              :key="opt.value"
-              type="button"
-              class="custom-filter-dropdown-item"
-              :class="{ active: sortBy === opt.value }"
-              @click="sortBy = opt.value; isSortDropdownOpen = false"
-            >
-              <span>{{ opt.label }}</span>
-              <Check v-if="sortBy === opt.value" :size="13" class="dropdown-check-icon" />
-            </button>
-          </div>
-        </div>
-
-        <!-- Segmented Filter Bar -->
-        <div class="segmented-filter-bar">
-          <button
-            class="segment-pill"
+            class="dam-folder-item"
             :class="{ active: assetFilter === 'all' }"
             @click="assetFilter = 'all'"
           >
-            <span>Semua ({{ mediaAssets.length }})</span>
+            <span class="dam-folder-leading">
+              <Folder :size="15" />
+              <span>Semua Berkas</span>
+            </span>
+            <span class="dam-folder-badge">{{ categoryCounts.all }}</span>
           </button>
+
           <button
-            class="segment-pill"
+            type="button"
+            class="dam-folder-item"
             :class="{ active: assetFilter === 'image' }"
             @click="assetFilter = 'image'"
           >
-            <span>Foto & Raster</span>
+            <span class="dam-folder-leading">
+              <ImageIcon :size="15" style="color: #2563eb;" />
+              <span>Foto & Raster</span>
+            </span>
+            <span class="dam-folder-badge">{{ categoryCounts.image }}</span>
           </button>
+
           <button
-            class="segment-pill"
+            type="button"
+            class="dam-folder-item"
             :class="{ active: assetFilter === 'pdf' }"
             @click="assetFilter = 'pdf'"
           >
-            <span>Dokumen PDF</span>
+            <span class="dam-folder-leading">
+              <FileText :size="15" style="color: #dc2626;" />
+              <span>Dokumen PDF</span>
+            </span>
+            <span class="dam-folder-badge">{{ categoryCounts.pdf }}</span>
           </button>
+
           <button
-            class="segment-pill"
+            type="button"
+            class="dam-folder-item"
             :class="{ active: assetFilter === 'excel' }"
             @click="assetFilter = 'excel'"
           >
-            <span>Excel</span>
+            <span class="dam-folder-leading">
+              <FileSpreadsheet :size="15" style="color: #059669;" />
+              <span>Excel Spreadsheet</span>
+            </span>
+            <span class="dam-folder-badge">{{ categoryCounts.excel }}</span>
           </button>
+
           <button
-            class="segment-pill"
+            type="button"
+            class="dam-folder-item"
             :class="{ active: assetFilter === 'doc' }"
             @click="assetFilter = 'doc'"
           >
-            <span>Word Docs</span>
+            <span class="dam-folder-leading">
+              <File :size="15" style="color: #4f46e5;" />
+              <span>Word Documents</span>
+            </span>
+            <span class="dam-folder-badge">{{ categoryCounts.doc }}</span>
           </button>
+
           <button
-            class="segment-pill"
+            type="button"
+            class="dam-folder-item"
             :class="{ active: assetFilter === 'vector' }"
             @click="assetFilter = 'vector'"
           >
-            <span>Vektor SVG</span>
-          </button>
-        </div>
-
-        <!-- View Mode Switcher (Grid vs List) -->
-        <div class="view-mode-toggle-group">
-          <button
-            type="button"
-            class="view-mode-btn"
-            :class="{ active: viewMode === 'grid' }"
-            @click="viewMode = 'grid'"
-            title="Tampilan Galeri Kartu"
-          >
-            <LayoutGrid :size="15" />
-          </button>
-          <button
-            type="button"
-            class="view-mode-btn"
-            :class="{ active: viewMode === 'list' }"
-            @click="viewMode = 'list'"
-            title="Tampilan Tabel Berkas"
-          >
-            <List :size="15" />
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 1. GRID VIEW MODE: CINEMATIC MEDIA CARDS -->
-    <div v-if="viewMode === 'grid'" class="media-gallery-grid">
-      <div
-        v-for="med in filteredMedia"
-        :key="med.id"
-        class="media-pro-card"
-        @click="openPreviewModal(med)"
-      >
-        <!-- Card Visual Preview Area -->
-        <div
-          class="media-preview-canvas"
-          :class="[
-            'art-type-' + med.type.toLowerCase(),
-            { 'checkerboard-bg': isImage(med.type) || med.type === 'SVG' }
-          ]"
-        >
-          <!-- 1. PDF DOCUMENT PREVIEW CANVAS -->
-          <div v-if="med.type === 'PDF'" class="graphic-pdf-preview">
-            <div class="pdf-watermark-symbol">
-              <FileText :size="32" class="pdf-icon-hero" />
-            </div>
-            <div class="pdf-doc-sheet">
-              <div class="pdf-doc-bar-red"></div>
-              <div class="pdf-line long"></div>
-              <div class="pdf-line medium"></div>
-              <div class="pdf-line short"></div>
-              <div class="pdf-meta-pill">ADOBE PDF DOCUMENT</div>
-            </div>
-            <span class="media-type-badge badge-pdf">PDF</span>
-          </div>
-
-          <!-- 2. EXCEL SPREADSHEET PREVIEW CANVAS -->
-          <div v-else-if="['XLSX', 'XLS', 'CSV'].includes(med.type)" class="graphic-excel-preview">
-            <div class="excel-watermark-symbol">
-              <FileSpreadsheet :size="32" class="excel-icon-hero" />
-            </div>
-            <div class="excel-sheet-grid">
-              <div class="excel-formula-bar">
-                <span class="fx-label">fx</span>
-                <span class="fx-formula">=SUM(B2:B14) * 1.11</span>
-              </div>
-              <div class="excel-grid-rows">
-                <div class="excel-row"><span></span><span></span><span></span></div>
-                <div class="excel-row"><span></span><span></span><span></span></div>
-                <div class="excel-row"><span></span><span></span><span></span></div>
-              </div>
-            </div>
-            <span class="media-type-badge badge-excel">{{ med.type }}</span>
-          </div>
-
-          <!-- 3. WORD DOCUMENT PREVIEW CANVAS -->
-          <div v-else-if="['DOCX', 'DOC'].includes(med.type)" class="graphic-doc-preview">
-            <div class="doc-watermark-symbol">
-              <File :size="32" class="doc-icon-hero" />
-            </div>
-            <div class="word-doc-sheet">
-              <div class="word-header-line"></div>
-              <div class="word-para-line"></div>
-              <div class="word-para-line"></div>
-              <div class="word-para-line short"></div>
-              <span class="word-page-indicator">MS WORD DOCUMENT</span>
-            </div>
-            <span class="media-type-badge badge-docx">{{ med.type }}</span>
-          </div>
-
-          <!-- 4. SVG VECTOR CANVAS -->
-          <div v-else-if="med.type === 'SVG'" class="graphic-vector-preview">
-            <div class="vector-blueprint-box">
-              <div class="vector-glyph-symbol">
-                <FileCode :size="28" />
-              </div>
-              <span class="vector-mark-text">SVG SCALABLE VECTOR</span>
-            </div>
-            <span class="media-type-badge badge-svg">SVG</span>
-          </div>
-
-          <!-- 5. REAL RASTER IMAGES (JPG, PNG, WEBP, AVIF) -->
-          <div v-else-if="isImage(med.type)" style="width: 100%; height: 100%;">
-            <img
-              v-if="!failedImageIds.has(med.id)"
-              :src="med.url"
-              :alt="med.name"
-              class="gallery-card-thumb"
-              loading="lazy"
-              @error="handleImageError(med.id)"
-            />
-            <div v-else class="gallery-card-thumb-fallback">
-              <Eye :size="24" style="color: #64748b; margin-bottom: 4px;" />
-              <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">{{ med.type }} IMAGE</span>
-            </div>
-            <span class="media-type-badge badge-img">{{ med.type }}</span>
-          </div>
-
-          <!-- Fallback Generic Object -->
-          <div v-else class="graphic-vector-preview">
-            <div class="vector-mark-symbol">◆ {{ med.type }}</div>
-            <span class="media-type-badge badge-svg">{{ med.type }}</span>
-          </div>
-
-          <!-- Glassmorphic Floating Action Dock (Card Hover) -->
-          <div class="media-hover-overlay" @click.stop>
-            <div class="glass-action-dock">
-              <button
-                class="dock-action-btn"
-                :class="{ success: copiedSubdomain === med.id }"
-                @click.stop="copyToClipboard(med.url, med.id)"
-                :title="copiedSubdomain === med.id ? 'Tersalin!' : 'Salin URL CDN Edge'"
-              >
-                <Check v-if="copiedSubdomain === med.id" :size="15" />
-                <Copy v-else :size="15" />
-              </button>
-              <button
-                class="dock-action-btn"
-                @click.stop="downloadMediaFile(med)"
-                title="Unduh Berkas Langsung"
-              >
-                <Download :size="15" />
-              </button>
-              <button
-                class="dock-action-btn"
-                @click.stop="openPreviewModal(med)"
-                title="Rincian & Pratinjau Lengkap"
-              >
-                <Eye :size="15" />
-              </button>
-              <button
-                class="dock-action-btn danger"
-                @click.stop="handleDeleteMedia(med)"
-                title="Hapus dari S3 Bucket"
-              >
-                <Trash2 :size="15" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card Meta Details -->
-        <div class="media-info-block">
-          <div class="media-title-line" :title="med.name">
-            {{ med.name }}
-          </div>
-          <div class="media-sub-meta">
-            <span class="file-size-tag">{{ med.size }}</span>
-            <span class="dot-sep">•</span>
-            <span>{{ med.dimensions }}</span>
-            <span class="edge-cached-tag">
-              <span class="pulse-green-dot"></span>
-              <span>CDN Ready</span>
+            <span class="dam-folder-leading">
+              <FileCode :size="15" style="color: #9333ea;" />
+              <span>Vektor SVG</span>
             </span>
+            <span class="dam-folder-badge">{{ categoryCounts.vector }}</span>
+          </button>
+        </nav>
+
+        <!-- 3. Compact Drag & Drop Ingestion Widget -->
+        <div
+          class="dam-compact-uploader"
+          :class="{ dragging: isDragging }"
+          @dragenter="handleDragEnter"
+          @dragover.prevent="isDragging = true"
+          @dragleave="handleDragLeave"
+          @drop.prevent="handleDropUpload"
+          @click="triggerFileInput"
+        >
+          <div v-if="isUploadingMedia">
+            <Loader2 :size="24" class="spin-animation" style="color: #2563eb; margin-bottom: 6px;" />
+            <h4>Mengunggah ke S3...</h4>
+            <p>Memproses objek media terenkripsi.</p>
+          </div>
+          <div v-else>
+            <div class="dam-compact-uploader-icon">
+              <UploadCloud :size="20" />
+            </div>
+            <h4>Unggah Cepat</h4>
+            <p>Tarik file ke sini (Maks. 50MB)</p>
+            <button type="button" class="btn-dam-browse" @click.stop="triggerFileInput">
+              <Sparkles :size="12" />
+              <span>Pilih Berkas</span>
+            </button>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <!-- Empty State -->
-      <div v-if="filteredMedia.length === 0" class="empty-gallery-state">
-        <UploadCloud :size="36" class="empty-icon" />
-        <h4>Tidak ada berkas media ditemukan</h4>
-        <p>Unggah berkas baru atau sesuaikan kata kunci pencarian Anda.</p>
-        <button class="btn-primary-ghost" @click="triggerFileInput">
-          <UploadCloud :size="14" style="margin-right: 6px;" />
-          Pilih Berkas untuk Diunggah
-        </button>
-      </div>
-    </div>
-
-    <!-- 2. LIST VIEW MODE: HIGH-TECH LEDGER TABLE -->
-    <div v-else class="media-list-container">
-      <table class="media-ledger-table">
-        <thead>
-          <tr>
-            <th>Berkas</th>
-            <th>Tipe</th>
-            <th>Ukuran</th>
-            <th>Dimensi</th>
-            <th>Status Edge</th>
-            <th>Tanggal Unggah</th>
-            <th style="text-align: right;">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="med in filteredMedia" :key="med.id" @click="openPreviewModal(med)" style="cursor: pointer;">
-            <td>
-              <div class="table-media-item-cell">
-                <div class="table-thumb-mini">
-                  <img v-if="isImage(med.type)" :src="med.url" :alt="med.name" />
-                  <FileText v-else-if="med.type === 'PDF'" :size="18" style="color: #dc2626;" />
-                  <FileSpreadsheet v-else-if="['XLSX', 'XLS', 'CSV'].includes(med.type)" :size="18" style="color: #059669;" />
-                  <File v-else-if="['DOCX', 'DOC'].includes(med.type)" :size="18" style="color: #4338ca;" />
-                  <FileCode v-else :size="18" style="color: #9333ea;" />
-                </div>
-                <div class="table-media-name-meta">
-                  <strong :title="med.name">{{ med.name }}</strong>
-                  <span>s3://{{ med.bucketName || mediaBucketName }}/{{ med.name }}</span>
-                </div>
+      <!-- MAIN STAGE (Kanan Fleksibel) -->
+      <main class="dam-main-stage">
+        <!-- Top Metrics Strip (4 Mini Inline Cards) -->
+        <div class="dam-mini-stats-strip">
+          <div class="dam-mini-stat-card">
+            <div class="dam-mini-stat-info">
+              <span class="dam-mini-stat-label">Total Objek Berkas</span>
+              <div class="dam-mini-stat-val">
+                <span>{{ mediaAssets.length }} File</span>
               </div>
-            </td>
-            <td>
-              <span
-                class="format-pill"
-                :class="{
-                  'pill-img': isImage(med.type),
-                  'pill-pdf': med.type === 'PDF',
-                  'pill-excel': ['XLSX', 'XLS', 'CSV'].includes(med.type),
-                  'pill-doc': ['DOCX', 'DOC'].includes(med.type),
-                  'pill-svg': med.type === 'SVG'
-                }"
+            </div>
+            <div class="dam-mini-stat-glyph blue">
+              <Layers :size="16" />
+            </div>
+          </div>
+
+          <div class="dam-mini-stat-card">
+            <div class="dam-mini-stat-info">
+              <span class="dam-mini-stat-label">CDN Edge Hit Ratio</span>
+              <div class="dam-mini-stat-val">
+                <span>99.4%</span>
+                <span class="badge-online" style="font-size: 10px;">Optimal</span>
+              </div>
+            </div>
+            <div class="dam-mini-stat-glyph emerald">
+              <Zap :size="16" />
+            </div>
+          </div>
+
+          <div class="dam-mini-stat-card">
+            <div class="dam-mini-stat-info">
+              <span class="dam-mini-stat-label">Serving Latency</span>
+              <div class="dam-mini-stat-val">
+                <span>1.2ms TTFB</span>
+              </div>
+            </div>
+            <div class="dam-mini-stat-glyph purple">
+              <Globe :size="16" />
+            </div>
+          </div>
+
+          <div class="dam-mini-stat-card">
+            <div class="dam-mini-stat-info">
+              <span class="dam-mini-stat-label">Dedicated S3 Storage</span>
+              <div class="dam-mini-stat-val" style="font-size: 13px; font-family: ui-monospace, monospace; color: #2563eb;">
+                <span>MinIO Isolated</span>
+              </div>
+            </div>
+            <div class="dam-mini-stat-glyph slate">
+              <Server :size="16" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Batch Action Bar (Ketika ada berkas yang dipilih) -->
+        <div v-if="selectedAssetIds.size > 0" class="dam-batch-bar">
+          <div class="batch-selection-tag">
+            <CheckSquare :size="16" style="color: #38bdf8;" />
+            <span>{{ selectedAssetIds.size }} dari {{ filteredMedia.length }} berkas dipilih</span>
+          </div>
+
+          <div class="batch-action-buttons">
+            <button type="button" class="btn-batch-action" @click="batchCopyUrls" title="Salin semua URL CDN terpilih">
+              <Copy :size="13" />
+              <span>Salin Semua URL</span>
+            </button>
+            <button type="button" class="btn-batch-action" @click="batchDownload" title="Unduh semua berkas terpilih">
+              <Download :size="13" />
+              <span>Unduh Terpilih</span>
+            </button>
+            <button type="button" class="btn-batch-action danger" @click="batchDelete" title="Hapus berkas terpilih dari S3">
+              <Trash2 :size="13" />
+              <span>Hapus ({{ selectedAssetIds.size }})</span>
+            </button>
+            <button type="button" class="btn-batch-action" @click="clearSelection" style="background: transparent; border-color: rgba(255,255,255,0.3);">
+              Batal
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="filter-toolbar" style="margin-bottom: 0;">
+          <div class="search-command-shell">
+            <Search :size="15" class="search-lead-glyph" />
+            <input
+              ref="searchInputRef"
+              v-model="mediaSearch"
+              type="text"
+              placeholder="Cari berkas gambar, dokumen PDF, spreadsheet Excel... (⌘K)"
+              class="search-command-input"
+            />
+            <button v-if="mediaSearch" class="btn-clear-search" @click="mediaSearch = ''" title="Bersihkan">
+              <X :size="13" />
+            </button>
+            <kbd class="shortcut-tag">⌘K</kbd>
+          </div>
+
+          <div class="filter-controls-group">
+            <!-- Select All Checkbox Button -->
+            <button
+              type="button"
+              class="segment-pill"
+              :class="{ active: isAllSelected }"
+              @click="toggleSelectAll"
+              title="Pilih atau Batalkan Semua Berkas"
+              style="display: inline-flex; align-items: center; gap: 6px;"
+            >
+              <CheckSquare v-if="isAllSelected" :size="13" style="color: #2563eb;" />
+              <Square v-else :size="13" />
+              <span>{{ isAllSelected ? 'Batalkan Pilihan' : 'Pilih Semua' }}</span>
+            </button>
+
+            <!-- Custom Sort Dropdown -->
+            <div class="custom-filter-dropdown-wrap">
+              <button
+                type="button"
+                class="custom-filter-trigger-btn"
+                @click.stop="isSortDropdownOpen = !isSortDropdownOpen"
+                title="Urutkan Berkas"
               >
-                {{ med.type }}
-              </span>
-            </td>
-            <td style="font-weight: 600; color: #0f172a;">{{ med.size }}</td>
-            <td style="color: #64748b;">{{ med.dimensions }}</td>
-            <td>
-              <span class="edge-cached-tag">
-                <span class="pulse-green-dot"></span>
-                <span>Traefik Edge (1.2ms)</span>
-              </span>
-            </td>
-            <td style="color: #64748b; font-size: 11.5px;">{{ med.uploadedAt }}</td>
-            <td>
-              <div class="table-actions-strip" @click.stop>
+                <ArrowUpDown :size="13" style="color: #64748b;" />
+                <span>{{ sortOptions.find(o => o.value === sortBy)?.label || 'Terbaru' }}</span>
+                <ChevronDown :size="13" class="filter-chevron" :class="{ 'rotate-180': isSortDropdownOpen }" />
+              </button>
+              <div v-if="isSortDropdownOpen" class="custom-filter-dropdown-menu">
                 <button
+                  v-for="opt in sortOptions"
+                  :key="opt.value"
                   type="button"
-                  class="btn-table-action"
-                  @click.stop="copyToClipboard(med.url, med.id)"
-                  :title="copiedSubdomain === med.id ? 'Tersalin!' : 'Salin URL CDN'"
+                  class="custom-filter-dropdown-item"
+                  :class="{ active: sortBy === opt.value }"
+                  @click="sortBy = opt.value; isSortDropdownOpen = false"
                 >
-                  <Check v-if="copiedSubdomain === med.id" :size="13" class="text-green" />
-                  <Copy v-else :size="13" />
-                </button>
-                <button
-                  type="button"
-                  class="btn-table-action"
-                  @click.stop="downloadMediaFile(med)"
-                  title="Unduh Berkas"
-                >
-                  <Download :size="13" />
-                </button>
-                <button
-                  type="button"
-                  class="btn-table-action"
-                  @click.stop="openPreviewModal(med)"
-                  title="Pratinjau Berkas"
-                >
-                  <Eye :size="13" />
-                </button>
-                <button
-                  type="button"
-                  class="btn-table-action danger"
-                  @click.stop="handleDeleteMedia(med)"
-                  title="Hapus dari S3"
-                >
-                  <Trash2 :size="13" />
+                  <span>{{ opt.label }}</span>
+                  <Check v-if="sortBy === opt.value" :size="13" class="dropdown-check-icon" />
                 </button>
               </div>
-            </td>
-          </tr>
-          <tr v-if="filteredMedia.length === 0">
-            <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
-              Tidak ada berkas media ditemukan.
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+
+            <!-- View Mode Switcher (Grid vs List) -->
+            <div class="view-mode-toggle-group">
+              <button
+                type="button"
+                class="view-mode-btn"
+                :class="{ active: viewMode === 'grid' }"
+                @click="viewMode = 'grid'"
+                title="Tampilan Galeri Kartu"
+              >
+                <LayoutGrid :size="15" />
+              </button>
+              <button
+                type="button"
+                class="view-mode-btn"
+                :class="{ active: viewMode === 'list' }"
+                @click="viewMode = 'list'"
+                title="Tampilan Tabel Berkas"
+              >
+                <List :size="15" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. GRID VIEW MODE: CINEMATIC MEDIA CARDS -->
+        <div v-if="viewMode === 'grid'" class="media-gallery-grid">
+          <div
+            v-for="med in filteredMedia"
+            :key="med.id"
+            class="media-pro-card"
+            :class="{ 'is-selected': isAssetSelected(med.id) }"
+            @click="openPreviewModal(med)"
+          >
+            <!-- Card Visual Preview Area -->
+            <div
+              class="media-preview-canvas"
+              :class="[
+                'art-type-' + med.type.toLowerCase(),
+                { 'checkerboard-bg': isImage(med.type) || med.type === 'SVG' }
+              ]"
+            >
+              <!-- Multi-Select Checkbox -->
+              <div
+                class="media-card-checkbox"
+                :class="{ selected: isAssetSelected(med.id) }"
+                @click.stop="toggleSelectAsset(med.id, $event)"
+                title="Pilih berkas untuk aksi massal"
+              >
+                <Check v-if="isAssetSelected(med.id)" :size="13" />
+              </div>
+
+              <!-- 1. PDF DOCUMENT PREVIEW CANVAS -->
+              <div v-if="med.type === 'PDF'" class="graphic-pdf-preview">
+                <div class="pdf-watermark-symbol">
+                  <FileText :size="32" class="pdf-icon-hero" />
+                </div>
+                <div class="pdf-doc-sheet">
+                  <div class="pdf-doc-bar-red"></div>
+                  <div class="pdf-line long"></div>
+                  <div class="pdf-line medium"></div>
+                  <div class="pdf-line short"></div>
+                  <div class="pdf-meta-pill">ADOBE PDF DOCUMENT</div>
+                </div>
+                <span class="media-type-badge badge-pdf">PDF</span>
+              </div>
+
+              <!-- 2. EXCEL SPREADSHEET PREVIEW CANVAS -->
+              <div v-else-if="['XLSX', 'XLS', 'CSV'].includes(med.type)" class="graphic-excel-preview">
+                <div class="excel-watermark-symbol">
+                  <FileSpreadsheet :size="32" class="excel-icon-hero" />
+                </div>
+                <div class="excel-sheet-grid">
+                  <div class="excel-formula-bar">
+                    <span class="fx-label">fx</span>
+                    <span class="fx-formula">=SUM(B2:B14) * 1.11</span>
+                  </div>
+                  <div class="excel-grid-rows">
+                    <div class="excel-row"><span></span><span></span><span></span></div>
+                    <div class="excel-row"><span></span><span></span><span></span></div>
+                    <div class="excel-row"><span></span><span></span><span></span></div>
+                  </div>
+                </div>
+                <span class="media-type-badge badge-excel">{{ med.type }}</span>
+              </div>
+
+              <!-- 3. WORD DOCUMENT PREVIEW CANVAS -->
+              <div v-else-if="['DOCX', 'DOC'].includes(med.type)" class="graphic-doc-preview">
+                <div class="doc-watermark-symbol">
+                  <File :size="32" class="doc-icon-hero" />
+                </div>
+                <div class="word-doc-sheet">
+                  <div class="word-header-line"></div>
+                  <div class="word-para-line"></div>
+                  <div class="word-para-line"></div>
+                  <div class="word-para-line short"></div>
+                  <span class="word-page-indicator">MS WORD DOCUMENT</span>
+                </div>
+                <span class="media-type-badge badge-docx">{{ med.type }}</span>
+              </div>
+
+              <!-- 4. SVG VECTOR CANVAS -->
+              <div v-else-if="med.type === 'SVG'" class="graphic-vector-preview">
+                <div class="vector-blueprint-box">
+                  <div class="vector-glyph-symbol">
+                    <FileCode :size="28" />
+                  </div>
+                  <span class="vector-mark-text">SVG SCALABLE VECTOR</span>
+                </div>
+                <span class="media-type-badge badge-svg">SVG</span>
+              </div>
+
+              <!-- 5. REAL RASTER IMAGES (JPG, PNG, WEBP, AVIF) -->
+              <div v-else-if="isImage(med.type)" style="width: 100%; height: 100%;">
+                <img
+                  v-if="!failedImageIds.has(med.id)"
+                  :src="med.url"
+                  :alt="med.name"
+                  class="gallery-card-thumb"
+                  loading="lazy"
+                  @error="handleImageError(med.id)"
+                />
+                <div v-else class="gallery-card-thumb-fallback">
+                  <Eye :size="24" style="color: #64748b; margin-bottom: 4px;" />
+                  <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">{{ med.type }} IMAGE</span>
+                </div>
+                <span class="media-type-badge badge-img">{{ med.type }}</span>
+              </div>
+
+              <!-- Fallback Generic Object -->
+              <div v-else class="graphic-vector-preview">
+                <div class="vector-mark-symbol">◆ {{ med.type }}</div>
+                <span class="media-type-badge badge-svg">{{ med.type }}</span>
+              </div>
+
+              <!-- Glassmorphic Floating Action Dock (Card Hover) -->
+              <div class="media-hover-overlay" @click.stop>
+                <div class="glass-action-dock">
+                  <button
+                    class="dock-action-btn"
+                    :class="{ success: copiedSubdomain === med.id }"
+                    @click.stop="copyToClipboard(med.url, med.id)"
+                    :title="copiedSubdomain === med.id ? 'Tersalin!' : 'Salin URL CDN Edge'"
+                  >
+                    <Check v-if="copiedSubdomain === med.id" :size="15" />
+                    <Copy v-else :size="15" />
+                  </button>
+                  <button
+                    class="dock-action-btn"
+                    @click.stop="downloadMediaFile(med)"
+                    title="Unduh Berkas Langsung"
+                  >
+                    <Download :size="15" />
+                  </button>
+                  <button
+                    class="dock-action-btn"
+                    @click.stop="openPreviewModal(med)"
+                    title="Rincian & Pratinjau Lengkap"
+                  >
+                    <Eye :size="15" />
+                  </button>
+                  <button
+                    class="dock-action-btn danger"
+                    @click.stop="handleDeleteMedia(med)"
+                    title="Hapus dari S3 Bucket"
+                  >
+                    <Trash2 :size="15" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Meta Details -->
+            <div class="media-info-block">
+              <div class="media-title-line" :title="med.name">
+                {{ med.name }}
+              </div>
+              <div class="media-sub-meta">
+                <span class="file-size-tag">{{ med.size }}</span>
+                <span class="dot-sep">•</span>
+                <span>{{ med.dimensions }}</span>
+                <span class="edge-cached-tag">
+                  <span class="pulse-green-dot"></span>
+                  <span>CDN Ready</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-if="filteredMedia.length === 0" class="empty-gallery-state">
+            <UploadCloud :size="36" class="empty-icon" />
+            <h4>Tidak ada berkas media ditemukan</h4>
+            <p>Unggah berkas baru atau pilih kategori folder lain pada sidebar.</p>
+            <button class="btn-primary-ghost" @click="triggerFileInput">
+              <UploadCloud :size="14" style="margin-right: 6px;" />
+              Pilih Berkas untuk Diunggah
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. LIST VIEW MODE: HIGH-TECH LEDGER TABLE -->
+        <div v-else class="media-list-container">
+          <table class="media-ledger-table">
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align: center;">
+                  <button type="button" @click="toggleSelectAll" style="background: none; border: none; cursor: pointer; color: #64748b; display: inline-flex; align-items: center;">
+                    <CheckSquare v-if="isAllSelected" :size="15" style="color: #2563eb;" />
+                    <Square v-else :size="15" />
+                  </button>
+                </th>
+                <th>Berkas</th>
+                <th>Tipe</th>
+                <th>Ukuran</th>
+                <th>Dimensi</th>
+                <th>Status Edge</th>
+                <th>Tanggal Unggah</th>
+                <th style="text-align: right;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="med in filteredMedia"
+                :key="med.id"
+                @click="openPreviewModal(med)"
+                style="cursor: pointer;"
+                :class="{ 'is-selected': isAssetSelected(med.id) }"
+              >
+                <td style="text-align: center;" @click.stop="toggleSelectAsset(med.id, $event)">
+                  <button type="button" style="background: none; border: none; cursor: pointer; color: #64748b; display: inline-flex; align-items: center;">
+                    <CheckSquare v-if="isAssetSelected(med.id)" :size="15" style="color: #2563eb;" />
+                    <Square v-else :size="15" />
+                  </button>
+                </td>
+                <td>
+                  <div class="table-media-item-cell">
+                    <div class="table-thumb-mini">
+                      <img v-if="isImage(med.type)" :src="med.url" :alt="med.name" />
+                      <FileText v-else-if="med.type === 'PDF'" :size="18" style="color: #dc2626;" />
+                      <FileSpreadsheet v-else-if="['XLSX', 'XLS', 'CSV'].includes(med.type)" :size="18" style="color: #059669;" />
+                      <File v-else-if="['DOCX', 'DOC'].includes(med.type)" :size="18" style="color: #4338ca;" />
+                      <FileCode v-else :size="18" style="color: #9333ea;" />
+                    </div>
+                    <div class="table-media-name-meta">
+                      <strong :title="med.name">{{ med.name }}</strong>
+                      <span>s3://{{ med.bucketName || mediaBucketName }}/{{ med.name }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span
+                    class="format-pill"
+                    :class="{
+                      'pill-img': isImage(med.type),
+                      'pill-pdf': med.type === 'PDF',
+                      'pill-excel': ['XLSX', 'XLS', 'CSV'].includes(med.type),
+                      'pill-doc': ['DOCX', 'DOC'].includes(med.type),
+                      'pill-svg': med.type === 'SVG'
+                    }"
+                  >
+                    {{ med.type }}
+                  </span>
+                </td>
+                <td style="font-weight: 600; color: #0f172a;">{{ med.size }}</td>
+                <td style="color: #64748b;">{{ med.dimensions }}</td>
+                <td>
+                  <span class="edge-cached-tag">
+                    <span class="pulse-green-dot"></span>
+                    <span>Traefik Edge (1.2ms)</span>
+                  </span>
+                </td>
+                <td style="color: #64748b; font-size: 11.5px;">{{ med.uploadedAt }}</td>
+                <td>
+                  <div class="table-actions-strip" @click.stop>
+                    <button
+                      type="button"
+                      class="btn-table-action"
+                      @click.stop="copyToClipboard(med.url, med.id)"
+                      :title="copiedSubdomain === med.id ? 'Tersalin!' : 'Salin URL CDN'"
+                    >
+                      <Check v-if="copiedSubdomain === med.id" :size="13" class="text-green" />
+                      <Copy v-else :size="13" />
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-table-action"
+                      @click.stop="downloadMediaFile(med)"
+                      title="Unduh Berkas"
+                    >
+                      <Download :size="13" />
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-table-action"
+                      @click.stop="openPreviewModal(med)"
+                      title="Pratinjau Berkas"
+                    >
+                      <Eye :size="13" />
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-table-action danger"
+                      @click.stop="handleDeleteMedia(med)"
+                      title="Hapus dari S3"
+                    >
+                      <Trash2 :size="13" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="filteredMedia.length === 0">
+                <td colspan="8" style="text-align: center; padding: 40px; color: #64748b;">
+                  Tidak ada berkas media ditemukan.
+                </td>
+              </tr>
+            </tbody>
+          </table>
     </div>
 
     <!-- MODAL: PREVIEW & DETAIL BERKAS S3 (BESPOKE MEDIA INSPECTOR) -->
