@@ -530,6 +530,9 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -710,6 +713,9 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -790,6 +796,9 @@ func (r *Repository) GetAssets(ctx context.Context, tenantID string) ([]gin.H, e
 						"uploadedAt": createdAt.Format("2 Jan 2006"),
 					})
 				}
+			}
+			if err := rows.Err(); err != nil {
+				return nil, err
 			}
 			if list != nil {
 				return list, nil
@@ -930,6 +939,9 @@ func (r *Repository) GetDomains(ctx context.Context, tenantID string) ([]gin.H, 
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -1010,6 +1022,9 @@ func (r *Repository) GetTickets(ctx context.Context, tenantID string) ([]gin.H, 
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -1085,6 +1100,9 @@ func (r *Repository) GetTicketMessages(ctx context.Context, ticketKey string) ([
 						"message":    message,
 					})
 				}
+			}
+			if err := rows.Err(); err != nil {
+				return nil, err
 			}
 			if list != nil {
 				return list, nil
@@ -1332,6 +1350,9 @@ func (r *Repository) GetInvoices(ctx context.Context, tenantID string) ([]gin.H,
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -1381,6 +1402,9 @@ func (r *Repository) GetWebhooks(ctx context.Context, tenantID string) ([]gin.H,
 					})
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			if list != nil {
 				return list, nil
 			}
@@ -1423,10 +1447,11 @@ func (r *Repository) GetBillingQuota(ctx context.Context, tenantID string) (gin.
 			FROM tenants WHERE id = $1 LIMIT 1
 		`, tenantID).Scan(&planTier, &maxContainers, &storageQuota)
 
-		if planTier == "starter" {
+		switch planTier {
+		case "starter":
 			planName = "Hero Starter Plan"
 			priceText = "Rp 49.000 / bln"
-		} else if planTier == "agency" {
+		case "agency":
 			planName = "Hero Agency Plan"
 			priceText = "Rp 399.000 / bln"
 		}

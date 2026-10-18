@@ -135,10 +135,8 @@ func (c *Client) GetTopViews(ctx context.Context, tenantID string, limit int64) 
 	defer c.mu.RUnlock()
 	sub := c.memTopViews[tenantID]
 	var items []TopItem
-	if sub != nil {
-		for p, score := range sub {
-			items = append(items, TopItem{Path: p, Score: score})
-		}
+	for p, score := range sub {
+		items = append(items, TopItem{Path: p, Score: score})
 	}
 
 	if len(items) == 0 {
