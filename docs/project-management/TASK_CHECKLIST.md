@@ -6,6 +6,19 @@
 
 ---
 
+## 👥 Roster Tim HeroCMS & Matriks Penugasan
+
+| Nama Anggota | Posisi / Spesialisasi | Fokus Service & Tanggung Jawab Utama | Rekan Kolaborasi Utama |
+| :--- | :--- | :--- | :--- |
+| **Rizal** | **DevOps, Security & Backend Specialist** | Go Backend Handlers/Middleware (`02`), Traefik v3 Ingress, cgroups Sandboxing, Pentest Suite | Andalusia (Backend), Irgi (Deploy/Vitals) |
+| **Andalusia** | **Full Stack Lead** | Go Orchestrator (`03`), BFF Go (`02`), Laravel Admin (`01`), Core Integration | Rizal (Backend/Infra), Irgi (FE), Risqi (DB) |
+| **Irgi** | **Frontend Web Specialist** | Dashboard Studio Vue 3 (`02`), Marketing Site React 19 (`04`), UI/UX & Design System | Andalusia & Rizal (BFF), Rizal (Vitals) |
+| **Risqi** | **Database Management** | PostgreSQL 16 (RLS multi-tenancy), Redis 7 (Sorted Sets), MinIO S3, Migrasi & Backup | Rizal & Andalusia (Schema/Query) |
+| **Tyno** | **Mobile Frontend Specialist** | HeroCMS Companion App (iOS/Android): Telemetri, Push Notif, Quick Draft, Emergency Control | Rizal & Andalusia (API Contracts) |
+| **Paijo AI Agent** | **Project Manager & Architect** | Task Checklist, Quality & Security Audit, SemVer Changelog, Sprint Coordination | Seluruh Tim |
+
+---
+
 ## 💼 Model Bisnis & Value Proposition HeroCMS
 
 HeroCMS adalah **Platform Cloud CMS Multi-Tenant SaaS** yang menjual hosting kontainer mandiri otonom + Visual Block Studio + AI Copilot + Custom Domains.

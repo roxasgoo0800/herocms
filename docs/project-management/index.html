@@ -1195,7 +1195,7 @@
       <div class="user-persona-selector">
         <label for="persona-select">👤 Sedang Melihat Sebagai:</label>
         <select id="persona-select" onchange="switchPersona(this.value)">
-          <option value="Rizal" selected>Rizal (DevOps & Security — Anda)</option>
+          <option value="Rizal" selected>Rizal (DevOps, Security & Backend — Anda)</option>
           <option value="Andalusia">Andalusia (Full Stack Lead)</option>
           <option value="Irgi">Irgi (Frontend Web Specialist)</option>
           <option value="Risqi">Risqi (Database Management)</option>
@@ -1216,8 +1216,8 @@
     <!-- Reality Check SaaS Banner -->
     <div class="reality-banner">
       <div class="reality-banner-text">
-        <h3 id="focus-banner-title">🛡️ Mode Fokus: Rizal (DevOps & Security)</h3>
-        <p id="focus-banner-sub">Pekerjaan saat ini aktif di <strong>services/02-dashboard-cms</strong> & <strong>services/04-marketing-site</strong>. Microservice lainnya (Orchestrator, AI Agent, Admin) berada pada fase integrasi lanjutan.</p>
+        <h3 id="focus-banner-title">🛡️⚙️ Mode Fokus: Rizal (DevOps, Security & Backend)</h3>
+        <p id="focus-banner-sub">Pekerjaan saat ini aktif di <strong>services/02-dashboard-cms</strong> (Backend & Frontend) & <strong>services/04-marketing-site</strong>. Microservice lainnya (Orchestrator, AI Agent, Admin) berada pada fase integrasi lanjutan.</p>
       </div>
       <div class="active-services-tags">
         <span class="tag-active-service">● Active: 02-dashboard-cms</span>
@@ -1245,7 +1245,7 @@
       <div class="telemetry-card">
         <span class="telemetry-label">Total Task Bisnis</span>
         <div class="telemetry-value-row">
-          <span class="telemetry-value" id="stat-total-tasks">36</span>
+          <span class="telemetry-value" id="stat-total-tasks">37</span>
           <span class="tab-counter">5 Divisi</span>
         </div>
         <span class="telemetry-subtext">Mencakup 12 modul studio + microservices</span>
@@ -1254,10 +1254,10 @@
       <div class="telemetry-card">
         <span class="telemetry-label">Fondasi Selesai (Done)</span>
         <div class="telemetry-value-row">
-          <span class="telemetry-value" id="stat-done-tasks" style="color: #059669;">15</span>
+          <span class="telemetry-value" id="stat-done-tasks" style="color: #059669;">16</span>
           <span class="status-badge badge-done">Verified</span>
         </div>
-        <span class="telemetry-subtext">Frontend UI & skema RLS inti</span>
+        <span class="telemetry-subtext">Frontend UI, Backend Auth & RLS</span>
       </div>
 
       <div class="telemetry-card">
@@ -1275,7 +1275,7 @@
       <div class="tabs-group">
         <button class="tab-btn active" id="tab-btn-tasks" onclick="switchMainTab('tasks')">
           <span>📋 Papan Tugas per Divisi</span>
-          <span class="tab-counter" id="tab-count-tasks">36</span>
+          <span class="tab-counter" id="tab-count-tasks">37</span>
         </button>
         <button class="tab-btn" id="tab-btn-dict" onclick="switchMainTab('dict')">
           <span>📖 Kamus Arsitektur</span>
@@ -1301,7 +1301,7 @@
 
         <div class="member-filter-pills" id="member-pills-container">
           <button class="pill-btn" onclick="filterByPill('all')">Semua Divisi</button>
-          <button class="pill-btn active" onclick="filterByPill('Rizal')">🛡️ Rizal (DevOps & Security)</button>
+          <button class="pill-btn active" onclick="filterByPill('Rizal')">🛡️⚙️ Rizal (DevOps, Sec & Backend)</button>
           <button class="pill-btn" onclick="filterByPill('Irgi')">🎨 Irgi (Frontend Web)</button>
           <button class="pill-btn" onclick="filterByPill('Andalusia')">⚙️ Andalusia (Fullstack)</button>
           <button class="pill-btn" onclick="filterByPill('Risqi')">🗄️ Risqi (Database)</button>
@@ -1534,7 +1534,7 @@ Lapor Paijo:
   <script>
     // DATASET MASTER ARTIKEL RUNBOOK LENGKAP & REALISTIS
     const divisionMetadata = [
-      { id: "Rizal", name: "Divisi DevOps & Security Specialist", pic: "Rizal (Anda)", icon: "🛡️" },
+      { id: "Rizal", name: "Divisi DevOps, Security & Backend Specialist", pic: "Rizal (Anda)", icon: "🛡️⚙️" },
       { id: "Irgi", name: "Divisi Frontend Web Specialist", pic: "Irgi", icon: "🎨" },
       { id: "Andalusia", name: "Divisi Backend & Full Stack Lead", pic: "Andalusia", icon: "⚙️" },
       { id: "Risqi", name: "Divisi Database & Storage Engine", pic: "Risqi", icon: "🗄️" },
@@ -1543,8 +1543,61 @@ Lapor Paijo:
 
     const detailedTasks = [
       // -------------------------------------------------------------
-      // 1. DIVISI DEVOPS & SECURITY (PIC: RIZAL)
+      // 1. DIVISI DEVOPS, SECURITY & BACKEND (PIC: RIZAL)
       // -------------------------------------------------------------
+      {
+        id: "TSK-BE-SEC-01",
+        division: "Rizal",
+        pic: "Rizal",
+        title: "Go BFF Security & Auth Middleware (JWT ED25519 & Rate-Limit)",
+        category: "Backend & Security (02-dashboard-cms)",
+        service: "services/02-dashboard-cms",
+        status: "done",
+        priority: "P1 - CRITICAL",
+        phase: "Fondasi Selesai",
+        lead: "Membangun middleware autentikasi backend Go Gin untuk verifikasi asymmetric JWT ED25519, proteksi brute-force login via Redis memory bucket, dan injeksi context tenant_id ke seluruh HTTP handler.",
+        flowDesc: "HTTP Request masuk -> Middleware Rate Limit cek IP -> Middleware Auth verifikasi signature JWT -> Inject tenant_id ke Gin Context -> Teruskan ke Controller.",
+        flowDiagram: `[ Incoming HTTP Request ]
+       │
+       ▼
+[ RateLimitMiddleware (5 req/detik) ]
+       │ PASS
+       ▼
+[ JWTAuthMiddleware (Asymmetric Verify) ]
+       │ Valid Token
+       ▼
+[ c.Set("tenant_id", claims.TenantID) ]
+       │
+       ▼
+[ Business Handler (Controller) ]`,
+        checklist: [
+          "Middleware RateLimit berbasis Redis token bucket di services/02-dashboard-cms/internal/middleware/",
+          "Middleware AuthJwt dengan pembacaan header Authorization: Bearer <token>",
+          "Unit test & pentest brute force di services/02-dashboard-cms/pentest/",
+          "Injeksi tenant_id ke kueri database PostgreSQL RLS"
+        ],
+        codeFile: "services/02-dashboard-cms/internal/middleware/auth.go",
+        codeLang: "GO",
+        codeSnippet: `func AuthMiddleware(secretKey []byte) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        authHeader := c.GetHeader("Authorization")
+        if !strings.HasPrefix(authHeader, "Bearer ") {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Missing bearer token"})
+            return
+        }
+        tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+        claims, err := jwt.ValidateToken(tokenStr, secretKey)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: Invalid or expired token"})
+            return
+        }
+        c.Set("tenant_id", claims.TenantID)
+        c.Next()
+    }
+}`,
+        aiNotes: "Kolaborasi dengan Andalusia: Endpoint handler yang dibuat Andalusia otomatis aman karena diproteksi oleh AuthMiddleware ini.",
+        dod: ["Brute-force diblokir setelah 5 percobaan gagal", "Context tenant_id tervalidasi", "Pentest 100% Pass"]
+      },
       {
         id: "TSK-DOM-03",
         division: "Rizal",
@@ -2451,8 +2504,8 @@ CREATE POLICY tenant_isolation_sites_policy ON sites
       const bannerSub = document.getElementById('focus-banner-sub');
 
       if (persona === 'Rizal') {
-        bannerTitle.innerText = "🛡️ Mode Fokus: Rizal (DevOps & Security Specialist)";
-        bannerSub.innerText = "Fokus Anda: Pengerasan cgroups v2, dynamic Traefik Ingress SSL, dan automated pentest gate.";
+        bannerTitle.innerText = "🛡️⚙️ Mode Fokus: Rizal (DevOps, Security & Backend Specialist)";
+        bannerSub.innerText = "Fokus Anda: Go Backend Handlers & Security Middleware, Pengerasan cgroups v2, dynamic Traefik Ingress SSL, dan automated pentest gate.";
       } else if (persona === 'Irgi') {
         bannerTitle.innerText = "🎨 Mode Fokus: Irgi (Frontend Web Specialist)";
         bannerSub.innerText = "Fokus Anda: Visual Block Studio di 02-dashboard-cms dan konversi di 04-marketing-site.";

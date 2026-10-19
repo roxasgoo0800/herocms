@@ -2,11 +2,32 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.21',
+    releaseDate: '19 Oktober 2026',
+    title: 'Ekspansi Peran Rizal ke Tim Backend Engineering (DevOps, Security & Backend Lead)',
+    summary: 'Memperluas matriks penugasan resmi Rizal untuk mencakup pengembangan backend Go BFF (autentikasi middleware JWT, rate limiting, security handlers) bersama Andalusia, serta memperbarui Mission Control persona filter, SOP, dan dataset runbook di seluruh repositori.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11421-1',
+        type: 'improvement',
+        scope: 'Team Governance & Backend Ownership',
+        description: 'Memperbarui penetapan peran Rizal menjadi DevOps, Security & Backend Specialist di SKILL.md, TASK_CHECKLIST.md, KAMUS_DAN_SOP_HEROCMS.md, dan index.html.'
+      },
+      {
+        id: 'c-11421-2',
+        type: 'feature',
+        scope: 'Go BFF Auth & Security Middleware Task',
+        description: 'Menambahkan task TSK-BE-SEC-01 ke antrean pengerjaan Rizal mencakup implementasi JWT ED25519 asymmetric verification dan Redis memory bucket rate-limiting.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.20',
     releaseDate: '19 Oktober 2026',
     title: 'Transformasi Portal Mission Control ke Reader View Artikel Teknis, Pengelompokan Divisi & Mode Fokus Petugas',
     summary: 'Merombak arsitektur antarmuka docs/project-management/index.html dari modal dialog ringkas menjadi Dedicated Technical Article Reader View (mengikuti standar Reader Mode HeroCMS Studio), menambahkan fitur pengelompokan task berbasis divisi tim (DevOps & Security, Frontend Web, Backend & Fullstack, Database, Mobile), mengintegrasikan Mode Fokus Petugas ("Sedang Melihat Sebagai..."), menyajikan checklist interaktif bertahap, serta mengkalibrasi ulang metrik kesiapan sprint menjadi rasio realistis (fokus aktif pada 02-dashboard-cms dan 04-marketing-site).',
-    badge: 'Latest',
     author: 'HeroCMS Dev / Paijo AI Agent',
     items: [
       {

@@ -36,8 +36,7 @@ Dokumen ini menjadi "kamus bersama" agar seluruh anggota tim berbicara dalam ist
 | :--- | :--- | :--- | :--- |
 | **Andalusia** | **Full Stack Lead** | `01-admin-console`, `02-dashboard-cms`, `03-provision-orchestrator` | Integrasi Go Docker SDK, arsitektur API BFF, sistem billing Laravel 11, dan penyusunan kontrak OpenAPI untuk tim Web & Mobile. |
 | **Irgi** | **Frontend Web Specialist** | `02-dashboard-cms`, `04-marketing-site` | Implementasi antarmuka Studio Vue 3, Visual Drag-and-Drop Builder, penegakan `studio-master.css`, dan optimasi Core Web Vitals (LCP < 1.2s). |
-| **Risqi** | **Database Management** | PostgreSQL 16, Redis 7, MinIO S3 | Desain skema multi-tenant, penegakan RLS, skrip migrasi up/down, connection pooling PgBouncer, dan disaster recovery PITR. |
-| **Rizal** | **DevOps & Security Lead** | Traefik v3, Docker Host, CI/CD, Pentest | Pengerasan kontainer (cgroups v2, non-root UID 10001), isolasi jaringan, pipeline CI/CD GitHub Actions, dan eksekusi pentest runner sebelum PR. |
+| **Rizal** | **DevOps, Security & Backend Lead** | `02-dashboard-cms` (Go Backend), Traefik v3, Docker Host, Pentest | Pengerasan kontainer (cgroups v2, non-root UID 10001), Go backend auth middleware & security handlers, pipeline CI/CD GitHub Actions, dan pentest runner pre-commit. |
 | **Tyno** | **Mobile Frontend Specialist** | HeroCMS Companion App (iOS/Android) | Pembangunan aplikasi pendamping mobile: analitik kunjungan real-time, push notification leads/kuota, dan tombol darurat kendali situs. |
 | **Paijo AI Agent** | **Project Manager & Architect** | Repository Governance & Quality Gate | Pemantauan checklist task, audit kelayakan kode/arsitektur, pengawalan SemVer changelog, dan sinkronisasi antartim. |
 

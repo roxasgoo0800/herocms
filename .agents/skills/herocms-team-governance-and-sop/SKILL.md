@@ -15,8 +15,7 @@ Skill ini merupakan **Buku Panduan Induk (Master Bible), Kamus Istilah Arsitektu
 | :--- | :--- | :--- | :--- |
 | **Andalusia** | **Full Stack Lead** | Go Orchestrator (`03`), BFF Go (`02`), Laravel Admin (`01`), Core Integration | SOP-BE-01, SOP-BE-02, SOP-FE-01 |
 | **Irgi** | **Frontend Web Specialist** | Dashboard Studio Vue 3 (`02`), Marketing Site React 19 (`04`), Design System | SOP-FE-01, SOP-FE-02, SOP-FE-03 |
-| **Risqi** | **Database Management** | PostgreSQL 16 (RLS multi-tenant), Redis 7 (ZSET), MinIO S3, Backup & PITR | SOP-DB-01, SOP-DB-02, SOP-DB-03 |
-| **Rizal** | **DevOps & Security Lead** | Traefik v3 Ingress, cgroups Linux sandboxing, CI/CD Actions, Pentest Suite | SOP-OPS-01, SOP-OPS-02, SOP-SEC-01 |
+| **Rizal** | **DevOps, Security & Backend Specialist** | Go Backend Handlers (`02`), Traefik v3 Ingress, cgroups Linux sandboxing, CI/CD, Pentest | SOP-BE-01, SOP-OPS-01, SOP-SEC-01 |
 | **Tyno** | **Mobile Frontend Specialist** | HeroCMS Companion App (iOS & Android): Telemetri, Push Notif, Quick Controls | SOP-MOB-01, SOP-MOB-02 |
 | **Paijo AI Agent** | **Project Manager & Architect** | Task Checklist, Quality & Security Audit, SemVer Changelog, Sprint Coordination | SOP-PM-01, SOP-PM-02 |
 
