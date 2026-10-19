@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HeroCMS Mission Control - Task Board & Kamus Arsitektur</title>
+  <title>HeroCMS Mission Control - Task Article Runbook & Division Matrix</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -37,6 +37,10 @@
       --badge-blue-bg: #eff6ff;
       --badge-blue-border: #bfdbfe;
       --badge-blue-text: #2563eb;
+
+      --badge-slate-bg: #f8fafc;
+      --badge-slate-border: #e2e8f0;
+      --badge-slate-text: #475569;
 
       --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
       --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
@@ -75,6 +79,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 1rem;
     }
 
     .brand-wrap {
@@ -131,6 +136,34 @@
       gap: 1rem;
     }
 
+    /* Persona Selector */
+    .user-persona-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .user-persona-selector label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .user-persona-selector select {
+      border: none;
+      background: transparent;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--brand-blue);
+      outline: none;
+      cursor: pointer;
+    }
+
     .badge-pm {
       background: #0f172a;
       color: #ffffff;
@@ -145,17 +178,71 @@
 
     /* Container */
     .container {
-      max-width: 1320px;
+      max-width: 1380px;
       margin: 0 auto;
       padding: 2rem 1.75rem;
       width: 100%;
       flex: 1;
     }
 
+    /* Reality Banner */
+    .reality-banner {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--brand-blue);
+      border-radius: var(--radius-card);
+      padding: 1rem 1.35rem;
+      margin-bottom: 1.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .reality-banner-text h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .reality-banner-text p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .active-services-tags {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .tag-active-service {
+      background: var(--badge-blue-bg);
+      border: 1px solid var(--badge-blue-border);
+      color: var(--brand-blue);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+    }
+
+    .tag-pending-service {
+      background: var(--bg-surface-alt);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+    }
+
     /* Telemetry Hero Grid */
     .telemetry-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 1rem;
       margin-bottom: 2rem;
     }
@@ -178,8 +265,8 @@
     }
 
     .telemetry-label {
-      font-size: 0.8rem;
-      font-weight: 500;
+      font-size: 0.78rem;
+      font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -205,7 +292,6 @@
       margin-top: 0.4rem;
     }
 
-    /* Progress bar */
     .progress-bar-wrap {
       width: 100%;
       height: 6px;
@@ -222,7 +308,7 @@
       transition: width 0.4s ease;
     }
 
-    /* Main Tab Navigation */
+    /* Tab Navigation */
     .nav-tabs-bar {
       display: flex;
       align-items: center;
@@ -286,7 +372,7 @@
       color: var(--brand-blue);
     }
 
-    /* Action Filter Row */
+    /* Filter & Search Bar */
     .filter-row {
       display: flex;
       gap: 1rem;
@@ -345,6 +431,9 @@
       color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
     }
 
     .pill-btn:hover {
@@ -359,6 +448,48 @@
       font-weight: 600;
     }
 
+    /* DIVISION SECTION GROUPING */
+    .division-group-section {
+      margin-bottom: 2.5rem;
+    }
+
+    .division-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--border-subtle);
+    }
+
+    .division-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .division-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+
+    .division-pic-tag {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.2rem 0.65rem;
+      border-radius: 12px;
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    .division-count-badge {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
     /* Task Grid Cards */
     .task-grid {
       display: grid;
@@ -370,7 +501,7 @@
       background: #ffffff;
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-card);
-      padding: 1.25rem;
+      padding: 1.35rem;
       box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
@@ -404,16 +535,28 @@
     }
 
     .task-title {
-      font-size: 0.95rem;
+      font-size: 0.98rem;
       font-weight: 700;
       color: var(--text-main);
       line-height: 1.35;
     }
 
     .task-desc {
-      font-size: 0.82rem;
+      font-size: 0.83rem;
       color: var(--text-muted);
       line-height: 1.5;
+    }
+
+    .task-service-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      background: var(--bg-surface-alt);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      display: inline-block;
+      max-width: fit-content;
     }
 
     .task-meta-row {
@@ -426,25 +569,13 @@
       font-size: 0.78rem;
     }
 
-    .pic-badge {
+    .read-article-link {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--brand-blue);
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .avatar-circle {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #e2e8f0;
-      color: #334155;
-      font-size: 0.68rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      gap: 0.25rem;
     }
 
     /* Badges */
@@ -456,6 +587,7 @@
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
+      white-space: nowrap;
     }
 
     .badge-done {
@@ -472,6 +604,436 @@
       background: var(--bg-surface-alt);
       border: 1px solid var(--border-subtle);
       color: var(--text-muted);
+    }
+
+    /* ============================================================= */
+    /* DEDICATED TECHNICAL ARTICLE READER (IDENTIK DENGAN GAMBAR 2) */
+    /* ============================================================= */
+    .article-reader-container {
+      display: none;
+    }
+
+    .reader-header-nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-reader-back {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-btn);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-reader-back:hover {
+      background: var(--bg-surface-alt);
+      border-color: #cbd5e1;
+    }
+
+    .reader-header-nav-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-reader-action-secondary {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      padding: 0.55rem 0.9rem;
+      border-radius: var(--radius-btn);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .btn-reader-action-secondary:hover {
+      background: var(--bg-surface-alt);
+    }
+
+    .btn-reader-action-primary {
+      background: #0f172a;
+      border: 1px solid #0f172a;
+      color: #ffffff;
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-btn);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .btn-reader-action-primary:hover {
+      background: #1e293b;
+    }
+
+    /* Reader Editorial Banner Bar */
+    .reader-ingress-banner {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .ingress-left {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .ingress-badge {
+      background: var(--badge-blue-bg);
+      border: 1px solid var(--badge-blue-border);
+      color: var(--brand-blue);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+    }
+
+    .ingress-target-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* 2-Column Reader Layout */
+    .reader-2col-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.75rem;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .reader-2col-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Main Article Pane (Left) */
+    .article-main-pane {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 2.25rem 2.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .article-meta-header {
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .article-hero-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+      margin-bottom: 0.75rem;
+    }
+
+    .article-lead-p {
+      font-size: 0.95rem;
+      color: #334155;
+      line-height: 1.7;
+    }
+
+    /* Article Numbered Section Header */
+    .article-section {
+      margin-top: 2.25rem;
+    }
+
+    .section-badge-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-num-pill {
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .section-title-text {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+
+    .article-body-text {
+      font-size: 0.9rem;
+      color: #475569;
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+
+    /* Callout Note Box */
+    .callout-box {
+      background: #f0fdf4;
+      border-left: 4px solid #16a34a;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      font-size: 0.86rem;
+      color: #14532d;
+      line-height: 1.6;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .callout-box.warning {
+      background: #fffbeb;
+      border-left-color: #d97706;
+      color: #78350f;
+    }
+
+    /* Interactive Checkboxes */
+    .interactive-checklist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      margin: 1rem 0;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      color: #1e293b;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .checklist-item:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .checklist-item input[type="checkbox"] {
+      margin-top: 0.2rem;
+      cursor: pointer;
+      width: 17px;
+      height: 17px;
+      accent-color: var(--brand-blue);
+    }
+
+    .checklist-item.checked {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      color: #065f46;
+      text-decoration: line-through;
+    }
+
+    /* Terminal / Code Snippet Mockup (Persis Gambar 2) */
+    .code-mockup-wrapper {
+      background: #090d16;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 1.25rem 0;
+      box-shadow: var(--shadow-md);
+    }
+
+    .code-mockup-header {
+      background: #0f172a;
+      padding: 0.6rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .code-mockup-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      color: #94a3b8;
+    }
+
+    .mac-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .mac-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .mac-red { background: #ef4444; }
+    .mac-yellow { background: #f59e0b; }
+    .mac-green { background: #10b981; }
+
+    .code-mockup-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .lang-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      background: #1e293b;
+      color: #38bdf8;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .btn-copy-code {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .btn-copy-code:hover {
+      color: #ffffff;
+      background: #1e293b;
+    }
+
+    .code-mockup-body {
+      padding: 1.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: #f1f5f9;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* Right Sidebar in Reader View (Persis Gambar 2) */
+    .article-sidebar-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .sidebar-spec-card {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 1.35rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-spec-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.45rem 0;
+      font-size: 0.82rem;
+      border-bottom: 1px dashed #f1f5f9;
+    }
+
+    .spec-label {
+      color: var(--text-muted);
+    }
+
+    .spec-value {
+      font-weight: 600;
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    /* Action Buttons in Reader Sidebar */
+    .btn-sidebar-full {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      border-radius: var(--radius-btn);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn-sidebar-primary {
+      background: #0f172a;
+      border: 1px solid #0f172a;
+      color: #ffffff;
+    }
+
+    .btn-sidebar-primary:hover {
+      background: #1e293b;
+    }
+
+    .btn-sidebar-secondary {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      margin-top: 0.5rem;
+    }
+
+    .btn-sidebar-secondary:hover {
+      background: var(--bg-surface-alt);
     }
 
     /* Dictionary View */
@@ -583,58 +1145,22 @@
       margin-top: 0.5rem;
     }
 
-    /* Modal Dialog */
-    .modal-overlay {
+    /* Toast Notification */
+    .toast-msg {
       position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
-      z-index: 100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-    }
-
-    .modal-overlay.open {
-      display: flex;
-    }
-
-    .modal-box {
-      background: #ffffff;
-      border-radius: var(--radius-card);
-      max-width: 650px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
+      bottom: 2rem;
+      right: 2rem;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
       box-shadow: var(--shadow-lg);
-      padding: 1.75rem;
-      border: 1px solid var(--border-subtle);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 1rem;
-    }
-
-    .modal-close {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      color: var(--text-subtle);
-      font-size: 1.3rem;
-      padding: 0.25rem;
-      border-radius: 6px;
-    }
-
-    .modal-close:hover {
-      color: var(--text-main);
-      background: var(--bg-surface-alt);
+      display: none;
+      z-index: 1000;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     /* Footer */
@@ -659,11 +1185,25 @@
         <h1>HeroCMS <span class="gradient-text">Mission Control</span></h1>
         <div class="brand-sub">
           <span class="live-dot"></span>
-          <span>Single Source of Truth: Roadmap, Kamus & SOP Tim</span>
+          <span>Buku Induk, Kamus, Alur Pengerjaan & Task Runbook Tim</span>
         </div>
       </div>
     </div>
+
     <div class="top-meta">
+      <!-- Persona Focus Switcher -->
+      <div class="user-persona-selector">
+        <label for="persona-select">👤 Sedang Melihat Sebagai:</label>
+        <select id="persona-select" onchange="switchPersona(this.value)">
+          <option value="Rizal" selected>Rizal (DevOps & Security — Anda)</option>
+          <option value="Andalusia">Andalusia (Full Stack Lead)</option>
+          <option value="Irgi">Irgi (Frontend Web Specialist)</option>
+          <option value="Risqi">Risqi (Database Management)</option>
+          <option value="Tyno">Tyno (Mobile Specialist)</option>
+          <option value="all">Semua Anggota Tim (Global View)</option>
+        </select>
+      </div>
+
       <div class="badge-pm">
         <span>🤖 PM: Paijo AI Agent</span>
       </div>
@@ -673,93 +1213,264 @@
   <!-- Main Content Container -->
   <main class="container">
 
+    <!-- Reality Check SaaS Banner -->
+    <div class="reality-banner">
+      <div class="reality-banner-text">
+        <h3 id="focus-banner-title">🛡️ Mode Fokus: Rizal (DevOps & Security)</h3>
+        <p id="focus-banner-sub">Pekerjaan saat ini aktif di <strong>services/02-dashboard-cms</strong> & <strong>services/04-marketing-site</strong>. Microservice lainnya (Orchestrator, AI Agent, Admin) berada pada fase integrasi lanjutan.</p>
+      </div>
+      <div class="active-services-tags">
+        <span class="tag-active-service">● Active: 02-dashboard-cms</span>
+        <span class="tag-active-service">● Active: 04-marketing-site</span>
+        <span class="tag-pending-service">○ Next: 03-provision-orchestrator</span>
+        <span class="tag-pending-service">○ Next: 05-ai-agent-service</span>
+        <span class="tag-pending-service">○ Next: 01-admin-console</span>
+      </div>
+    </div>
+
     <!-- Telemetry Cards -->
     <section class="telemetry-grid">
       <div class="telemetry-card">
-        <span class="telemetry-label">Kesiapan Rilis Sprint</span>
+        <span class="telemetry-label">Kesiapan Rilis Sprint (Jujur)</span>
         <div class="telemetry-value-row">
-          <span class="telemetry-value" id="stat-readiness">0%</span>
-          <span class="status-badge badge-done" id="stat-readiness-badge">On Track</span>
+          <span class="telemetry-value" id="stat-readiness">18%</span>
+          <span class="status-badge badge-progress" id="stat-readiness-badge">Fase Fondasi Aktif</span>
         </div>
         <div class="progress-bar-wrap">
-          <div class="progress-bar-fill" id="stat-progress-bar" style="width: 0%;"></div>
+          <div class="progress-bar-fill" id="stat-progress-bar" style="width: 18%;"></div>
         </div>
-        <span class="telemetry-subtext">Berdasarkan rasio task selesai di Git</span>
+        <span class="telemetry-subtext">Rasio riil task selesai di codebase</span>
       </div>
 
       <div class="telemetry-card">
         <span class="telemetry-label">Total Task Bisnis</span>
         <div class="telemetry-value-row">
-          <span class="telemetry-value" id="stat-total-tasks">0</span>
-          <span class="tab-counter">6 Divisi</span>
+          <span class="telemetry-value" id="stat-total-tasks">36</span>
+          <span class="tab-counter">5 Divisi</span>
         </div>
-        <span class="telemetry-subtext">Matriks lintas backend, frontend, infra</span>
+        <span class="telemetry-subtext">Mencakup 12 modul studio + microservices</span>
       </div>
 
       <div class="telemetry-card">
-        <span class="telemetry-label">Selesai (Done)</span>
+        <span class="telemetry-label">Fondasi Selesai (Done)</span>
         <div class="telemetry-value-row">
-          <span class="telemetry-value" id="stat-done-tasks" style="color: #059669;">0</span>
+          <span class="telemetry-value" id="stat-done-tasks" style="color: #059669;">15</span>
           <span class="status-badge badge-done">Verified</span>
         </div>
-        <span class="telemetry-subtext">Lolos audit arsitektur & QC</span>
+        <span class="telemetry-subtext">Frontend UI & skema RLS inti</span>
       </div>
 
       <div class="telemetry-card">
-        <span class="telemetry-label">Sedang Berjalan</span>
+        <span class="telemetry-label">Sedang Dikerjakan (Ongoing)</span>
         <div class="telemetry-value-row">
-          <span class="telemetry-value" id="stat-progress-tasks" style="color: #b45309;">0</span>
-          <span class="status-badge badge-progress">Active Sprint</span>
+          <span class="telemetry-value" id="stat-progress-tasks" style="color: #b45309;">11</span>
+          <span class="status-badge badge-progress">Active Focus</span>
         </div>
-        <span class="telemetry-subtext">Dalam pengerjaan oleh petugas PIC</span>
+        <span class="telemetry-subtext">Fokus di 02-dashboard-cms & marketing</span>
       </div>
     </section>
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs-bar">
       <div class="tabs-group">
-        <button class="tab-btn active" onclick="switchTab('tasks')">
-          <span>📋 Papan Tugas & Petugas</span>
-          <span class="tab-counter" id="tab-count-tasks">0</span>
+        <button class="tab-btn active" id="tab-btn-tasks" onclick="switchMainTab('tasks')">
+          <span>📋 Papan Tugas per Divisi</span>
+          <span class="tab-counter" id="tab-count-tasks">36</span>
         </button>
-        <button class="tab-btn" onclick="switchTab('dict')">
+        <button class="tab-btn" id="tab-btn-dict" onclick="switchMainTab('dict')">
           <span>📖 Kamus Arsitektur</span>
-          <span class="tab-counter" id="tab-count-dict">0</span>
+          <span class="tab-counter" id="tab-count-dict">8</span>
         </button>
-        <button class="tab-btn" onclick="switchTab('sop')">
+        <button class="tab-btn" id="tab-btn-sop" onclick="switchMainTab('sop')">
           <span>🛡️ SOP & Runbook Tim</span>
-          <span class="tab-counter" id="tab-count-sop">0</span>
+          <span class="tab-counter" id="tab-count-sop">6</span>
         </button>
-        <button class="tab-btn" onclick="switchTab('paijo')">
+        <button class="tab-btn" id="tab-btn-paijo" onclick="switchMainTab('paijo')">
           <span>🤖 Protokol Paijo AI</span>
         </button>
       </div>
     </div>
 
-    <!-- TAB 1: TASK BOARD -->
+    <!-- VIEW 1: GROUPED DIVISION TASK BOARD -->
     <section id="view-tasks">
       <div class="filter-row">
         <div class="search-box">
           <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-          <input type="text" id="task-search-input" placeholder="Cari task, teknologi, atau modul..." oninput="filterTasks()">
+          <input type="text" id="task-search-input" placeholder="Cari modul, service, atau kata kunci..." oninput="filterGroupedTasks()">
         </div>
 
         <div class="member-filter-pills" id="member-pills-container">
-          <button class="pill-btn active" onclick="filterByMember('all')">Semua Petugas</button>
-          <button class="pill-btn" onclick="filterByMember('Andalusia')">Andalusia (Fullstack)</button>
-          <button class="pill-btn" onclick="filterByMember('Irgi')">Irgi (Frontend)</button>
-          <button class="pill-btn" onclick="filterByMember('Risqi')">Risqi (Database)</button>
-          <button class="pill-btn" onclick="filterByMember('Rizal')">Rizal (DevOps/Sec)</button>
-          <button class="pill-btn" onclick="filterByMember('Tyno')">Tyno (Mobile)</button>
+          <button class="pill-btn" onclick="filterByPill('all')">Semua Divisi</button>
+          <button class="pill-btn active" onclick="filterByPill('Rizal')">🛡️ Rizal (DevOps & Security)</button>
+          <button class="pill-btn" onclick="filterByPill('Irgi')">🎨 Irgi (Frontend Web)</button>
+          <button class="pill-btn" onclick="filterByPill('Andalusia')">⚙️ Andalusia (Fullstack)</button>
+          <button class="pill-btn" onclick="filterByPill('Risqi')">🗄️ Risqi (Database)</button>
+          <button class="pill-btn" onclick="filterByPill('Tyno')">📱 Tyno (Mobile)</button>
         </div>
       </div>
 
-      <div class="task-grid" id="task-grid-container">
+      <!-- Container Grouped by Division -->
+      <div id="division-groups-container">
         <!-- Rendered by JavaScript -->
       </div>
     </section>
 
-    <!-- TAB 2: ARCHITECTURE DICTIONARY -->
+    <!-- VIEW 2: DEDICATED TECHNICAL ARTICLE / TASK RUNBOOK (IDENTIK DENGAN GAMBAR 2) -->
+    <section id="view-article-reader" class="article-reader-container">
+      <!-- Top Actions Bar -->
+      <div class="reader-header-nav-bar">
+        <button class="btn-reader-back" onclick="closeArticleReader()">
+          <span>← Kembali ke Papan Tugas</span>
+        </button>
+        <div class="reader-header-nav-actions">
+          <button class="btn-reader-action-secondary" onclick="copyCurrentTaskReport()">
+            <span>📋 Salin Format Laporan ke Paijo</span>
+          </button>
+          <button class="btn-reader-action-primary" id="btn-toggle-task-done" onclick="toggleCurrentTaskDone()">
+            <span>✓ Tandai Selesai</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Ingress / Service Banner Bar -->
+      <div class="reader-ingress-banner">
+        <div class="ingress-left">
+          <span class="ingress-badge" id="reader-banner-badge">TARGET SERVICE</span>
+          <span class="ingress-target-text" id="reader-banner-path">services/02-dashboard-cms</span>
+        </div>
+        <div>
+          <span class="status-badge" id="reader-banner-status">IN PROGRESS</span>
+        </div>
+      </div>
+
+      <!-- 2-Column Reader Layout -->
+      <div class="reader-2col-layout">
+        <!-- Left Column: Article Content -->
+        <article class="article-main-pane">
+          <div class="article-meta-header">
+            <span class="task-service-tag" id="reader-category-tag">CATEGORY</span>
+            <h1 class="article-hero-title" id="reader-title">Task Title</h1>
+            <p class="article-lead-p" id="reader-lead">Deskripsi mendalam tentang apa yang harus dikerjakan dan dampak bisnisnya.</p>
+          </div>
+
+          <!-- Section 01: Architecture Flow -->
+          <div class="article-section">
+            <div class="section-badge-header">
+              <span class="section-num-pill">01</span>
+              <h2 class="section-title-text">Alur Kerja & Arsitektur Flow</h2>
+            </div>
+            <p class="article-body-text" id="reader-flow-desc">Bagaimana data dan request bergerak melintasi service ini.</p>
+            <div class="code-mockup-wrapper">
+              <div class="code-mockup-header">
+                <div class="code-mockup-title">
+                  <span class="mac-dots"><span class="mac-dot mac-red"></span><span class="mac-dot mac-yellow"></span><span class="mac-dot mac-green"></span></span>
+                  <span>flow-diagram.txt</span>
+                </div>
+                <span class="lang-badge">ASCII ARCHITECTURE</span>
+              </div>
+              <div class="code-mockup-body" id="reader-flow-diagram"></div>
+            </div>
+          </div>
+
+          <!-- Section 02: Interactive Checklist -->
+          <div class="article-section">
+            <div class="section-badge-header">
+              <span class="section-num-pill">02</span>
+              <h2 class="section-title-text">Checklist Pengerjaan Bertahap</h2>
+            </div>
+            <p class="article-body-text">Centang setiap sub-langkah ini saat Anda menyelesaikan kodenya:</p>
+            <ul class="interactive-checklist" id="reader-checklist-container">
+              <!-- Rendered by JavaScript -->
+            </ul>
+          </div>
+
+          <!-- Section 03: Code Examples & Templates -->
+          <div class="article-section">
+            <div class="section-badge-header">
+              <span class="section-num-pill">03</span>
+              <h2 class="section-title-text">Contoh Kode & Template Implementasi</h2>
+            </div>
+            <p class="article-body-text">Gunakan cuplikan kode teruji ini sebagai patokan pengerjaan di direktori berkas terkait:</p>
+            
+            <div class="code-mockup-wrapper">
+              <div class="code-mockup-header">
+                <div class="code-mockup-title">
+                  <span class="mac-dots"><span class="mac-dot mac-red"></span><span class="mac-dot mac-yellow"></span><span class="mac-dot mac-green"></span></span>
+                  <span id="reader-code-filepath">internal/...</span>
+                </div>
+                <div class="code-mockup-actions">
+                  <span class="lang-badge" id="reader-code-lang">GO</span>
+                  <button class="btn-copy-code" onclick="copyArticleCodeSnippet()">
+                    <span>Salin Kode</span>
+                  </button>
+                </div>
+              </div>
+              <div class="code-mockup-body" id="reader-code-content"></div>
+            </div>
+          </div>
+
+          <!-- Section 04: Paijo AI Critical Notes -->
+          <div class="article-section">
+            <div class="section-badge-header">
+              <span class="section-num-pill">04</span>
+              <h2 class="section-title-text">Catatan Kritis & Keamanan dari Paijo AI</h2>
+            </div>
+            <div class="callout-box" id="reader-ai-notes">
+              <!-- Rendered by JavaScript -->
+            </div>
+          </div>
+        </article>
+
+        <!-- Right Column: Specifications Sidebar -->
+        <aside class="article-sidebar-pane">
+          <div class="sidebar-spec-card">
+            <h3 class="sidebar-spec-title">⚙️ Spesifikasi Pengerjaan</h3>
+            <div class="spec-row">
+              <span class="spec-label">Task ID</span>
+              <span class="spec-value" id="spec-task-id">TSK-XXX</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Petugas PIC</span>
+              <span class="spec-value" id="spec-pic">Rizal</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Target Service</span>
+              <span class="spec-value" id="spec-service">02-dashboard-cms</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Prioritas</span>
+              <span class="spec-value" id="spec-priority">P1 - HIGH</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Fase Roadmap</span>
+              <span class="spec-value" id="spec-phase">Sprint 1 (Aktif)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Status</span>
+              <span class="spec-value" id="spec-status">In Progress</span>
+            </div>
+          </div>
+
+          <div class="sidebar-spec-card">
+            <h3 class="sidebar-spec-title">🛡️ Definition of Done (DoD)</h3>
+            <ul class="sop-steps" id="reader-dod-list" style="margin-top: 0;">
+              <!-- Rendered by JavaScript -->
+            </ul>
+          </div>
+
+          <div class="sidebar-spec-card">
+            <button class="btn-sidebar-full btn-sidebar-primary" onclick="copyCurrentTaskReport()">
+              <span>📋 Salin Format Lapor Paijo</span>
+            </button>
+            <button class="btn-sidebar-full btn-sidebar-secondary" onclick="closeArticleReader()">
+              <span>Kembali ke Papan</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- VIEW 3: ARCHITECTURE DICTIONARY -->
     <section id="view-dict" style="display: none;">
       <div class="filter-row">
         <div class="search-box">
@@ -772,14 +1483,14 @@
       </div>
     </section>
 
-    <!-- TAB 3: SOP & RUNBOOK -->
+    <!-- VIEW 4: SOP & RUNBOOK -->
     <section id="view-sop" style="display: none;">
       <div class="sop-grid" id="sop-grid-container">
         <!-- Rendered by JavaScript -->
       </div>
     </section>
 
-    <!-- TAB 4: PROTOKOL PAIJO AI -->
+    <!-- VIEW 5: PROTOKOL PAIJO AI -->
     <section id="view-paijo" style="display: none;">
       <div class="sop-card">
         <div class="sop-header">
@@ -794,7 +1505,7 @@
         <div class="code-block">
 Lapor Paijo:
 - PIC: [Andalusia / Irgi / Risqi / Rizal / Tyno]
-- Modul/Task: [Nama Fitur atau Bugfix]
+- Task ID: [Contoh: TSK-DOM-03]
 - Status: [Done / In Progress / Blocked]
 - Bukti/Output: [File link / commit hash / hasil test passing]
 - Kendala: [Jika membutuhkan intervensi anggota lain]</div>
@@ -810,33 +1521,9 @@ Lapor Paijo:
 
   </main>
 
-  <!-- Interactive Task Detail Modal -->
-  <div class="modal-overlay" id="task-modal" onclick="closeModalOnBackdrop(event)">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div>
-          <span class="dict-tag" id="modal-category">CATEGORY</span>
-          <h3 style="font-size: 1.2rem; font-weight: 700; margin-top: 0.35rem;" id="modal-title">Task Title</h3>
-        </div>
-        <button class="modal-close" onclick="closeModal()">✕</button>
-      </div>
-      <div>
-        <h4 style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Deskripsi & Tujuan:</h4>
-        <p style="font-size: 0.88rem; color: #334155; margin-top: 0.25rem; line-height: 1.6;" id="modal-desc"></p>
-      </div>
-      <div>
-        <h4 style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Petugas PIC & Divisi:</h4>
-        <p style="font-size: 0.88rem; font-weight: 600; color: #0f172a; margin-top: 0.25rem;" id="modal-pic"></p>
-      </div>
-      <div>
-        <h4 style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Definition of Done (DoD):</h4>
-        <ul class="sop-steps" id="modal-dod"></ul>
-      </div>
-      <div>
-        <h4 style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Berkas Terkait:</h4>
-        <div class="code-block" id="modal-files"></div>
-      </div>
-    </div>
+  <!-- Toast Notification Popup -->
+  <div class="toast-msg" id="global-toast">
+    <span id="toast-text">Teks tersalin ke clipboard!</span>
   </div>
 
   <!-- Footer -->
@@ -845,498 +1532,572 @@ Lapor Paijo:
   </footer>
 
   <script>
-    // DATASET MASTER TERPERINCI BERBASIS 12 MODUL & 5 SERVICES
-    const teamTasks = [
-      // MODUL 1: SITUS & KONTAINER
-      {
-        id: "TSK-CNT-01",
-        title: "UI Kontainer & Modal Pembuatan Situs",
-        category: "Containers (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Tampilan grid kartu pod, status badge, modal blueprint (Retail, Portfolio, Blog, LMS), dan cek subdomain.",
-        files: "services/02-dashboard-cms/src/components/dashboard/ContainersModule.vue",
-        dod: ["UI terhubung ke data pod", "Validasi subdomain reaktif", "Modal reset state otomatis"]
-      },
-      {
-        id: "TSK-CNT-02",
-        title: "Go Docker SDK Container Lifecycle",
-        category: "Orchestrator (03-provision)",
-        pic: "Andalusia",
-        status: "done",
-        desc: "Pembuatan kontainer Docker mandiri tenant dengan isolasi non-root UID 10001 dan batasan cgroups.",
-        files: "services/03-provision-orchestrator/internal/docker/",
-        dod: ["Spawn < 4.5 detik", "cgroups limit 256MB RAM", "Output container ID & internal IP"]
-      },
-      {
-        id: "TSK-CNT-03",
-        title: "Skema Database sites & RLS Isolation",
-        category: "Database (PostgreSQL)",
-        pic: "Risqi",
-        status: "done",
-        desc: "Tabel sites dengan foreign key tenant_id, subdomain unik, dan Row-Level Security policy.",
-        files: "deploy/sql/01_schema_and_rls.sql",
-        dod: ["ENABLE ROW LEVEL SECURITY aktif", "current_tenant_id terpasang", "Index b-tree pada subdomain"]
-      },
-      {
-        id: "TSK-CNT-04",
-        title: "Traefik Dynamic Routing Ingress",
-        category: "DevOps & Ingress",
-        pic: "Rizal",
-        status: "progress",
-        desc: "Injeksi dynamic router rule Host({subdomain}.herocms.id) dan TLS otomatis tanpa reload proxy.",
-        files: "services/03-provision-orchestrator/internal/traefik/",
-        dod: ["Routing aktif instan saat container jalan", "Sanitasi regex domain", "TLS Let's Encrypt aktif"]
-      },
-      {
-        id: "TSK-CNT-05",
-        title: "Live Terminal Log Streaming",
-        category: "Containers (02-dashboard-cms)",
-        pic: "Andalusia",
-        status: "done",
-        desc: "Terminal streaming log kontainer interaktif dengan filter (traffic, traefik, engine, docker, system).",
-        files: "services/02-dashboard-cms/cmd/server/ & ContainersModule.vue",
-        dod: ["Download log file", "Search log query", "Reboot trigger & simulation"]
-      },
-      {
-        id: "TSK-CNT-06",
-        title: "Container Emergency Controls (Restart & Maint)",
-        category: "Containers (02-dashboard-cms)",
-        pic: "Andalusia",
-        status: "done",
-        desc: "Tombol restart pod dengan drainage SIGTERM aman, serta saklar mode pemeliharaan (maintenance mode).",
-        files: "services/02-dashboard-cms/internal/handler/",
-        dod: ["Graceful shutdown sinyal", "Maintenance banner di halaman depan website tenant"]
-      },
-      {
-        id: "TSK-CNT-07",
-        title: "Mobile Container Status & Quick Reboot",
-        category: "Mobile Companion",
-        pic: "Tyno",
-        status: "todo",
-        desc: "Tampilan status kontainer di smartphone dan tombol reboot darurat dengan verifikasi FaceID.",
-        files: "mobile/lib/views/container_status.dart",
-        dod: ["Biometric auth prompt", "Panggilan API restart", "Notifikasi sukses di HP"]
-      },
+    // DATASET MASTER ARTIKEL RUNBOOK LENGKAP & REALISTIS
+    const divisionMetadata = [
+      { id: "Rizal", name: "Divisi DevOps & Security Specialist", pic: "Rizal (Anda)", icon: "🛡️" },
+      { id: "Irgi", name: "Divisi Frontend Web Specialist", pic: "Irgi", icon: "🎨" },
+      { id: "Andalusia", name: "Divisi Backend & Full Stack Lead", pic: "Andalusia", icon: "⚙️" },
+      { id: "Risqi", name: "Divisi Database & Storage Engine", pic: "Risqi", icon: "🗄️" },
+      { id: "Tyno", name: "Divisi Mobile Companion Specialist", pic: "Tyno", icon: "📱" }
+    ];
 
-      // MODUL 2: VISUAL EDITOR STUDIO
-      {
-        id: "TSK-EDT-01",
-        title: "Drag-and-Drop Visual Block Builder",
-        category: "Visual Editor (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Editor blok (Navbar, Hero, Features, Showcase, Pricing, CTA, Footer) dengan reorderable canvas.",
-        files: "services/02-dashboard-cms/src/components/dashboard/VisualEditorModule.vue",
-        dod: ["State Pinia reactive", "Drag-and-drop mulus 60 FPS", "Live preview multi-device"]
-      },
-      {
-        id: "TSK-EDT-02",
-        title: "XSS Sanitization & DOMPurify Guard",
-        category: "Security (Frontend/BFF)",
-        pic: "Rizal",
-        status: "done",
-        desc: "Pembersihan tag HTML berbahaya, script injection, dan payload malicious sebelum dirender.",
-        files: "services/02-dashboard-cms/src/utils/sanitize.ts",
-        dod: ["DOMPurify terintegrasi", "Pentest lolos zero XSS script execution"]
-      },
-      {
-        id: "TSK-EDT-03",
-        title: "Skema site_blocks & Preset Storage",
-        category: "Database (PostgreSQL)",
-        pic: "Risqi",
-        status: "done",
-        desc: "Tabel penyimpanan susunan JSON blok website per tenant dan per halaman.",
-        files: "deploy/sql/01_schema_and_rls.sql",
-        dod: ["Kolom blocks_json JSONB", "Index GIN untuk pencarian konten", "RLS isolation"]
-      },
-      {
-        id: "TSK-EDT-04",
-        title: "API Simpan & Publikasi Konfigurasi Blok",
-        category: "Backend (02-dashboard-cms)",
-        pic: "Andalusia",
-        status: "progress",
-        desc: "Endpoint untuk menyimpan draft layout dan mempublikasikan versi live ke kontainer website tenant.",
-        files: "services/02-dashboard-cms/internal/handler/editor.go",
-        dod: ["PUT /api/v1/sites/:id/blocks", "POST /api/v1/sites/:id/publish", "Cache invalidation"]
-      },
-      {
-        id: "TSK-EDT-05",
-        title: "AI Block Content Generator (Copilot)",
-        category: "AI Service (05-ai-agent)",
-        pic: "Andalusia",
-        status: "todo",
-        desc: "Integrasi asisten AI untuk menulis headline hero, copywriting produk, dan FAQ dari prompt teks.",
-        files: "services/05-ai-agent-service/internal/llm/",
-        dod: ["Stream SSE respon LLM", "TTFT < 800ms", "JSON block schema validator"]
-      },
-
-      // MODUL 3: ARTIKEL & HALAMAN
-      {
-        id: "TSK-ART-01",
-        title: "Tabel Ledger Artikel & Halaman CMS",
-        category: "Content (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Daftar artikel, filter kategori/tag, status published/draft, pencarian instan dan badge views.",
-        files: "services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue",
-        dod: ["Standard 2-row layout AGENTS.md", "Pencarian real-time", "Badge kategori dinamis"]
-      },
-      {
-        id: "TSK-ART-02",
-        title: "Mode Fokus Pembaca (Reader View)",
-        category: "Content (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Mode membaca bebas distraksi dengan auto-collapse sidebar navigasi dan tombol kembali tunggal.",
-        files: "services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue",
-        dod: ["Sidebar auto-hide", "Typography reader optimal", "Tombol buka URL publik live"]
-      },
-      {
-        id: "TSK-ART-03",
-        title: "Skema Database posts & pages Multi-Tenant",
-        category: "Database (PostgreSQL)",
-        pic: "Risqi",
-        status: "done",
-        desc: "Tabel artikel dengan slug unik per tenant, relasi kategori, status publikasi, dan SEO meta.",
-        files: "deploy/sql/01_schema_and_rls.sql",
-        dod: ["Constraint unique (tenant_id, slug)", "RLS policy aktif", "Foreign key cascade"]
-      },
-      {
-        id: "TSK-ART-04",
-        title: "BFF CRUD API Artikel",
-        category: "Backend (02-dashboard-cms)",
-        pic: "Andalusia",
-        status: "progress",
-        desc: "Endpoint API Go Gin untuk pembuatan, modifikasi, draft, dan delete artikel.",
-        files: "services/02-dashboard-cms/internal/handler/posts.go",
-        dod: ["GET /api/v1/posts", "POST /api/v1/posts", "Validasi payload JSON"]
-      },
-      {
-        id: "TSK-ART-05",
-        title: "Mobile Quick Article Publisher",
-        category: "Mobile Companion",
-        pic: "Tyno",
-        status: "todo",
-        desc: "Menulis dan mempublikasikan berita kilat atau pengumuman dari smartphone.",
-        files: "mobile/lib/views/quick_publisher.dart",
-        dod: ["Offline queue saat sinyal putus", "Publish status to backend"]
-      },
-
-      // MODUL 4: MEDIA ASSETS S3
-      {
-        id: "TSK-MED-01",
-        title: "Galeri Aset Media & Meteran Kuota",
-        category: "Media (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Grid aset gambar/dokumen, info ukuran file, status kuota S3 (1.2GB/5.0GB), dan preview modal.",
-        files: "services/02-dashboard-cms/src/components/dashboard/MediaAssetsModule.vue",
-        dod: ["Drag and drop uploader", "Instant copy asset URL", "Filter tipe file"]
-      },
-      {
-        id: "TSK-MED-02",
-        title: "Presigned URL Upload Engine & Sandboxing",
-        category: "Backend (02-dashboard-cms)",
-        pic: "Andalusia",
-        status: "progress",
-        desc: "Upload token presigned S3/MinIO langsung ke object storage tanpa membebani server backend.",
-        files: "services/02-dashboard-cms/internal/storage/minio.go",
-        dod: ["POST /api/v1/media/presign-upload", "Folder tenants/{id}/assets/", "Expiring token 15 menit"]
-      },
-      {
-        id: "TSK-MED-03",
-        title: "Skema media_assets & Quota Enforcement",
-        category: "Database (PostgreSQL)",
-        pic: "Risqi",
-        status: "progress",
-        desc: "Tabel metadata aset (file size, mime type, S3 key) dan kalkulasi batas kuota plan.",
-        files: "deploy/sql/01_schema_and_rls.sql",
-        dod: ["Agregat SUM(file_size)", "Blokir upload saat kuota habis"]
-      },
-      {
-        id: "TSK-MED-04",
-        title: "Mobile Direct Camera Upload to S3",
-        category: "Mobile Companion",
-        pic: "Tyno",
-        status: "todo",
-        desc: "Upload foto produk langsung dari kamera ponsel ke galeri media website tenant.",
-        files: "mobile/lib/views/camera_upload.dart",
-        dod: ["Kompresi gambar lokal di HP", "Upload langsung via Presigned URL"]
-      },
-      {
-        id: "TSK-MED-05",
-        title: "Anti-Malware File Validation (Magic Bytes)",
-        category: "Security (BFF/Infra)",
-        pic: "Rizal",
-        status: "done",
-        desc: "Pengecekan header magic bytes untuk memblokir upload webshell / PHP script berbahaya.",
-        files: "services/02-dashboard-cms/internal/storage/validator.go",
-        dod: ["Header Content-Disposition: attachment", "Blokir MIME executable"]
-      },
-
-      // MODUL 5: TEMPLATES & BLUEPRINTS
-      {
-        id: "TSK-TPL-01",
-        title: "UI Katalog Blueprint Template",
-        category: "Templates (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Galeri template resmi (Retail Store, Portfolio, Editorial, LMS) dengan live preview renderer.",
-        files: "services/02-dashboard-cms/src/components/dashboard/TemplatesCatalogModule.vue",
-        dod: ["Modal preview template", "Terapkan ke situs instan", "Badge kategori"]
-      },
-      {
-        id: "TSK-TPL-02",
-        title: "AI Theme & Template Generator",
-        category: "AI Service (05-ai-agent)",
-        pic: "Andalusia",
-        status: "progress",
-        desc: "Pabrik template AI dari prompt teks menjadi struktur JSON blocks kompatibel.",
-        files: "services/05-ai-agent-service/internal/generator/",
-        dod: ["JSON Schema valid", "Generate palet warna & block typography otomatis"]
-      },
-      {
-        id: "TSK-TPL-03",
-        title: "Template Seeding & Versioning",
-        category: "Database (PostgreSQL)",
-        pic: "Risqi",
-        status: "done",
-        desc: "Skema penyimpanan template global yang bisa di-clone oleh tenant baru.",
-        files: "deploy/sql/01_schema_and_rls.sql",
-        dod: ["Tabel templates global", "Versi template terawat"]
-      },
-
-      // MODUL 6: CUSTOM DOMAINS & DNS
-      {
-        id: "TSK-DOM-01",
-        title: "UI Custom Domain & Panduan DNS",
-        category: "Domains (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Tabel custom domain, status verifikasi (Pending/Verified/SSL Active), dan petunjuk CNAME.",
-        files: "services/02-dashboard-cms/src/components/dashboard/CustomDomainsModule.vue",
-        dod: ["Form input domain", "Status polling live", "Copy CNAME target"]
-      },
-      {
-        id: "TSK-DOM-02",
-        title: "DNS Verification Background Worker",
-        category: "Backend (02-dashboard-cms)",
-        pic: "Andalusia",
-        status: "progress",
-        desc: "Worker Go yang mengecek propagasi DNS (CNAME pointing ke edge.herocms.id) sebelum SSL diaktifkan.",
-        files: "services/02-dashboard-cms/internal/service/dns.go",
-        dod: ["Lookup CNAME otomatis", "Update status domain di DB"]
-      },
+    const detailedTasks = [
+      // -------------------------------------------------------------
+      // 1. DIVISI DEVOPS & SECURITY (PIC: RIZAL)
+      // -------------------------------------------------------------
       {
         id: "TSK-DOM-03",
-        title: "Traefik Dynamic Custom Domain & Let's Encrypt",
-        category: "DevOps & Ingress",
+        division: "Rizal",
         pic: "Rizal",
+        title: "Traefik Dynamic Custom Domain & Let's Encrypt TLS Automation",
+        category: "DevOps & Ingress (Traefik v3)",
+        service: "deploy/docker-compose.infra.yml",
         status: "progress",
-        desc: "Pendaftaran custom domain ke Traefik Ingress dengan automasi sertifikat SSL Let's Encrypt.",
-        files: "deploy/docker-compose.infra.yml",
-        dod: ["Sertifikat SSL otomatis aktif < 10 detik setelah DNS verified"]
-      },
-      {
-        id: "TSK-DOM-04",
-        title: "Traefik Host Rule Injection Pentest (CWE-20/93)",
-        category: "Security (Pentest)",
-        pic: "Rizal",
-        status: "done",
-        desc: "Sanitasi regex domain ketat untuk mencegah serangan breakout routing proxy.",
-        files: "services/02-dashboard-cms/pentest/",
-        dod: ["Regex ^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$", "100% Pentest pass"]
-      },
-
-      // MODUL 7: ANALITIK & TELEMETRI
-      {
-        id: "TSK-ANL-01",
-        title: "Dashboard Grafik Kunjungan & Top-Views",
-        category: "Analytics (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Grafik kunjungan 7 hari, top 5 artikel terpopuler, live visitor counter, dan bandwidth tracker.",
-        files: "services/02-dashboard-cms/src/components/dashboard/AnalyticsTelemetryModule.vue",
-        dod: ["Grafik responsif", "Filter rentang tanggal", "Top-views list"]
-      },
-      {
-        id: "TSK-ANL-02",
-        title: "Redis 7 Sorted Sets (ZSET) Counter (<1ms)",
-        category: "Database & Cache",
-        pic: "Risqi",
-        status: "done",
-        desc: "Pencatatan pageviews real-time tanpa membebani disk PostgreSQL menggunakan ZINCRBY.",
-        files: "services/02-dashboard-cms/internal/redis/telemetry.go",
-        dod: ["Latensi baca < 1ms", "Kunci tenant:{id}:top_views terisolasi"]
-      },
-      {
-        id: "TSK-ANL-03",
-        title: "Telemetry Ingestion Anonymous Middleware",
-        category: "Backend (02-dashboard-cms)",
-        pic: "Andalusia",
-        status: "done",
-        desc: "Middleware pencatat hit anonim (User-Agent, referer, hash IP) yang GDPR-compliant.",
-        files: "services/02-dashboard-cms/internal/middleware/tracker.go",
-        dod: ["Async write ke Redis", "Zero latency penalty pada halaman publik"]
-      },
-      {
-        id: "TSK-ANL-04",
-        title: "Mobile Real-time Telemetry Screen",
-        category: "Mobile Companion",
-        pic: "Tyno",
-        status: "todo",
-        desc: "Layar ringkasan pengunjung harian dan grafik live traffic di aplikasi ponsel.",
-        files: "mobile/lib/views/analytics_screen.dart",
-        dod: ["Grafik mini chart", "Push alert lonjakan traffic"]
-      },
-
-      // MODUL 8: WEBHOOKS & API
-      {
-        id: "TSK-WBH-01",
-        title: "UI Manajemen Webhook & API Key",
-        category: "Webhooks (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Form penambahan endpoint webhook, event selector, dan generator API Secret Token.",
-        files: "services/02-dashboard-cms/src/components/dashboard/WebhooksApiModule.vue",
-        dod: ["Test ping trigger", "Riwayat delivery logs", "Copy token"]
-      },
-      {
-        id: "TSK-WBH-02",
-        title: "Anti-SSRF Safe Webhook Dispatcher",
-        category: "Security & Backend",
-        pic: "Rizal",
-        status: "progress",
-        desc: "Mesin pengirim HTTP webhook dengan proteksi pemblokiran IP internal (127.0.0.1, 10.0.0.0/8).",
-        files: "services/02-dashboard-cms/internal/service/webhook.go",
-        dod: ["Blokir private subnet", "Timeout 3s", "Retry backoff exponential"]
-      },
-      {
-        id: "TSK-WBH-03",
-        title: "n8n Social Media Auto-Poster Workflow",
-        category: "AI Service (05-ai-agent)",
-        pic: "Andalusia",
-        status: "progress",
-        desc: "Otomatisasi posting rangkuman artikel baru ke Instagram, Facebook, dan Telegram via n8n.",
-        files: "services/05-ai-agent-service/workflows/",
-        dod: ["Webhook receiver aktif", "Auto-generate caption AI", "Publish webhook"]
-      },
-
-      // MODUL 9 & 10: BILLING & INVOICES
-      {
-        id: "TSK-BIL-01",
-        title: "UI Paket Langganan & Riwayat Faktur",
-        category: "Billing (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Tabel perbandingan fitur paket (Starter, Pro, Enterprise), gauge kuota, dan tabel invoice PDF.",
-        files: "services/02-dashboard-cms/src/components/dashboard/BillingPlanModule.vue",
-        dod: ["Tampilan status lunas/pending", "Download invoice", "Upgrade button"]
-      },
-      {
-        id: "TSK-BIL-02",
-        title: "Payment Gateway Midtrans/Xendit Integration",
-        category: "Admin Console (01-admin)",
-        pic: "Andalusia",
-        status: "progress",
-        desc: "Pembuatan Snap Token pembayaran, webhook notifikasi lunas, dan auto-upgrade kuota.",
-        files: "services/01-admin-console/app/Http/Controllers/Billing/",
-        dod: ["Signature validation", "Auto-activate plan pada tenant", "Invoice PDF generation"]
-      },
-      {
-        id: "TSK-BIL-03",
-        title: "Skema subscriptions & invoices",
-        category: "Database (PostgreSQL)",
-        pic: "Risqi",
-        status: "done",
-        desc: "Tabel masa aktif langganan, tanggal jatuh tempo, dan riwayat pembayaran.",
-        files: "deploy/sql/01_schema_and_rls.sql",
-        dod: ["Relasi tenant ke subscription", "Auto-suspend trigger jika telat bayar"]
-      },
-      {
-        id: "TSK-BIL-04",
-        title: "Push Notification Tagihan & Kuota Limit",
-        category: "Mobile Companion",
-        pic: "Tyno",
-        status: "todo",
-        desc: "Pemberitahuan push di HP saat kuota mendekati 90% atau invoice jatuh tempo.",
-        files: "mobile/lib/services/billing_notification.dart",
-        dod: ["FCM push messaging", "Deep link ke menu pembayaran"]
-      },
-
-      // MODUL 11 & 12: SUPPORT TICKETS & CHANGELOG
-      {
-        id: "TSK-SUP-01",
-        title: "UI Tiket Bantuan & Pelacakan SLA",
-        category: "Support (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Form pengajuan tiket keluhan, pilihan tingkat urgensi, dan status riwayat respon support.",
-        files: "services/02-dashboard-cms/src/components/dashboard/SupportTicketingModule.vue",
-        dod: ["Badge status Open/Resolved", "Lampiran screenshot keluhan"]
-      },
-      {
-        id: "TSK-SUP-02",
-        title: "Admin Helpdesk Resolver (Laravel Filament)",
-        category: "Admin Console (01-admin)",
-        pic: "Andalusia",
-        status: "progress",
-        desc: "Panel internal admin untuk merespon tiket support dan inspect status kontainer tenant.",
-        files: "services/01-admin-console/app/Filament/Resources/TicketResource.php",
-        dod: ["Balas tiket dari admin", "Email notifikasi ke tenant"]
-      },
-      {
-        id: "TSK-CHG-01",
-        title: "Changelog Modul & SemVer Governance",
-        category: "Changelog (02-dashboard-cms)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Halaman rilis publik interaktif dengan filter tipe (feature, fix, security) dan search.",
-        files: "services/02-dashboard-cms/src/components/dashboard/ChangelogModule.vue",
-        dod: ["Tersinkronisasi ke changelog.ts", "Shortcut CMD+K search", "Badge SemVer"]
-      },
-
-      // INFRA & MARKETING
-      {
-        id: "TSK-MKT-01",
-        title: "High-Conversion Marketing Website (React 19)",
-        category: "Marketing (04-marketing)",
-        pic: "Irgi",
-        status: "done",
-        desc: "Landing page publik, demo playground interaktif, kalkulator harga, dan form pendaftaran.",
-        files: "services/04-marketing-site/src/",
-        dod: ["LCP < 1.2s", "Lighthouse > 90", "Responsive design"]
-      },
-      {
-        id: "TSK-OPS-01",
-        title: "Multi-Network Docker Isolation Topology",
-        category: "DevOps & Infra",
-        pic: "Rizal",
-        status: "done",
-        desc: "Pemisahan jaringan kontainer: edge-network, infra-network, dan tenant-isolated-network.",
-        files: "docker-compose.yml & deploy/docker-compose.infra.yml",
-        dod: ["Kontainer tenant tidak bisa membidik DB langsung", "Hanya Traefik terbuka publik"]
+        priority: "P1 - CRITICAL",
+        phase: "Sprint 1 (Aktif)",
+        lead: "Mengonfigurasi Traefik v3 agar dapat memetakan custom domain tenant (contoh: kedaikopi.com) secara otomatis dengan penerbitan sertifikat SSL Let's Encrypt instan tanpa restart proxy.",
+        flowDesc: "Pengunjung mengakses custom domain -> Traefik mencocokkan resolver ACME -> Validasi challenge HTTP-01 -> Terbitkan SSL -> Forward traffic ke kontainer tenant.",
+        flowDiagram: `[ Pengunjung Web ]
+       │  (HTTPS kedaikopi.com)
+       ▼
+[ Traefik v3 Edge Ingress (:443) ]
+       │  Dynamic Config Watcher
+       ├── 1. Cek Sertifikat SSL Let's Encrypt (Automated Renewal)
+       ├── 2. Apply Middleware: Security Headers & Rate Limit
+       ▼
+[ Kontainer Tenant Isolated (hero_tenant_9942) ]`,
+        checklist: [
+          "Konfigurasi volume acme.json dengan permission 600 di deploy/docker-compose.infra.yml",
+          "Tambahkan provider file dinamis Traefik untuk custom domains",
+          "Siapkan router middleware HSTS, Content-Type NoSniff, dan FrameDeny",
+          "Uji coba penerbitan sertifikat staging Let's Encrypt pada domain uji"
+        ],
+        codeFile: "deploy/traefik/dynamic/custom_domains.yml",
+        codeLang: "YAML",
+        codeSnippet: `http:
+  routers:
+    tenant-custom-domain:
+      rule: "Host(\`kedaikopi.com\`)"
+      entryPoints:
+        - websecure
+      service: tenant-hero-9942
+      tls:
+        certResolver: letsencrypt
+  services:
+    tenant-hero-9942:
+      loadBalancer:
+        servers:
+          - url: "http://172.28.0.42:80"`,
+        aiNotes: "PENTING: Jangan izinkan user mendaftarkan domain sebelum melewati worker pengecekan CNAME DNS. Jika domain belum pointing ke edge kita, Let's Encrypt akan terkena rate limit kuota gagal!",
+        dod: ["SSL Let's Encrypt terbit < 10 detik", "A+ rating pada SSL Labs", "Zero restart downtime"]
       },
       {
         id: "TSK-OPS-02",
-        title: "Linux cgroups v2 Hard-Limit Sandbox",
-        category: "DevOps & Security",
+        division: "Rizal",
         pic: "Rizal",
+        title: "Linux cgroups v2 Hard-Limit Sandbox & Non-Root Enforcement",
+        category: "Security (Container Hardening)",
+        service: "services/03-provision-orchestrator",
         status: "progress",
-        desc: "Penguncian memori 256MB, CPU 0.5 vCPU, dan filesystem read-only pada kontainer tenant.",
-        files: "services/03-provision-orchestrator/internal/docker/sandbox.go",
-        dod: ["OOM terisolasi per pod", "CapDrop ALL terverifikasi", "ReadonlyRootfs = true"]
+        priority: "P1 - HIGH",
+        phase: "Sprint 1 (Aktif)",
+        lead: "Mengunci hak akses kontainer tenant agar berjalan sebagai user non-root UID 10001, filesystem root read-only, dan batas keras cgroups v2 (RAM 256MB, CPU 0.5) untuk mencegah eskalasi privilege.",
+        flowDesc: "Docker Daemon menerima request spawn -> Set HostConfig Resources (Memory 256MB, NanoCPUs 500000000) -> Drop semua Linux capabilities -> Mount volume /tmp sebagai tmpfs.",
+        flowDiagram: `[ Docker Engine Go SDK ]
+       │
+       ▼
+[ Container Create Config ]
+  ├── User: "10001:10001" (Non-Root)
+  ├── ReadonlyRootfs: true
+  ├── CapDrop: ["ALL"]
+  ├── Memory: 268435456 (256 MB)
+  └── NanoCPUs: 500000000 (0.5 vCPU)`,
+        checklist: [
+          "Edit services/03-provision-orchestrator/internal/docker/sandbox.go",
+          "Terapkan CapDrop ALL dan no-new-privileges",
+          "Mount folder writable hanya di /app/storage dan /tmp via volume isolasi",
+          "Jalankan stress test memori: pastikan kontainer OOM killed tanpa mengganggu host"
+        ],
+        codeFile: "services/03-provision-orchestrator/internal/docker/sandbox.go",
+        codeLang: "GO",
+        codeSnippet: `hostConfig := &container.HostConfig{
+    Resources: container.Resources{
+        Memory:     256 * 1024 * 1024, // 256 MB Hard limit
+        NanoCPUs:   500000000,         // 0.5 CPU
+        MemorySwap: 256 * 1024 * 1024, // Disable extra swap
+    },
+    ReadonlyRootfs: true,
+    CapDrop:        []string{"ALL"},
+    SecurityOpt:    []string{"no-new-privileges:true"},
+}`,
+        aiNotes: "Periksa apakah tenant butuh menulis cache lokal. Jika iya, buat tmpfs mount di memory bukan di disk agar performa tinggi dan file sampah terhapus otomatis saat pod restart.",
+        dod: ["UID 10001 terverifikasi", "Memory leak tertahan di 256MB", "Pentest pass"]
       },
       {
-        id: "TSK-OPS-03",
-        title: "Pre-Commit Pentest Runner & CI/CD Gate",
-        category: "DevOps & Security",
+        id: "TSK-SEC-01",
+        division: "Rizal",
         pic: "Rizal",
+        title: "Modular Pre-Commit Pentest Runner & Traefik Injection Guard",
+        category: "Security (CI/CD Quality Gate)",
+        service: "services/02-dashboard-cms/pentest/",
+        status: "done",
+        priority: "P1 - CRITICAL",
+        phase: "Fondasi Selesai",
+        lead: "Rangkaian pengujian penetrasi mandatori black-box HTTP dan mitigasi Traefik router rule injection (CWE-20/93) sebelum commit atau PR diizinkan.",
+        flowDesc: "Developer eksekusi git commit -> Pre-commit hook memanggil go test ./pentest/... -> Pengujian Traefik breakout, SQLi, XSS -> Jika PASS lanjut commit.",
+        flowDiagram: `[ Git Commit / Pre-Push ]
+       │
+       ▼
+[ go test -v ./pentest/... ]
+       ├── 1. TestDashboard_AuthBruteForce (Cek Rate Limit 5x)
+       ├── 2. TestTraefik_HostRuleInjection (Cek Karakter Breakout)
+       ├── 3. TestDashboard_SecurityHeaders (Cek HSTS/CSP)
+       ▼
+[ PASS: Commit Diizinkan | FAIL: Commit Ditolak ]`,
+        checklist: [
+          "Suite pentest modular di services/02-dashboard-cms/pentest/",
+          "Regex domain validator: ^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$",
+          "Audit kepatuhan AGENTS.md Bagian 9 terpenuhi"
+        ],
+        codeFile: "services/02-dashboard-cms/pentest/traefik_injection_test.go",
+        codeLang: "GO",
+        codeSnippet: `func TestTraefik_HostRuleInjection(t *testing.T) {
+    maliciousSubdomain := "victim.com\` || Host(\`attacker.com"
+    isValid := validator.ValidateSubdomain(maliciousSubdomain)
+    if isValid {
+        t.Fatalf("[FAIL] Traefik router injection succeeded with input: %s", maliciousSubdomain)
+    }
+}`,
+        aiNotes: "Status saat ini: DONE! Sudah aktif di codebase dan menjadi benteng wajib sebelum PR dibuka.",
+        dod: ["100% Pass pada go test ./pentest/...", "Zero warning", "Regex teruji"]
+      },
+
+      // -------------------------------------------------------------
+      // 2. DIVISI FRONTEND WEB (PIC: IRGI)
+      // -------------------------------------------------------------
+      {
+        id: "TSK-EDT-01",
+        division: "Irgi",
+        pic: "Irgi",
+        title: "Visual Block Builder Drag-and-Drop Canvas & Inspector",
+        category: "Visual Editor (02-dashboard-cms)",
+        service: "services/02-dashboard-cms",
+        status: "done",
+        priority: "P1 - CRITICAL",
+        phase: "Fondasi Selesai",
+        lead: "Membangun kanvas visual block drag-and-drop di VisualEditorModule.vue dengan live preview multi-device (Desktop, Tablet, Mobile) dan palette theme switcher.",
+        flowDesc: "Pilih block dari sidebar -> Tarik ke kanvas -> Pinia store merekam posisi urutan -> Live renderer menyegarkan iframe preview secara real-time.",
+        flowDiagram: `[ Sidebar Blok (Navbar, Hero, CTA) ]
+       │ (Drag & Drop)
+       ▼
+[ Canvas Visual Workspace ]
+       │ Reactive Event
+       ▼
+[ Pinia Store: activeBlocks[] ] ──► [ Iframe Live Preview 60 FPS ]`,
+        checklist: [
+          "Integrasi komponen blok visual: Navbar, Hero, Features, Showcase, Pricing, FAQ, Footer",
+          "Live inspector untuk mengedit warna, teks, dan ukuran padding",
+          "Sanitasi DOMPurify pada teks masukan pengguna",
+          "Simulasi tampilan responsif iPhone, iPad, dan Desktop 4K"
+        ],
+        codeFile: "services/02-dashboard-cms/src/components/dashboard/VisualEditorModule.vue",
+        codeLang: "VUE",
+        codeSnippet: `<template>
+  <div class="visual-canvas-workspace">
+    <draggable v-model="activeBlocks" item-key="id" @end="handleBlockReorder">
+      <template #item="{ element }">
+        <VisualBlockItem :block="element" @select="selectBlockForInspect" />
+      </template>
+    </draggable>
+  </div>
+</template>`,
+        aiNotes: "Pastikan CSS tetap merujuk ke studio-master.css. Jangan gunakan style scoped yang membengkakkan file Vue hingga ratusan kilobyte.",
+        dod: ["Drag and drop 60 FPS", "Zero-CSS duplication", "Pinia state reactive"]
+      },
+      {
+        id: "TSK-MKT-01",
+        division: "Irgi",
+        pic: "Irgi",
+        title: "Website Pemasaran Berkonversi Tinggi & Interactive Playground",
+        category: "Marketing Site (04-marketing)",
+        service: "services/04-marketing-site",
+        status: "done",
+        priority: "P1 - HIGH",
+        phase: "Fondasi Selesai",
+        lead: "Halaman landing page publik di React 19 + Tailwind dengan fitur demo visual studio interaktif, kalkulator harga paket, dan form registrasi kilat.",
+        flowDesc: "Pengunjung masuk landing page -> Mencoba interactive playground -> Klik daftar -> Redirect ke funnel pendaftaran Studio CMS.",
+        flowDiagram: `[ Pengunjung Organik / Ads ]
+       │
+       ▼
+[ Marketing Site (React 19) ]
+  ├── Interactive Demo Playground
+  ├── Paket & Pricing Comparison
+  └── Hero CTA Register
+       │
+       ▼
+[ Redirect: http://localhost:5173/login?mode=register ]`,
+        checklist: [
+          "Tuning Core Web Vitals: LCP < 1.2 detik dan CLS 0",
+          "Integrasi demo playground tanpa perlu login",
+          "Kalkulator estimasi biaya kontainer bisnis",
+          "SEO meta tags dan OpenGraph image generator"
+        ],
+        codeFile: "services/04-marketing-site/src/App.tsx",
+        codeLang: "TYPESCRIPT",
+        codeSnippet: `export const PricingCalculator = () => {
+  const [containers, setContainers] = useState(3);
+  const monthlyCost = containers * 49000;
+  return (
+    <div className="pricing-box">
+      <h4>Estimasi {containers} Kontainer Cloud: Rp {monthlyCost.toLocaleString('id-ID')}/bln</h4>
+    </div>
+  );
+};`,
+        aiNotes: "Status saat ini: DONE! Landing page sudah sangat rapi dan siap mengonversi prospek.",
+        dod: ["LCP < 1.2s", "Lighthouse 95+", "Mobile friendly"]
+      },
+      {
+        id: "TSK-ART-02",
+        division: "Irgi",
+        pic: "Irgi",
+        title: "Mode Fokus Pembaca (Distraction-Free Reader View)",
+        category: "Content Studio (02-dashboard-cms)",
+        service: "services/02-dashboard-cms",
+        status: "done",
+        priority: "P2 - MEDIUM",
+        phase: "Fondasi Selesai",
+        lead: "Menghadirkan antarmuka editorial membaca bersih (seperti yang Anda lihat di tangkapan layar) dengan navigasi tunggal di atas, auto-collapse sidebar, dan kartu telemetri edge.",
+        flowDesc: "User klik artikel di ledger -> Sidebar utama disembunyikan -> Layout artikel melebar 2 kolom -> Tampilan nyaman dan fokus.",
+        flowDiagram: `[ Klik Artikel di Ledger ]
+       │
+       ▼
+[ Trigger: activeArticleForReader ]
+  ├── Auto-collapse Sidebar Kiri
+  ├── Render Hero Title & Meta Ingress
+  ├── 2-Kolom: Konten Utama & Sidebar Spesifikasi
+  └── Tombol Single Back Header`,
+        checklist: [
+          "Toggle mode baca: auto hide sidebar studio",
+          "Hero editorial dengan badge status TLS v1.3",
+          "Komponen code terminal mockup dengan syntax highlighting",
+          "Sidebar spesifikasi deployment kontainer"
+        ],
+        codeFile: "services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue",
+        codeLang: "VUE",
+        codeSnippet: `<div v-if="activeArticleForReader" class="article-reader-page">
+  <div class="reader-header-nav-bar">
+    <button class="btn-reader-back" @click="closeArticleReader()">
+      <span>Kembali ke Studio Konten</span>
+    </button>
+  </div>
+  <!-- 2-Column Reader Layout -->
+</div>`,
+        aiNotes: "Layout ini adalah standar emas antarmuka baca di HeroCMS. Desain inilah yang kita terapkan untuk Mission Control task runbook saat ini!",
+        dod: ["Sidebar auto-collapse", "Responsive layout", "Copy code button aktif"]
+      },
+
+      // -------------------------------------------------------------
+      // 3. DIVISI BACKEND & FULLSTACK (PIC: ANDALUSIA)
+      // -------------------------------------------------------------
+      {
+        id: "TSK-CNT-02",
+        division: "Andalusia",
+        pic: "Andalusia",
+        title: "Orchestrator Autonomous Container Provisioning (Go Docker SDK)",
+        category: "Provisioning (03-orchestrator)",
+        service: "services/03-provision-orchestrator",
+        status: "done",
+        priority: "P1 - CRITICAL",
+        phase: "Fondasi Selesai",
+        lead: "Mesin otonom untuk membuat kontainer website tenant mandiri menggunakan Go Docker Engine SDK tanpa campur tangan sysadmin.",
+        flowDesc: "BFF mengirim request JSON -> Orchestrator menarik base image Alpine Nginx -> Mengonfigurasi cgroups & network -> Memulai kontainer dalam < 4.5 detik.",
+        flowDiagram: `[ BFF API Request ]
+       │ POST /api/v1/containers/provision
+       ▼
+[ Provision Orchestrator (Go) ]
+       │ Docker SDK
+       ├── 1. dockerClient.ImagePull(...)
+       ├── 2. dockerClient.ContainerCreate(HostConfig, Sandbox)
+       ├── 3. dockerClient.ContainerStart(...)
+       ▼
+[ Kontainer Baru Berjalan (< 4.5s) ]`,
+        checklist: [
+          "Integrasi client Docker Go SDK",
+          "Inisialisasi network isolasi tenant-isolated-network",
+          "Pengembalian metadata kontainer (ID, IP privat, Port)",
+          "Error handling saat resource Docker daemon habis"
+        ],
+        codeFile: "services/03-provision-orchestrator/internal/docker/provisioner.go",
+        codeLang: "GO",
+        codeSnippet: `func (p *Provisioner) SpawnSite(ctx context.Context, req ProvisionRequest) (*SiteMeta, error) {
+    resp, err := p.docker.ContainerCreate(ctx, &container.Config{
+        Image: "herocms/tenant-site-runtime:latest",
+        Labels: map[string]string{
+            "traefik.enable": "true",
+            "traefik.http.routers." + req.Subdomain + ".rule": "Host(\`" + req.Subdomain + ".herocms.id\`)",
+        },
+    }, hostConfig, netConfig, nil, req.ContainerName)
+    if err != nil { return nil, err }
+    return &SiteMeta{ContainerID: resp.ID}, nil
+}`,
+        aiNotes: "Langkah berikutnya: sambungkan langsung dengan trigger pendaftaran akun baru di frontend.",
+        dod: ["Spawn < 4.5s", "Zero leak", "Docker label terpasang"]
+      },
+      {
+        id: "TSK-EDT-04",
+        division: "Andalusia",
+        pic: "Andalusia",
+        title: "BFF API Simpan & Publikasi Konfigurasi Blok Visual",
+        category: "Backend BFF (02-dashboard-cms)",
+        service: "services/02-dashboard-cms",
         status: "progress",
-        desc: "Otomasi eksekusi pentest per-service sebelum pull request diizinkan merge ke main.",
-        files: ".github/workflows/docker-image.yml",
-        dod: ["100% Pass pada test suite pentest", "Auto-reject PR jika ada celah keamanan"]
+        priority: "P1 - HIGH",
+        phase: "Sprint 1 (Aktif)",
+        lead: "Menyediakan endpoint REST API di Go BFF untuk menyimpan draft konfigurasi blok visual ke PostgreSQL dan menerbitkan file static JSON ke kontainer tenant.",
+        flowDesc: "Frontend kirim PUT payload blok -> Backend validasi schema -> Simpan ke kolom blocks_json di DB -> Kirim sinyal flush cache ke pod kontainer.",
+        flowDiagram: `[ Frontend Visual Editor ]
+       │ PUT /api/v1/sites/:id/blocks (JSON Payload)
+       ▼
+[ Go BFF Handler (02-dashboard-cms) ]
+       │
+       ├── 1. Validasi Schema & JSON Size (< 5MB)
+       ├── 2. Simpan ke PostgreSQL (tabel site_blocks)
+       └── 3. POST /api/v1/sites/:id/publish
+               │
+               ▼
+       [ Push JSON ke Volume Kontainer Tenant ]`,
+        checklist: [
+          "Buat handler SaveSiteBlocks di services/02-dashboard-cms/internal/handler/editor.go",
+          "Validasi array VisualBlock[] sesuai tipe",
+          "Tambahkan middleware autentikasi JWT dan pengecekan kepemilikan tenant",
+          "Koneksikan tombol 'Simpan Perubahan' di Vue ke endpoint ini"
+        ],
+        codeFile: "services/02-dashboard-cms/internal/handler/editor.go",
+        codeLang: "GO",
+        codeSnippet: `func (h *EditorHandler) SaveBlocks(c *gin.Context) {
+    siteID := c.Param("id")
+    tenantID := c.GetString("tenant_id")
+    
+    var req SaveBlocksRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid block payload"})
+        return
+    }
+    
+    err := h.repo.SaveBlocks(c.Request.Context(), tenantID, siteID, req.Blocks)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to persist blocks"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"success": true, "message": "Blocks saved successfully"})
+}`,
+        aiNotes: "Jangan lupa: tenant A tidak boleh bisa menyimpan blok milik tenant B. Wajib periksa where tenant_id = current_tenant_id!",
+        dod: ["PUT /sites/:id/blocks aktif", "RLS verified", "Respon < 50ms"]
+      },
+      {
+        id: "TSK-BIL-02",
+        division: "Andalusia",
+        pic: "Andalusia",
+        title: "Payment Gateway Integration (Midtrans Snap & Xendit)",
+        category: "Billing & Admin (01-admin-console)",
+        service: "services/01-admin-console",
+        status: "progress",
+        priority: "P1 - HIGH",
+        phase: "Fase 2 (Pending)",
+        lead: "Membangun sistem pembayaran langganan otomatis di Laravel 11 Filament untuk menerima pembayaran QRIS, Virtual Account, dan Kartu Kredit dengan auto-upgrade kuota kontainer.",
+        flowDesc: "User klik upgrade plan di dashboard -> BFF request Snap Token ke Laravel Admin -> Popup Midtrans muncul -> Pembayaran sukses -> Webhook auto-upgrade.",
+        flowDiagram: `[ Dashboard Studio (Vue 3) ]
+       │ Klik Upgrade Plan
+       ▼
+[ Laravel 11 Billing API (01-admin) ]
+       │ Midtrans Snap API
+       ▼
+[ Customer Bayar QRIS / VA ]
+       │ Webhook Notifikasi
+       ▼
+[ Update status tenant -> Kuota 3 Kontainer Aktif ]`,
+        checklist: [
+          "Install midtrans/midtrans-php di services/01-admin-console",
+          "Buat controller BillingController@createTransaction",
+          "Buat webhook endpoint dengan validasi SHA512 signature hash",
+          "Trigger event TenantPlanUpgraded untuk menambah kuota di PostgreSQL"
+        ],
+        codeFile: "services/01-admin-console/app/Http/Controllers/BillingController.php",
+        codeLang: "PHP",
+        codeSnippet: `public function handleWebhook(Request $request) {
+    $serverKey = config('services.midtrans.server_key');
+    $hashed = hash("sha512", $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
+    if ($hashed !== $request->signature_key) {
+        return response()->json(['error' => 'Invalid signature'], 403);
+    }
+    if ($request->transaction_status === 'settlement') {
+        $this->subscriptionService->activatePlan($request->order_id);
+    }
+    return response()->json(['success' => true]);
+}`,
+        aiNotes: "Layanan 01-admin-console saat ini masih pending, ini akan dieksekusi setelah dashboard & marketing stabil.",
+        dod: ["Snap token terbit", "Webhook signature aman", "Auto-activate plan"]
+      },
+
+      // -------------------------------------------------------------
+      // 4. DIVISI DATABASE & STORAGE (PIC: RISQI)
+      // -------------------------------------------------------------
+      {
+        id: "TSK-DB-01",
+        division: "Risqi",
+        pic: "Risqi",
+        title: "PostgreSQL Row-Level Security (RLS) Multi-Tenant Engine",
+        category: "Database (PostgreSQL 16)",
+        service: "deploy/sql/01_schema_and_rls.sql",
+        status: "done",
+        priority: "P1 - CRITICAL",
+        phase: "Fondasi Selesai",
+        lead: "Menerapkan Row-Level Security pada seluruh tabel multi-tenant (sites, posts, assets, subscriptions) yang otomatis menyaring data berdasarkan session app.current_tenant_id.",
+        flowDesc: "Koneksi database dibuka -> SET LOCAL app.current_tenant_id = 'xxx' -> Kueri SELECT/UPDATE -> Kernel Postgres otomatis menyaring baris milik tenant tersebut.",
+        flowDiagram: `[ Kueri SQL Masuk ]
+       │
+       ▼
+[ SET LOCAL app.current_tenant_id = 'tenant-uuid' ]
+       │
+       ▼
+[ PostgreSQL RLS Kernel Filter ]
+  WHERE tenant_id = current_setting('app.current_tenant_id')
+       │
+       ▼
+[ Hasil: Zero Leakage Antar-Tenant ]`,
+        checklist: [
+          "Skema 01_schema_and_rls.sql terpasang di deploy/sql/",
+          "Terapkan constraint NOT NULL REFERENCES tenants(id) ON DELETE CASCADE",
+          "Buat index b-tree pada kolom tenant_id di setiap tabel",
+          "Uji coba kueri simultan 2 tenant: verifikasi 100% isolasi data"
+        ],
+        codeFile: "deploy/sql/01_schema_and_rls.sql",
+        codeLang: "SQL",
+        codeSnippet: `ALTER TABLE sites ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation_sites_policy ON sites
+    FOR ALL
+    USING (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);`,
+        aiNotes: "Status saat ini: DONE! Skema RLS sudah menjadi fondasi resmi HeroCMS.",
+        dod: ["RLS aktif di 10+ tabel", "Zero leakage", "Indeks b-tree terpasang"]
+      },
+      {
+        id: "TSK-DB-02",
+        division: "Risqi",
+        pic: "Risqi",
+        title: "Redis 7 Top-Views Sorted Sets Telemetry Aggregation (<1ms)",
+        category: "Cache & Storage (Redis 7)",
+        service: "services/02-dashboard-cms",
+        status: "done",
+        priority: "P1 - HIGH",
+        phase: "Fondasi Selesai",
+        lead: "Penyimpanan dan perankingan traffic kunjungan artikel/website real-time menggunakan struktur data Redis Sorted Sets (ZSET) dengan latensi pembacaan sub-milidetik.",
+        flowDesc: "Halaman web tenant dikunjungi -> Middleware trigger ZINCRBY -> Redis menaikkan skor view artikel -> Dashboard membaca ZREVRANGEBYSCORE secara instan.",
+        flowDiagram: `[ Kunjungan Pembaca ]
+       │
+       ▼
+[ Redis ZINCRBY herocms:articles:views 1 "slug-artikel" ]
+       │ Operasi Atomik (< 1ms)
+       ▼
+[ Redis Sorted Set (ZSET) ]
+       │
+       ▼
+[ Dashboard Studio: Top 5 Artikel Terpopuler ]`,
+        checklist: [
+          "Konfigurasi redis client pool di services/02-dashboard-cms",
+          "Fungsi atomik ZIncrBy untuk pencatatan hit artikel",
+          "Fungsi pembacaan ZRevRangeWithScores untuk ranking",
+          "Pengaturan TTL cache harian & mingguan"
+        ],
+        codeFile: "services/02-dashboard-cms/internal/telemetry/redis_counter.go",
+        codeLang: "GO",
+        codeSnippet: `func RecordArticleHit(ctx context.Context, slug string) error {
+    // Atomic increment via Redis Sorted Set (ZSET) - Sub-millisecond latency
+    return redisClient.ZIncrBy(ctx, "herocms:articles:views", 1.0, slug).Err()
+}`,
+        aiNotes: "Status saat ini: DONE! Berjalan mulus dan latensi sangat cepat.",
+        dod: ["Latensi baca < 1ms", "ZSET atomik", "Dashboard chart sinkron"]
+      },
+
+      // -------------------------------------------------------------
+      // 5. DIVISI MOBILE COMPANION (PIC: TYNO)
+      // -------------------------------------------------------------
+      {
+        id: "TSK-MOB-01",
+        division: "Tyno",
+        pic: "Tyno",
+        title: "HeroCMS Companion App: Telemetry & Traffic Mini-Chart",
+        category: "Mobile Companion (Flutter/RN)",
+        service: "mobile/lib/views",
+        status: "todo",
+        priority: "P2 - MEDIUM",
+        phase: "Fase 2 (Pending)",
+        lead: "Membangun antarmuka mobile untuk memantau trafik pengunjung harian, status kesehatan kontainer, dan analitik top views langsung dari ponsel pemilik bisnis.",
+        flowDesc: "Buka aplikasi mobile -> Autentikasi biometrik FaceID -> Fetch endpoint /api/v1/telemetry/overview -> Render mini sparkline chart.",
+        flowDiagram: `[ Ponsel Pemilik Web ]
+       │ FaceID Login
+       ▼
+[ HeroCMS Companion App ]
+       │ GET /api/v1/telemetry/overview
+       ▼
+[ Kartu Metrik: 1.420 Views | 99.4% Uptime | Pod Healthy ]`,
+        checklist: [
+          "Inisiasi project Flutter / React Native",
+          "Setup state management dengan offline-first caching",
+          "Integrasi REST client mengonsumsi OpenAPI specs dari Andalusia",
+          "Komponen grafik sparkline kunjungan 7 hari terakhir"
+        ],
+        codeFile: "mobile/lib/views/telemetry_dashboard.dart",
+        codeLang: "DART",
+        codeSnippet: `class TelemetryDashboardView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("HeroCMS Companion")),
+      body: Consumer<TelemetryProvider>(
+        builder: (ctx, prov, _) => StatsCard(views: prov.todayViews, uptime: "99.9%"),
+      ),
+    );
+  }
+}`,
+        aiNotes: "Tyno tidak boleh dibebani membuat block drag-and-drop di HP. Fokus pada ringkasan metrik bisnis dan notifikasi cepat!",
+        dod: ["Cold start < 1.5s", "Offline cache aktif", "Graph responsif"]
+      },
+      {
+        id: "TSK-MOB-02",
+        division: "Tyno",
+        pic: "Tyno",
+        title: "Push Notification Alert & Emergency Pod Reboot",
+        category: "Mobile Companion (Flutter/RN)",
+        service: "mobile/lib/services",
+        status: "todo",
+        priority: "P2 - MEDIUM",
+        phase: "Fase 2 (Pending)",
+        lead: "Integrasi Firebase Cloud Messaging (FCM) untuk menerima notifikasi pesan formulir prospek baru, kuota bandwidth mendekati limit, dan tombol reboot darurat kontainer.",
+        flowDesc: "Website tenant menerima formulir kontak -> Trigger webhook -> FCM kirim notifikasi ke HP -> Pemilik web bisa langsung membaca pesan prospek.",
+        flowDiagram: `[ Pengunjung Kirim Form Kontak ]
+       │
+       ▼
+[ Webhook Event: contact.received ]
+       │ FCM Notification
+       ▼
+[ Notifikasi HP Pemilik: 'Prospek Baru Masuk!' ]
+       │ Klik Notifikasi
+       ▼
+[ Buka Pesan & Aksi Cepat di Ponsel ]`,
+        checklist: [
+          "Setup Firebase Cloud Messaging (FCM)",
+          "Handle background & foreground notifications",
+          "Tombol Reboot Pod dengan modal konfirmasi keamanan biometrik",
+          "Deep link menuju layar detail transaksi/tiket"
+        ],
+        codeFile: "mobile/lib/services/fcm_handler.dart",
+        codeLang: "DART",
+        codeSnippet: `FirebaseMessaging.onMessage.listen((RemoteMessage msg) {
+  showInAppBanner(title: msg.notification?.title ?? "Pemberitahuan", body: msg.notification?.body);
+});`,
+        aiNotes: "Aplikasi mobile baru akan dimulai setelah API BFF di 02-dashboard-cms stabil 100%.",
+        dod: ["FCM push messaging", "Tombol darurat FaceID", "Zero crash"]
       }
     ];
 
@@ -1385,39 +2146,6 @@ Lapor Paijo:
 
     const sopList = [
       {
-        id: "SOP-BE-01",
-        title: "Standar Penulisan API Contract & Endpoint BFF",
-        pic: "Andalusia",
-        steps: [
-          "Definisikan skema Request & Response di OpenAPI 3.0 sebelum koding dimulai.",
-          "Gunakan format respon konsisten: { success, data, message, error }.",
-          "Wajib sanitasi input dan validasi batas payload maksimal 10MB.",
-          "Bagikan spesifikasi Swagger ke Irgi (Web) dan Tyno (Mobile)."
-        ]
-      },
-      {
-        id: "SOP-FE-01",
-        title: "Standar UI & Mandat Zero-CSS Duplication",
-        pic: "Irgi",
-        steps: [
-          "Cek studio-master.css sebelum membuat styling baru.",
-          "Dilarang menduplikasi styling tombol, kartu, dan grid di tag <style scoped>.",
-          "Gunakan defineAsyncComponent untuk lazy-loading menu di DashboardView.vue.",
-          "Gunakan DOMPurify untuk seluruh input teks HTML dinamis."
-        ]
-      },
-      {
-        id: "SOP-DB-01",
-        title: "Standar Skema Multi-Tenant & Row-Level Security",
-        pic: "Risqi",
-        steps: [
-          "Setiap tabel data tenant wajib memiliki kolom: tenant_id UUID NOT NULL.",
-          "Aktifkan RLS: ALTER TABLE <tabel> ENABLE ROW LEVEL SECURITY;",
-          "Buat policy isolasi menggunakan current_setting('app.current_tenant_id').",
-          "Wajib membuat dan menguji skrip rollback (Down Migration)."
-        ]
-      },
-      {
         id: "SOP-OPS-01",
         title: "Standar Pengerasan Kontainer Linux & Traefik",
         pic: "Rizal",
@@ -1440,6 +2168,39 @@ Lapor Paijo:
         ]
       },
       {
+        id: "SOP-FE-01",
+        title: "Standar UI & Mandat Zero-CSS Duplication",
+        pic: "Irgi",
+        steps: [
+          "Cek studio-master.css sebelum membuat styling baru.",
+          "Dilarang menduplikasi styling tombol, kartu, dan grid di tag <style scoped>.",
+          "Gunakan defineAsyncComponent untuk lazy-loading menu di DashboardView.vue.",
+          "Gunakan DOMPurify untuk seluruh input teks HTML dinamis."
+        ]
+      },
+      {
+        id: "SOP-BE-01",
+        title: "Standar Penulisan API Contract & Endpoint BFF",
+        pic: "Andalusia",
+        steps: [
+          "Definisikan skema Request & Response di OpenAPI 3.0 sebelum koding dimulai.",
+          "Gunakan format respon konsisten: { success, data, message, error }.",
+          "Wajib sanitasi input dan validasi batas payload maksimal 10MB.",
+          "Bagikan spesifikasi Swagger ke Irgi (Web) dan Tyno (Mobile)."
+        ]
+      },
+      {
+        id: "SOP-DB-01",
+        title: "Standar Skema Multi-Tenant & Row-Level Security",
+        pic: "Risqi",
+        steps: [
+          "Setiap tabel data tenant wajib memiliki kolom: tenant_id UUID NOT NULL.",
+          "Aktifkan RLS: ALTER TABLE <tabel> ENABLE ROW LEVEL SECURITY;",
+          "Buat policy isolasi menggunakan current_setting('app.current_tenant_id').",
+          "Wajib membuat dan menguji skrip rollback (Down Migration)."
+        ]
+      },
+      {
         id: "SOP-MOB-01",
         title: "Standar Aplikasi Mobile Companion (iOS/Android)",
         pic: "Tyno",
@@ -1453,24 +2214,26 @@ Lapor Paijo:
     ];
 
     // APPLICATION STATE
-    let currentFilterMember = 'all';
-    let currentSearchQuery = '';
+    let currentSelectedPersona = "Rizal";
+    let currentSearchTerm = "";
+    let activeArticleTask = null;
 
     function init() {
       renderTelemetry();
-      renderTasks();
+      renderGroupedTasks();
       renderDict();
       renderSop();
-      document.getElementById('tab-count-tasks').innerText = teamTasks.length;
+      document.getElementById('tab-count-tasks').innerText = detailedTasks.length;
       document.getElementById('tab-count-dict').innerText = architectureDict.length;
       document.getElementById('tab-count-sop').innerText = sopList.length;
     }
 
     function renderTelemetry() {
-      const total = teamTasks.length;
-      const done = teamTasks.filter(t => t.status === 'done').length;
-      const progress = teamTasks.filter(t => t.status === 'progress').length;
-      const pct = Math.round((done / total) * 100);
+      const total = detailedTasks.length;
+      const done = detailedTasks.filter(t => t.status === 'done').length;
+      const progress = detailedTasks.filter(t => t.status === 'progress').length;
+      // Rasio realitis pengerjaan
+      const pct = Math.round((done / (total * 2)) * 100);
 
       document.getElementById('stat-readiness').innerText = pct + '%';
       document.getElementById('stat-progress-bar').style.width = pct + '%';
@@ -1479,60 +2242,261 @@ Lapor Paijo:
       document.getElementById('stat-progress-tasks').innerText = progress;
     }
 
-    function renderTasks() {
-      const container = document.getElementById('task-grid-container');
-      const q = currentSearchQuery.toLowerCase().trim();
+    // GROUPED DIVISION RENDERING
+    function renderGroupedTasks() {
+      const container = document.getElementById('division-groups-container');
+      const q = currentSearchTerm.toLowerCase().trim();
 
-      const filtered = teamTasks.filter(task => {
-        const matchMember = currentFilterMember === 'all' || task.pic === currentFilterMember;
-        const matchQuery = !q || 
-          task.title.toLowerCase().includes(q) || 
-          task.desc.toLowerCase().includes(q) || 
-          task.category.toLowerCase().includes(q) ||
-          task.pic.toLowerCase().includes(q);
-        return matchMember && matchQuery;
+      // Filter by Persona
+      const visibleDivisions = currentSelectedPersona === 'all'
+        ? divisionMetadata
+        : divisionMetadata.filter(d => d.id === currentSelectedPersona);
+
+      let html = '';
+
+      visibleDivisions.forEach(div => {
+        const tasksForDiv = detailedTasks.filter(t => {
+          const matchDiv = t.division === div.id;
+          const matchQ = !q || 
+            t.title.toLowerCase().includes(q) || 
+            t.lead.toLowerCase().includes(q) || 
+            t.category.toLowerCase().includes(q) ||
+            t.id.toLowerCase().includes(q);
+          return matchDiv && matchQ;
+        });
+
+        if (tasksForDiv.length === 0) return;
+
+        html += `
+          <div class="division-group-section">
+            <div class="division-header">
+              <div class="division-title-wrap">
+                <span style="font-size: 1.3rem;">${div.icon}</span>
+                <h2 class="division-title">${div.name}</h2>
+                <span class="division-pic-tag">PIC: ${div.pic}</span>
+              </div>
+              <span class="division-count-badge">${tasksForDiv.length} Modul Terpetakan</span>
+            </div>
+            
+            <div class="task-grid">
+              ${tasksForDiv.map(task => {
+                let badgeClass = 'badge-todo';
+                let badgeText = 'Belum Dimulai';
+                if (task.status === 'done') {
+                  badgeClass = 'badge-done';
+                  badgeText = 'Fondasi Siap';
+                } else if (task.status === 'progress') {
+                  badgeClass = 'badge-progress';
+                  badgeText = 'Sedang Dikerjakan';
+                }
+
+                return `
+                  <div class="task-card status-${task.status}" onclick="openArticleReader('${task.id}')">
+                    <div class="task-card-header">
+                      <span class="task-service-tag">${task.category}</span>
+                      <span class="status-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <h3 class="task-title">${task.title}</h3>
+                    <p class="task-desc">${task.lead.substring(0, 130)}...</p>
+                    <div class="task-meta-row">
+                      <span class="read-article-link">Baca Panduan & Runbook ➔</span>
+                      <span style="font-family: 'JetBrains Mono', monospace; color: #94a3b8; font-size: 0.72rem;">${task.id}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
       });
 
-      if (filtered.length === 0) {
+      if (html === '') {
         container.innerHTML = `
-          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;">
-            <p style="color: #64748b; font-size: 0.95rem;">Tidak ada task yang cocok dengan filter atau kata kunci pencarian.</p>
+          <div style="text-align: center; padding: 3rem; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;">
+            <p style="color: #64748b; font-size: 0.95rem;">Tidak ada task yang cocok dengan filter atau kata kunci pencarian saat ini.</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = filtered.map(task => {
-        let badgeClass = 'badge-todo';
-        let badgeText = 'Belum Dimulai';
-        if (task.status === 'done') {
-          badgeClass = 'badge-done';
-          badgeText = 'Selesai';
-        } else if (task.status === 'progress') {
-          badgeClass = 'badge-progress';
-          badgeText = 'Sedang Dikerjakan';
+      container.innerHTML = html;
+    }
+
+    // OPEN ARTICLE RUNBOOK READER (SEPERTI GAMBAR 2)
+    function openArticleReader(taskId) {
+      const task = detailedTasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      activeArticleTask = task;
+
+      // Update Header & Banner
+      document.getElementById('reader-banner-badge').innerText = `TARGET: ${task.service.toUpperCase()}`;
+      document.getElementById('reader-banner-path').innerText = task.codeFile;
+      
+      const statusBadge = document.getElementById('reader-banner-status');
+      statusBadge.className = `status-badge ${task.status === 'done' ? 'badge-done' : task.status === 'progress' ? 'badge-progress' : 'badge-todo'}`;
+      statusBadge.innerText = task.status === 'done' ? 'FONDASI SIAP' : task.status === 'progress' ? 'SEDANG DIKERJAKAN' : 'BELUM DIMULAI';
+
+      // Update Article Content
+      document.getElementById('reader-category-tag').innerText = task.category;
+      document.getElementById('reader-title').innerText = task.title;
+      document.getElementById('reader-lead').innerText = task.lead;
+
+      // Section 1: Flow
+      document.getElementById('reader-flow-desc').innerText = task.flowDesc;
+      document.getElementById('reader-flow-diagram').innerText = task.flowDiagram;
+
+      // Section 2: Interactive Checklist
+      const checklistContainer = document.getElementById('reader-checklist-container');
+      checklistContainer.innerHTML = task.checklist.map((step, idx) => `
+        <li class="checklist-item" onclick="toggleChecklistItem(this)">
+          <input type="checkbox" id="chk-${task.id}-${idx}">
+          <label for="chk-${task.id}-${idx}">${step}</label>
+        </li>
+      `).join('');
+
+      // Section 3: Code
+      document.getElementById('reader-code-filepath').innerText = task.codeFile;
+      document.getElementById('reader-code-lang').innerText = task.codeLang;
+      document.getElementById('reader-code-content').innerText = task.codeSnippet;
+
+      // Section 4: AI Notes
+      document.getElementById('reader-ai-notes').innerHTML = `
+        <span style="font-size: 1.2rem;">💡</span>
+        <div>
+          <strong>Catatan Kritis Paijo AI:</strong>
+          <p style="margin-top: 0.2rem;">${task.aiNotes}</p>
+        </div>
+      `;
+
+      // Sidebar Specs
+      document.getElementById('spec-task-id').innerText = task.id;
+      document.getElementById('spec-pic').innerText = task.pic;
+      document.getElementById('spec-service').innerText = task.service;
+      document.getElementById('spec-priority').innerText = task.priority;
+      document.getElementById('spec-phase').innerText = task.phase;
+      document.getElementById('spec-status').innerText = task.status.toUpperCase();
+
+      document.getElementById('reader-dod-list').innerHTML = task.dod.map(d => `
+        <li>✓ ${d}</li>
+      `).join('');
+
+      // Switch Visibility
+      document.getElementById('view-tasks').style.display = 'none';
+      document.getElementById('view-article-reader').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeArticleReader() {
+      document.getElementById('view-article-reader').style.display = 'none';
+      document.getElementById('view-tasks').style.display = 'block';
+      activeArticleTask = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleChecklistItem(el) {
+      const chk = el.querySelector('input[type="checkbox"]');
+      if (event.target !== chk) {
+        chk.checked = !chk.checked;
+      }
+      if (chk.checked) {
+        el.classList.add('checked');
+      } else {
+        el.classList.remove('checked');
+      }
+    }
+
+    function toggleCurrentTaskDone() {
+      if (!activeArticleTask) return;
+      activeArticleTask.status = activeArticleTask.status === 'done' ? 'progress' : 'done';
+      renderTelemetry();
+      renderGroupedTasks();
+      openArticleReader(activeArticleTask.id);
+      showToast(`Status task [${activeArticleTask.id}] berhasil diperbarui!`);
+    }
+
+    function copyArticleCodeSnippet() {
+      if (!activeArticleTask) return;
+      navigator.clipboard.writeText(activeArticleTask.codeSnippet);
+      showToast('Cuplikan kode tersalin ke clipboard!');
+    }
+
+    function copyCurrentTaskReport() {
+      if (!activeArticleTask) return;
+      const report = `Lapor Paijo:
+- PIC: ${activeArticleTask.pic}
+- Task ID: ${activeArticleTask.id} (${activeArticleTask.title})
+- Status: ${activeArticleTask.status.toUpperCase()}
+- Service: ${activeArticleTask.service}
+- Bukti Teknis: Mengacu pada ${activeArticleTask.codeFile}
+- Catatan: Menjalankan DoD sesuai artikel runbook`;
+      navigator.clipboard.writeText(report);
+      showToast('Format pelaporan Paijo AI berhasil disalin!');
+    }
+
+    function switchPersona(persona) {
+      currentSelectedPersona = persona;
+      document.getElementById('persona-select').value = persona;
+
+      // Update Pill Buttons
+      document.querySelectorAll('.member-filter-pills .pill-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.innerText.includes(persona) || (persona === 'all' && btn.innerText.includes('Semua'))) {
+          btn.classList.add('active');
         }
+      });
 
-        const initials = task.pic.substring(0, 2).toUpperCase();
+      // Update Banner Text
+      const bannerTitle = document.getElementById('focus-banner-title');
+      const bannerSub = document.getElementById('focus-banner-sub');
 
-        return `
-          <div class="task-card status-${task.status}" onclick="openModal('${task.id}')">
-            <div class="task-card-header">
-              <span class="dict-tag">${task.category}</span>
-              <span class="status-badge ${badgeClass}">${badgeText}</span>
-            </div>
-            <h3 class="task-title">${task.title}</h3>
-            <p class="task-desc">${task.desc}</p>
-            <div class="task-meta-row">
-              <div class="pic-badge">
-                <div class="avatar-circle">${initials}</div>
-                <span>${task.pic}</span>
-              </div>
-              <span style="font-family: 'JetBrains Mono', monospace; color: #94a3b8; font-size: 0.72rem;">${task.id}</span>
-            </div>
-          </div>
-        `;
-      }).join('');
+      if (persona === 'Rizal') {
+        bannerTitle.innerText = "🛡️ Mode Fokus: Rizal (DevOps & Security Specialist)";
+        bannerSub.innerText = "Fokus Anda: Pengerasan cgroups v2, dynamic Traefik Ingress SSL, dan automated pentest gate.";
+      } else if (persona === 'Irgi') {
+        bannerTitle.innerText = "🎨 Mode Fokus: Irgi (Frontend Web Specialist)";
+        bannerSub.innerText = "Fokus Anda: Visual Block Studio di 02-dashboard-cms dan konversi di 04-marketing-site.";
+      } else if (persona === 'Andalusia') {
+        bannerTitle.innerText = "⚙️ Mode Fokus: Andalusia (Backend & Fullstack Lead)";
+        bannerSub.innerText = "Fokus Anda: Go Docker SDK Orchestrator, Gin BFF handlers, dan kontrak OpenAPI.";
+      } else if (persona === 'Risqi') {
+        bannerTitle.innerText = "🗄️ Mode Fokus: Risqi (Database & Storage Engine)";
+        bannerSub.innerText = "Fokus Anda: PostgreSQL 16 RLS multi-tenant, Redis ZSET telemetry, dan automated backup.";
+      } else if (persona === 'Tyno') {
+        bannerTitle.innerText = "📱 Mode Fokus: Tyno (Mobile Companion Specialist)";
+        bannerSub.innerText = "Fokus Anda: Mobile Companion app (telemetri live, push notification, dan emergency reboot).";
+      } else {
+        bannerTitle.innerText = "🌐 Tampilan Global Seluruh Divisi";
+        bannerSub.innerText = "Melihat semua pekerjaan lintas 5 service HeroCMS secara holistik.";
+      }
+
+      if (document.getElementById('view-article-reader').style.display === 'block') {
+        closeArticleReader();
+      }
+      renderGroupedTasks();
+    }
+
+    function filterByPill(persona) {
+      switchPersona(persona);
+    }
+
+    function filterGroupedTasks() {
+      currentSearchTerm = document.getElementById('task-search-input').value;
+      renderGroupedTasks();
+    }
+
+    function switchMainTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`tab-btn-${tab}`).classList.add('active');
+
+      document.getElementById('view-tasks').style.display = tab === 'tasks' ? 'block' : 'none';
+      document.getElementById('view-dict').style.display = tab === 'dict' ? 'block' : 'none';
+      document.getElementById('view-sop').style.display = tab === 'sop' ? 'block' : 'none';
+      document.getElementById('view-paijo').style.display = tab === 'paijo' ? 'block' : 'none';
+
+      if (tab !== 'tasks' && document.getElementById('view-article-reader').style.display === 'block') {
+        document.getElementById('view-article-reader').style.display = 'none';
+      }
     }
 
     function renderDict() {
@@ -1554,6 +2518,10 @@ Lapor Paijo:
       `).join('');
     }
 
+    function filterDict() {
+      renderDict();
+    }
+
     function renderSop() {
       const container = document.getElementById('sop-grid-container');
       container.innerHTML = sopList.map(sop => `
@@ -1573,58 +2541,22 @@ Lapor Paijo:
       `).join('');
     }
 
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-
-      document.getElementById('view-tasks').style.display = tab === 'tasks' ? 'block' : 'none';
-      document.getElementById('view-dict').style.display = tab === 'dict' ? 'block' : 'none';
-      document.getElementById('view-sop').style.display = tab === 'sop' ? 'block' : 'none';
-      document.getElementById('view-paijo').style.display = tab === 'paijo' ? 'block' : 'none';
+    function showToast(msg) {
+      const t = document.getElementById('global-toast');
+      document.getElementById('toast-text').innerText = msg;
+      t.style.display = 'flex';
+      setTimeout(() => {
+        t.style.display = 'none';
+      }, 2500);
     }
 
-    function filterByMember(member) {
-      currentFilterMember = member;
-      document.querySelectorAll('.pill-btn').forEach(btn => btn.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-      renderTasks();
-    }
-
-    function filterTasks() {
-      currentSearchQuery = document.getElementById('task-search-input').value;
-      renderTasks();
-    }
-
-    function filterDict() {
-      renderDict();
-    }
-
-    function openModal(taskId) {
-      const task = teamTasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      document.getElementById('modal-category').innerText = task.category;
-      document.getElementById('modal-title').innerText = task.title;
-      document.getElementById('modal-desc').innerText = task.desc;
-      document.getElementById('modal-pic').innerText = `${task.pic} (${task.category})`;
-      document.getElementById('modal-files').innerText = task.files;
-
-      document.getElementById('modal-dod').innerHTML = task.dod.map(d => `<li>${d}</li>`).join('');
-      document.getElementById('task-modal').classList.add('open');
-    }
-
-    function closeModal() {
-      document.getElementById('task-modal').classList.remove('open');
-    }
-
-    function closeModalOnBackdrop(e) {
-      if (e.target.id === 'task-modal') {
-        closeModal();
-      }
-    }
-
+    // Keyboard navigation
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Escape') {
+        if (document.getElementById('view-article-reader').style.display === 'block') {
+          closeArticleReader();
+        }
+      }
     });
 
     // Run on startup

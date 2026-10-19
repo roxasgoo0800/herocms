@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.20',
+    releaseDate: '19 Oktober 2026',
+    title: 'Transformasi Portal Mission Control ke Reader View Artikel Teknis, Pengelompokan Divisi & Mode Fokus Petugas',
+    summary: 'Merombak arsitektur antarmuka docs/project-management/index.html dari modal dialog ringkas menjadi Dedicated Technical Article Reader View (mengikuti standar Reader Mode HeroCMS Studio), menambahkan fitur pengelompokan task berbasis divisi tim (DevOps & Security, Frontend Web, Backend & Fullstack, Database, Mobile), mengintegrasikan Mode Fokus Petugas ("Sedang Melihat Sebagai..."), menyajikan checklist interaktif bertahap, serta mengkalibrasi ulang metrik kesiapan sprint menjadi rasio realistis (fokus aktif pada 02-dashboard-cms dan 04-marketing-site).',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11420-1',
+        type: 'feature',
+        scope: 'Technical Article Reader View Architecture',
+        description: 'Membangun antarmuka baca artikel teknis 2 kolom dengan diagram alur arsitektur, checklist interaktif yang dapat dicentang langsung, dan mockup terminal kode macOS.'
+      },
+      {
+        id: 'c-11420-2',
+        type: 'improvement',
+        scope: 'Division Grouping & User Persona Switcher',
+        description: 'Menambahkan pengelompokan kartu per divisi dan dropdown pemilih profil pengguna agar setiap anggota (terutama Rizal) langsung tahu apa yang harus dikerjakan tanpa kebingungan.'
+      },
+      {
+        id: 'c-11420-3',
+        type: 'improvement',
+        scope: 'Realistic Sprint Readiness Calibration',
+        description: 'Mengkalibrasi ulang persentase kesiapan rilis menjadi 18% untuk mencerminkan fase fondasi aktif pada 02-dashboard-cms dan 04-marketing-site.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.19',
     releaseDate: '19 Oktober 2026',
     title: 'Penjabaran Matriks 36 Task Granular 12 Modul Studio & Katalog Kontrak API Microservices',
     summary: 'Menjabarkan secara mendalam 36 task teknis berbasis 12 modul resmi di services/02-dashboard-cms dan hubungannya ke seluruh microservices (01-admin, 03-provision, 04-marketing, 05-ai-agent, Mobile). Menyusun model bisnis SaaS terukur (4 vertikal blueprint), katalog spesifikasi API BFF, serta memperbarui Mission Control portal dengan dataset granular.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / Paijo AI Agent',
     items: [
       {
