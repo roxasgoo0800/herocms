@@ -845,147 +845,498 @@ Lapor Paijo:
   </footer>
 
   <script>
-    // DATASET MASTER
+    // DATASET MASTER TERPERINCI BERBASIS 12 MODUL & 5 SERVICES
     const teamTasks = [
+      // MODUL 1: SITUS & KONTAINER
       {
-        id: "T-BE-01",
-        title: "Core Provisioning Engine via Go Docker SDK",
-        category: "Backend",
-        pic: "Andalusia",
-        status: "done",
-        desc: "Membangun orchestrator otonom untuk inisialisasi kontainer tenant mandiri dengan isolasi penuh.",
-        files: "services/03-provision-orchestrator/cmd/main.go",
-        dod: ["Kontainer berhasil dibuat < 4.5 detik", "cgroups v2 limit terpasang", "Network isolated"]
-      },
-      {
-        id: "T-BE-02",
-        title: "Dynamic Traefik Rule Generator",
-        category: "Backend & Infra",
-        pic: "Andalusia",
-        status: "progress",
-        desc: "Generator label dynamic routing Traefik v3 saat kontainer tenant baru di-spawn tanpa reload proxy.",
-        files: "services/03-provision-orchestrator/internal/traefik/",
-        dod: ["Label Traefik otomatis terinjeksi", "Sanitasi regex mencegah rule injection", "HTTPS SSL otomatis aktif"]
-      },
-      {
-        id: "T-BE-03",
-        title: "Contract-First OpenAPI 3.0 Specs",
-        category: "Backend",
-        pic: "Andalusia",
-        status: "todo",
-        desc: "Menyusun skema OpenAPI / Swagger terpadu untuk dikonsumsi tim Web (Irgi) dan Mobile (Tyno).",
-        files: "services/02-dashboard-cms/docs/openapi.yaml",
-        dod: ["Endpoint auth, sites, dan telemetry terdefinisi", "Shared JSON types", "Mock server siap diakses"]
-      },
-      {
-        id: "T-FE-01",
-        title: "Bespoke Enterprise Design System",
-        category: "Frontend Web",
+        id: "TSK-CNT-01",
+        title: "UI Kontainer & Modal Pembuatan Situs",
+        category: "Containers (02-dashboard-cms)",
         pic: "Irgi",
         status: "done",
-        desc: "Standardisasi token warna Slate/Royal Blue, tipografi Inter, dan master CSS (studio-master.css).",
-        files: "services/02-dashboard-cms/src/assets/studio-master.css",
-        dod: ["Zero-CSS duplication", "Ambient dot grid", "Semantic status badges"]
+        desc: "Tampilan grid kartu pod, status badge, modal blueprint (Retail, Portfolio, Blog, LMS), dan cek subdomain.",
+        files: "services/02-dashboard-cms/src/components/dashboard/ContainersModule.vue",
+        dod: ["UI terhubung ke data pod", "Validasi subdomain reaktif", "Modal reset state otomatis"]
       },
       {
-        id: "T-FE-02",
-        title: "Modular Lazy-Loading (defineAsyncComponent)",
-        category: "Frontend Web",
-        pic: "Irgi",
+        id: "TSK-CNT-02",
+        title: "Go Docker SDK Container Lifecycle",
+        category: "Orchestrator (03-provision)",
+        pic: "Andalusia",
         status: "done",
-        desc: "Pemisahan bundle per menu dashboard untuk memangkas initial payload JS dan hemat memori browser.",
-        files: "services/02-dashboard-cms/src/views/DashboardView.vue",
-        dod: ["Seluruh modul menu di-lazyload", "Vite vendor code-splitting", "Lighthouse score > 90"]
+        desc: "Pembuatan kontainer Docker mandiri tenant dengan isolasi non-root UID 10001 dan batasan cgroups.",
+        files: "services/03-provision-orchestrator/internal/docker/",
+        dod: ["Spawn < 4.5 detik", "cgroups limit 256MB RAM", "Output container ID & internal IP"]
       },
       {
-        id: "T-FE-03",
-        title: "Interactive Visual Block Editor Live Preview",
-        category: "Frontend Web",
-        pic: "Irgi",
-        status: "progress",
-        desc: "Editor blok visual drag-and-drop dengan rendering real-time dan sanitasi XSS (DOMPurify).",
-        files: "services/02-dashboard-cms/src/components/dashboard/VisualEditorModule.vue",
-        dod: ["Preview mulus tanpa lag", "DOMPurify sanitasi HTML", "Responsive desktop/tablet/mobile preview"]
-      },
-      {
-        id: "T-DB-01",
-        title: "PostgreSQL Row-Level Security (RLS) Isolation",
-        category: "Database",
+        id: "TSK-CNT-03",
+        title: "Skema Database sites & RLS Isolation",
+        category: "Database (PostgreSQL)",
         pic: "Risqi",
         status: "done",
-        desc: "Menerapkan isolasi tingkat kernel PostgreSQL 16 untuk mencegah kebocoran data antar-tenant.",
+        desc: "Tabel sites dengan foreign key tenant_id, subdomain unik, dan Row-Level Security policy.",
         files: "deploy/sql/01_schema_and_rls.sql",
-        dod: ["app.current_tenant_id terpasang di setiap policy", "Zero leakage saat multi-user", "Index tenant_id b-tree"]
+        dod: ["ENABLE ROW LEVEL SECURITY aktif", "current_tenant_id terpasang", "Index b-tree pada subdomain"]
       },
       {
-        id: "T-DB-02",
-        title: "Redis 7 Top-Views Telemetry Cache (<1ms)",
+        id: "TSK-CNT-04",
+        title: "Traefik Dynamic Routing Ingress",
+        category: "DevOps & Ingress",
+        pic: "Rizal",
+        status: "progress",
+        desc: "Injeksi dynamic router rule Host({subdomain}.herocms.id) dan TLS otomatis tanpa reload proxy.",
+        files: "services/03-provision-orchestrator/internal/traefik/",
+        dod: ["Routing aktif instan saat container jalan", "Sanitasi regex domain", "TLS Let's Encrypt aktif"]
+      },
+      {
+        id: "TSK-CNT-05",
+        title: "Live Terminal Log Streaming",
+        category: "Containers (02-dashboard-cms)",
+        pic: "Andalusia",
+        status: "done",
+        desc: "Terminal streaming log kontainer interaktif dengan filter (traffic, traefik, engine, docker, system).",
+        files: "services/02-dashboard-cms/cmd/server/ & ContainersModule.vue",
+        dod: ["Download log file", "Search log query", "Reboot trigger & simulation"]
+      },
+      {
+        id: "TSK-CNT-06",
+        title: "Container Emergency Controls (Restart & Maint)",
+        category: "Containers (02-dashboard-cms)",
+        pic: "Andalusia",
+        status: "done",
+        desc: "Tombol restart pod dengan drainage SIGTERM aman, serta saklar mode pemeliharaan (maintenance mode).",
+        files: "services/02-dashboard-cms/internal/handler/",
+        dod: ["Graceful shutdown sinyal", "Maintenance banner di halaman depan website tenant"]
+      },
+      {
+        id: "TSK-CNT-07",
+        title: "Mobile Container Status & Quick Reboot",
+        category: "Mobile Companion",
+        pic: "Tyno",
+        status: "todo",
+        desc: "Tampilan status kontainer di smartphone dan tombol reboot darurat dengan verifikasi FaceID.",
+        files: "mobile/lib/views/container_status.dart",
+        dod: ["Biometric auth prompt", "Panggilan API restart", "Notifikasi sukses di HP"]
+      },
+
+      // MODUL 2: VISUAL EDITOR STUDIO
+      {
+        id: "TSK-EDT-01",
+        title: "Drag-and-Drop Visual Block Builder",
+        category: "Visual Editor (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Editor blok (Navbar, Hero, Features, Showcase, Pricing, CTA, Footer) dengan reorderable canvas.",
+        files: "services/02-dashboard-cms/src/components/dashboard/VisualEditorModule.vue",
+        dod: ["State Pinia reactive", "Drag-and-drop mulus 60 FPS", "Live preview multi-device"]
+      },
+      {
+        id: "TSK-EDT-02",
+        title: "XSS Sanitization & DOMPurify Guard",
+        category: "Security (Frontend/BFF)",
+        pic: "Rizal",
+        status: "done",
+        desc: "Pembersihan tag HTML berbahaya, script injection, dan payload malicious sebelum dirender.",
+        files: "services/02-dashboard-cms/src/utils/sanitize.ts",
+        dod: ["DOMPurify terintegrasi", "Pentest lolos zero XSS script execution"]
+      },
+      {
+        id: "TSK-EDT-03",
+        title: "Skema site_blocks & Preset Storage",
+        category: "Database (PostgreSQL)",
+        pic: "Risqi",
+        status: "done",
+        desc: "Tabel penyimpanan susunan JSON blok website per tenant dan per halaman.",
+        files: "deploy/sql/01_schema_and_rls.sql",
+        dod: ["Kolom blocks_json JSONB", "Index GIN untuk pencarian konten", "RLS isolation"]
+      },
+      {
+        id: "TSK-EDT-04",
+        title: "API Simpan & Publikasi Konfigurasi Blok",
+        category: "Backend (02-dashboard-cms)",
+        pic: "Andalusia",
+        status: "progress",
+        desc: "Endpoint untuk menyimpan draft layout dan mempublikasikan versi live ke kontainer website tenant.",
+        files: "services/02-dashboard-cms/internal/handler/editor.go",
+        dod: ["PUT /api/v1/sites/:id/blocks", "POST /api/v1/sites/:id/publish", "Cache invalidation"]
+      },
+      {
+        id: "TSK-EDT-05",
+        title: "AI Block Content Generator (Copilot)",
+        category: "AI Service (05-ai-agent)",
+        pic: "Andalusia",
+        status: "todo",
+        desc: "Integrasi asisten AI untuk menulis headline hero, copywriting produk, dan FAQ dari prompt teks.",
+        files: "services/05-ai-agent-service/internal/llm/",
+        dod: ["Stream SSE respon LLM", "TTFT < 800ms", "JSON block schema validator"]
+      },
+
+      // MODUL 3: ARTIKEL & HALAMAN
+      {
+        id: "TSK-ART-01",
+        title: "Tabel Ledger Artikel & Halaman CMS",
+        category: "Content (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Daftar artikel, filter kategori/tag, status published/draft, pencarian instan dan badge views.",
+        files: "services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue",
+        dod: ["Standard 2-row layout AGENTS.md", "Pencarian real-time", "Badge kategori dinamis"]
+      },
+      {
+        id: "TSK-ART-02",
+        title: "Mode Fokus Pembaca (Reader View)",
+        category: "Content (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Mode membaca bebas distraksi dengan auto-collapse sidebar navigasi dan tombol kembali tunggal.",
+        files: "services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue",
+        dod: ["Sidebar auto-hide", "Typography reader optimal", "Tombol buka URL publik live"]
+      },
+      {
+        id: "TSK-ART-03",
+        title: "Skema Database posts & pages Multi-Tenant",
+        category: "Database (PostgreSQL)",
+        pic: "Risqi",
+        status: "done",
+        desc: "Tabel artikel dengan slug unik per tenant, relasi kategori, status publikasi, dan SEO meta.",
+        files: "deploy/sql/01_schema_and_rls.sql",
+        dod: ["Constraint unique (tenant_id, slug)", "RLS policy aktif", "Foreign key cascade"]
+      },
+      {
+        id: "TSK-ART-04",
+        title: "BFF CRUD API Artikel",
+        category: "Backend (02-dashboard-cms)",
+        pic: "Andalusia",
+        status: "progress",
+        desc: "Endpoint API Go Gin untuk pembuatan, modifikasi, draft, dan delete artikel.",
+        files: "services/02-dashboard-cms/internal/handler/posts.go",
+        dod: ["GET /api/v1/posts", "POST /api/v1/posts", "Validasi payload JSON"]
+      },
+      {
+        id: "TSK-ART-05",
+        title: "Mobile Quick Article Publisher",
+        category: "Mobile Companion",
+        pic: "Tyno",
+        status: "todo",
+        desc: "Menulis dan mempublikasikan berita kilat atau pengumuman dari smartphone.",
+        files: "mobile/lib/views/quick_publisher.dart",
+        dod: ["Offline queue saat sinyal putus", "Publish status to backend"]
+      },
+
+      // MODUL 4: MEDIA ASSETS S3
+      {
+        id: "TSK-MED-01",
+        title: "Galeri Aset Media & Meteran Kuota",
+        category: "Media (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Grid aset gambar/dokumen, info ukuran file, status kuota S3 (1.2GB/5.0GB), dan preview modal.",
+        files: "services/02-dashboard-cms/src/components/dashboard/MediaAssetsModule.vue",
+        dod: ["Drag and drop uploader", "Instant copy asset URL", "Filter tipe file"]
+      },
+      {
+        id: "TSK-MED-02",
+        title: "Presigned URL Upload Engine & Sandboxing",
+        category: "Backend (02-dashboard-cms)",
+        pic: "Andalusia",
+        status: "progress",
+        desc: "Upload token presigned S3/MinIO langsung ke object storage tanpa membebani server backend.",
+        files: "services/02-dashboard-cms/internal/storage/minio.go",
+        dod: ["POST /api/v1/media/presign-upload", "Folder tenants/{id}/assets/", "Expiring token 15 menit"]
+      },
+      {
+        id: "TSK-MED-03",
+        title: "Skema media_assets & Quota Enforcement",
+        category: "Database (PostgreSQL)",
+        pic: "Risqi",
+        status: "progress",
+        desc: "Tabel metadata aset (file size, mime type, S3 key) dan kalkulasi batas kuota plan.",
+        files: "deploy/sql/01_schema_and_rls.sql",
+        dod: ["Agregat SUM(file_size)", "Blokir upload saat kuota habis"]
+      },
+      {
+        id: "TSK-MED-04",
+        title: "Mobile Direct Camera Upload to S3",
+        category: "Mobile Companion",
+        pic: "Tyno",
+        status: "todo",
+        desc: "Upload foto produk langsung dari kamera ponsel ke galeri media website tenant.",
+        files: "mobile/lib/views/camera_upload.dart",
+        dod: ["Kompresi gambar lokal di HP", "Upload langsung via Presigned URL"]
+      },
+      {
+        id: "TSK-MED-05",
+        title: "Anti-Malware File Validation (Magic Bytes)",
+        category: "Security (BFF/Infra)",
+        pic: "Rizal",
+        status: "done",
+        desc: "Pengecekan header magic bytes untuk memblokir upload webshell / PHP script berbahaya.",
+        files: "services/02-dashboard-cms/internal/storage/validator.go",
+        dod: ["Header Content-Disposition: attachment", "Blokir MIME executable"]
+      },
+
+      // MODUL 5: TEMPLATES & BLUEPRINTS
+      {
+        id: "TSK-TPL-01",
+        title: "UI Katalog Blueprint Template",
+        category: "Templates (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Galeri template resmi (Retail Store, Portfolio, Editorial, LMS) dengan live preview renderer.",
+        files: "services/02-dashboard-cms/src/components/dashboard/TemplatesCatalogModule.vue",
+        dod: ["Modal preview template", "Terapkan ke situs instan", "Badge kategori"]
+      },
+      {
+        id: "TSK-TPL-02",
+        title: "AI Theme & Template Generator",
+        category: "AI Service (05-ai-agent)",
+        pic: "Andalusia",
+        status: "progress",
+        desc: "Pabrik template AI dari prompt teks menjadi struktur JSON blocks kompatibel.",
+        files: "services/05-ai-agent-service/internal/generator/",
+        dod: ["JSON Schema valid", "Generate palet warna & block typography otomatis"]
+      },
+      {
+        id: "TSK-TPL-03",
+        title: "Template Seeding & Versioning",
+        category: "Database (PostgreSQL)",
+        pic: "Risqi",
+        status: "done",
+        desc: "Skema penyimpanan template global yang bisa di-clone oleh tenant baru.",
+        files: "deploy/sql/01_schema_and_rls.sql",
+        dod: ["Tabel templates global", "Versi template terawat"]
+      },
+
+      // MODUL 6: CUSTOM DOMAINS & DNS
+      {
+        id: "TSK-DOM-01",
+        title: "UI Custom Domain & Panduan DNS",
+        category: "Domains (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Tabel custom domain, status verifikasi (Pending/Verified/SSL Active), dan petunjuk CNAME.",
+        files: "services/02-dashboard-cms/src/components/dashboard/CustomDomainsModule.vue",
+        dod: ["Form input domain", "Status polling live", "Copy CNAME target"]
+      },
+      {
+        id: "TSK-DOM-02",
+        title: "DNS Verification Background Worker",
+        category: "Backend (02-dashboard-cms)",
+        pic: "Andalusia",
+        status: "progress",
+        desc: "Worker Go yang mengecek propagasi DNS (CNAME pointing ke edge.herocms.id) sebelum SSL diaktifkan.",
+        files: "services/02-dashboard-cms/internal/service/dns.go",
+        dod: ["Lookup CNAME otomatis", "Update status domain di DB"]
+      },
+      {
+        id: "TSK-DOM-03",
+        title: "Traefik Dynamic Custom Domain & Let's Encrypt",
+        category: "DevOps & Ingress",
+        pic: "Rizal",
+        status: "progress",
+        desc: "Pendaftaran custom domain ke Traefik Ingress dengan automasi sertifikat SSL Let's Encrypt.",
+        files: "deploy/docker-compose.infra.yml",
+        dod: ["Sertifikat SSL otomatis aktif < 10 detik setelah DNS verified"]
+      },
+      {
+        id: "TSK-DOM-04",
+        title: "Traefik Host Rule Injection Pentest (CWE-20/93)",
+        category: "Security (Pentest)",
+        pic: "Rizal",
+        status: "done",
+        desc: "Sanitasi regex domain ketat untuk mencegah serangan breakout routing proxy.",
+        files: "services/02-dashboard-cms/pentest/",
+        dod: ["Regex ^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$", "100% Pentest pass"]
+      },
+
+      // MODUL 7: ANALITIK & TELEMETRI
+      {
+        id: "TSK-ANL-01",
+        title: "Dashboard Grafik Kunjungan & Top-Views",
+        category: "Analytics (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Grafik kunjungan 7 hari, top 5 artikel terpopuler, live visitor counter, dan bandwidth tracker.",
+        files: "services/02-dashboard-cms/src/components/dashboard/AnalyticsTelemetryModule.vue",
+        dod: ["Grafik responsif", "Filter rentang tanggal", "Top-views list"]
+      },
+      {
+        id: "TSK-ANL-02",
+        title: "Redis 7 Sorted Sets (ZSET) Counter (<1ms)",
         category: "Database & Cache",
         pic: "Risqi",
         status: "done",
-        desc: "Agregasi traffic kunjungan real-time menggunakan struktur data Redis Sorted Sets (ZSET).",
-        files: "services/02-dashboard-cms/internal/telemetry/redis.go",
-        dod: ["Waktu baca < 1ms", "ZINCRBY aman dari race conditions", "Penyimpanan rank harian & mingguan"]
+        desc: "Pencatatan pageviews real-time tanpa membebani disk PostgreSQL menggunakan ZINCRBY.",
+        files: "services/02-dashboard-cms/internal/redis/telemetry.go",
+        dod: ["Latensi baca < 1ms", "Kunci tenant:{id}:top_views terisolasi"]
       },
       {
-        id: "T-DB-03",
-        title: "Automated Daily Snapshot & PITR Recovery",
-        category: "Database",
-        pic: "Risqi",
+        id: "TSK-ANL-03",
+        title: "Telemetry Ingestion Anonymous Middleware",
+        category: "Backend (02-dashboard-cms)",
+        pic: "Andalusia",
+        status: "done",
+        desc: "Middleware pencatat hit anonim (User-Agent, referer, hash IP) yang GDPR-compliant.",
+        files: "services/02-dashboard-cms/internal/middleware/tracker.go",
+        dod: ["Async write ke Redis", "Zero latency penalty pada halaman publik"]
+      },
+      {
+        id: "TSK-ANL-04",
+        title: "Mobile Real-time Telemetry Screen",
+        category: "Mobile Companion",
+        pic: "Tyno",
         status: "todo",
-        desc: "SOP dan skrip otomatis pencadangan PostgreSQL dengan Point-In-Time Recovery ke MinIO S3.",
-        files: "deploy/scripts/backup-pitr.sh",
-        dod: ["Backup otomatis terjadwal cron", "Uji restore berhasil < 15 menit", "Enkripsi data at rest"]
+        desc: "Layar ringkasan pengunjung harian dan grafik live traffic di aplikasi ponsel.",
+        files: "mobile/lib/views/analytics_screen.dart",
+        dod: ["Grafik mini chart", "Push alert lonjakan traffic"]
+      },
+
+      // MODUL 8: WEBHOOKS & API
+      {
+        id: "TSK-WBH-01",
+        title: "UI Manajemen Webhook & API Key",
+        category: "Webhooks (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Form penambahan endpoint webhook, event selector, dan generator API Secret Token.",
+        files: "services/02-dashboard-cms/src/components/dashboard/WebhooksApiModule.vue",
+        dod: ["Test ping trigger", "Riwayat delivery logs", "Copy token"]
       },
       {
-        id: "T-OPS-01",
+        id: "TSK-WBH-02",
+        title: "Anti-SSRF Safe Webhook Dispatcher",
+        category: "Security & Backend",
+        pic: "Rizal",
+        status: "progress",
+        desc: "Mesin pengirim HTTP webhook dengan proteksi pemblokiran IP internal (127.0.0.1, 10.0.0.0/8).",
+        files: "services/02-dashboard-cms/internal/service/webhook.go",
+        dod: ["Blokir private subnet", "Timeout 3s", "Retry backoff exponential"]
+      },
+      {
+        id: "TSK-WBH-03",
+        title: "n8n Social Media Auto-Poster Workflow",
+        category: "AI Service (05-ai-agent)",
+        pic: "Andalusia",
+        status: "progress",
+        desc: "Otomatisasi posting rangkuman artikel baru ke Instagram, Facebook, dan Telegram via n8n.",
+        files: "services/05-ai-agent-service/workflows/",
+        dod: ["Webhook receiver aktif", "Auto-generate caption AI", "Publish webhook"]
+      },
+
+      // MODUL 9 & 10: BILLING & INVOICES
+      {
+        id: "TSK-BIL-01",
+        title: "UI Paket Langganan & Riwayat Faktur",
+        category: "Billing (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Tabel perbandingan fitur paket (Starter, Pro, Enterprise), gauge kuota, dan tabel invoice PDF.",
+        files: "services/02-dashboard-cms/src/components/dashboard/BillingPlanModule.vue",
+        dod: ["Tampilan status lunas/pending", "Download invoice", "Upgrade button"]
+      },
+      {
+        id: "TSK-BIL-02",
+        title: "Payment Gateway Midtrans/Xendit Integration",
+        category: "Admin Console (01-admin)",
+        pic: "Andalusia",
+        status: "progress",
+        desc: "Pembuatan Snap Token pembayaran, webhook notifikasi lunas, dan auto-upgrade kuota.",
+        files: "services/01-admin-console/app/Http/Controllers/Billing/",
+        dod: ["Signature validation", "Auto-activate plan pada tenant", "Invoice PDF generation"]
+      },
+      {
+        id: "TSK-BIL-03",
+        title: "Skema subscriptions & invoices",
+        category: "Database (PostgreSQL)",
+        pic: "Risqi",
+        status: "done",
+        desc: "Tabel masa aktif langganan, tanggal jatuh tempo, dan riwayat pembayaran.",
+        files: "deploy/sql/01_schema_and_rls.sql",
+        dod: ["Relasi tenant ke subscription", "Auto-suspend trigger jika telat bayar"]
+      },
+      {
+        id: "TSK-BIL-04",
+        title: "Push Notification Tagihan & Kuota Limit",
+        category: "Mobile Companion",
+        pic: "Tyno",
+        status: "todo",
+        desc: "Pemberitahuan push di HP saat kuota mendekati 90% atau invoice jatuh tempo.",
+        files: "mobile/lib/services/billing_notification.dart",
+        dod: ["FCM push messaging", "Deep link ke menu pembayaran"]
+      },
+
+      // MODUL 11 & 12: SUPPORT TICKETS & CHANGELOG
+      {
+        id: "TSK-SUP-01",
+        title: "UI Tiket Bantuan & Pelacakan SLA",
+        category: "Support (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Form pengajuan tiket keluhan, pilihan tingkat urgensi, dan status riwayat respon support.",
+        files: "services/02-dashboard-cms/src/components/dashboard/SupportTicketingModule.vue",
+        dod: ["Badge status Open/Resolved", "Lampiran screenshot keluhan"]
+      },
+      {
+        id: "TSK-SUP-02",
+        title: "Admin Helpdesk Resolver (Laravel Filament)",
+        category: "Admin Console (01-admin)",
+        pic: "Andalusia",
+        status: "progress",
+        desc: "Panel internal admin untuk merespon tiket support dan inspect status kontainer tenant.",
+        files: "services/01-admin-console/app/Filament/Resources/TicketResource.php",
+        dod: ["Balas tiket dari admin", "Email notifikasi ke tenant"]
+      },
+      {
+        id: "TSK-CHG-01",
+        title: "Changelog Modul & SemVer Governance",
+        category: "Changelog (02-dashboard-cms)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Halaman rilis publik interaktif dengan filter tipe (feature, fix, security) dan search.",
+        files: "services/02-dashboard-cms/src/components/dashboard/ChangelogModule.vue",
+        dod: ["Tersinkronisasi ke changelog.ts", "Shortcut CMD+K search", "Badge SemVer"]
+      },
+
+      // INFRA & MARKETING
+      {
+        id: "TSK-MKT-01",
+        title: "High-Conversion Marketing Website (React 19)",
+        category: "Marketing (04-marketing)",
+        pic: "Irgi",
+        status: "done",
+        desc: "Landing page publik, demo playground interaktif, kalkulator harga, dan form pendaftaran.",
+        files: "services/04-marketing-site/src/",
+        dod: ["LCP < 1.2s", "Lighthouse > 90", "Responsive design"]
+      },
+      {
+        id: "TSK-OPS-01",
         title: "Multi-Network Docker Isolation Topology",
-        category: "DevOps",
+        category: "DevOps & Infra",
         pic: "Rizal",
         status: "done",
         desc: "Pemisahan jaringan kontainer: edge-network, infra-network, dan tenant-isolated-network.",
-        files: "docker-compose.yml",
-        dod: ["Kontainer tenant tidak bisa membidik host internal", "Hanya Traefik yang terbuka ke publik", "DNS isolation"]
+        files: "docker-compose.yml & deploy/docker-compose.infra.yml",
+        dod: ["Kontainer tenant tidak bisa membidik DB langsung", "Hanya Traefik terbuka publik"]
       },
       {
-        id: "T-OPS-02",
+        id: "TSK-OPS-02",
         title: "Linux cgroups v2 Hard-Limit Sandbox",
-        category: "DevOps",
+        category: "DevOps & Security",
         pic: "Rizal",
         status: "progress",
-        desc: "Penerapan batas keras memori 256MB, CPU 0.5 vCPU, dan read-only rootfs per kontainer.",
+        desc: "Penguncian memori 256MB, CPU 0.5 vCPU, dan filesystem read-only pada kontainer tenant.",
         files: "services/03-provision-orchestrator/internal/docker/sandbox.go",
-        dod: ["OOM killer terisolasi di kontainer tenant", "CPU throttle aktif", "CapDrop ALL terverifikasi"]
+        dod: ["OOM terisolasi per pod", "CapDrop ALL terverifikasi", "ReadonlyRootfs = true"]
       },
       {
-        id: "T-SEC-01",
-        title: "Modular Pentest Runner & Traefik Injection Guard",
-        category: "Security",
+        id: "TSK-OPS-03",
+        title: "Pre-Commit Pentest Runner & CI/CD Gate",
+        category: "DevOps & Security",
         pic: "Rizal",
-        status: "done",
-        desc: "Rangkaian pengujian penetrasi mandatori black-box HTTP dan mitigasi Traefik injection (CWE-20/93).",
-        files: "services/02-dashboard-cms/pentest/",
-        dod: ["100% Pass sebelum commit/PR", "Regex domain sanitization", "Header keamanan terpasang"]
-      },
-      {
-        id: "T-MOB-01",
-        title: "Real-time Telemetry Dashboard (Mobile)",
-        category: "Mobile",
-        pic: "Tyno",
-        status: "todo",
-        desc: "Aplikasi pendamping mobile untuk melihat metrik kunjungan, top views, dan status kontainer real-time.",
-        files: "mobile/lib/views/telemetry_dashboard.dart",
-        dod: ["Grafik kunjungan hari ini", "Offline cache metrik terakhir", "Cold start < 1.5 detik"]
-      },
-      {
-        id: "T-MOB-02",
-        title: "Push Notification Engine & Emergency Controls",
-        category: "Mobile",
-        pic: "Tyno",
-        status: "todo",
-        desc: "Notifikasi lead formulir kontak baru dan tombol saklar darurat (restart container/clear cache).",
-        files: "mobile/lib/services/push_notification.dart",
-        dod: ["FCM Firebase terintegrasi", "Tombol darurat dengan proteksi konfirmasi", "Biometric login FaceID"]
+        status: "progress",
+        desc: "Otomasi eksekusi pentest per-service sebelum pull request diizinkan merge ke main.",
+        files: ".github/workflows/docker-image.yml",
+        dod: ["100% Pass pada test suite pentest", "Auto-reject PR jika ada celah keamanan"]
       }
     ];
 

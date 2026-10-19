@@ -100,3 +100,54 @@ Dokumen ini menjadi "kamus bersama" agar seluruh anggota tim berbicara dalam ist
    - Kendala: [Jika ada]
    ```
 2. Paijo AI Agent akan memverifikasi hasil kerja, memperbarui checklist di Git, dan menaikkan nomor versi SemVer di `changelog.ts`.
+
+---
+
+## 4. 📊 LOG Hasil Pengerjaan & Pemetaan 12 Modul Studio ke Microservices
+
+Berikut adalah log status pengerjaan saat ini serta dependensi integrasi antar-service untuk mewujudkan fungsionalitas bisnis:
+
+| # | Nama Modul Studio | Komponen Frontend (`02-dashboard-cms`) | Backend & Service Pendukung | Status Frontend | Status Backend / DB | Langkah Integrasi Berikutnya |
+| :- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **1** | **Situs & Kontainer** | `ContainersModule.vue` & `PodDetailAnalyticsView.vue` | `03-provision-orchestrator` (Go Docker SDK) | `DONE` (Full UI & logs terminal) | `DONE` (Core spawn ready) | Finalisasi dynamic Traefik rule injection saat spawn (`TSK-CNT-04`). |
+| **2** | **Editor Studio Visual**| `VisualEditorModule.vue` & `TemplateLiveRenderer.vue` | `02-dashboard-cms` (Go BFF) & `05-ai-agent-service` | `DONE` (Drag-drop blocks & preview) | `IN PROGRESS` (Save blocks API) | Wiring endpoint `PUT /api/v1/sites/:id/blocks` & AI Copilot prompt generator (`TSK-EDT-04`). |
+| **3** | **Artikel & Halaman** | `ContentArticlesModule.vue` | `02-dashboard-cms` (Go BFF) & PostgreSQL 16 | `DONE` (Ledger table & Reader view) | `IN PROGRESS` (CRUD handlers) | Sambungkan fetch API artikel ke Go BFF repository (`TSK-ART-04`). |
+| **4** | **Media Assets (S3)** | `MediaAssetsModule.vue` | `02-dashboard-cms` (Go storage) & MinIO | `DONE` (Grid view & meteran kuota) | `IN PROGRESS` (Presigned URLs) | Uji coba upload file langsung via S3 presigned PUT URL (`TSK-MED-02`). |
+| **5** | **Katalog Template** | `TemplatesCatalogModule.vue` | `05-ai-agent-service` (LLM Engine) | `DONE` (Blueprint selector & preview) | `IN PROGRESS` (AI theme generator) | Sinkronisasi template blueprints JSON schema ke kontainer tenant (`TSK-TPL-02`). |
+| **6** | **Custom Domain & DNS**| `CustomDomainsModule.vue` | Traefik v3 Edge Ingress | `DONE` (Tabel status & CNAME guide) | `IN PROGRESS` (DNS worker) | Worker pengecekan propagasi DNS CNAME otomatis (`TSK-DOM-02`). |
+| **7** | **Analitik & Telemetri**| `AnalyticsTelemetryModule.vue`| Redis 7 (`ZSET`) & Go Middleware | `DONE` (Grafik chart & top views) | `DONE` (ZSET latency < 1ms) | Integrasi middleware tracker ke rute publik website tenant (`TSK-ANL-03`). |
+| **8** | **Webhooks & API** | `WebhooksApiModule.vue` | `05-ai-agent-service` & n8n engine | `DONE` (Webhook list & token generator) | `IN PROGRESS` (Anti-SSRF dispatcher) | Uji coba anti-SSRF guard pada outbound HTTP request (`TSK-WBH-02`). |
+| **9** | **Kapasitas & Paket** | `BillingPlanModule.vue` | `01-admin-console` (Laravel 11) | `DONE` (Plan comparison & quota gauge) | `IN PROGRESS` (Midtrans gateway) | Integrasi Snap Token Midtrans/Xendit untuk auto-upgrade (`TSK-BIL-02`). |
+| **10**| **Faktur & Invoice** | `InvoicesHistoryModule.vue` | `01-admin-console` (Laravel 11) | `DONE` (Tabel invoice & download UI) | `DONE` (Skema database siap) | Endpoint generate PDF invoice otomatis (`TSK-BIL-03`). |
+| **11**| **Tiket Support** | `SupportTicketingModule.vue` | `01-admin-console` (Filament Admin) | `DONE` (Tiket submission & SLA badge) | `IN PROGRESS` (Filament resource) | Modul balasan tiket dari SuperAdmin Filament (`TSK-SUP-02`). |
+| **12**| **Changelog & Rilis** | `ChangelogModule.vue` | `src/data/changelog.ts` & SemVer Engine | `DONE` (Interactive timeline & search) | `DONE` (SemVer script aktif) | Pemeliharaan berkala catatan rilis via Paijo AI Agent (`TSK-CHG-01`). |
+
+---
+
+## 5. 🔌 Katalog Spesifikasi Kontrak API Inti (BFF & Microservices)
+
+Seluruh komunikasi antarmuka (Web Studio & Mobile Companion) mengacu pada kontrak API berikut:
+
+### A. Autentikasi & Profil Tenant (`/api/v1/auth`)
+* `POST /api/v1/auth/login`: Menerima `{ email, password }`. Mengembalikan `{ token, refreshToken, tenant: { id, name, plan } }`.
+* `POST /api/v1/auth/refresh`: Refresh token session dengan proteksi rotasi token.
+
+### B. Manajemen Kontainer (`/api/v1/containers`)
+* `GET /api/v1/containers`: Mengambil daftar kontainer milik tenant aktif (disaring oleh RLS).
+* `POST /api/v1/containers/provision`: Menerima `{ subdomain, category, templateId }`. Men-trigger orchestrator Go Docker SDK.
+* `POST /api/v1/containers/:id/restart`: Restart kontainer pod dengan drainage sinyal SIGTERM.
+* `GET /api/v1/containers/:id/logs`: Mengambil log container real-time (query: `tail`, `level`).
+
+### C. Editor & Blok Konten (`/api/v1/sites/:id/blocks`)
+* `GET /api/v1/sites/:id/blocks`: Mengambil susunan blok aktif untuk live preview.
+* `PUT /api/v1/sites/:id/blocks`: Menyimpan draft blok (`{ blocks: VisualBlock[] }`).
+* `POST /api/v1/sites/:id/publish`: Mempublikasikan blok ke kontainer web tenant dan membersihkan cache.
+
+### D. Aset Media S3 (`/api/v1/media`)
+* `POST /api/v1/media/presign-upload`: Menerima `{ fileName, fileSize, mimeType }`. Mengembalikan presigned PUT URL dari MinIO/S3.
+* `GET /api/v1/media`: Mengambil daftar aset media dan kalkulasi kuota pemakaian.
+
+### E. Telemetri Real-Time (`/api/v1/telemetry`)
+* `GET /api/v1/telemetry/overview`: Mengambil ringkasan kunjungan 7 hari terakhir, total hits, dan bandwidth.
+* `GET /api/v1/telemetry/top-views`: Membaca Redis ZSET ranking artikel terpopuler (< 1ms).
+

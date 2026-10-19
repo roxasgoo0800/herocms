@@ -92,3 +92,35 @@ Setiap pengembang wajib memahami konsep-konsep inti berikut sebelum memodifikasi
    - Kendala: [Jika ada]
    ```
 2. Paijo AI Agent akan memverifikasi hasil kerja, memperbarui checkbox di [TASK_CHECKLIST.md](file:///Users/rizalfahmi/Documents/React/herocms/docs/project-management/TASK_CHECKLIST.md) dan portal interaktif `index.html`.
+
+---
+
+## 4. Pemetaan 12 Modul Studio Dashboard ke Microservices
+
+Setiap pekerjaan di `services/02-dashboard-cms` wajib dipetakan ke service backend pasangannya:
+
+1. **Situs & Kontainer**: Terkoneksi ke `services/03-provision-orchestrator` (Go Docker SDK) & Traefik dynamic labels.
+2. **Editor Studio Visual**: Terkoneksi ke Go BFF `02-dashboard-cms` (`site_blocks`) & `services/05-ai-agent-service` (AI Copilot).
+3. **Artikel & Halaman**: Terkoneksi ke PostgreSQL 16 (tabel `posts` & `pages` dengan RLS) via Go BFF.
+4. **Media Assets (S3)**: Terkoneksi ke MinIO/S3 via Go Presigned URL uploader dan quota validator.
+5. **Katalog Template**: Terkoneksi ke `services/05-ai-agent-service` untuk generator tema otomatis.
+6. **Custom Domain & DNS**: Terkoneksi ke Traefik Ingress SSL Let's Encrypt dan DNS verification worker.
+7. **Analitik & Telemetri**: Terkoneksi ke Redis 7 Sorted Sets (`ZSET`) latensi < 1ms dan middleware tracker.
+8. **Webhooks & API**: Terkoneksi ke anti-SSRF outbound dispatcher dan otomasi n8n workflow.
+9. **Kapasitas & Paket (Billing)**: Terkoneksi ke `services/01-admin-console` (Laravel 11) dan Midtrans payment gateway.
+10. **Faktur & Invoice**: Terkoneksi ke Laravel 11 invoice generator dan skema PostgreSQL `invoices`.
+11. **Tiket Support**: Terkoneksi ke SuperAdmin Filament helpdesk resolver di `services/01-admin-console`.
+12. **Changelog & Rilis**: Terkoneksi ke dataset `src/data/changelog.ts` dan SemVer governance.
+
+---
+
+## 5. Model Bisnis & Target Vertikal Blueprint
+
+HeroCMS bukan CRUD generik; melainkan SaaS berbayar dengan 4 Blueprint Vertikal:
+- `business`: Toko Online Retail UMKM (Etalase, Diskon, WhatsApp checkout).
+- `portfolio`: Portofolio Teknis & Agensi (Showcase, Telemetri live, GitHub API).
+- `blog`: Blog Editorial & Media Digital (Reader view, SEO, Multi-author).
+- `education`: Pusat Edukasi & Kursus LMS (Silabus, Modul video, Siswa).
+
+Tiga paket berbayar diatur di `BillingPlanModule.vue`: Starter (Free), Pro (Rp 149k), Enterprise (Rp 499k).
+

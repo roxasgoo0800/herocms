@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.19',
+    releaseDate: '19 Oktober 2026',
+    title: 'Penjabaran Matriks 36 Task Granular 12 Modul Studio & Katalog Kontrak API Microservices',
+    summary: 'Menjabarkan secara mendalam 36 task teknis berbasis 12 modul resmi di services/02-dashboard-cms dan hubungannya ke seluruh microservices (01-admin, 03-provision, 04-marketing, 05-ai-agent, Mobile). Menyusun model bisnis SaaS terukur (4 vertikal blueprint), katalog spesifikasi API BFF, serta memperbarui Mission Control portal dengan dataset granular.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11419-1',
+        type: 'improvement',
+        scope: 'Granular Service Task Matrix',
+        description: 'Menyusun rincian tugas teknis mendalam per-petugas (Andalusia, Irgi, Risqi, Rizal, Tyno) di docs/project-management/TASK_CHECKLIST.md untuk seluruh 12 modul Studio.'
+      },
+      {
+        id: 'c-11419-2',
+        type: 'feature',
+        scope: 'Core API Specification Catalog',
+        description: 'Mendokumentasikan kontrak API BFF lengkap (/auth, /containers, /sites/blocks, /media, /telemetry) dan log pengerjaan di docs/KAMUS_DAN_SOP_HEROCMS.md.'
+      },
+      {
+        id: 'c-11419-3',
+        type: 'improvement',
+        scope: 'Interactive Mission Control Portal Sync',
+        description: 'Memperbarui dataset di docs/project-management/index.html dengan 36 tugas terperinci sehingga telemetri kesiapan rilis dan filter modul sinkron 100%.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.18',
     releaseDate: '19 Oktober 2026',
     title: 'Portal Interaktif HeroCMS Mission Control, Kamus Arsitektur & Skill SOP Tim',
     summary: 'Menerbitkan portal interaktif mandiri HeroCMS Mission Control berbasis web (docs/project-management/index.html) dengan tema Studio resmi, meluncurkan Buku Kamus Arsitektur & SOP Pengerjaan Lengkap (docs/KAMUS_DAN_SOP_HEROCMS.md), serta meresmikan Master Skill .agents/skills/herocms-team-governance-and-sop sebagai rujukan permanen seluruh anggota tim dan AI Agent.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / Paijo AI Agent',
     items: [
       {
