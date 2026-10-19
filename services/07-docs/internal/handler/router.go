@@ -99,7 +99,7 @@ func (r *Router) handleHealth(w http.ResponseWriter, req *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"status":  "healthy",
 		"service": "07-docs",
-		"version": "v1.15.0",
+		"version": "v1.2.0",
 	})
 }
 

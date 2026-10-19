@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FolderKanban, Clock, BookOpen, Terminal } from 'lucide-vue-next';
+import { FolderKanban, FileText, ShieldCheck, GitBranch } from 'lucide-vue-next';
 import { useDocsStore } from '../stores/docsStore';
 
 const store = useDocsStore();
@@ -15,57 +15,58 @@ const store = useDocsStore();
       </div>
       <div class="telemetry-val">
         {{ store.telemetry.totalTasks }}
-        <span class="badge-growth-pill">6 Services</span>
+        <span class="badge-growth-pill">{{ store.telemetry.totalServices }} Services</span>
       </div>
       <div class="telemetry-sub ready-state">
         <span class="pulse-mini-dot"></span>
-        <span>12 Modul Studio + BFF + QA Suite</span>
+        <span>6 Divisi Tim Aktif • Sprint Ongoing</span>
       </div>
     </div>
 
-    <!-- 2. Ongoing Status -->
+    <!-- 2. PRD Microservices -->
     <div class="telemetry-card accent-amber">
-      <div class="telemetry-corner-watermark amber"><Clock :size="58" /></div>
+      <div class="telemetry-corner-watermark amber"><FileText :size="58" /></div>
       <div class="telemetry-top">
-        <span class="telemetry-label">STATUS SPRINT PROGRES</span>
+        <span class="telemetry-label">SPESIFIKASI PRD LENGKAP</span>
       </div>
       <div class="telemetry-val">
-        100%
-        <span class="badge-warning" style="font-size: 0.72rem; padding: 2px 7px; border-radius: 6px; font-weight: 700;">Ongoing</span>
+        {{ store.telemetry.totalPrds }}
+        <span class="badge-warning" style="font-size: 0.72rem; padding: 2px 7px; border-radius: 6px; font-weight: 700;">Layanan</span>
       </div>
       <div class="telemetry-sub">
-        <span>Tampilan selesai, real proses berjalan</span>
+        <span>Katalog 7 Microservice (01 - 07)</span>
       </div>
     </div>
 
-    <!-- 3. Architecture Blueprints -->
+    <!-- 3. Security Standards & Sandboxing -->
     <div class="telemetry-card accent-emerald">
-      <div class="telemetry-corner-watermark emerald"><BookOpen :size="58" /></div>
+      <div class="telemetry-corner-watermark emerald"><ShieldCheck :size="58" /></div>
       <div class="telemetry-top">
-        <span class="telemetry-label">BLUEPRINT ARSITEKTUR SISTEM</span>
+        <span class="telemetry-label">STANDAR KEAMANAN & SANDBOXING</span>
       </div>
       <div class="telemetry-val">
-        {{ store.telemetry.totalBlueprints }}
-        <span class="badge-online">Standar</span>
+        {{ store.telemetry.totalSecurityPillars }}
+        <span class="badge-online">Pilar</span>
       </div>
       <div class="telemetry-sub">
-        <span>13 Panduan operasional + CLI command</span>
+        <span>20 Pilar Keamanan + cgroups v2 Sandboxing</span>
       </div>
     </div>
 
-    <!-- 4. Enterprise SOPs -->
+    <!-- 4. System Journeys & Blueprints -->
     <div class="telemetry-card accent-sky">
-      <div class="telemetry-corner-watermark sky"><Terminal :size="58" /></div>
+      <div class="telemetry-corner-watermark sky"><GitBranch :size="58" /></div>
       <div class="telemetry-top">
-        <span class="telemetry-label">SOP & RUNBOOK ENTERPRISE</span>
+        <span class="telemetry-label">ALUR KERJA SISTEM & BLUEPRINT</span>
       </div>
       <div class="telemetry-val">
-        {{ store.telemetry.totalSops }}
-        <span class="telemetry-denom">Runbooks</span>
+        {{ store.telemetry.totalJourneys }}
+        <span class="telemetry-denom">Alur</span>
       </div>
       <div class="telemetry-sub">
-        <span>Git branching, DoD, pentest, RLS isolasi</span>
+        <span>{{ store.telemetry.totalBlueprints }} Blueprint + {{ store.telemetry.totalSops }} SOP Runbooks</span>
       </div>
     </div>
   </section>
 </template>
+

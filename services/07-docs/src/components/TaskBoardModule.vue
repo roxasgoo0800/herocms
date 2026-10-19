@@ -4,10 +4,8 @@ import {
   Search,
   X,
   FolderKanban,
-  CheckCircle2,
   ArrowRight,
-  FileCode,
-  UserCheck
+  FileCode
 } from 'lucide-vue-next';
 import { useDocsStore } from '../stores/docsStore';
 import type { TaskItem } from '../types/docs';
@@ -89,6 +87,7 @@ const visibleGroups = computed<GroupedTasks[]>(() => {
         return {
           id: s.id,
           name: s.name,
+          version: s.version,
           pic: s.pic,
           icon: s.icon,
           lead: s.lead,
@@ -188,6 +187,7 @@ const getCompletionPercentage = (t: TaskItem) => {
         >
           <span class="mini-status-dot running"></span>
           <span>{{ s.icon }} {{ s.id.substring(0, 10) }}</span>
+          <span v-if="s.version" style="font-size: 0.72rem; opacity: 0.75; font-weight: 700; margin-left: 2px;">{{ s.version }}</span>
         </button>
       </template>
     </div>
@@ -210,6 +210,9 @@ const getCompletionPercentage = (t: TaskItem) => {
               <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.02em;">
                 {{ grp.name }}
               </h2>
+              <span v-if="(grp as any).version" class="nav-badge badge-success">
+                {{ (grp as any).version }}
+              </span>
               <span v-if="grp.path" class="nav-badge badge-primary">
                 {{ grp.path }}
               </span>
@@ -230,91 +233,82 @@ const getCompletionPercentage = (t: TaskItem) => {
 
         <!-- Cards Grid using studio-master.css -->
         <div class="site-cards-grid">
-          <div
+          <article
             v-for="task in grp.tasks"
             :key="task.id"
-            class="pro-site-card"
-            style="--card-accent: #2563eb; cursor: pointer;"
+            class="task-card-pro"
+            :class="{ 'card-completed': getCompletionPercentage(task) === 100 }"
             @click="store.openTask(task)"
+            role="button"
+            tabindex="0"
+            :aria-label="`Buka artikel ${task.title}`"
+            @keydown.enter="store.openTask(task)"
           >
-            <!-- Card Head -->
-            <div class="card-head">
-              <div class="site-branding">
-                <div class="site-icon-box" style="background: #eff6ff; color: #2563eb;">
-                  <FolderKanban :size="20" />
-                </div>
-                <div class="site-branding-info">
-                  <div style="display: flex; align-items: center; gap: 6px;">
-                    <span class="nav-badge" style="font-family: 'JetBrains Mono', monospace;">{{ task.id }}</span>
-                    <span class="nav-badge badge-warning">⏳ ONGOING</span>
-                  </div>
-                  <h3 class="brand-title" style="font-size: 0.98rem; font-weight: 700; color: #0f172a; margin-top: 2px; line-height: 1.35; white-space: normal;">
-                    {{ task.title }}
-                  </h3>
-                </div>
+            <!-- Card Top Header: ID Chip, Category & Priority -->
+            <div class="task-card-header">
+              <div class="task-card-meta-left">
+                <span class="task-id-chip">{{ task.id }}</span>
+                <span class="task-cat-badge">{{ task.category }}</span>
+              </div>
+              <div class="task-card-meta-right">
+                <span
+                  class="task-priority-chip"
+                  :class="`priority-${task.priority.toLowerCase()}`"
+                >
+                  {{ task.priority }}
+                </span>
               </div>
             </div>
 
-            <!-- Lead Paragraph -->
-            <p class="page-desc" style="font-size: 0.82rem; color: #475569; line-height: 1.45; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-              {{ task.lead }}
-            </p>
+            <!-- Card Body: Title & Excerpt -->
+            <div class="task-card-body">
+              <h3 class="task-card-title">{{ task.title }}</h3>
+              <p class="task-card-lead">{{ task.lead }}</p>
+            </div>
 
-            <!-- Technical File Box -->
-            <div class="site-url-box" style="margin: 0;">
-              <div class="url-text-wrap">
-                <FileCode :size="12" style="color: #2563eb; flex-shrink: 0;" />
-                <span class="url-prefix">{{ task.codeLang }}:</span>
-                <span class="url-mono" style="font-size: 0.74rem;">{{ task.codeFile }}</span>
+            <!-- Target File Pill -->
+            <div class="task-target-pill" :title="`${task.codeLang}: ${task.codeFile}`">
+              <FileCode :size="13" class="target-file-icon" />
+              <span class="target-lang-tag">{{ task.codeLang }}</span>
+              <span class="target-file-path">{{ task.codeFile }}</span>
+            </div>
+
+            <!-- Sleek Progress Meter -->
+            <div class="task-progress-box">
+              <div class="task-progress-meta">
+                <span class="progress-label">Progres Tugas</span>
+                <span class="progress-val">
+                  <strong>{{ getCompletedCount(task) }}</strong> / {{ task.checklist.length }}
+                  <span class="progress-pct">({{ getCompletionPercentage(task) }}%)</span>
+                </span>
+              </div>
+              <div class="task-progress-bar">
+                <div
+                  class="task-progress-fill"
+                  :class="{ 'fill-completed': getCompletionPercentage(task) === 100 }"
+                  :style="{ width: `${getCompletionPercentage(task)}%` }"
+                ></div>
               </div>
             </div>
 
-            <!-- Checklist Progress Meter -->
-            <div class="resource-gauges-row" style="margin: 0; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <div class="gauge-col" style="width: 100%;">
-                <div class="gauge-meta" style="margin-bottom: 6px;">
-                  <div class="gauge-header-flex">
-                    <CheckCircle2 :size="12" style="color: #059669;" />
-                    <span class="gauge-title">CHECKLIST PROGRES</span>
-                  </div>
-                  <span class="gauge-val" style="font-size: 0.76rem;">
-                    <strong>{{ getCompletedCount(task) }} / {{ task.checklist.length }}</strong>
-                    <span class="gauge-sub"> ({{ getCompletionPercentage(task) }}%)</span>
-                  </span>
+            <!-- Card Footer: Handover & Read Action -->
+            <div class="task-card-footer">
+              <div class="task-handover-info">
+                <div class="task-avatar-mini" :title="`Handover ke ${task.handoverTo || task.division}`">
+                  {{ (task.handoverTo || task.division).charAt(0).toUpperCase() }}
                 </div>
-                <div class="custom-meter-track" style="height: 5px;">
-                  <div
-                    class="custom-meter-fill fill-blue"
-                    :style="{ width: `${getCompletionPercentage(task)}%` }"
-                  ></div>
+                <div class="task-handover-text">
+                  <span class="handover-sub">Handover:</span>
+                  <span class="handover-name">{{ task.handoverTo || task.division }}</span>
                 </div>
               </div>
-            </div>
 
-            <!-- Personil & Handover Strip -->
-            <div class="card-momentum-strip" style="cursor: default; padding: 8px 12px;">
-              <div class="momentum-left-meta">
-                <div class="momentum-title-flex">
-                  <UserCheck :size="12" style="color: #059669;" />
-                  <span>PERANCANG AWAL: <strong>Rizal (✓ UI Siap)</strong></span>
-                </div>
-                <div class="momentum-stat-flex" style="margin-top: 2px;">
-                  <span style="font-size: 0.74rem; color: #64748b;">
-                    Handover: <strong style="color: #2563eb;">{{ task.handoverTo || task.division }}</strong>
-                  </span>
-                </div>
+              <div class="task-read-cta">
+                <span>Buka Artikel</span>
+                <ArrowRight :size="13" class="cta-arrow" />
               </div>
             </div>
-
-            <!-- Card Bottom Action Link -->
-            <div style="display: flex; justify-content: space-between; align-items: center; pt: 8px; border-top: 1px solid #f1f5f9;">
-              <span style="font-size: 0.78rem; font-weight: 700; color: #2563eb; display: inline-flex; align-items: center; gap: 4px;">
-                <span>Buka Detail & Checklist Interaktif</span>
-                <ArrowRight :size="13" />
-              </span>
-              <span class="nav-badge badge-primary">{{ task.priority }}</span>
-            </div>
-          </div>
+          </article>
         </div>
       </section>
     </div>

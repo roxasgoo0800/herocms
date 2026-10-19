@@ -12,13 +12,15 @@ import {
   Zap,
   Wrench,
   CheckCircle2,
-  UserCheck
+  UserCheck,
+  Server
 } from 'lucide-vue-next';
-import { changelogReleases } from '../../data/changelog';
+import { changelogReleases, microserviceVersions } from '../../data/changelog';
 import type { ChangelogType } from '../../types/dashboard';
 
 const searchQuery = ref('');
 const selectedTypeFilter = ref<string>('all');
+const selectedServiceFilter = ref<string>('all');
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
 const handleGlobalKeydown = (e: KeyboardEvent) => {
@@ -36,8 +38,11 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown);
 });
 
+const dashboardCmsVersion = computed(() =>
+  microserviceVersions.find(s => s.id === '02-dashboard-cms')?.version || 'v1.14.27'
+);
+const latestVersion = dashboardCmsVersion;
 const totalReleasesCount = computed(() => changelogReleases.length);
-const latestVersion = computed(() => changelogReleases[0]?.version || 'v1.0.0');
 const totalItemsCount = computed(() =>
   changelogReleases.reduce((acc, rel) => acc + (rel.items ? rel.items.length : 0), 0)
 );
@@ -45,13 +50,19 @@ const totalItemsCount = computed(() =>
 const filteredReleases = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   const typeFilter = selectedTypeFilter.value;
+  const serviceFilter = selectedServiceFilter.value;
 
   return changelogReleases
+    .filter(rel => {
+      if (serviceFilter === 'all') return true;
+      return rel.service === serviceFilter;
+    })
     .map(rel => {
       const matchRelHeader =
         !q ||
         rel.version.toLowerCase().includes(q) ||
         rel.title.toLowerCase().includes(q) ||
+        (rel.serviceName && rel.serviceName.toLowerCase().includes(q)) ||
         (rel.summary && rel.summary.toLowerCase().includes(q));
 
       const matchingItems = (rel.items || []).filter(item => {
@@ -131,10 +142,10 @@ const getTypeIcon = (type: ChangelogType) => {
       <div class="telemetry-card accent-blue">
         <div class="telemetry-corner-watermark blue"><Tag :size="58" /></div>
         <div class="telemetry-top">
-          <span class="telemetry-label">VERSI SAAT INI</span>
+          <span class="telemetry-label">VERSI DASHBOARD CMS</span>
         </div>
         <div class="telemetry-val">
-          {{ latestVersion }} <span class="badge-online">Produksi Stabil</span>
+          {{ dashboardCmsVersion }} <span class="badge-online">Produksi Stabil</span>
         </div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
@@ -151,7 +162,7 @@ const getTypeIcon = (type: ChangelogType) => {
           {{ totalReleasesCount }} <span class="telemetry-denom">Versi Dirilis</span>
         </div>
         <div class="telemetry-sub">
-          <span>Sejak fondasi v1.0.0 hingga kini</span>
+          <span>Terdokumentasi per microservice</span>
         </div>
       </div>
 
@@ -177,7 +188,48 @@ const getTypeIcon = (type: ChangelogType) => {
           100% <span class="badge-growth-pill">Terverifikasi</span>
         </div>
         <div class="telemetry-sub">
-          <span>Sinkronisasi otomatis dengan AI Agent</span>
+          <span>7 Microservices mandiri</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2.5: Matriks Versi Independen Microservices (7 Layanan HeroCMS) -->
+    <div class="pro-panel" style="margin-bottom: 24px; padding: 18px 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <Server :size="16" color="#2563eb" />
+          <h3 style="margin: 0; font-size: 0.98rem; font-weight: 800; color: #0f172a;">
+            Matriks Versi Independen Microservices (7 Layanan HeroCMS)
+          </h3>
+        </div>
+        <span class="nav-badge badge-primary">Versi Mandiri per Service</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px;">
+        <div
+          v-for="svc in microserviceVersions"
+          :key="svc.id"
+          class="pro-panel"
+          style="padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: all 0.15s ease;"
+          :style="{
+            borderColor: selectedServiceFilter === svc.id ? '#2563eb' : '#e2e8f0',
+            background: selectedServiceFilter === svc.id ? '#eff6ff' : '#f8fafc'
+          }"
+          @click="selectedServiceFilter = selectedServiceFilter === svc.id ? 'all' : svc.id"
+          :title="`Klik untuk filter changelog ${svc.name}`"
+        >
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <code style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 700; color: #334155;">{{ svc.id }}</code>
+            <span class="nav-badge" :class="svc.badge === 'Latest' ? 'badge-primary' : 'badge-success'" style="font-size: 0.68rem; padding: 1px 6px;">
+              {{ svc.version }}
+            </span>
+          </div>
+          <div style="font-size: 0.82rem; font-weight: 700; color: #0f172a; line-height: 1.3;">
+            {{ svc.name }}
+          </div>
+          <div style="font-size: 0.7rem; color: #64748b; margin-top: 2px;">
+            PIC: {{ svc.leadPic }} • {{ svc.stack }}
+          </div>
         </div>
       </div>
     </div>
@@ -203,48 +255,75 @@ const getTypeIcon = (type: ChangelogType) => {
         <button
           type="button"
           class="segment-pill"
-          :class="{ active: selectedTypeFilter === 'all' }"
-          @click="selectedTypeFilter = 'all'"
+          :class="{ active: selectedServiceFilter === 'all' }"
+          @click="selectedServiceFilter = 'all'"
         >
-          <span>Semua Tipe</span>
+          <span>🌐 Semua Service (7)</span>
         </button>
         <button
           type="button"
           class="segment-pill"
-          :class="{ active: selectedTypeFilter === 'feature' }"
-          @click="selectedTypeFilter = 'feature'"
+          :class="{ active: selectedServiceFilter === '02-dashboard-cms' }"
+          @click="selectedServiceFilter = '02-dashboard-cms'"
         >
-          <Sparkles :size="12" />
-          <span>Fitur Baru</span>
+          <span>02 Dashboard CMS</span>
         </button>
         <button
           type="button"
           class="segment-pill"
-          :class="{ active: selectedTypeFilter === 'bugfix' }"
-          @click="selectedTypeFilter = 'bugfix'"
+          :class="{ active: selectedServiceFilter === '07-docs' }"
+          @click="selectedServiceFilter = '07-docs'"
         >
-          <Wrench :size="12" />
-          <span>Perbaikan Bug</span>
-        </button>
-        <button
-          type="button"
-          class="segment-pill"
-          :class="{ active: selectedTypeFilter === 'performance' }"
-          @click="selectedTypeFilter = 'performance'"
-        >
-          <Zap :size="12" />
-          <span>Performa</span>
-        </button>
-        <button
-          type="button"
-          class="segment-pill"
-          :class="{ active: selectedTypeFilter === 'security' }"
-          @click="selectedTypeFilter = 'security'"
-        >
-          <ShieldCheck :size="12" />
-          <span>Keamanan</span>
+          <span>07 Docs Hub</span>
         </button>
       </div>
+    </div>
+
+    <div class="segmented-filter-bar" style="margin-bottom: 24px;">
+      <button
+        type="button"
+        class="segment-pill"
+        :class="{ active: selectedTypeFilter === 'all' }"
+        @click="selectedTypeFilter = 'all'"
+      >
+        <span>Semua Tipe</span>
+      </button>
+      <button
+        type="button"
+        class="segment-pill"
+        :class="{ active: selectedTypeFilter === 'feature' }"
+        @click="selectedTypeFilter = 'feature'"
+      >
+        <Sparkles :size="12" />
+        <span>Fitur Baru</span>
+      </button>
+      <button
+        type="button"
+        class="segment-pill"
+        :class="{ active: selectedTypeFilter === 'bugfix' }"
+        @click="selectedTypeFilter = 'bugfix'"
+      >
+        <Wrench :size="12" />
+        <span>Perbaikan Bug</span>
+      </button>
+      <button
+        type="button"
+        class="segment-pill"
+        :class="{ active: selectedTypeFilter === 'performance' }"
+        @click="selectedTypeFilter = 'performance'"
+      >
+        <Zap :size="12" />
+        <span>Performa</span>
+      </button>
+      <button
+        type="button"
+        class="segment-pill"
+        :class="{ active: selectedTypeFilter === 'security' }"
+        @click="selectedTypeFilter = 'security'"
+      >
+        <ShieldCheck :size="12" />
+        <span>Keamanan</span>
+      </button>
     </div>
 
     <!-- Release Cards Timeline Stream -->
@@ -257,6 +336,9 @@ const getTypeIcon = (type: ChangelogType) => {
         <!-- Header Rilis -->
         <div class="release-card-header">
           <div class="release-version-group">
+            <span v-if="rel.serviceName" class="nav-badge badge-primary" style="font-weight: 700;">
+              {{ rel.serviceName }}
+            </span>
             <span class="release-version-badge">{{ rel.version }}</span>
             <span v-if="rel.badge" class="release-status-badge" :class="rel.badge.toLowerCase()">
               {{ rel.badge }}

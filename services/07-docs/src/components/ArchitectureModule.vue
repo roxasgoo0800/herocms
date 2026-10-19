@@ -1,30 +1,40 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Search, X, BookOpen, Check, Copy } from 'lucide-vue-next';
+import { Search, X, BookOpen, ArrowRight, ShieldCheck } from 'lucide-vue-next';
 import { useDocsStore } from '../stores/docsStore';
+import type { ArchitectureBlueprint } from '../types/docs';
 
 const store = useDocsStore();
 const searchQuery = ref('');
-const copiedCmdIndex = ref<number | null>(null);
+const selectedCategory = ref('Semua Kategori');
+
+const categories = computed(() => {
+  const cats = Array.from(new Set(store.blueprints.map(b => b.category)));
+  return ['Semua Kategori', ...cats];
+});
 
 const filteredBlueprints = computed(() => {
   const q = searchQuery.value.toLowerCase().trim();
-  if (!q) return store.blueprints;
-  return store.blueprints.filter(b => 
-    b.term.toLowerCase().includes(q) ||
-    b.definition.toLowerCase().includes(q) ||
-    b.category.toLowerCase().includes(q) ||
-    b.fileReference.toLowerCase().includes(q) ||
-    b.cliCommand.toLowerCase().includes(q)
-  );
+  const cat = selectedCategory.value;
+
+  return store.blueprints.filter(b => {
+    const matchCat = cat === 'Semua Kategori' || b.category === cat;
+    if (!matchCat) return false;
+    if (!q) return true;
+    return (
+      b.term.toLowerCase().includes(q) ||
+      b.id.toLowerCase().includes(q) ||
+      b.definition.toLowerCase().includes(q) ||
+      b.category.toLowerCase().includes(q) ||
+      b.service.toLowerCase().includes(q) ||
+      b.fileReference.toLowerCase().includes(q) ||
+      b.cliCommand.toLowerCase().includes(q)
+    );
+  });
 });
 
-const copyCommand = (cmd: string, idx: number) => {
-  navigator.clipboard.writeText(cmd);
-  copiedCmdIndex.value = idx;
-  setTimeout(() => {
-    if (copiedCmdIndex.value === idx) copiedCmdIndex.value = null;
-  }, 2000);
+const openBlueprintReader = (bp: ArchitectureBlueprint) => {
+  store.openBlueprint(bp);
 };
 </script>
 
@@ -32,12 +42,12 @@ const copyCommand = (cmd: string, idx: number) => {
   <div class="architecture-module fade-in-section">
     <!-- Filter Toolbar -->
     <div class="filter-toolbar">
-      <div class="search-command-shell" style="width: 420px;">
+      <div class="search-command-shell" style="max-width: 420px; width: 100%;">
         <Search :size="15" class="search-lead-glyph" />
         <input 
           v-model="searchQuery"
           type="text" 
-          placeholder="Cari blueprint, kebutuhan alat, port, atau perintah CLI..."
+          placeholder="Cari blueprint, ID arsitektur, nama service, atau file rujukan..."
           class="search-command-input"
         />
         <button v-if="searchQuery" class="btn-clear-search" @click="searchQuery = ''" title="Bersihkan">
@@ -53,94 +63,110 @@ const copyCommand = (cmd: string, idx: number) => {
       </div>
     </div>
 
-    <!-- Blueprints Cards Grid -->
-    <div class="site-cards-grid">
+    <!-- Category Filter Chips -->
+    <div class="category-filter-strip">
+      <button 
+        v-for="cat in categories" 
+        :key="cat"
+        class="category-chip"
+        :class="{ active: selectedCategory === cat }"
+        @click="selectedCategory = cat"
+      >
+        <span>{{ cat }}</span>
+        <span v-if="cat === 'Semua Kategori'" class="chip-count">{{ store.blueprints.length }}</span>
+        <span v-else class="chip-count">{{ store.blueprints.filter(b => b.category === cat).length }}</span>
+      </button>
+    </div>
+
+    <!-- Empty State -->
+    <div v-if="filteredBlueprints.length === 0" class="empty-state-card" style="padding: 48px 24px; text-align: center; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 14px;">
+      <BookOpen :size="42" color="#94a3b8" style="margin-bottom: 12px;" />
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Tidak Ada Blueprint yang Cocok</h3>
+      <p style="color: #64748b; font-size: 0.85rem; margin: 0;">Silakan bersihkan pencarian atau pilih kategori lain.</p>
+    </div>
+
+    <!-- Blueprints Cards Grid (Pro Aligned & Clickable) -->
+    <div v-else class="site-cards-grid">
       <div 
-        v-for="(item, idx) in filteredBlueprints" 
-        :key="idx"
-        class="pro-site-card"
-        style="--card-accent: #059669;"
+        v-for="item in filteredBlueprints" 
+        :key="item.id"
+        class="blueprint-card-pro"
+        @click="openBlueprintReader(item)"
       >
         <!-- Head -->
-        <div class="card-head">
-          <div class="site-branding">
-            <div class="site-icon-box" style="background: #ecfdf5; color: #059669; font-size: 1.25rem;">
-              {{ item.icon }}
-            </div>
-            <div class="site-branding-info">
+        <div class="bp-head">
+          <div class="bp-icon-box">
+            {{ item.icon }}
+          </div>
+          <div class="bp-title-meta">
+            <div class="bp-badges-row">
+              <span class="task-id-chip">{{ item.id }}</span>
+              <span class="nav-badge badge-primary" :title="item.service">{{ item.service.split('/')[0].trim() }}</span>
               <span class="nav-badge badge-success">{{ item.category }}</span>
-              <h3 class="brand-title" style="font-size: 1rem; font-weight: 700; color: #0f172a; margin-top: 2px; line-height: 1.35; white-space: normal;">
-                {{ item.term }}
-              </h3>
             </div>
+            <h3 class="bp-title">
+              {{ item.term }}
+            </h3>
           </div>
         </div>
 
         <!-- Definition -->
-        <p class="page-desc" style="font-size: 0.84rem; color: #475569; line-height: 1.5; margin: 0;">
+        <p class="bp-definition">
           {{ item.definition }}
         </p>
 
-        <!-- System Requirements Pills -->
-        <div v-if="item.requirements && item.requirements.length > 0">
-          <div style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">
-            ⚙️ Kebutuhan Sistem & Port:
+        <!-- System Requirements Preview -->
+        <div v-if="item.requirements && item.requirements.length > 0" class="bp-requirements-box">
+          <div class="bp-requirements-label">
+            ⚙️ Kebutuhan Sistem:
           </div>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          <div class="bp-requirements-list">
             <span 
-              v-for="(req, rIdx) in item.requirements" 
+              v-for="(req, rIdx) in item.requirements.slice(0, 2)" 
               :key="rIdx"
-              class="nav-badge"
-              style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;"
+              class="bp-req-pill"
+              :title="req"
             >
               {{ req }}
             </span>
-          </div>
-        </div>
-
-        <!-- File Reference Box -->
-        <div class="site-url-box" style="margin: 0;">
-          <div class="url-text-wrap">
-            <BookOpen :size="12" style="color: #059669; flex-shrink: 0;" />
-            <span class="url-prefix">File Rujukan:</span>
-            <span class="url-mono" style="font-size: 0.74rem;">{{ item.fileReference }}</span>
-          </div>
-        </div>
-
-        <!-- Guide Steps List -->
-        <div v-if="item.guideSteps && item.guideSteps.length > 0" class="pro-panel" style="padding: 12px 14px; background: #f8fafc; margin: 0;">
-          <div style="font-size: 0.72rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px;">
-            📋 Langkah Implementasi:
-          </div>
-          <ol style="margin: 0; padding-left: 18px; font-size: 0.8rem; color: #334155; line-height: 1.5;">
-            <li v-for="(step, sIdx) in item.guideSteps" :key="sIdx" style="margin-bottom: 3px;">
-              {{ step }}
-            </li>
-          </ol>
-        </div>
-
-        <!-- CLI Command Box with Copy Button -->
-        <div v-if="item.cliCommand">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase;">
-              💻 Perintah CLI Uji Cepat:
+            <span v-if="item.requirements.length > 2" class="bp-req-more" :title="item.requirements.slice(2).join(', ')">
+              +{{ item.requirements.length - 2 }} lainnya
             </span>
-            <button
-              class="btn-url-action"
-              style="padding: 2px 6px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px;"
-              @click="copyCommand(item.cliCommand, idx)"
-            >
-              <Check v-if="copiedCmdIndex === idx" :size="11" color="#059669" />
-              <Copy v-else :size="11" />
-              <span>{{ copiedCmdIndex === idx ? 'Tersalin' : 'Salin' }}</span>
-            </button>
           </div>
-          <pre style="background: #0f172a; color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 10px 12px; border-radius: 6px; overflow-x: auto; margin: 0; border-left: 3px solid #059669;"><code>{{ item.cliCommand }}</code></pre>
         </div>
 
-        <!-- Do & Don't Strip -->
-        <div v-if="item.doAndDont" style="font-size: 0.78rem; padding: 8px 12px; border-radius: 6px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; line-height: 1.45;">
-          <strong>⚖️ Aturan & Larangan:</strong> {{ item.doAndDont }}
+        <!-- File Reference Strip -->
+        <div class="bp-file-strip" :title="item.fileReference">
+          <BookOpen :size="12" color="#059669" style="flex-shrink: 0;" />
+          <span class="bp-file-text">
+            {{ item.fileReference }}
+          </span>
+        </div>
+
+        <!-- Alur Kerja / Flowchart Preview Ribbon -->
+        <div v-if="item.flowchart && item.flowchart.length > 0" class="bp-flow-preview">
+          <span class="flow-preview-label">Alur Kerja:</span>
+          <div class="flow-pills-row">
+            <template v-for="(node, nIdx) in item.flowchart.slice(0, 2)" :key="nIdx">
+              <span class="flow-pill-mini" :title="node">{{ node }}</span>
+              <span v-if="nIdx === 0 && item.flowchart.length > 1" class="flow-sep">→</span>
+            </template>
+            <span v-if="item.flowchart.length > 2" class="flow-pill-more" :title="item.flowchart.slice(2).join(' → ')">
+              +{{ item.flowchart.length - 2 }} tahap
+            </span>
+          </div>
+        </div>
+
+        <!-- Footer: Action Button -->
+        <div class="bp-card-footer">
+          <span class="bp-status-badge">
+            <ShieldCheck :size="13" />
+            <span>Terstandarisasi</span>
+          </span>
+          <button class="btn-read-sop" @click.stop="openBlueprintReader(item)">
+            <span>Baca Arsitektur</span>
+            <ArrowRight :size="14" />
+          </button>
         </div>
       </div>
     </div>

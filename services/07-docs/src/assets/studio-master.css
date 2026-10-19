@@ -16,6 +16,32 @@ html {
   }
 }
 
+/* ==========================================================================
+   HEROCMS STUDIO - CORE TYPOGRAPHY & FONT SMOOTHING FOUNDATION
+   ========================================================================== */
+html, body {
+  min-height: 100%;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #ffffff;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+button, input, select, textarea {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .page-title, .brand-title, .modal-heading {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.025em;
+}
+
+code, pre, .url-mono, .shortcut-tag, .spec-code, .task-id-chip {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 *,
 *::before,
 *::after {
@@ -701,6 +727,8 @@ html {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 
 .page-title {
@@ -745,15 +773,23 @@ html {
    ========================================================================== */
 .stats-overview-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
   width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1360px) {
   .stats-overview-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .stats-overview-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1132,21 +1168,305 @@ html {
    ========================================================================== */
 .site-cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
   width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1440px) {
   .site-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 860px) {
   .site-cards-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ==========================================================================
+   HEROCMS DOCS - NEAT BESPOKE TASK CARD SYSTEM
+   ========================================================================== */
+.task-card-pro {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px -2px rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.18s ease;
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  height: 100%;
+}
+
+.task-card-pro:hover {
+  transform: translateY(-2px);
+  border-color: #93c5fd;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(37, 99, 235, 0.06);
+}
+
+.task-card-pro:focus-visible {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-card-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.task-id-chip {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1e293b;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 2px 7px;
+  border-radius: 5px;
+  letter-spacing: -0.01em;
+}
+
+.task-cat-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.task-priority-chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.task-priority-chip.priority-critical {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+}
+
+.task-priority-chip.priority-high {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.task-priority-chip.priority-normal {
+  background: #f0fdf4;
+  color: #059669;
+  border: 1px solid #bbf7d0;
+}
+
+.task-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.task-card-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.38;
+  margin: 0;
+  letter-spacing: -0.015em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.task-card-lead {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.task-target-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 0.74rem;
+  color: #334155;
+  overflow: hidden;
+}
+
+.target-file-icon {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.target-lang-tag {
+  font-weight: 700;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.target-file-path {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: #475569;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-progress-box {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.task-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.74rem;
+}
+
+.progress-label {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.progress-val {
+  color: #0f172a;
+}
+
+.progress-pct {
+  color: #64748b;
+  font-size: 0.7rem;
+}
+
+.task-progress-bar {
+  height: 5px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.task-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.task-progress-fill.fill-completed {
+  background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+}
+
+.task-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: auto;
+}
+
+.task-handover-info {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.task-avatar-mini {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.68rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #bfdbfe;
+  flex-shrink: 0;
+}
+
+.task-handover-text {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 0.74rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.handover-sub {
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+.handover-name {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.task-read-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #2563eb;
+  flex-shrink: 0;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.task-card-pro:hover .task-read-cta {
+  color: #1d4ed8;
+}
+
+.task-card-pro:hover .cta-arrow {
+  transform: translateX(3px);
+}
+
+.cta-arrow {
+  transition: transform 0.15s ease;
 }
 
 .pro-site-card {
@@ -13205,11 +13525,13 @@ html {
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 28px;
   align-items: start;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1280px) {
   .reader-layout-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -13220,6 +13542,15 @@ html {
   border-radius: 14px;
   padding: 32px 36px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .reader-main-content {
+    padding: 20px 18px;
+  }
 }
 
 .reader-edge-callout {
@@ -13666,6 +13997,8 @@ html {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .inspector-card {
@@ -13674,6 +14007,8 @@ html {
   border-radius: 12px;
   padding: 18px 20px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .inspector-title {
@@ -13692,22 +14027,40 @@ html {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 
 .spec-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
+  gap: 8px;
   font-size: 12.5px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .spec-k {
   color: #64748b;
+  font-size: 0.76rem;
+  flex-shrink: 0;
 }
 
 .spec-v {
   color: #0f172a;
   font-weight: 600;
+  font-size: 0.78rem;
+  word-break: break-word;
+  text-align: right;
+  max-width: 100%;
+}
+
+.spec-row .nav-badge {
+  max-width: 165px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .spec-code {
@@ -20210,4 +20563,713 @@ html {
   .cms-pages-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================================================
+   HEROCMS DOCS - SOP & ARCHITECTURE ARTICLE READER & CARDS SUITE
+   ========================================================================== */
+
+/* ==========================================================================
+   HEROCMS DOCS - SOP & ARCHITECTURE ARTICLE READER & CARDS SUITE
+   ========================================================================== */
+
+/* 0. Standalone Category Filter Chips Strip */
+.category-filter-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.category-chip:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.category-chip.active {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+}
+
+.category-chip .chip-count {
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.category-chip.active .chip-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+/* 1. SOP Card Pro (Clean, Balanced & Aligned) */
+.sop-card-pro {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.sop-card-pro:hover {
+  transform: translateY(-2px);
+  border-color: #93c5fd;
+  box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.1);
+}
+
+.sop-card-pro .card-top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sop-card-pro .sop-badges-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.sop-card-pro .sop-id-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 7px;
+  border-radius: 5px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.sop-card-pro .sop-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.38;
+  margin: 0;
+  letter-spacing: -0.015em;
+  word-break: break-word;
+}
+
+.sop-card-pro .sop-purpose {
+  font-size: 0.83rem;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sop-flow-preview,
+.bp-flow-preview,
+.flow-preview-strip,
+.sop-card-pro .sop-flow-preview,
+.blueprint-card-pro .bp-flow-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 9px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.flow-preview-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.flow-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  min-width: 0;
+  flex: 1;
+}
+
+.flow-pill-mini {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  min-width: 0;
+}
+
+.flow-pill-more {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.flow-sep {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.sop-card-pro .sop-card-footer,
+.blueprint-card-pro .bp-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.76rem;
+  color: #64748b;
+  margin-top: auto;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sop-card-pro .sop-pic-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Universal Action Buttons on Cards (PRD, Kamus, Keamanan, SOP) */
+.btn-read-sop,
+.btn-read-doc,
+.btn-read-card,
+.btn-read-blueprint,
+.sop-card-pro .btn-read-sop,
+.blueprint-card-pro .btn-read-sop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: #2563eb !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 8px;
+  padding: 6px 13px !important;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08);
+}
+
+.btn-read-sop:hover,
+.btn-read-doc:hover,
+.btn-read-card:hover,
+.btn-read-blueprint:hover,
+.sop-card-pro:hover .btn-read-sop,
+.blueprint-card-pro:hover .btn-read-sop {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
+  transform: translateY(-1px);
+}
+
+
+/* 2. Blueprint Card Pro */
+.blueprint-card-pro {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+.blueprint-card-pro:hover {
+  transform: translateY(-2px);
+  border-color: #6ee7b7;
+  box-shadow: 0 10px 24px -4px rgba(5, 150, 105, 0.1);
+}
+
+.blueprint-card-pro .bp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.blueprint-card-pro .bp-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  border: 1px solid #d1fae5;
+}
+
+.blueprint-card-pro .bp-title-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.blueprint-card-pro .bp-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.blueprint-card-pro .bp-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  word-break: break-word;
+}
+
+.blueprint-card-pro .bp-definition {
+  font-size: 0.83rem;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.blueprint-card-pro .bp-requirements-box {
+  min-width: 0;
+}
+
+.blueprint-card-pro .bp-requirements-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.blueprint-card-pro .bp-requirements-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.blueprint-card-pro .bp-req-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  padding: 2px 7px;
+  border-radius: 5px;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blueprint-card-pro .bp-req-more {
+  font-size: 0.68rem;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.blueprint-card-pro .bp-file-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: #475569;
+  background: #f8fafc;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #edf2f7;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.blueprint-card-pro .bp-file-text {
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.blueprint-card-pro .bp-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.76rem;
+  margin-top: auto;
+  min-width: 0;
+}
+
+.blueprint-card-pro .bp-status-badge {
+  color: #059669;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+/* 3. Connected Step Pipeline Flowchart (Enterprise Clean) */
+.flowchart-pipeline-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  gap: 0;
+}
+
+.pipeline-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+  padding-bottom: 18px;
+}
+
+.pipeline-step-item:last-child {
+  padding-bottom: 0;
+}
+
+.pipeline-step-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  position: relative;
+  z-index: 2;
+}
+
+.pipeline-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #eff6ff;
+  border: 2px solid #2563eb;
+  color: #1d4ed8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15);
+}
+
+.pipeline-step-item.step-emerald .pipeline-step-num {
+  background: #ecfdf5;
+  border-color: #059669;
+  color: #047857;
+  box-shadow: 0 2px 5px rgba(5, 150, 105, 0.15);
+}
+
+.pipeline-step-line {
+  position: absolute;
+  top: 32px;
+  bottom: 0;
+  width: 2px;
+  background: #cbd5e1;
+  left: 15px;
+  z-index: 1;
+}
+
+.pipeline-step-body {
+  flex: 1;
+  min-width: 0;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  transition: all 0.18s ease;
+}
+
+.pipeline-step-body:hover {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.06);
+}
+
+.pipeline-step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.pipeline-step-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.pipeline-step-item.step-emerald .pipeline-step-tag {
+  color: #059669;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.pipeline-step-text {
+  font-size: 0.88rem;
+  color: #1e293b;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+  word-break: break-word;
+}
+
+/* 4. DND (Do's and Don'ts) Matrix Columns */
+.dnd-matrix-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 8px;
+}
+
+.dnd-column {
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dnd-column.dos {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.dnd-column.donts {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.dnd-column .dnd-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.dnd-column.dos .dnd-header { color: #065f46; }
+.dnd-column.donts .dnd-header { color: #991b1b; }
+
+.dnd-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dnd-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.dnd-column.dos .dnd-list li { color: #047857; }
+.dnd-column.donts .dnd-list li { color: #b91c1c; }
+
+/* 5. Terminal / macOS Code Box */
+.terminal-code-card {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.2);
+  min-width: 0;
+}
+
+.terminal-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  min-width: 0;
+}
+
+.terminal-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.terminal-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.terminal-dots .dot-red { background: #ef4444; }
+.terminal-dots .dot-yellow { background: #f59e0b; }
+.terminal-dots .dot-green { background: #10b981; }
+
+.terminal-code-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.terminal-code-body {
+  padding: 14px 16px;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: #38bdf8;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* 6. Step Test List for Live Testing */
+.step-test-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step-test-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.84rem;
+  color: #334155;
+  line-height: 1.55;
+}
+
+.step-test-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
 }

@@ -31,7 +31,7 @@ func main() {
 	}
 
 	log.Printf("==================================================================")
-	log.Printf("HeroCMS Service 07: Docs & Mission Control Hub (v1.15.0)")
+	log.Printf("HeroCMS Service 07: Docs & Mission Control Hub (v1.2.0)")
 	log.Printf("Port: %s | DataDir: %s | DistDir: %s", port, dataDir, distDir)
 	log.Printf("==================================================================")
 

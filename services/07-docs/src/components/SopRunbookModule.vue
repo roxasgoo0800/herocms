@@ -1,53 +1,51 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Search, X, Terminal, CheckCircle2 } from 'lucide-vue-next';
+import { Search, X, Terminal, CheckCircle2, XCircle, ArrowRight, User } from 'lucide-vue-next';
 import { useDocsStore } from '../stores/docsStore';
+import type { EnterpriseSop } from '../types/docs';
 
 const store = useDocsStore();
 const searchQuery = ref('');
 const selectedCategory = ref('Semua Kategori');
 
-const categories = [
-  'Semua Kategori',
-  'Git & Collaboration',
-  'Workflow & Checklist',
-  'Microservices Compliance',
-  'Database & Migration',
-  'Security & Pentest',
-  'Orchestrator & Docker',
-  'API Contract & OpenAPI',
-  'Incident & Rollback',
-  'Performance & Vitals'
-];
+const categories = computed(() => {
+  const cats = Array.from(new Set(store.sops.map(s => s.category)));
+  return ['Semua Kategori', ...cats];
+});
 
 const filteredSops = computed(() => {
   const q = searchQuery.value.toLowerCase().trim();
   const cat = selectedCategory.value;
 
   return store.sops.filter(s => {
-    const matchCat = cat === 'Semua Kategori' || s.category.toLowerCase().includes(cat.toLowerCase().replace('&', '').trim());
+    const matchCat = cat === 'Semua Kategori' || s.category === cat;
     if (!matchCat) return false;
     if (!q) return true;
     return (
       s.title.toLowerCase().includes(q) ||
       s.id.toLowerCase().includes(q) ||
       s.category.toLowerCase().includes(q) ||
-      s.pic.toLowerCase().includes(q)
+      s.pic.toLowerCase().includes(q) ||
+      s.purpose.toLowerCase().includes(q)
     );
   });
 });
+
+const openSopReader = (sop: EnterpriseSop) => {
+  store.openSop(sop);
+};
 </script>
 
 <template>
   <div class="sop-runbook-module fade-in-section">
     <!-- Filter Toolbar -->
     <div class="filter-toolbar">
-      <div class="search-command-shell" style="width: 420px;">
+      <div class="search-command-shell" style="max-width: 420px; width: 100%;">
         <Search :size="15" class="search-lead-glyph" />
         <input 
           v-model="searchQuery"
           type="text" 
-          placeholder="Cari SOP, nomor ID, topik git, atau nama personil..."
+          placeholder="Cari SOP, nomor ID, alur git, atau nama PIC..."
           class="search-command-input"
         />
         <button v-if="searchQuery" class="btn-clear-search" @click="searchQuery = ''" title="Bersihkan">
@@ -63,76 +61,87 @@ const filteredSops = computed(() => {
       </div>
     </div>
 
-    <!-- Category Filter Pills -->
-    <div class="segmented-filter-bar" style="margin-bottom: 24px; flex-wrap: wrap;">
+    <!-- Category Filter Chips (Dynamically Synced with Dataset) -->
+    <div class="category-filter-strip">
       <button 
         v-for="cat in categories" 
         :key="cat"
-        class="segment-pill"
+        class="category-chip"
         :class="{ active: selectedCategory === cat }"
         @click="selectedCategory = cat"
       >
         <span>{{ cat }}</span>
+        <span v-if="cat === 'Semua Kategori'" class="chip-count">{{ store.sops.length }}</span>
+        <span v-else class="chip-count">{{ store.sops.filter(s => s.category === cat).length }}</span>
       </button>
     </div>
 
-    <!-- SOP Cards Grid -->
-    <div class="site-cards-grid">
+    <!-- Empty State if Search Fails -->
+    <div v-if="filteredSops.length === 0" class="empty-state-card" style="padding: 48px 24px; text-align: center; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 14px;">
+      <Terminal :size="42" color="#94a3b8" style="margin-bottom: 12px;" />
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Tidak Ada SOP yang Cocok</h3>
+      <p style="color: #64748b; font-size: 0.85rem; margin: 0;">Silakan bersihkan kata kunci atau pilih tab "Semua Kategori".</p>
+    </div>
+
+    <!-- SOP Cards Grid (Clean, Aligned & Pro Layout) -->
+    <div v-else class="site-cards-grid">
       <div 
         v-for="sop in filteredSops" 
         :key="sop.id"
-        class="pro-site-card"
-        style="--card-accent: #2563eb;"
+        class="sop-card-pro"
+        @click="openSopReader(sop)"
       >
-        <!-- Head -->
-        <div class="card-head">
-          <div class="site-branding">
-            <div class="site-icon-box" style="background: #eff6ff; color: #2563eb;">
-              <Terminal :size="20" />
-            </div>
-            <div class="site-branding-info">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span class="nav-badge" style="font-family: 'JetBrains Mono', monospace;">{{ sop.id }}</span>
-                <span class="nav-badge badge-primary">{{ sop.badge }}</span>
-              </div>
-              <h3 class="brand-title" style="font-size: 1rem; font-weight: 700; color: #0f172a; margin-top: 2px; line-height: 1.35; white-space: normal;">
-                {{ sop.title }}
-              </h3>
-            </div>
+        <!-- Top Metadata Row -->
+        <div class="card-top-header">
+          <div class="sop-badges-left">
+            <span class="sop-id-chip">{{ sop.id }}</span>
+            <span class="nav-badge badge-primary">{{ sop.category }}</span>
           </div>
+          <span class="nav-badge badge-warning">{{ sop.badge }}</span>
         </div>
 
-        <!-- PIC & Category Strip -->
-        <div class="card-momentum-strip" style="cursor: default; padding: 8px 12px;">
-          <div class="momentum-left-meta">
-            <span style="font-size: 0.74rem; color: #64748b;">
-              Kategori: <strong>{{ sop.category }}</strong>
+        <!-- Title & Purpose -->
+        <div>
+          <h3 class="sop-title">{{ sop.title }}</h3>
+          <p class="sop-purpose" style="margin-top: 6px;">{{ sop.purpose }}</p>
+        </div>
+
+        <!-- Flowchart Preview Mini Ribbon -->
+        <div v-if="sop.flowchart && sop.flowchart.length > 0" class="sop-flow-preview">
+          <span class="flow-preview-label">Alur:</span>
+          <div class="flow-pills-row">
+            <template v-for="(node, nIdx) in sop.flowchart.slice(0, 2)" :key="nIdx">
+              <span class="flow-pill-mini" :title="node">{{ node }}</span>
+              <span v-if="nIdx === 0 && sop.flowchart.length > 1" class="flow-sep">→</span>
+            </template>
+            <span v-if="sop.flowchart.length > 2" class="flow-pill-more" :title="sop.flowchart.slice(2).join(' → ')">
+              +{{ sop.flowchart.length - 2 }} tahap
             </span>
-            <div style="font-size: 0.74rem; color: #2563eb; margin-top: 2px;">
-              Penanggung Jawab: <strong>{{ sop.pic }}</strong>
-            </div>
           </div>
         </div>
 
-        <!-- Numbered Implementation Steps -->
-        <div class="pro-panel" style="padding: 12px 14px; background: #f8fafc; margin: 0;">
-          <div style="font-size: 0.72rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 8px;">
-            📋 Langkah Prosedur Kerja:
-          </div>
-          <ol style="margin: 0; padding-left: 20px; font-size: 0.82rem; color: #334155; line-height: 1.55;">
-            <li v-for="(step, sIdx) in sop.steps" :key="sIdx" style="margin-bottom: 4px;">
-              {{ step }}
-            </li>
-          </ol>
-        </div>
-
-        <!-- Bottom Status -->
-        <div style="display: flex; justify-content: space-between; align-items: center; pt: 8px; border-top: 1px solid #f1f5f9;">
-          <span style="font-size: 0.74rem; color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+        <!-- Do's and Don'ts Summary Indicator -->
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 0.74rem; flex-wrap: wrap;">
+          <span style="display: inline-flex; align-items: center; gap: 4px; color: #059669; font-weight: 700;">
             <CheckCircle2 :size="13" />
-            <span>Standar Aktif Seluruh Tim</span>
+            <span>{{ sop.dos.length }} Do's</span>
           </span>
-          <span class="nav-badge">Wajib Dipatuhi</span>
+          <span style="display: inline-flex; align-items: center; gap: 4px; color: #dc2626; font-weight: 700;">
+            <XCircle :size="13" />
+            <span>{{ sop.donts.length }} Don'ts</span>
+          </span>
+        </div>
+
+        <!-- Bottom Footer: PIC & Open Action Button -->
+        <div class="sop-card-footer">
+          <div class="sop-pic-info">
+            <User :size="13" color="#64748b" />
+            <span>PIC: <strong style="color: #0f172a;">{{ sop.pic }}</strong></span>
+          </div>
+          <button class="btn-read-sop" @click.stop="openSopReader(sop)">
+            <span>Baca SOP</span>
+            <ArrowRight :size="14" />
+          </button>
         </div>
       </div>
     </div>

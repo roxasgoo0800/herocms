@@ -1,8 +1,19 @@
 import { defineStore } from 'pinia';
-import type { TaskItem, TelemetryStats } from '../types/docs';
+import type {
+  TaskItem,
+  TelemetryStats,
+  EnterpriseSop,
+  ArchitectureBlueprint,
+  MicroservicePrd,
+  SecurityStandard,
+  SystemJourney
+} from '../types/docs';
 import { teamMembers, microservicesList } from '../data/team';
 import { architectureBlueprints } from '../data/blueprints';
 import { enterpriseSops } from '../data/sops';
+import { microservicePrds } from '../data/prds';
+import { securityStandards } from '../data/security';
+import { systemJourneys } from '../data/journeys';
 
 export const useDocsStore = defineStore('docsStore', {
   state: () => ({
@@ -11,13 +22,22 @@ export const useDocsStore = defineStore('docsStore', {
     groupingMode: 'division' as 'division' | 'service',
     selectedFilter: 'all',
     searchQuery: '',
-    activeTab: 'tasks' as 'tasks' | 'services' | 'blueprints' | 'sops' | 'paijo',
+    activeTab: 'tasks' as 'tasks' | 'services' | 'prds' | 'blueprints' | 'journeys' | 'security' | 'sops' | 'paijo',
     activeTask: null as TaskItem | null,
+    activeSop: null as EnterpriseSop | null,
+    activeBlueprint: null as ArchitectureBlueprint | null,
+    activePrd: null as MicroservicePrd | null,
+    activeSecurity: null as SecurityStandard | null,
+    activeJourney: null as SystemJourney | null,
+    isReaderSidebarHidden: false,
     toastMessage: null as string | null,
     members: teamMembers,
     microservices: microservicesList,
     blueprints: architectureBlueprints,
-    sops: enterpriseSops
+    sops: enterpriseSops,
+    prds: microservicePrds,
+    securityStandards: securityStandards,
+    journeys: systemJourneys
   }),
 
   getters: {
@@ -28,7 +48,10 @@ export const useDocsStore = defineStore('docsStore', {
         totalServices: state.microservices.length,
         totalMembers: state.members.length,
         totalBlueprints: state.blueprints.length,
-        totalSops: state.sops.length
+        totalSops: state.sops.length,
+        totalPrds: state.prds.length,
+        totalSecurityPillars: state.securityStandards.length,
+        totalJourneys: state.journeys.length
       };
     },
 
@@ -130,8 +153,14 @@ export const useDocsStore = defineStore('docsStore', {
       this.selectedFilter = filter;
     },
 
-    setActiveTab(tab: 'tasks' | 'services' | 'blueprints' | 'sops' | 'paijo') {
+    setActiveTab(tab: 'tasks' | 'services' | 'prds' | 'blueprints' | 'journeys' | 'security' | 'sops' | 'paijo') {
       this.activeTab = tab;
+      this.activeTask = null;
+      this.activeSop = null;
+      this.activeBlueprint = null;
+      this.activePrd = null;
+      this.activeSecurity = null;
+      this.activeJourney = null;
       if (tab === 'tasks') {
         this.groupingMode = 'division';
       } else if (tab === 'services') {
@@ -141,10 +170,200 @@ export const useDocsStore = defineStore('docsStore', {
 
     openTask(task: TaskItem) {
       this.activeTask = task;
+      this.activeSop = null;
+      this.activeBlueprint = null;
+      this.activePrd = null;
+      this.activeSecurity = null;
+      this.activeJourney = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
     closeTask() {
       this.activeTask = null;
+    },
+
+    openSop(sop: EnterpriseSop) {
+      this.activeSop = sop;
+      this.activeTask = null;
+      this.activeBlueprint = null;
+      this.activePrd = null;
+      this.activeSecurity = null;
+      this.activeJourney = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    closeSop() {
+      this.activeSop = null;
+    },
+
+    openBlueprint(bp: ArchitectureBlueprint) {
+      this.activeBlueprint = bp;
+      this.activeTask = null;
+      this.activeSop = null;
+      this.activePrd = null;
+      this.activeSecurity = null;
+      this.activeJourney = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    closeBlueprint() {
+      this.activeBlueprint = null;
+    },
+
+    openPrd(prd: MicroservicePrd) {
+      this.activePrd = prd;
+      this.activeTask = null;
+      this.activeSop = null;
+      this.activeBlueprint = null;
+      this.activeSecurity = null;
+      this.activeJourney = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    closePrd() {
+      this.activePrd = null;
+    },
+
+    openSecurity(sec: SecurityStandard) {
+      this.activeSecurity = sec;
+      this.activeTask = null;
+      this.activeSop = null;
+      this.activeBlueprint = null;
+      this.activePrd = null;
+      this.activeJourney = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    closeSecurity() {
+      this.activeSecurity = null;
+    },
+
+    openJourney(jrn: SystemJourney) {
+      this.activeJourney = jrn;
+      this.activeTask = null;
+      this.activeSop = null;
+      this.activeBlueprint = null;
+      this.activePrd = null;
+      this.activeSecurity = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    closeJourney() {
+      this.activeJourney = null;
+    },
+
+    toggleReaderSidebar() {
+      this.isReaderSidebarHidden = !this.isReaderSidebarHidden;
+    },
+
+    nextTask() {
+      if (!this.activeTask) return;
+      const list = this.filteredTasks.length > 0 ? this.filteredTasks : this.tasks;
+      const idx = list.findIndex(t => t.id === this.activeTask?.id);
+      if (idx !== -1 && idx < list.length - 1) {
+        this.activeTask = list[idx + 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    prevTask() {
+      if (!this.activeTask) return;
+      const list = this.filteredTasks.length > 0 ? this.filteredTasks : this.tasks;
+      const idx = list.findIndex(t => t.id === this.activeTask?.id);
+      if (idx > 0) {
+        this.activeTask = list[idx - 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    nextSop() {
+      if (!this.activeSop) return;
+      const idx = this.sops.findIndex(s => s.id === this.activeSop?.id);
+      if (idx !== -1 && idx < this.sops.length - 1) {
+        this.activeSop = this.sops[idx + 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    prevSop() {
+      if (!this.activeSop) return;
+      const idx = this.sops.findIndex(s => s.id === this.activeSop?.id);
+      if (idx > 0) {
+        this.activeSop = this.sops[idx - 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    nextBlueprint() {
+      if (!this.activeBlueprint) return;
+      const idx = this.blueprints.findIndex(b => b.id === this.activeBlueprint?.id);
+      if (idx !== -1 && idx < this.blueprints.length - 1) {
+        this.activeBlueprint = this.blueprints[idx + 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    prevBlueprint() {
+      if (!this.activeBlueprint) return;
+      const idx = this.blueprints.findIndex(b => b.id === this.activeBlueprint?.id);
+      if (idx > 0) {
+        this.activeBlueprint = this.blueprints[idx - 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    nextPrd() {
+      if (!this.activePrd) return;
+      const idx = this.prds.findIndex(p => p.id === this.activePrd?.id);
+      if (idx !== -1 && idx < this.prds.length - 1) {
+        this.activePrd = this.prds[idx + 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    prevPrd() {
+      if (!this.activePrd) return;
+      const idx = this.prds.findIndex(p => p.id === this.activePrd?.id);
+      if (idx > 0) {
+        this.activePrd = this.prds[idx - 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    nextSecurity() {
+      if (!this.activeSecurity) return;
+      const idx = this.securityStandards.findIndex(s => s.id === this.activeSecurity?.id);
+      if (idx !== -1 && idx < this.securityStandards.length - 1) {
+        this.activeSecurity = this.securityStandards[idx + 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    prevSecurity() {
+      if (!this.activeSecurity) return;
+      const idx = this.securityStandards.findIndex(s => s.id === this.activeSecurity?.id);
+      if (idx > 0) {
+        this.activeSecurity = this.securityStandards[idx - 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    nextJourney() {
+      if (!this.activeJourney) return;
+      const idx = this.journeys.findIndex(j => j.id === this.activeJourney?.id);
+      if (idx !== -1 && idx < this.journeys.length - 1) {
+        this.activeJourney = this.journeys[idx + 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+
+    prevJourney() {
+      if (!this.activeJourney) return;
+      const idx = this.journeys.findIndex(j => j.id === this.activeJourney?.id);
+      if (idx > 0) {
+        this.activeJourney = this.journeys[idx - 1];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     },
 
     showToast(message: string) {

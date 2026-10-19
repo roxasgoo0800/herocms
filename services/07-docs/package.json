@@ -1,11 +1,11 @@
 {
   "name": "herocms-docs-platform",
   "private": true,
-  "version": "1.15.0",
+  "version": "1.4.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "server": "go run cmd/server/main.go"
   },

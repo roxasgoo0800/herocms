@@ -67,6 +67,7 @@ export const microservicesList: MicroserviceMeta[] = [
   {
     id: "01-admin-console",
     name: "Service 01: Admin Console & Billing",
+    version: "v1.2.0",
     path: "services/01-admin-console",
     stack: "Laravel 11 • Filament v3 • PHP 8.3 • Midtrans / Xendit",
     pic: "Andalusia, Risqi & Paijo (QA)",
@@ -85,6 +86,7 @@ export const microservicesList: MicroserviceMeta[] = [
   {
     id: "02-dashboard-cms",
     name: "Service 02: Dashboard Studio & Go BFF",
+    version: "v1.14.27",
     path: "services/02-dashboard-cms",
     stack: "Vue 3 • Vite • Pinia • Gin Golang (Port 8085) • Redis • MinIO",
     pic: "Irgi, Rizal, Andalusia & Paijo (QA)",
@@ -104,6 +106,7 @@ export const microservicesList: MicroserviceMeta[] = [
   {
     id: "03-provision-orchestrator",
     name: "Service 03: Container Provision Orchestrator & Infra",
+    version: "v1.8.0",
     path: "services/03-provision-orchestrator",
     stack: "Golang • Docker Engine SDK • Linux cgroups v2 • Traefik v3",
     pic: "Andalusia, Rizal & Paijo (QC)",
@@ -123,6 +126,7 @@ export const microservicesList: MicroserviceMeta[] = [
   {
     id: "04-marketing-site",
     name: "Service 04: Marketing Site & Public Landing",
+    version: "v1.9.2",
     path: "services/04-marketing-site",
     stack: "React 19 • TypeScript • Tailwind CSS • Vite",
     pic: "Irgi & Paijo (QA)",
@@ -140,6 +144,7 @@ export const microservicesList: MicroserviceMeta[] = [
   {
     id: "05-ai-agent-service",
     name: "Service 05: AI Agent Service & Workflows",
+    version: "v1.3.0",
     path: "services/05-ai-agent-service",
     stack: "Golang / Python • Gemini API • Claude LLM • n8n",
     pic: "Andalusia",
@@ -157,6 +162,7 @@ export const microservicesList: MicroserviceMeta[] = [
   {
     id: "06-mobile-companion",
     name: "Service 06: Mobile Companion Platform",
+    version: "v1.0.0",
     path: "mobile-companion/",
     stack: "Flutter / React Native • Firebase Cloud Messaging (FCM)",
     pic: "Tyno",
@@ -169,6 +175,26 @@ export const microservicesList: MicroserviceMeta[] = [
     ],
     forbidden: [
       "Dilarang membebani aplikasi mobile dengan canvas page builder drag-and-drop"
+    ]
+  },
+  {
+    id: "07-docs",
+    name: "Service 07: Team SOP & Enterprise Documentation Hub",
+    version: "v1.3.0",
+    path: "services/07-docs",
+    stack: "Vue 3 • Vite • Pinia • Go BFF (Port 8087) • SQLite (WAL)",
+    pic: "Rizal & Paijo (QA)",
+    icon: "📚",
+    lead: "Pusat dokumentasi tim enterprise, kamus blueprint arsitektur, sprint board interaktif, SOP operasional, reader view artikel komprehensif, dan verifikasi pentest otomatis.",
+    mandates: [
+      "Zero-CSS Duplication menggunakan studio-master.css",
+      "Mode baca artikel distraction-free reader view",
+      "Pemisahan data statis di src/data/*.ts",
+      "Audit pentest sebelum commit"
+    ],
+    forbidden: [
+      "Dilarang menumpuk modal popup berat untuk membaca artikel dokumentasi",
+      "Dilarang menyatukan versi microservices yang berbeda menjadi satu versi monolitik"
     ]
   }
 ];
