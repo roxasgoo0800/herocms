@@ -2,11 +2,32 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.15',
+    releaseDate: '19 Oktober 2026',
+    title: 'Integrasi Skill Pentest Pre-Commit & Audit Keamanan Mandatori Sebelum PR',
+    summary: 'Menambahkan skill resmi herocms-pentest-runner (.agents/skills/herocms-pentest-runner) dan menetapkan Bagian 9 pada AGENTS.md mengenai standar audit keamanan mandatori. Setiap pengembang dan AI Agent diwajibkan menjalankan rangkaian pengujian pentest black-box HTTP di direktori pentest/ sebelum melakukan git commit atau membuka Pull Request.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11415-1',
+        type: 'feature',
+        scope: 'Pre-Commit & Pre-PR Pentest Skill',
+        description: 'Membuat modul skill herocms-pentest-runner yang memandu eksekusi otomatis audit Traefik injection, Redis injection, brute-force auth, dan path traversal.'
+      },
+      {
+        id: 'c-11415-2',
+        type: 'improvement',
+        scope: 'AGENTS.md Mandatory Security Standard',
+        description: 'Menambahkan aturan Section 9 pada AGENTS.md yang mewajibkan status 100% PASS pada suite pentest sebelum kode di-push dan di-merge ke main.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.14',
     releaseDate: '19 Oktober 2026',
     title: 'Isolasi Rangkaian Uji & Pentest ke Direktori Terpusat pentest/',
     summary: 'Memisahkan seluruh berkas pengujian penetrasi (pentest) dan unit test (*_test.go) dari direktori kode produksi (services/*) ke direktori root pentest/ terisolasi. Penataan ini memastikan kode aplikasi tetap bersih, rapi, dan modular tanpa mencampurkan skrip pengujian internal ke dalam pohon berkas implementasi layanan.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
