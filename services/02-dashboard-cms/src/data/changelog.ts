@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.24',
+    releaseDate: '19 Oktober 2026',
+    title: 'Pemisahan Matriks Tugas Berdasarkan 6 Microservices & Dual-Grouping Mode (Divisi & Services)',
+    summary: 'Menyediakan pemisahan matriks pekerjaan bisnis berdasarkan 6 layanan microservices arsitektur HeroCMS (01-admin-console, 02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, 05-ai-agent-service, 06-mobile-companion) di samping pengelompokan 5 divisi keahlian tim, menambahkan toggle switcher interaktif dan tab navigasi khusus per-service di portal Mission Control, serta menyinkronkan TASK_CHECKLIST.md.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / Paijo AI Agent (PM)',
+    items: [
+      {
+        id: 'c-11424-1',
+        type: 'feature',
+        scope: 'Dual-Mode Task Grouping (Division & Service)',
+        description: 'Menambahkan tombol pengalih (toggle) dan tab navigasi mandiri untuk melihat 45 tugas bisnis terkelompok berdasarkan 5 Divisi Tim atau berdasarkan 6 Microservices.'
+      },
+      {
+        id: 'c-11424-2',
+        type: 'feature',
+        scope: '6 Microservices Architecture Granular Mapping',
+        description: 'Memetakan seluruh 45 task ke dalam 6 direktori service: Service 01 Admin Console (4 tasks), Service 02 Studio & BFF (29 tasks), Service 03 Orchestrator & Infra (6 tasks), Service 04 Marketing Site (1 task), Service 05 AI Agent Service (3 tasks), dan Service 06 Mobile Companion (2 tasks).'
+      },
+      {
+        id: 'c-11424-3',
+        type: 'improvement',
+        scope: 'Interactive Service Filter Pills & Dynamic Metadata',
+        description: 'Menghadirkan pil filter per-service (01 Admin, 02 Studio, 03 Orchestrator, 04 Marketing, 05 AI Agent, 06 Mobile) dengan informasi direktori path, tech stack, dan PIC penanggung jawab service.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.23',
     releaseDate: '19 Oktober 2026',
     title: 'Penataan Roster 5 Anggota Tim, Eliminasi Kartu Pelaksana & Kamus Arsitektur Ramah Pengguna',
     summary: 'Memperbarui profil keahlian 5 anggota tim inti (Andalusia Full Stack Lead jago BE & FE, Irgi Frontend Web Specialist, Risqi Database Management Specialist, Rizal DevOps/Security & Rancang Bangun Awal, Tyno Mobile Specialist) serta menegaskan peran Paijo AI sebagai Active Project Manager, menghapus kartu Pelaksana Aktif dari telemetri, dan memaparkan seluruh komponen arsitektur sistem ke dalam istilah teknis yang manusiawi dan mudah dipahami.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / Paijo AI Agent (PM)',
     items: [
       {

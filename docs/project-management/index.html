@@ -1173,6 +1173,59 @@
       text-align: center;
       margin-top: 3rem;
     }
+    /* Service & Grouping Toggles */
+    .grouping-toggle-bar {
+      display: inline-flex;
+      background: var(--bg-surface-alt);
+      padding: 0.25rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 1.25rem;
+      gap: 0.25rem;
+    }
+
+    .group-toggle-btn {
+      border: none;
+      background: transparent;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .group-toggle-btn:hover {
+      color: var(--text-main);
+    }
+
+    .group-toggle-btn.active {
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .service-badge-pill {
+      background: #eff6ff;
+      color: var(--brand-blue);
+      border: 1px solid #bfdbfe;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .service-meta-lead {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      line-height: 1.45;
+    }
   </style>
 </head>
 <body>
@@ -1271,12 +1324,16 @@
     <div class="nav-tabs-bar">
       <div class="tabs-group">
         <button class="tab-btn active" id="tab-btn-tasks" onclick="switchMainTab('tasks')">
-          <span>📋 Papan Tugas per Divisi</span>
-          <span class="tab-counter" id="tab-count-tasks">37</span>
+          <span>📋 Papan Tugas per Divisi (5 Tim)</span>
+          <span class="tab-counter" id="tab-count-tasks">45</span>
+        </button>
+        <button class="tab-btn" id="tab-btn-services" onclick="switchMainTab('services')">
+          <span>🏢 Papan Tugas per Service (6 Area)</span>
+          <span class="tab-counter">6 Services</span>
         </button>
         <button class="tab-btn" id="tab-btn-dict" onclick="switchMainTab('dict')">
           <span>📖 Kamus Arsitektur</span>
-          <span class="tab-counter" id="tab-count-dict">8</span>
+          <span class="tab-counter" id="tab-count-dict">12</span>
         </button>
         <button class="tab-btn" id="tab-btn-sop" onclick="switchMainTab('sop')">
           <span>🛡️ SOP & Runbook Tim</span>
@@ -1542,6 +1599,63 @@ Lapor Paijo:
       { id: "Tyno", name: "Divisi Mobile Companion Platform", pic: "Rizal (Kontrak API Siap)", icon: "📱", handover: "Tyno (Target Handover Mobile)" }
     ];
 
+    const serviceMetadata = [
+      { 
+        id: "01-admin-console", 
+        name: "Service 01: Admin Console & Billing", 
+        path: "services/01-admin-console",
+        stack: "Laravel 11 • Filament v3 • PHP 8.3 • Midtrans",
+        pic: "Andalusia & Risqi",
+        icon: "🏛️", 
+        lead: "Panel kontrol internal superadmin untuk mengelola tenant, verifikasi langganan, pelacakan faktur, webhook Midtrans/Xendit, dan penyelesaian tiket support." 
+      },
+      { 
+        id: "02-dashboard-cms", 
+        name: "Service 02: Dashboard Studio & Go BFF", 
+        path: "services/02-dashboard-cms",
+        stack: "Vue 3 • Vite • Pinia • Gin Golang • Redis • S3",
+        pic: "Irgi, Rizal & Andalusia",
+        icon: "🎨", 
+        lead: "Pusat antarmuka utama pengguna (12 Modul Studio) dan backend Go BFF (port 8085) untuk manajemen kontainer, visual editor blok, artikel, aset media, custom domain, dan analitik." 
+      },
+      { 
+        id: "03-provision-orchestrator", 
+        name: "Service 03: Container Provision Orchestrator & Infra", 
+        path: "services/03-provision-orchestrator",
+        stack: "Golang • Docker Engine SDK • Linux cgroups v2 • Traefik v3",
+        pic: "Andalusia & Rizal",
+        icon: "⚙️", 
+        lead: "Mesin otonom pembuat dan pengatur siklus hidup kontainer Docker mandiri tenant dengan cgroups sandboxing (RAM 256MB/CPU 0.5), Traefik ingress SSL, dan automated backup cron." 
+      },
+      { 
+        id: "04-marketing-site", 
+        name: "Service 04: Marketing Site & Public Landing", 
+        path: "services/04-marketing-site",
+        stack: "React 19 • TypeScript • Tailwind CSS • Vite",
+        pic: "Irgi",
+        icon: "🚀", 
+        lead: "Website pemasaran publik utama HeroCMS untuk landing page berkonversi tinggi, showcase playground interaktif, kalkulator harga, dan pendaftaran akun tenant baru." 
+      },
+      { 
+        id: "05-ai-agent-service", 
+        name: "Service 05: AI Agent Service & Workflows", 
+        path: "services/05-ai-agent-service",
+        stack: "Golang / Python • Gemini API • Claude LLM • n8n",
+        pic: "Andalusia",
+        icon: "🤖", 
+        lead: "Microservice kecerdasan buatan untuk copilot penulisan konten otomatis di visual editor, generator template tema website dari teks prompt, dan alur kerja n8n auto-poster." 
+      },
+      { 
+        id: "06-mobile-companion", 
+        name: "Service 06: Mobile Companion Platform", 
+        path: "mobile-companion/",
+        stack: "Flutter / React Native • Firebase Cloud Messaging",
+        pic: "Tyno",
+        icon: "📱", 
+        lead: "Aplikasi mobile smartphone Android & iOS pendamping pemilik website untuk memantau pengunjung live, menerima notifikasi pesan baru & invoice, dan reboot darurat lewat FaceID." 
+      }
+    ];
+
     const detailedTasks = [
   {
     "id": "TSK-BE-SEC-01",
@@ -1587,7 +1701,8 @@ Lapor Paijo:
       "Brute-force diblokir setelah 5 percobaan gagal",
       "Context tenant_id tervalidasi",
       "Pentest 100% Pass"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-DOM-03",
@@ -1633,7 +1748,8 @@ Lapor Paijo:
       "SSL Let's Encrypt terbit < 10 detik",
       "A+ rating pada SSL Labs",
       "Zero restart downtime"
-    ]
+    ],
+    "serviceGroup": "03-provision-orchestrator"
   },
   {
     "id": "TSK-OPS-01",
@@ -1674,7 +1790,8 @@ Lapor Paijo:
     "dod": [
       "Isolasi jaringan 100% antar-tenant",
       "Label dynamic routing terbaca otomatis"
-    ]
+    ],
+    "serviceGroup": "03-provision-orchestrator"
   },
   {
     "id": "TSK-OPS-02",
@@ -1719,7 +1836,8 @@ Lapor Paijo:
     "dod": [
       "Kontainer mati jika OOM tanpa mengganggu host",
       "Zero privilege escalation"
-    ]
+    ],
+    "serviceGroup": "03-provision-orchestrator"
   },
   {
     "id": "TSK-OPS-03",
@@ -1760,7 +1878,8 @@ Lapor Paijo:
     "dod": [
       "Suite pentest berjalan otomatis",
       "Zero FAIL status diizinkan merge"
-    ]
+    ],
+    "serviceGroup": "03-provision-orchestrator"
   },
   {
     "id": "TSK-SEC-01",
@@ -1801,7 +1920,8 @@ Lapor Paijo:
     "dod": [
       "100% test passing",
       "Zero false positives pada flow sah"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-DOM-04",
@@ -1838,7 +1958,8 @@ Lapor Paijo:
     "dod": [
       "Zero breakout vulnerability",
       "Pentest pass 100%"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-CNT-01",
@@ -1884,7 +2005,8 @@ Lapor Paijo:
       "Komponen Vue < 500 baris",
       "Zero duplicate CSS",
       "Responsif di mobile & desktop"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-CNT-05",
@@ -1925,7 +2047,8 @@ Lapor Paijo:
     "dod": [
       "Single back button standar UX",
       "Master CSS tokens applied"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-EDT-01",
@@ -1971,7 +2094,8 @@ Lapor Paijo:
       "60 FPS drag and drop",
       "Immersive fullscreen mode",
       "Pinia modular store"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-EDT-02",
@@ -2012,7 +2136,8 @@ Lapor Paijo:
     "dod": [
       "Zero XSS vulnerability",
       "Responsive multi-device viewport toggle"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-ART-01",
@@ -2057,7 +2182,8 @@ Lapor Paijo:
     "dod": [
       "2 Rows Layout sesuai AGENTS.md",
       "Zero-CSS duplication"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-ART-02",
@@ -2102,7 +2228,8 @@ Lapor Paijo:
     "dod": [
       "Distraction-free auto collapse",
       "Single header back navigation"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-MED-01",
@@ -2147,7 +2274,8 @@ Lapor Paijo:
     "dod": [
       "S3 quota visual bar",
       "Instant clipboard copy"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-TPL-01",
@@ -2188,7 +2316,8 @@ Lapor Paijo:
     "dod": [
       "Interactive iframe modal preview",
       "Master CSS tokens applied"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-DOM-01",
@@ -2233,7 +2362,8 @@ Lapor Paijo:
     "dod": [
       "PoP Anycast modal guide",
       "SSL Inspector dialog"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-ANL-01",
@@ -2278,7 +2408,8 @@ Lapor Paijo:
     "dod": [
       "Zero heavy charting bundle",
       "Master CSS telemetry tokens"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-WBH-01",
@@ -2323,7 +2454,8 @@ Lapor Paijo:
     "dod": [
       "Event selection checkboxes",
       "Log delivery status badges"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-BIL-01",
@@ -2368,7 +2500,8 @@ Lapor Paijo:
     "dod": [
       "Tiering pricing comparison",
       "Container quota usage gauge"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-INV-01",
@@ -2409,7 +2542,8 @@ Lapor Paijo:
     "dod": [
       "Invoice ledger table",
       "Year filter segment buttons"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-SUP-01",
@@ -2454,7 +2588,8 @@ Lapor Paijo:
     "dod": [
       "SLA status indicators",
       "Priority selector radio group"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-CHG-01",
@@ -2495,7 +2630,8 @@ Lapor Paijo:
     "dod": [
       "SemVer compliant display",
       "Keyboard navigation CMD+K"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-MKT-01",
@@ -2536,7 +2672,8 @@ Lapor Paijo:
     "dod": [
       "LCP < 1.2s pada Lighthouse",
       "Mobile responsive 100%"
-    ]
+    ],
+    "serviceGroup": "04-marketing-site"
   },
   {
     "id": "TSK-CNT-02",
@@ -2581,7 +2718,8 @@ Lapor Paijo:
     "dod": [
       "Waktu spawn < 4.5 detik",
       "Status kontainer terupdate di database"
-    ]
+    ],
+    "serviceGroup": "03-provision-orchestrator"
   },
   {
     "id": "TSK-CNT-03",
@@ -2622,7 +2760,8 @@ Lapor Paijo:
     "dod": [
       "Realtime log streaming",
       "Zero memory leak pada koneksi idle"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-CNT-04",
@@ -2659,7 +2798,8 @@ Lapor Paijo:
     "dod": [
       "Graceful SIGTERM execution",
       "Zero file corruption pada kontainer"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-EDT-03",
@@ -2696,7 +2836,8 @@ Lapor Paijo:
     "dod": [
       "Draft autosave latency < 150ms",
       "Published site live < 1s"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-EDT-04",
@@ -2733,7 +2874,8 @@ Lapor Paijo:
     "dod": [
       "TTFT < 800ms",
       "Valid JSON Schema output"
-    ]
+    ],
+    "serviceGroup": "05-ai-agent-service"
   },
   {
     "id": "TSK-ART-03",
@@ -2770,7 +2912,8 @@ Lapor Paijo:
     "dod": [
       "Unique slug constraint per tenant",
       "Full CRUD operations"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-MED-02",
@@ -2807,7 +2950,8 @@ Lapor Paijo:
     "dod": [
       "Presigned URL expiry 15 menit",
       "Zero backend RAM inflation"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-TPL-02",
@@ -2840,7 +2984,8 @@ Lapor Paijo:
     "dod": [
       "Compliant with Visual Editor blocks",
       "Valid JSON Schema"
-    ]
+    ],
+    "serviceGroup": "05-ai-agent-service"
   },
   {
     "id": "TSK-DOM-02",
@@ -2877,7 +3022,8 @@ Lapor Paijo:
     "dod": [
       "Background worker non-blocking",
       "Zero false positive verification"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-ANL-03",
@@ -2910,7 +3056,8 @@ Lapor Paijo:
     "dod": [
       "Zero added latency (< 0.2ms)",
       "GDPR-safe IP hashing"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-WBH-02",
@@ -2947,7 +3094,8 @@ Lapor Paijo:
     "dod": [
       "Zero internal network probing",
       "Timeout 3 seconds"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-WBH-03",
@@ -2980,7 +3128,8 @@ Lapor Paijo:
     "dod": [
       "Automated social dispatch",
       "Error fallback logging"
-    ]
+    ],
+    "serviceGroup": "05-ai-agent-service"
   },
   {
     "id": "TSK-BIL-02",
@@ -3017,7 +3166,8 @@ Lapor Paijo:
     "dod": [
       "Verifikasi SHA512 signature",
       "Idempotent payment processing"
-    ]
+    ],
+    "serviceGroup": "01-admin-console"
   },
   {
     "id": "TSK-SUP-02",
@@ -3050,7 +3200,8 @@ Lapor Paijo:
     "dod": [
       "Filament resource ready",
       "Quick inspection view"
-    ]
+    ],
+    "serviceGroup": "01-admin-console"
   },
   {
     "id": "TSK-DB-01",
@@ -3091,7 +3242,8 @@ Lapor Paijo:
     "dod": [
       "RLS enabled pada 100% tabel tenant",
       "Zero cross-tenant data leakage"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-DB-02",
@@ -3128,7 +3280,8 @@ Lapor Paijo:
     "dod": [
       "Backup terkompresi < 5 menit",
       "Retensi 30 hari aman"
-    ]
+    ],
+    "serviceGroup": "03-provision-orchestrator"
   },
   {
     "id": "TSK-ANL-02",
@@ -3165,7 +3318,8 @@ Lapor Paijo:
     "dod": [
       "Latensi agregasi < 1ms pada 10.000 req/s",
       "Data agregat sinkron"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-MED-03",
@@ -3202,7 +3356,8 @@ Lapor Paijo:
     "dod": [
       "Isolasi direktori S3 ketat",
       "Quota enforcement terverifikasi"
-    ]
+    ],
+    "serviceGroup": "02-dashboard-cms"
   },
   {
     "id": "TSK-BIL-03",
@@ -3235,7 +3390,8 @@ Lapor Paijo:
     "dod": [
       "Relasi database valid",
       "Auto-suspend query teruji"
-    ]
+    ],
+    "serviceGroup": "01-admin-console"
   },
   {
     "id": "TSK-INV-02",
@@ -3268,7 +3424,8 @@ Lapor Paijo:
     "dod": [
       "Composite index kencang",
       "RLS verified"
-    ]
+    ],
+    "serviceGroup": "01-admin-console"
   },
   {
     "id": "TSK-MOB-01",
@@ -3305,7 +3462,8 @@ Lapor Paijo:
     "dod": [
       "FaceID confirmation on reboot",
       "Offline-first caching"
-    ]
+    ],
+    "serviceGroup": "06-mobile-companion"
   },
   {
     "id": "TSK-MOB-02",
@@ -3342,7 +3500,8 @@ Lapor Paijo:
     "dod": [
       "Instant delivery < 2 detik",
       "Deep-linking ke invoice/leads"
-    ]
+    ],
+    "serviceGroup": "06-mobile-companion"
   }
 ];
 
@@ -3478,13 +3637,15 @@ Lapor Paijo:
       }
     ];
 
-    // APPLICATION STATE
-    let currentSelectedPersona = "all";
+        // APPLICATION STATE
+    let currentGroupingMode = "division"; // "division" or "service"
+    let currentSelectedFilter = "all";
     let currentSearchTerm = "";
     let activeArticleTask = null;
 
     function init() {
       renderTelemetry();
+      renderPills();
       renderGroupedTasks();
       renderDict();
       renderSop();
@@ -3502,82 +3663,161 @@ Lapor Paijo:
       }
     }
 
-    // GROUPED DIVISION RENDERING
+    function setGroupingMode(mode) {
+      currentGroupingMode = mode;
+      currentSelectedFilter = "all";
+
+      const btnDiv = document.getElementById('btn-group-division');
+      const btnSvc = document.getElementById('btn-group-service');
+      if (btnDiv && btnSvc) {
+        btnDiv.classList.toggle('active', mode === 'division');
+        btnSvc.classList.toggle('active', mode === 'service');
+      }
+
+      const tabTasks = document.getElementById('tab-btn-tasks');
+      const tabServices = document.getElementById('tab-btn-services');
+      if (tabTasks && tabServices) {
+        tabTasks.classList.toggle('active', mode === 'division');
+        tabServices.classList.toggle('active', mode === 'service');
+      }
+
+      renderPills();
+      renderGroupedTasks();
+      updateBannerText();
+    }
+
+    function renderPills() {
+      const container = document.getElementById('member-pills-container');
+      if (!container) return;
+
+      if (currentGroupingMode === 'division') {
+        container.innerHTML = `
+          <button class="pill-btn ${currentSelectedFilter === 'all' ? 'active' : ''}" onclick="filterByPill('all')">🌐 Semua Divisi (45)</button>
+          <button class="pill-btn ${currentSelectedFilter === 'Andalusia' ? 'active' : ''}" onclick="filterByPill('Andalusia')">⚙️ Andalusia (Full Stack)</button>
+          <button class="pill-btn ${currentSelectedFilter === 'Irgi' ? 'active' : ''}" onclick="filterByPill('Irgi')">🎨 Irgi (Frontend Web)</button>
+          <button class="pill-btn ${currentSelectedFilter === 'Risqi' ? 'active' : ''}" onclick="filterByPill('Risqi')">🗄️ Risqi (Database)</button>
+          <button class="pill-btn ${currentSelectedFilter === 'Tyno' ? 'active' : ''}" onclick="filterByPill('Tyno')">📱 Tyno (Mobile)</button>
+          <button class="pill-btn ${currentSelectedFilter === 'Rizal' ? 'active' : ''}" onclick="filterByPill('Rizal')">🛡️⚙️ Rizal (DevOps & Sec)</button>
+        `;
+      } else {
+        container.innerHTML = `
+          <button class="pill-btn ${currentSelectedFilter === 'all' ? 'active' : ''}" onclick="filterByPill('all')">🌐 Semua Service (45)</button>
+          <button class="pill-btn ${currentSelectedFilter === '01-admin-console' ? 'active' : ''}" onclick="filterByPill('01-admin-console')">🏛️ 01 Admin (4)</button>
+          <button class="pill-btn ${currentSelectedFilter === '02-dashboard-cms' ? 'active' : ''}" onclick="filterByPill('02-dashboard-cms')">🎨 02 Studio (29)</button>
+          <button class="pill-btn ${currentSelectedFilter === '03-provision-orchestrator' ? 'active' : ''}" onclick="filterByPill('03-provision-orchestrator')">⚙️ 03 Orchestrator (6)</button>
+          <button class="pill-btn ${currentSelectedFilter === '04-marketing-site' ? 'active' : ''}" onclick="filterByPill('04-marketing-site')">🚀 04 Marketing (1)</button>
+          <button class="pill-btn ${currentSelectedFilter === '05-ai-agent-service' ? 'active' : ''}" onclick="filterByPill('05-ai-agent-service')">🤖 05 AI Agent (3)</button>
+          <button class="pill-btn ${currentSelectedFilter === '06-mobile-companion' ? 'active' : ''}" onclick="filterByPill('06-mobile-companion')">📱 06 Mobile (2)</button>
+        `;
+      }
+    }
+
+    function renderTaskCard(task) {
+      return `
+        <div class="task-card status-progress" onclick="openArticleReader('${task.id}')">
+          <div class="task-card-header">
+            <span class="task-service-tag">${task.category}</span>
+            <span class="status-badge badge-progress">Sedang Dikerjakan</span>
+          </div>
+          <h3 class="task-title">${task.title}</h3>
+          <p class="task-desc">${task.lead.substring(0, 130)}...</p>
+          <div style="margin: 0.6rem 0; font-size: 0.76rem; display: flex; flex-direction: column; gap: 0.25rem;">
+            <div style="color: #1e293b;">
+              <span style="color: #64748b;">Rancang Awal:</span> <strong>Rizal</strong> 
+              <span style="background: #ecfdf5; color: #059669; padding: 1px 6px; border-radius: 4px; font-weight: 600; font-size: 0.7rem;">✓ Tampilan Selesai</span>
+            </div>
+            <div style="color: #64748b;">
+              <span>Lanjutan Handover:</span> <strong style="color: #0f172a;">${task.handoverTo || task.division}</strong>
+            </div>
+          </div>
+          <div class="task-meta-row">
+            <span class="read-article-link">Lihat Detail Checklist ➔</span>
+            <span style="font-family: 'JetBrains Mono', monospace; color: #94a3b8; font-size: 0.72rem;">${task.id}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // GROUPED RENDERING (SUPPORT BOTH DIVISION & SERVICE)
     function renderGroupedTasks() {
       const container = document.getElementById('division-groups-container');
       const q = currentSearchTerm.toLowerCase().trim();
-
-      // Filter by Persona
-      const visibleDivisions = currentSelectedPersona === 'all'
-        ? divisionMetadata
-        : divisionMetadata.filter(d => d.id === currentSelectedPersona);
-
       let html = '';
 
-      visibleDivisions.forEach(div => {
-        const tasksForDiv = detailedTasks.filter(t => {
-          const matchDiv = t.division === div.id;
-          const matchQ = !q || 
-            t.title.toLowerCase().includes(q) || 
-            t.lead.toLowerCase().includes(q) || 
-            t.category.toLowerCase().includes(q) ||
-            t.id.toLowerCase().includes(q);
-          return matchDiv && matchQ;
-        });
+      if (currentGroupingMode === 'division') {
+        const visibleDivisions = currentSelectedFilter === 'all'
+          ? divisionMetadata
+          : divisionMetadata.filter(d => d.id === currentSelectedFilter);
 
-        if (tasksForDiv.length === 0) return;
+        visibleDivisions.forEach(div => {
+          const tasksForDiv = detailedTasks.filter(t => {
+            const matchDiv = t.division === div.id;
+            const matchQ = !q || 
+              t.title.toLowerCase().includes(q) || 
+              t.lead.toLowerCase().includes(q) || 
+              t.category.toLowerCase().includes(q) ||
+              t.id.toLowerCase().includes(q);
+            return matchDiv && matchQ;
+          });
 
-        html += `
-          <div class="division-group-section">
-            <div class="division-header">
-              <div class="division-title-wrap">
-                <span style="font-size: 1.3rem;">${div.icon}</span>
-                <h2 class="division-title">${div.name}</h2>
-                <span class="division-pic-tag">PIC: ${div.pic}</span>
+          if (tasksForDiv.length === 0) return;
+
+          html += `
+            <div class="division-group-section">
+              <div class="division-header">
+                <div class="division-title-wrap">
+                  <span style="font-size: 1.3rem;">${div.icon}</span>
+                  <h2 class="division-title">${div.name}</h2>
+                  <span class="division-pic-tag">PIC: ${div.pic}</span>
+                </div>
+                <span class="division-count-badge">${tasksForDiv.length} Modul Terpetakan</span>
               </div>
-              <span class="division-count-badge">${tasksForDiv.length} Modul Terpetakan</span>
+              <div class="task-grid">
+                ${tasksForDiv.map(task => renderTaskCard(task)).join('')}
+              </div>
             </div>
-            
-            <div class="task-grid">
-              ${tasksForDiv.map(task => {
-                let badgeClass = 'badge-todo';
-                let badgeText = 'Belum Dimulai';
-                if (task.status === 'done') {
-                  badgeClass = 'badge-done';
-                  badgeText = 'Fondasi Siap';
-                } else if (task.status === 'progress') {
-                  badgeClass = 'badge-progress';
-                  badgeText = 'Sedang Dikerjakan';
-                }
+          `;
+        });
+      } else {
+        // GROUPED BY 6 MICROSERVICES!
+        const visibleServices = currentSelectedFilter === 'all'
+          ? serviceMetadata
+          : serviceMetadata.filter(s => s.id === currentSelectedFilter);
 
-                return `
-                  <div class="task-card status-progress" onclick="openArticleReader('${task.id}')">
-                    <div class="task-card-header">
-                      <span class="task-service-tag">${task.category}</span>
-                      <span class="status-badge badge-progress">Sedang Dikerjakan</span>
-                    </div>
-                    <h3 class="task-title">${task.title}</h3>
-                    <p class="task-desc">${task.lead.substring(0, 130)}...</p>
-                    <div style="margin: 0.6rem 0; font-size: 0.76rem; display: flex; flex-direction: column; gap: 0.25rem;">
-                      <div style="color: #1e293b;">
-                        <span style="color: #64748b;">Rancang Awal:</span> <strong>Rizal</strong> 
-                        <span style="background: #ecfdf5; color: #059669; padding: 1px 6px; border-radius: 4px; font-weight: 600; font-size: 0.7rem;">✓ Tampilan Selesai</span>
-                      </div>
-                      <div style="color: #64748b;">
-                        <span>Lanjutan Handover:</span> <strong style="color: #0f172a;">${task.handoverTo || task.division}</strong>
-                      </div>
-                    </div>
-                    <div class="task-meta-row">
-                      <span class="read-article-link">Lihat Detail Checklist ➔</span>
-                      <span style="font-family: 'JetBrains Mono', monospace; color: #94a3b8; font-size: 0.72rem;">${task.id}</span>
-                    </div>
+        visibleServices.forEach(svc => {
+          const tasksForSvc = detailedTasks.filter(t => {
+            const matchSvc = t.serviceGroup === svc.id;
+            const matchQ = !q || 
+              t.title.toLowerCase().includes(q) || 
+              t.lead.toLowerCase().includes(q) || 
+              t.category.toLowerCase().includes(q) ||
+              t.id.toLowerCase().includes(q);
+            return matchSvc && matchQ;
+          });
+
+          if (tasksForSvc.length === 0) return;
+
+          html += `
+            <div class="division-group-section">
+              <div class="division-header" style="border-bottom-color: var(--brand-blue);">
+                <div>
+                  <div class="division-title-wrap">
+                    <span style="font-size: 1.3rem;">${svc.icon}</span>
+                    <h2 class="division-title">${svc.name}</h2>
+                    <span class="service-badge-pill">${svc.path}</span>
+                    <span class="division-pic-tag">PIC: ${svc.pic}</span>
                   </div>
-                `;
-              }).join('')}
+                  <p class="service-meta-lead">${svc.lead}</p>
+                </div>
+                <span class="division-count-badge" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">${tasksForSvc.length} Task Service</span>
+              </div>
+              <div class="task-grid">
+                ${tasksForSvc.map(task => renderTaskCard(task)).join('')}
+              </div>
             </div>
-          </div>
-        `;
-      });
+          `;
+        });
+      }
 
       if (html === '') {
         container.innerHTML = `
@@ -3591,181 +3831,112 @@ Lapor Paijo:
       container.innerHTML = html;
     }
 
-    // OPEN ARTICLE RUNBOOK READER (SEPERTI GAMBAR 2)
-    function openArticleReader(taskId) {
-      const task = detailedTasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      activeArticleTask = task;
-
-      // Update Header & Banner
-      document.getElementById('reader-banner-badge').innerText = `TARGET: ${task.service.toUpperCase()}`;
-      document.getElementById('reader-banner-path').innerText = task.codeFile;
-      
-      const statusBadge = document.getElementById('reader-banner-status');
-      statusBadge.className = `status-badge ${task.status === 'done' ? 'badge-done' : task.status === 'progress' ? 'badge-progress' : 'badge-todo'}`;
-      statusBadge.innerText = task.status === 'done' ? 'FONDASI SIAP' : task.status === 'progress' ? 'SEDANG DIKERJAKAN' : 'BELUM DIMULAI';
-
-      // Update Article Content
-      document.getElementById('reader-category-tag').innerText = task.category;
-      document.getElementById('reader-title').innerText = task.title;
-      document.getElementById('reader-lead').innerText = task.lead;
-
-      // Section 1: Flow
-      document.getElementById('reader-flow-desc').innerText = task.flowDesc;
-      document.getElementById('reader-flow-diagram').innerText = task.flowDiagram;
-
-      // Section 2: Interactive Checklist
-      const checklistContainer = document.getElementById('reader-checklist-container');
-      checklistContainer.innerHTML = task.checklist.map((step, idx) => {
-        const isChecked = (typeof step === 'object' && step.done) || (typeof step === 'string' && step.startsWith('[x]'));
-        const rawText = typeof step === 'object' ? step.text : step.replace(/^\[(x| )\]\s*/, '');
-        const prefixBadge = isChecked 
-          ? '<span style="background:#ecfdf5;color:#059669;padding:1px 6px;border-radius:4px;font-weight:700;font-size:0.7rem;margin-right:0.4rem;">✓ SELESAI (UI)</span>' 
-          : '<span style="background:#fffbeb;color:#b45309;padding:1px 6px;border-radius:4px;font-weight:700;font-size:0.7rem;margin-right:0.4rem;">⏳ ONGOING (PROSES REAL)</span>';
-        return `
-          <li class="checklist-item ${isChecked ? 'checked' : ''}" onclick="toggleChecklistItem(this)">
-            <input type="checkbox" id="chk-${task.id}-${idx}" ${isChecked ? 'checked' : ''}>
-            <label for="chk-${task.id}-${idx}">${prefixBadge} ${rawText}</label>
-          </li>
-        `;
-      }).join('');
-
-      // Section 3: Code
-      document.getElementById('reader-code-filepath').innerText = task.codeFile;
-      document.getElementById('reader-code-lang').innerText = task.codeLang;
-      document.getElementById('reader-code-content').innerText = task.codeSnippet;
-
-      // Section 4: AI Notes
-      document.getElementById('reader-ai-notes').innerHTML = `
-        <span style="font-size: 1.2rem;">💡</span>
-        <div>
-          <strong>Catatan Kritis Paijo AI:</strong>
-          <p style="margin-top: 0.2rem;">${task.aiNotes}</p>
-        </div>
-      `;
-
-      // Sidebar Specs
-      document.getElementById('spec-task-id').innerText = task.id;
-      document.getElementById('spec-pic').innerText = task.pic || 'Rizal (Pelaksana Aktif)';
-      if (document.getElementById('spec-handover')) {
-        document.getElementById('spec-handover').innerText = task.handoverTo || task.division;
-      }
-      document.getElementById('spec-service').innerText = task.service;
-      document.getElementById('spec-priority').innerText = task.priority;
-      document.getElementById('spec-phase').innerText = task.phase || 'Ongoing (Tampilan Beres Dicentang)';
-      document.getElementById('spec-status').innerText = 'ONGOING';
-
-      document.getElementById('reader-dod-list').innerHTML = task.dod.map(d => `
-        <li>✓ ${d}</li>
-      `).join('');
-
-      // Switch Visibility
-      document.getElementById('view-tasks').style.display = 'none';
-      document.getElementById('view-article-reader').style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    function filterByPill(val) {
+      currentSelectedFilter = val;
+      renderPills();
+      renderGroupedTasks();
+      updateBannerText();
     }
 
-    function closeArticleReader() {
-      document.getElementById('view-article-reader').style.display = 'none';
-      document.getElementById('view-tasks').style.display = 'block';
-      activeArticleTask = null;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    function updateBannerText() {
+      const bannerTitle = document.getElementById('focus-banner-title');
+      const bannerSub = document.getElementById('focus-banner-sub');
+      if (!bannerTitle || !bannerSub) return;
 
-    function toggleChecklistItem(el) {
-      const chk = el.querySelector('input[type="checkbox"]');
-      if (event.target !== chk) {
-        chk.checked = !chk.checked;
-      }
-      if (chk.checked) {
-        el.classList.add('checked');
+      if (currentGroupingMode === 'service') {
+        if (currentSelectedFilter === '01-admin-console') {
+          bannerTitle.innerText = "🏛️ Service 01: Admin Console & Billing";
+          bannerSub.innerText = "Fokus Service: Superadmin Laravel Filament, verifikasi pembayaran Midtrans, dan pelacakan invoice resmi.";
+        } else if (currentSelectedFilter === '02-dashboard-cms') {
+          bannerTitle.innerText = "🎨 Service 02: Dashboard Studio & Go BFF";
+          bannerSub.innerText = "Fokus Service: 12 Modul antarmuka Studio Vue 3 dan BFF Gin Golang (port 8085).";
+        } else if (currentSelectedFilter === '03-provision-orchestrator') {
+          bannerTitle.innerText = "⚙️ Service 03: Container Provision Orchestrator & Infra";
+          bannerSub.innerText = "Fokus Service: Docker Engine SDK spawning, cgroups v2 sandboxing, dan Traefik edge ingress SSL.";
+        } else if (currentSelectedFilter === '04-marketing-site') {
+          bannerTitle.innerText = "🚀 Service 04: Marketing Site & Public Landing";
+          bannerSub.innerText = "Fokus Service: Website publik React 19, showcase playground, dan corong pendaftaran tenant baru.";
+        } else if (currentSelectedFilter === '05-ai-agent-service') {
+          bannerTitle.innerText = "🤖 Service 05: AI Agent Service & Workflows";
+          bannerSub.innerText = "Fokus Service: Microservice copilot teks/gambar, generator tema otomatis, dan n8n automation.";
+        } else if (currentSelectedFilter === '06-mobile-companion') {
+          bannerTitle.innerText = "📱 Service 06: Mobile Companion Platform";
+          bannerSub.innerText = "Fokus Service: Aplikasi Android/iOS Flutter/React Native, push notification FCM, dan emergency reboot.";
+        } else {
+          bannerTitle.innerText = "🏢 Tampilan 6 Microservices HeroCMS Platform";
+          bannerSub.innerText = "Menampilkan seluruh task bisnis yang dikelompokkan berdasarkan 6 layanan microservices arsitektur HeroCMS.";
+        }
       } else {
-        el.classList.remove('checked');
+        if (currentSelectedFilter === 'Rizal') {
+          bannerTitle.innerText = "🛡️⚙️ Mode Fokus: Rizal (DevOps, Security & Rancang Bangun Awal)";
+          bannerSub.innerText = "Peran Anda: Mengamankan sistem, Traefik SSL Ingress, cgroups Linux, pentest suite, serta merintis tampilan awal & handler awal sebelum di-handover ke tim.";
+        } else if (currentSelectedFilter === 'Andalusia') {
+          bannerTitle.innerText = "⚙️ Mode Fokus: Andalusia (Full Stack Lead — Jago Backend & Frontend)";
+          bannerSub.innerText = "Peran Anda: Menguasai penuh backend Go/Laravel & frontend web. Menangani mesin Docker SDK, API BFF, dan integrasi kasir pembayaran.";
+        } else if (currentSelectedFilter === 'Irgi') {
+          bannerTitle.innerText = "🎨 Mode Fokus: Irgi (Frontend Web Specialist — Studio & Marketing)";
+          bannerSub.innerText = "Peran Anda: Fokus murni di antarmuka web modern (Vue 3 & React 19). Menangani keindahan visual, pergerakan drag-and-drop blok 60fps, dan responsive mobile.";
+        } else if (currentSelectedFilter === 'Risqi') {
+          bannerTitle.innerText = "🗄️ Mode Fokus: Risqi (Database Management Specialist)";
+          bannerSub.innerText = "Peran Anda: Mengelola gudang data PostgreSQL 16 RLS (kamar data tenant terisolasi), memori kilat Redis 7 (<1ms), brankas MinIO S3, dan backup rutin.";
+        } else if (currentSelectedFilter === 'Tyno') {
+          bannerTitle.innerText = "📱 Mode Fokus: Tyno (Mobile Apps Specialist — Jago Frontend Mobile)";
+          bannerSub.innerText = "Peran Anda: Mengembangkan aplikasi Android/iOS (Flutter/React Native) untuk pemantauan pengunjung live, terima alert notifikasi, dan tombol reboot dari HP.";
+        } else {
+          bannerTitle.innerText = "🌐 Tampilan Global Seluruh Divisi (45 Task Terpetakan)";
+          bannerSub.innerText = "Menampilkan seluruh rancangan arsitektur dan pekerjaan tim lintas 5 divisi. Dikelola dan dipantau aktif oleh Paijo AI (Project Manager).";
+        }
       }
-    }
-
-    function toggleCurrentTaskDone() {
-      if (!activeArticleTask) return;
-      showToast(`Task [${activeArticleTask.id}] tetap berstatus ONGOING. Pembenahan tampilan sudah dicentang, proses integrasi real backend sedang berjalan!`);
-    }
-
-    function copyArticleCodeSnippet() {
-      if (!activeArticleTask) return;
-      navigator.clipboard.writeText(activeArticleTask.codeSnippet);
-      showToast('Cuplikan kode tersalin ke clipboard!');
-    }
-
-    function copyCurrentTaskReport() {
-      if (!activeArticleTask) return;
-      const report = `Lapor Paijo:
-- Pelaksana Aktif: Rizal
-- Target Handover: ${activeArticleTask.handoverTo || activeArticleTask.division} (sesuai jobdesk)
-- Task ID: ${activeArticleTask.id} (${activeArticleTask.title})
-- Status: ONGOING (Sedang Dikerjakan)
-- Progress Tampilan: Selesai & Dicentang pada Checklist
-- Progress Proses Real: Sedang Berjalan / Siap Handover
-- Service: ${activeArticleTask.service}
-- Bukti Teknis: Mengacu pada ${activeArticleTask.codeFile}
-- Catatan: Sesuai roadmap HeroCMS Enterprise`;
-      navigator.clipboard.writeText(report);
-      showToast('Format pelaporan Paijo AI berhasil disalin!');
     }
 
     function switchPersona(persona) {
-      currentSelectedPersona = persona;
-      document.getElementById('persona-select').value = persona;
-
-      // Update Pill Buttons
-      document.querySelectorAll('.member-filter-pills .pill-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if ((persona === 'all' && btn.innerText.includes('Semua')) || (persona !== 'all' && btn.innerText.includes(persona))) {
-          btn.classList.add('active');
-        }
-      });
-
-      // Update Banner Text
-      const bannerTitle = document.getElementById('focus-banner-title');
-      const bannerSub = document.getElementById('focus-banner-sub');
-
-      if (persona === 'Rizal') {
-        bannerTitle.innerText = "🛡️⚙️ Mode Fokus: Rizal (DevOps, Security & Rancang Bangun Awal)";
-        bannerSub.innerText = "Keahlian & Peran Anda: Mengamankan infrastruktur server, Traefik SSL Ingress, pembatasan cgroups Linux, pentest runner suite, serta merintis rancangan tampilan awal (Frontend) & handler awal (Backend) untuk kemudian diserahterimakan (handover) ke tim.";
-      } else if (persona === 'Andalusia') {
-        bannerTitle.innerText = "⚙️ Mode Fokus: Andalusia (Full Stack Lead — Jago Backend & Frontend)";
-        bannerSub.innerText = "Keahlian & Peran Anda: Sangat menguasai kedua sisi (Backend Go/Laravel & Frontend Web). Bertanggung jawab atas mesin utama pembuat situs otomatis (Docker SDK), penyambung kabel data API BFF, dan kasir pembayaran resmi.";
-      } else if (persona === 'Irgi') {
-        bannerTitle.innerText = "🎨 Mode Fokus: Irgi (Frontend Web Specialist — Studio & Marketing)";
-        bannerSub.innerText = "Keahlian & Peran Anda: Fokus murni pada keindahan dan kenyamanan antarmuka web modern (Vue 3 di Studio & React 19 di Marketing). Menangani interaksi drag-and-drop blok 60 FPS dan responsivitas layar HP/laptop.";
-      } else if (persona === 'Risqi') {
-        bannerTitle.innerText = "🗄️ Mode Fokus: Risqi (Database Management Specialist)";
-        bannerSub.innerText = "Keahlian & Peran Anda: Pakar pengelola gudang data utama PostgreSQL 16 RLS (sekat data antar tenant), pencatat pengunjung kilat Redis 7 (<1ms), brankas penyimpanan file MinIO S3, dan pencadangan data otomatis rutin.";
-      } else if (persona === 'Tyno') {
-        bannerTitle.innerText = "📱 Mode Fokus: Tyno (Mobile Apps Specialist — Jago Frontend Mobile)";
-        bannerSub.innerText = "Keahlian & Peran Anda: Sangat ahli mengembangkan aplikasi smartphone Android & iOS (Flutter/React Native). Menangani aplikasi mobile pendamping untuk pemantauan pengunjung live, terima notifikasi instan, dan reboot darurat lewat HP.";
+      if (persona === 'all') {
+        currentSelectedFilter = 'all';
       } else {
-        bannerTitle.innerText = "🌐 Tampilan Global Seluruh Divisi (45 Task Terpetakan)";
-        bannerSub.innerText = "Menampilkan semua modul lintas 12 menu Studio dan 5 microservices. Seluruh pekerjaan saat ini dirintis oleh Rizal (tampilan selesai dicentang) dan berstatus ONGOING untuk integrasi real proses yang dipandu aktif oleh Paijo AI (Project Manager).";
+        currentSelectedFilter = persona;
       }
-
-      if (document.getElementById('view-article-reader').style.display === 'block') {
-        closeArticleReader();
-      }
-      renderGroupedTasks();
-    }
-
-    function filterByPill(persona) {
-      switchPersona(persona);
-    }
-
-    function filterGroupedTasks() {
-      currentSearchTerm = document.getElementById('task-search-input').value;
-      renderGroupedTasks();
+      setGroupingMode('division');
     }
 
     function switchMainTab(tab) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`tab-btn-${tab}`).classList.add('active');
+      const activeBtn = document.getElementById(`tab-btn-${tab}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      if (tab === 'tasks') {
+        document.getElementById('view-tasks').style.display = 'block';
+        document.getElementById('view-dict').style.display = 'none';
+        document.getElementById('view-sop').style.display = 'none';
+        document.getElementById('view-paijo').style.display = 'none';
+        setGroupingMode('division');
+      } else if (tab === 'services') {
+        document.getElementById('view-tasks').style.display = 'block';
+        document.getElementById('view-dict').style.display = 'none';
+        document.getElementById('view-sop').style.display = 'none';
+        document.getElementById('view-paijo').style.display = 'none';
+        setGroupingMode('service');
+      } else if (tab === 'dict') {
+        document.getElementById('view-tasks').style.display = 'none';
+        document.getElementById('view-dict').style.display = 'block';
+        document.getElementById('view-sop').style.display = 'none';
+        document.getElementById('view-paijo').style.display = 'none';
+      } else if (tab === 'sop') {
+        document.getElementById('view-tasks').style.display = 'none';
+        document.getElementById('view-dict').style.display = 'none';
+        document.getElementById('view-sop').style.display = 'block';
+        document.getElementById('view-paijo').style.display = 'none';
+      } else if (tab === 'paijo') {
+        document.getElementById('view-tasks').style.display = 'none';
+        document.getElementById('view-dict').style.display = 'none';
+        document.getElementById('view-sop').style.display = 'none';
+        document.getElementById('view-paijo').style.display = 'block';
+      }
+
+      if (document.getElementById('view-article-reader').style.display === 'block') {
+        document.getElementById('view-article-reader').style.display = 'none';
+      }
+    }
+`).classList.add('active');
 
       document.getElementById('view-tasks').style.display = tab === 'tasks' ? 'block' : 'none';
       document.getElementById('view-dict').style.display = tab === 'dict' ? 'block' : 'none';
