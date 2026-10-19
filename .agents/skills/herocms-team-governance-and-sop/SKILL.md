@@ -13,11 +13,12 @@ Skill ini merupakan **Buku Panduan Induk (Master Bible), Kamus Istilah Arsitektu
 
 | Nama Petugas | Posisi / Spesialisasi | Cakupan Service & Tugas Utama | SOP Wajib yang Harus Dirujuk |
 | :--- | :--- | :--- | :--- |
-| **Andalusia** | **Full Stack Lead** | Go Orchestrator (`03`), BFF Go (`02`), Laravel Admin (`01`), Core Integration | SOP-BE-01, SOP-BE-02, SOP-FE-01 |
-| **Irgi** | **Frontend Web Specialist** | Dashboard Studio Vue 3 (`02`), Marketing Site React 19 (`04`), Design System | SOP-FE-01, SOP-FE-02, SOP-FE-03 |
-| **Rizal** | **DevOps, Security & Backend Specialist** | Go Backend Handlers (`02`), Traefik v3 Ingress, cgroups Linux sandboxing, CI/CD, Pentest | SOP-BE-01, SOP-OPS-01, SOP-SEC-01 |
-| **Tyno** | **Mobile Frontend Specialist** | HeroCMS Companion App (iOS & Android): Telemetri, Push Notif, Quick Controls | SOP-MOB-01, SOP-MOB-02 |
-| **Paijo AI Agent** | **Project Manager & Architect** | Task Checklist, Quality & Security Audit, SemVer Changelog, Sprint Coordination | SOP-PM-01, SOP-PM-02 |
+| **Andalusia** | **Full Stack Lead (Jago Backend & Frontend)** | Menguasai Go/Laravel & Vue/React secara menyeluruh. Bertanggung jawab atas mesin kontainer Go Docker SDK (`03`), BFF Go (`02`), Laravel Admin (`01`), dan Payment Gateway | SOP-BE-01, SOP-BE-02, SOP-FE-01 |
+| **Irgi** | **Frontend Web Specialist** | Sangat fokus di antarmuka web modern: Dashboard Studio Vue 3 (`02`), Marketing Site React 19 (`04`), UI/UX, keindahan visual, pergerakan drag-and-drop blok 60fps, dan responsive mobile | SOP-FE-01, SOP-FE-02, SOP-FE-03 |
+| **Risqi** | **Database Management Specialist** | Pakar basis data: PostgreSQL 16 (RLS multi-tenancy), memori kilat Redis 7 (Sorted Sets <1ms), penyimpanan brankas MinIO S3, migrasi schema, query tuning & automated backup | SOP-DB-01, SOP-DB-02 |
+| **Rizal** | **DevOps, Security & Rancang Bangun Awal** | Mengunci keamanan sistem, Traefik v3 Ingress SSL, cgroups v2 sandboxing, pentest runner suite, serta merintis tampilan awal (Frontend) & handler awal (Backend) sebelum di-handover ke tim | SOP-BE-01, SOP-OPS-01, SOP-SEC-01 |
+| **Tyno** | **Mobile Apps Specialist (Jago Frontend Mobile)** | Sangat ahli di aplikasi smartphone Android & iOS (Flutter / React Native). Mengembangkan HeroCMS Companion App untuk telemetri live, push notif leads/tagihan, dan tombol darurat reboot lewat HP | SOP-MOB-01, SOP-MOB-02 |
+| **Paijo AI Agent** | **Lead Project Manager & System Architect** | Memimpin tata kelola proyek secara aktif, mendistribusikan task tanpa henti, memantau standar kualitas DoD, audit keamanan, dan menjaga roadmap serta changelog | SOP-PM-01, SOP-PM-02 |
 
 ---
 

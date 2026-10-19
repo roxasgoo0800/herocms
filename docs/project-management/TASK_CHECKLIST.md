@@ -1,21 +1,35 @@
 # 📋 HeroCMS Enterprise: Master Roadmap, Granular Task Matrix & Service Architecture
-> **Project Manager**: Paijo AI Agent (Lead Technical PM & System Architect)  
-> **Status**: Living Production Blueprint (Tersinkronisasi dengan 5 Services + Mobile + Root Infra)  
+> **Project Manager (PM)**: **Paijo AI Agent** (Lead Technical PM & System Architect — Aktif membagikan dan mengarahkan pekerjaan terus-menerus)  
+> **Rancang Bangun Awal**: **Rizal** (Fondasi arsitektur, keamanan, dan tampilan UI 12 modul Studio telah dirintis & dicentang)  
+> **Skema Serah Terima (Handover)**: Siap di-handover ke rekan tim sesuai keahlian spesifik (Andalusia, Irgi, Risqi, Tyno, Rizal)  
+> **Status Pekerjaan Mutlak**: **100% ONGOING** (Semua pekerjaan berstatus ongoing karena proses real backend, database persistence, dan runtime kontainer produksi masih berjalan).  
 > **Dokumen Pusat**: `docs/project-management/TASK_CHECKLIST.md`  
 > **Prinsip Mutlak**: Zero Generic Slop, 100% Service-Mapped, Business-Driven SaaS, Strict Security First.
 
 ---
 
+## 📊 Telemetri Ringkasan Tugas Tim
+
+| Metrik Telemetri | Nilai Riil | Status & Penjelasan Ramah |
+| :--- | :--- | :--- |
+| **Total Task Bisnis & Arsitektur** | **45 Tasks** | Mencakup seluruh 12 modul Studio, BFF Go, Traefik, PostgreSQL RLS, MinIO S3, AI Copilot, dan Mobile |
+| **Status Seluruh Pekerjaan** | **100% ONGOING** | Seluruh task berstatus ongoing karena proses real backend/orchestration sedang berjalan aktif |
+| **Cakupan Microservices** | **6 Area Sistem** | Admin (01), Studio (02), Orchestrator (03), Marketing (04), AI (05), Mobile Companion |
+| **Tim Pelaksana & Handover** | **5 Anggota Tim** | Andalusia (Full Stack), Irgi (Frontend), Risqi (Database), Rizal (DevOps/Sec), Tyno (Mobile) |
+| **Project Manager Aktif** | **Paijo AI Agent** | Bertugas memimpin sprint, membagi tugas, audit kualitas DoD, dan memperbarui backlog tanpa henti |
+
+---
+
 ## 👥 Roster Tim HeroCMS & Matriks Penugasan
 
-| Nama Anggota | Posisi / Spesialisasi | Fokus Service & Tanggung Jawab Utama | Rekan Kolaborasi Utama |
+| Nama Anggota | Posisi & Keahlian Utama | Fokus Tanggung Jawab & Penjelasan Ramah | Rekan Kolaborasi Utama |
 | :--- | :--- | :--- | :--- |
-| **Rizal** | **DevOps, Security & Backend Specialist** | Go Backend Handlers/Middleware (`02`), Traefik v3 Ingress, cgroups Sandboxing, Pentest Suite | Andalusia (Backend), Irgi (Deploy/Vitals) |
-| **Andalusia** | **Full Stack Lead** | Go Orchestrator (`03`), BFF Go (`02`), Laravel Admin (`01`), Core Integration | Rizal (Backend/Infra), Irgi (FE), Risqi (DB) |
-| **Irgi** | **Frontend Web Specialist** | Dashboard Studio Vue 3 (`02`), Marketing Site React 19 (`04`), UI/UX & Design System | Andalusia & Rizal (BFF), Rizal (Vitals) |
-| **Risqi** | **Database Management** | PostgreSQL 16 (RLS multi-tenancy), Redis 7 (Sorted Sets), MinIO S3, Migrasi & Backup | Rizal & Andalusia (Schema/Query) |
-| **Tyno** | **Mobile Frontend Specialist** | HeroCMS Companion App (iOS/Android): Telemetri, Push Notif, Quick Draft, Emergency Control | Rizal & Andalusia (API Contracts) |
-| **Paijo AI Agent** | **Project Manager & Architect** | Task Checklist, Quality & Security Audit, SemVer Changelog, Sprint Coordination | Seluruh Tim |
+| **Andalusia** | **Full Stack Lead (Jago Backend & Frontend)** | Menguasai Go/Laravel & Vue/React secara menyeluruh. Bertanggung jawab atas mesin pembuat kontainer Docker SDK (`03`), jalur data BFF (`02`), dan kasir pembayaran Midtrans | Rizal (Backend/Infra), Irgi (FE), Risqi (DB) |
+| **Irgi** | **Frontend Web Specialist (Ahli Antarmuka Web)** | Sangat fokus di antarmuka web modern: Dashboard Studio Vue 3 (`02`), Website Marketing React 19 (`04`), keindahan desain, pergerakan drag-and-drop blok 60fps, dan responsive mobile | Andalusia (BFF), Rizal (Vitals & CSS) |
+| **Risqi** | **Database Management Specialist (Pakar Basis Data)** | Mengelola gudang data utama PostgreSQL 16 dengan sekat isolasi tenant (RLS), memori kilat Redis 7 (<1ms), brankas penyimpanan media MinIO S3, dan jadwal backup rutin | Rizal (Schema), Andalusia (Query) |
+| **Rizal** | **DevOps, Security & Rancang Bangun Awal** | Mengunci keamanan sistem, Traefik SSL Ingress, pembatasan cgroups Linux (256MB/0.5 CPU), pentest runner, serta merintis tampilan & handler awal sebelum di-handover ke tim | Andalusia (Backend), Irgi (Frontend) |
+| **Tyno** | **Mobile Apps Specialist (Jago Frontend Mobile)** | Sangat ahli di aplikasi smartphone Android & iOS (Flutter / React Native). Membuat aplikasi pendamping untuk memantau pengunjung live, terima notifikasi instan, dan tombol darurat reboot lewat HP | Rizal & Andalusia (API Contracts) |
+| **Paijo AI Agent** | **Project Manager & System Architect** | Memimpin tata kelola proyek, membagi tugas, memantau standar kualitas DoD, audit keamanan, dan aktif memberikan tugas baru terus-menerus | Seluruh Tim |
 
 ---
 
@@ -36,162 +50,116 @@ HeroCMS adalah **Platform Cloud CMS Multi-Tenant SaaS** yang menjual hosting kon
 
 ---
 
-## 🗺️ Matriks Pekerjaan Granular Berbasis Service & Menu
+## 🗺️ Matriks Pekerjaan Granular Berbasis Service & Menu (45 Tasks)
+
+### 🛡️⚙️ DIVISI DEVOPS, SECURITY & INGRESS LEAD (PIC: RIZAL)
+> **Rancang Bangun Awal**: Rizal  
+> **Lanjutan Handover**: Rizal (DevOps, Security & Backend Lead)  
+> **Status Seluruh Task**: **ONGOING (Sedang Dikerjakan)**  
+
+| Task ID | Nama Pekerjaan & Rincian Sederhana | Rancang Awal | Lanjutan Handover | Service / File Kode | Rincian Checklist (UI Selesai vs Proses Real) | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TSK-BE-SEC-01** | **Go BFF Security & Auth Middleware (JWT ED25519 & Redis Rate-Limit)**<br>_Membangun middleware autentikasi backend Go Gin untuk verifikasi asymmetric JWT ED25519, proteksi brute-force login via ..._ | **Rizal** | **Rizal (DevOps & Backend Lead)** | `services/02-dashboard-cms` | [x] Pembenahan Tampilan UI: Integrasi state user email, plan, dan token di Pinia store<br>[x] Arsitektur Security: Middleware asymmetric JWT ED25519 & header Authorization bearer<br>[x] Unit & Pentest Gate: Suite brute-force pentest lolos 100% di services/02-dashboard-cms/pentest/<br>[ ] Integrasi Real Backend: Injeksi context tenant_id ke database PostgreSQL RLS<br>[ ] Integrasi Real Backend: Redis memory token blacklist untuk instant session revocation | `ONGOING` |
+| **TSK-DOM-03** | **Traefik Dynamic Custom Domain & Let's Encrypt TLS Automation**<br>_Mengonfigurasi Traefik v3 agar dapat memetakan custom domain tenant secara otomatis dengan penerbitan sertifikat SSL Let..._ | **Rizal** | **Rizal (DevOps Lead)** | `deploy/docker-compose.infra.yml` | [x] Pembenahan Tampilan UI: Indikator status SSL (Active, Pending, Failed) di CustomDomainsModule<br>[x] Arsitektur Ingress: Konfigurasi dynamic file provider Traefik dan ACME certResolver<br>[x] Audit Keamanan: Validasi nama domain anti-injection router rules<br>[ ] Integrasi Real Ingress: Penerbitan sertifikat SSL produksi Let's Encrypt via HTTP-01<br>[ ] Integrasi Real Ingress: Automatic SSL renewal background timer dengan zero downtime | `ONGOING` |
+| **TSK-OPS-01** | **Traefik Edge Ingress Multi-Network Routing & Dynamic Labels**<br>_Menata isolasi multi-network Docker di mana Traefik berada pada edge-network publik dan menghubungkan ke kontainer tenan..._ | **Rizal** | **Rizal (DevOps Lead)** | `deploy/docker-compose.infra.yml` | [x] Pembenahan Arsitektur: Topologi dual-network Docker (edge-network publik & tenant-network privat)<br>[x] Arsitektur Ingress: Label dinamis Traefik Host(`{subdomain}.herocms.id`) per kontainer<br>[ ] Integrasi Real Ingress: Health check interval 10s dengan failover otomatis<br>[ ] Integrasi Real Ingress: Rate-limiting per IP (100 req/min) di edge ingress proxy | `ONGOING` |
+| **TSK-OPS-02** | **Linux cgroups v2 Hard Limit Isolation & Tenant Sandboxing**<br>_Menerapkan pembatasan cgroups v2 (RAM 256MB, CPU 0.5 vCPU) dan flag keamanan (read-only rootfs, drop capabilities, no-ne..._ | **Rizal** | **Rizal (DevOps Lead)** | `services/03-provision-orchestrator/internal/docker/` | [x] Pembenahan Arsitektur: Penetapan hard limit memori 256MB dan CPU 0.5 per tenant<br>[x] Keamanan Sandboxing: Enforcement non-root user UID 10001 dan no-new-privileges flag<br>[x] Audit Keamanan: Pentest container breakout & privilege isolation lolos<br>[ ] Integrasi Real Orchestrator: Pemantauan pelanggaran OOM killer via Go Docker client<br>[ ] Integrasi Real Orchestrator: Auto-kill kontainer yang memakan CPU > 95% selama 5 menit | `ONGOING` |
+| **TSK-OPS-03** | **Automated Pre-Commit Pentest Runner & CI/CD Security Gate**<br>_Membangun skill otomatisasi pentest runner (herocms-pentest-runner) dan workflow pre-commit per-service agar tidak ada k..._ | **Rizal** | **Rizal (DevOps Lead)** | `.agents/skills/herocms-pentest-runner/` | [x] Pembenahan Tooling: Master skill herocms-pentest-runner dan aturan wajib AGENTS.md<br>[x] Security Runner: Suite black-box HTTP mandiri di setiap folder services/*/pentest/<br>[ ] Integrasi Real CI/CD: GitHub Actions workflow blocker jika pentest gagal (exit code 1)<br>[ ] Integrasi Real CI/CD: Automated multi-arch container image builder ke registry | `ONGOING` |
+| **TSK-SEC-01** | **Enterprise Black-Box HTTP Pentest & OWASP Top 10 Suite**<br>_Membuat paket pengujian keamanan black-box mandiri untuk menguji proteksi brute force, manipulasi JWT, injection karakte..._ | **Rizal** | **Rizal (Security Specialist)** | `services/02-dashboard-cms/pentest/` | [x] Pembenahan Pengujian: 10 skenario uji keamanan autentikasi & sanitasi input HTTP<br>[x] Security Gate: Verifikasi header HSTS, X-Frame-Options DENY, X-Content-Type-Options<br>[x] Audit Keamanan: Proteksi JWT tampering & forged signature validation<br>[ ] Integrasi Real Pentest: Automated nightly security scan pada endpoint staging | `ONGOING` |
+| **TSK-DOM-04** | **Traefik Host Rule Injection Pentest (CWE-20/CWE-93)**<br>_Memastikan input domain pada modul custom domain tidak dapat disusupi karakter newline (, 
+) atau backtick (`) yang ber..._ | **Rizal** | **Rizal (Security Specialist)** | `services/02-dashboard-cms/pentest/security_test.go` | [x] Pembenahan Sanitasi: Regex domain validasi ketat ^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$<br>[x] Security Gate: Uji coba injeksi CRLF dan router rule escape berhasil ditolak 100%<br>[ ] Integrasi Real Proxy: Dynamic custom WAF rule pada Traefik middleware | `ONGOING` |
 
 ---
 
-### MODUL 1: SITUS & KONTAINER DOCKER
-*Komponen Frontend*: `services/02-dashboard-cms/src/components/dashboard/ContainersModule.vue` & `PodDetailAnalyticsView.vue`  
-*Service Backend*: `services/03-provision-orchestrator` & `services/02-dashboard-cms/internal/`
+### 🎨 DIVISI FRONTEND WEB STUDIO & MARKETING (RANCANG AWAL: RIZAL | LANJUTAN HANDOVER: IRGI)
+> **Rancang Bangun Awal**: Rizal  
+> **Lanjutan Handover**: Irgi (Frontend Web Specialist)  
+> **Status Seluruh Task**: **ONGOING (Sedang Dikerjakan)**  
 
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-CNT-01** | **UI Kontainer & Modal Pembuatan Situs**: Tampilan grid kartu pod, status badge (running/stopped/provisioning), modal blueprint selection, dan verifikasi ketersediaan subdomain. | **Irgi** | `02-dashboard-cms/.../ContainersModule.vue` | UI terhubung ke backend, form validasi subdomain reaktif, modal reset state. | `DONE` |
-| **TSK-CNT-02** | **Go Docker SDK Container Lifecycle**: Pembuatan kontainer Docker mandiri tenant dengan parameter non-root UID 10001, cgroups memory 256MB, CPU 0.5. | **Andalusia** | `03-provision-orchestrator/internal/docker/` | `POST /api/v1/containers/provision`<br>Response `{ success: true, container_id, ip }`. Spawn < 4.5 detik. | `DONE` |
-| **TSK-CNT-03** | **Skema Database `sites` & RLS Isolation**: Tabel sites dengan foreign key `tenant_id`, subdomain unik, status kontainer, dan RLS policy. | **Risqi** | `deploy/sql/01_schema_and_rls.sql` | `ALTER TABLE sites ENABLE ROW LEVEL SECURITY;`<br>Kueri antar-tenant 100% terisolasi. | `DONE` |
-| **TSK-CNT-04** | **Traefik Dynamic Routing Injection**: Injeksi router rule `Host({subdomain}.herocms.id)` dan middleware TLS otomatis saat kontainer di-spawn. | **Rizal** | `03-provision-orchestrator/internal/traefik/` | Routing aktif instan tanpa restart Traefik. Sanitasi regex domain anti-injection. | `IN PROGRESS` |
-| **TSK-CNT-05** | **Live Terminal Log Streaming**: Terminal interaktif untuk melihat log kontainer (stdout/stderr) dengan filter level (traffic, traefik, engine, docker, system). | **Andalusia** & **Irgi** | `02-dashboard-cms/cmd/server/` & `ContainersModule.vue` | `GET /api/v1/containers/:id/logs?tail=100`<br>WebSocket / SSE streaming logs. | `DONE` |
-| **TSK-CNT-06** | **Container Emergency Controls (Restart & Maintenance)**: Tombol restart pod dengan drainage SIGTERM aman, serta saklar mode pemeliharaan. | **Andalusia** | `02-dashboard-cms/internal/handler/` | `POST /api/v1/containers/:id/restart`<br>`POST /api/v1/containers/:id/maintenance` | `DONE` |
-| **TSK-CNT-07** | **Mobile Container Status & Quick Reboot**: Tampilan status kontainer di HP dan tombol reboot darurat. | **Tyno** | Mobile Companion App | Mengonsumsi endpoint restart dengan konfirmasi biometrik FaceID. | `TODO` |
-
----
-
-### MODUL 2: VISUAL STUDIO BLOCK EDITOR
-*Komponen Frontend*: `services/02-dashboard-cms/src/components/dashboard/VisualEditorModule.vue` & `TemplateLiveRenderer.vue`  
-*Service Backend*: `services/02-dashboard-cms/internal/` & `services/05-ai-agent-service`
-
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-EDT-01** | **Drag-and-Drop Visual Block Builder**: Editor blok (Navbar, Hero, Features, Showcase, Pricing, CTA, Footer) dengan reorderable canvas dan live inspector. | **Irgi** | `02-dashboard-cms/.../VisualEditorModule.vue` | State blok tersimpan di Pinia store, drag and drop mulus 60 FPS. | `DONE` |
-| **TSK-EDT-02** | **XSS Sanitization & DOMPurify**: Sanitasi konten HTML, script injection, dan payload berbahaya sebelum disimpan atau dirender ke preview. | **Rizal** & **Irgi** | `02-dashboard-cms/src/utils/sanitize.ts` | Zero script alert/XSS injection lolos uji pentest. | `DONE` |
-| **TSK-EDT-03** | **Skema Basis Data `site_blocks` & Preset Storage**: Tabel penyimpanan susunan JSON blok website per tenant dan per halaman. | **Risqi** | `deploy/sql/01_schema_and_rls.sql` | Kolom `blocks_json JSONB`, foreign key `site_id`, indeks GIN untuk pencarian konten JSON. | `DONE` |
-| **TSK-EDT-04** | **API Simpan & Publikasi Konfigurasi Blok**: Endpoint untuk menyimpan draft layout dan mempublikasikan versi live ke kontainer tenant. | **Andalusia** | `02-dashboard-cms/internal/handler/editor.go` | `PUT /api/v1/sites/:id/blocks` (Save Draft)<br>`POST /api/v1/sites/:id/publish` (Push to Container) | `IN PROGRESS` |
-| **TSK-EDT-05** | **AI Block Content Generator (Copilot)**: Integrasi tombol "Bantu Tulis Konten AI" untuk headline hero, deskripsi produk, dan FAQ otomatis dari prompt teks. | **Andalusia** | `05-ai-agent-service/internal/llm/` | `POST /api/v1/ai/generate-block`<br>Stream SSE teks hasil generate dengan latensi TTFT < 800ms. | `TODO` |
+| Task ID | Nama Pekerjaan & Rincian Sederhana | Rancang Awal | Lanjutan Handover | Service / File Kode | Rincian Checklist (UI Selesai vs Proses Real) | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TSK-CNT-01** | **UI Grid Kontainer & Modal Pembuatan Situs (Modul 1: ContainersModule.vue)**<br>_Membangun tampilan grid kartu pod kontainer, indikator status running/stopped, modal interaktif pemilihan 4 vertikal blu..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/ContainersModule.vue` | [x] Pembenahan Tampilan UI: Grid kartu pod responsif 2 baris dengan badge status semantic<br>[x] Pembenahan Tampilan UI: Modal interaktif pemilihan 4 vertikal blueprint (Toko, Portofolio, Blog, LMS)<br>[x] Pembenahan Tampilan UI: Form validasi ketersediaan subdomain instan secara reaktif<br>[ ] Integrasi Real Frontend: Binding form pembuatan situs ke API BFF Go real<br>[ ] Integrasi Real Frontend: Toast error handling jika provisioning kontainer timeout | `ONGOING` |
+| **TSK-CNT-05** | **Halaman Detail Pod Telemetri & Resource Monitor (PodDetailAnalyticsView.vue)**<br>_Antarmuka analitik granular untuk satu kontainer tertentu mencakup pemakaian CPU, RAM, Network I/O, uptime, serta tombol..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/PodDetailAnalyticsView.vue` | [x] Pembenahan Tampilan UI: Kartu telemetri CPU, RAM, Network I/O dengan progress ring<br>[x] Pembenahan Tampilan UI: Navigasi breadcrumb ramah pembaca satu tombol kembali<br>[ ] Integrasi Real Frontend: Polling interval 3 detik metrik docker stats dari backend<br>[ ] Integrasi Real Frontend: Visualisasi grafik sparkline riwayat pemakaian resource 24 jam | `ONGOING` |
+| **TSK-EDT-01** | **Drag-and-Drop Visual Block Builder & Canvas Immersive (Modul 2: VisualEditorModule.vue)**<br>_Membangun canvas editor blok visual dengan mode layar penuh imersif, palet komponen blok (Navbar, Hero, Showcase, Pricin..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/VisualEditorModule.vue` | [x] Pembenahan Tampilan UI: Canvas visual editor imersif dengan auto-collapse sidebar studio<br>[x] Pembenahan Tampilan UI: Palet 7 komponen blok esensial (Navbar, Hero, Showcase, Pricing, dll)<br>[x] Pembenahan Tampilan UI: Inspector properti reaktif untuk edit teks, warna, gambar, dan link<br>[ ] Integrasi Real Frontend: Autosave draft blok lokal ke Pinia store & localStorage<br>[ ] Integrasi Real Frontend: Undo & redo state machine untuk riwayat modifikasi pengguna | `ONGOING` |
+| **TSK-EDT-02** | **Live Renderer & XSS Sanitization Engine (TemplateLiveRenderer.vue)**<br>_Komponen renderer langsung untuk menampilkan mockup website multi-device (Desktop, Tablet, Mobile) dengan lapisan pember..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/TemplateLiveRenderer.vue` | [x] Pembenahan Tampilan UI: Frame live renderer dengan switch mode Desktop, Tablet, Mobile<br>[x] Keamanan UI: Integrasi DOMPurify untuk sanitasi HTML/JS berbahaya sebelum preview<br>[ ] Integrasi Real Frontend: PostMessage bidirectional bridge antara iframe preview dan parent<br>[ ] Integrasi Real Frontend: Live font preview injector dari Google Fonts API | `ONGOING` |
+| **TSK-ART-01** | **Tabel Ledger Artikel, Filter Kategori & Pencarian Instan (Modul 3: ContentArticlesModule.vue)**<br>_Tabel manajemen konten artikel dan halaman statis CMS mengikuti standar tata letak 2 baris bersih, filter kategori, badg..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue` | [x] Pembenahan Tampilan UI: Tata letak 2 baris bersih (Baris 1 search/filter, Baris 2 tabel data)<br>[x] Pembenahan Tampilan UI: Badges status semantic (Published emerald, Draft amber, Scheduled blue)<br>[x] Pembenahan Tampilan UI: Pencarian instan dan tab filter kategori artikel reaktif<br>[ ] Integrasi Real Frontend: Debounced search API request ke backend Go BFF<br>[ ] Integrasi Real Frontend: Pagination reaktif dan sorting kolom berdasarkan tanggal/views | `ONGOING` |
+| **TSK-ART-02** | **Mode Fokus Pembaca Eksklusif (Obsidian Reader View) (Modul 3: ContentArticlesModule.vue)**<br>_Antarmuka membaca artikel bergaya Obsidian editorial dengan mode bebas distraksi (auto-collapse sidebar), tipografi nyam..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue` | [x] Pembenahan Tampilan UI: Mode fokus pembaca distraction-free dengan tombol kembali tunggal<br>[x] Pembenahan Tampilan UI: Tipografi editorial nyaman, ambient glow watermark, dan tactile telemetry<br>[x] Pembenahan Tampilan UI: Terminal code snippet terisolasi gaya VS Code / Ray.so<br>[ ] Integrasi Real Frontend: Markdown-it parser dengan syntax highlighting Prism.js real<br>[ ] Integrasi Real Frontend: Estimasi waktu baca dinamis (Reading Time Calculator) | `ONGOING` |
+| **TSK-MED-01** | **Galeri Aset Media, Meteran Kuota S3 & Preview Modal (Modul 4: MediaAssetsModule.vue)**<br>_Galeri pengelolaan file media (gambar, dokumen, video) dengan meteran kuota penyimpanan S3 (contoh: 1.2GB/5.0GB), previe..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/MediaAssetsModule.vue` | [x] Pembenahan Tampilan UI: Grid kartu aset media dengan thumbnail preview, ukuran file & tanggal<br>[x] Pembenahan Tampilan UI: Meteran pemakaian kuota S3 visual (contoh: 1.2GB / 5.0GB)<br>[x] Pembenahan Tampilan UI: Tombol salin URL aset langsung ke clipboard dan filter tipe file<br>[ ] Integrasi Real Frontend: Drag-and-drop uploader terhubung ke multipart presigned S3 URL<br>[ ] Integrasi Real Frontend: Progress bar upload persentase riil (0-100%) | `ONGOING` |
+| **TSK-TPL-01** | **UI Katalog Blueprint Template & Modal Preview (Modul 5: TemplatesCatalogModule.vue)**<br>_Etalase katalog template website resmi (Toko Retail, Portofolio Teknis, Blog Media, LMS Edukasi) dengan filter kategori ..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/TemplatesCatalogModule.vue` | [x] Pembenahan Tampilan UI: Galeri blueprint kartu template dengan filter kategori bisnis<br>[x] Pembenahan Tampilan UI: Modal preview interaktif untuk melihat live demo template<br>[ ] Integrasi Real Frontend: Tombol 'Terapkan Template' mengirim payload kloning ke situs aktif<br>[ ] Integrasi Real Frontend: Fitur download preset konfigurasi template JSON | `ONGOING` |
+| **TSK-DOM-01** | **UI Custom Domain, Modal PoP Anycast & SSL Inspector (Modul 6: CustomDomainsModule.vue)**<br>_Tampilan manajemen domain kustom dengan panduan integrasi DNS (CNAME ke edge.herocms.id), modal PoP Anycast, dan modal S..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/CustomDomainsModule.vue` | [x] Pembenahan Tampilan UI: Tabel ledger custom domain dengan badge status SSL<br>[x] Pembenahan Tampilan UI: Modal panduan konfigurasi DNS (CNAME ke edge.herocms.id & A Record)<br>[x] Pembenahan Tampilan UI: Modal SSL Certificate Inspector untuk cek issuer & kadaluarsa<br>[ ] Integrasi Real Frontend: Polling otomatis status CNAME setiap 10 detik saat pending<br>[ ] Integrasi Real Frontend: Validasi regex nama domain pada form input sebelum submit | `ONGOING` |
+| **TSK-ANL-01** | **Dashboard Grafik Telemetri Kunjungan & Top-Views (Modul 7: AnalyticsTelemetryModule.vue)**<br>_Dashboard grafik kunjungan mingguan, counter pengunjung langsung (live visitors), bounce rate, dan tabel ranking artikel..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/AnalyticsTelemetryModule.vue` | [x] Pembenahan Tampilan UI: Kartu telemetri pengunjung hari ini, live visitors, bounce rate<br>[x] Pembenahan Tampilan UI: Tabel ranking 5 artikel terpopuler dan grafik tren 7 hari<br>[x] Pembenahan Tampilan UI: Tab filter rentang tanggal (Hari Ini, 7 Hari, 30 Hari)<br>[ ] Integrasi Real Frontend: Fetching data analitik dari endpoint aggregation API Go<br>[ ] Integrasi Real Frontend: Auto-refresh data grafik setiap 60 detik tanpa re-render penuh | `ONGOING` |
+| **TSK-WBH-01** | **UI Manajemen Webhook & Generator API Key (Modul 8: WebhooksApiModule.vue)**<br>_Form pembuatan webhook endpoint untuk integrasi eksternal (n8n, Zapier, Discord), pemilihan trigger event, dan tabel riw..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/WebhooksApiModule.vue` | [x] Pembenahan Tampilan UI: Form pembuatan webhook endpoint dengan checklist event triggers<br>[x] Pembenahan Tampilan UI: Generator API Key token dengan fitur copy instan<br>[x] Pembenahan Tampilan UI: Tabel riwayat pengiriman log payload (Status 200 OK / Error)<br>[ ] Integrasi Real Frontend: Tombol 'Kirim Uji Coba (Test Ping)' memanggil API dispatcher<br>[ ] Integrasi Real Frontend: Modal inspect detail request & response payload JSON | `ONGOING` |
+| **TSK-BIL-01** | **UI Matriks Paket Langganan & Meteran Kuota (Modul 9: BillingPlanModule.vue)**<br>_Tampilan perbandingan paket SaaS HeroCMS (Starter Rp 0, Pro Rp 149.000, Agency Rp 499.000), meteran kuota kontainer yang..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/BillingPlanModule.vue` | [x] Pembenahan Tampilan UI: Kartu paket harga Starter (Rp 0), Pro (Rp 149rb), Agency (Rp 499rb)<br>[x] Pembenahan Tampilan UI: Meteran kuota pemakaian kontainer dan resource plan aktif<br>[x] Pembenahan Tampilan UI: Tombol upgrade plan responsif dengan modal konfirmasi<br>[ ] Integrasi Real Frontend: Integrasi Midtrans Snap Popup pada klik tombol bayar<br>[ ] Integrasi Real Frontend: Tampilan status transaksi pending / sukses via SSE | `ONGOING` |
+| **TSK-INV-01** | **UI Ledger Faktur & Unduh Kwitansi PDF (Modul 10: InvoicesHistoryModule.vue)**<br>_Tabel riwayat pembayaran dan faktur resmi pelanggan dengan nomor invoice, nominal, tanggal, status lunas, serta tombol u..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/InvoicesHistoryModule.vue` | [x] Pembenahan Tampilan UI: Tabel ledger faktur resmi dengan nomor invoice, nominal, tanggal, status<br>[x] Pembenahan Tampilan UI: Tab filter riwayat tahun pembayaran dan pencarian invoice<br>[x] Pembenahan Tampilan UI: Tombol unduh kwitansi PDF dengan feedback loading<br>[ ] Integrasi Real Frontend: Download stream PDF blob resmi dari endpoint backend | `ONGOING` |
+| **TSK-SUP-01** | **UI Tiket Bantuan & Pelacakan SLA Support (Modul 11: SupportTicketingModule.vue)**<br>_Form pelaporan kendala teknis dengan pemilihan tingkat urgensi (Normal, High, Urgent), badge status SLA, dan riwayat per..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/SupportTicketingModule.vue` | [x] Pembenahan Tampilan UI: Form pengajuan tiket support dengan pemilihan tingkat prioritas<br>[x] Pembenahan Tampilan UI: Thread percakapan bantuan dengan bubble pesan pengguna & agen<br>[x] Pembenahan Tampilan UI: Status badge SLA (Open, In Progress, Resolved)<br>[ ] Integrasi Real Frontend: Kirim balasan pesan tiket baru terhubung ke Go BFF<br>[ ] Integrasi Real Frontend: Lampiran screenshot gambar via presigned upload | `ONGOING` |
+| **TSK-CHG-01** | **UI Changelog Interaktif, Filter Tipe & Hotkey (Modul 12: ChangelogModule.vue)**<br>_Halaman log rilis versi sistem transparan mengikuti tata kelola SemVer di AGENTS.md, dilengkapi filter tipe rilis, penca..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/02-dashboard-cms/src/components/dashboard/ChangelogModule.vue` | [x] Pembenahan Tampilan UI: Garis waktu rilis sistem dengan badge versi SemVer resmi<br>[x] Pembenahan Tampilan UI: Filter tag kategori (Feature, Fix, Improvement, Security, Perf)<br>[x] Pembenahan Tampilan UI: Shortcut keyboard CMD+K / CTRL+K untuk pencarian cepat<br>[ ] Integrasi Real Frontend: Sinkronisasi dataset changelog otomatis dari endpoint release API | `ONGOING` |
+| **TSK-MKT-01** | **Website Pemasaran & Landing Page Konversi Tinggi (services/04-marketing-site)**<br>_Membangun website pemasaran utama HeroCMS berbasis React 19 dengan skor Largest Contentful Paint (LCP) < 1.2 detik, demo..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/04-marketing-site/src/` | [x] Pembenahan Tampilan UI: Hero headline memikat, demo playground interaktif, kalkulator harga<br>[x] Optimasi Performa Web: Skor LCP < 1.2 detik dan audit keamanan directory traversal lolos<br>[ ] Integrasi Real Frontend: Form pendaftaran akun baru terhubung langsung ke register API backend<br>[ ] Integrasi Real Frontend: Integrasi Google Analytics 4 / Plausible event tracking | `ONGOING` |
 
 ---
 
-### MODUL 3: MANAJEMEN ARTIKEL, HALAMAN & KONTEN CMS
-*Komponen Frontend*: `services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue`  
-*Service Backend*: `services/02-dashboard-cms/internal/`
+### ⚙️ DIVISI BACKEND BFF & ORCHESTRATOR SDK (RANCANG AWAL: RIZAL | LANJUTAN HANDOVER: ANDALUSIA)
+> **Rancang Bangun Awal**: Rizal  
+> **Lanjutan Handover**: Andalusia (Full Stack Lead)  
+> **Status Seluruh Task**: **ONGOING (Sedang Dikerjakan)**  
 
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-CNT-01** | **Tabel Ledger Artikel & Halaman**: Daftar postingan, filter kategori, status (Published/Draft/Scheduled), badge views, dan pencarian instan. | **Irgi** | `02-dashboard-cms/.../ContentArticlesModule.vue` | Tampilan 2 baris standar UX `AGENTS.md`, filter reaktif, pagination. | `DONE` |
-| **TSK-CNT-02** | **Mode Fokus Pembaca (Reader View)**: Antarmuka membaca konten bersih tanpa gangguan (*distraction-free*) dengan tombol kembali tunggal dan auto-collapse sidebar. | **Irgi** | `02-dashboard-cms/.../ContentArticlesModule.vue` | Sidebar navigasi otomatis kolaps, layout membaca lapang dan nyaman. | `DONE` |
-| **TSK-CNT-03** | **Skema Database `posts` & `pages` Multi-Tenant**: Tabel artikel dengan slug unik per tenant, relasi kategori, status publikasi, dan SEO meta fields. | **Risqi** | `deploy/sql/01_schema_and_rls.sql` | RLS aktif: `tenant_id` mandatory, constraint unique `(tenant_id, slug)`. | `DONE` |
-| **TSK-CNT-04** | **BFF CRUD API Artikel**: Endpoint pembuatan, edit draft, publikasi, dan penghapusan artikel dengan validasi slug otomatis. | **Andalusia** | `02-dashboard-cms/internal/handler/posts.go` | `GET /api/v1/posts`, `POST /api/v1/posts`, `PUT /api/v1/posts/:id`, `DELETE /api/v1/posts/:id`. | `IN PROGRESS` |
-| **TSK-CNT-05** | **Mobile Quick Article Publisher**: Fitur menulis berita kilat atau pengumuman darurat langsung dari smartphone. | **Tyno** | Mobile Companion App | `POST /api/v1/mobile/quick-post` dengan offline queue saat sinyal lemah. | `TODO` |
-
----
-
-### MODUL 4: PENYIMPANAN ASSET MEDIA S3 / MINIO
-*Komponen Frontend*: `services/02-dashboard-cms/src/components/dashboard/MediaAssetsModule.vue`  
-*Service Backend*: `services/02-dashboard-cms/internal/storage/` & MinIO
-
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-MED-01** | **Galeri Aset Media & Meteran Kuota**: Grid foto/dokumen, info ukuran file, status kuota S3 (misal: 1.2GB/5.0GB), dan preview modal. | **Irgi** | `02-dashboard-cms/.../MediaAssetsModule.vue` | Drag-and-drop uploader UI, copy URL instan, filter tipe file (image/doc/video). | `DONE` |
-| **TSK-MED-02** | **Presigned URL Upload Engine & Sandboxing**: Pembuatan upload token presigned S3 agar file diunggah langsung ke MinIO tanpa membebani RAM backend. | **Andalusia** | `02-dashboard-cms/internal/storage/minio.go` | `POST /api/v1/media/presign-upload`<br>Isolasi folder: `bucket/tenants/{tenant_id}/assets/`. | `IN PROGRESS` |
-| **TSK-MED-03** | **Skema Database `media_assets` & Quota Enforcement**: Tabel metadata aset (file size, mime type, s3 key) dan kalkulasi batas kuota plan. | **Risqi** | `deploy/sql/01_schema_and_rls.sql` | Trigger database atau kueri agregat `SUM(file_size)` untuk memblokir upload saat kuota habis. | `IN PROGRESS` |
-| **TSK-MED-04** | **Mobile Direct Camera Upload**: Upload foto dokumentasi produk langsung dari kamera ponsel ke galeri media website. | **Tyno** | Mobile Companion App | Integrasi Image Picker + upload langsung via Presigned S3 URL. | `TODO` |
-| **TSK-MED-05** | **Security Anti-Malware File Validation**: Validasi Magic Bytes (bukan hanya ekstensi file) untuk mencegah upload shell PHP/webshell berbahaya. | **Rizal** | `02-dashboard-cms/internal/storage/validator.go` | Blokir eksekusi file di S3 dengan header `Content-Disposition: attachment` & non-executable MIME. | `DONE` |
+| Task ID | Nama Pekerjaan & Rincian Sederhana | Rancang Awal | Lanjutan Handover | Service / File Kode | Rincian Checklist (UI Selesai vs Proses Real) | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TSK-CNT-02** | **Go Docker Engine SDK Container Lifecycle Provisioning**<br>_Membuat mekanisme spawning kontainer mandiri berbasis Go Docker SDK dengan batas cgroups 256MB RAM, non-root user UID 10..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/03-provision-orchestrator/internal/docker/` | [x] Perancangan Arsitektur: Desain state machine lifecycle kontainer (spawn, stop, restart, delete)<br>[x] Audit Keamanan: Validasi nama kontainer dan pengecekan docker privilege<br>[ ] Integrasi Real Orchestrator: Pemanggilan client.ContainerCreate dengan cgroups memori 256MB<br>[ ] Integrasi Real Orchestrator: Endpoint POST /api/v1/containers/provision dengan latensi < 4.5s<br>[ ] Integrasi Real Orchestrator: Background worker health check dan auto-restart jika crash | `ONGOING` |
+| **TSK-CNT-03** | **Live Interactive Terminal Log Streaming Engine**<br>_Mesin streaming log kontainer interaktif melalui WebSocket / SSE dengan filter multi-kategori (traffic, traefik, engine,..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/02-dashboard-cms/cmd/server/` | [x] Pembenahan Tampilan UI: Modal terminal interaktif multi-level log di dashboard<br>[x] Perancangan Arsitektur: Desain buffer log 500 baris terakhir per kontainer<br>[ ] Integrasi Real Backend: WebSocket / SSE handler stream stdout/stderr langsung dari Docker SDK<br>[ ] Integrasi Real Backend: Endpoint GET /api/v1/containers/:id/logs?tail=100 | `ONGOING` |
+| **TSK-CNT-04** | **Container Emergency Controls (Restart & Maintenance Drainage)**<br>_Handler backend untuk merestart kontainer secara aman dengan graceful drainage timeout dan saklar pemeliharaan situs...._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/02-dashboard-cms/internal/handler/` | [x] Pembenahan Tampilan UI: Tombol saklar reboot darurat dan maintenance mode di pod view<br>[ ] Integrasi Real Backend: Handler POST /api/v1/containers/:id/restart dengan SIGTERM timeout 10s<br>[ ] Integrasi Real Backend: Handler POST /api/v1/containers/:id/maintenance switch status di DB | `ONGOING` |
+| **TSK-EDT-03** | **API Simpan & Publikasi Konfigurasi Blok ke Kontainer**<br>_Endpoint untuk menyimpan draft susunan JSON blok website dan mempublikasikan versi HTML/CSS statis terkompilasi langsung..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/02-dashboard-cms/internal/handler/editor.go` | [x] Perancangan Skema: Format JSON schema blocks_json per halaman situs<br>[ ] Integrasi Real Backend: Endpoint PUT /api/v1/sites/:id/blocks untuk simpan draft<br>[ ] Integrasi Real Backend: Endpoint POST /api/v1/sites/:id/publish kompilasi static HTML ke volume kontainer | `ONGOING` |
+| **TSK-EDT-04** | **AI Block Content Generator (Copilot Teks & Gambar)**<br>_Microservice AI untuk menghasilkan konten teks headline, deskripsi produk, artikel blog, dan gambar visual dari prompt t..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/05-ai-agent-service/internal/llm/` | [x] Pembenahan Tampilan UI: Tombol Copilot 'Bantu Tulis Konten AI' pada editor visual<br>[ ] Integrasi Real AI: Endpoint POST /api/v1/ai/generate-block ke Gemini API / Claude<br>[ ] Integrasi Real AI: Stream response SSE dengan Time-To-First-Token < 800ms | `ONGOING` |
+| **TSK-ART-03** | **BFF CRUD API Postingan Artikel & SEO Metadata**<br>_Endpoint RESTful API lengkap untuk manajemen postingan artikel, validasi keunikan slug per-tenant, pagination server-sid..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/02-dashboard-cms/internal/handler/posts.go` | [x] Desain Kontrak API: Struktur payload artikel, tag kategori, dan slug generator<br>[ ] Integrasi Real Backend: Endpoint GET /api/v1/posts dengan filter status & search<br>[ ] Integrasi Real Backend: Endpoint POST /api/v1/posts, PUT, DELETE dengan validasi tenant RLS | `ONGOING` |
+| **TSK-MED-02** | **Presigned S3 Upload Handler & Magic Bytes Verification**<br>_Pembuatan upload URL presigned MinIO S3 agar browser dapat mengunggah file langsung ke storage tanpa membebani memori ba..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/02-dashboard-cms/internal/storage/minio.go` | [x] Audit Keamanan: Validasi Magic Bytes anti-webshell dan pencegahan eksekusi di MinIO<br>[ ] Integrasi Real Backend: Endpoint POST /api/v1/media/presign-upload menghasilkan Presigned PUT URL<br>[ ] Integrasi Real Backend: Webhook verifikasi ukuran file pasca upload untuk pemotongan kuota | `ONGOING` |
+| **TSK-TPL-02** | **AI Theme & Template Generator Engine**<br>_Generator cerdas yang mampu menerjemahkan deskripsi bisnis pengguna menjadi susunan template website lengkap dalam bentu..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/05-ai-agent-service/internal/generator/` | [x] Perancangan Schema: Template JSON blueprint 4 vertikal bisnis terstandarisasi<br>[ ] Integrasi Real AI: Generator otomatis tema warna, font pairing, dan copywriting dari satu prompt | `ONGOING` |
+| **TSK-DOM-02** | **DNS Verification Background Worker (CNAME Propagation)**<br>_Worker background untuk mengecek kueri DNS CNAME domain pelanggan sebelum mendaftarkannya ke Traefik guna menghindari ra..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/02-dashboard-cms/internal/service/dns.go` | [x] Desain Alur Kerja: Prosedur verifikasi domain sebelum didaftarkan ke SSL Let's Encrypt<br>[ ] Integrasi Real Backend: Worker background kueri DNS CNAME ke edge.herocms.id<br>[ ] Integrasi Real Backend: Update status domain verified dan trigger injeksi config Traefik | `ONGOING` |
+| **TSK-ANL-03** | **Telemetry Hit Ingestion Middleware (GDPR-Safe)**<br>_Middleware pencatat kunjungan website secara anonim (hash IP dengan salt harian) tanpa menambah latensi respon halaman b..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/02-dashboard-cms/internal/middleware/tracker.go` | [x] Desain Privasi Data: Format payload hit anonim (hash SHA256 IP + salt harian)<br>[ ] Integrasi Real Backend: Gin middleware non-blocking asinkron kirim data hit ke Redis channel | `ONGOING` |
+| **TSK-WBH-02** | **Anti-SSRF Safe Webhook Dispatcher**<br>_Mesin pengirim HTTP POST webhook keluar dengan proteksi pemblokiran IP privat internal guna mencegah serangan Server-Sid..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/02-dashboard-cms/internal/service/webhook.go` | [x] Audit Keamanan: Validasi anti-SSRF pemblokiran IP internal (127.0.0.1, 10.0.0.0/8)<br>[ ] Integrasi Real Backend: Worker HTTP client dengan custom DialContext anti-DNS rebinding<br>[ ] Integrasi Real Backend: Mekanisme retry eksponensial (3x coba) jika endpoint target timeout | `ONGOING` |
+| **TSK-WBH-03** | **n8n Social Media Auto-Poster Workflow Automation**<br>_Workflow otomasi n8n yang menerima webhook saat artikel baru dipublikasikan, menghasilkan ringkasan caption via AI, dan ..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/05-ai-agent-service/workflows/` | [x] Perancangan Alur: Pemetaan event post.published ke trigger n8n webhook<br>[ ] Integrasi Real Workflow: Integrasi n8n node Instagram Graph API & Telegram Bot | `ONGOING` |
+| **TSK-BIL-02** | **Payment Gateway Integration (Midtrans / Xendit SDK)**<br>_Integrasi pembayaran gateway resmi Midtrans Snap untuk transaksi upgrade paket, verifikasi webhook notifikasi lunas, dan..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/01-admin-console/app/Http/Controllers/Billing/` | [x] Desain Kontrak: Spesifikasi payload checkout dan verifikasi SHA512 signature<br>[ ] Integrasi Real Payment: Endpoint POST /api/v1/billing/checkout menghasilkan Midtrans Snap Token<br>[ ] Integrasi Real Payment: Webhook handler POST /api/v1/billing/notification auto-upgrade kuota tenant | `ONGOING` |
+| **TSK-SUP-02** | **Admin Helpdesk Resolver (Laravel 11 Filament)**<br>_Dashboard internal admin berbasis Laravel 11 Filament untuk tim dukungan membalas tiket, mengubah status SLA, dan meliha..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/01-admin-console` | [x] Perancangan Relasi: Skema relasi tiket support, pesan, dan lampiran<br>[ ] Integrasi Real Admin: Filament Resource Tiket Bantuan dengan quick view status kontainer pelapor | `ONGOING` |
 
 ---
 
-### MODUL 5: KATALOG TEMPLATE & BLUEPRINTS
-*Komponen Frontend*: `services/02-dashboard-cms/src/components/dashboard/TemplatesCatalogModule.vue`  
-*Service Backend*: `services/05-ai-agent-service`
+### 🗄️ DIVISI DATABASE RLS & STORAGE ENGINE (RANCANG AWAL: RIZAL | LANJUTAN HANDOVER: RISQI)
+> **Rancang Bangun Awal**: Rizal  
+> **Lanjutan Handover**: Risqi (Database Management)  
+> **Status Seluruh Task**: **ONGOING (Sedang Dikerjakan)**  
 
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-TPL-01** | **UI Katalog Blueprint Template**: Galeri template (Retail Store, Tech Portfolio, Editorial, LMS), filter kategori, dan tombol instant clone ke kontainer. | **Irgi** | `02-dashboard-cms/.../TemplatesCatalogModule.vue` | Modal preview interaktif, badge kategori, tombol "Terapkan ke Situs". | `DONE` |
-| **TSK-TPL-02** | **AI Theme & Template Generator**: Generator tema dari instruksi prompt teks menjadi struktur JSON blocks yang kompatibel dengan Visual Editor. | **Andalusia** | `05-ai-agent-service/internal/generator/` | `POST /api/v1/ai/generate-theme`<br>Payload JSON Schema tervalidasi 100%. | `IN PROGRESS` |
-| **TSK-TPL-03** | **Template Seeding & Versioning**: Skema penyimpanan template global di PostgreSQL yang bisa dipakai bersama oleh semua tenant. | **Risqi** | `deploy/sql/01_schema_and_rls.sql` | Tabel `templates` (global read-only untuk tenant reguler, CRUD untuk superadmin). | `DONE` |
-
----
-
-### MODUL 6: CUSTOM DOMAIN & OTOMASI DNS SSL
-*Komponen Frontend*: `services/02-dashboard-cms/src/components/dashboard/CustomDomainsModule.vue`  
-*Service Backend*: Traefik v3 & `services/02-dashboard-cms/internal/`
-
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-DOM-01** | **UI Manajemen Domain & Panduan DNS**: Tampilan tabel custom domain, status verifikasi (Pending/Verified/SSL Active), dan kartu instruksi CNAME/A record. | **Irgi** | `02-dashboard-cms/.../CustomDomainsModule.vue` | Form input domain, copy CNAME value, status polling live. | `DONE` |
-| **TSK-DOM-02** | **DNS Verification Worker**: Background worker yang mengecek DNS propagation (kueri CNAME ke `edge.herocms.id`) sebelum mendaftarkan ke SSL. | **Andalusia** | `02-dashboard-cms/internal/service/dns.go` | `POST /api/v1/domains/verify`<br>Mengembalikan status propagasi IP/CNAME. | `IN PROGRESS` |
-| **TSK-DOM-03** | **Traefik Dynamic Custom Domain Mapping**: Mendaftarkan custom domain tenant ke Traefik Ingress dengan automasi sertifikat Let's Encrypt TLS-ALPN-01/HTTP-01. | **Rizal** | Traefik Dynamic Config / Orchestrator | Sertifikat SSL otomatis terbit dalam < 10 detik setelah DNS verified. | `IN PROGRESS` |
-| **TSK-DOM-04** | **Traefik Host Rule Injection Pentest**: Audit keamanan untuk memastikan input domain tidak bisa disusupi karakter *breakout* Traefik (CWE-20/93). | **Rizal** | `02-dashboard-cms/pentest/` | Regex validasi domain ketat: `^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`. | `DONE` |
+| Task ID | Nama Pekerjaan & Rincian Sederhana | Rancang Awal | Lanjutan Handover | Service / File Kode | Rincian Checklist (UI Selesai vs Proses Real) | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TSK-DB-01** | **PostgreSQL 16 Multi-Tenant Row-Level Security (RLS) Engine**<br>_Menerapkan Row-Level Security (RLS) pada tabel sites, posts, media_assets, dan invoices untuk menjamin isolasi data mutl..._ | **Rizal** | **Risqi (Database Specialist)** | `deploy/sql/01_schema_and_rls.sql` | [x] Perancangan Skema: Kolom tenant_id UUID mandatory pada seluruh tabel data tenant<br>[x] Security Policy: Sintaks ALTER TABLE ENABLE ROW LEVEL SECURITY dan isolation policy<br>[ ] Integrasi Real DB: Eksekusi DDL migrasi dan penegakan policy di production PostgreSQL<br>[ ] Integrasi Real DB: Indeks GIN pada kolom JSONB site_blocks untuk kueri cepat | `ONGOING` |
+| **TSK-DB-02** | **PostgreSQL Automated Backup Cron & Disaster Recovery**<br>_Membuat skrip otomatisasi pencadangan database PostgreSQL menggunakan pg_dump dengan kompresi gzip dan rotasi backup 30 ..._ | **Rizal** | **Risqi (Database Specialist)** | `deploy/scripts/backup.sh` | [x] Perancangan Script: Skrip pg_dump dengan kompresi gzip dan rotasi backup 30 hari<br>[ ] Integrasi Real Backup: Cron container backup otomatis berjalan setiap 6 jam<br>[ ] Integrasi Real Backup: Sinkronisasi salinan file backup ke bucket MinIO S3 terisolasi | `ONGOING` |
+| **TSK-ANL-02** | **Redis 7 Sorted Sets (ZSET) Hit Counter (<1ms)**<br>_Mesin penghitung top-views artikel berbasis Redis Sorted Sets (ZSET) dengan waktu respon < 1ms untuk mencegah lonjakan k..._ | **Rizal** | **Risqi (Database Specialist)** | `services/02-dashboard-cms/internal/redis/telemetry.go` | [x] Arsitektur Kunci: Desain struktur key tenant:{id}:top_views menggunakan ZINCRBY<br>[ ] Integrasi Real Redis: Eksekusi command ZREVRANGEBYSCORE dengan latensi < 1ms<br>[ ] Integrasi Real Redis: Background cron agregasi hit harian dari Redis ke PostgreSQL | `ONGOING` |
+| **TSK-MED-03** | **MinIO S3 Tenant Bucket Isolation & Quota Enforcement**<br>_Pengaturan isolasi direktori tenant pada MinIO S3 (`bucket/tenants/{tenant_id}/`) dan penghitungan agregat pemakaian kuo..._ | **Rizal** | **Risqi (Database Specialist)** | `deploy/minio/` | [x] Perancangan Folder: Struktur prefix bucket/tenants/{tenant_id}/assets/ terisolasi<br>[ ] Integrasi Real Storage: Trigger database atau kueri agregat SUM(file_size) per tenant<br>[ ] Integrasi Real Storage: Pemblokiran otomatis upload presigned saat kuota paket habis | `ONGOING` |
+| **TSK-BIL-03** | **Skema Database Subscriptions & Automatic Suspension**<br>_Skema pencatatan periode aktif langganan, relasi paket, tanggal jatuh tempo, dan masa tenggang (grace-period) sebelum ko..._ | **Rizal** | **Risqi (Database Specialist)** | `deploy/sql/01_schema_and_rls.sql` | [x] Pemodelan Relasi: Tabel subscriptions, plans, dan payment_transactions<br>[ ] Integrasi Real DB: Database cron worker auto-suspend status kontainer jika telat bayar 7 hari | `ONGOING` |
+| **TSK-INV-02** | **Skema Database Invoices & Multi-Tenant Isolation**<br>_Tabel riwayat faktur tagihan pelanggan dengan nomor invoice unik per tahun, nominal Rupiah, metadata bukti bayar, dan pr..._ | **Rizal** | **Risqi (Database Specialist)** | `deploy/sql/01_schema_and_rls.sql` | [x] Pemodelan Relasi: Tabel invoices dengan relasi tenant_id dan RLS policy aktif<br>[ ] Integrasi Real DB: Composite index (tenant_id, created_at DESC) untuk query performa tinggi | `ONGOING` |
 
 ---
 
-### MODUL 7: ANALITIK & TELEMETRI TRAFFIC REAL-TIME
-*Komponen Frontend*: `services/02-dashboard-cms/src/components/dashboard/AnalyticsTelemetryModule.vue`  
-*Service Backend*: `services/02-dashboard-cms/internal/redis/` & Redis 7
+### 📱 DIVISI MOBILE COMPANION PLATFORM (RANCANG AWAL: RIZAL | LANJUTAN HANDOVER: TYNO)
+> **Rancang Bangun Awal**: Rizal  
+> **Lanjutan Handover**: Tyno (Mobile Specialist)  
+> **Status Seluruh Task**: **ONGOING (Sedang Dikerjakan)**  
 
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-ANL-01** | **Dashboard Grafik Kunjungan & Top-Views**: Grafik kunjungan 7 hari, top 5 artikel terpopuler, live visitor counter, dan bandwidth tracker. | **Irgi** | `02-dashboard-cms/.../AnalyticsTelemetryModule.vue` | Komponen visual telemetri responsif, filter rentang tanggal. | `DONE` |
-| **TSK-ANL-02** | **Redis Sorted Sets (ZSET) Counter (<1ms)**: Mesin perekam pageview real-time tanpa membebani disk PostgreSQL menggunakan `ZINCRBY`. | **Risqi** & **Andalusia** | `02-dashboard-cms/internal/redis/telemetry.go` | Latensi kueri < 1ms pada 10.000 req/detik. Kunci: `tenant:{id}:top_views`. | `DONE` |
-| **TSK-ANL-03** | **Telemetry Ingestion Middleware**: Middleware pencatat hit anonim yang mengekstrak User-Agent, referer, dan IP hash tanpa melanggar privasi pengguna (GDPR-safe). | **Andalusia** | `02-dashboard-cms/internal/middleware/tracker.go` | Async push ke Redis queue tanpa menambah latency respon website. | `DONE` |
-| **TSK-ANL-04** | **Mobile Real-time Telemetry Screen**: Layar telemetri di aplikasi HP pemilik website untuk melihat lonjakan pengunjung secara langsung. | **Tyno** | Mobile Companion App | Mengonsumsi endpoint ringkasan analitik harian via websocket/polling. | `TODO` |
-
----
-
-### MODUL 8: WEBHOOKS, API TOKENS & SOCIAL MEDIA AUTOMATION
-*Komponen Frontend*: `services/02-dashboard-cms/src/components/dashboard/WebhooksApiModule.vue`  
-*Service Backend*: `services/05-ai-agent-service` & n8n
-
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-WBH-01** | **UI Manajemen Webhook & API Key**: Form penambahan endpoint webhook, pilihan event (`post.published`, `contact.received`, `container.alert`), dan generator API Token. | **Irgi** | `02-dashboard-cms/.../WebhooksApiModule.vue` | Copy secret key, trigger webhook test ping, riwayat log pengiriman. | `DONE` |
-| **TSK-WBH-02** | **Anti-SSRF Safe Webhook Dispatcher**: Mesin pengirim HTTP POST webhook dengan validasi DNS dan pemblokiran IP internal (127.0.0.1, 10.0.0.0/8, 169.254.169.254). | **Rizal** & **Andalusia** | `02-dashboard-cms/internal/service/webhook.go` | Pencegahan SSRF 100% tervalidasi di suite pentest. Timeout 3 detik. | `IN PROGRESS` |
-| **TSK-WBH-03** | **n8n Social Media Auto-Poster Workflow**: Otomatisasi publikasi rangkuman artikel baru ke Instagram, Facebook, dan Telegram menggunakan workflow n8n. | **Andalusia** | `services/05-ai-agent-service/workflows/` | Webhook diterima -> generate caption AI -> publish ke media sosial otomatis. | `IN PROGRESS` |
+| Task ID | Nama Pekerjaan & Rincian Sederhana | Rancang Awal | Lanjutan Handover | Service / File Kode | Rincian Checklist (UI Selesai vs Proses Real) | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TSK-MOB-01** | **Mobile Companion App (iOS & Android Telemetry & Emergency Reboot)**<br>_Aplikasi smartphone pendamping pemilik website untuk memantau pengunjung live, status kontainer, dan melakukan reboot da..._ | **Rizal** | **Tyno (Mobile Specialist)** | `mobile-companion/` | [x] Perancangan Kontrak API: OpenAPI spesifikasi endpoint mobile untuk ringkasan telemetri<br>[ ] Integrasi Real Mobile: Layar telemetri live pengunjung & status kontainer di smartphone<br>[ ] Integrasi Real Mobile: Tombol darurat reboot kontainer dengan konfirmasi Biometrik FaceID | `ONGOING` |
+| **TSK-MOB-02** | **Mobile Push Notifications FCM (Leads, Invoice & Alert Kuota)**<br>_Pengiriman push notification instan ke ponsel pelanggan saat ada pesan kontak baru dari pengunjung, kuota kontainer mend..._ | **Rizal** | **Tyno (Mobile Specialist)** | `mobile-companion/` | [x] Desain Notifikasi: Format payload FCM untuk alert pemakaian kuota > 90% dan invoice terbit<br>[ ] Integrasi Real Mobile: Registrasi token FCM device ke database tenant<br>[ ] Integrasi Real Mobile: Deep-linking notifikasi langsung membuka halaman terkait di aplikasi | `ONGOING` |
 
 ---
 
-### MODUL 9 & 10: KAPASITAS PAKET (BILLING) & INVOICES
-*Komponen Frontend*: `services/02-dashboard-cms/src/components/dashboard/BillingPlanModule.vue` & `InvoicesHistoryModule.vue`  
-*Service Backend*: `services/01-admin-console` (Laravel 11 Filament) & Midtrans/Xendit
+## 🔄 Standar Log Pelaporan Tim ke Paijo AI Agent (PM)
 
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-BIL-01** | **UI Paket Langganan & Riwayat Faktur**: Tabel perbandingan fitur paket (Starter, Pro, Enterprise), gauge pemakaian kuota kontainer, dan tabel riwayat invoice PDF. | **Irgi** | `02-dashboard-cms/.../BillingPlanModule.vue` | Tampilan status lunas/pending, tombol upgrade plan, download invoice. | `DONE` |
-| **TSK-BIL-02** | **Payment Gateway Integration (Midtrans/Xendit)**: Pembuatan Snap Token transaksi, webhook notifikasi pembayaran lunas, dan auto-upgrade kuota tenant. | **Andalusia** | `01-admin-console/app/Http/Controllers/Billing/` | `POST /api/v1/billing/checkout`<br>Webhook `POST /api/v1/billing/notification` tervalidasi signature. | `IN PROGRESS` |
-| **TSK-BIL-03** | **Skema Database `subscriptions` & `invoices`**: Tabel pencatatan periode aktif langganan, tanggal jatuh tempo, dan riwayat tagihan. | **Risqi** | `deploy/sql/01_schema_and_rls.sql` | Relasi tenant ke plan, trigger masa kadaluarsa (auto suspend container jika telat bayar 7 hari). | `DONE` |
-| **TSK-BIL-04** | **Push Notification Tagihan & Kuota Mendekati Limit**: Notifikasi otomatis ke aplikasi mobile pemilik web saat kuota kontainer tersisa 10% atau invoice terbit. | **Tyno** | Mobile Companion App | Integrasi Firebase Cloud Messaging (FCM) dengan deep link ke menu bayar. | `TODO` |
-
----
-
-### MODUL 11 & 12: TIKET SUPPORT & CHANGELOG SISTEM
-*Komponen Frontend*: `services/02-dashboard-cms/src/components/dashboard/SupportTicketingModule.vue` & `ChangelogModule.vue`
-
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-SUP-01** | **UI Tiket Bantuan & Pelacakan SLA**: Form pengajuan keluhan, pilihan tingkat urgensi (Normal, High, Urgent), riwayat percakapan dengan tim support. | **Irgi** | `02-dashboard-cms/.../SupportTicketingModule.vue` | Badge status tiket (Open, In Progress, Resolved), lampiran tangkapan layar. | `DONE` |
-| **TSK-SUP-02** | **Admin Helpdesk Resolver (Laravel Filament)**: Dashboard internal untuk tim admin membalas tiket support dan melihat status kontainer pelapor. | **Andalusia** | `services/01-admin-console` | Notifikasi email/webhook ke pelanggan saat tiket dijawab. | `IN PROGRESS` |
-| **TSK-CHG-01** | **Changelog Modul & SemVer Governance**: Halaman catatan rilis publik dengan filter tipe perubahan (Feature, Fix, Improvement, Security) dan shortcut keyboard CMD+K. | **Irgi** & **Paijo AI** | `02-dashboard-cms/.../ChangelogModule.vue` & `changelog.ts` | Tersinkronisasi otomatis dengan aturan SemVer `AGENTS.md`. | `DONE` |
-
----
-
-### MODUL 13 & 14: WEBSITE PEMASARAN & PENTEST OTOMASI CI/CD
-*Service*: `services/04-marketing-site` & `.github/workflows/`
-
-| Task ID | Nama Pekerjaan & Spesifikasi Teknis | PIC | Service / Lokasi Kode | API Contract & Kriteria Selesai (DoD) | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TSK-MKT-01** | **Landing Page Berkonversi Tinggi (React 19)**: Hero headline memikat, demo playground interaktif, kalkulator harga, dan form pendaftaran instan. | **Irgi** | `services/04-marketing-site/src/` | LCP < 1.2 detik, SEO meta tags, responsif sempurna di perangkat mobile. | `DONE` |
-| **TSK-OPS-03** | **Pre-Commit Pentest Runner & CI/CD Gate**: Otomasi eksekusi pentest per-service pada GitHub Actions sebelum pull request diizinkan merge ke main. | **Rizal** | `.github/workflows/docker-image.yml` | 100% PASS pada suite `services/*/pentest/...`. Build multi-arch image otomatis. | `IN PROGRESS` |
-
----
-
-## 🔄 Standar Log Pelaporan Tim ke Paijo AI Agent
-
-Setiap kali melaporkan progres atau hasil pengerjaan, gunakan nomor Task ID dari tabel di atas:
+Setiap kali melaporkan progres atau hasil serah terima pengerjaan, gunakan format resmi:
 
 ```markdown
 Lapor Paijo:
-- Task ID: [Contoh: TSK-CNT-04]
-- PIC: [Nama Anda / Anggota Tim]
-- Status: [Done / In Progress / Blocked]
+- Pelaksana: [Nama Anda / Anggota Tim]
+- Task ID: [Contoh: TSK-CNT-01]
+- Status: ONGOING
+- Progress Tampilan: Selesai & Dicentang pada Checklist
+- Progress Proses Real: Sedang Berjalan / Siap Handover
 - Service: [02-dashboard-cms / 03-provision-orchestrator / dll]
 - Bukti Teknis: [Commit hash, file link, output pengujian]
-- Catatan Integrasi: [Dependensi API ke anggota lain jika ada]
+- Catatan Integrasi: [Dependensi API ke anggota lain]
 ```

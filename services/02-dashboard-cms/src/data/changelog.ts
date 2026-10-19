@@ -2,11 +2,65 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.23',
+    releaseDate: '19 Oktober 2026',
+    title: 'Penataan Roster 5 Anggota Tim, Eliminasi Kartu Pelaksana & Kamus Arsitektur Ramah Pengguna',
+    summary: 'Memperbarui profil keahlian 5 anggota tim inti (Andalusia Full Stack Lead jago BE & FE, Irgi Frontend Web Specialist, Risqi Database Management Specialist, Rizal DevOps/Security & Rancang Bangun Awal, Tyno Mobile Specialist) serta menegaskan peran Paijo AI sebagai Active Project Manager, menghapus kartu Pelaksana Aktif dari telemetri, dan memaparkan seluruh komponen arsitektur sistem ke dalam istilah teknis yang manusiawi dan mudah dipahami.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / Paijo AI Agent (PM)',
+    items: [
+      {
+        id: 'c-11423-1',
+        type: 'improvement',
+        scope: 'Team Governance & Active PM Protocol',
+        description: 'Menegaskan keahlian 5 anggota tim di SKILL.md, TASK_CHECKLIST.md, dan Mission Control portal: Andalusia (Full Stack Lead), Irgi (Frontend Web), Risqi (Database Management), Rizal (DevOps, Security & Rancang Awal FE/BE), Tyno (Mobile Frontend), dan Paijo AI (Lead Technical PM).'
+      },
+      {
+        id: 'c-11423-2',
+        type: 'improvement',
+        scope: 'Telemetry Grid & Clean Overview',
+        description: 'Menutup / menghapus kartu telemetri Dikerjakan Aktif (Pelaksana) dari portal Mission Control dan menyajikan 4 kartu telemetri berimbang: Total Task Bisnis (45), Status 100% Ongoing, Cakupan 6 Area Microservices, dan Tim Pelaksana & Handover.'
+      },
+      {
+        id: 'c-11423-3',
+        type: 'feature',
+        scope: 'Friendly Architecture Dictionary',
+        description: 'Menulis ulang seluruh entri kamus arsitektur di index.html dan dokumentasi teknis ke dalam bahasa yang komunikatif, ramah, dan mudah dipahami tanpa mengurangi ketelitian teknis.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.22',
+    releaseDate: '19 Oktober 2026',
+    title: 'Restorasi Matriks 45 Task Granular, Eliminasi Metrik Kesiapan Sprint & Tracking Handover Tim (Pelaksana: Rizal)',
+    summary: 'Memulihkan kelengkapan matriks seluruh task bisnis menjadi 45 task granular mencakup 12 modul Studio dan 5 services microservices HeroCMS, menghapus metrik estimasi kesiapan rilis sprint, menetapkan status seluruh task menjadi 100% ONGOING (proses real berjalan), mendokumentasikan Rizal sebagai pelaksana aktif pembenahan tampilan (seluruh item UI dicentang pada checklist), serta memetakan rencana serah terima (handover) ke rekan tim sesuai jobdesk spesifik (Andalusia, Irgi, Risqi, Tyno, Rizal).',
+    author: 'HeroCMS Dev (Rizal) / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11422-1',
+        type: 'improvement',
+        scope: 'Task Matrix & Granular Coverage',
+        description: 'Menyajikan seluruh 45 task bisnis riil yang mencakup 12 modul Studio dan seluruh services microservices di docs/project-management/index.html dan TASK_CHECKLIST.md tanpa terpotong.'
+      },
+      {
+        id: 'c-11422-2',
+        type: 'improvement',
+        scope: 'Telemetry & Sprint Metric Removal',
+        description: 'Menghapus kartu telemetri Kesiapan Rilis Sprint (Jujur) sesuai instruksi karena pekerjaan terus berkembang, dan menggantikannya dengan metrik transparansi task ongoing, pelaksana aktif (Rizal), dan target handover.'
+      },
+      {
+        id: 'c-11422-3',
+        type: 'feature',
+        scope: 'Interactive Checklist UI Status & Handover Tracking',
+        description: 'Menegakkan status 100% ONGOING pada seluruh task, menandai item pembenahan tampilan UI sebagai [SELESAI] / dicentang pada checklist, dan memetakan target serah terima ke Andalusia (BE), Irgi (FE), Risqi (DB), dan Tyno (Mobile).'
+      }
+    ]
+  },
+  {
     version: 'v1.14.21',
     releaseDate: '19 Oktober 2026',
     title: 'Ekspansi Peran Rizal ke Tim Backend Engineering (DevOps, Security & Backend Lead)',
     summary: 'Memperluas matriks penugasan resmi Rizal untuk mencakup pengembangan backend Go BFF (autentikasi middleware JWT, rate limiting, security handlers) bersama Andalusia, serta memperbarui Mission Control persona filter, SOP, dan dataset runbook di seluruh repositori.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / Paijo AI Agent',
     items: [
       {
