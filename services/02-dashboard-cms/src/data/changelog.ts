@@ -2,11 +2,32 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.17',
+    releaseDate: '19 Oktober 2026',
+    title: 'Pembagian Divisi Bisnis Enterprise & Inisiasi Task Checklist PM (Paijo AI Agent)',
+    summary: 'Mendefinisikan matriks penugasan dan roadmap divisi bisnis lintas tim (Andalusia: Fullstack, Irgi: Frontend Web, Risqi: Database Management, Rizal: DevOps & Security, Tyno: Mobile Companion App) serta menginisiasi Single Source of Truth manajemen proyek berbasis Git di docs/project-management/TASK_CHECKLIST.md di bawah koordinasi Paijo AI Agent.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11417-1',
+        type: 'improvement',
+        scope: 'Project Management & Team Governance',
+        description: 'Membentuk dokumen living task checklist terstruktur di docs/project-management/TASK_CHECKLIST.md untuk melacak backlog, KPI, dan protokol pelaporan tim.'
+      },
+      {
+        id: 'c-11417-2',
+        type: 'improvement',
+        scope: 'Multi-Division Roster & Architecture Mapping',
+        description: 'Memetakan tanggung jawab teknis, mitigasi bottleneck, dan dependensi API contracts untuk 5 anggota tim inti pada skala bisnis SaaS.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.16',
     releaseDate: '19 Oktober 2026',
     title: 'Pemisahan Suite Pentest Modular Per-Service (services/<service>/pentest/)',
     summary: 'Menata ulang seluruh suite pengujian penetrasi (pentest) dari root monorepo menjadi modular per-service di dalam direktori masing-masing layanan (contoh: services/02-dashboard-cms/pentest/). Dengan pemisahan ini, setiap modul memiliki domain pengujian keamanan yang terisolasi, mandiri, dan rapi sesuai batasan tanggung jawab servisnya.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
