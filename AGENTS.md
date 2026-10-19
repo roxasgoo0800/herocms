@@ -112,11 +112,13 @@ Setiap AI Agent maupun pengembang yang melakukan modifikasi kode, penambahan fit
 
 ## 9. Standar Audit Keamanan & Pentest Sebelum Commit & PR (Wajib)
 Setiap AI Agent maupun pengembang yang hendak melakukan **`git commit`**, **`git push`**, atau **membuka Pull Request (PR)** di repositori HeroCMS **WAJIB** mematuhi panduan pada skill [`.agents/skills/herocms-pentest-runner`](file:///Users/rizalfahmi/Documents/React/herocms/.agents/skills/herocms-pentest-runner/SKILL.md):
-1. **Eksekusi Pentest Suite**: Jalankan `cd pentest && go test -v ./...` dan pastikan hasil pengujian `PASS` (atau `SKIP` jika servis tidak aktif). Dilarang commit jika terdapat status `FAIL`.
-2. **Cakupan Pentest**:
-   - Audit Traefik Router Rule Injection (CWE-20/CWE-93) pada Orchestrator.
-   - Audit Redis Namespace Injection & DoS protection (CWE-400/CWE-1287) pada AI Agent Service.
-   - Audit proteksi login brute force, JWT forgery, dan CORS/Security headers pada Dashboard CMS.
-   - Audit proteksi directory traversal (`/../../etc/passwd`) pada Marketing Site.
+1. **Eksekusi Pentest Suite Per-Service**: Jalankan pentest pada service yang diubah, contoh untuk Dashboard CMS:
+   `cd services/02-dashboard-cms && go test -v ./pentest/...`
+   Pastikan hasil pengujian `PASS` (atau `SKIP` jika servis tidak aktif). Dilarang commit jika terdapat status `FAIL`.
+2. **Cakupan Pentest Per-Service**:
+   - `services/02-dashboard-cms/pentest/`: Proteksi login brute force, JWT forgery, dan CORS/Security headers.
+   - `services/03-provision-orchestrator/pentest/`: Traefik Router Rule Injection (CWE-20/CWE-93) dan lifecycle kontainer.
+   - `services/04-marketing-site/pentest/`: Directory traversal (`/../../etc/passwd`) dan header keamanan.
+   - `services/05-ai-agent-service/pentest/`: Redis Namespace Injection & DoS protection (CWE-400/CWE-1287).
 3. **Dokumentasi di Deskripsi PR**: Sertakan checklist verifikasi pentest pada body Pull Request sebelum merge ke `main`.
 

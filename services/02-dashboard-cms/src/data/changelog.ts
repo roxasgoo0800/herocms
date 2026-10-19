@@ -2,11 +2,32 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.16',
+    releaseDate: '19 Oktober 2026',
+    title: 'Pemisahan Suite Pentest Modular Per-Service (services/<service>/pentest/)',
+    summary: 'Menata ulang seluruh suite pengujian penetrasi (pentest) dari root monorepo menjadi modular per-service di dalam direktori masing-masing layanan (contoh: services/02-dashboard-cms/pentest/). Dengan pemisahan ini, setiap modul memiliki domain pengujian keamanan yang terisolasi, mandiri, dan rapi sesuai batasan tanggung jawab servisnya.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11416-1',
+        type: 'improvement',
+        scope: 'Per-Service Pentest Architecture',
+        description: 'Memindahkan dan mengisolasi berkas pentest ke subfolder pentest/ pada masing-masing service (02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, 05-ai-agent-service).'
+      },
+      {
+        id: 'c-11416-2',
+        type: 'improvement',
+        scope: 'Pentest Runner Skill & Standards Update',
+        description: 'Memperbarui skill herocms-pentest-runner dan AGENTS.md Bagian 9 untuk mendukung eksekusi verifikasi keamanan per-service.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.15',
     releaseDate: '19 Oktober 2026',
     title: 'Integrasi Skill Pentest Pre-Commit & Audit Keamanan Mandatori Sebelum PR',
     summary: 'Menambahkan skill resmi herocms-pentest-runner (.agents/skills/herocms-pentest-runner) dan menetapkan Bagian 9 pada AGENTS.md mengenai standar audit keamanan mandatori. Setiap pengembang dan AI Agent diwajibkan menjalankan rangkaian pengujian pentest black-box HTTP di direktori pentest/ sebelum melakukan git commit atau membuka Pull Request.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
