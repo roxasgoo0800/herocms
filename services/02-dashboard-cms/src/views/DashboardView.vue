@@ -60,7 +60,7 @@ const InvoicesHistoryModule = defineAsyncComponent(() => import('../components/d
 const SupportTicketingModule = defineAsyncComponent(() => import('../components/dashboard/SupportTicketingModule.vue'));
 const ChangelogModule = defineAsyncComponent(() => import('../components/dashboard/ChangelogModule.vue'));
 import { useSplashTransition } from '../composables/useSplashTransition';
-import { changelogReleases } from '../data/changelog';
+import { microserviceVersions } from '../data/changelog';
 
 const router = useRouter();
 const { isDashboardEntering } = useSplashTransition();
@@ -97,7 +97,10 @@ const {
   confirmDeleteContainer
 } = useDashboardData();
 
-const latestSystemVersion = computed(() => changelogReleases[0]?.version || 'v1.4.1');
+const dashboardVersion = computed(() =>
+  microserviceVersions.find(s => s.id === '02-dashboard-cms')?.version || 'v1.14.27'
+);
+const latestSystemVersion = dashboardVersion;
 
 interface BlueprintTemplate {
   id: 'business' | 'portfolio' | 'blog' | 'education';

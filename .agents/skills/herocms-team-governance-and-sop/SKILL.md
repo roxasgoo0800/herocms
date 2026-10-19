@@ -1,0 +1,186 @@
+---
+name: herocms-team-governance-and-sop
+description: Buku panduan tata kelola tim enterprise HeroCMS, kamus istilah arsitektur sistem, matriks penugasan anggota tim (Andalusia, Irgi, Risqi, Rizal, Tyno, Paijo AI), SOP pengerjaan teknis per-divisi, dan protokol pelaporan ke Project Management. Gunakan saat membagi tugas, memeriksa SOP, merujuk kamus arsitektur, atau mengelola pelaporan progres proyek.
+---
+
+# HeroCMS Team Governance, Dictionary & SOP Skill (`herocms-team-governance-and-sop`)
+
+Skill ini merupakan **Buku Panduan Induk (Master Bible), Kamus Istilah Arsitektur, dan Standar Operasional Prosedur (SOP)** pengerjaan proyek HeroCMS untuk seluruh anggota tim dan AI Agent.
+
+---
+
+## 1. Matriks Organisasi & Tanggung Jawab Anggota Tim
+
+| Nama Petugas | Posisi / Spesialisasi | Cakupan Service & Tugas Utama | SOP Wajib yang Harus Dirujuk |
+| :--- | :--- | :--- | :--- |
+| **Andalusia** | **Full Stack Lead (Jago Backend & Frontend)** | Menguasai Go/Laravel & Vue/React secara menyeluruh. Bertanggung jawab atas mesin kontainer Go Docker SDK (`03`), BFF Go (`02`), Laravel Admin (`01`), dan Payment Gateway | SOP-BE-01, SOP-BE-02, SOP-FE-01 |
+| **Irgi** | **Frontend Web Specialist** | Sangat fokus di antarmuka web modern: Dashboard Studio Vue 3 (`02`), Marketing Site React 19 (`04`), UI/UX, keindahan visual, pergerakan drag-and-drop blok 60fps, dan responsive mobile | SOP-FE-01, SOP-FE-02, SOP-FE-03 |
+| **Risqi** | **Database Management Specialist** | Pakar basis data: PostgreSQL 16 (RLS multi-tenancy), memori kilat Redis 7 (Sorted Sets <1ms), penyimpanan brankas MinIO S3, migrasi schema, query tuning & automated backup | SOP-DB-01, SOP-DB-02 |
+| **Rizal** | **DevOps, Security & Rancang Bangun Awal** | Mengunci keamanan sistem, Traefik v3 Ingress SSL, cgroups v2 sandboxing, pentest runner suite, serta merintis tampilan awal (Frontend) & handler awal (Backend) sebelum di-handover ke tim | SOP-BE-01, SOP-OPS-01, SOP-SEC-01 |
+| **Tyno** | **Mobile Apps Specialist (Jago Frontend Mobile)** | Sangat ahli di aplikasi smartphone Android & iOS (Flutter / React Native). Mengembangkan HeroCMS Companion App untuk telemetri live, push notif leads/tagihan, dan tombol darurat reboot lewat HP | SOP-MOB-01, SOP-MOB-02 |
+| **Paijo (AI Agent)** | **Lead Project Manager & QA/QC Specialist** | Karyawan internal penanggung jawab Project Management dan Quality Assurance & Quality Control (QA & QC): mengatur sprint backlog secara aktif tanpa henti, menegakkan gerbang Definition of Done (DoD), menjalankan audit E2E Playwright, pengujian keamanan cross-service, verifikasi kontrak API, dan benchmark Web Vitals | SOP-PM-01, SOP-QA-01 |
+
+---
+
+## 2. Kamus Istilah Arsitektur HeroCMS (Platform Dictionary)
+
+Setiap pengembang wajib memahami konsep-konsep inti berikut sebelum memodifikasi kode:
+
+1. **Autonomous Container Provisioning**: Mekanisme pembuatan kontainer Docker mandiri secara otomatis untuk setiap website tenant baru via Docker Engine SDK tanpa memerlukan intervensi manual sysadmin.
+2. **Row-Level Security (RLS)**: Fitur keamanan setingkat kernel pada PostgreSQL yang membatasi baris data yang dapat dibaca/ditulis hanya untuk tenant yang aktif (`app.current_tenant_id`). Mencegah kebocoran data antar-tenant (*data leakage*).
+3. **Traefik Dynamic Labels Ingress**: Mekanisme reverse proxy edge yang membaca label Docker kontainer secara real-time untuk membuat rute HTTPS otomatis tanpa perlu me-reload atau me-restart Traefik.
+4. **cgroups v2 Sandboxing**: Pembatasan batas keras (*hard limit*) memori (256MB), CPU (0.5 vCPU), dan read-only rootfs pada kontainer tenant agar satu website yang diretas atau mengalami lonjakan traffic tidak melumpuhkan node server host.
+5. **Top-Views Sorted Sets (ZSET)**: Struktur data Redis 7 berbasis kunci berurutan yang digunakan untuk menghitung kunjungan artikel dan website dengan waktu agregasi kurang dari 1 milidetik (< 1ms).
+6. **Single-Binary Mode (Gin + Vue)**: Pola kompilasi di mana aset frontend Vue 3 di-*embed* ke dalam binary Go executable menggunakan fitur `embed.FS` sehingga Dashboard CMS dapat berjalan dalam satu port tunggal (port 8085) tanpa ketergantungan NodeJS di server produksi.
+7. **Anti-SSRF Webhook Proxy**: Mekanisme filter proteksi pada request keluar (*outbound HTTP*) dari webhook agar sistem tidak bisa dimanfaatkan penyerang untuk menembak alamat IP privat internal (`127.0.0.1`, `10.0.0.0/8`, atau cloud metadata API).
+8. **Bespoke Enterprise Design System**: Standar visual HeroCMS Studio berbasis token Slate (`#0f172a`), Royal Blue (`#2563eb`), Inter font, dan Master CSS (`studio-master.css`) dengan mandat *Zero-CSS Duplication*.
+
+---
+
+## 3. Standar Operasional Prosedur (SOP) Pengerjaan Teknis & Lifecycle
+
+### [SOP-GIT-01] Standar Industri Git Branching, Conventional Commits & Push Remote
+1. **Tarik Kode Terbaru**: Sebelum mulai koding, selalu sinkronkan branch lokal dengan `main`:
+   `git checkout main && git pull origin main`
+2. **Buat Branch Fitur Sesuai Standar**:
+   - Fitur baru: `git checkout -b feat/<task-id>-<slug-fitur>` (contoh: `git checkout -b feat/TSK-CNT-01-container-grid`)
+   - Perbaikan bug: `git checkout -b fix/<task-id>-<slug-fitur>` (contoh: `fix/TSK-DOM-04-domain-injection`)
+   - Optimasi performa: `git checkout -b perf/<task-id>-<slug-fitur>`
+   - Patch keamanan: `git checkout -b sec/<task-id>-<slug-fitur>`
+3. **Format Conventional Commits & SemVer**:
+   Pesan commit wajib mencantumkan versi semver di akhir:
+   `git commit -m "<type>(<scope>): <pesan aksi imperative> (<versi-semver>)"`
+   Contoh: `git commit -m "feat(studio): add container pod telemetry card (v1.14.26)"`
+4. **Prosedur Push ke Remote**:
+   `git push -u origin feat/<task-id>-<slug-fitur>`
+5. **Buka Pull Request (PR)**:
+   Buat PR ke `main` dan lampirkan checklist bukti pentest suite dan preview visual.
+
+### [SOP-FLOW-01] Siklus Pengerjaan Tugas End-to-End dari Awal Sampai Akhir
+1. **Langkah 1 (Ambil Checklist)**: Buka `TASK_CHECKLIST.md` atau portal `index.html`. Filter tugas sesuai divisi keahlian Anda dan pilih task yang berstatus `ONGOING`.
+2. **Langkah 2 (Klaim Tugas)**: Laporkan klaim tugas ke Paijo AI Agent: `Lapor Paijo: Klaim Task TSK-XXX-YY`.
+3. **Langkah 3 (Koding & Pembenahan)**: Buat branch lokal sesuai SOP-GIT-01. Terapkan prinsip *Zero-CSS Duplication* dan *Clean Resource Separation*.
+4. **Langkah 4 (Uji Keamanan Pentest)**: Jalankan pentest mandatori: `cd services/<service> && go test -v ./pentest/...` pastikan status `PASS`.
+5. **Langkah 5 (Catat SemVer)**: Update dataset `services/02-dashboard-cms/src/data/changelog.ts` dengan rilis SemVer baru.
+6. **Langkah 6 (Review & DoD Gate)**: Lakukan git push, buka PR, dan Paijo (QA/QC) akan memvalidasi Definition of Done sebelum merge.
+
+### [SOP-CHK-01] Tata Cara Mengambil, Menandai & Mengelola Checklist Tugas
+1. **Prinsip Status ONGOING Mutlak**: Semua task berstatus `ONGOING` karena proses real backend/orchestrator produksi terus berjalan aktif dan disempurnakan. Dilarang mengubah status task menjadi `DONE` tanpa persetujuan arsitektur penuh.
+2. **Arti Penandaan Checklist**:
+   - `[x] ✓ SELESAI`: Untuk pembenahan tampilan antarmuka (UI), pembuatan skema mock, perancangan kontrak API, atau tooling SOP.
+   - `[ ] ⏳ ONGOING`: Untuk integrasi proses real backend, kueri database production, driver runtime kontainer, atau live payment webhook.
+3. **Cara Menandai Progres**: Setiap menyelesaikan satu butir pekerjaan, ubah tanda `[ ]` menjadi `[x]` pada `TASK_CHECKLIST.md` dan perbarui json task terkait.
+4. **Pelaporan Resmi ke Paijo**: Laporkan setiap progres dengan format standar Lapor Paijo yang menyertakan bukti teknis.
+
+### [SOP-SVC-01] Posisi 6 Microservices: Aturan Wajib & Hal yang Harus Dipatuhi
+1. **`01-admin-console` (Superadmin & Billing)**:
+   - *Wajib*: Validasi tanda tangan SHA512 pada webhook kasir Midtrans/Xendit; Autentikasi ketat Filament SuperAdmin; Validasi relasi faktur dan tenant ID.
+   - *Dilarang*: Menyimpan plaintext API token atau mengekspos kredensial database tenant ke client.
+2. **`02-dashboard-cms` (Studio & Go BFF)**:
+   - *Wajib*: Single-binary mode (Gin BFF port 8085 + Vue 3 `embed.FS`); *Zero-CSS Duplication* (gunakan `studio-master.css`); Lazy-loading modular (`defineAsyncComponent`); Pisahkan data statis ke `src/data/*.ts`; Gunakan DOMPurify untuk HTML dinamis; Asymmetric JWT ED25519 & Redis rate-limit.
+   - *Dilarang*: Menaruh ratusan baris data statis di dalam file `.vue`; membuat style duplikat di `<style scoped>`.
+3. **`03-provision-orchestrator` (Container Spawning & Ingress)**:
+   - *Wajib*: Hard limit cgroups v2 (RAM 256MB, CPU 0.5); Non-root UID 10001; Read-only rootfs; Drop ALL capabilities; Sanitasi regex domain Traefik `^[a-z0-9-]+$` anti-rule injection; Background health-check 10 detik.
+   - *Dilarang*: Menjalankan kontainer dengan flag `--privileged` atau membuka port langsung ke host tanpa ingress Traefik.
+4. **`04-marketing-site` (Public Landing & Showcase)**:
+   - *Wajib*: Skor LCP < 1.2 detik, CLS = 0; Sanitasi path routing untuk cegah directory traversal (`/../../etc/passwd`); Tailwind CSS utility; Mobile-first responsive; Meta tag OpenGraph.
+   - *Dilarang*: Mengimpor library script berat pihak ketiga yang memblokir render hero image.
+5. **`05-ai-agent-service` (AI Copilot & n8n Workflows)**:
+   - *Wajib*: Rate-limiting kuota prompt per tenant; Sanitasi teks & JSON keluaran LLM sebelum dikirim ke UI; Streaming SSE response dengan TTFT < 800ms; Retry webhook n8n maksimal 3x.
+   - *Dilarang*: Mengeksekusi prompt LLM langsung ke shell/terminal host.
+6. **`06-mobile-companion` (Mobile Companion Platform)**:
+   - *Wajib*: Fokus pada monitoring telemetri live, notifikasi leads/invoice via FCM, dan tombol reboot darurat via FaceID/Fingerprint; Offline-first local caching.
+   - *Dilarang*: Membebani aplikasi mobile dengan canvas page builder drag-and-drop.
+
+### [SOP-BE-01] Backend: Kontrak API & Endpoint BFF (Andalusia)
+1. Setiap endpoint baru pada Go BFF (`02-dashboard-cms`) wajib didefinisikan skema *request* dan *response*-nya dalam format OpenAPI 3.0 / Swagger sebelum koding dimulai.
+2. Endpoint harus mengembalikan struktur JSON konsisten: `{ "success": boolean, "data": any, "message": string, "error": string | null }`.
+3. Validasi input wajib menggunakan validator ketat (tidak boleh menerima string kosong atau payload berukuran lebih dari 10MB).
+4. Bagikan dokumentasi endpoint kepada Irgi (Frontend Web) dan Tyno (Mobile) sebelum merging.
+
+### [SOP-FE-01] Frontend: Penulisan UI & Zero-CSS Duplication (Irgi)
+1. Cek [studio-master.css](file:///Users/rizalfahmi/Documents/React/herocms/services/02-dashboard-cms/src/assets/studio-master.css) sebelum membuat styling baru. Gunakan utility classes yang sudah tersedia (`.btn-top-create`, `.telemetry-card`, `.search-box`, dll).
+2. Dilarang menduplikasi styling grid, kartu, form, dan modal di tag `<style scoped>`.
+3. Komponen menu baru pada view induk (`DashboardView.vue`) wajib dibungkus dengan `defineAsyncComponent(() => import(...))` untuk *lazy-loading*.
+4. Pastikan teks dan input form bersih dari risiko XSS dengan DOMPurify.
+
+### [SOP-DB-01] Database: Migrasi Skema & Penegakan RLS (Risqi)
+1. Setiap pembuatan tabel baru yang menyimpan data tenant wajib menyertakan kolom: `tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE`.
+2. Aktifkan RLS secara eksplisit: `ALTER TABLE <nama_tabel> ENABLE ROW LEVEL SECURITY;`.
+3. Buat policy isolasi:
+   ```sql
+   CREATE POLICY tenant_isolation_policy ON <nama_tabel>
+   FOR ALL USING (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
+   ```
+4. Semua skrip migrasi wajib memiliki file rollback (*Down Migration*) yang teruji.
+
+### [SOP-OPS-01] DevOps & Infra: Pengerasan Kontainer & Edge Proxy (Rizal)
+1. Setiap kontainer website tenant wajib dideploy dengan konfigurasi keamanan:
+   - `User: 10001:10001` (Non-Root)
+   - `ReadonlyRootfs: true`
+   - `CapDrop: ["ALL"]`
+   - `Memory: 268435456` (256MB)
+   - `NanoCPUs: 500000000` (0.5 CPU)
+2. Label Traefik wajib disanitasi menggunakan ekspresi reguler `^[a-z0-9-]+$` untuk mencegah *Traefik Rule Injection (CWE-20/93)*.
+
+### [SOP-SEC-01] Security: Mandatory Pre-Commit Pentest Runner (Rizal)
+1. Sebelum melakukan `git commit`, `git push`, atau membuka Pull Request (PR), jalankan uji penetrasi per-service:
+   `cd services/<service_name> && go test -v ./pentest/...`
+2. Status hasil uji wajib `PASS` (atau `SKIP` jika servis lokal tidak berjalan).
+3. Jika ditemukan status `FAIL`, commit dilarang dan bug keamanan harus segera diperbaiki.
+
+### [SOP-MOB-01] Mobile: Companion App Architecture (Tyno)
+1. Fokus aplikasi mobile adalah **HeroCMS Companion**: Monitoring analitik kunjungan real-time, notifikasi pesan prospek masuk, dan tombol kendali darurat (restart kontainer/maintenance mode).
+2. Tyno tidak boleh dibebani membuat page-builder drag-and-drop di ponsel.
+3. Gunakan state management yang mendukung *offline-first caching* agar metrik terakhir tetap terlihat saat koneksi seluler terputus.
+
+### [SOP-PM-01] Pelaporan Progres ke Paijo AI Agent
+1. Setiap anggota tim melaporkan progres menggunakan format standar:
+   ```markdown
+   Lapor Paijo:
+   - PIC: [Nama Anggota]
+   - Modul/Task: [Nama Fitur/Fix]
+   - Status: [Done / In Progress / Blocked]
+   - Bukti/Output: [File link / Commit / Test pass]
+   - Kendala: [Jika ada]
+   ```
+2. Paijo AI Agent akan memverifikasi hasil kerja, memperbarui checkbox di [TASK_CHECKLIST.md](file:///Users/rizalfahmi/Documents/React/herocms/docs/project-management/TASK_CHECKLIST.md) dan portal interaktif `index.html`.
+
+### [SOP-QA-01] QA & QC: Quality Gate, Definition of Done & E2E Validation (Paijo)
+1. **Pemeriksaan Definition of Done (DoD)**: Setiap task yang diajukan oleh tim wajib dicek kepatuhannya: Zero generic slop, error handling teruji, UI responsif tanpa duplikasi CSS, lolos uji keamanan pentest, dan pencatatan SemVer di changelog.
+2. **Pengujian Regresi E2E Antarmuka**: Validasi skenario pengguna dari pembuatan kontainer hingga live visual editor menggunakan Playwright / browser automation untuk mencegah regresi visual.
+3. **Verifikasi Kontrak API Cross-Service**: Memastikan tidak ada ketidakcocokan tipe data (schema drift) antara Go BFF (`02`), Orchestrator (`03`), Laravel Filament (`01`), dan Mobile App (`06`).
+4. **Gerbang Keamanan Pentest**: Memastikan pre-commit pentest runner berstatus `PASS` pada setiap service sebelum perubahan di-merge ke branch utama.
+5. **Audit Performa Web Vitals**: Mengaudit Marketing Site (`04`) dan Dashboard (`02`) agar memenuhi standar LCP < 1.2 detik dan CLS = 0.
+
+---
+
+## 4. Pemetaan 12 Modul Studio Dashboard ke Microservices
+
+Setiap pekerjaan di `services/02-dashboard-cms` wajib dipetakan ke service backend pasangannya:
+
+1. **Situs & Kontainer**: Terkoneksi ke `services/03-provision-orchestrator` (Go Docker SDK) & Traefik dynamic labels.
+2. **Editor Studio Visual**: Terkoneksi ke Go BFF `02-dashboard-cms` (`site_blocks`) & `services/05-ai-agent-service` (AI Copilot).
+3. **Artikel & Halaman**: Terkoneksi ke PostgreSQL 16 (tabel `posts` & `pages` dengan RLS) via Go BFF.
+4. **Media Assets (S3)**: Terkoneksi ke MinIO/S3 via Go Presigned URL uploader dan quota validator.
+5. **Katalog Template**: Terkoneksi ke `services/05-ai-agent-service` untuk generator tema otomatis.
+6. **Custom Domain & DNS**: Terkoneksi ke Traefik Ingress SSL Let's Encrypt dan DNS verification worker.
+7. **Analitik & Telemetri**: Terkoneksi ke Redis 7 Sorted Sets (`ZSET`) latensi < 1ms dan middleware tracker.
+8. **Webhooks & API**: Terkoneksi ke anti-SSRF outbound dispatcher dan otomasi n8n workflow.
+9. **Kapasitas & Paket (Billing)**: Terkoneksi ke `services/01-admin-console` (Laravel 11) dan Midtrans payment gateway.
+10. **Faktur & Invoice**: Terkoneksi ke Laravel 11 invoice generator dan skema PostgreSQL `invoices`.
+11. **Tiket Support**: Terkoneksi ke SuperAdmin Filament helpdesk resolver di `services/01-admin-console`.
+12. **Changelog & Rilis**: Terkoneksi ke dataset `src/data/changelog.ts` dan SemVer governance.
+
+---
+
+## 5. Model Bisnis & Target Vertikal Blueprint
+
+HeroCMS bukan CRUD generik; melainkan SaaS berbayar dengan 4 Blueprint Vertikal:
+- `business`: Toko Online Retail UMKM (Etalase, Diskon, WhatsApp checkout).
+- `portfolio`: Portofolio Teknis & Agensi (Showcase, Telemetri live, GitHub API).
+- `blog`: Blog Editorial & Media Digital (Reader view, SEO, Multi-author).
+- `education`: Pusat Edukasi & Kursus LMS (Silabus, Modul video, Siswa).
+
+Tiga paket berbayar diatur di `BillingPlanModule.vue`: Starter (Free), Pro (Rp 149k), Enterprise (Rp 499k).
+
