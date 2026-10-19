@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.26',
+    releaseDate: '19 Oktober 2026',
+    title: 'Kamus Arsitektur Berbasis Blueprint Panduan Operasional & 10 SOP Lifecycle Standar Industri',
+    summary: 'Mentransformasi Kamus Arsitektur menjadi blueprint operasional interaktif yang dilengkapi kebutuhan sistem, port, lokasi file rujukan, langkah eksekusi step-by-step, perintah CLI verifikasi cepat, dan aturan Do & Don\'ts; meresmikan 10 Standar Operasional Prosedur (SOP) industri mencakup git branching (SOP-GIT-01), siklus pengerjaan tugas end-to-end (SOP-FLOW-01), tata cara klaim dan kelola checklist (SOP-CHK-01), serta matriks kepatuhan mutlak dan larangan 6 microservices (SOP-SVC-01).',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-11426-1',
+        type: 'feature',
+        scope: 'Actionable Architecture Blueprint Guides',
+        description: 'Mentransformasi 13 entri kamus arsitektur di index.html dan TASK_CHECKLIST.md menjadi kartu blueprint interaktif lengkap dengan dependensi, port, file rujukan, CLI command, langkah pakai, dan Do/Don\'ts.'
+      },
+      {
+        id: 'c-11426-2',
+        type: 'feature',
+        scope: 'Enterprise Lifecycle SOPs (Git, Branching, Workflow & Checklist)',
+        description: 'Menetapkan SOP resmi pembuatan git branch fitur/bug, pesan commit konvensional, alur kerja dari awal sampai akhir, dan tata cara klaim checklist ongoing.'
+      },
+      {
+        id: 'c-11426-3',
+        type: 'improvement',
+        scope: '6 Microservices Architecture Compliance & Mandates',
+        description: 'Merumuskan aturan wajib dan larangan spesifik untuk masing-masing 6 microservices guna mencegah regresi arsitektur dan kebocoran keamanan.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.25',
     releaseDate: '19 Oktober 2026',
     title: 'Integrasi Paijo sebagai Karyawan Internal (PM & QA/QC Specialist) & 5 Task Checklist Jaminan Kualitas (Total 50 Tasks Ongoing)',
     summary: 'Meresmikan Paijo (AI Agent) sebagai salah satu karyawan inti di tim HeroCMS yang memegang peran ganda: Lead Project Management (PM) dan Quality Assurance & Quality Control (QA & QC), melengkapi Paijo dengan 5 task checklist jaminan kualitas mandiri (Playwright E2E Regression, Sprint Backlog & DoD Gatekeeper, Cross-Service Security Pentest, OpenAPI Contract Verifier, dan Core Web Vitals Auditing), meningkatkan total task bisnis menjadi 50 tasks (100% ongoing), serta memperbarui matriks 6 divisi dan 6 microservices.',
-    badge: 'Latest',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

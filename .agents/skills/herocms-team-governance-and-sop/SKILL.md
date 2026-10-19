@@ -37,7 +37,60 @@ Setiap pengembang wajib memahami konsep-konsep inti berikut sebelum memodifikasi
 
 ---
 
-## 3. Standar Operasional Prosedur (SOP) Pengerjaan Teknis
+## 3. Standar Operasional Prosedur (SOP) Pengerjaan Teknis & Lifecycle
+
+### [SOP-GIT-01] Standar Industri Git Branching, Conventional Commits & Push Remote
+1. **Tarik Kode Terbaru**: Sebelum mulai koding, selalu sinkronkan branch lokal dengan `main`:
+   `git checkout main && git pull origin main`
+2. **Buat Branch Fitur Sesuai Standar**:
+   - Fitur baru: `git checkout -b feat/<task-id>-<slug-fitur>` (contoh: `git checkout -b feat/TSK-CNT-01-container-grid`)
+   - Perbaikan bug: `git checkout -b fix/<task-id>-<slug-fitur>` (contoh: `fix/TSK-DOM-04-domain-injection`)
+   - Optimasi performa: `git checkout -b perf/<task-id>-<slug-fitur>`
+   - Patch keamanan: `git checkout -b sec/<task-id>-<slug-fitur>`
+3. **Format Conventional Commits & SemVer**:
+   Pesan commit wajib mencantumkan versi semver di akhir:
+   `git commit -m "<type>(<scope>): <pesan aksi imperative> (<versi-semver>)"`
+   Contoh: `git commit -m "feat(studio): add container pod telemetry card (v1.14.26)"`
+4. **Prosedur Push ke Remote**:
+   `git push -u origin feat/<task-id>-<slug-fitur>`
+5. **Buka Pull Request (PR)**:
+   Buat PR ke `main` dan lampirkan checklist bukti pentest suite dan preview visual.
+
+### [SOP-FLOW-01] Siklus Pengerjaan Tugas End-to-End dari Awal Sampai Akhir
+1. **Langkah 1 (Ambil Checklist)**: Buka `TASK_CHECKLIST.md` atau portal `index.html`. Filter tugas sesuai divisi keahlian Anda dan pilih task yang berstatus `ONGOING`.
+2. **Langkah 2 (Klaim Tugas)**: Laporkan klaim tugas ke Paijo AI Agent: `Lapor Paijo: Klaim Task TSK-XXX-YY`.
+3. **Langkah 3 (Koding & Pembenahan)**: Buat branch lokal sesuai SOP-GIT-01. Terapkan prinsip *Zero-CSS Duplication* dan *Clean Resource Separation*.
+4. **Langkah 4 (Uji Keamanan Pentest)**: Jalankan pentest mandatori: `cd services/<service> && go test -v ./pentest/...` pastikan status `PASS`.
+5. **Langkah 5 (Catat SemVer)**: Update dataset `services/02-dashboard-cms/src/data/changelog.ts` dengan rilis SemVer baru.
+6. **Langkah 6 (Review & DoD Gate)**: Lakukan git push, buka PR, dan Paijo (QA/QC) akan memvalidasi Definition of Done sebelum merge.
+
+### [SOP-CHK-01] Tata Cara Mengambil, Menandai & Mengelola Checklist Tugas
+1. **Prinsip Status ONGOING Mutlak**: Semua task berstatus `ONGOING` karena proses real backend/orchestrator produksi terus berjalan aktif dan disempurnakan. Dilarang mengubah status task menjadi `DONE` tanpa persetujuan arsitektur penuh.
+2. **Arti Penandaan Checklist**:
+   - `[x] ✓ SELESAI`: Untuk pembenahan tampilan antarmuka (UI), pembuatan skema mock, perancangan kontrak API, atau tooling SOP.
+   - `[ ] ⏳ ONGOING`: Untuk integrasi proses real backend, kueri database production, driver runtime kontainer, atau live payment webhook.
+3. **Cara Menandai Progres**: Setiap menyelesaikan satu butir pekerjaan, ubah tanda `[ ]` menjadi `[x]` pada `TASK_CHECKLIST.md` dan perbarui json task terkait.
+4. **Pelaporan Resmi ke Paijo**: Laporkan setiap progres dengan format standar Lapor Paijo yang menyertakan bukti teknis.
+
+### [SOP-SVC-01] Posisi 6 Microservices: Aturan Wajib & Hal yang Harus Dipatuhi
+1. **`01-admin-console` (Superadmin & Billing)**:
+   - *Wajib*: Validasi tanda tangan SHA512 pada webhook kasir Midtrans/Xendit; Autentikasi ketat Filament SuperAdmin; Validasi relasi faktur dan tenant ID.
+   - *Dilarang*: Menyimpan plaintext API token atau mengekspos kredensial database tenant ke client.
+2. **`02-dashboard-cms` (Studio & Go BFF)**:
+   - *Wajib*: Single-binary mode (Gin BFF port 8085 + Vue 3 `embed.FS`); *Zero-CSS Duplication* (gunakan `studio-master.css`); Lazy-loading modular (`defineAsyncComponent`); Pisahkan data statis ke `src/data/*.ts`; Gunakan DOMPurify untuk HTML dinamis; Asymmetric JWT ED25519 & Redis rate-limit.
+   - *Dilarang*: Menaruh ratusan baris data statis di dalam file `.vue`; membuat style duplikat di `<style scoped>`.
+3. **`03-provision-orchestrator` (Container Spawning & Ingress)**:
+   - *Wajib*: Hard limit cgroups v2 (RAM 256MB, CPU 0.5); Non-root UID 10001; Read-only rootfs; Drop ALL capabilities; Sanitasi regex domain Traefik `^[a-z0-9-]+$` anti-rule injection; Background health-check 10 detik.
+   - *Dilarang*: Menjalankan kontainer dengan flag `--privileged` atau membuka port langsung ke host tanpa ingress Traefik.
+4. **`04-marketing-site` (Public Landing & Showcase)**:
+   - *Wajib*: Skor LCP < 1.2 detik, CLS = 0; Sanitasi path routing untuk cegah directory traversal (`/../../etc/passwd`); Tailwind CSS utility; Mobile-first responsive; Meta tag OpenGraph.
+   - *Dilarang*: Mengimpor library script berat pihak ketiga yang memblokir render hero image.
+5. **`05-ai-agent-service` (AI Copilot & n8n Workflows)**:
+   - *Wajib*: Rate-limiting kuota prompt per tenant; Sanitasi teks & JSON keluaran LLM sebelum dikirim ke UI; Streaming SSE response dengan TTFT < 800ms; Retry webhook n8n maksimal 3x.
+   - *Dilarang*: Mengeksekusi prompt LLM langsung ke shell/terminal host.
+6. **`06-mobile-companion` (Mobile Companion Platform)**:
+   - *Wajib*: Fokus pada monitoring telemetri live, notifikasi leads/invoice via FCM, dan tombol reboot darurat via FaceID/Fingerprint; Offline-first local caching.
+   - *Dilarang*: Membebani aplikasi mobile dengan canvas page builder drag-and-drop.
 
 ### [SOP-BE-01] Backend: Kontrak API & Endpoint BFF (Andalusia)
 1. Setiap endpoint baru pada Go BFF (`02-dashboard-cms`) wajib didefinisikan skema *request* dan *response*-nya dalam format OpenAPI 3.0 / Swagger sebelum koding dimulai.

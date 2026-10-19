@@ -1,10 +1,10 @@
-# 📋 HeroCMS Enterprise: Master Roadmap, Granular Task Matrix & 6 Microservices
+# 📋 HeroCMS Enterprise: Master Roadmap, Granular Task Matrix & Operational Blueprint
 > **Project Manager (PM) & QA/QC**: **Paijo (AI Agent)** (Lead Technical PM & QA/QC Specialist — Karyawan internal yang aktif membagikan pekerjaan & mengaudit kualitas terus-menerus)  
 > **Rancang Bangun Awal**: **Rizal** (Fondasi arsitektur, keamanan, dan tampilan UI 12 modul Studio telah dirintis & dicentang)  
 > **Skema Serah Terima (Handover)**: Siap di-handover ke rekan tim sesuai keahlian spesifik (Andalusia, Irgi, Risqi, Tyno, Rizal, Paijo)  
 > **Status Pekerjaan Mutlak**: **100% ONGOING** (Semua pekerjaan berstatus ongoing karena proses real backend, database persistence, runtime kontainer, dan otomasi QA masih berjalan).  
 > **Dokumen Pusat**: `docs/project-management/TASK_CHECKLIST.md`  
-> **Prinsip Mutlak**: Zero Generic Slop, Dual-View (6 Services & 6 Divisi), Business-Driven SaaS, Strict Security First.
+> **Prinsip Mutlak**: Zero Generic Slop, Dual-View (6 Services & 6 Divisi), Functional Architecture Blueprints, Complete Lifecycle SOPs.
 
 ---
 
@@ -292,31 +292,382 @@ Setiap task di bawah ini dikelompokkan berdasarkan divisi keahlian 6 karyawan ti
 
 ---
 
-## 📖 Kamus Arsitektur HeroCMS (Bahasa Ramah & Mudah Dipahami)
+## 📖 Blueprint & Panduan Operasional Arsitektur HeroCMS (Bukan Sekadar Kamus Tulisan)
 
-| Istilah Arsitektur | Analogi Ramah / Penjelasan Sederhana | Peran dalam HeroCMS |
-| :--- | :--- | :--- |
-| **Microservices** | Seperti restoran dengan chef spesialis: kasir sendiri, koki memasak sendiri, pelayan sendiri | 6 service terpisah (Admin, Studio, Orchestrator, Marketing, AI, Mobile) agar jika satu error, yang lain tetap jalan |
-| **Go BFF (Backend-for-Frontend)** | Seperti pelayan sigap yang meracik pesanan dari dapur agar meja depan (web studio) tinggal terima beres | Backend Go Gin di port 8085 yang menyajikan data khusus untuk Vue 3 Dashboard |
-| **Docker Engine SDK Orchestrator** | Seperti juragan tanah otomatis yang membangun rumah kontrakan baru dalam 3 detik saat ada yang sewa | Kode Go yang otomatis membuat kontainer Docker mandiri saat user klik 'Buat Situs' |
-| **Traefik Edge Ingress** | Seperti pos satpam gerbang utama yang memeriksa alamat tamu dan mengantar ke rumah yang benar | Mengatur alamat web (subdomain / custom domain) dan memasang sertifikat SSL gembok hijau otomatis |
-| **Linux cgroups v2 Sandboxing** | Seperti meteran listrik prabayar yang membatasi daya maksimal kamar kos | Membatasi RAM 256MB dan CPU 0.5 vCPU agar satu website ramai tidak menenggelamkan website tenant lain |
-| **PostgreSQL Row-Level Security (RLS)**| Seperti brankas hotel dengan kunci kamar khusus: tamu hanya bisa melihat barang miliknya | Memastikan data artikel/foto tenant A tidak bisa diintip tenant B walau di database yang sama |
-| **Redis 7 Sorted Sets (ZSET)** | Seperti papan skor turnamen kilat di stadion yang diupdate setiap detik | Menghitung ranking artikel terpopuler secara instan tanpa membuat database ngos-ngosan (<1ms) |
-| **MinIO S3 Storage** | Seperti gudang penyimpanan foto dan file terpisah dari bangunan utama | Tempat menyimpan file gambar/video pengguna secara aman dengan link upload berbatas waktu |
-| **AI Copilot (Gemini / Claude)** | Seperti asisten penulis pribadi yang duduk di sebelah pengguna | Membantu menulis teks website, bikin judul menarik, dan buat layout halaman otomatis |
-| **Mobile Companion App** | Seperti remote kontrol TV di saku pemilik toko | Aplikasi HP untuk memantau pengunjung dan merestart website jika macet saat lagi di luar |
-| **Anti-SSRF Webhook Dispatcher** | Seperti kurir surat yang dilarang keras mengantar paket ke alamat rahasia di dalam rumah | Mencegah fitur webhook disalahgunakan hacker untuk menyerang server internal HeroCMS |
-| **Pentest Runner Suite** | Seperti satpam uji petik yang mengetes ketahanan pintu dan gembok sebelum toko buka | Skrip otomatis untuk membobol sistem: jika ada celah terbuka, kode dilarang masuk ke server produksi |
-| **Playwright E2E Regression** | Seperti pembeli misterius yang rutin mengecek semua fungsi toko dari pintu masuk sampai kasir | Menguji otomatis browser headless agar fitur studio tidak rusak saat ada kode baru |
-| **Definition of Done (DoD) Gate** | Seperti checklist quality control sebelum mobil keluar dari pabrik | Memastikan kode zero-slop, pentest lolos, mobile responsif, dan SemVer tercatat sebelum rilis |
-| **API Contract Testing (Schema Drift)** | Seperti perjanjian resmi dua pedagang agar mata uang dan nota pembayaran selalu cocok | Mencegah error akibat perubahan struktur data antar microservices yang tidak sinkron |
+Bagian ini memaparkan setiap komponen arsitektur HeroCMS secara fungsional: dilengkapi **kebutuhan alat, dependensi, lokasi file rujukan, langkah eksekusi lapangan, perintah CLI cepat, dan aturan wajib/larangan**.
+
+### ⚡ Pembuatan Situs Otomatis (Autonomous Container Provisioning)
+> **Kategori**: `Arsitektur Inti & Container`  
+> **Konsep Ramah Pemula**: Mekanisme pembuatan kamar website mandiri (kontainer Docker isolated) secara otomatis saat pelanggan klik 'Buat Situs'. Menggunakan Go Docker SDK tanpa campur tangan manual sysadmin.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Docker Engine API v1.45, Go Docker SDK, Linux cgroups v2, Port internal 80`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `services/03-provision-orchestrator/internal/docker/provisioner.go`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  docker ps --filter 'label=herocms.tenant=true' --format 'table {{.Names}}	{{.Status}}	{{.Ports}}'
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. BFF Go menerima payload pembuatan situs (subdomain & vertikal blueprint).
+  1. Orchestrator memanggil client.ContainerCreate dengan hard limit 256MB RAM / 0.5 CPU.
+  1. Label dynamic Traefik Host(`{subdomain}.herocms.id`) disematkan pada kontainer.
+  1. Kontainer dijalankan (ContainerStart) dan status berubah menjadi active dalam < 4.5 detik.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB non-root UID 10001 dan read-only rootfs; DILARANG memakai flag --privileged.
+
+---
+
+### 🗄️ Kamar Data Terisolasi Tenant (PostgreSQL Row-Level Security / RLS)
+> **Kategori**: `Basis Data & Isolasi`  
+> **Konsep Ramah Pemula**: Sistem sekat kamar hotel digital di PostgreSQL. Setiap pelanggan memiliki kunci kamar sendiri (tenant_id), sehingga artikel, foto, dan invoice antar pelanggan 100% aman dan mustahil saling intip.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `PostgreSQL 16, Port 5432, UUID Extension, Session app.current_tenant_id`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `deploy/sql/01_schema_and_rls.sql`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  psql -U herocms -d herocms_db -c "SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname='public';"
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Setiap tabel data tenant wajib menyertakan kolom: tenant_id UUID NOT NULL.
+  1. Aktifkan RLS: ALTER TABLE <nama_tabel> ENABLE ROW LEVEL SECURITY;
+  1. Buat policy isolasi: USING (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
+  1. Sebelum query dieksekusi di backend, set session: SET LOCAL app.current_tenant_id = 'xxx';
+* **⚖️ Aturan Wajib & Larangan**: WAJIB gunakan transaksi SET LOCAL per request; DILARANG login aplikasi web menggunakan superuser PostgreSQL.
+
+---
+
+### 🛡️ Pintu Gerbang & Satpam SSL Otomatis (Traefik Ingress)
+> **Kategori**: `Infrastruktur & Ingress Proxy`  
+> **Konsep Ramah Pemula**: Pintu gerbang utama penerima lalu lintas web. Otomatis mengenali alamat domain pelanggan (subdomain *.herocms.id maupun custom domain) dan langsung memasang sertifikat SSL gembok hijau HTTPS tanpa restart server.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Traefik v3, Port 80/443, Let's Encrypt ACME, Docker Socket Provider`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `deploy/docker-compose.infra.yml`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  curl -k -I https://127.0.0.1:8085/healthz
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Traefik membaca event streaming Docker socket saat kontainer tenant baru menyala.
+  1. Router HTTP otomatis dipetakan ke layanan internal kontainer port 80.
+  1. Tantangan ACME HTTP-01 diproses otomatis di latar belakang untuk menerbitkan sertifikat Let's Encrypt.
+  1. Lalu lintas dialihkan paksa ke HTTPS (port 443) dengan proteksi TLS 1.3.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB sanitasi nama domain dengan regex ^[a-z0-9-]+$; DILARANG mengizinkan karakter newline/backtick (CWE-20/93).
+
+---
+
+### ⚖️ Pembatas Kuota Server (Linux cgroups v2 Sandboxing)
+> **Kategori**: `Keamanan & Server Host`  
+> **Konsep Ramah Pemula**: Pemberi jatah kuota server agar adil. Tiap website dibatasi maksimal RAM 256MB dan CPU 0.5 vCPU. Jika ada satu website pelanggan viral mendadak atau diserang hacker, website pelanggan lain tetap lancar.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Linux Kernel 5.8+, cgroups v2 hierarchy, Memory Limit 256MB, CPU Quota 50000`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `services/03-provision-orchestrator/internal/docker/`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  docker stats --no-stream --format 'table {{.Name}}	{{.CPUPerc}}	{{.MemUsage}}	{{.MemPerc}}'
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Tentukan HostConfig.Memory = 268435456 (256 * 1024 * 1024 bytes) saat spawning.
+  1. Tentukan HostConfig.NanoCPUs = 500000000 (0.5 vCPU).
+  1. Jatuhkan seluruh hak akses istimewa: CapDrop = ['ALL'].
+  1. Pasang volume tmpfs untuk direktori cache sementara (/tmp) agar write memory terkontrol.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB monitor peringatan OOM killer; DILARANG membiarkan kontainer tenant jalan tanpa batas memori.
+
+---
+
+### 📦 Mode Satu Berkas Ringkas (Single-Binary Gin + Vue BFF)
+> **Kategori**: `Backend & Deployment`  
+> **Konsep Ramah Pemula**: Seluruh aset antarmuka Vue 3 dikompilasi dan dibungkus langsung ke dalam satu file binary executable Go menggunakan fitur embed.FS. Server produksi tidak membutuhkan Node.js dan langsung menyala di port 8085.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Go 1.22+, Gin Web Framework, Vite Production Build, Port 8085`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `services/02-dashboard-cms/cmd/server/main.go`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  cd services/02-dashboard-cms && go run cmd/server/main.go
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Jalankan vite build pada folder frontend sehingga aset statis ter-hash masuk ke dist/.
+  1. Gunakan direktif Go: //go:embed dist/* var staticFS embed.FS di main.go.
+  1. Gin menyajikan rute /assets/* dengan header Cache-Control: public, max-age=31536000, immutable.
+  1. Semua rute antarmuka SPA di-fallback ke index.html.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB code-split vendor di vite.config.ts; DILARANG memasang runtime Node.js di server produksi kontainer.
+
+---
+
+### ⚡ Pencatat Pengunjung Kilat (Redis 7 Sorted Sets / ZSET)
+> **Kategori**: `Memori Kilat & Cache`  
+> **Konsep Ramah Pemula**: Buku tamu digital super kencang di memori RAM. Setiap kali artikel dibaca, Redis mencatat dalam waktu kurang dari 1 milidetik (<1ms), sehingga database PostgreSQL tidak kelelahan saat website ramai.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Redis 7.2, Port 6379, In-Memory Store, Latensi < 1ms`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `services/02-dashboard-cms/internal/redis/telemetry.go`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  redis-cli PING && redis-cli INFO stats
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Hit masuk diterima oleh Gin tracker middleware secara non-blocking.
+  1. IP pengunjung di-hash dengan SHA256 + salt harian (aman GDPR).
+  1. Jalankan command atomik: ZINCRBY tenant:{id}:top_views 1 {article_id}.
+  1. Ambil 5 artikel teratas instan: ZREVRANGE tenant:{id}:top_views 0 4 WITHSCORES.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB gunakan ZSET untuk counter berkecepatan tinggi; DILARANG kueri SELECT COUNT(*) ke PostgreSQL pada setiap page hit.
+
+---
+
+### 🗃️ Penyimpanan Brankas File (MinIO S3 Object Storage)
+> **Kategori**: `Penyimpanan File & Aset`  
+> **Konsep Ramah Pemula**: Brankas penyimpanan foto produk, dokumen, dan logo. Gambar tidak disimpan di database agar server tidak berat, melainkan diunggah langsung ke storage MinIO S3 dengan batas kuota otomatis paket langganan.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `MinIO S3, Port 9000 (API) & 9001 (UI), Presigned PUT URLs, Magic Bytes Validator`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `services/02-dashboard-cms/internal/storage/minio.go`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  curl -I http://127.0.0.1:9000/minio/health/live
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Browser meminta Presigned URL ke Go BFF POST /api/v1/media/presign-upload.
+  1. BFF memeriksa apakah agregat pemakaian file tenant masih di bawah kuota paket.
+  1. Jika aman, BFF mengembalikan Presigned PUT URL berbatas waktu 15 menit.
+  1. Browser mengunggah file langsung ke MinIO; Webhook memverifikasi magic bytes gambar.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB simpan file di prefix terisolasi tenants/{tenant_id}/; DILARANG izinkan upload file executable (.php, .sh, .exe).
+
+---
+
+### 💳 Kasir Pembayaran Otomatis (Midtrans / Xendit Payment Gateway)
+> **Kategori**: `Monetisasi & Billing SaaS`  
+> **Konsep Ramah Pemula**: Sistem kasir online terintegrasi QRIS, Virtual Account, dan Kartu Kredit. Saat pelanggan transfer dan lunas, sistem kasir langsung menaikkan kuota dan paket akun secara otomatis detik itu juga.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Laravel 11, Filament v3, PHP 8.3, Midtrans Snap SDK, HMAC SHA512`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `services/01-admin-console/app/Http/Controllers/Billing/`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  cd services/01-admin-console && php artisan route:list | grep billing
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Pengguna memilih paket (Pro Rp 149rb / Agency Rp 499rb) di BillingPlanModule.vue.
+  1. Admin Console membuat transaksi ke Midtrans dan menghasilkan Snap Token.
+  1. Popup kasir Midtrans Snap terbuka di layar pengguna untuk pembayaran.
+  1. Webhook notifikasi Midtrans diterima, diverifikasi SHA512 signature, dan kuota paket diaktifkan otomatis.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB verifikasi signature SHA512 di webhook; DILARANG meng-upgrade paket hanya berdasarkan callback URL client browser.
+
+---
+
+### 🛡️ Satpam Anti-Penyusupan Jaringan (Anti-SSRF Webhook Dispatcher)
+> **Kategori**: `Keamanan Jaringan & Integrasi`  
+> **Konsep Ramah Pemula**: Penyaring sinyal keluar. Memastikan webhook sistem hanya mengirim data ke alamat publik resmi (seperti Telegram, Instagram, n8n), dan memblokir upaya tembak ke alamat rahasia internal server (127.0.0.1).
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Go Custom HTTP Client, DialContext Validator, Timeout 5 detik, Private IP Blacklist`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `services/02-dashboard-cms/internal/service/webhook.go`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  cd services/02-dashboard-cms && go test -v ./pentest/...
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Event post.published atau container.alert memicu pengiriman webhook.
+  1. DialContext menyelesaikan kueri DNS dan memeriksa alamat IP hasil resolve.
+  1. Jika IP masuk ke range 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, koneksi langsung diputus.
+  1. Jika aman, request HTTP POST dikirim dengan payload terenkripsi HMAC signature.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB periksa IP hasil resolve DNS tepat saat koneksi dibuka (anti-DNS rebinding); DILARANG izinkan kirim ke localhost.
+
+---
+
+### 📱 Aplikasi Pendamping di HP (HeroCMS Mobile Companion)
+> **Kategori**: `Aplikasi Mobile Smartphone`  
+> **Konsep Ramah Pemula**: Aplikasi praktis di smartphone Android & iOS yang dirancang Tyno. Pemilik web bisa memantau pengunjung live hari ini, terima notifikasi lead pesan baru, dan menekan tombol darurat restart situs lewat FaceID.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Flutter 3.x / React Native, Firebase Cloud Messaging (FCM), Biometrics Auth, Offline Cache`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `mobile-companion/`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  cd mobile-companion && ls -la
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Aplikasi HP melakukan registrasi device FCM token ke Go BFF saat pertama kali login.
+  1. Backend mengirimkan push notification saat ada formulir leads baru atau invoice terbit.
+  1. Layar utama menampilkan kartu ringkasan telemetri pengunjung live dan status kontainer.
+  1. Fitur Emergency Reboot meminta konfirmasi sidik jari atau FaceID sebelum mengirim payload restart.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB sediakan offline-first caching metrik; DILARANG membebani mobile app dengan kanvas visual block editor.
+
+---
+
+### 🤖 Asisten Cerdas Penulis Konten (HeroCMS AI Copilot)
+> **Kategori**: `Kecerdasan Buatan & Otomasi`  
+> **Konsep Ramah Pemula**: Robot asisten di editor visual. Pemilik web cukup ketik 'Toko Kopi Kekinian', maka AI langsung membuatkan susunan teks judul hero, deskripsi produk, tombol ajakan, dan template blok siap pakai.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Google Gemini API / Claude LLM, Python / Go Service, n8n Automation, Streaming SSE`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `services/05-ai-agent-service/`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  curl -I http://127.0.0.1:8090/healthz
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Pengguna mengklik tombol Copilot 'Bantu Tulis Konten AI' di VisualEditorModule.vue.
+  1. Prompt instruksi bisnis diteruskan ke microservice AI dengan batasan token ketat.
+  1. Keluaran teks di-stream menggunakan Server-Sent Events (SSE) dengan Time-To-First-Token < 800ms.
+  1. Hasil teks disanitasi dan dimasukkan langsung ke komponen blok yang sedang aktif.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB sanitasi output JSON/teks dari LLM sebelum preview; DILARANG menjalankan perintah sistem host dari prompt AI.
+
+---
+
+### 🛡️ Uji Keamanan Otomatis Sebelum Simpan (Pre-Commit Pentest Runner)
+> **Kategori**: `Jaminan Kualitas & Keamanan`  
+> **Konsep Ramah Pemula**: Pintu audit keamanan otomatis yang dirancang Rizal. Setiap kali ada kode baru yang mau di-commit, robot penguji keamanan otomatis mengecek celah hacker. Jika ada celah terbuka, kode langsung ditolak sampai diperbaiki.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Go Test Runner, HTTP Black-Box Suite, OWASP Top 10 Checks, AGENTS.md Compliance`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `.agents/skills/herocms-pentest-runner/SKILL.md`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  cd services/02-dashboard-cms && go test -v ./pentest/...
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. Developer menyelesaikan pengeditan kode pada salah satu microservice.
+  1. Buka terminal dan jalankan pengujian pentest: cd services/<service> && go test -v ./pentest/...
+  1. Pentest suite menguji proteksi brute force, manipulasi JWT, header keamanan, dan injection.
+  1. Jika hasil PASS atau SKIP, developer diizinkan melakukan git commit dan git push.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB eksekusi pentest runner sebelum git commit; DILARANG commit jika ada status pengujian FAIL.
+
+---
+
+### 🔍 Pengujian Regresi Browser Otomatis (Playwright E2E Regression)
+> **Kategori**: `Jaminan Kualitas & QA`  
+> **Konsep Ramah Pemula**: Robot pemeriksa antarmuka otomatis yang dikelola Paijo (QA & QC). Menguji simulasi alur klik pengguna di browser headless Chromium, memastikan 12 modul Studio tidak rusak dan tampilan responsive mobile tetap presisi.
+
+* **⚙️ Kebutuhan Sistem & Dependensi**: `Node.js, @playwright/test, Headless Chromium/WebKit, Viewport Matrix`
+* **📁 Lokasi File / Konfigurasi Rujukan**: `docs/project-management/qa-e2e/playwright.config.ts`
+* **💻 Perintah CLI Uji / Verifikasi Cepat**:
+  ```bash
+  npx playwright test --project=chromium
+  ```
+* **📋 Panduan Implementasi Lapangan (Step-by-Step)**:
+  1. CI Test Runner menyalakan headless Chromium dalam mode headless.
+  1. Robot membuka halaman Studio Dashboard dan menguji navigasi 12 modul menu.
+  1. Mengambil tangkapan layar (screenshot) dan membandingkan visual diff terhadap baseline.
+  1. Memverifikasi tidak ada error di browser console log dan response time rendering < 300ms.
+* **⚖️ Aturan Wajib & Larangan**: WAJIB uji di resolusi desktop (1440px) dan mobile (375px); DILARANG meloloskan PR yang memiliki regresi visual.
+
+---
+
+## 🛡️ Standar Operasional Prosedur (SOP) Industri & Lifecycle Workflow
+
+Seluruh anggota tim wajib mematuhi panduan pengerjaan teknis, alur git branch, cara ambil checklist, dan kepatuhan microservices berikut:
+
+### [SOP-GIT-01] Standar Industri Git Branching, Conventional Commits & Push Remote
+> **Kategori**: `Alur Kerja & Git` | **PIC Utama**: **Rizal & Seluruh Tim** | **Status**: `Mandatori`
+
+**Langkah-Langkah Pelaksanaan Standar Industri**:
+- Tarik perubahan terbaru dari branch utama sebelum mulai koding: git checkout main && git pull origin main.
+- Buat branch fitur baru dengan format baku: git checkout -b feat/<task-id>-<slug-fitur> (contoh: git checkout -b feat/TSK-CNT-01-container-grid). Untuk perbaikan bug gunakan fix/..., performa perf/..., keamanan sec/....
+- Terapkan format Conventional Commits: git commit -m '<type>(<scope>): <pesan aksi imperative> (<versi-semver>)'. Contoh: git commit -m 'feat(studio): add container pod telemetry card (v1.14.26)'.
+- Kirim branch ke remote repository: git push -u origin feat/<task-id>-<slug-fitur>.
+- Buka Pull Request (PR) ke main dan lampirkan bukti checklist pengujian pentest pada deskripsi PR.
+
+---
+
+### [SOP-FLOW-01] Siklus Pengerjaan Tugas End-to-End dari Awal Sampai Akhir
+> **Kategori**: `Alur Kerja & Git` | **PIC Utama**: **Paijo (PM) & Seluruh Tim** | **Status**: `Mandatori`
+
+**Langkah-Langkah Pelaksanaan Standar Industri**:
+- Langkah 1 (Ambil Checklist): Buka TASK_CHECKLIST.md atau portal index.html, pilih task status ONGOING sesuai divisi keahlian Anda.
+- Langkah 2 (Klaim Tugas): Laporkan klaim tugas ke Paijo: 'Lapor Paijo: Klaim Task TSK-XXX-YY'.
+- Langkah 3 (Koding & Pembenahan): Buat branch lokal (SOP-GIT-01). Terapkan prinsip Zero-CSS Duplication dan Clean Resource Separation.
+- Langkah 4 (Uji Keamanan Pentest): Jalankan pentest mandatori: cd services/<service> && go test -v ./pentest/... pastikan status PASS.
+- Langkah 5 (Catat SemVer): Update dataset services/02-dashboard-cms/src/data/changelog.ts dengan menaikkan nomor versi rilis baru.
+- Langkah 6 (Review & DoD Gate): Lakukan git push, buka PR, dan Paijo (QA/QC) akan memvalidasi Definition of Done sebelum merge.
+
+---
+
+### [SOP-CHK-01] Tata Cara Mengambil, Menandai & Mengelola Checklist Tugas
+> **Kategori**: `Alur Kerja & Git` | **PIC Utama**: **Paijo (PM) & Seluruh Tim** | **Status**: `Mandatori`
+
+**Langkah-Langkah Pelaksanaan Standar Industri**:
+- Status Seluruh Task Mutlak ONGOING: Semua task berstatus ongoing karena proses real backend/orchestrator produksi terus disempurnakan. Dilarang mengubah status task menjadi DONE.
+- Arti Penandaan Checklist: Item [x] berarti rancangan UI/skema/SOP sudah selesai. Item [ ] berarti integrasi proses real backend/DB/runtime kontainer masih berjalan.
+- Cara Menandai Progres: Setiap menyelesaikan satu butir pekerjaan, ubah tanda [ ] menjadi [x] pada TASK_CHECKLIST.md dan perbarui json task.
+- Format Laporan ke Paijo: Sertakan ID Task, nama pelaksana, status ongoing, item yang selesai dicentang, dan tautan commit bukti teknis.
+
+---
+
+### [SOP-SVC-01] Posisi 6 Microservices: Aturan Wajib & Hal yang Harus Dipatuhi
+> **Kategori**: `Kepatuhan Service` | **PIC Utama**: **Seluruh Tim & Paijo (QA)** | **Status**: `Arsitektur Kunci`
+
+**Langkah-Langkah Pelaksanaan Standar Industri**:
+- 01-admin-console: Wajib validasi SHA512 signature Midtrans webhook, auth Filament guard ketat; Dilarang menyimpan plaintext token pembayaran.
+- 02-dashboard-cms: Wajib single-binary port 8085 (embed.FS), Zero-CSS Duplication (studio-master.css), lazy loading defineAsyncComponent, pisahkan data statis ke src/data/*.ts; Dilarang CSS duplikat di scoped style.
+- 03-provision-orchestrator: Wajib batas cgroups v2 256MB RAM / 0.5 CPU, non-root UID 10001, read-only rootfs, sanitasi regex domain Traefik ^[a-z0-9-]+$; Dilarang flag --privileged.
+- 04-marketing-site: Wajib performa kilat LCP < 1.2s, CLS = 0, sanitasi cegah directory traversal (/../../etc/passwd), Tailwind CSS; Dilarang library berat yang memblokir rendering hero.
+- 05-ai-agent-service: Wajib rate-limit prompt per tenant, streaming SSE TTFT < 800ms, sanitasi output teks/JSON; Dilarang eksekusi prompt mentah ke shell server.
+- 06-mobile-companion: Wajib fokus monitoring telemetri live, push alert FCM, emergency reboot FaceID, offline caching; Dilarang membebani mobile dengan visual block page builder.
+
+---
+
+### [SOP-FE-01] Standar UI Studio, Master CSS & Zero-CSS Duplication
+> **Kategori**: `Engineering Teknis` | **PIC Utama**: **Irgi (Frontend Specialist)** | **Status**: `Mandatori`
+
+**Langkah-Langkah Pelaksanaan Standar Industri**:
+- Cek studio-master.css sebelum membuat styling baru. Manfaatkan .btn-top-create, .telemetry-card, .search-box, dll.
+- Dilarang menduplikasi styling tombol, kartu, tabel, dan modal di tag <style scoped>.
+- Gunakan defineAsyncComponent(() => import(...)) untuk lazy-loading modul menu di DashboardView.vue.
+- Pemisahan bersih: File data mock/array statis wajib di src/data/*.ts; Folder src/assets/ khusus visual CSS, font, gambar.
+- Gunakan DOMPurify untuk seluruh input teks HTML dinamis sebelum ditampilkan di canvas editor.
+
+---
+
+### [SOP-BE-01] Standar Penulisan API Contract & Endpoint Go BFF
+> **Kategori**: `Engineering Teknis` | **PIC Utama**: **Andalusia (Full Stack Lead)** | **Status**: `Mandatori`
+
+**Langkah-Langkah Pelaksanaan Standar Industri**:
+- Definisikan skema Request & Response di OpenAPI 3.0 / Swagger sebelum koding backend dimulai.
+- Format respon JSON konsisten: { 'success': boolean, 'data': any, 'message': string, 'error': string | null }.
+- Wajib sanitasi input dan validasi batas payload maksimal 10MB.
+- Bagikan spesifikasi kontrak endpoint ke Irgi (Web) dan Tyno (Mobile) sebelum merging ke branch main.
+
+---
+
+### [SOP-DB-01] Standar Skema Basis Data Multi-Tenant & Row-Level Security
+> **Kategori**: `Engineering Teknis` | **PIC Utama**: **Risqi (Database Specialist)** | **Status**: `Mandatori`
+
+**Langkah-Langkah Pelaksanaan Standar Industri**:
+- Setiap tabel data tenant wajib memiliki kolom: tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE.
+- Aktifkan RLS secara eksplisit: ALTER TABLE <nama_tabel> ENABLE ROW LEVEL SECURITY;
+- Buat policy isolasi menggunakan current_setting('app.current_tenant_id', true).
+- Setiap skrip migrasi database wajib menyertakan skrip rollback (Down Migration) yang teruji.
+- Konfigurasi backup otomatis pg_dump terkompresi gzip setiap 6 jam dengan rotasi 30 hari.
+
+---
+
+### [SOP-OPS-01] Standar Pengerasan Kontainer Linux & Ingress Traefik
+> **Kategori**: `DevOps & Security` | **PIC Utama**: **Rizal (DevOps & Security)** | **Status**: `Mandatori`
+
+**Langkah-Langkah Pelaksanaan Standar Industri**:
+- Setiap kontainer website tenant wajib dikunci dengan non-root UID 10001:10001.
+- Aktifkan ReadonlyRootfs = true dan jatuhkan seluruh capabilities: CapDrop: ['ALL'].
+- Batasi memori maksimal 256MB dan CPU 0.5 vCPU pada HostConfig Docker Engine SDK.
+- Sanitasi nama subdomain dengan regex ^[a-z0-9-]+$ untuk mencegah serangan Traefik Router Rule Injection (CWE-20/93).
+
+---
+
+### [SOP-SEC-01] Mandatory Pre-Commit & Pre-PR Pentest Runner
+> **Kategori**: `DevOps & Security` | **PIC Utama**: **Rizal & Paijo (QA/QC)** | **Status**: `Security Gate`
+
+**Langkah-Langkah Pelaksanaan Standar Industri**:
+- Sebelum git commit atau push, jalankan: cd services/<service_name> && go test -v ./pentest/...
+- Hasil pengujian wajib berstatus PASS (atau SKIP jika servis belum dinyalakan).
+- Jika ada pengujian yang menghasilkan status FAIL, proses commit dilarang keras dan bug harus segera ditambal.
+- Sertakan hasil verifikasi pentest pada body Pull Request sebelum merge ke main.
+
+---
+
+### [SOP-QA-01] Standar Quality Gate, Definition of Done & E2E Validation
+> **Kategori**: `Quality Gate & Security` | **PIC Utama**: **Paijo (PM & QA/QC)** | **Status**: `Quality Gate`
+
+**Langkah-Langkah Pelaksanaan Standar Industri**:
+- Verifikasi kriteria Definition of Done (DoD) pada setiap PR: Zero generic slop, pentest passed, responsive verified, SemVer logged.
+- Jalankan uji regresi E2E Playwright browser headless pada alur registrasi dan visual block editor.
+- Audit konsistensi kontrak API antar microservices guna mencegah schema drift atau breaking changes.
+- Ukur benchmark Core Web Vitals (LCP < 1.2s, CLS = 0) pada Marketing Site dan Studio.
+- Perbarui checklist tugas pada TASK_CHECKLIST.md dan index.html secara sinkron dan transparan.
 
 ---
 
 ## 🔄 Standar Log Pelaporan Tim ke Paijo AI Agent (PM & QA/QC)
 
-Setiap kali melaporkan progres atau hasil serah terima pengerjaan, gunakan format resmi:
+Setiap kali melaporkan progres, mengklaim task, atau melakukan serah terima pekerjaan, gunakan format standar resmi:
 
 ```markdown
 Lapor Paijo:
