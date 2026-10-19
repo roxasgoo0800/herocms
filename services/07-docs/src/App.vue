@@ -1,132 +1,23 @@
-<template>
-  <div class="docs-app" style="min-height: 100vh; background-color: #f8fafc; color: #0f172a; font-family: 'Inter', sans-serif;">
-    <!-- Top Glassmorphic Navigation Bar -->
-    <header style="background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(20px); border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 50;">
-      <div style="max-width: 1400px; margin: 0 auto; padding: 0.85rem 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
-        <!-- Brand -->
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <div style="width: 36px; height: 36px; border-radius: 9px; background: #0f172a; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-            H
-          </div>
-          <div>
-            <div style="display: flex; align-items: center; gap: 0.45rem;">
-              <span style="font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; color: #0f172a;">HeroCMS</span>
-              <span style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Docs</span>
-            </div>
-            <div style="font-size: 0.72rem; color: #64748b; font-weight: 600;">Team Mission Control & Architecture Hub</div>
-          </div>
-        </div>
-
-        <!-- Top Controls: Persona Selector & PM Badge -->
-        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 0.45rem; background: #f8fafc; padding: 0.35rem 0.65rem; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <label for="persona-select" style="font-size: 0.76rem; font-weight: 600; color: #64748b;">👤 Melihat Sebagai:</label>
-            <select 
-              id="persona-select"
-              v-model="store.selectedFilter"
-              style="border: none; background: transparent; font-size: 0.82rem; font-weight: 700; color: #0f172a; outline: none; cursor: pointer;"
-              @change="onPersonaChange"
-            >
-              <option value="all">🌐 Semua Anggota Tim (50 Task)</option>
-              <option v-for="m in store.members" :key="m.id" :value="m.id">
-                {{ m.icon }} {{ m.name }} ({{ m.role }})
-              </option>
-            </select>
-          </div>
-
-          <div style="display: inline-flex; align-items: center; gap: 0.45rem; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.8rem; border-radius: 20px;">
-            <span style="width: 8px; height: 8px; border-radius: 50%; background: #2563eb; display: inline-block;"></span>
-            <span>🤖 PM & QA/QC: Paijo AI Agent</span>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Main Container -->
-    <main style="max-width: 1400px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem 1.5rem;">
-      <!-- Telemetry Cards -->
-      <TelemetryGrid />
-
-      <!-- Navigation Tabs Bar -->
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0.4rem; display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1.75rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
-        <button 
-          :style="store.activeTab === 'tasks' ? activeTabStyle : inactiveTabStyle"
-          @click="store.setActiveTab('tasks')"
-        >
-          <span>📋 Papan Tugas per Divisi (6 Divisi)</span>
-          <span style="font-size: 0.72rem; padding: 0.1rem 0.45rem; border-radius: 5px; font-weight: 700;" :style="store.activeTab === 'tasks' ? { background: '#2563eb', color: '#fff' } : { background: '#e2e8f0', color: '#475569' }">
-            {{ store.telemetry.totalTasks }}
-          </span>
-        </button>
-
-        <button 
-          :style="store.activeTab === 'services' ? activeTabStyle : inactiveTabStyle"
-          @click="store.setActiveTab('services')"
-        >
-          <span>🏢 Papan Tugas per Service (6 Area)</span>
-          <span style="font-size: 0.72rem; padding: 0.1rem 0.45rem; border-radius: 5px; font-weight: 700;" :style="store.activeTab === 'services' ? { background: '#2563eb', color: '#fff' } : { background: '#e2e8f0', color: '#475569' }">
-            6 Services
-          </span>
-        </button>
-
-        <button 
-          :style="store.activeTab === 'blueprints' ? activeTabStyle : inactiveTabStyle"
-          @click="store.setActiveTab('blueprints')"
-        >
-          <span>📖 Blueprint & Kamus Arsitektur</span>
-          <span style="font-size: 0.72rem; padding: 0.1rem 0.45rem; border-radius: 5px; font-weight: 700;" :style="store.activeTab === 'blueprints' ? { background: '#2563eb', color: '#fff' } : { background: '#e2e8f0', color: '#475569' }">
-            {{ store.telemetry.totalBlueprints }}
-          </span>
-        </button>
-
-        <button 
-          :style="store.activeTab === 'sops' ? activeTabStyle : inactiveTabStyle"
-          @click="store.setActiveTab('sops')"
-        >
-          <span>🛡️ SOP & Runbook Tim</span>
-          <span style="font-size: 0.72rem; padding: 0.1rem 0.45rem; border-radius: 5px; font-weight: 700;" :style="store.activeTab === 'sops' ? { background: '#2563eb', color: '#fff' } : { background: '#e2e8f0', color: '#475569' }">
-            {{ store.telemetry.totalSops }}
-          </span>
-        </button>
-
-        <button 
-          :style="store.activeTab === 'paijo' ? activeTabStyle : inactiveTabStyle"
-          @click="store.setActiveTab('paijo')"
-        >
-          <span>🤖 Protokol Paijo AI</span>
-        </button>
-      </div>
-
-      <!-- Active Module View (Lazy-Loaded via defineAsyncComponent) -->
-      <section>
-        <TaskBoardModule v-if="store.activeTab === 'tasks' || store.activeTab === 'services'" />
-        <ArchitectureModule v-else-if="store.activeTab === 'blueprints'" />
-        <SopRunbookModule v-else-if="store.activeTab === 'sops'" />
-        <PaijoProtocolModule v-else-if="store.activeTab === 'paijo'" />
-      </section>
-    </main>
-
-    <!-- Modal Reader View -->
-    <TaskDetailModal />
-
-    <!-- Global Toast Notification -->
-    <div 
-      v-if="store.toastMessage"
-      style="position: fixed; bottom: 1.5rem; right: 1.5rem; background: #0f172a; color: #ffffff; padding: 0.85rem 1.25rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); display: flex; align-items: center; gap: 0.6rem; z-index: 10000; border: 1px solid #334155;"
-    >
-      <span style="color: #10b981;">✓</span>
-      <span>{{ store.toastMessage }}</span>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted } from 'vue';
+import { computed, defineAsyncComponent, onMounted } from 'vue';
+import {
+  Layers,
+  FolderKanban,
+  Server,
+  BookOpen,
+  Terminal,
+  LifeBuoy,
+  ChevronRight,
+  User,
+  CheckCircle2,
+  X
+} from 'lucide-vue-next';
 import { useDocsStore } from './stores/docsStore';
+import BackgroundWave from './components/BackgroundWave.vue';
 import TelemetryGrid from './components/TelemetryGrid.vue';
 import TaskDetailModal from './components/TaskDetailModal.vue';
 
-// Rule 6: Lazy Loading Modules via defineAsyncComponent
+// Lazy-Loaded Views
 const TaskBoardModule = defineAsyncComponent(() => import('./components/TaskBoardModule.vue'));
 const ArchitectureModule = defineAsyncComponent(() => import('./components/ArchitectureModule.vue'));
 const SopRunbookModule = defineAsyncComponent(() => import('./components/SopRunbookModule.vue'));
@@ -138,51 +29,232 @@ onMounted(async () => {
   await store.fetchTasks();
 });
 
-function onPersonaChange() {
-  store.setActiveTab('tasks');
-}
-
-const activeTabStyle = {
-  background: '#0f172a',
-  color: '#ffffff',
-  border: 'none',
-  padding: '0.6rem 1.1rem',
-  borderRadius: '8px',
-  fontSize: '0.86rem',
-  fontWeight: '700',
-  cursor: 'pointer',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '0.5rem',
-  transition: 'all 0.2s'
-};
-
-const inactiveTabStyle = {
-  background: 'transparent',
-  color: '#475569',
-  border: 'none',
-  padding: '0.6rem 1.1rem',
-  borderRadius: '8px',
-  fontSize: '0.86rem',
-  fontWeight: '600',
-  cursor: 'pointer',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '0.5rem',
-  transition: 'all 0.2s'
-};
+const currentBreadcrumbTitle = computed(() => {
+  switch (store.activeTab) {
+    case 'tasks': return 'Papan Tugas per Divisi (6 Divisi)';
+    case 'services': return 'Papan Tugas per Microservice (6 Layanan)';
+    case 'blueprints': return 'Kamus & Blueprint Arsitektur Sistem';
+    case 'sops': return 'Standar Operasional Prosedur (SOP Runbooks)';
+    case 'paijo': return 'Protokol Paijo AI (PM & QA/QC Specialist)';
+    default: return 'Mission Control Portal';
+  }
+});
 </script>
 
-<style>
-/* Ambient dot pattern background matching DESIGN.md */
-body {
-  margin: 0;
-  background-color: #f8fafc;
-  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
-  background-size: 24px 24px;
-}
+<template>
+  <div id="dashboard-app-root">
+    <!-- 1. Background Wave with Dot Grid & Gaussian Ambient Glow -->
+    <BackgroundWave />
 
-* {
-  box-sizing: border-box;
-}
-</style>
+    <div class="dashboard-root-layout" style="position: relative; z-index: 1;">
+      <div class="app-shell">
+        <!-- 2. LEFT SIDEBAR: Professional Cloud Console Navigation -->
+        <aside class="app-sidebar">
+          <!-- Workspace Brand Switcher -->
+          <div class="sidebar-header">
+            <div class="workspace-brand-header">
+              <div class="brand-glyph">
+                <Layers :size="18" color="#ffffff" />
+              </div>
+              <div class="brand-meta">
+                <div class="brand-title">
+                  HeroCMS <span class="brand-gradient">Docs</span>
+                </div>
+                <div class="brand-plan-row">
+                  <span class="pulse-green"></span>
+                  <span class="plan-name">Mission Control Hub</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation Sections -->
+          <div class="sidebar-nav-sections">
+            <div class="nav-section-title">PAPAN TUGAS & SPRINT</div>
+            <nav class="sidebar-nav-list">
+              <button
+                class="nav-link"
+                :class="{ active: store.activeTab === 'tasks' }"
+                @click="store.setActiveTab('tasks'); store.setGroupingMode('division')"
+              >
+                <FolderKanban :size="17" />
+                <span class="nav-link-text">Tugas per Divisi</span>
+                <span class="nav-badge">{{ store.telemetry.totalTasks }} Ongoing</span>
+              </button>
+
+              <button
+                class="nav-link"
+                :class="{ active: store.activeTab === 'services' }"
+                @click="store.setActiveTab('services'); store.setGroupingMode('service')"
+              >
+                <Server :size="17" />
+                <span class="nav-link-text">Tugas per Service</span>
+                <span class="nav-badge">6 Services</span>
+              </button>
+            </nav>
+
+            <div class="nav-section-title">ARSITEKTUR & STANDAR</div>
+            <nav class="sidebar-nav-list">
+              <button
+                class="nav-link"
+                :class="{ active: store.activeTab === 'blueprints' }"
+                @click="store.setActiveTab('blueprints')"
+              >
+                <BookOpen :size="17" />
+                <span class="nav-link-text">Kamus Arsitektur</span>
+                <span class="nav-badge badge-primary">{{ store.telemetry.totalBlueprints }} Blueprint</span>
+              </button>
+
+              <button
+                class="nav-link"
+                :class="{ active: store.activeTab === 'sops' }"
+                @click="store.setActiveTab('sops')"
+              >
+                <Terminal :size="17" />
+                <span class="nav-link-text">SOP & Runbooks</span>
+                <span class="nav-badge badge-success">{{ store.telemetry.totalSops }} SOP</span>
+              </button>
+            </nav>
+
+            <div class="nav-section-title">PROJECT MANAGEMENT</div>
+            <nav class="sidebar-nav-list">
+              <button
+                class="nav-link"
+                :class="{ active: store.activeTab === 'paijo' }"
+                @click="store.setActiveTab('paijo')"
+              >
+                <LifeBuoy :size="17" />
+                <span class="nav-link-text">Paijo PM & QA/QC Hub</span>
+                <span class="nav-badge badge-warning">AI Copilot</span>
+              </button>
+            </nav>
+          </div>
+
+          <!-- Bottom Sidebar: Quota Gauge & User Profile -->
+          <div class="sidebar-footer">
+            <div class="quota-gauge-widget">
+              <div class="gauge-header">
+                <span>Status Sprint</span>
+                <strong>{{ store.telemetry.totalTasks }} / {{ store.telemetry.totalTasks }} Ongoing</strong>
+              </div>
+              <div class="gauge-segments">
+                <span class="gauge-seg filled"></span>
+                <span class="gauge-seg filled"></span>
+                <span class="gauge-seg filled"></span>
+                <span class="gauge-seg filled"></span>
+                <span class="gauge-seg filled"></span>
+                <span class="gauge-seg filled"></span>
+              </div>
+              <div class="gauge-footer">
+                <span>6 Divisi • 6 Microservices</span>
+                <span style="color: #2563eb; font-weight: 700;">Continuous</span>
+              </div>
+            </div>
+
+            <div class="sidebar-user-strip">
+              <div class="user-avatar-small">
+                <User :size="14" color="#2563eb" />
+              </div>
+              <div class="user-info-text">
+                <div class="user-name">Rizal Pratama</div>
+                <div class="user-email-sub">DevOps & Security Lead</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 3. MAIN APPLICATION WORKSPACE -->
+        <div class="app-main-area">
+          <!-- Glassmorphism Sticky Header -->
+          <header class="top-nav-header">
+            <div class="breadcrumbs">
+              <span>HeroCMS Docs</span>
+              <ChevronRight :size="14" class="crumb-sep" />
+              <span class="crumb-current">{{ currentBreadcrumbTitle }}</span>
+            </div>
+
+            <div class="top-actions">
+              <!-- Persona Selector styled to match Studio Search/Pill -->
+              <div class="search-command-shell" style="width: auto; height: 34px; padding: 0 10px; gap: 6px;">
+                <User :size="13" class="search-lead-glyph" style="margin-right: 0;" />
+                <span style="font-size: 0.76rem; font-weight: 600; color: #64748b; white-space: nowrap;">Melihat:</span>
+                <select
+                  v-model="store.selectedFilter"
+                  style="border: none; background: transparent; font-size: 0.8rem; font-weight: 700; color: #0f172a; outline: none; cursor: pointer; padding-right: 4px;"
+                >
+                  <option value="all">🌐 Semua Tim ({{ store.telemetry.totalTasks }} Task)</option>
+                  <option v-for="m in store.members" :key="m.id" :value="m.id">
+                    {{ m.icon }} {{ m.name }} ({{ m.role }})
+                  </option>
+                </select>
+              </div>
+
+              <!-- PM & QA Tag -->
+              <div class="edge-status-tag">
+                <span class="pulse-green-sm"></span>
+                <span>PM & QA: <strong>Paijo AI Agent</strong></span>
+              </div>
+            </div>
+          </header>
+
+          <!-- Main Scrollable Pane -->
+          <main class="content-scroll-pane">
+            <!-- Page Intro Row -->
+            <div class="page-intro-row">
+              <div>
+                <h1 class="page-title">
+                  {{
+                    store.activeTab === 'tasks' ? 'Papan Tugas Bisnis & Arsitektur (Divisi Tim)' :
+                    store.activeTab === 'services' ? 'Papan Tugas per Microservice (01 - 06)' :
+                    store.activeTab === 'blueprints' ? 'Kamus Arsitektur & Operational Blueprint' :
+                    store.activeTab === 'sops' ? 'Standar Operasional Prosedur (SOP) Enterprise' :
+                    'Pusat Kendali Paijo AI (Project Management & QA/QC)'
+                  }}
+                </h1>
+                <p class="page-desc">
+                  {{
+                    store.activeTab === 'tasks' || store.activeTab === 'services' ?
+                    'Seluruh 50 tugas bisnis & arsitektur berada dalam fase ONGOING, dilengkapi alur handover kepemilikan dan checklist interaktif.' :
+                    store.activeTab === 'blueprints' ?
+                    '13 Blueprint operasional lengkap dengan dependensi, file rujukan, langkah eksekusi, dan perintah CLI siap pakai.' :
+                    store.activeTab === 'sops' ?
+                    '10 Panduan standar industri mencakup git branching, siklus pengerjaan tugas, pentest pre-commit, dan tata kelola rilis.' :
+                    'Protokol kendali mutu otomatis, checklist verifikasi rilis, dan generator template laporan sprint berkala.'
+                  }}
+                </p>
+              </div>
+              <div class="quota-quick-pills">
+                <span class="pill-metric">Tugas Ongoing: <strong>{{ store.telemetry.totalTasks }}</strong></span>
+                <span class="pill-metric">6 Divisi: <strong>100% Aktif</strong></span>
+                <span class="pill-metric-highlight">Versi: <strong>v1.15.0</strong></span>
+              </div>
+            </div>
+
+            <!-- Telemetry Strips -->
+            <TelemetryGrid />
+
+            <!-- Active View Component -->
+            <div class="tab-module-canvas">
+              <TaskBoardModule v-if="store.activeTab === 'tasks' || store.activeTab === 'services'" />
+              <ArchitectureModule v-else-if="store.activeTab === 'blueprints'" />
+              <SopRunbookModule v-else-if="store.activeTab === 'sops'" />
+              <PaijoProtocolModule v-else-if="store.activeTab === 'paijo'" />
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Reader View -->
+    <TaskDetailModal />
+
+    <!-- Global Toast Alert -->
+    <Teleport to="body">
+      <div v-if="store.toastMessage" class="toast-popup success">
+        <CheckCircle2 :size="16" />
+        <span>{{ store.toastMessage }}</span>
+        <button class="btn-toast-x" @click="store.toastMessage = null"><X :size="14" /></button>
+      </div>
+    </Teleport>
+  </div>
+</template>

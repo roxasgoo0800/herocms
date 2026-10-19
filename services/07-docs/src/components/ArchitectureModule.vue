@@ -1,116 +1,11 @@
-<template>
-  <div class="architecture-module">
-    <!-- Header Summary -->
-    <div style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #dbeafe; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.75rem;">
-      <h2 style="margin: 0 0 0.4rem 0; font-size: 1.25rem; font-weight: 800; color: #1e3a8a;">
-        📖 Blueprint & Panduan Operasional Arsitektur HeroCMS
-      </h2>
-      <p style="margin: 0; font-size: 0.9rem; color: #475569; line-height: 1.5;">
-        Bukan sekadar kamus tulisan pasif — Setiap komponen sistem dilengkapi kebutuhan alat, port, lokasi file kode rujukan, langkah eksekusi step-by-step, perintah CLI verifikasi cepat, dan aturan wajib / larangan.
-      </p>
-    </div>
-
-    <!-- Blueprint Search -->
-    <div style="margin-bottom: 1.5rem; max-width: 480px;">
-      <input 
-        v-model="searchQuery"
-        type="text" 
-        placeholder="Cari blueprint, kebutuhan alat, port, atau perintah CLI..."
-        style="width: 100%; padding: 0.65rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88rem; outline: none; background: #ffffff;"
-      />
-    </div>
-
-    <!-- Blueprints Grid -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.25rem;">
-      <div 
-        v-for="(item, idx) in filteredBlueprints" 
-        :key="idx"
-        class="blueprint-card"
-        style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.4rem; display: flex; flex-direction: column; gap: 0.9rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); transition: all 0.2s;"
-      >
-        <!-- Head -->
-        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-          <div style="width: 42px; height: 42px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; border: 1px solid #dbeafe; flex-shrink: 0;">
-            {{ item.icon }}
-          </div>
-          <div style="flex: 1;">
-            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #0f172a; line-height: 1.35;">
-              {{ item.term }}
-            </h3>
-            <span style="display: inline-block; background: #eff6ff; color: #2563eb; font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 4px; margin-top: 0.25rem;">
-              {{ item.category }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Definition -->
-        <p style="margin: 0; color: #475569; font-size: 0.88rem; line-height: 1.5;">
-          {{ item.definition }}
-        </p>
-
-        <!-- Requirements -->
-        <div v-if="item.requirements && item.requirements.length > 0">
-          <div style="font-size: 0.73rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 0.35rem;">
-            ⚙️ Kebutuhan Sistem & Dependensi:
-          </div>
-          <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
-            <span 
-              v-for="(req, rIdx) in item.requirements" 
-              :key="rIdx"
-              style="background: #f1f5f9; color: #334155; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; padding: 0.15rem 0.5rem; border-radius: 5px; border: 1px solid #e2e8f0; font-weight: 500;"
-            >
-              {{ req }}
-            </span>
-          </div>
-        </div>
-
-        <!-- File Reference -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.65rem 0.85rem; font-size: 0.8rem;">
-          <div style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.25rem;">
-            📁 File Rujukan di Repositori:
-          </div>
-          <code style="font-family: 'JetBrains Mono', monospace; color: #0f172a; font-size: 0.78rem; word-break: break-all;">
-            {{ item.fileReference }}
-          </code>
-        </div>
-
-        <!-- Guide Steps -->
-        <div v-if="item.guideSteps && item.guideSteps.length > 0">
-          <div style="font-size: 0.73rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 0.35rem;">
-            📋 Panduan Implementasi Lapangan:
-          </div>
-          <ol style="margin: 0 0 0 1.1rem; padding: 0; font-size: 0.82rem; color: #334155; line-height: 1.5;">
-            <li v-for="(step, sIdx) in item.guideSteps" :key="sIdx" style="margin-bottom: 0.25rem;">
-              {{ step }}
-            </li>
-          </ol>
-        </div>
-
-        <!-- CLI Command -->
-        <div v-if="item.cliCommand">
-          <div style="font-size: 0.73rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 0.25rem;">
-            💻 Perintah CLI Uji Cepat:
-          </div>
-          <div style="background: #0f172a; color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; padding: 0.55rem 0.85rem; border-radius: 6px; overflow-x: auto; border-left: 3px solid #2563eb;">
-            {{ item.cliCommand }}
-          </div>
-        </div>
-
-        <!-- Do & Don't -->
-        <div v-if="item.doAndDont" style="font-size: 0.78rem; padding: 0.5rem 0.75rem; border-radius: 6px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; line-height: 1.45;">
-          <strong>⚖️ Aturan Wajib & Larangan:</strong> {{ item.doAndDont }}
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { Search, X, BookOpen, Check, Copy } from 'lucide-vue-next';
 import { useDocsStore } from '../stores/docsStore';
 
 const store = useDocsStore();
 const searchQuery = ref('');
+const copiedCmdIndex = ref<number | null>(null);
 
 const filteredBlueprints = computed(() => {
   const q = searchQuery.value.toLowerCase().trim();
@@ -123,12 +18,131 @@ const filteredBlueprints = computed(() => {
     b.cliCommand.toLowerCase().includes(q)
   );
 });
+
+const copyCommand = (cmd: string, idx: number) => {
+  navigator.clipboard.writeText(cmd);
+  copiedCmdIndex.value = idx;
+  setTimeout(() => {
+    if (copiedCmdIndex.value === idx) copiedCmdIndex.value = null;
+  }, 2000);
+};
 </script>
 
-<style scoped>
-.blueprint-card:hover {
-  border-color: #93c5fd !important;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08) !important;
-  transform: translateY(-2px);
-}
-</style>
+<template>
+  <div class="architecture-module fade-in-section">
+    <!-- Filter Toolbar -->
+    <div class="filter-toolbar">
+      <div class="search-command-shell" style="width: 420px;">
+        <Search :size="15" class="search-lead-glyph" />
+        <input 
+          v-model="searchQuery"
+          type="text" 
+          placeholder="Cari blueprint, kebutuhan alat, port, atau perintah CLI..."
+          class="search-command-input"
+        />
+        <button v-if="searchQuery" class="btn-clear-search" @click="searchQuery = ''" title="Bersihkan">
+          <X :size="13" />
+        </button>
+        <kbd class="shortcut-tag">⌘K</kbd>
+      </div>
+
+      <div class="quota-quick-pills">
+        <span class="pill-metric-highlight">
+          <strong>{{ filteredBlueprints.length }} Blueprint Siap Pakai</strong>
+        </span>
+      </div>
+    </div>
+
+    <!-- Blueprints Cards Grid -->
+    <div class="site-cards-grid">
+      <div 
+        v-for="(item, idx) in filteredBlueprints" 
+        :key="idx"
+        class="pro-site-card"
+        style="--card-accent: #059669;"
+      >
+        <!-- Head -->
+        <div class="card-head">
+          <div class="site-branding">
+            <div class="site-icon-box" style="background: #ecfdf5; color: #059669; font-size: 1.25rem;">
+              {{ item.icon }}
+            </div>
+            <div class="site-branding-info">
+              <span class="nav-badge badge-success">{{ item.category }}</span>
+              <h3 class="brand-title" style="font-size: 1rem; font-weight: 700; color: #0f172a; margin-top: 2px; line-height: 1.35; white-space: normal;">
+                {{ item.term }}
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- Definition -->
+        <p class="page-desc" style="font-size: 0.84rem; color: #475569; line-height: 1.5; margin: 0;">
+          {{ item.definition }}
+        </p>
+
+        <!-- System Requirements Pills -->
+        <div v-if="item.requirements && item.requirements.length > 0">
+          <div style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">
+            ⚙️ Kebutuhan Sistem & Port:
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span 
+              v-for="(req, rIdx) in item.requirements" 
+              :key="rIdx"
+              class="nav-badge"
+              style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;"
+            >
+              {{ req }}
+            </span>
+          </div>
+        </div>
+
+        <!-- File Reference Box -->
+        <div class="site-url-box" style="margin: 0;">
+          <div class="url-text-wrap">
+            <BookOpen :size="12" style="color: #059669; flex-shrink: 0;" />
+            <span class="url-prefix">File Rujukan:</span>
+            <span class="url-mono" style="font-size: 0.74rem;">{{ item.fileReference }}</span>
+          </div>
+        </div>
+
+        <!-- Guide Steps List -->
+        <div v-if="item.guideSteps && item.guideSteps.length > 0" class="pro-panel" style="padding: 12px 14px; background: #f8fafc; margin: 0;">
+          <div style="font-size: 0.72rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px;">
+            📋 Langkah Implementasi:
+          </div>
+          <ol style="margin: 0; padding-left: 18px; font-size: 0.8rem; color: #334155; line-height: 1.5;">
+            <li v-for="(step, sIdx) in item.guideSteps" :key="sIdx" style="margin-bottom: 3px;">
+              {{ step }}
+            </li>
+          </ol>
+        </div>
+
+        <!-- CLI Command Box with Copy Button -->
+        <div v-if="item.cliCommand">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase;">
+              💻 Perintah CLI Uji Cepat:
+            </span>
+            <button
+              class="btn-url-action"
+              style="padding: 2px 6px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px;"
+              @click="copyCommand(item.cliCommand, idx)"
+            >
+              <Check v-if="copiedCmdIndex === idx" :size="11" color="#059669" />
+              <Copy v-else :size="11" />
+              <span>{{ copiedCmdIndex === idx ? 'Tersalin' : 'Salin' }}</span>
+            </button>
+          </div>
+          <pre style="background: #0f172a; color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 10px 12px; border-radius: 6px; overflow-x: auto; margin: 0; border-left: 3px solid #059669;"><code>{{ item.cliCommand }}</code></pre>
+        </div>
+
+        <!-- Do & Don't Strip -->
+        <div v-if="item.doAndDont" style="font-size: 0.78rem; padding: 8px 12px; border-radius: 6px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; line-height: 1.45;">
+          <strong>⚖️ Aturan & Larangan:</strong> {{ item.doAndDont }}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

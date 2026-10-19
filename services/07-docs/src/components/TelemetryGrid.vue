@@ -1,57 +1,71 @@
-<template>
-  <section class="stats-overview-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
-    <!-- Card 1: Total Tasks -->
-    <div class="telemetry-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);">
-      <div style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.4rem;">Total Task Bisnis & Arsitektur</div>
-      <div style="display: flex; align-items: baseline; justify-content: space-between;">
-        <span style="font-size: 1.9rem; font-weight: 800; color: #0f172a; font-family: 'JetBrains Mono', monospace;">{{ store.telemetry.totalTasks }}</span>
-        <span style="background: #eff6ff; color: #2563eb; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 6px; border: 1px solid #bfdbfe;">
-          6 Services
-        </span>
-      </div>
-      <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 0.4rem;">12 Modul Studio + BFF + QA Suite</div>
-    </div>
-
-    <!-- Card 2: 100% Ongoing Status -->
-    <div class="telemetry-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);">
-      <div style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.4rem;">Status Seluruh Pekerjaan</div>
-      <div style="display: flex; align-items: baseline; justify-content: space-between;">
-        <span style="font-size: 1.9rem; font-weight: 800; color: #b45309; font-family: 'JetBrains Mono', monospace;">100%</span>
-        <span style="background: #fffbeb; color: #b45309; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 6px; border: 1px solid #fde68a;">
-          Ongoing
-        </span>
-      </div>
-      <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 0.4rem;">Tampilan selesai, real proses berjalan</div>
-    </div>
-
-    <!-- Card 3: Microservices Coverage -->
-    <div class="telemetry-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);">
-      <div style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.4rem;">Cakupan Microservices</div>
-      <div style="display: flex; align-items: baseline; justify-content: space-between;">
-        <span style="font-size: 1.9rem; font-weight: 800; color: #2563eb; font-family: 'JetBrains Mono', monospace;">{{ store.telemetry.totalServices }}</span>
-        <span style="background: #ecfdf5; color: #059669; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 6px; border: 1px solid #d1fae5;">
-          Terisolasi
-        </span>
-      </div>
-      <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 0.4rem;">Admin, Studio, Infra, Marketing, AI, Mobile</div>
-    </div>
-
-    <!-- Card 4: Team Members & Handover -->
-    <div class="telemetry-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);">
-      <div style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.4rem;">Tim Pelaksana & Handover</div>
-      <div style="display: flex; align-items: baseline; justify-content: space-between;">
-        <span style="font-size: 1.9rem; font-weight: 800; color: #059669; font-family: 'JetBrains Mono', monospace;">{{ store.telemetry.totalMembers }}</span>
-        <span style="background: #eff6ff; color: #2563eb; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 6px; border: 1px solid #bfdbfe;">
-          6 Personil
-        </span>
-      </div>
-      <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 0.4rem;">Rizal, Andalusia, Irgi, Risqi, Tyno & Paijo</div>
-    </div>
-  </section>
-</template>
-
 <script setup lang="ts">
+import { FolderKanban, Clock, BookOpen, Terminal } from 'lucide-vue-next';
 import { useDocsStore } from '../stores/docsStore';
 
 const store = useDocsStore();
 </script>
+
+<template>
+  <section class="stats-overview-grid" style="margin-bottom: 24px;">
+    <!-- 1. Total Tasks -->
+    <div class="telemetry-card accent-blue">
+      <div class="telemetry-corner-watermark blue"><FolderKanban :size="58" /></div>
+      <div class="telemetry-top">
+        <span class="telemetry-label">TOTAL TUGAS BISNIS & ARSITEKTUR</span>
+      </div>
+      <div class="telemetry-val">
+        {{ store.telemetry.totalTasks }}
+        <span class="badge-growth-pill">6 Services</span>
+      </div>
+      <div class="telemetry-sub ready-state">
+        <span class="pulse-mini-dot"></span>
+        <span>12 Modul Studio + BFF + QA Suite</span>
+      </div>
+    </div>
+
+    <!-- 2. Ongoing Status -->
+    <div class="telemetry-card accent-amber">
+      <div class="telemetry-corner-watermark amber"><Clock :size="58" /></div>
+      <div class="telemetry-top">
+        <span class="telemetry-label">STATUS SPRINT PROGRES</span>
+      </div>
+      <div class="telemetry-val">
+        100%
+        <span class="badge-warning" style="font-size: 0.72rem; padding: 2px 7px; border-radius: 6px; font-weight: 700;">Ongoing</span>
+      </div>
+      <div class="telemetry-sub">
+        <span>Tampilan selesai, real proses berjalan</span>
+      </div>
+    </div>
+
+    <!-- 3. Architecture Blueprints -->
+    <div class="telemetry-card accent-emerald">
+      <div class="telemetry-corner-watermark emerald"><BookOpen :size="58" /></div>
+      <div class="telemetry-top">
+        <span class="telemetry-label">BLUEPRINT ARSITEKTUR SISTEM</span>
+      </div>
+      <div class="telemetry-val">
+        {{ store.telemetry.totalBlueprints }}
+        <span class="badge-online">Standar</span>
+      </div>
+      <div class="telemetry-sub">
+        <span>13 Panduan operasional + CLI command</span>
+      </div>
+    </div>
+
+    <!-- 4. Enterprise SOPs -->
+    <div class="telemetry-card accent-sky">
+      <div class="telemetry-corner-watermark sky"><Terminal :size="58" /></div>
+      <div class="telemetry-top">
+        <span class="telemetry-label">SOP & RUNBOOK ENTERPRISE</span>
+      </div>
+      <div class="telemetry-val">
+        {{ store.telemetry.totalSops }}
+        <span class="telemetry-denom">Runbooks</span>
+      </div>
+      <div class="telemetry-sub">
+        <span>Git branching, DoD, pentest, RLS isolasi</span>
+      </div>
+    </div>
+  </section>
+</template>

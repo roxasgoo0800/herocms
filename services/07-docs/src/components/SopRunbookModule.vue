@@ -1,148 +1,140 @@
-<template>
-  <div class="sop-runbook-module">
-    <!-- Header Summary -->
-    <div style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #dbeafe; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.75rem;">
-      <h2 style="margin: 0 0 0.4rem 0; font-size: 1.25rem; font-weight: 800; color: #1e3a8a;">
-        🛡️ Standar Operasional Prosedur (SOP) Industri & Lifecycle Runbook
-      </h2>
-      <p style="margin: 0; font-size: 0.9rem; color: #475569; line-height: 1.5;">
-        Panduan resmi pengerjaan teknis, alur git branching, pesan commit standar industri, siklus kerja dari awal sampai akhir, cara mengklaim dan menandai checklist, serta batas kepatuhan mutlak pada 6 microservices.
-      </p>
-    </div>
-
-    <!-- Category Filters & Search -->
-    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.75rem;">
-      <div style="max-width: 480px;">
-        <input 
-          v-model="searchQuery"
-          type="text" 
-          placeholder="Cari SOP, nomor ID, topik git, atau nama personil..."
-          style="width: 100%; padding: 0.65rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88rem; outline: none; background: #ffffff;"
-        />
-      </div>
-
-      <div style="display: flex; flex-wrap: wrap; gap: 0.45rem;">
-        <button 
-          v-for="cat in categories" 
-          :key="cat"
-          :style="selectedCategory === cat ? activeCatStyle : inactiveCatStyle"
-          @click="selectedCategory = cat"
-        >
-          {{ cat }}
-        </button>
-      </div>
-    </div>
-
-    <!-- SOP Cards Grid -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 1.25rem;">
-      <div 
-        v-for="sop in filteredSops" 
-        :key="sop.id"
-        class="sop-card"
-        style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.4rem; display: flex; flex-direction: column; gap: 0.85rem; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); transition: all 0.2s;"
-      >
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="background: #eff6ff; color: #2563eb; font-weight: 700; font-size: 0.78rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-family: 'JetBrains Mono', monospace; border: 1px solid #bfdbfe;">
-              {{ sop.id }}
-            </span>
-            <span style="background: #f1f5f9; color: #475569; font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 5px;">
-              {{ sop.category }}
-            </span>
-          </div>
-          <span 
-            style="font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px;"
-            :style="{
-              background: sop.badge === 'Security Gate' || sop.badge === 'Quality Gate' ? '#eff6ff' : '#ecfdf5',
-              color: sop.badge === 'Security Gate' || sop.badge === 'Quality Gate' ? '#2563eb' : '#059669',
-              border: sop.badge === 'Security Gate' || sop.badge === 'Quality Gate' ? '1px solid #bfdbfe' : '1px solid #d1fae5'
-            }"
-          >
-            {{ sop.badge }}
-          </span>
-        </div>
-
-        <div>
-          <h3 style="margin: 0 0 0.35rem 0; font-size: 1.05rem; font-weight: 700; color: #0f172a; line-height: 1.4;">
-            {{ sop.title }}
-          </h3>
-          <div style="font-size: 0.78rem; color: #64748b;">
-            PIC Penanggung Jawab: <strong style="color: #0f172a;">{{ sop.pic }}</strong>
-          </div>
-        </div>
-
-        <div style="border-top: 1px solid #f1f5f9; padding-top: 0.75rem;">
-          <ol style="margin: 0 0 0 1.2rem; padding: 0; font-size: 0.85rem; color: #334155; line-height: 1.55;">
-            <li v-for="(step, sIdx) in sop.steps" :key="sIdx" style="margin-bottom: 0.45rem;">
-              {{ step }}
-            </li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { Search, X, Terminal, CheckCircle2 } from 'lucide-vue-next';
 import { useDocsStore } from '../stores/docsStore';
 
 const store = useDocsStore();
 const searchQuery = ref('');
-const selectedCategory = ref('Semua');
+const selectedCategory = ref('Semua Kategori');
 
 const categories = [
-  'Semua',
-  'Alur Kerja & Git',
-  'Kepatuhan Service',
-  'Engineering Teknis',
-  'DevOps & Security',
-  'Quality Gate & Security'
+  'Semua Kategori',
+  'Git & Collaboration',
+  'Workflow & Checklist',
+  'Microservices Compliance',
+  'Database & Migration',
+  'Security & Pentest',
+  'Orchestrator & Docker',
+  'API Contract & OpenAPI',
+  'Incident & Rollback',
+  'Performance & Vitals'
 ];
-
-const activeCatStyle = {
-  background: '#0f172a',
-  color: '#ffffff',
-  border: '1px solid #0f172a',
-  padding: '0.35rem 0.8rem',
-  borderRadius: '8px',
-  fontSize: '0.8rem',
-  fontWeight: '600',
-  cursor: 'pointer'
-};
-
-const inactiveCatStyle = {
-  background: '#ffffff',
-  color: '#475569',
-  border: '1px solid #e2e8f0',
-  padding: '0.35rem 0.8rem',
-  borderRadius: '8px',
-  fontSize: '0.8rem',
-  fontWeight: '500',
-  cursor: 'pointer'
-};
 
 const filteredSops = computed(() => {
   const q = searchQuery.value.toLowerCase().trim();
   const cat = selectedCategory.value;
 
-  return store.sops.filter(sop => {
-    const matchCat = cat === 'Semua' || sop.category === cat;
-    const matchQ = !q ||
-      sop.title.toLowerCase().includes(q) ||
-      sop.id.toLowerCase().includes(q) ||
-      sop.pic.toLowerCase().includes(q) ||
-      sop.steps.some(s => s.toLowerCase().includes(q));
-
-    return matchCat && matchQ;
+  return store.sops.filter(s => {
+    const matchCat = cat === 'Semua Kategori' || s.category.toLowerCase().includes(cat.toLowerCase().replace('&', '').trim());
+    if (!matchCat) return false;
+    if (!q) return true;
+    return (
+      s.title.toLowerCase().includes(q) ||
+      s.id.toLowerCase().includes(q) ||
+      s.category.toLowerCase().includes(q) ||
+      s.pic.toLowerCase().includes(q)
+    );
   });
 });
 </script>
 
-<style scoped>
-.sop-card:hover {
-  border-color: #93c5fd !important;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08) !important;
-  transform: translateY(-2px);
-}
-</style>
+<template>
+  <div class="sop-runbook-module fade-in-section">
+    <!-- Filter Toolbar -->
+    <div class="filter-toolbar">
+      <div class="search-command-shell" style="width: 420px;">
+        <Search :size="15" class="search-lead-glyph" />
+        <input 
+          v-model="searchQuery"
+          type="text" 
+          placeholder="Cari SOP, nomor ID, topik git, atau nama personil..."
+          class="search-command-input"
+        />
+        <button v-if="searchQuery" class="btn-clear-search" @click="searchQuery = ''" title="Bersihkan">
+          <X :size="13" />
+        </button>
+        <kbd class="shortcut-tag">⌘K</kbd>
+      </div>
+
+      <div class="quota-quick-pills">
+        <span class="pill-metric-highlight">
+          <strong>{{ filteredSops.length }} SOP Terdaftar</strong>
+        </span>
+      </div>
+    </div>
+
+    <!-- Category Filter Pills -->
+    <div class="segmented-filter-bar" style="margin-bottom: 24px; flex-wrap: wrap;">
+      <button 
+        v-for="cat in categories" 
+        :key="cat"
+        class="segment-pill"
+        :class="{ active: selectedCategory === cat }"
+        @click="selectedCategory = cat"
+      >
+        <span>{{ cat }}</span>
+      </button>
+    </div>
+
+    <!-- SOP Cards Grid -->
+    <div class="site-cards-grid">
+      <div 
+        v-for="sop in filteredSops" 
+        :key="sop.id"
+        class="pro-site-card"
+        style="--card-accent: #2563eb;"
+      >
+        <!-- Head -->
+        <div class="card-head">
+          <div class="site-branding">
+            <div class="site-icon-box" style="background: #eff6ff; color: #2563eb;">
+              <Terminal :size="20" />
+            </div>
+            <div class="site-branding-info">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="nav-badge" style="font-family: 'JetBrains Mono', monospace;">{{ sop.id }}</span>
+                <span class="nav-badge badge-primary">{{ sop.badge }}</span>
+              </div>
+              <h3 class="brand-title" style="font-size: 1rem; font-weight: 700; color: #0f172a; margin-top: 2px; line-height: 1.35; white-space: normal;">
+                {{ sop.title }}
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- PIC & Category Strip -->
+        <div class="card-momentum-strip" style="cursor: default; padding: 8px 12px;">
+          <div class="momentum-left-meta">
+            <span style="font-size: 0.74rem; color: #64748b;">
+              Kategori: <strong>{{ sop.category }}</strong>
+            </span>
+            <div style="font-size: 0.74rem; color: #2563eb; margin-top: 2px;">
+              Penanggung Jawab: <strong>{{ sop.pic }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Numbered Implementation Steps -->
+        <div class="pro-panel" style="padding: 12px 14px; background: #f8fafc; margin: 0;">
+          <div style="font-size: 0.72rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 8px;">
+            📋 Langkah Prosedur Kerja:
+          </div>
+          <ol style="margin: 0; padding-left: 20px; font-size: 0.82rem; color: #334155; line-height: 1.55;">
+            <li v-for="(step, sIdx) in sop.steps" :key="sIdx" style="margin-bottom: 4px;">
+              {{ step }}
+            </li>
+          </ol>
+        </div>
+
+        <!-- Bottom Status -->
+        <div style="display: flex; justify-content: space-between; align-items: center; pt: 8px; border-top: 1px solid #f1f5f9;">
+          <span style="font-size: 0.74rem; color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <CheckCircle2 :size="13" />
+            <span>Standar Aktif Seluruh Tim</span>
+          </span>
+          <span class="nav-badge">Wajib Dipatuhi</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

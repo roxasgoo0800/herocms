@@ -1,294 +1,322 @@
-<template>
-  <div class="task-board-module">
-    <!-- Grouping Toggle Bar -->
-    <div style="display: inline-flex; background: #f1f5f9; padding: 0.25rem; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 1.25rem; gap: 0.25rem;">
-      <button 
-        :style="store.groupingMode === 'division' ? activeToggleStyle : inactiveToggleStyle"
-        @click="store.setGroupingMode('division')"
-      >
-        <span>👥 Kelompokkan per Divisi Tim (6 Divisi)</span>
-      </button>
-      <button 
-        :style="store.groupingMode === 'service' ? activeToggleStyle : inactiveToggleStyle"
-        @click="store.setGroupingMode('service')"
-      >
-        <span>🏢 Kelompokkan per Service (6 Area Microservices)</span>
-      </button>
-    </div>
-
-    <!-- Filter & Search Row -->
-    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
-      <!-- Search Input -->
-      <div style="position: relative; max-width: 480px;">
-        <input 
-          v-model="store.searchQuery"
-          type="text" 
-          placeholder="Cari task, nama modul, service, file target, atau PIC..."
-          style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88rem; outline: none; background: #ffffff;"
-        />
-        <span style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.95rem;">🔍</span>
-      </div>
-
-      <!-- Filter Pills -->
-      <div style="display: flex; flex-wrap: wrap; gap: 0.45rem;">
-        <template v-if="store.groupingMode === 'division'">
-          <button 
-            :style="store.selectedFilter === 'all' ? activePillStyle : inactivePillStyle"
-            @click="store.setFilter('all')"
-          >
-            🌐 Semua Divisi ({{ store.telemetry.totalTasks }})
-          </button>
-          <button 
-            v-for="m in store.members" 
-            :key="m.id"
-            :style="store.selectedFilter === m.id ? activePillStyle : inactivePillStyle"
-            @click="store.setFilter(m.id)"
-          >
-            {{ m.icon }} {{ m.name }}
-          </button>
-        </template>
-        <template v-else>
-          <button 
-            :style="store.selectedFilter === 'all' ? activePillStyle : inactivePillStyle"
-            @click="store.setFilter('all')"
-          >
-            🌐 Semua Service ({{ store.telemetry.totalTasks }})
-          </button>
-          <button 
-            v-for="s in store.microservices" 
-            :key="s.id"
-            :style="store.selectedFilter === s.id ? activePillStyle : inactivePillStyle"
-            @click="store.setFilter(s.id)"
-          >
-            {{ s.icon }} {{ s.id.substring(0, 8) }}
-          </button>
-        </template>
-      </div>
-    </div>
-
-    <!-- Dynamic Focus Banner -->
-    <div style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #dbeafe; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem;">
-      <h3 style="margin: 0 0 0.35rem 0; font-size: 1.1rem; font-weight: 700; color: #1e3a8a;">
-        {{ bannerTitle }}
-      </h3>
-      <p style="margin: 0; font-size: 0.88rem; color: #475569; line-height: 1.5;">
-        {{ bannerSubtitle }}
-      </p>
-    </div>
-
-    <!-- Groups Container -->
-    <div v-if="visibleGroups.length === 0" style="text-align: center; padding: 3rem; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;">
-      <p style="color: #64748b; font-size: 0.95rem;">Tidak ada task yang cocok dengan filter atau kata kunci pencarian Anda.</p>
-    </div>
-
-    <div v-else style="display: flex; flex-direction: column; gap: 2.25rem;">
-      <div v-for="grp in visibleGroups" :key="grp.id" class="group-section">
-        <!-- Group Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.85rem; margin-bottom: 1.25rem; gap: 1rem; flex-wrap: wrap;">
-          <div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-              <span style="font-size: 1.35rem;">{{ grp.icon }}</span>
-              <h2 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #0f172a;">{{ grp.name }}</h2>
-              <span v-if="grp.path" style="background: #eff6ff; color: #2563eb; font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 6px; font-family: 'JetBrains Mono', monospace; border: 1px solid #bfdbfe;">
-                {{ grp.path }}
-              </span>
-              <span style="background: #f1f5f9; color: #475569; font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 6px;">
-                PIC: {{ grp.pic }}
-              </span>
-            </div>
-            <p v-if="grp.lead" style="margin: 0.35rem 0 0 0; font-size: 0.84rem; color: #64748b; line-height: 1.45;">
-              {{ grp.lead }}
-            </p>
-          </div>
-          <span style="background: #eff6ff; color: #2563eb; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 6px; border: 1px solid #bfdbfe;">
-            {{ grp.tasks.length }} Tasks Terpetakan
-          </span>
-        </div>
-
-        <!-- Task Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;">
-          <div 
-            v-for="task in grp.tasks" 
-            :key="task.id"
-            class="task-card"
-            style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);"
-            @click="store.openTask(task)"
-          >
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
-                <span style="font-size: 0.72rem; font-weight: 600; color: #2563eb; background: #eff6ff; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid #bfdbfe;">
-                  {{ task.category }}
-                </span>
-                <span style="font-size: 0.72rem; font-weight: 600; color: #b45309; background: #fffbeb; padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid #fde68a;">
-                  Sedang Dikerjakan
-                </span>
-              </div>
-              <h3 style="margin: 0 0 0.45rem 0; font-size: 0.98rem; font-weight: 700; color: #0f172a; line-height: 1.4;">
-                {{ task.title }}
-              </h3>
-              <p style="margin: 0; font-size: 0.82rem; color: #64748b; line-height: 1.45;">
-                {{ task.lead.substring(0, 125) }}...
-              </p>
-            </div>
-
-            <div style="margin-top: 1rem; pt: 0.75rem; border-top: 1px solid #f1f5f9;">
-              <div style="margin-bottom: 0.6rem; font-size: 0.76rem; display: flex; flex-direction: column; gap: 0.25rem;">
-                <div>
-                  <span style="color: #64748b;">Rancang Awal:</span> <strong>Rizal</strong> 
-                  <span style="background: #ecfdf5; color: #059669; padding: 1px 6px; border-radius: 4px; font-weight: 600; font-size: 0.7rem; margin-left: 0.35rem;">✓ Tampilan Selesai</span>
-                </div>
-                <div>
-                  <span style="color: #64748b;">Lanjutan Handover:</span> <strong style="color: #0f172a;">{{ task.handoverTo || task.division }}</strong>
-                </div>
-              </div>
-              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.76rem;">
-                <span style="color: #2563eb; font-weight: 600;">Lihat Detail & Checklist ➔</span>
-                <span style="font-family: 'JetBrains Mono', monospace; color: #94a3b8; font-size: 0.72rem;">{{ task.id }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
+import {
+  Search,
+  X,
+  FolderKanban,
+  CheckCircle2,
+  ArrowRight,
+  FileCode,
+  UserCheck
+} from 'lucide-vue-next';
 import { useDocsStore } from '../stores/docsStore';
 import type { TaskItem } from '../types/docs';
 
 const store = useDocsStore();
+const searchInputRef = ref<HTMLInputElement | null>(null);
 
-const activeToggleStyle = {
-  background: '#ffffff',
-  color: '#0f172a',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-  border: 'none',
-  padding: '0.45rem 0.9rem',
-  borderRadius: '8px',
-  fontSize: '0.82rem',
-  fontWeight: '600',
-  cursor: 'pointer'
-};
-
-const inactiveToggleStyle = {
-  background: 'transparent',
-  color: '#64748b',
-  border: 'none',
-  padding: '0.45rem 0.9rem',
-  borderRadius: '8px',
-  fontSize: '0.82rem',
-  fontWeight: '600',
-  cursor: 'pointer'
-};
-
-const activePillStyle = {
-  background: '#0f172a',
-  color: '#ffffff',
-  border: '1px solid #0f172a',
-  padding: '0.35rem 0.75rem',
-  borderRadius: '8px',
-  fontSize: '0.8rem',
-  fontWeight: '600',
-  cursor: 'pointer'
-};
-
-const inactivePillStyle = {
-  background: '#ffffff',
-  color: '#475569',
-  border: '1px solid #e2e8f0',
-  padding: '0.35rem 0.75rem',
-  borderRadius: '8px',
-  fontSize: '0.8rem',
-  fontWeight: '500',
-  cursor: 'pointer'
-};
-
-const bannerTitle = computed(() => {
-  if (store.groupingMode === 'service') {
-    if (store.selectedFilter === 'all') return '🏢 Tampilan 6 Microservices HeroCMS Platform';
-    const svc = store.microservices.find(s => s.id === store.selectedFilter);
-    return svc ? `${svc.icon} ${svc.name}` : 'Detail Service';
-  } else {
-    if (store.selectedFilter === 'all') return '🌐 Tampilan Global Seluruh Divisi (50 Task Terpetakan)';
-    const mem = store.members.find(m => m.id === store.selectedFilter);
-    return mem ? `${mem.icon} Mode Fokus: ${mem.name} (${mem.role})` : 'Detail Divisi';
+const handleGlobalKeydown = (e: KeyboardEvent) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    searchInputRef.value?.focus();
   }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeydown);
 });
 
-const bannerSubtitle = computed(() => {
-  if (store.groupingMode === 'service') {
-    if (store.selectedFilter === 'all') return 'Menampilkan seluruh pekerjaan bisnis yang dipetakan ke dalam 6 layanan microservices arsitektur HeroCMS.';
-    const svc = store.microservices.find(s => s.id === store.selectedFilter);
-    return svc ? svc.lead : '';
-  } else {
-    if (store.selectedFilter === 'all') return 'Menampilkan seluruh rancangan arsitektur dan pekerjaan tim lintas 6 divisi. Dikelola dan diaudit aktif oleh Paijo AI (Project Manager & QA/QC).';
-    const mem = store.members.find(m => m.id === store.selectedFilter);
-    return mem ? mem.focus : '';
-  }
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown);
 });
 
-interface GroupDisplay {
+interface GroupedTasks {
   id: string;
   name: string;
-  icon: string;
   pic: string;
+  icon: string;
+  lead: string;
   path?: string;
-  lead?: string;
   tasks: TaskItem[];
 }
 
-const visibleGroups = computed<GroupDisplay[]>(() => {
-  const filtered = store.filteredTasks;
-  const groups: GroupDisplay[] = [];
+const visibleGroups = computed<GroupedTasks[]>(() => {
+  const query = store.searchQuery.trim().toLowerCase();
+  const filter = store.selectedFilter;
 
   if (store.groupingMode === 'division') {
-    const targetMembers = store.selectedFilter === 'all' 
-      ? store.members 
-      : store.members.filter(m => m.id === store.selectedFilter);
-
-    targetMembers.forEach(mem => {
-      const tasksForMem = filtered.filter(t => t.division === mem.id);
-      if (tasksForMem.length > 0) {
-        groups.push({
-          id: mem.id,
-          name: `Divisi ${mem.role}`,
-          icon: mem.icon,
-          pic: mem.pic,
-          tasks: tasksForMem
+    return store.members
+      .filter(m => filter === 'all' || m.id === filter)
+      .map(m => {
+        const memberTasks = store.tasks.filter(t => {
+          const matchDiv = t.division === m.id;
+          if (!matchDiv) return false;
+          if (!query) return true;
+          return (
+            t.title.toLowerCase().includes(query) ||
+            t.lead.toLowerCase().includes(query) ||
+            t.codeFile.toLowerCase().includes(query) ||
+            t.category.toLowerCase().includes(query) ||
+            t.id.toLowerCase().includes(query)
+          );
         });
-      }
-    });
+        return {
+          id: m.id,
+          name: `${m.name} (${m.role})`,
+          pic: m.pic,
+          icon: m.icon,
+          lead: m.focus,
+          tasks: memberTasks
+        };
+      })
+      .filter(g => g.tasks.length > 0);
   } else {
-    const targetServices = store.selectedFilter === 'all'
-      ? store.microservices
-      : store.microservices.filter(s => s.id === store.selectedFilter);
-
-    targetServices.forEach(svc => {
-      const tasksForSvc = filtered.filter(t => t.serviceGroup === svc.id);
-      if (tasksForSvc.length > 0) {
-        groups.push({
-          id: svc.id,
-          name: svc.name,
-          icon: svc.icon,
-          pic: svc.pic,
-          path: svc.path,
-          lead: svc.lead,
-          tasks: tasksForSvc
+    return store.microservices
+      .filter(s => filter === 'all' || s.id === filter)
+      .map(s => {
+        const serviceTasks = store.tasks.filter(t => {
+          const matchSvc = t.serviceGroup === s.id;
+          if (!matchSvc) return false;
+          if (!query) return true;
+          return (
+            t.title.toLowerCase().includes(query) ||
+            t.lead.toLowerCase().includes(query) ||
+            t.codeFile.toLowerCase().includes(query) ||
+            t.category.toLowerCase().includes(query) ||
+            t.id.toLowerCase().includes(query)
+          );
         });
-      }
-    });
+        return {
+          id: s.id,
+          name: s.name,
+          pic: s.pic,
+          icon: s.icon,
+          lead: s.lead,
+          path: s.path,
+          tasks: serviceTasks
+        };
+      })
+      .filter(g => g.tasks.length > 0);
   }
-
-  return groups;
 });
+
+const getCompletedCount = (t: TaskItem) => {
+  if (!t.checklist) return 0;
+  return t.checklist.filter(c => c.done).length;
+};
+
+const getCompletionPercentage = (t: TaskItem) => {
+  if (!t.checklist || t.checklist.length === 0) return 0;
+  return Math.round((getCompletedCount(t) / t.checklist.length) * 100);
+};
 </script>
 
-<style scoped>
-.task-card:hover {
-  border-color: #93c5fd !important;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08) !important;
-  transform: translateY(-2px);
-}
-</style>
+<template>
+  <div class="task-board-module fade-in-section">
+    <!-- 1. Bespoke Search Command & Mode Switcher Bar -->
+    <div class="filter-toolbar">
+      <div class="search-command-shell">
+        <Search :size="15" class="search-lead-glyph" />
+        <input
+          ref="searchInputRef"
+          v-model="store.searchQuery"
+          type="text"
+          placeholder="Cari task, nama modul, service, target file, atau PIC..."
+          class="search-command-input"
+        />
+        <button
+          v-if="store.searchQuery"
+          class="btn-clear-search"
+          @click="store.searchQuery = ''"
+          title="Bersihkan"
+        >
+          <X :size="13" />
+        </button>
+        <kbd class="shortcut-tag">⌘K</kbd>
+      </div>
+
+      <!-- Segmented Mode Toggle (Divisi vs Service) -->
+      <div class="year-toggle-group">
+        <button
+          class="btn-year-tab"
+          :class="{ active: store.groupingMode === 'division' }"
+          @click="store.setGroupingMode('division')"
+        >
+          <span>👥 Mode Divisi (6)</span>
+        </button>
+        <button
+          class="btn-year-tab"
+          :class="{ active: store.groupingMode === 'service' }"
+          @click="store.setGroupingMode('service')"
+        >
+          <span>🏢 Mode Service (6)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Segmented Filter Pills -->
+    <div class="segmented-filter-bar" style="margin-bottom: 24px; flex-wrap: wrap;">
+      <button
+        class="segment-pill"
+        :class="{ active: store.selectedFilter === 'all' }"
+        @click="store.setFilter('all')"
+      >
+        <span>Semua</span>
+        <span class="pill-count">{{ store.telemetry.totalTasks }}</span>
+      </button>
+
+      <template v-if="store.groupingMode === 'division'">
+        <button
+          v-for="m in store.members"
+          :key="m.id"
+          class="segment-pill"
+          :class="{ active: store.selectedFilter === m.id }"
+          @click="store.setFilter(m.id)"
+        >
+          <span class="mini-status-dot running"></span>
+          <span>{{ m.icon }} {{ m.name }}</span>
+        </button>
+      </template>
+
+      <template v-else>
+        <button
+          v-for="s in store.microservices"
+          :key="s.id"
+          class="segment-pill"
+          :class="{ active: store.selectedFilter === s.id }"
+          @click="store.setFilter(s.id)"
+        >
+          <span class="mini-status-dot running"></span>
+          <span>{{ s.icon }} {{ s.id.substring(0, 10) }}</span>
+        </button>
+      </template>
+    </div>
+
+    <!-- 3. Empty State Notification -->
+    <div v-if="visibleGroups.length === 0" class="empty-state-card" style="padding: 48px 24px; text-align: center; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 14px;">
+      <FolderKanban :size="42" color="#94a3b8" style="margin-bottom: 12px;" />
+      <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Tidak Ada Task yang Cocok</h3>
+      <p style="color: #64748b; font-size: 0.85rem; margin: 0;">Silakan bersihkan filter pencarian untuk menampilkan seluruh 50 task.</p>
+    </div>
+
+    <!-- 4. Group Sections & Responsive Cards Grid -->
+    <div v-else style="display: flex; flex-direction: column; gap: 32px;">
+      <section v-for="grp in visibleGroups" :key="grp.id" class="group-section">
+        <!-- Group Header Header Bar -->
+        <div class="page-intro-row" style="margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span style="font-size: 1.25rem;">{{ grp.icon }}</span>
+              <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.02em;">
+                {{ grp.name }}
+              </h2>
+              <span v-if="grp.path" class="nav-badge badge-primary">
+                {{ grp.path }}
+              </span>
+              <span class="nav-badge">
+                PIC: {{ grp.pic }}
+              </span>
+            </div>
+            <p style="margin: 4px 0 0; font-size: 0.82rem; color: #64748b;">
+              {{ grp.lead }}
+            </p>
+          </div>
+          <div class="quota-quick-pills">
+            <span class="pill-metric-highlight">
+              <strong>{{ grp.tasks.length }} Tasks Terdaftar</strong>
+            </span>
+          </div>
+        </div>
+
+        <!-- Cards Grid using studio-master.css -->
+        <div class="site-cards-grid">
+          <div
+            v-for="task in grp.tasks"
+            :key="task.id"
+            class="pro-site-card"
+            style="--card-accent: #2563eb; cursor: pointer;"
+            @click="store.openTask(task)"
+          >
+            <!-- Card Head -->
+            <div class="card-head">
+              <div class="site-branding">
+                <div class="site-icon-box" style="background: #eff6ff; color: #2563eb;">
+                  <FolderKanban :size="20" />
+                </div>
+                <div class="site-branding-info">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="nav-badge" style="font-family: 'JetBrains Mono', monospace;">{{ task.id }}</span>
+                    <span class="nav-badge badge-warning">⏳ ONGOING</span>
+                  </div>
+                  <h3 class="brand-title" style="font-size: 0.98rem; font-weight: 700; color: #0f172a; margin-top: 2px; line-height: 1.35; white-space: normal;">
+                    {{ task.title }}
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lead Paragraph -->
+            <p class="page-desc" style="font-size: 0.82rem; color: #475569; line-height: 1.45; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+              {{ task.lead }}
+            </p>
+
+            <!-- Technical File Box -->
+            <div class="site-url-box" style="margin: 0;">
+              <div class="url-text-wrap">
+                <FileCode :size="12" style="color: #2563eb; flex-shrink: 0;" />
+                <span class="url-prefix">{{ task.codeLang }}:</span>
+                <span class="url-mono" style="font-size: 0.74rem;">{{ task.codeFile }}</span>
+              </div>
+            </div>
+
+            <!-- Checklist Progress Meter -->
+            <div class="resource-gauges-row" style="margin: 0; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+              <div class="gauge-col" style="width: 100%;">
+                <div class="gauge-meta" style="margin-bottom: 6px;">
+                  <div class="gauge-header-flex">
+                    <CheckCircle2 :size="12" style="color: #059669;" />
+                    <span class="gauge-title">CHECKLIST PROGRES</span>
+                  </div>
+                  <span class="gauge-val" style="font-size: 0.76rem;">
+                    <strong>{{ getCompletedCount(task) }} / {{ task.checklist.length }}</strong>
+                    <span class="gauge-sub"> ({{ getCompletionPercentage(task) }}%)</span>
+                  </span>
+                </div>
+                <div class="custom-meter-track" style="height: 5px;">
+                  <div
+                    class="custom-meter-fill fill-blue"
+                    :style="{ width: `${getCompletionPercentage(task)}%` }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Personil & Handover Strip -->
+            <div class="card-momentum-strip" style="cursor: default; padding: 8px 12px;">
+              <div class="momentum-left-meta">
+                <div class="momentum-title-flex">
+                  <UserCheck :size="12" style="color: #059669;" />
+                  <span>PERANCANG AWAL: <strong>Rizal (✓ UI Siap)</strong></span>
+                </div>
+                <div class="momentum-stat-flex" style="margin-top: 2px;">
+                  <span style="font-size: 0.74rem; color: #64748b;">
+                    Handover: <strong style="color: #2563eb;">{{ task.handoverTo || task.division }}</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Bottom Action Link -->
+            <div style="display: flex; justify-content: space-between; align-items: center; pt: 8px; border-top: 1px solid #f1f5f9;">
+              <span style="font-size: 0.78rem; font-weight: 700; color: #2563eb; display: inline-flex; align-items: center; gap: 4px;">
+                <span>Buka Detail & Checklist Interaktif</span>
+                <ArrowRight :size="13" />
+              </span>
+              <span class="nav-badge badge-primary">{{ task.priority }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</template>
