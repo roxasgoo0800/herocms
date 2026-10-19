@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.18',
+    releaseDate: '19 Oktober 2026',
+    title: 'Portal Interaktif HeroCMS Mission Control, Kamus Arsitektur & Skill SOP Tim',
+    summary: 'Menerbitkan portal interaktif mandiri HeroCMS Mission Control berbasis web (docs/project-management/index.html) dengan tema Studio resmi, meluncurkan Buku Kamus Arsitektur & SOP Pengerjaan Lengkap (docs/KAMUS_DAN_SOP_HEROCMS.md), serta meresmikan Master Skill .agents/skills/herocms-team-governance-and-sop sebagai rujukan permanen seluruh anggota tim dan AI Agent.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11418-1',
+        type: 'feature',
+        scope: 'Interactive Mission Control Portal',
+        description: 'Membangun aplikasi portal HTML mandiri dengan telemetri kesiapan rilis, papan tugas dengan filter petugas & pencarian real-time, tab kamus arsitektur, dan modal detail DoD.'
+      },
+      {
+        id: 'c-11418-2',
+        type: 'feature',
+        scope: 'Master Architecture & SOP Bible',
+        description: 'Menerbitkan docs/KAMUS_DAN_SOP_HEROCMS.md yang memuat glosarium teknis (RLS, cgroups v2, Traefik dynamic labels, ZSET, dll) serta runbook SOP pengerjaan per-divisi.'
+      },
+      {
+        id: 'c-11418-3',
+        type: 'improvement',
+        scope: 'AI Team Governance Skill',
+        description: 'Menambahkan skill resmi .agents/skills/herocms-team-governance-and-sop untuk memandu tata kelola tim dan standar pengerjaan kode.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.17',
     releaseDate: '19 Oktober 2026',
     title: 'Pembagian Divisi Bisnis Enterprise & Inisiasi Task Checklist PM (Paijo AI Agent)',
     summary: 'Mendefinisikan matriks penugasan dan roadmap divisi bisnis lintas tim (Andalusia: Fullstack, Irgi: Frontend Web, Risqi: Database Management, Rizal: DevOps & Security, Tyno: Mobile Companion App) serta menginisiasi Single Source of Truth manajemen proyek berbasis Git di docs/project-management/TASK_CHECKLIST.md di bawah koordinasi Paijo AI Agent.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / Paijo AI Agent',
     items: [
       {

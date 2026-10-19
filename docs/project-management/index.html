@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HeroCMS Mission Control - Task Board & Kamus Arsitektur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-alt: #f1f5f9;
+      --border-subtle: #e2e8f0;
+      --border-focus: #2563eb;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+      
+      --brand-blue: #2563eb;
+      --brand-blue-hover: #1d4ed8;
+      --brand-gradient: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+      
+      --badge-green-bg: #ecfdf5;
+      --badge-green-border: #a7f3d0;
+      --badge-green-text: #059669;
+
+      --badge-amber-bg: #fffbeb;
+      --badge-amber-border: #fde68a;
+      --badge-amber-text: #b45309;
+
+      --badge-red-bg: #fef2f2;
+      --badge-red-border: #fecaca;
+      --badge-red-text: #dc2626;
+
+      --badge-blue-bg: #eff6ff;
+      --badge-blue-border: #bfdbfe;
+      --badge-blue-text: #2563eb;
+
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+      --radius-card: 14px;
+      --radius-btn: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-canvas);
+      background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+      background-size: 24px 24px;
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Bar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.85rem 1.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-glyph {
+      width: 36px;
+      height: 36px;
+      background: #0f172a;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.1rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-info h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-info span.gradient-text {
+      background: var(--brand-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+
+    .top-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .badge-pm {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 2rem 1.75rem;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Telemetry Hero Grid */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .telemetry-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 1.15rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .telemetry-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .telemetry-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .telemetry-value-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+    }
+
+    .telemetry-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+    }
+
+    .telemetry-subtext {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+
+    /* Progress bar */
+    .progress-bar-wrap {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-surface-alt);
+      border-radius: 4px;
+      margin-top: 0.6rem;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--brand-gradient);
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    /* Main Tab Navigation */
+    .nav-tabs-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 1.75rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .tabs-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: var(--brand-blue);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--brand-blue);
+    }
+
+    .tab-counter {
+      background: var(--bg-surface-alt);
+      color: var(--text-main);
+      padding: 0.15rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .tab-btn.active .tab-counter {
+      background: var(--badge-blue-bg);
+      color: var(--brand-blue);
+    }
+
+    /* Action Filter Row */
+    .filter-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      max-width: 380px;
+      min-width: 240px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 0.6rem 1rem 0.6rem 2.25rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-btn);
+      font-size: 0.85rem;
+      outline: none;
+      background: #ffffff;
+      color: var(--text-main);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-subtle);
+      pointer-events: none;
+    }
+
+    .member-filter-pills {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      border: 1px solid var(--border-subtle);
+      background: #ffffff;
+      padding: 0.45rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pill-btn:hover {
+      border-color: #cbd5e1;
+      color: var(--text-main);
+    }
+
+    .pill-btn.active {
+      background: #0f172a;
+      border-color: #0f172a;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Task Grid Cards */
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .task-card {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .task-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: #cbd5e1;
+    }
+
+    .task-card.status-done {
+      border-left: 4px solid #10b981;
+    }
+    .task-card.status-progress {
+      border-left: 4px solid #f59e0b;
+    }
+    .task-card.status-todo {
+      border-left: 4px solid #94a3b8;
+    }
+
+    .task-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .task-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.35;
+    }
+
+    .task-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .task-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 0.75rem;
+      border-top: 1px dashed var(--border-subtle);
+      font-size: 0.78rem;
+    }
+
+    .pic-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .avatar-circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 0.68rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Badges */
+    .status-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .badge-done {
+      background: var(--badge-green-bg);
+      border: 1px solid var(--badge-green-border);
+      color: var(--badge-green-text);
+    }
+    .badge-progress {
+      background: var(--badge-amber-bg);
+      border: 1px solid var(--badge-amber-border);
+      color: var(--badge-amber-text);
+    }
+    .badge-todo {
+      background: var(--bg-surface-alt);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    /* Dictionary View */
+    .dict-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .dict-card {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 1.35rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dict-term {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .dict-tag {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      background: var(--badge-blue-bg);
+      color: var(--brand-blue);
+      border: 1px solid var(--badge-blue-border);
+      font-weight: 600;
+    }
+
+    .dict-definition {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* SOP Cards */
+    .sop-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+
+    .sop-card {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .sop-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--brand-blue);
+      background: var(--badge-blue-bg);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+    }
+
+    .sop-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .sop-steps {
+      list-style-position: inside;
+      font-size: 0.86rem;
+      color: #334155;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .sop-steps li {
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+    }
+
+    .code-block {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+
+    /* Modal Dialog */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #ffffff;
+      border-radius: var(--radius-card);
+      max-width: 650px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      padding: 1.75rem;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--text-subtle);
+      font-size: 1.3rem;
+      padding: 0.25rem;
+      border-radius: 6px;
+    }
+
+    .modal-close:hover {
+      color: var(--text-main);
+      background: var(--bg-surface-alt);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      background: #ffffff;
+      padding: 1.25rem 1.75rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="topbar">
+    <div class="brand-wrap">
+      <div class="brand-glyph">H</div>
+      <div class="brand-info">
+        <h1>HeroCMS <span class="gradient-text">Mission Control</span></h1>
+        <div class="brand-sub">
+          <span class="live-dot"></span>
+          <span>Single Source of Truth: Roadmap, Kamus & SOP Tim</span>
+        </div>
+      </div>
+    </div>
+    <div class="top-meta">
+      <div class="badge-pm">
+        <span>🤖 PM: Paijo AI Agent</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="container">
+
+    <!-- Telemetry Cards -->
+    <section class="telemetry-grid">
+      <div class="telemetry-card">
+        <span class="telemetry-label">Kesiapan Rilis Sprint</span>
+        <div class="telemetry-value-row">
+          <span class="telemetry-value" id="stat-readiness">0%</span>
+          <span class="status-badge badge-done" id="stat-readiness-badge">On Track</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="stat-progress-bar" style="width: 0%;"></div>
+        </div>
+        <span class="telemetry-subtext">Berdasarkan rasio task selesai di Git</span>
+      </div>
+
+      <div class="telemetry-card">
+        <span class="telemetry-label">Total Task Bisnis</span>
+        <div class="telemetry-value-row">
+          <span class="telemetry-value" id="stat-total-tasks">0</span>
+          <span class="tab-counter">6 Divisi</span>
+        </div>
+        <span class="telemetry-subtext">Matriks lintas backend, frontend, infra</span>
+      </div>
+
+      <div class="telemetry-card">
+        <span class="telemetry-label">Selesai (Done)</span>
+        <div class="telemetry-value-row">
+          <span class="telemetry-value" id="stat-done-tasks" style="color: #059669;">0</span>
+          <span class="status-badge badge-done">Verified</span>
+        </div>
+        <span class="telemetry-subtext">Lolos audit arsitektur & QC</span>
+      </div>
+
+      <div class="telemetry-card">
+        <span class="telemetry-label">Sedang Berjalan</span>
+        <div class="telemetry-value-row">
+          <span class="telemetry-value" id="stat-progress-tasks" style="color: #b45309;">0</span>
+          <span class="status-badge badge-progress">Active Sprint</span>
+        </div>
+        <span class="telemetry-subtext">Dalam pengerjaan oleh petugas PIC</span>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs-bar">
+      <div class="tabs-group">
+        <button class="tab-btn active" onclick="switchTab('tasks')">
+          <span>📋 Papan Tugas & Petugas</span>
+          <span class="tab-counter" id="tab-count-tasks">0</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('dict')">
+          <span>📖 Kamus Arsitektur</span>
+          <span class="tab-counter" id="tab-count-dict">0</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('sop')">
+          <span>🛡️ SOP & Runbook Tim</span>
+          <span class="tab-counter" id="tab-count-sop">0</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('paijo')">
+          <span>🤖 Protokol Paijo AI</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 1: TASK BOARD -->
+    <section id="view-tasks">
+      <div class="filter-row">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <input type="text" id="task-search-input" placeholder="Cari task, teknologi, atau modul..." oninput="filterTasks()">
+        </div>
+
+        <div class="member-filter-pills" id="member-pills-container">
+          <button class="pill-btn active" onclick="filterByMember('all')">Semua Petugas</button>
+          <button class="pill-btn" onclick="filterByMember('Andalusia')">Andalusia (Fullstack)</button>
+          <button class="pill-btn" onclick="filterByMember('Irgi')">Irgi (Frontend)</button>
+          <button class="pill-btn" onclick="filterByMember('Risqi')">Risqi (Database)</button>
+          <button class="pill-btn" onclick="filterByMember('Rizal')">Rizal (DevOps/Sec)</button>
+          <button class="pill-btn" onclick="filterByMember('Tyno')">Tyno (Mobile)</button>
+        </div>
+      </div>
+
+      <div class="task-grid" id="task-grid-container">
+        <!-- Rendered by JavaScript -->
+      </div>
+    </section>
+
+    <!-- TAB 2: ARCHITECTURE DICTIONARY -->
+    <section id="view-dict" style="display: none;">
+      <div class="filter-row">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <input type="text" id="dict-search-input" placeholder="Cari istilah kamus arsitektur..." oninput="filterDict()">
+        </div>
+      </div>
+      <div class="dict-grid" id="dict-grid-container">
+        <!-- Rendered by JavaScript -->
+      </div>
+    </section>
+
+    <!-- TAB 3: SOP & RUNBOOK -->
+    <section id="view-sop" style="display: none;">
+      <div class="sop-grid" id="sop-grid-container">
+        <!-- Rendered by JavaScript -->
+      </div>
+    </section>
+
+    <!-- TAB 4: PROTOKOL PAIJO AI -->
+    <section id="view-paijo" style="display: none;">
+      <div class="sop-card">
+        <div class="sop-header">
+          <span class="sop-id">PM-GOVERNANCE</span>
+          <span class="sop-title">Protokol Interaksi & Pelaporan Tim ke Paijo AI Agent</span>
+        </div>
+        <p style="font-size: 0.88rem; color: #475569; margin-bottom: 1rem;">
+          Paijo AI Agent bertindak sebagai Technical Project Manager dan System Architect. Seluruh pengembang wajib mengikuti protokol kerja berikut agar produk tetap berstandar enterprise tanpa kode kotor (*anti-slop*).
+        </p>
+
+        <h4 style="font-size: 0.95rem; margin-top: 1rem; color: #0f172a;">1. Format Standar Pelaporan Task:</h4>
+        <div class="code-block">
+Lapor Paijo:
+- PIC: [Andalusia / Irgi / Risqi / Rizal / Tyno]
+- Modul/Task: [Nama Fitur atau Bugfix]
+- Status: [Done / In Progress / Blocked]
+- Bukti/Output: [File link / commit hash / hasil test passing]
+- Kendala: [Jika membutuhkan intervensi anggota lain]</div>
+
+        <h4 style="font-size: 0.95rem; margin-top: 1.25rem; color: #0f172a;">2. Alur Quality Gate:</h4>
+        <ul class="sop-steps">
+          <li><strong>Verifikasi Otomatis</strong>: Setiap PR wajib menyertakan unit test dan pengujian pentest (`services/*/pentest/...`) dengan status 100% PASS.</li>
+          <li><strong>Git living checklist</strong>: Paijo memperbarui checklist di <code>docs/project-management/TASK_CHECKLIST.md</code>.</li>
+          <li><strong>SemVer Update</strong>: Versi dirilis dan dicatat ke <code>services/02-dashboard-cms/src/data/changelog.ts</code>.</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive Task Detail Modal -->
+  <div class="modal-overlay" id="task-modal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <span class="dict-tag" id="modal-category">CATEGORY</span>
+          <h3 style="font-size: 1.2rem; font-weight: 700; margin-top: 0.35rem;" id="modal-title">Task Title</h3>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div>
+        <h4 style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Deskripsi & Tujuan:</h4>
+        <p style="font-size: 0.88rem; color: #334155; margin-top: 0.25rem; line-height: 1.6;" id="modal-desc"></p>
+      </div>
+      <div>
+        <h4 style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Petugas PIC & Divisi:</h4>
+        <p style="font-size: 0.88rem; font-weight: 600; color: #0f172a; margin-top: 0.25rem;" id="modal-pic"></p>
+      </div>
+      <div>
+        <h4 style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Definition of Done (DoD):</h4>
+        <ul class="sop-steps" id="modal-dod"></ul>
+      </div>
+      <div>
+        <h4 style="font-size: 0.82rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Berkas Terkait:</h4>
+        <div class="code-block" id="modal-files"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    HeroCMS Enterprise Platform &copy; 2026. Managed by <strong>Paijo AI Agent</strong>. Single Source of Truth Repository Governance.
+  </footer>
+
+  <script>
+    // DATASET MASTER
+    const teamTasks = [
+      {
+        id: "T-BE-01",
+        title: "Core Provisioning Engine via Go Docker SDK",
+        category: "Backend",
+        pic: "Andalusia",
+        status: "done",
+        desc: "Membangun orchestrator otonom untuk inisialisasi kontainer tenant mandiri dengan isolasi penuh.",
+        files: "services/03-provision-orchestrator/cmd/main.go",
+        dod: ["Kontainer berhasil dibuat < 4.5 detik", "cgroups v2 limit terpasang", "Network isolated"]
+      },
+      {
+        id: "T-BE-02",
+        title: "Dynamic Traefik Rule Generator",
+        category: "Backend & Infra",
+        pic: "Andalusia",
+        status: "progress",
+        desc: "Generator label dynamic routing Traefik v3 saat kontainer tenant baru di-spawn tanpa reload proxy.",
+        files: "services/03-provision-orchestrator/internal/traefik/",
+        dod: ["Label Traefik otomatis terinjeksi", "Sanitasi regex mencegah rule injection", "HTTPS SSL otomatis aktif"]
+      },
+      {
+        id: "T-BE-03",
+        title: "Contract-First OpenAPI 3.0 Specs",
+        category: "Backend",
+        pic: "Andalusia",
+        status: "todo",
+        desc: "Menyusun skema OpenAPI / Swagger terpadu untuk dikonsumsi tim Web (Irgi) dan Mobile (Tyno).",
+        files: "services/02-dashboard-cms/docs/openapi.yaml",
+        dod: ["Endpoint auth, sites, dan telemetry terdefinisi", "Shared JSON types", "Mock server siap diakses"]
+      },
+      {
+        id: "T-FE-01",
+        title: "Bespoke Enterprise Design System",
+        category: "Frontend Web",
+        pic: "Irgi",
+        status: "done",
+        desc: "Standardisasi token warna Slate/Royal Blue, tipografi Inter, dan master CSS (studio-master.css).",
+        files: "services/02-dashboard-cms/src/assets/studio-master.css",
+        dod: ["Zero-CSS duplication", "Ambient dot grid", "Semantic status badges"]
+      },
+      {
+        id: "T-FE-02",
+        title: "Modular Lazy-Loading (defineAsyncComponent)",
+        category: "Frontend Web",
+        pic: "Irgi",
+        status: "done",
+        desc: "Pemisahan bundle per menu dashboard untuk memangkas initial payload JS dan hemat memori browser.",
+        files: "services/02-dashboard-cms/src/views/DashboardView.vue",
+        dod: ["Seluruh modul menu di-lazyload", "Vite vendor code-splitting", "Lighthouse score > 90"]
+      },
+      {
+        id: "T-FE-03",
+        title: "Interactive Visual Block Editor Live Preview",
+        category: "Frontend Web",
+        pic: "Irgi",
+        status: "progress",
+        desc: "Editor blok visual drag-and-drop dengan rendering real-time dan sanitasi XSS (DOMPurify).",
+        files: "services/02-dashboard-cms/src/components/dashboard/VisualEditorModule.vue",
+        dod: ["Preview mulus tanpa lag", "DOMPurify sanitasi HTML", "Responsive desktop/tablet/mobile preview"]
+      },
+      {
+        id: "T-DB-01",
+        title: "PostgreSQL Row-Level Security (RLS) Isolation",
+        category: "Database",
+        pic: "Risqi",
+        status: "done",
+        desc: "Menerapkan isolasi tingkat kernel PostgreSQL 16 untuk mencegah kebocoran data antar-tenant.",
+        files: "deploy/sql/01_schema_and_rls.sql",
+        dod: ["app.current_tenant_id terpasang di setiap policy", "Zero leakage saat multi-user", "Index tenant_id b-tree"]
+      },
+      {
+        id: "T-DB-02",
+        title: "Redis 7 Top-Views Telemetry Cache (<1ms)",
+        category: "Database & Cache",
+        pic: "Risqi",
+        status: "done",
+        desc: "Agregasi traffic kunjungan real-time menggunakan struktur data Redis Sorted Sets (ZSET).",
+        files: "services/02-dashboard-cms/internal/telemetry/redis.go",
+        dod: ["Waktu baca < 1ms", "ZINCRBY aman dari race conditions", "Penyimpanan rank harian & mingguan"]
+      },
+      {
+        id: "T-DB-03",
+        title: "Automated Daily Snapshot & PITR Recovery",
+        category: "Database",
+        pic: "Risqi",
+        status: "todo",
+        desc: "SOP dan skrip otomatis pencadangan PostgreSQL dengan Point-In-Time Recovery ke MinIO S3.",
+        files: "deploy/scripts/backup-pitr.sh",
+        dod: ["Backup otomatis terjadwal cron", "Uji restore berhasil < 15 menit", "Enkripsi data at rest"]
+      },
+      {
+        id: "T-OPS-01",
+        title: "Multi-Network Docker Isolation Topology",
+        category: "DevOps",
+        pic: "Rizal",
+        status: "done",
+        desc: "Pemisahan jaringan kontainer: edge-network, infra-network, dan tenant-isolated-network.",
+        files: "docker-compose.yml",
+        dod: ["Kontainer tenant tidak bisa membidik host internal", "Hanya Traefik yang terbuka ke publik", "DNS isolation"]
+      },
+      {
+        id: "T-OPS-02",
+        title: "Linux cgroups v2 Hard-Limit Sandbox",
+        category: "DevOps",
+        pic: "Rizal",
+        status: "progress",
+        desc: "Penerapan batas keras memori 256MB, CPU 0.5 vCPU, dan read-only rootfs per kontainer.",
+        files: "services/03-provision-orchestrator/internal/docker/sandbox.go",
+        dod: ["OOM killer terisolasi di kontainer tenant", "CPU throttle aktif", "CapDrop ALL terverifikasi"]
+      },
+      {
+        id: "T-SEC-01",
+        title: "Modular Pentest Runner & Traefik Injection Guard",
+        category: "Security",
+        pic: "Rizal",
+        status: "done",
+        desc: "Rangkaian pengujian penetrasi mandatori black-box HTTP dan mitigasi Traefik injection (CWE-20/93).",
+        files: "services/02-dashboard-cms/pentest/",
+        dod: ["100% Pass sebelum commit/PR", "Regex domain sanitization", "Header keamanan terpasang"]
+      },
+      {
+        id: "T-MOB-01",
+        title: "Real-time Telemetry Dashboard (Mobile)",
+        category: "Mobile",
+        pic: "Tyno",
+        status: "todo",
+        desc: "Aplikasi pendamping mobile untuk melihat metrik kunjungan, top views, dan status kontainer real-time.",
+        files: "mobile/lib/views/telemetry_dashboard.dart",
+        dod: ["Grafik kunjungan hari ini", "Offline cache metrik terakhir", "Cold start < 1.5 detik"]
+      },
+      {
+        id: "T-MOB-02",
+        title: "Push Notification Engine & Emergency Controls",
+        category: "Mobile",
+        pic: "Tyno",
+        status: "todo",
+        desc: "Notifikasi lead formulir kontak baru dan tombol saklar darurat (restart container/clear cache).",
+        files: "mobile/lib/services/push_notification.dart",
+        dod: ["FCM Firebase terintegrasi", "Tombol darurat dengan proteksi konfirmasi", "Biometric login FaceID"]
+      }
+    ];
+
+    const architectureDict = [
+      {
+        term: "Autonomous Provisioning",
+        category: "Architecture",
+        definition: "Mekanisme pembuatan kontainer Docker mandiri secara otomatis dalam hitungan detik saat tenant mendaftar via Go Docker SDK tanpa campur tangan sysadmin."
+      },
+      {
+        term: "Row-Level Security (RLS)",
+        category: "Database",
+        definition: "Kebijakan keamanan di tingkat kernel PostgreSQL yang menyaring data tabel berdasarkan variabel sesi app.current_tenant_id untuk mencegah kebocoran data antar-tenant."
+      },
+      {
+        term: "Traefik Dynamic Labels Ingress",
+        category: "Infrastructure",
+        definition: "Reverse proxy cerdas yang memantau socket Docker dan mendaftarkan rute domain/subdomain HTTPS secara dinamis tanpa perlu me-restart proxy server."
+      },
+      {
+        term: "cgroups v2 Sandboxing",
+        category: "Security",
+        definition: "Fitur kernel Linux untuk membatasi konsumsi memori (256MB), CPU (0.5 vCPU), dan disk IO per kontainer tenant agar tidak membebani server bersama."
+      },
+      {
+        term: "Single-Binary Mode (Gin + Vue)",
+        category: "Backend",
+        definition: "Pola kompilasi Go di mana seluruh file hasil build frontend Vue 3 di-embed ke dalam binary Go executable tunggal (port 8085) tanpa butuh Node.js di server produksi."
+      },
+      {
+        term: "Top-Views Sorted Sets (ZSET)",
+        category: "Cache",
+        definition: "Struktur data Redis yang mengurutkan ranking kunjungan website & artikel dengan operasi real-time dan latensi ultra rendah (< 1ms)."
+      },
+      {
+        term: "Anti-SSRF Webhook Proxy",
+        category: "Security",
+        definition: "Proteksi filter request HTTP keluar pada webhook agar website tenant tidak bisa menyusup atau menembak alamat IP privat internal (127.0.0.1, 10.0.0.0/8)."
+      },
+      {
+        term: "HeroCMS Companion App",
+        category: "Mobile",
+        definition: "Aplikasi mobile pendamping pemilik website yang difokuskan pada pemantauan telemetri bisnis, notifikasi lead prospek baru, dan kontrol darurat."
+      }
+    ];
+
+    const sopList = [
+      {
+        id: "SOP-BE-01",
+        title: "Standar Penulisan API Contract & Endpoint BFF",
+        pic: "Andalusia",
+        steps: [
+          "Definisikan skema Request & Response di OpenAPI 3.0 sebelum koding dimulai.",
+          "Gunakan format respon konsisten: { success, data, message, error }.",
+          "Wajib sanitasi input dan validasi batas payload maksimal 10MB.",
+          "Bagikan spesifikasi Swagger ke Irgi (Web) dan Tyno (Mobile)."
+        ]
+      },
+      {
+        id: "SOP-FE-01",
+        title: "Standar UI & Mandat Zero-CSS Duplication",
+        pic: "Irgi",
+        steps: [
+          "Cek studio-master.css sebelum membuat styling baru.",
+          "Dilarang menduplikasi styling tombol, kartu, dan grid di tag <style scoped>.",
+          "Gunakan defineAsyncComponent untuk lazy-loading menu di DashboardView.vue.",
+          "Gunakan DOMPurify untuk seluruh input teks HTML dinamis."
+        ]
+      },
+      {
+        id: "SOP-DB-01",
+        title: "Standar Skema Multi-Tenant & Row-Level Security",
+        pic: "Risqi",
+        steps: [
+          "Setiap tabel data tenant wajib memiliki kolom: tenant_id UUID NOT NULL.",
+          "Aktifkan RLS: ALTER TABLE <tabel> ENABLE ROW LEVEL SECURITY;",
+          "Buat policy isolasi menggunakan current_setting('app.current_tenant_id').",
+          "Wajib membuat dan menguji skrip rollback (Down Migration)."
+        ]
+      },
+      {
+        id: "SOP-OPS-01",
+        title: "Standar Pengerasan Kontainer Linux & Traefik",
+        pic: "Rizal",
+        steps: [
+          "Setiap kontainer wajib dikunci dengan non-root UID 10001:10001.",
+          "Aktifkan ReadonlyRootfs = true dan CapDrop: ALL.",
+          "Batasi memori maksimal 256MB dan CPU 0.5 vCPU.",
+          "Sanitasi nama subdomain dengan regex ^[a-z0-9-]+$ untuk mencegah rule injection."
+        ]
+      },
+      {
+        id: "SOP-SEC-01",
+        title: "Mandatory Pre-Commit & Pre-PR Pentest Runner",
+        pic: "Rizal",
+        steps: [
+          "Jalankan go test -v ./pentest/... di direktori service yang diubah.",
+          "Hasil uji wajib PASS (atau SKIP jika servis belum jalan).",
+          "Dilarang melakukan git push atau merge jika ada status FAIL.",
+          "Sertakan bukti checklist pentest pada deskripsi Pull Request."
+        ]
+      },
+      {
+        id: "SOP-MOB-01",
+        title: "Standar Aplikasi Mobile Companion (iOS/Android)",
+        pic: "Tyno",
+        steps: [
+          "Fokus pada monitoring analitik dan respon cepat, bukan page builder di HP.",
+          "Terapkan offline-first caching untuk riwayat analitik kunjungan.",
+          "Gunakan push notification Firebase (FCM) untuk leads & alert kuota.",
+          "Sediakan autentikasi biometrik (FaceID / Fingerprint) demi keamanan."
+        ]
+      }
+    ];
+
+    // APPLICATION STATE
+    let currentFilterMember = 'all';
+    let currentSearchQuery = '';
+
+    function init() {
+      renderTelemetry();
+      renderTasks();
+      renderDict();
+      renderSop();
+      document.getElementById('tab-count-tasks').innerText = teamTasks.length;
+      document.getElementById('tab-count-dict').innerText = architectureDict.length;
+      document.getElementById('tab-count-sop').innerText = sopList.length;
+    }
+
+    function renderTelemetry() {
+      const total = teamTasks.length;
+      const done = teamTasks.filter(t => t.status === 'done').length;
+      const progress = teamTasks.filter(t => t.status === 'progress').length;
+      const pct = Math.round((done / total) * 100);
+
+      document.getElementById('stat-readiness').innerText = pct + '%';
+      document.getElementById('stat-progress-bar').style.width = pct + '%';
+      document.getElementById('stat-total-tasks').innerText = total;
+      document.getElementById('stat-done-tasks').innerText = done;
+      document.getElementById('stat-progress-tasks').innerText = progress;
+    }
+
+    function renderTasks() {
+      const container = document.getElementById('task-grid-container');
+      const q = currentSearchQuery.toLowerCase().trim();
+
+      const filtered = teamTasks.filter(task => {
+        const matchMember = currentFilterMember === 'all' || task.pic === currentFilterMember;
+        const matchQuery = !q || 
+          task.title.toLowerCase().includes(q) || 
+          task.desc.toLowerCase().includes(q) || 
+          task.category.toLowerCase().includes(q) ||
+          task.pic.toLowerCase().includes(q);
+        return matchMember && matchQuery;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;">
+            <p style="color: #64748b; font-size: 0.95rem;">Tidak ada task yang cocok dengan filter atau kata kunci pencarian.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(task => {
+        let badgeClass = 'badge-todo';
+        let badgeText = 'Belum Dimulai';
+        if (task.status === 'done') {
+          badgeClass = 'badge-done';
+          badgeText = 'Selesai';
+        } else if (task.status === 'progress') {
+          badgeClass = 'badge-progress';
+          badgeText = 'Sedang Dikerjakan';
+        }
+
+        const initials = task.pic.substring(0, 2).toUpperCase();
+
+        return `
+          <div class="task-card status-${task.status}" onclick="openModal('${task.id}')">
+            <div class="task-card-header">
+              <span class="dict-tag">${task.category}</span>
+              <span class="status-badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <h3 class="task-title">${task.title}</h3>
+            <p class="task-desc">${task.desc}</p>
+            <div class="task-meta-row">
+              <div class="pic-badge">
+                <div class="avatar-circle">${initials}</div>
+                <span>${task.pic}</span>
+              </div>
+              <span style="font-family: 'JetBrains Mono', monospace; color: #94a3b8; font-size: 0.72rem;">${task.id}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDict() {
+      const container = document.getElementById('dict-grid-container');
+      const q = (document.getElementById('dict-search-input')?.value || '').toLowerCase().trim();
+
+      const filtered = architectureDict.filter(item => {
+        return !q || item.term.toLowerCase().includes(q) || item.definition.toLowerCase().includes(q) || item.category.toLowerCase().includes(q);
+      });
+
+      container.innerHTML = filtered.map(item => `
+        <div class="dict-card">
+          <div class="dict-term">
+            <span>${item.term}</span>
+            <span class="dict-tag">${item.category}</span>
+          </div>
+          <p class="dict-definition">${item.definition}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderSop() {
+      const container = document.getElementById('sop-grid-container');
+      container.innerHTML = sopList.map(sop => `
+        <div class="sop-card">
+          <div class="sop-header">
+            <div>
+              <span class="sop-id">${sop.id}</span>
+              <span style="font-size: 0.8rem; color: #64748b; margin-left: 0.5rem;">PIC: <strong>${sop.pic}</strong></span>
+            </div>
+            <span class="status-badge badge-done">Mandatori</span>
+          </div>
+          <h3 class="sop-title">${sop.title}</h3>
+          <ol class="sop-steps">
+            ${sop.steps.map(s => `<li>${s}</li>`).join('')}
+          </ol>
+        </div>
+      `).join('');
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      document.getElementById('view-tasks').style.display = tab === 'tasks' ? 'block' : 'none';
+      document.getElementById('view-dict').style.display = tab === 'dict' ? 'block' : 'none';
+      document.getElementById('view-sop').style.display = tab === 'sop' ? 'block' : 'none';
+      document.getElementById('view-paijo').style.display = tab === 'paijo' ? 'block' : 'none';
+    }
+
+    function filterByMember(member) {
+      currentFilterMember = member;
+      document.querySelectorAll('.pill-btn').forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      renderTasks();
+    }
+
+    function filterTasks() {
+      currentSearchQuery = document.getElementById('task-search-input').value;
+      renderTasks();
+    }
+
+    function filterDict() {
+      renderDict();
+    }
+
+    function openModal(taskId) {
+      const task = teamTasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      document.getElementById('modal-category').innerText = task.category;
+      document.getElementById('modal-title').innerText = task.title;
+      document.getElementById('modal-desc').innerText = task.desc;
+      document.getElementById('modal-pic').innerText = `${task.pic} (${task.category})`;
+      document.getElementById('modal-files').innerText = task.files;
+
+      document.getElementById('modal-dod').innerHTML = task.dod.map(d => `<li>${d}</li>`).join('');
+      document.getElementById('task-modal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('task-modal').classList.remove('open');
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target.id === 'task-modal') {
+        closeModal();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Run on startup
+    init();
+  </script>
+</body>
+</html>
