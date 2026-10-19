@@ -122,3 +122,17 @@ Setiap AI Agent maupun pengembang yang hendak melakukan **`git commit`**, **`git
    - `services/05-ai-agent-service/pentest/`: Redis Namespace Injection & DoS protection (CWE-400/CWE-1287).
 3. **Dokumentasi di Deskripsi PR**: Sertakan checklist verifikasi pentest pada body Pull Request sebelum merge ke `main`.
 
+---
+
+## 10. Standar Rilis Mandiri (Independent Service Release) & Kebijakan Docker CI/CD (Wajib)
+Setiap AI Agent maupun pengembang **WAJIB** mematuhi panduan pada skill [`.agents/skills/herocms-independent-release-flow`](file:///Users/rizalfahmi/Documents/React/herocms/.agents/skills/herocms-independent-release-flow/SKILL.md):
+1. **Format Tag Rilis Per-Service**: Gunakan format `<service-prefix>-vX.Y.Z` agar rilis setiap microservice independen dan tidak membingungkan:
+   - `07-docs-vX.Y.Z` atau `docs-vX.Y.Z` untuk Service 07 Docs Hub
+   - `02-dashboard-vX.Y.Z` atau `dashboard-vX.Y.Z` untuk Service 02 Dashboard Studio
+   - `04-marketing-vX.Y.Z` atau `marketing-vX.Y.Z` untuk Service 04 Marketing Site
+   - `03-orchestrator-vX.Y.Z` atau `orchestrator-vX.Y.Z` untuk Service 03 Provision Orchestrator
+   - `05-ai-agent-vX.Y.Z` atau `ai-agent-vX.Y.Z` untuk Service 05 AI Agent Service
+   - `vX.Y.Z` (e.g. `v1.15.0`) hanya digunakan saat rilis serentak seluruh platform (*Platform Suite Milestone*).
+2. **Pembuatan Docker Image HANYA Lewat Release**: Pembuatan (*build*) dan pengunggahan (*push*) Docker Image ke Docker Hub **HANYA BISA DAN HANYA BOLEH** dilakukan melalui event **GitHub Release** (`on: release: types: [published]`).
+3. **Larangan Push Branch Trigger**: **DILARANG KERAS** memicu Docker build & push melalui event `git push` ke branch `main`, `master`, atau branch fitur mana pun.
+
