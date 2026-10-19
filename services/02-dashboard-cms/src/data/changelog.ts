@@ -2,11 +2,32 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.14',
+    releaseDate: '19 Oktober 2026',
+    title: 'Isolasi Rangkaian Uji & Pentest ke Direktori Terpusat pentest/',
+    summary: 'Memisahkan seluruh berkas pengujian penetrasi (pentest) dan unit test (*_test.go) dari direktori kode produksi (services/*) ke direktori root pentest/ terisolasi. Penataan ini memastikan kode aplikasi tetap bersih, rapi, dan modular tanpa mencampurkan skrip pengujian internal ke dalam pohon berkas implementasi layanan.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11414-1',
+        type: 'improvement',
+        scope: 'Test Suite & Pentest Folder Segregation',
+        description: 'Memindahkan 12 berkas *_test.go dari 02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, dan 05-ai-agent-service ke struktur pentest/ terpusat.'
+      },
+      {
+        id: 'c-11414-2',
+        type: 'improvement',
+        scope: 'Pentest Documentation & Architecture Hygiene',
+        description: 'Menambahkan pentest/README.md sebagai panduan arsitektur pengujian dan pemetaan terhadap laporan audit QC_AND_PENTEST_REPORT.md.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.13',
     releaseDate: '18 Oktober 2026',
     title: 'Fix Code Block Background Leak & Upgrade to Ray.so / VS Code Terminal Editor Styling',
     summary: 'Memperbaiki dan meningkatkan tampilan cuplikan kode di Reader Mode artikel: (1) Memperbaiki selector CSS inline code (.reader-prose-body code) yang sebelumnya bocor ke dalam blok <pre><code> sehingga menghasilkan highlight putih/abu-abu yang mengganggu di balik baris teks; (2) Merombak kartu kode (.reader-code-card) menjadi antarmuka terminal/editor modern setara Ray.so dan VS Code: tab file aktif dengan ikon FileCode, language badge GO 1.22, gutter nomor baris digital (01-04), palet syntax highlighting Tokyo Night / One Dark Pro, dan status footer real-time dengan pulsing live dot Redis counter.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {
