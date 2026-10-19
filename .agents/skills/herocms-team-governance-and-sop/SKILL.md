@@ -18,7 +18,7 @@ Skill ini merupakan **Buku Panduan Induk (Master Bible), Kamus Istilah Arsitektu
 | **Risqi** | **Database Management Specialist** | Pakar basis data: PostgreSQL 16 (RLS multi-tenancy), memori kilat Redis 7 (Sorted Sets <1ms), penyimpanan brankas MinIO S3, migrasi schema, query tuning & automated backup | SOP-DB-01, SOP-DB-02 |
 | **Rizal** | **DevOps, Security & Rancang Bangun Awal** | Mengunci keamanan sistem, Traefik v3 Ingress SSL, cgroups v2 sandboxing, pentest runner suite, serta merintis tampilan awal (Frontend) & handler awal (Backend) sebelum di-handover ke tim | SOP-BE-01, SOP-OPS-01, SOP-SEC-01 |
 | **Tyno** | **Mobile Apps Specialist (Jago Frontend Mobile)** | Sangat ahli di aplikasi smartphone Android & iOS (Flutter / React Native). Mengembangkan HeroCMS Companion App untuk telemetri live, push notif leads/tagihan, dan tombol darurat reboot lewat HP | SOP-MOB-01, SOP-MOB-02 |
-| **Paijo AI Agent** | **Lead Project Manager & System Architect** | Memimpin tata kelola proyek secara aktif, mendistribusikan task tanpa henti, memantau standar kualitas DoD, audit keamanan, dan menjaga roadmap serta changelog | SOP-PM-01, SOP-PM-02 |
+| **Paijo (AI Agent)** | **Lead Project Manager & QA/QC Specialist** | Karyawan internal penanggung jawab Project Management dan Quality Assurance & Quality Control (QA & QC): mengatur sprint backlog secara aktif tanpa henti, menegakkan gerbang Definition of Done (DoD), menjalankan audit E2E Playwright, pengujian keamanan cross-service, verifikasi kontrak API, dan benchmark Web Vitals | SOP-PM-01, SOP-QA-01 |
 
 ---
 
@@ -92,6 +92,13 @@ Setiap pengembang wajib memahami konsep-konsep inti berikut sebelum memodifikasi
    - Kendala: [Jika ada]
    ```
 2. Paijo AI Agent akan memverifikasi hasil kerja, memperbarui checkbox di [TASK_CHECKLIST.md](file:///Users/rizalfahmi/Documents/React/herocms/docs/project-management/TASK_CHECKLIST.md) dan portal interaktif `index.html`.
+
+### [SOP-QA-01] QA & QC: Quality Gate, Definition of Done & E2E Validation (Paijo)
+1. **Pemeriksaan Definition of Done (DoD)**: Setiap task yang diajukan oleh tim wajib dicek kepatuhannya: Zero generic slop, error handling teruji, UI responsif tanpa duplikasi CSS, lolos uji keamanan pentest, dan pencatatan SemVer di changelog.
+2. **Pengujian Regresi E2E Antarmuka**: Validasi skenario pengguna dari pembuatan kontainer hingga live visual editor menggunakan Playwright / browser automation untuk mencegah regresi visual.
+3. **Verifikasi Kontrak API Cross-Service**: Memastikan tidak ada ketidakcocokan tipe data (schema drift) antara Go BFF (`02`), Orchestrator (`03`), Laravel Filament (`01`), dan Mobile App (`06`).
+4. **Gerbang Keamanan Pentest**: Memastikan pre-commit pentest runner berstatus `PASS` pada setiap service sebelum perubahan di-merge ke branch utama.
+5. **Audit Performa Web Vitals**: Mengaudit Marketing Site (`04`) dan Dashboard (`02`) agar memenuhi standar LCP < 1.2 detik dan CLS = 0.
 
 ---
 

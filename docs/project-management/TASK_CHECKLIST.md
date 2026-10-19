@@ -1,10 +1,10 @@
 # 📋 HeroCMS Enterprise: Master Roadmap, Granular Task Matrix & 6 Microservices
-> **Project Manager (PM)**: **Paijo AI Agent** (Lead Technical PM & System Architect — Aktif membagikan dan mengarahkan pekerjaan terus-menerus)  
+> **Project Manager (PM) & QA/QC**: **Paijo (AI Agent)** (Lead Technical PM & QA/QC Specialist — Karyawan internal yang aktif membagikan pekerjaan & mengaudit kualitas terus-menerus)  
 > **Rancang Bangun Awal**: **Rizal** (Fondasi arsitektur, keamanan, dan tampilan UI 12 modul Studio telah dirintis & dicentang)  
-> **Skema Serah Terima (Handover)**: Siap di-handover ke rekan tim sesuai keahlian spesifik (Andalusia, Irgi, Risqi, Tyno, Rizal)  
-> **Status Pekerjaan Mutlak**: **100% ONGOING** (Semua pekerjaan berstatus ongoing karena proses real backend, database persistence, dan runtime kontainer produksi masih berjalan).  
+> **Skema Serah Terima (Handover)**: Siap di-handover ke rekan tim sesuai keahlian spesifik (Andalusia, Irgi, Risqi, Tyno, Rizal, Paijo)  
+> **Status Pekerjaan Mutlak**: **100% ONGOING** (Semua pekerjaan berstatus ongoing karena proses real backend, database persistence, runtime kontainer, dan otomasi QA masih berjalan).  
 > **Dokumen Pusat**: `docs/project-management/TASK_CHECKLIST.md`  
-> **Prinsip Mutlak**: Zero Generic Slop, Dual-View (6 Services & 5 Divisi), Business-Driven SaaS, Strict Security First.
+> **Prinsip Mutlak**: Zero Generic Slop, Dual-View (6 Services & 6 Divisi), Business-Driven SaaS, Strict Security First.
 
 ---
 
@@ -12,11 +12,11 @@
 
 | Metrik Telemetri | Nilai Riil | Status & Penjelasan Ramah |
 | :--- | :--- | :--- |
-| **Total Task Bisnis & Arsitektur** | **45 Tasks** | Mencakup seluruh 12 modul Studio, BFF Go, Traefik, PostgreSQL RLS, MinIO S3, AI Copilot, dan Mobile |
-| **Status Seluruh Pekerjaan** | **100% ONGOING** | Seluruh task berstatus ongoing karena proses real backend/orchestration sedang berjalan aktif |
+| **Total Task Bisnis & Arsitektur** | **50 Tasks** | Mencakup seluruh 12 modul Studio, BFF Go, Traefik, PostgreSQL RLS, MinIO S3, AI Copilot, Mobile, dan QA/QC Suite |
+| **Status Seluruh Pekerjaan** | **100% ONGOING** | Seluruh task berstatus ongoing karena proses real backend/orchestration dan continuous QA sedang berjalan aktif |
 | **Cakupan Microservices** | **6 Area Sistem** | Admin (01), Studio (02), Orchestrator (03), Marketing (04), AI (05), Mobile Companion (06) |
-| **Tim Pelaksana & Handover** | **5 Anggota Tim** | Andalusia (Full Stack), Irgi (Frontend), Risqi (Database), Rizal (DevOps/Sec), Tyno (Mobile) |
-| **Project Manager Aktif** | **Paijo AI Agent** | Bertugas memimpin sprint, membagi tugas, audit kualitas DoD, dan memperbarui backlog tanpa henti |
+| **Tim Pelaksana & Handover** | **6 Karyawan Tim** | Andalusia (Full Stack), Irgi (Frontend), Risqi (Database), Rizal (DevOps/Sec), Tyno (Mobile), Paijo (PM & QA/QC) |
+| **Project Manager & QA/QC Aktif** | **Paijo (AI Agent)** | Karyawan internal yang memimpin sprint backlog, membagi tugas, gatekeeper DoD, audit keamanan, dan memelihara roadmap |
 
 ---
 
@@ -29,7 +29,7 @@
 | **Risqi** | **Database Management Specialist (Pakar Basis Data)** | Mengelola gudang data utama PostgreSQL 16 dengan sekat isolasi tenant (RLS), memori kilat Redis 7 (<1ms), brankas penyimpanan media MinIO S3, dan jadwal backup rutin | Rizal (Schema), Andalusia (Query) |
 | **Rizal** | **DevOps, Security & Rancang Bangun Awal** | Mengunci keamanan sistem, Traefik SSL Ingress, pembatasan cgroups Linux (256MB/0.5 CPU), pentest runner, serta merintis tampilan & handler awal sebelum di-handover ke tim | Andalusia (Backend), Irgi (Frontend) |
 | **Tyno** | **Mobile Apps Specialist (Jago Frontend Mobile)** | Sangat ahli di aplikasi smartphone Android & iOS (Flutter / React Native). Membuat aplikasi pendamping untuk memantau pengunjung live, terima notifikasi instan, dan tombol darurat reboot lewat HP | Rizal & Andalusia (API Contracts) |
-| **Paijo AI Agent** | **Project Manager & System Architect** | Memimpin tata kelola proyek, membagi tugas, memantau standar kualitas DoD, audit keamanan, dan aktif memberikan tugas baru terus-menerus | Seluruh Tim |
+| **Paijo (AI Agent)** | **Lead Project Manager & QA/QC Specialist** | Karyawan internal penanggung jawab Project Management dan Quality Assurance & Quality Control (QA & QC): mengatur sprint backlog secara aktif tanpa henti, menegakkan gerbang Definition of Done (DoD), menjalankan audit E2E Playwright, pengujian keamanan cross-service, verifikasi kontrak API, dan benchmark Web Vitals | Seluruh Tim |
 
 ---
 
@@ -50,15 +50,15 @@ HeroCMS adalah **Platform Cloud CMS Multi-Tenant SaaS** yang menjual hosting kon
 
 ---
 
-## 🏢 Matriks Pekerjaan Berdasarkan 6 Microservices
+## 🏢 Matriks Pekerjaan Berdasarkan 6 Microservices (50 Tasks)
 
 HeroCMS dibangun di atas arsitektur 6 microservices terdistribusi. Setiap task bisnis di bawah ini dikelompokkan berdasarkan direktori service tempat kode berjalan:
 
-### 🏛️ Service 01: Admin Console & Billing (4 Tasks)
+### 🏛️ Service 01: Admin Console & Billing (5 Tasks)
 > **Direktori Path**: `services/01-admin-console`  
 > **Tech Stack**: `Laravel 11 • Filament v3 • PHP 8.3 • Midtrans / Xendit`  
-> **PIC Utama**: **Andalusia & Risqi**  
-> **Fungsi Utama**: Panel kontrol internal superadmin untuk verifikasi langganan, pelacakan faktur, webhook kasir pembayaran, dan penyelesaian tiket support pengguna.  
+> **PIC Utama**: **Andalusia, Risqi & Paijo (QA)**  
+> **Fungsi Utama**: Panel kontrol internal superadmin untuk verifikasi langganan, pelacakan faktur, webhook kasir pembayaran, penyelesaian tiket support, dan verifikasi kontrak API.  
 > **Status**: **100% ONGOING (Sedang Dikerjakan)**
 
 | Task ID | Nama Pekerjaan & Rincian Sederhana | Rancang Awal | Lanjutan Handover | Service / File Kode | Rincian Checklist (UI Selesai vs Proses Real) | Status |
@@ -67,14 +67,15 @@ HeroCMS dibangun di atas arsitektur 6 microservices terdistribusi. Setiap task b
 | **TSK-SUP-02** | **Admin Helpdesk Resolver (Laravel 11 Filament)**<br>_Dashboard internal admin berbasis Laravel 11 Filament untuk tim dukungan membalas tiket, mengubah status SLA, dan meliha..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/01-admin-console/app/Filament/Resources/TicketResource.php` | [x] Perancangan Relasi: Skema relasi tiket support, pesan, dan lampiran<br>[ ] Integrasi Real Admin: Filament Resource Tiket Bantuan dengan quick view status kontainer pelapor | `ONGOING` |
 | **TSK-BIL-03** | **Skema Database Subscriptions & Automatic Suspension**<br>_Skema pencatatan periode aktif langganan, relasi paket, tanggal jatuh tempo, dan masa tenggang (grace-period) sebelum ko..._ | **Rizal** | **Risqi (Database Specialist)** | `deploy/sql/01_schema_and_rls.sql` | [x] Pemodelan Relasi: Tabel subscriptions, plans, dan payment_transactions<br>[ ] Integrasi Real DB: Database cron worker auto-suspend status kontainer jika telat bayar 7 hari | `ONGOING` |
 | **TSK-INV-02** | **Skema Database Invoices & Multi-Tenant Isolation**<br>_Tabel riwayat faktur tagihan pelanggan dengan nomor invoice unik per tahun, nominal Rupiah, metadata bukti bayar, dan pr..._ | **Rizal** | **Risqi (Database Specialist)** | `deploy/sql/01_schema_and_rls.sql` | [x] Pemodelan Relasi: Tabel invoices dengan relasi tenant_id dan RLS policy aktif<br>[ ] Integrasi Real DB: Composite index (tenant_id, created_at DESC) untuk query performa tinggi | `ONGOING` |
+| **TSK-QA-04** | **Cross-Service API Contract & OpenAPI Schema Drift Verifier**<br>_Pengujian integritas kontrak API antar microservices (BFF Go, Orchestrator Docker, Laravel Filament, dan Mobile App) unt..._ | **Rizal** | **Paijo (QA & QC Specialist)** | `services/01-admin-console/docs/api-contracts.json` | [x] Desain Kontrak: Standardisasi format respon JSON konsisten { success, data, message, error }<br>[x] Schema Definition: Spesifikasi skema payload event webhook Midtrans dan invoice status<br>[ ] Integrasi Real QC: Automated contract testing (Pact / Prism mock server) antar service<br>[ ] Integrasi Real QC: Schema drift detection validator untuk mencegah breaking change tipe data<br>[ ] Integrasi Real QC: Sinkronisasi otomatis OpenAPI spec ke mock server tim frontend Irgi & Tyno | `ONGOING` |
 
 ---
 
-### 🎨 Service 02: Dashboard Studio & Go BFF (29 Tasks)
+### 🎨 Service 02: Dashboard Studio & Go BFF (31 Tasks)
 > **Direktori Path**: `services/02-dashboard-cms`  
 > **Tech Stack**: `Vue 3 • Vite • Pinia • Gin Golang (BFF Port 8085) • Redis • MinIO S3`  
-> **PIC Utama**: **Irgi, Rizal & Andalusia**  
-> **Fungsi Utama**: Pusat antarmuka utama pengguna (12 Modul Studio) dan backend Go BFF untuk manajemen kontainer, visual editor blok, artikel, media, custom domain, dan analitik.  
+> **PIC Utama**: **Irgi, Rizal, Andalusia & Paijo (QA)**  
+> **Fungsi Utama**: Pusat antarmuka utama pengguna (12 Modul Studio), backend Go BFF, visual editor blok, artikel, media, custom domain, analitik, dan pengujian regresi E2E Playwright.  
 > **Status**: **100% ONGOING (Sedang Dikerjakan)**
 
 | Task ID | Nama Pekerjaan & Rincian Sederhana | Rancang Awal | Lanjutan Handover | Service / File Kode | Rincian Checklist (UI Selesai vs Proses Real) | Status |
@@ -109,14 +110,16 @@ HeroCMS dibangun di atas arsitektur 6 microservices terdistribusi. Setiap task b
 | **TSK-DB-01** | **PostgreSQL 16 Multi-Tenant Row-Level Security (RLS) Engine**<br>_Menerapkan Row-Level Security (RLS) pada tabel sites, posts, media_assets, dan invoices untuk menjamin isolasi data mutl..._ | **Rizal** | **Risqi (Database Specialist)** | `deploy/sql/01_schema_and_rls.sql` | [x] Perancangan Skema: Kolom tenant_id UUID mandatory pada seluruh tabel data tenant<br>[x] Security Policy: Sintaks ALTER TABLE ENABLE ROW LEVEL SECURITY dan isolation policy<br>[ ] Integrasi Real DB: Eksekusi DDL migrasi dan penegakan policy di production PostgreSQL<br>[ ] Integrasi Real DB: Indeks GIN pada kolom JSONB site_blocks untuk kueri cepat | `ONGOING` |
 | **TSK-ANL-02** | **Redis 7 Sorted Sets (ZSET) Hit Counter (<1ms)**<br>_Mesin penghitung top-views artikel berbasis Redis Sorted Sets (ZSET) dengan waktu respon < 1ms untuk mencegah lonjakan k..._ | **Rizal** | **Risqi (Database Specialist)** | `services/02-dashboard-cms/internal/redis/telemetry.go` | [x] Arsitektur Kunci: Desain struktur key tenant:{id}:top_views menggunakan ZINCRBY<br>[ ] Integrasi Real Redis: Eksekusi command ZREVRANGEBYSCORE dengan latensi < 1ms<br>[ ] Integrasi Real Redis: Background cron agregasi hit harian dari Redis ke PostgreSQL | `ONGOING` |
 | **TSK-MED-03** | **MinIO S3 Tenant Bucket Isolation & Quota Enforcement**<br>_Pengaturan isolasi direktori tenant pada MinIO S3 (`bucket/tenants/{tenant_id}/`) dan penghitungan agregat pemakaian kuo..._ | **Rizal** | **Risqi (Database Specialist)** | `deploy/sql/01_schema_and_rls.sql` | [x] Perancangan Folder: Struktur prefix bucket/tenants/{tenant_id}/assets/ terisolasi<br>[ ] Integrasi Real Storage: Trigger database atau kueri agregat SUM(file_size) per tenant<br>[ ] Integrasi Real Storage: Pemblokiran otomatis upload presigned saat kuota paket habis | `ONGOING` |
+| **TSK-QA-01** | **Automated E2E Playwright Regression & Visual Quality Suite**<br>_Pengujian otomatis antarmuka browser menyeluruh (End-to-End) menggunakan Playwright untuk memvalidasi alur registrasi, p..._ | **Rizal** | **Paijo (QA & QC Specialist)** | `docs/project-management/qa-e2e/playwright.config.ts` | [x] Perancangan Skenario: Matriks 12 alur pengujian E2E Studio dan formulir pembuatan website<br>[x] Desain Arsitektur: Konfigurasi Playwright multi-viewport (Desktop, iPad, iPhone 14)<br>[ ] Integrasi Real QA: Eksekusi otomatis Playwright test run di headless Chromium<br>[ ] Integrasi Real QA: Screenshot visual diff comparison untuk mendeteksi pergeseran layout CSS<br>[ ] Integrasi Real QA: Pengujian auto-recovery saat koneksi internet offline | `ONGOING` |
+| **TSK-QA-02** | **Sprint Backlog Orchestration & Definition of Done (DoD) Gatekeeping**<br>_Manajemen backlog sprint interaktif, validasi ketat setiap PR terhadap kriteria Definition of Done (DoD), serta pendistr..._ | **Rizal** | **Paijo (Lead Technical PM)** | `docs/project-management/index.html` | [x] Standar Tata Kelola: Matriks penugasan tim, kamus istilah arsitektur ramah, dan 4 vertikal bisnis<br>[x] Tooling Dashboard: Mission Control portal dengan dual-mode grouping (Divisi & 6 Microservices)<br>[ ] Integrasi Real PM: Verifikasi harian DoD (Zero-CSS duplication, test passed, SemVer bump) per commit<br>[ ] Integrasi Real PM: Otomasi notifikasi sprint blockers ke channel Telegram / Slack tim<br>[ ] Integrasi Real PM: Evaluasi beban kerja sprint (workload balancing) antar anggota tim | `ONGOING` |
 
 ---
 
-### ⚙️ Service 03: Container Provision Orchestrator & Infra (6 Tasks)
+### ⚙️ Service 03: Container Provision Orchestrator & Infra (7 Tasks)
 > **Direktori Path**: `services/03-provision-orchestrator`  
 > **Tech Stack**: `Golang • Docker Engine SDK • Linux cgroups v2 • Traefik v3`  
-> **PIC Utama**: **Andalusia & Rizal**  
-> **Fungsi Utama**: Mesin otonom pembuat dan pengatur siklus hidup kontainer Docker mandiri tenant dengan cgroups sandboxing (RAM 256MB/CPU 0.5), Traefik ingress SSL, dan automated backup cron.  
+> **PIC Utama**: **Andalusia, Rizal & Paijo (QC)**  
+> **Fungsi Utama**: Mesin otonom pembuat dan pengatur siklus hidup kontainer Docker mandiri tenant dengan cgroups sandboxing (RAM 256MB/CPU 0.5), Traefik ingress SSL, dan pentest compliance gate.  
 > **Status**: **100% ONGOING (Sedang Dikerjakan)**
 
 | Task ID | Nama Pekerjaan & Rincian Sederhana | Rancang Awal | Lanjutan Handover | Service / File Kode | Rincian Checklist (UI Selesai vs Proses Real) | Status |
@@ -127,19 +130,21 @@ HeroCMS dibangun di atas arsitektur 6 microservices terdistribusi. Setiap task b
 | **TSK-OPS-03** | **Automated Pre-Commit Pentest Runner & CI/CD Security Gate**<br>_Membangun skill otomatisasi pentest runner (herocms-pentest-runner) dan workflow pre-commit per-service agar tidak ada k..._ | **Rizal** | **Rizal (DevOps Lead)** | `.agents/skills/herocms-pentest-runner/SKILL.md` | [x] Pembenahan Tooling: Master skill herocms-pentest-runner dan aturan wajib AGENTS.md<br>[x] Security Runner: Suite black-box HTTP mandiri di setiap folder services/*/pentest/<br>[ ] Integrasi Real CI/CD: GitHub Actions workflow blocker jika pentest gagal (exit code 1)<br>[ ] Integrasi Real CI/CD: Automated multi-arch container image builder ke registry | `ONGOING` |
 | **TSK-CNT-02** | **Go Docker Engine SDK Container Lifecycle Provisioning**<br>_Membuat mekanisme spawning kontainer mandiri berbasis Go Docker SDK dengan batas cgroups 256MB RAM, non-root user UID 10..._ | **Rizal** | **Andalusia (Full Stack Lead)** | `services/03-provision-orchestrator/internal/docker/provisioner.go` | [x] Perancangan Arsitektur: Desain state machine lifecycle kontainer (spawn, stop, restart, delete)<br>[x] Audit Keamanan: Validasi nama kontainer dan pengecekan docker privilege<br>[ ] Integrasi Real Orchestrator: Pemanggilan client.ContainerCreate dengan cgroups memori 256MB<br>[ ] Integrasi Real Orchestrator: Endpoint POST /api/v1/containers/provision dengan latensi < 4.5s<br>[ ] Integrasi Real Orchestrator: Background worker health check dan auto-restart jika crash | `ONGOING` |
 | **TSK-DB-02** | **PostgreSQL Automated Backup Cron & Disaster Recovery**<br>_Membuat skrip otomatisasi pencadangan database PostgreSQL menggunakan pg_dump dengan kompresi gzip dan rotasi backup 30 ..._ | **Rizal** | **Risqi (Database Specialist)** | `deploy/scripts/backup.sh` | [x] Perancangan Script: Skrip pg_dump dengan kompresi gzip dan rotasi backup 30 hari<br>[ ] Integrasi Real Backup: Cron container backup otomatis berjalan setiap 6 jam<br>[ ] Integrasi Real Backup: Sinkronisasi salinan file backup ke bucket MinIO S3 terisolasi | `ONGOING` |
+| **TSK-QA-03** | **Cross-Service Security Pentest & Compliance Gatekeeper**<br>_Audit kualitas keamanan berkala pada seluruh rute API, proteksi Traefik injection, cgroups resource abuse, JWT forgery, ..._ | **Rizal** | **Paijo (QA & QC Specialist)** | `.agents/skills/herocms-pentest-runner/SKILL.md` | [x] Gatekeeping Security: Kebijakan wajib pentest runner lolos (PASS) sebelum git commit di AGENTS.md<br>[x] Skenario Uji: Pengujian black-box brute force, header HSTS, dan CORS per-service<br>[ ] Integrasi Real QC: Automated nightly security scan pada endpoint staging multi-tenant<br>[ ] Integrasi Real QC: Fuzz testing pada router Traefik dynamic labels untuk deteksi bypass karakter unik<br>[ ] Integrasi Real QC: Verifikasi isolasi RLS PostgreSQL menggunakan kueri SQL injection acak | `ONGOING` |
 
 ---
 
-### 🚀 Service 04: Marketing Site & Public Landing (1 Tasks)
+### 🚀 Service 04: Marketing Site & Public Landing (2 Tasks)
 > **Direktori Path**: `services/04-marketing-site`  
 > **Tech Stack**: `React 19 • TypeScript • Tailwind CSS • Vite`  
-> **PIC Utama**: **Irgi**  
-> **Fungsi Utama**: Website pemasaran publik utama HeroCMS untuk landing page berkonversi tinggi, showcase playground interaktif, kalkulator harga, dan pendaftaran tenant baru.  
+> **PIC Utama**: **Irgi & Paijo (QA)**  
+> **Fungsi Utama**: Website pemasaran publik utama HeroCMS untuk landing page berkonversi tinggi, showcase playground interaktif, kalkulator harga, pendaftaran tenant baru, dan audit Core Web Vitals (LCP < 1.2s).  
 > **Status**: **100% ONGOING (Sedang Dikerjakan)**
 
 | Task ID | Nama Pekerjaan & Rincian Sederhana | Rancang Awal | Lanjutan Handover | Service / File Kode | Rincian Checklist (UI Selesai vs Proses Real) | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **TSK-MKT-01** | **Website Pemasaran & Landing Page Konversi Tinggi (services/04-marketing-site)**<br>_Membangun website pemasaran utama HeroCMS berbasis React 19 dengan skor Largest Contentful Paint (LCP) < 1.2 detik, demo..._ | **Rizal** | **Irgi (Frontend Web Specialist)** | `services/04-marketing-site/src/App.tsx` | [x] Pembenahan Tampilan UI: Hero headline memikat, demo playground interaktif, kalkulator harga<br>[x] Optimasi Performa Web: Skor LCP < 1.2 detik dan audit keamanan directory traversal lolos<br>[ ] Integrasi Real Frontend: Form pendaftaran akun baru terhubung langsung ke register API backend<br>[ ] Integrasi Real Frontend: Integrasi Google Analytics 4 / Plausible event tracking | `ONGOING` |
+| **TSK-QA-05** | **Performance & Core Web Vitals Auditing (LCP, CLS, INP)**<br>_Pengujian benchmark performa web berkala pada Marketing Site dan Studio Dashboard: memastikan LCP < 1.2 detik, CLS = 0, ..._ | **Rizal** | **Paijo (QA & QC Specialist)** | `services/04-marketing-site/lighthouserc.json` | [x] Benchmark Target: Ambang batas metrik Core Web Vitals (LCP < 1.2s, CLS 0, INP < 200ms) di SKILL.md<br>[x] Vendor Code Splitting: Verifikasi manualChunks vue-vendor dan lucide-icons di vite.config.ts<br>[ ] Integrasi Real QA: Automated Lighthouse CI audit pada build artifact marketing site & studio<br>[ ] Integrasi Real QA: Stress test simulasi 500 koneksi bersamaan (load test via k6 / autocannon)<br>[ ] Integrasi Real QA: Audit HTTP cache headers (Cache-Control: immutable) pada aset statis Traefik | `ONGOING` |
 
 ---
 
@@ -172,9 +177,9 @@ HeroCMS dibangun di atas arsitektur 6 microservices terdistribusi. Setiap task b
 
 ---
 
-## 👥 Matriks Pekerjaan Berdasarkan 5 Divisi Tim (Handover View)
+## 👥 Matriks Pekerjaan Berdasarkan 6 Divisi Tim (Handover & Governance View)
 
-Setiap task di bawah ini dikelompokkan berdasarkan divisi keahlian tim penerima serah terima (handover):
+Setiap task di bawah ini dikelompokkan berdasarkan divisi keahlian 6 karyawan tim penerima serah terima (handover):
 
 ### 🛡️⚙️ DIVISI DEVOPS, SECURITY & INGRESS LEAD (PIC: RIZAL) (7 Tasks)
 > **Rancang Bangun Awal**: Rizal  
@@ -272,6 +277,21 @@ Setiap task di bawah ini dikelompokkan berdasarkan divisi keahlian tim penerima 
 
 ---
 
+### 🤖🔍 DIVISI PROJECT MANAGEMENT & QA/QC (KARYAWAN: PAIJO) (5 Tasks)
+> **Rancang Bangun Awal**: Paijo  
+> **Lanjutan Handover**: Paijo (Lead Project Manager & QA/QC Specialist)  
+> **Status Seluruh Task**: **ONGOING (Sedang Dikerjakan)**
+
+| Task ID | Nama Pekerjaan & Rincian Sederhana | Rancang Awal | Lanjutan Handover | Service / File Kode | Rincian Checklist (UI Selesai vs Proses Real) | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TSK-QA-01** | **Automated E2E Playwright Regression & Visual Quality Suite**<br>_Pengujian otomatis antarmuka browser menyeluruh (End-to-End) menggunakan Playwright untuk memvalidasi alur registrasi, p..._ | **Rizal** | **Paijo (QA & QC Specialist)** | `docs/project-management/qa-e2e/playwright.config.ts` | [x] Perancangan Skenario: Matriks 12 alur pengujian E2E Studio dan formulir pembuatan website<br>[x] Desain Arsitektur: Konfigurasi Playwright multi-viewport (Desktop, iPad, iPhone 14)<br>[ ] Integrasi Real QA: Eksekusi otomatis Playwright test run di headless Chromium<br>[ ] Integrasi Real QA: Screenshot visual diff comparison untuk mendeteksi pergeseran layout CSS<br>[ ] Integrasi Real QA: Pengujian auto-recovery saat koneksi internet offline | `ONGOING` |
+| **TSK-QA-02** | **Sprint Backlog Orchestration & Definition of Done (DoD) Gatekeeping**<br>_Manajemen backlog sprint interaktif, validasi ketat setiap PR terhadap kriteria Definition of Done (DoD), serta pendistr..._ | **Rizal** | **Paijo (Lead Technical PM)** | `docs/project-management/index.html` | [x] Standar Tata Kelola: Matriks penugasan tim, kamus istilah arsitektur ramah, dan 4 vertikal bisnis<br>[x] Tooling Dashboard: Mission Control portal dengan dual-mode grouping (Divisi & 6 Microservices)<br>[ ] Integrasi Real PM: Verifikasi harian DoD (Zero-CSS duplication, test passed, SemVer bump) per commit<br>[ ] Integrasi Real PM: Otomasi notifikasi sprint blockers ke channel Telegram / Slack tim<br>[ ] Integrasi Real PM: Evaluasi beban kerja sprint (workload balancing) antar anggota tim | `ONGOING` |
+| **TSK-QA-03** | **Cross-Service Security Pentest & Compliance Gatekeeper**<br>_Audit kualitas keamanan berkala pada seluruh rute API, proteksi Traefik injection, cgroups resource abuse, JWT forgery, ..._ | **Rizal** | **Paijo (QA & QC Specialist)** | `.agents/skills/herocms-pentest-runner/SKILL.md` | [x] Gatekeeping Security: Kebijakan wajib pentest runner lolos (PASS) sebelum git commit di AGENTS.md<br>[x] Skenario Uji: Pengujian black-box brute force, header HSTS, dan CORS per-service<br>[ ] Integrasi Real QC: Automated nightly security scan pada endpoint staging multi-tenant<br>[ ] Integrasi Real QC: Fuzz testing pada router Traefik dynamic labels untuk deteksi bypass karakter unik<br>[ ] Integrasi Real QC: Verifikasi isolasi RLS PostgreSQL menggunakan kueri SQL injection acak | `ONGOING` |
+| **TSK-QA-04** | **Cross-Service API Contract & OpenAPI Schema Drift Verifier**<br>_Pengujian integritas kontrak API antar microservices (BFF Go, Orchestrator Docker, Laravel Filament, dan Mobile App) unt..._ | **Rizal** | **Paijo (QA & QC Specialist)** | `services/01-admin-console/docs/api-contracts.json` | [x] Desain Kontrak: Standardisasi format respon JSON konsisten { success, data, message, error }<br>[x] Schema Definition: Spesifikasi skema payload event webhook Midtrans dan invoice status<br>[ ] Integrasi Real QC: Automated contract testing (Pact / Prism mock server) antar service<br>[ ] Integrasi Real QC: Schema drift detection validator untuk mencegah breaking change tipe data<br>[ ] Integrasi Real QC: Sinkronisasi otomatis OpenAPI spec ke mock server tim frontend Irgi & Tyno | `ONGOING` |
+| **TSK-QA-05** | **Performance & Core Web Vitals Auditing (LCP, CLS, INP)**<br>_Pengujian benchmark performa web berkala pada Marketing Site dan Studio Dashboard: memastikan LCP < 1.2 detik, CLS = 0, ..._ | **Rizal** | **Paijo (QA & QC Specialist)** | `services/04-marketing-site/lighthouserc.json` | [x] Benchmark Target: Ambang batas metrik Core Web Vitals (LCP < 1.2s, CLS 0, INP < 200ms) di SKILL.md<br>[x] Vendor Code Splitting: Verifikasi manualChunks vue-vendor dan lucide-icons di vite.config.ts<br>[ ] Integrasi Real QA: Automated Lighthouse CI audit pada build artifact marketing site & studio<br>[ ] Integrasi Real QA: Stress test simulasi 500 koneksi bersamaan (load test via k6 / autocannon)<br>[ ] Integrasi Real QA: Audit HTTP cache headers (Cache-Control: immutable) pada aset statis Traefik | `ONGOING` |
+
+---
+
 ## 📖 Kamus Arsitektur HeroCMS (Bahasa Ramah & Mudah Dipahami)
 
 | Istilah Arsitektur | Analogi Ramah / Penjelasan Sederhana | Peran dalam HeroCMS |
@@ -288,21 +308,24 @@ Setiap task di bawah ini dikelompokkan berdasarkan divisi keahlian tim penerima 
 | **Mobile Companion App** | Seperti remote kontrol TV di saku pemilik toko | Aplikasi HP untuk memantau pengunjung dan merestart website jika macet saat lagi di luar |
 | **Anti-SSRF Webhook Dispatcher** | Seperti kurir surat yang dilarang keras mengantar paket ke alamat rahasia di dalam rumah | Mencegah fitur webhook disalahgunakan hacker untuk menyerang server internal HeroCMS |
 | **Pentest Runner Suite** | Seperti satpam uji petik yang mengetes ketahanan pintu dan gembok sebelum toko buka | Skrip otomatis untuk membobol sistem: jika ada celah terbuka, kode dilarang masuk ke server produksi |
+| **Playwright E2E Regression** | Seperti pembeli misterius yang rutin mengecek semua fungsi toko dari pintu masuk sampai kasir | Menguji otomatis browser headless agar fitur studio tidak rusak saat ada kode baru |
+| **Definition of Done (DoD) Gate** | Seperti checklist quality control sebelum mobil keluar dari pabrik | Memastikan kode zero-slop, pentest lolos, mobile responsif, dan SemVer tercatat sebelum rilis |
+| **API Contract Testing (Schema Drift)** | Seperti perjanjian resmi dua pedagang agar mata uang dan nota pembayaran selalu cocok | Mencegah error akibat perubahan struktur data antar microservices yang tidak sinkron |
 
 ---
 
-## 🔄 Standar Log Pelaporan Tim ke Paijo AI Agent (PM)
+## 🔄 Standar Log Pelaporan Tim ke Paijo AI Agent (PM & QA/QC)
 
 Setiap kali melaporkan progres atau hasil serah terima pengerjaan, gunakan format resmi:
 
 ```markdown
 Lapor Paijo:
 - Pelaksana: [Nama Anda / Anggota Tim]
-- Task ID: [Contoh: TSK-CNT-01]
+- Task ID: [Contoh: TSK-CNT-01 / TSK-QA-01]
 - Status: ONGOING
 - Progress Tampilan: Selesai & Dicentang pada Checklist
 - Progress Proses Real: Sedang Berjalan / Siap Handover
 - Service: [02-dashboard-cms / 03-provision-orchestrator / dll]
-- Bukti Teknis: [Commit hash, file link, output pengujian]
+- Bukti Teknis: [Commit hash, file link, output pengujian, screenshot Playwright]
 - Catatan Integrasi: [Dependensi API ke anggota lain]
 ```

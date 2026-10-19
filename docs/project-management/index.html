@@ -1286,10 +1286,10 @@
       <div class="telemetry-card">
         <span class="telemetry-label">Total Task Bisnis & Arsitektur</span>
         <div class="telemetry-value-row">
-          <span class="telemetry-value" id="stat-total-tasks">45</span>
+          <span class="telemetry-value" id="stat-total-tasks">50</span>
           <span class="tab-counter">5 Services</span>
         </div>
-        <span class="telemetry-subtext">12 Modul Studio + BFF + Microservices</span>
+        <span class="telemetry-subtext">12 Modul Studio + BFF + Microservices + QA/QC Suite</span>
       </div>
 
       <div class="telemetry-card">
@@ -1313,10 +1313,10 @@
       <div class="telemetry-card">
         <span class="telemetry-label">Tim Pelaksana & Handover</span>
         <div class="telemetry-value-row">
-          <span class="telemetry-value" id="stat-handover-tasks" style="color: #059669;">5 Anggota</span>
+          <span class="telemetry-value" id="stat-handover-tasks" style="color: #059669;">6 Anggota</span>
           <span class="status-badge badge-done">Jobdesk Mapped</span>
         </div>
-        <span class="telemetry-subtext">Andalusia, Irgi, Risqi, Rizal, Tyno (Dipandu Paijo PM)</span>
+        <span class="telemetry-subtext">Andalusia, Irgi, Risqi, Rizal, Tyno & Paijo (PM & QA/QC)</span>
       </div>
     </section>
 
@@ -1324,7 +1324,7 @@
     <div class="nav-tabs-bar">
       <div class="tabs-group">
         <button class="tab-btn active" id="tab-btn-tasks" onclick="switchMainTab('tasks')">
-          <span>📋 Papan Tugas per Divisi (5 Tim)</span>
+          <span>📋 Papan Tugas per Divisi (6 Divisi)</span>
           <span class="tab-counter" id="tab-count-tasks">45</span>
         </button>
         <button class="tab-btn" id="tab-btn-services" onclick="switchMainTab('services')">
@@ -1596,45 +1596,45 @@ Lapor Paijo:
       { id: "Irgi", name: "Divisi Frontend Web Studio & Marketing", pic: "Rizal (UI Selesai Dicentang)", icon: "🎨", handover: "Irgi (Target Handover Frontend)" },
       { id: "Andalusia", name: "Divisi Backend BFF & Orchestrator SDK", pic: "Rizal (Fondasi Siap)", icon: "⚙️", handover: "Andalusia (Target Handover Backend)" },
       { id: "Risqi", name: "Divisi Database RLS & Storage MinIO", pic: "Rizal (Skema Mock Siap)", icon: "🗄️", handover: "Risqi (Target Handover Database)" },
-      { id: "Tyno", name: "Divisi Mobile Companion Platform", pic: "Rizal (Kontrak API Siap)", icon: "📱", handover: "Tyno (Target Handover Mobile)" }
+      { id: "Tyno", name: "Divisi Mobile Companion Platform", pic: "Rizal (Kontrak API Siap)", icon: "📱", handover: "Tyno (Target Handover Mobile)" },
+      { id: "Paijo", name: "Divisi Project Management & QA/QC", pic: "Paijo (Karyawan PM & QA/QC)", icon: "🤖🔍", handover: "Paijo (PM & QA/QC Specialist)" }
     ];
-
     const serviceMetadata = [
       { 
         id: "01-admin-console", 
         name: "Service 01: Admin Console & Billing", 
         path: "services/01-admin-console",
         stack: "Laravel 11 • Filament v3 • PHP 8.3 • Midtrans",
-        pic: "Andalusia & Risqi",
+        pic: "Andalusia, Risqi & Paijo (QA)",
         icon: "🏛️", 
-        lead: "Panel kontrol internal superadmin untuk mengelola tenant, verifikasi langganan, pelacakan faktur, webhook Midtrans/Xendit, dan penyelesaian tiket support." 
+        lead: "Panel kontrol internal superadmin untuk mengelola tenant, verifikasi langganan, pelacakan faktur, webhook kasir pembayaran, resolver tiket, dan verifikasi kontrak API." 
       },
       { 
         id: "02-dashboard-cms", 
         name: "Service 02: Dashboard Studio & Go BFF", 
         path: "services/02-dashboard-cms",
         stack: "Vue 3 • Vite • Pinia • Gin Golang • Redis • S3",
-        pic: "Irgi, Rizal & Andalusia",
+        pic: "Irgi, Rizal, Andalusia & Paijo (QA)",
         icon: "🎨", 
-        lead: "Pusat antarmuka utama pengguna (12 Modul Studio) dan backend Go BFF (port 8085) untuk manajemen kontainer, visual editor blok, artikel, aset media, custom domain, dan analitik." 
+        lead: "Pusat antarmuka utama pengguna (12 Modul Studio), backend Go BFF (port 8085), visual editor blok, artikel, media, custom domain, analitik, dan pengujian regresi E2E Playwright." 
       },
       { 
         id: "03-provision-orchestrator", 
         name: "Service 03: Container Provision Orchestrator & Infra", 
         path: "services/03-provision-orchestrator",
         stack: "Golang • Docker Engine SDK • Linux cgroups v2 • Traefik v3",
-        pic: "Andalusia & Rizal",
+        pic: "Andalusia, Rizal & Paijo (QC)",
         icon: "⚙️", 
-        lead: "Mesin otonom pembuat dan pengatur siklus hidup kontainer Docker mandiri tenant dengan cgroups sandboxing (RAM 256MB/CPU 0.5), Traefik ingress SSL, dan automated backup cron." 
+        lead: "Mesin otonom pembuat dan pengatur siklus hidup kontainer Docker mandiri tenant dengan cgroups sandboxing (RAM 256MB/CPU 0.5), Traefik ingress SSL, dan pentest compliance gate." 
       },
       { 
         id: "04-marketing-site", 
         name: "Service 04: Marketing Site & Public Landing", 
         path: "services/04-marketing-site",
         stack: "React 19 • TypeScript • Tailwind CSS • Vite",
-        pic: "Irgi",
+        pic: "Irgi & Paijo (QA)",
         icon: "🚀", 
-        lead: "Website pemasaran publik utama HeroCMS untuk landing page berkonversi tinggi, showcase playground interaktif, kalkulator harga, dan pendaftaran akun tenant baru." 
+        lead: "Website pemasaran publik utama HeroCMS untuk landing page berkonversi tinggi, showcase playground interaktif, kalkulator harga, pendaftaran tenant baru, dan audit Core Web Vitals (LCP < 1.2s)." 
       },
       { 
         id: "05-ai-agent-service", 
@@ -1655,7 +1655,6 @@ Lapor Paijo:
         lead: "Aplikasi mobile smartphone Android & iOS pendamping pemilik website untuk memantau pengunjung live, menerima notifikasi pesan baru & invoice, dan reboot darurat lewat FaceID." 
       }
     ];
-
     const detailedTasks = [
   {
     "id": "TSK-BE-SEC-01",
@@ -3502,6 +3501,221 @@ Lapor Paijo:
       "Deep-linking ke invoice/leads"
     ],
     "serviceGroup": "06-mobile-companion"
+  },
+  {
+    "id": "TSK-QA-01",
+    "division": "Paijo",
+    "pic": "Paijo (Lead PM & QA/QC)",
+    "handoverTo": "Paijo (QA & QC Specialist)",
+    "title": "Automated E2E Playwright Regression & Visual Quality Suite",
+    "category": "QA & Visual Testing",
+    "service": "services/02-dashboard-cms",
+    "serviceGroup": "02-dashboard-cms",
+    "codeFile": "docs/project-management/qa-e2e/playwright.config.ts",
+    "codeLang": "typescript",
+    "status": "ONGOING",
+    "priority": "Critical",
+    "phase": "Phase 2",
+    "lead": "Pengujian otomatis antarmuka browser menyeluruh (End-to-End) menggunakan Playwright untuk memvalidasi alur registrasi, pembuatan kontainer, interaksi editor blok, dan responsivitas mobile tanpa regresi visual.",
+    "flowDesc": "Test Runner -> Headless Chromium/WebKit/Firefox -> Simulasi Klik & Drag-and-Drop -> Screenshot Visual Comparison -> Laporan Lolos/Gagal",
+    "flowDiagram": "graph LR\n  A[CI Test Runner] --> B[Headless Chromium]\n  B --> C[Uji 12 Modul Studio]\n  C --> D[Visual Diff Comparison]\n  D --> E{Lolos DoD?}\n  E -->|Ya| F[Green Check]\n  E -->|Tidak| G[Alert Blocker]",
+    "checklist": [
+      {
+        "text": "Perancangan Skenario: Matriks 12 alur pengujian E2E Studio dan formulir pembuatan website",
+        "done": true
+      },
+      {
+        "text": "Desain Arsitektur: Konfigurasi Playwright multi-viewport (Desktop, iPad, iPhone 14)",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real QA: Eksekusi otomatis Playwright test run di headless Chromium",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QA: Screenshot visual diff comparison untuk mendeteksi pergeseran layout CSS",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QA: Pengujian auto-recovery saat koneksi internet offline",
+        "done": false
+      }
+    ],
+    "codeSnippet": "import { defineConfig, devices } from '@playwright/test';\nexport default defineConfig({\n  testDir: './e2e',\n  timeout: 30000,\n  retries: 2,\n  projects: [\n    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },\n    { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },\n  ],\n});",
+    "aiNotes": "Paijo AI memvalidasi tidak ada regresi visual pada Studio canvas dan modal dialog sebelum commit disetujui.",
+    "dod": "Suite Playwright berjalan hijau (zero failures), screenshot diff < 0.1%, dan laporan tersimpan di artefak."
+  },
+  {
+    "id": "TSK-QA-02",
+    "division": "Paijo",
+    "pic": "Paijo (Lead PM & QA/QC)",
+    "handoverTo": "Paijo (Lead Technical PM)",
+    "title": "Sprint Backlog Orchestration & Definition of Done (DoD) Gatekeeping",
+    "category": "Project Governance",
+    "service": "docs/project-management",
+    "serviceGroup": "02-dashboard-cms",
+    "codeFile": "docs/project-management/index.html",
+    "codeLang": "javascript",
+    "status": "ONGOING",
+    "priority": "High",
+    "phase": "Phase 1",
+    "lead": "Manajemen backlog sprint interaktif, validasi ketat setiap PR terhadap kriteria Definition of Done (DoD), serta pendistribusian tugas baru ke 5 rekan tim secara aktif tanpa henti.",
+    "flowDesc": "Analisis Kebutuhan -> Pemetaan Task Granular -> Penugasan Anggota Tim -> Audit Kualitas Hasil -> Update SemVer Changelog",
+    "flowDiagram": "graph LR\n  A[Sprint Request] --> B[Breakdown Task]\n  B --> C[Matriks Penugasan]\n  C --> D[Verifikasi DoD]\n  D --> E[Changelog & Release]",
+    "checklist": [
+      {
+        "text": "Standar Tata Kelola: Matriks penugasan tim, kamus istilah arsitektur ramah, dan 4 vertikal bisnis",
+        "done": true
+      },
+      {
+        "text": "Tooling Dashboard: Mission Control portal dengan dual-mode grouping (Divisi & 6 Microservices)",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real PM: Verifikasi harian DoD (Zero-CSS duplication, test passed, SemVer bump) per commit",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real PM: Otomasi notifikasi sprint blockers ke channel Telegram / Slack tim",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real PM: Evaluasi beban kerja sprint (workload balancing) antar anggota tim",
+        "done": false
+      }
+    ],
+    "codeSnippet": "export interface DoDChecklist {\n  zeroCssDuplication: boolean;\n  pentestSuitePassed: boolean;\n  semVerChangelogLogged: boolean;\n  responsiveMobileVerified: boolean;\n  noHeavyArrayInVue: boolean;\n}",
+    "aiNotes": "Setiap pull request atau task tim harus melalui gerbang DoD Paijo sebelum boleh dinyatakan selesai.",
+    "dod": "Seluruh 5 pilar DoD terverifikasi tanpa celah, dokumentasi sinkron di portal dan markdown."
+  },
+  {
+    "id": "TSK-QA-03",
+    "division": "Paijo",
+    "pic": "Paijo (Lead PM & QA/QC)",
+    "handoverTo": "Paijo (QA & QC Specialist)",
+    "title": "Cross-Service Security Pentest & Compliance Gatekeeper",
+    "category": "Security QA",
+    "service": "services/03-provision-orchestrator",
+    "serviceGroup": "03-provision-orchestrator",
+    "codeFile": ".agents/skills/herocms-pentest-runner/SKILL.md",
+    "codeLang": "bash",
+    "status": "ONGOING",
+    "priority": "Critical",
+    "phase": "Phase 1",
+    "lead": "Audit kualitas keamanan berkala pada seluruh rute API, proteksi Traefik injection, cgroups resource abuse, JWT forgery, serta mitigasi OWASP Top 10 sebelum rilis produksi.",
+    "flowDesc": "Trigger Pre-Commit -> Jalankan Suite Pentest Per-Service -> Deteksi Kerentanan HTTP -> Blokir Commit jika Gagal -> Izinkan Rilis jika Lolos",
+    "flowDiagram": "graph LR\n  A[Git Commit Trigger] --> B[Pentest Runner]\n  B --> C[Uji Brute Force & JWT]\n  C --> D[Uji Traefik Injection]\n  D --> E{Status PASS?}\n  E -->|Ya| F[Commit Approved]\n  E -->|Tidak| G[Abort Commit]",
+    "checklist": [
+      {
+        "text": "Gatekeeping Security: Kebijakan wajib pentest runner lolos (PASS) sebelum git commit di AGENTS.md",
+        "done": true
+      },
+      {
+        "text": "Skenario Uji: Pengujian black-box brute force, header HSTS, dan CORS per-service",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real QC: Automated nightly security scan pada endpoint staging multi-tenant",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QC: Fuzz testing pada router Traefik dynamic labels untuk deteksi bypass karakter unik",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QC: Verifikasi isolasi RLS PostgreSQL menggunakan kueri SQL injection acak",
+        "done": false
+      }
+    ],
+    "codeSnippet": "#!/usr/bin/env bash\n# Paijo QC Pentest Gatekeeper\nSERVICES=('02-dashboard-cms' '03-provision-orchestrator' '04-marketing-site')\nfor svc in \"${SERVICES[@]}\"; do\n  (cd \"services/$svc\" && go test -v ./pentest/...) || exit 1\ndone\necho 'All Security Gates Passed!'",
+    "aiNotes": "Audit keamanan dilakukan di level HTTP black-box independen dari implementasi internal kode.",
+    "dod": "Hasil uji pentest 100% PASS (atau SKIP jika servis belum dinyalakan), zero critical vulnerabilities."
+  },
+  {
+    "id": "TSK-QA-04",
+    "division": "Paijo",
+    "pic": "Paijo (Lead PM & QA/QC)",
+    "handoverTo": "Paijo (QA & QC Specialist)",
+    "title": "Cross-Service API Contract & OpenAPI Schema Drift Verifier",
+    "category": "Contract Testing",
+    "service": "services/01-admin-console",
+    "serviceGroup": "01-admin-console",
+    "codeFile": "services/01-admin-console/docs/api-contracts.json",
+    "codeLang": "json",
+    "status": "ONGOING",
+    "priority": "High",
+    "phase": "Phase 2",
+    "lead": "Pengujian integritas kontrak API antar microservices (BFF Go, Orchestrator Docker, Laravel Filament, dan Mobile App) untuk mencegah kegagalan komunikasi data.",
+    "flowDesc": "Ekstraksi OpenAPI Spec -> Bandingkan dengan Schema Konsumer -> Validasi Payload Webhook -> Deteksi Schema Drift -> Laporan Kompatibilitas",
+    "flowDiagram": "graph LR\n  A[BFF Spec] --> C[Contract Verifier]\n  B[Laravel Admin Spec] --> C\n  C --> D[Uji Kompatibilitas]\n  D --> E{Breaking Changes?}\n  E -->|Tidak| F[Compatible]\n  E -->|Ya| G[Reject PR]",
+    "checklist": [
+      {
+        "text": "Desain Kontrak: Standardisasi format respon JSON konsisten { success, data, message, error }",
+        "done": true
+      },
+      {
+        "text": "Schema Definition: Spesifikasi skema payload event webhook Midtrans dan invoice status",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real QC: Automated contract testing (Pact / Prism mock server) antar service",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QC: Schema drift detection validator untuk mencegah breaking change tipe data",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QC: Sinkronisasi otomatis OpenAPI spec ke mock server tim frontend Irgi & Tyno",
+        "done": false
+      }
+    ],
+    "codeSnippet": "{\n  \"swagger\": \"2.0\",\n  \"info\": { \"title\": \"HeroCMS Unified Contracts\", \"version\": \"1.14.0\" },\n  \"paths\": {\n    \"/api/v1/containers/provision\": { \"post\": { \"responses\": { \"200\": { \"description\": \"Container Spawning OK\" } } } }\n  }\n}",
+    "aiNotes": "Mencegah situasi di mana backend mengubah field JSON tanpa memberitahu frontend web atau mobile.",
+    "dod": "Kontrak OpenAPI lolos verifikasi drift linting dan mock server dapat dikonsumsi frontend tanpa error."
+  },
+  {
+    "id": "TSK-QA-05",
+    "division": "Paijo",
+    "pic": "Paijo (Lead PM & QA/QC)",
+    "handoverTo": "Paijo (QA & QC Specialist)",
+    "title": "Performance & Core Web Vitals Auditing (LCP, CLS, INP)",
+    "category": "Performance QA",
+    "service": "services/04-marketing-site",
+    "serviceGroup": "04-marketing-site",
+    "codeFile": "services/04-marketing-site/lighthouserc.json",
+    "codeLang": "json",
+    "status": "ONGOING",
+    "priority": "High",
+    "phase": "Phase 2",
+    "lead": "Pengujian benchmark performa web berkala pada Marketing Site dan Studio Dashboard: memastikan LCP < 1.2 detik, CLS = 0, bundle code-splitting terpisah, dan HTTP cache aktif.",
+    "flowDesc": "Build Static Assets -> Inspect Chunks Size -> Run Lighthouse CI -> Ukur Waktu Render (CWV) -> Validasi Ambang Batas 90+",
+    "flowDiagram": "graph LR\n  A[Production Build] --> B[Bundle Inspection]\n  B --> C[Lighthouse CI Audit]\n  C --> D[Ukur LCP, CLS, INP]\n  D --> E{Skor > 90?}\n  E -->|Ya| F[Pass]\n  E -->|Tidak| G[Optimize Assets]",
+    "checklist": [
+      {
+        "text": "Benchmark Target: Ambang batas metrik Core Web Vitals (LCP < 1.2s, CLS 0, INP < 200ms) di SKILL.md",
+        "done": true
+      },
+      {
+        "text": "Vendor Code Splitting: Verifikasi manualChunks vue-vendor dan lucide-icons di vite.config.ts",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real QA: Automated Lighthouse CI audit pada build artifact marketing site & studio",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QA: Stress test simulasi 500 koneksi bersamaan (load test via k6 / autocannon)",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QA: Audit HTTP cache headers (Cache-Control: immutable) pada aset statis Traefik",
+        "done": false
+      }
+    ],
+    "codeSnippet": "{\n  \"ci\": {\n    \"assert\": {\n      \"assertions\": {\n        \"categories:performance\": [\"error\", { \"minScore\": 0.9 }],\n        \"largest-contentful-paint\": [\"error\", { \"maxNumericValue\": 1200 }],\n        \"cumulative-layout-shift\": [\"error\", { \"maxNumericValue\": 0.05 }]\n      }\n    }\n  }\n}",
+    "aiNotes": "Performa landing page langsung berdampak pada konversi pendaftaran tenant HeroCMS.",
+    "dod": "Skor Lighthouse Performance >= 95, LCP < 1.2s, CLS < 0.05, dan zero chunking warning."
   }
 ];
 
@@ -3692,20 +3906,21 @@ Lapor Paijo:
 
       if (currentGroupingMode === 'division') {
         container.innerHTML = `
-          <button class="pill-btn ${currentSelectedFilter === 'all' ? 'active' : ''}" onclick="filterByPill('all')">🌐 Semua Divisi (45)</button>
+          <button class="pill-btn ${currentSelectedFilter === 'all' ? 'active' : ''}" onclick="filterByPill('all')">🌐 Semua Divisi (50)</button>
           <button class="pill-btn ${currentSelectedFilter === 'Andalusia' ? 'active' : ''}" onclick="filterByPill('Andalusia')">⚙️ Andalusia (Full Stack)</button>
           <button class="pill-btn ${currentSelectedFilter === 'Irgi' ? 'active' : ''}" onclick="filterByPill('Irgi')">🎨 Irgi (Frontend Web)</button>
           <button class="pill-btn ${currentSelectedFilter === 'Risqi' ? 'active' : ''}" onclick="filterByPill('Risqi')">🗄️ Risqi (Database)</button>
           <button class="pill-btn ${currentSelectedFilter === 'Tyno' ? 'active' : ''}" onclick="filterByPill('Tyno')">📱 Tyno (Mobile)</button>
           <button class="pill-btn ${currentSelectedFilter === 'Rizal' ? 'active' : ''}" onclick="filterByPill('Rizal')">🛡️⚙️ Rizal (DevOps & Sec)</button>
+          <button class="pill-btn ${currentSelectedFilter === 'Paijo' ? 'active' : ''}" onclick="filterByPill('Paijo')">🤖 Paijo (PM & QA/QC)</button>
         `;
       } else {
         container.innerHTML = `
-          <button class="pill-btn ${currentSelectedFilter === 'all' ? 'active' : ''}" onclick="filterByPill('all')">🌐 Semua Service (45)</button>
-          <button class="pill-btn ${currentSelectedFilter === '01-admin-console' ? 'active' : ''}" onclick="filterByPill('01-admin-console')">🏛️ 01 Admin (4)</button>
-          <button class="pill-btn ${currentSelectedFilter === '02-dashboard-cms' ? 'active' : ''}" onclick="filterByPill('02-dashboard-cms')">🎨 02 Studio (29)</button>
-          <button class="pill-btn ${currentSelectedFilter === '03-provision-orchestrator' ? 'active' : ''}" onclick="filterByPill('03-provision-orchestrator')">⚙️ 03 Orchestrator (6)</button>
-          <button class="pill-btn ${currentSelectedFilter === '04-marketing-site' ? 'active' : ''}" onclick="filterByPill('04-marketing-site')">🚀 04 Marketing (1)</button>
+          <button class="pill-btn ${currentSelectedFilter === 'all' ? 'active' : ''}" onclick="filterByPill('all')">🌐 Semua Service (50)</button>
+          <button class="pill-btn ${currentSelectedFilter === '01-admin-console' ? 'active' : ''}" onclick="filterByPill('01-admin-console')">🏛️ 01 Admin (5)</button>
+          <button class="pill-btn ${currentSelectedFilter === '02-dashboard-cms' ? 'active' : ''}" onclick="filterByPill('02-dashboard-cms')">🎨 02 Studio (31)</button>
+          <button class="pill-btn ${currentSelectedFilter === '03-provision-orchestrator' ? 'active' : ''}" onclick="filterByPill('03-provision-orchestrator')">⚙️ 03 Orchestrator (7)</button>
+          <button class="pill-btn ${currentSelectedFilter === '04-marketing-site' ? 'active' : ''}" onclick="filterByPill('04-marketing-site')">🚀 04 Marketing (2)</button>
           <button class="pill-btn ${currentSelectedFilter === '05-ai-agent-service' ? 'active' : ''}" onclick="filterByPill('05-ai-agent-service')">🤖 05 AI Agent (3)</button>
           <button class="pill-btn ${currentSelectedFilter === '06-mobile-companion' ? 'active' : ''}" onclick="filterByPill('06-mobile-companion')">📱 06 Mobile (2)</button>
         `;
@@ -3849,13 +4064,13 @@ Lapor Paijo:
           bannerSub.innerText = "Fokus Service: Superadmin Laravel Filament, verifikasi pembayaran Midtrans, dan pelacakan invoice resmi.";
         } else if (currentSelectedFilter === '02-dashboard-cms') {
           bannerTitle.innerText = "🎨 Service 02: Dashboard Studio & Go BFF";
-          bannerSub.innerText = "Fokus Service: 12 Modul antarmuka Studio Vue 3 dan BFF Gin Golang (port 8085).";
+          bannerSub.innerText = "Fokus Service: 12 Modul antarmuka Studio Vue 3, BFF Gin Golang (port 8085), dan suite regresi E2E Playwright.";
         } else if (currentSelectedFilter === '03-provision-orchestrator') {
           bannerTitle.innerText = "⚙️ Service 03: Container Provision Orchestrator & Infra";
-          bannerSub.innerText = "Fokus Service: Docker Engine SDK spawning, cgroups v2 sandboxing, dan Traefik edge ingress SSL.";
+          bannerSub.innerText = "Fokus Service: Docker Engine SDK spawning, cgroups v2 sandboxing, Traefik edge ingress SSL, dan pentest compliance gate.";
         } else if (currentSelectedFilter === '04-marketing-site') {
           bannerTitle.innerText = "🚀 Service 04: Marketing Site & Public Landing";
-          bannerSub.innerText = "Fokus Service: Website publik React 19, showcase playground, dan corong pendaftaran tenant baru.";
+          bannerSub.innerText = "Fokus Service: Website publik React 19, showcase playground, pendaftaran tenant baru, dan audit Core Web Vitals (LCP < 1.2s).";
         } else if (currentSelectedFilter === '05-ai-agent-service') {
           bannerTitle.innerText = "🤖 Service 05: AI Agent Service & Workflows";
           bannerSub.innerText = "Fokus Service: Microservice copilot teks/gambar, generator tema otomatis, dan n8n automation.";
@@ -3863,7 +4078,7 @@ Lapor Paijo:
           bannerTitle.innerText = "📱 Service 06: Mobile Companion Platform";
           bannerSub.innerText = "Fokus Service: Aplikasi Android/iOS Flutter/React Native, push notification FCM, dan emergency reboot.";
         } else {
-          bannerTitle.innerText = "🏢 Tampilan 6 Microservices HeroCMS Platform";
+          bannerTitle.innerText = "🏢 Tampilan 6 Microservices HeroCMS Platform (50 Task)";
           bannerSub.innerText = "Menampilkan seluruh task bisnis yang dikelompokkan berdasarkan 6 layanan microservices arsitektur HeroCMS.";
         }
       } else {
@@ -3882,11 +4097,15 @@ Lapor Paijo:
         } else if (currentSelectedFilter === 'Tyno') {
           bannerTitle.innerText = "📱 Mode Fokus: Tyno (Mobile Apps Specialist — Jago Frontend Mobile)";
           bannerSub.innerText = "Peran Anda: Mengembangkan aplikasi Android/iOS (Flutter/React Native) untuk pemantauan pengunjung live, terima alert notifikasi, dan tombol reboot dari HP.";
+        } else if (currentSelectedFilter === 'Paijo') {
+          bannerTitle.innerText = "🤖🔍 Mode Fokus: Paijo AI (Lead Project Manager & QA/QC Specialist)";
+          bannerSub.innerText = "Peran Karyawan: Mengatur backlog sprint, menegakkan gerbang Definition of Done (DoD), menjalankan audit E2E Playwright, pengujian keamanan cross-service, verifikasi kontrak API, dan benchmark Web Vitals.";
         } else {
-          bannerTitle.innerText = "🌐 Tampilan Global Seluruh Divisi (45 Task Terpetakan)";
-          bannerSub.innerText = "Menampilkan seluruh rancangan arsitektur dan pekerjaan tim lintas 5 divisi. Dikelola dan dipantau aktif oleh Paijo AI (Project Manager).";
+          bannerTitle.innerText = "🌐 Tampilan Global Seluruh Divisi (50 Task Terpetakan)";
+          bannerSub.innerText = "Menampilkan seluruh rancangan arsitektur dan pekerjaan tim lintas 6 divisi. Dikelola dan diaudit aktif oleh Paijo AI (Project Manager & QA/QC).";
         }
       }
+    }
     }
 
     function switchPersona(persona) {

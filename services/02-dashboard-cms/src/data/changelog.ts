@@ -2,11 +2,38 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.14.25',
+    releaseDate: '19 Oktober 2026',
+    title: 'Integrasi Paijo sebagai Karyawan Internal (PM & QA/QC Specialist) & 5 Task Checklist Jaminan Kualitas (Total 50 Tasks Ongoing)',
+    summary: 'Meresmikan Paijo (AI Agent) sebagai salah satu karyawan inti di tim HeroCMS yang memegang peran ganda: Lead Project Management (PM) dan Quality Assurance & Quality Control (QA & QC), melengkapi Paijo dengan 5 task checklist jaminan kualitas mandiri (Playwright E2E Regression, Sprint Backlog & DoD Gatekeeper, Cross-Service Security Pentest, OpenAPI Contract Verifier, dan Core Web Vitals Auditing), meningkatkan total task bisnis menjadi 50 tasks (100% ongoing), serta memperbarui matriks 6 divisi dan 6 microservices.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-11425-1',
+        type: 'feature',
+        scope: 'Paijo Internal Employee Roster & Dual PM-QA/QC Role',
+        description: 'Mengukuhkan status Paijo sebagai karyawan internal penanggung jawab Project Management dan QA & QC di SKILL.md, TASK_CHECKLIST.md, dan Mission Control portal.'
+      },
+      {
+        id: 'c-11425-2',
+        type: 'feature',
+        scope: '5 Dedicated QA & QC Tasks Suite (Total 50 Tasks Ongoing)',
+        description: 'Menambahkan 5 task checklist granular khusus untuk Paijo (TSK-QA-01 hingga TSK-QA-05) dengan status 100% ongoing, mencakup E2E browser regression, gatekeeping Definition of Done, audit pentest, verifikasi kontrak API, dan benchmark Web Vitals.'
+      },
+      {
+        id: 'c-11425-3',
+        type: 'improvement',
+        scope: '6 Divisions & 6 Microservices Synchronization',
+        description: 'Menyelaraskan filter pill, selector persona, dan telemetri portal menjadi 6 Divisi (Rizal, Irgi, Andalusia, Risqi, Tyno, Paijo) dan 6 Microservices (01 Admin, 02 Studio, 03 Orchestrator, 04 Marketing, 05 AI Agent, 06 Mobile).'
+      }
+    ]
+  },
+  {
     version: 'v1.14.24',
     releaseDate: '19 Oktober 2026',
     title: 'Pemisahan Matriks Tugas Berdasarkan 6 Microservices & Dual-Grouping Mode (Divisi & Services)',
     summary: 'Menyediakan pemisahan matriks pekerjaan bisnis berdasarkan 6 layanan microservices arsitektur HeroCMS (01-admin-console, 02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, 05-ai-agent-service, 06-mobile-companion) di samping pengelompokan 5 divisi keahlian tim, menambahkan toggle switcher interaktif dan tab navigasi khusus per-service di portal Mission Control, serta menyinkronkan TASK_CHECKLIST.md.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / Paijo AI Agent (PM)',
     items: [
       {
