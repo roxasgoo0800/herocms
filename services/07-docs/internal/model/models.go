@@ -1,32 +1,51 @@
 package model
 
+import "encoding/json"
+
 type ChecklistItem struct {
 	ID   int    `json:"id,omitempty"`
 	Text string `json:"text"`
 	Done bool   `json:"done"`
 }
 
+type StringOrSlice []string
+
+func (s *StringOrSlice) UnmarshalJSON(data []byte) error {
+	var single string
+	if err := json.Unmarshal(data, &single); err == nil {
+		*s = []string{single}
+		return nil
+	}
+	var slice []string
+	if err := json.Unmarshal(data, &slice); err == nil {
+		*s = slice
+		return nil
+	}
+	*s = []string{}
+	return nil
+}
+
 type TaskItem struct {
-	ID          string          `json:"id"`
-	Division    string          `json:"division"`
-	PIC         string          `json:"pic"`
-	HandoverTo  string          `json:"handoverTo"`
-	Title       string          `json:"title"`
-	Category    string          `json:"category"`
-	Service     string          `json:"service"`
-	ServiceGroup string         `json:"serviceGroup"`
-	CodeFile    string          `json:"codeFile"`
-	CodeLang    string          `json:"codeLang"`
-	Status      string          `json:"status"`
-	Priority    string          `json:"priority"`
-	Phase       string          `json:"phase"`
-	Lead        string          `json:"lead"`
-	FlowDesc    string          `json:"flowDesc"`
-	FlowDiagram string          `json:"flowDiagram"`
-	Checklist   []ChecklistItem `json:"checklist"`
-	CodeSnippet string          `json:"codeSnippet"`
-	AINotes     string          `json:"aiNotes"`
-	DOD         string          `json:"dod"`
+	ID           string          `json:"id"`
+	Division     string          `json:"division"`
+	PIC          string          `json:"pic"`
+	HandoverTo   string          `json:"handoverTo"`
+	Title        string          `json:"title"`
+	Category     string          `json:"category"`
+	Service      string          `json:"service"`
+	ServiceGroup string          `json:"serviceGroup"`
+	CodeFile     string          `json:"codeFile"`
+	CodeLang     string          `json:"codeLang"`
+	Status       string          `json:"status"`
+	Priority     string          `json:"priority"`
+	Phase        string          `json:"phase"`
+	Lead         string          `json:"lead"`
+	FlowDesc     string          `json:"flowDesc"`
+	FlowDiagram  string          `json:"flowDiagram"`
+	Checklist    []ChecklistItem `json:"checklist"`
+	CodeSnippet  string          `json:"codeSnippet"`
+	AINotes      string          `json:"aiNotes"`
+	DOD          StringOrSlice   `json:"dod"`
 }
 
 type ArchitectureBlueprint struct {

@@ -116,12 +116,17 @@
 
         <!-- Definition of Done (DoD) -->
         <div v-if="task.dod" style="background: #f8fafc; border-left: 4px solid #059669; padding: 0.85rem 1.15rem; border-radius: 0 8px 8px 0;">
-          <h4 style="margin: 0 0 0.25rem 0; font-size: 0.88rem; font-weight: 700; color: #065f46;">
+          <h4 style="margin: 0 0 0.35rem 0; font-size: 0.88rem; font-weight: 700; color: #065f46;">
             ✅ Kriteria Definition of Done (DoD):
           </h4>
-          <p style="margin: 0; font-size: 0.85rem; color: #1e293b; line-height: 1.45;">
+          <p v-if="typeof task.dod === 'string'" style="margin: 0; font-size: 0.85rem; color: #1e293b; line-height: 1.45;">
             {{ task.dod }}
           </p>
+          <ul v-else-if="Array.isArray(task.dod)" style="margin: 0; padding-left: 1.25rem; font-size: 0.85rem; color: #1e293b; line-height: 1.5;">
+            <li v-for="(criterion, cIdx) in task.dod" :key="cIdx" style="margin-bottom: 0.2rem;">
+              {{ criterion }}
+            </li>
+          </ul>
         </div>
 
         <!-- Paijo AI Architecture Notes -->

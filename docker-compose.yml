@@ -179,6 +179,8 @@ services:
     environment:
       PORT: 8087
       DIST_DIR: /app/dist
+    ports:
+      - "${DOCS_PORT:-8087}:8087"
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_network"

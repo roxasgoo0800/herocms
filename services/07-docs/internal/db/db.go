@@ -1,6 +1,7 @@
 package db
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,6 +11,15 @@ import (
 
 	"github.com/cloudcms/herocms-docs/internal/model"
 )
+
+//go:embed seeds/tasks.json
+var defaultTasksJSON []byte
+
+//go:embed seeds/blueprints.json
+var defaultBlueprintsJSON []byte
+
+//go:embed seeds/sops.json
+var defaultSOPsJSON []byte
 
 type Database struct {
 	mu            sync.RWMutex
@@ -61,7 +71,17 @@ func (d *Database) loadOrSeed() error {
 		}
 	}
 
-	// 2. Try loading from /tmp/herocms_pm_tasks.json
+	// 2. Load from embedded seeds
+	if len(defaultTasksJSON) > 0 {
+		var tasks []model.TaskItem
+		if err := json.Unmarshal(defaultTasksJSON, &tasks); err == nil && len(tasks) > 0 {
+			d.tasks = tasks
+			d.saveSnapshotLocked()
+			return nil
+		}
+	}
+
+	// 3. Try loading from /tmp/herocms_pm_tasks.json
 	if tmpData, err := os.ReadFile("/tmp/herocms_pm_tasks.json"); err == nil {
 		var tasks []model.TaskItem
 		if err := json.Unmarshal(tmpData, &tasks); err == nil && len(tasks) > 0 {
@@ -71,7 +91,7 @@ func (d *Database) loadOrSeed() error {
 		}
 	}
 
-	// 3. Fallback: initialized empty tasks or default set
+	// 4. Fallback: initialized empty tasks or default set
 	d.saveSnapshotLocked()
 	return nil
 }
@@ -275,5 +295,13 @@ func (d *Database) initStaticData() {
 			PIC: "Tyno", Icon: "📱",
 			Lead: "Aplikasi mobile smartphone Android & iOS pendamping pemilik website untuk memantau pengunjung live, menerima notifikasi pesan baru & invoice, dan reboot darurat lewat FaceID.",
 		},
+	}
+
+	if len(defaultBlueprintsJSON) > 0 {
+		_ = json.Unmarshal(defaultBlueprintsJSON, &d.blueprints)
+	}
+
+	if len(defaultSOPsJSON) > 0 {
+		_ = json.Unmarshal(defaultSOPsJSON, &d.sops)
 	}
 }

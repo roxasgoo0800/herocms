@@ -1,0 +1,2063 @@
+[
+  {
+    "id": "TSK-BE-SEC-01",
+    "division": "Rizal",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Rizal (DevOps & Backend Lead)",
+    "title": "Go BFF Security & Auth Middleware (JWT ED25519 & Redis Rate-Limit)",
+    "category": "Backend & Security (02-dashboard-cms)",
+    "service": "services/02-dashboard-cms",
+    "status": "progress",
+    "priority": "P1 - CRITICAL",
+    "phase": "Ongoing (Fondasi & Tampilan Beres Dicentang)",
+    "lead": "Membangun middleware autentikasi backend Go Gin untuk verifikasi asymmetric JWT ED25519, proteksi brute-force login via Redis memory bucket, dan injeksi context tenant_id ke seluruh HTTP handler.",
+    "flowDesc": "HTTP Request masuk -> Middleware Rate Limit cek IP -> Middleware Auth verifikasi signature JWT -> Inject tenant_id ke Gin Context -> Teruskan ke Controller.",
+    "flowDiagram": "[ Incoming HTTP Request ]\n       \u2502\n       \u25bc\n[ RateLimitMiddleware (5 req/detik) ]\n       \u2502 PASS\n       \u25bc\n[ JWTAuthMiddleware (Asymmetric Verify) ]\n       \u2502 Valid Token\n       \u25bc\n[ c.Set(\"tenant_id\", claims.TenantID) ]\n       \u2502\n       \u25bc\n[ Business Handler (Controller) ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Integrasi state user email, plan, dan token di Pinia store",
+        "done": true
+      },
+      {
+        "text": "Arsitektur Security: Middleware asymmetric JWT ED25519 & header Authorization bearer",
+        "done": true
+      },
+      {
+        "text": "Unit & Pentest Gate: Suite brute-force pentest lolos 100% di services/02-dashboard-cms/pentest/",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Backend: Injeksi context tenant_id ke database PostgreSQL RLS",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Backend: Redis memory token blacklist untuk instant session revocation",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/middleware/auth.go",
+    "codeLang": "GO",
+    "codeSnippet": "func AuthMiddleware(secretKey []byte) gin.HandlerFunc {\n    return func(c *gin.Context) {\n        authHeader := c.GetHeader(\"Authorization\")\n        if !strings.HasPrefix(authHeader, \"Bearer \") {\n            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{\"error\": \"Unauthorized: Missing bearer token\"})\n            return\n        }\n        tokenStr := strings.TrimPrefix(authHeader, \"Bearer \")\n        claims, err := jwt.ValidateToken(tokenStr, secretKey)\n        if err != nil {\n            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{\"error\": \"Unauthorized: Invalid or expired token\"})\n            return\n        }\n        c.Set(\"tenant_id\", claims.TenantID)\n        c.Next()\n    }\n}",
+    "aiNotes": "Dikerjakan oleh Rizal: Seluruh middleware security & pentest gate telah aktif. Siap berkolaborasi dengan Andalusia untuk integrasi handler bisnis.",
+    "dod": [
+      "Brute-force diblokir setelah 5 percobaan gagal",
+      "Context tenant_id tervalidasi",
+      "Pentest 100% Pass"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-DOM-03",
+    "division": "Rizal",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Rizal (DevOps Lead)",
+    "title": "Traefik Dynamic Custom Domain & Let's Encrypt TLS Automation",
+    "category": "DevOps & Ingress (Traefik v3)",
+    "service": "deploy/docker-compose.infra.yml",
+    "status": "progress",
+    "priority": "P1 - CRITICAL",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Mengonfigurasi Traefik v3 agar dapat memetakan custom domain tenant secara otomatis dengan penerbitan sertifikat SSL Let's Encrypt instan tanpa restart proxy.",
+    "flowDesc": "Pengunjung mengakses custom domain -> Traefik mencocokkan resolver ACME -> Validasi challenge HTTP-01 -> Terbitkan SSL -> Forward traffic ke kontainer tenant.",
+    "flowDiagram": "[ Pengunjung Web ]\n       \u2502  (HTTPS custom domain)\n       \u25bc\n[ Traefik v3 Edge Ingress (:443) ]\n       \u2502  Dynamic Config Watcher\n       \u251c\u2500\u2500 1. Cek Sertifikat SSL Let's Encrypt (Automated Renewal)\n       \u251c\u2500\u2500 2. Apply Middleware: Security Headers & Rate Limit\n       \u25bc\n[ Kontainer Tenant Isolated (hero_tenant_xxx) ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Indikator status SSL (Active, Pending, Failed) di CustomDomainsModule",
+        "done": true
+      },
+      {
+        "text": "Arsitektur Ingress: Konfigurasi dynamic file provider Traefik dan ACME certResolver",
+        "done": true
+      },
+      {
+        "text": "Audit Keamanan: Validasi nama domain anti-injection router rules",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Ingress: Penerbitan sertifikat SSL produksi Let's Encrypt via HTTP-01",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Ingress: Automatic SSL renewal background timer dengan zero downtime",
+        "done": false
+      }
+    ],
+    "codeFile": "deploy/traefik/dynamic/custom_domains.yml",
+    "codeLang": "YAML",
+    "codeSnippet": "http:\n  routers:\n    tenant-custom-domain:\n      rule: \"Host(`kedaikopi.com`)\"\n      entryPoints:\n        - websecure\n      service: tenant-hero-9942\n      tls:\n        certResolver: letsencrypt\n  services:\n    tenant-hero-9942:\n      loadBalancer:\n        servers:\n          - url: \"http://172.28.0.42:80\" ",
+    "aiNotes": "Dikerjakan oleh Rizal: Konfigurasi volume acme.json 600 dan dynamic provider siap. Integrasi proses live challenge siap diuji pada domain nyata.",
+    "dod": [
+      "SSL Let's Encrypt terbit < 10 detik",
+      "A+ rating pada SSL Labs",
+      "Zero restart downtime"
+    ],
+    "serviceGroup": "03-provision-orchestrator"
+  },
+  {
+    "id": "TSK-OPS-01",
+    "division": "Rizal",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Rizal (DevOps Lead)",
+    "title": "Traefik Edge Ingress Multi-Network Routing & Dynamic Labels",
+    "category": "DevOps & Ingress (Traefik v3)",
+    "service": "deploy/docker-compose.infra.yml",
+    "status": "progress",
+    "priority": "P1 - CRITICAL",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Menata isolasi multi-network Docker di mana Traefik berada pada edge-network publik dan menghubungkan ke kontainer tenant melalui private internal network.",
+    "flowDesc": "Traefik Edge -> Evaluasi Network Topology -> Teruskan hanya ke port 80 kontainer internal -> Blokir akses antar kontainer tenant.",
+    "flowDiagram": "[ Internet ] \u2500\u2500\u25b6 [ Traefik Ingress (:80/:443) ] (edge-network)\n                               \u2502\n            \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n            \u25bc                                     \u25bc\n[ Tenant A Container ] (tenant-net-A)   [ Tenant B Container ] (tenant-net-B)",
+    "checklist": [
+      {
+        "text": "Pembenahan Arsitektur: Topologi dual-network Docker (edge-network publik & tenant-network privat)",
+        "done": true
+      },
+      {
+        "text": "Arsitektur Ingress: Label dinamis Traefik Host(`{subdomain}.herocms.id`) per kontainer",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Ingress: Health check interval 10s dengan failover otomatis",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Ingress: Rate-limiting per IP (100 req/min) di edge ingress proxy",
+        "done": false
+      }
+    ],
+    "codeFile": "deploy/docker-compose.infra.yml",
+    "codeLang": "YAML",
+    "codeSnippet": "networks:\n  edge-network:\n    name: herocms_edge_network\n    driver: bridge\n  internal-network:\n    name: herocms_internal_network\n    internal: true",
+    "aiNotes": "Dikerjakan oleh Rizal: Arsitektur topologi jaringan telah tervalidasi pada berkas root compose.",
+    "dod": [
+      "Isolasi jaringan 100% antar-tenant",
+      "Label dynamic routing terbaca otomatis"
+    ],
+    "serviceGroup": "03-provision-orchestrator"
+  },
+  {
+    "id": "TSK-OPS-02",
+    "division": "Rizal",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Rizal (DevOps Lead)",
+    "title": "Linux cgroups v2 Hard Limit Isolation & Tenant Sandboxing",
+    "category": "DevOps & Sandboxing (Docker Engine)",
+    "service": "services/03-provision-orchestrator/internal/docker/",
+    "status": "progress",
+    "priority": "P1 - CRITICAL",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Menerapkan pembatasan cgroups v2 (RAM 256MB, CPU 0.5 vCPU) dan flag keamanan (read-only rootfs, drop capabilities, no-new-privileges) untuk mencegah kontainer tenant menguras sumber daya host.",
+    "flowDesc": "Docker Client -> HostConfig -> Memory: 268435456, NanoCPUs: 500000000 -> Drop ALL Caps -> Run UID 10001 -> Linux Kernel cgroups enforce.",
+    "flowDiagram": "[ Go Docker Client ]\n       \u2502 HostConfig cgroups\n       \u251c\u2500\u2500 Memory: 256MB (Hard Limit)\n       \u251c\u2500\u2500 NanoCPUs: 500,000,000 (0.5 vCPU)\n       \u251c\u2500\u2500 CapDrop: [\"ALL\"]\n       \u251c\u2500\u2500 SecurityOpt: [\"no-new-privileges:true\"]\n       \u25bc\n[ Linux cgroups v2 Kernel Subsystem ] \u2500\u2500\u25b6 Sandbox Enforced",
+    "checklist": [
+      {
+        "text": "Pembenahan Arsitektur: Penetapan hard limit memori 256MB dan CPU 0.5 per tenant",
+        "done": true
+      },
+      {
+        "text": "Keamanan Sandboxing: Enforcement non-root user UID 10001 dan no-new-privileges flag",
+        "done": true
+      },
+      {
+        "text": "Audit Keamanan: Pentest container breakout & privilege isolation lolos",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Orchestrator: Pemantauan pelanggaran OOM killer via Go Docker client",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Orchestrator: Auto-kill kontainer yang memakan CPU > 95% selama 5 menit",
+        "done": false
+      }
+    ],
+    "codeFile": "services/03-provision-orchestrator/internal/docker/sandbox.go",
+    "codeLang": "GO",
+    "codeSnippet": "hostConfig := &container.HostConfig{\n    Resources: container.Resources{\n        Memory:     256 * 1024 * 1024, // 256 MB hard limit\n        NanoCPUs:   500000000,         // 0.5 vCPU\n        MemorySwap: 256 * 1024 * 1024, // Disable swap inflation\n    },\n    SecurityOpt: []string{\"no-new-privileges:true\"},\n    CapDrop:     []string{\"ALL\"},\n    RestartPolicy: container.RestartPolicy{Name: \"unless-stopped\"},\n}",
+    "aiNotes": "Dikerjakan oleh Rizal: Konfigurasi cgroups telah disiapkan untuk dipakai pada Go Orchestrator oleh Andalusia.",
+    "dod": [
+      "Kontainer mati jika OOM tanpa mengganggu host",
+      "Zero privilege escalation"
+    ],
+    "serviceGroup": "03-provision-orchestrator"
+  },
+  {
+    "id": "TSK-OPS-03",
+    "division": "Rizal",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Rizal (DevOps Lead)",
+    "title": "Automated Pre-Commit Pentest Runner & CI/CD Security Gate",
+    "category": "DevOps & Security CI/CD",
+    "service": ".agents/skills/herocms-pentest-runner/",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Membangun skill otomatisasi pentest runner (herocms-pentest-runner) dan workflow pre-commit per-service agar tidak ada kode dengan kerentanan keamanan yang dapat di-merge ke main.",
+    "flowDesc": "Developer edit code -> Menjalankan go test -v ./pentest/... -> Evaluasi status PASS/FAIL -> Jika FAIL abort commit -> Jika PASS lanjutkan merge.",
+    "flowDiagram": "[ Git Commit Attempt ]\n       \u2502\n       \u25bc\n[ Pre-Commit Hook: run pentest suite per service ]\n       \u2502\n       \u251c\u2500\u2500 FAIL \u2500\u2500\u25b6 ABORT COMMIT & Report Vulnerability\n       \u2514\u2500\u2500 PASS \u2500\u2500\u25b6 ALLOW COMMIT \u2500\u2500\u25b6 Push to Origin",
+    "checklist": [
+      {
+        "text": "Pembenahan Tooling: Master skill herocms-pentest-runner dan aturan wajib AGENTS.md",
+        "done": true
+      },
+      {
+        "text": "Security Runner: Suite black-box HTTP mandiri di setiap folder services/*/pentest/",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real CI/CD: GitHub Actions workflow blocker jika pentest gagal (exit code 1)",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real CI/CD: Automated multi-arch container image builder ke registry",
+        "done": false
+      }
+    ],
+    "codeFile": ".agents/skills/herocms-pentest-runner/SKILL.md",
+    "codeLang": "MARKDOWN",
+    "codeSnippet": "# Jalankan pentest sebelum commit:\ncd services/02-dashboard-cms && go test -v ./pentest/...\n# Wajib PASS tanpa status FAIL.",
+    "aiNotes": "Dikerjakan oleh Rizal: Seluruh pengembang wajib menjalankan runner ini sebelum mengajukan PR.",
+    "dod": [
+      "Suite pentest berjalan otomatis",
+      "Zero FAIL status diizinkan merge"
+    ],
+    "serviceGroup": "03-provision-orchestrator"
+  },
+  {
+    "id": "TSK-SEC-01",
+    "division": "Rizal",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Rizal (Security Specialist)",
+    "title": "Enterprise Black-Box HTTP Pentest & OWASP Top 10 Suite",
+    "category": "Security & QA Audit",
+    "service": "services/02-dashboard-cms/pentest/",
+    "status": "progress",
+    "priority": "P1 - CRITICAL",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Membuat paket pengujian keamanan black-box mandiri untuk menguji proteksi brute force, manipulasi JWT, injection karakter Traefik, dan validasi CORS.",
+    "flowDesc": "Uji Black-box HTTP Client -> Kirim Malicious Request -> Verifikasi HTTP Status Code 400/401/403 -> Verifikasi respons JSON aman tanpa stack trace.",
+    "flowDiagram": "[ Attack Payload Generator ]\n       \u2502\n       \u251c\u2500\u2500 Test 1: Brute-force Login (Burst 10 req) \u2500\u2500\u25b6 Expect 429 Too Many Requests\n       \u251c\u2500\u2500 Test 2: Insecure JWT Signature Tampering \u2500\u2500\u25b6 Expect 401 Unauthorized\n       \u2514\u2500\u2500 Test 3: CRLF Traefik Rule Breakout       \u2500\u2500\u25b6 Expect 400 Bad Request",
+    "checklist": [
+      {
+        "text": "Pembenahan Pengujian: 10 skenario uji keamanan autentikasi & sanitasi input HTTP",
+        "done": true
+      },
+      {
+        "text": "Security Gate: Verifikasi header HSTS, X-Frame-Options DENY, X-Content-Type-Options",
+        "done": true
+      },
+      {
+        "text": "Audit Keamanan: Proteksi JWT tampering & forged signature validation",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Pentest: Automated nightly security scan pada endpoint staging",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/pentest/security_test.go",
+    "codeLang": "GO",
+    "codeSnippet": "func TestBruteForceRateLimit(t *testing.T) {\n    // Verifikasi pemblokiran burst brute force\n    ts := setupMockSecurityServer()\n    defer ts.Close()\n    for i := 0; i < 10; i++ {\n        resp, _ := http.Post(ts.URL + \"/api/v1/auth/login\", \"application/json\", nil)\n        if i >= 5 && resp.StatusCode != http.StatusTooManyRequests {\n            t.Errorf(\"Expected 429 after 5 attempts, got %d\", resp.StatusCode)\n        }\n    }\n}",
+    "aiNotes": "Dikerjakan oleh Rizal: Suite pentest ini menjamin sistem tahan serangan OWASP Top 10.",
+    "dod": [
+      "100% test passing",
+      "Zero false positives pada flow sah"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-DOM-04",
+    "division": "Rizal",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Rizal (Security Specialist)",
+    "title": "Traefik Host Rule Injection Pentest (CWE-20/CWE-93)",
+    "category": "Security & QA Audit",
+    "service": "services/02-dashboard-cms/pentest/security_test.go",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Memastikan input domain pada modul custom domain tidak dapat disusupi karakter newline (\r, \n) atau backtick (`) yang berpotensi memanipulasi rule router Traefik.",
+    "flowDesc": "Input Domain -> Validasi Regex Domain RFC 1035 -> Sanitasi Karakter Khusus -> Injeksi ke dynamic Traefik YAML.",
+    "flowDiagram": "[ Input: \"evil.com` || Host(`admin.herocms.id`)\" ]\n       \u2502\n       \u25bc\n[ Regex Sanitizer: ^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$ ]\n       \u2502\n       \u251c\u2500\u2500 MATCH GAGAL \u2500\u2500\u25b6 Reject 400 \"Invalid domain format\"\n       \u2514\u2500\u2500 MATCH SUKSES \u2500\u2500\u25b6 Write to Traefik Config",
+    "checklist": [
+      {
+        "text": "Pembenahan Sanitasi: Regex domain validasi ketat ^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$",
+        "done": true
+      },
+      {
+        "text": "Security Gate: Uji coba injeksi CRLF dan router rule escape berhasil ditolak 100%",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Proxy: Dynamic custom WAF rule pada Traefik middleware",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/handler/domains.go",
+    "codeLang": "GO",
+    "codeSnippet": "var domainRegex = regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$`)\n\nfunc ValidateDomain(d string) error {\n    if !domainRegex.MatchString(d) || len(d) > 253 {\n        return errors.New(\"invalid domain format or illegal breakout characters\")\n    }\n    return nil\n}",
+    "aiNotes": "Dikerjakan oleh Rizal: Proteksi Traefik injection telah teruji di pentest suite.",
+    "dod": [
+      "Zero breakout vulnerability",
+      "Pentest pass 100%"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-CNT-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "UI Grid Kontainer & Modal Pembuatan Situs (Modul 1: ContainersModule.vue)",
+    "category": "Studio Modul 1 (Situs & Kontainer)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/ContainersModule.vue",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Membangun tampilan grid kartu pod kontainer, indikator status running/stopped, modal interaktif pemilihan 4 vertikal blueprint (Toko, Portofolio, Blog, LMS), dan validasi ketersediaan subdomain instan.",
+    "flowDesc": "User klik Buat Situs -> Buka Modal Blueprint -> Pilih Kategori -> Masukkan Subdomain -> Validasi Unik -> Kirim Request Provision.",
+    "flowDiagram": "[ ContainersModule Grid ] \u2500\u2500( Klik Tambah Situs )\u2500\u2500\u25b6 [ Modal Buat Situs ]\n                                                         \u2502\n                \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                \u25bc                   \u25bc                    \u25bc                   \u25bc\n         [ Toko Online ]     [ Portofolio ]       [ Blog & Berita ]    [ Edukasi LMS ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Grid kartu pod responsif 2 baris dengan badge status semantic",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Modal interaktif pemilihan 4 vertikal blueprint (Toko, Portofolio, Blog, LMS)",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Form validasi ketersediaan subdomain instan secara reaktif",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Binding form pembuatan situs ke API BFF Go real",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Toast error handling jika provisioning kontainer timeout",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/ContainersModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"containers-grid\">\n  <div v-for=\"c in containers\" :key=\"c.id\" class=\"telemetry-card pod-card\">\n    <div class=\"pod-header\">\n      <span class=\"status-badge\" :class=\"c.status === 'running' ? 'badge-done' : 'badge-progress'\">\n        {{ c.status.toUpperCase() }}\n      </span>\n      <span class=\"pod-subdomain\">{{ c.subdomain }}</span>\n    </div>\n  </div>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk penyempurnaan form feedback dan interaksi lanjutan.",
+    "dod": [
+      "Komponen Vue < 500 baris",
+      "Zero duplicate CSS",
+      "Responsif di mobile & desktop"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-CNT-05",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "Halaman Detail Pod Telemetri & Resource Monitor (PodDetailAnalyticsView.vue)",
+    "category": "Studio Modul 1 (Situs & Kontainer)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/PodDetailAnalyticsView.vue",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Antarmuka analitik granular untuk satu kontainer tertentu mencakup pemakaian CPU, RAM, Network I/O, uptime, serta tombol kontrol darurat dan breadcrumb navigasi tunggal.",
+    "flowDesc": "Pilih Pod di Grid -> Masuk PodDetailAnalyticsView -> Tampilkan telemetry gauge -> Live streaming metrik cgroups.",
+    "flowDiagram": "[ Pod Grid ] \u2500\u2500( Klik 'Lihat Detail Pod' )\u2500\u2500\u25b6 [ PodDetailAnalyticsView ]\n                                                       \u2502\n                                  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                                  \u25bc                                         \u25bc\n                       [ CPU & RAM Telemetry ]                   [ Emergency Reboot Control ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Kartu telemetri CPU, RAM, Network I/O dengan progress ring",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Navigasi breadcrumb ramah pembaca satu tombol kembali",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Polling interval 3 detik metrik docker stats dari backend",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Visualisasi grafik sparkline riwayat pemakaian resource 24 jam",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/PodDetailAnalyticsView.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"pod-detail-view\">\n  <button class=\"btn-crumb-back\" @click=\"$emit('back')\">\u2190 Kembali ke Semua Kontainer</button>\n  <div class=\"telemetry-grid\">\n    <div class=\"telemetry-card\">\n      <span class=\"telemetry-label\">CPU USAGE</span>\n      <span class=\"telemetry-value\">{{ cpuUsage }}%</span>\n    </div>\n  </div>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk animasi grafik interaktif.",
+    "dod": [
+      "Single back button standar UX",
+      "Master CSS tokens applied"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-EDT-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "Drag-and-Drop Visual Block Builder & Canvas Immersive (Modul 2: VisualEditorModule.vue)",
+    "category": "Studio Modul 2 (Editor Visual Studio)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/VisualEditorModule.vue",
+    "status": "progress",
+    "priority": "P1 - CRITICAL",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Membangun canvas editor blok visual dengan mode layar penuh imersif, palet komponen blok (Navbar, Hero, Showcase, Pricing, dll), dan inspector properti reaktif.",
+    "flowDesc": "Buka Visual Editor -> Auto-collapse sidebar -> Pilih blok dari palet -> Drag ke canvas -> Edit teks di inspector -> Live update preview.",
+    "flowDiagram": "[ Palet Komponen Blok ] \u2500\u2500( Drag & Drop )\u2500\u2500\u25b6 [ Canvas Visual Studio ]\n                                                        \u2502\n                                                        \u25bc\n                                           [ Inspector Properti Reaktif ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Canvas visual editor imersif dengan auto-collapse sidebar studio",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Palet 7 komponen blok esensial (Navbar, Hero, Showcase, Pricing, dll)",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Inspector properti reaktif untuk edit teks, warna, gambar, dan link",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Autosave draft blok lokal ke Pinia store & localStorage",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Undo & redo state machine untuk riwayat modifikasi pengguna",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/VisualEditorModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"visual-editor-container\" :class=\"{ 'immersive-mode': isSidebarCollapsed }\">\n  <aside class=\"block-palette\">\n    <div v-for=\"b in availableBlocks\" :key=\"b.type\" class=\"block-draggable\" draggable=\"true\">\n      {{ b.title }}\n    </div>\n  </aside>\n  <main class=\"editor-canvas\">\n    <TemplateLiveRenderer :blocks=\"activeBlocks\" />\n  </main>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk fine-tuning drag interaction 60fps.",
+    "dod": [
+      "60 FPS drag and drop",
+      "Immersive fullscreen mode",
+      "Pinia modular store"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-EDT-02",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "Live Renderer & XSS Sanitization Engine (TemplateLiveRenderer.vue)",
+    "category": "Studio Modul 2 (Editor Visual Studio)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/TemplateLiveRenderer.vue",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Komponen renderer langsung untuk menampilkan mockup website multi-device (Desktop, Tablet, Mobile) dengan lapisan pembersih DOMPurify anti-XSS.",
+    "flowDesc": "JSON Blocks -> Sanitasi DOMPurify -> Render HTML dinamis ke viewport iframe -> CSS Responsive Injection.",
+    "flowDiagram": "[ Raw Blocks JSON ] \u2500\u2500\u25b6 [ DOMPurify Sanitizer ] \u2500\u2500\u25b6 [ Safe HTML ] \u2500\u2500\u25b6 [ Multi-Device Viewport ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Frame live renderer dengan switch mode Desktop, Tablet, Mobile",
+        "done": true
+      },
+      {
+        "text": "Keamanan UI: Integrasi DOMPurify untuk sanitasi HTML/JS berbahaya sebelum preview",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: PostMessage bidirectional bridge antara iframe preview dan parent",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Live font preview injector dari Google Fonts API",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/TemplateLiveRenderer.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<iframe :src=\"previewUrl\" class=\"live-preview-frame\" :style=\"{ width: viewportWidth }\"></iframe>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk penyelarasan stylesheet iframe.",
+    "dod": [
+      "Zero XSS vulnerability",
+      "Responsive multi-device viewport toggle"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-ART-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "Tabel Ledger Artikel, Filter Kategori & Pencarian Instan (Modul 3: ContentArticlesModule.vue)",
+    "category": "Studio Modul 3 (Artikel & Halaman CMS)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Tabel manajemen konten artikel dan halaman statis CMS mengikuti standar tata letak 2 baris bersih, filter kategori, badge status publikasi, dan pencarian instan.",
+    "flowDesc": "Buka Menu Artikel -> Baris 1: Pencarian & Filter Kategori -> Baris 2: Ledger Table -> Klik baris untuk buka Reader View.",
+    "flowDiagram": "[ Baris 1: Search Box & Kategori Pills ]\n       \u2502\n       \u25bc\n[ Baris 2: Ledger Table Artikel & Halaman ] \u2500\u2500( Klik Baris )\u2500\u2500\u25b6 [ Reader View ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Tata letak 2 baris bersih (Baris 1 search/filter, Baris 2 tabel data)",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Badges status semantic (Published emerald, Draft amber, Scheduled blue)",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Pencarian instan dan tab filter kategori artikel reaktif",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Debounced search API request ke backend Go BFF",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Pagination reaktif dan sorting kolom berdasarkan tanggal/views",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"content-articles-module\">\n  <div class=\"filter-row\">\n    <div class=\"search-box\">\n      <input type=\"text\" v-model=\"searchQuery\" placeholder=\"Cari judul artikel atau tag...\" />\n    </div>\n  </div>\n  <table class=\"ledger-table\">...</table>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk pagination dan sorting.",
+    "dod": [
+      "2 Rows Layout sesuai AGENTS.md",
+      "Zero-CSS duplication"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-ART-02",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "Mode Fokus Pembaca Eksklusif (Obsidian Reader View) (Modul 3: ContentArticlesModule.vue)",
+    "category": "Studio Modul 3 (Artikel & Halaman CMS)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Antarmuka membaca artikel bergaya Obsidian editorial dengan mode bebas distraksi (auto-collapse sidebar), tipografi nyaman, ambient glow watermark, dan terminal code snippet bergaya Ray.so.",
+    "flowDesc": "User klik 'Baca Artikel' -> Sidebar utama otomatis kolaps -> Tampilan beralih ke 2 kolom (Hero Content + Specs Sidebar) -> Navigasi kembali tunggal di header.",
+    "flowDiagram": "[ Daftar Artikel ] \u2500\u2500\u25b6 [ Reader View Terbuka ] \u2500\u2500\u25b6 [ Sidebar Kolaps Otomatis ]\n                               \u2502\n            \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n            \u25bc                                     \u25bc\n[ Kolom Kiri: Artikel Editorial & Code ]   [ Kolom Kanan: Sidebar Spesifikasi ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Mode fokus pembaca distraction-free dengan tombol kembali tunggal",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Tipografi editorial nyaman, ambient glow watermark, dan tactile telemetry",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Terminal code snippet terisolasi gaya VS Code / Ray.so",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Markdown-it parser dengan syntax highlighting Prism.js real",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Estimasi waktu baca dinamis (Reading Time Calculator)",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/ContentArticlesModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div v-if=\"activeArticleForReader\" class=\"reader-view-container\">\n  <div class=\"reader-header-bar\">\n    <button class=\"btn-crumb-back\" @click=\"activeArticleForReader = null\">\u2190 Kembali ke Daftar Artikel</button>\n  </div>\n  <div class=\"reader-2col-layout\">...</div>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk rich text editor formatting.",
+    "dod": [
+      "Distraction-free auto collapse",
+      "Single header back navigation"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-MED-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "Galeri Aset Media, Meteran Kuota S3 & Preview Modal (Modul 4: MediaAssetsModule.vue)",
+    "category": "Studio Modul 4 (Media Assets & Storage S3)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/MediaAssetsModule.vue",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Galeri pengelolaan file media (gambar, dokumen, video) dengan meteran kuota penyimpanan S3 (contoh: 1.2GB/5.0GB), preview modal, dan tombol salin tautan instan.",
+    "flowDesc": "Buka Media Assets -> Tampilkan Grid Asset -> Meteran Kuota S3 -> Klik Aset -> Tampilkan Modal Preview & Copy URL.",
+    "flowDiagram": "[ Grid Kartu Media ] \u2500\u2500( Klik Aset )\u2500\u2500\u25b6 [ Modal Preview & Exif Info ] \u2500\u2500\u25b6 [ Copy CDN Link ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Grid kartu aset media dengan thumbnail preview, ukuran file & tanggal",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Meteran pemakaian kuota S3 visual (contoh: 1.2GB / 5.0GB)",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Tombol salin URL aset langsung ke clipboard dan filter tipe file",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Drag-and-drop uploader terhubung ke multipart presigned S3 URL",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Progress bar upload persentase riil (0-100%)",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/MediaAssetsModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"media-assets-module\">\n  <div class=\"quota-meter-card\">\n    <span>Kapasitas S3: {{ usedStorage }} / {{ maxStorage }}</span>\n    <div class=\"progress-bar-fill\" :style=\"{ width: storagePercentage + '%' }\"></div>\n  </div>\n  <div class=\"media-grid\">...</div>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk penanganan drag-and-drop file upload progress.",
+    "dod": [
+      "S3 quota visual bar",
+      "Instant clipboard copy"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-TPL-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "UI Katalog Blueprint Template & Modal Preview (Modul 5: TemplatesCatalogModule.vue)",
+    "category": "Studio Modul 5 (Katalog Template & Pricelist)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/TemplatesCatalogModule.vue",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Etalase katalog template website resmi (Toko Retail, Portofolio Teknis, Blog Media, LMS Edukasi) dengan filter kategori dan modal preview interaktif.",
+    "flowDesc": "Buka Katalog Template -> Filter Kategori -> Klik Pratinjau -> Buka Modal Demo Live -> Klik 'Gunakan Template'.",
+    "flowDiagram": "[ Katalog Template ] \u2500\u2500( Klik Demo )\u2500\u2500\u25b6 [ Modal Pratinjau Iframe ] \u2500\u2500( Gunakan )\u2500\u2500\u25b6 [ Kloning ke Situs ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Galeri blueprint kartu template dengan filter kategori bisnis",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Modal preview interaktif untuk melihat live demo template",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Tombol 'Terapkan Template' mengirim payload kloning ke situs aktif",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Fitur download preset konfigurasi template JSON",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/TemplatesCatalogModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"templates-catalog-module\">\n  <div class=\"template-cards-grid\">\n    <div v-for=\"tpl in templates\" :key=\"tpl.id\" class=\"telemetry-card template-card\">\n      <img :src=\"tpl.thumbnail\" class=\"template-thumb\" />\n      <button class=\"btn-top-create\" @click=\"previewTemplate(tpl)\">Lihat Demo Live</button>\n    </div>\n  </div>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk animasi transisi modal katalog.",
+    "dod": [
+      "Interactive iframe modal preview",
+      "Master CSS tokens applied"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-DOM-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "UI Custom Domain, Modal PoP Anycast & SSL Inspector (Modul 6: CustomDomainsModule.vue)",
+    "category": "Studio Modul 6 (Custom Domain & DNS Traefik)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/CustomDomainsModule.vue",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Tampilan manajemen domain kustom dengan panduan integrasi DNS (CNAME ke edge.herocms.id), modal PoP Anycast, dan modal SSL Inspector untuk cek status sertifikat Let's Encrypt.",
+    "flowDesc": "Input Domain -> Tambah ke Tabel -> Buka Panduan DNS CNAME -> Verifikasi Propagasi -> Status SSL Aktif.",
+    "flowDiagram": "[ Input Custom Domain ] \u2500\u2500\u25b6 [ Panduan CNAME & A Record ] \u2500\u2500\u25b6 [ SSL Certificate Inspector ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Tabel ledger custom domain dengan badge status SSL",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Modal panduan konfigurasi DNS (CNAME ke edge.herocms.id & A Record)",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Modal SSL Certificate Inspector untuk cek issuer & kadaluarsa",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Polling otomatis status CNAME setiap 10 detik saat pending",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Validasi regex nama domain pada form input sebelum submit",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/CustomDomainsModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"custom-domains-module\">\n  <div class=\"domains-ledger-wrap\">\n    <table class=\"ledger-table\">...</table>\n  </div>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk polling verifikasi CNAME.",
+    "dod": [
+      "PoP Anycast modal guide",
+      "SSL Inspector dialog"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-ANL-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "Dashboard Grafik Telemetri Kunjungan & Top-Views (Modul 7: AnalyticsTelemetryModule.vue)",
+    "category": "Studio Modul 7 (Analitik Real-Time)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/AnalyticsTelemetryModule.vue",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Dashboard grafik kunjungan mingguan, counter pengunjung langsung (live visitors), bounce rate, dan tabel ranking artikel terpopuler.",
+    "flowDesc": "Request Data Analitik -> Render Metrik Kartu -> Gambar Bar Chart 7 Hari -> Render Tabel Top 5 Views.",
+    "flowDiagram": "[ Ingestion Engine ] \u2500\u2500\u25b6 [ Aggregation API ] \u2500\u2500\u25b6 [ Chart & Telemetry Dashboard ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Kartu telemetri pengunjung hari ini, live visitors, bounce rate",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Tabel ranking 5 artikel terpopuler dan grafik tren 7 hari",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Tab filter rentang tanggal (Hari Ini, 7 Hari, 30 Hari)",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Fetching data analitik dari endpoint aggregation API Go",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Auto-refresh data grafik setiap 60 detik tanpa re-render penuh",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/AnalyticsTelemetryModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"analytics-telemetry-module\">\n  <div class=\"stats-overview-grid\">...</div>\n  <div class=\"chart-wrapper\">...</div>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk integrasi visualisasi Chart.js / SVG lightweight.",
+    "dod": [
+      "Zero heavy charting bundle",
+      "Master CSS telemetry tokens"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-WBH-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "UI Manajemen Webhook & Generator API Key (Modul 8: WebhooksApiModule.vue)",
+    "category": "Studio Modul 8 (Webhooks & Integrasi API)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/WebhooksApiModule.vue",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Form pembuatan webhook endpoint untuk integrasi eksternal (n8n, Zapier, Discord), pemilihan trigger event, dan tabel riwayat pengiriman log.",
+    "flowDesc": "Form Input Webhook URL -> Pilih Events -> Simpan -> Tampilkan di Tabel Webhook -> Uji Test Ping.",
+    "flowDiagram": "[ Input Webhook URL ] \u2500\u2500( Pilih Event: post.published )\u2500\u2500\u25b6 [ Webhook Table ] \u2500\u2500\u25b6 [ Test Ping ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Form pembuatan webhook endpoint dengan checklist event triggers",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Generator API Key token dengan fitur copy instan",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Tabel riwayat pengiriman log payload (Status 200 OK / Error)",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Tombol 'Kirim Uji Coba (Test Ping)' memanggil API dispatcher",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Modal inspect detail request & response payload JSON",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/WebhooksApiModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"webhooks-api-module\">\n  <div class=\"webhook-form-card\">...</div>\n  <table class=\"ledger-table\">...</table>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk interaksi copy secret key.",
+    "dod": [
+      "Event selection checkboxes",
+      "Log delivery status badges"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-BIL-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "UI Matriks Paket Langganan & Meteran Kuota (Modul 9: BillingPlanModule.vue)",
+    "category": "Studio Modul 9 (Billing & Paket Langganan)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/BillingPlanModule.vue",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Tampilan perbandingan paket SaaS HeroCMS (Starter Rp 0, Pro Rp 149.000, Agency Rp 499.000), meteran kuota kontainer yang telah digunakan, dan alur upgrade paket.",
+    "flowDesc": "Buka Menu Billing -> Evaluasi Paket Saat Ini -> Bandingkan Fitur Paket -> Klik Upgrade -> Muncul Pop-up Pembayaran.",
+    "flowDiagram": "[ Kartu Paket Langganan ] \u2500\u2500( Klik Upgrade ke Pro )\u2500\u2500\u25b6 [ Midtrans Snap Payment Gateway ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Kartu paket harga Starter (Rp 0), Pro (Rp 149rb), Agency (Rp 499rb)",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Meteran kuota pemakaian kontainer dan resource plan aktif",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Tombol upgrade plan responsif dengan modal konfirmasi",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Integrasi Midtrans Snap Popup pada klik tombol bayar",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Tampilan status transaksi pending / sukses via SSE",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/BillingPlanModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"billing-plan-module\">\n  <div class=\"pricing-matrix-grid\">...</div>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk integrasi script Midtrans Snap SDK.",
+    "dod": [
+      "Tiering pricing comparison",
+      "Container quota usage gauge"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-INV-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "UI Ledger Faktur & Unduh Kwitansi PDF (Modul 10: InvoicesHistoryModule.vue)",
+    "category": "Studio Modul 10 (Faktur & Riwayat Invoice)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/InvoicesHistoryModule.vue",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Tabel riwayat pembayaran dan faktur resmi pelanggan dengan nomor invoice, nominal, tanggal, status lunas, serta tombol unduh kwitansi PDF.",
+    "flowDesc": "Buka Riwayat Invoice -> Filter Tahun -> Cari Nomor Invoice -> Klik 'Unduh PDF' -> Download berkas faktur.",
+    "flowDiagram": "[ Ledger Invoices ] \u2500\u2500( Klik Unduh )\u2500\u2500\u25b6 [ Backend PDF Generator ] \u2500\u2500\u25b6 [ Simpan Berkas PDF ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Tabel ledger faktur resmi dengan nomor invoice, nominal, tanggal, status",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Tab filter riwayat tahun pembayaran dan pencarian invoice",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Tombol unduh kwitansi PDF dengan feedback loading",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Download stream PDF blob resmi dari endpoint backend",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/InvoicesHistoryModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"invoices-history-module\">\n  <div class=\"year-toggle-group\">...</div>\n  <table class=\"ledger-table\">...</table>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk handling trigger download blob.",
+    "dod": [
+      "Invoice ledger table",
+      "Year filter segment buttons"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-SUP-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "UI Tiket Bantuan & Pelacakan SLA Support (Modul 11: SupportTicketingModule.vue)",
+    "category": "Studio Modul 11 (Pusat Bantuan & Support)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/SupportTicketingModule.vue",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Form pelaporan kendala teknis dengan pemilihan tingkat urgensi (Normal, High, Urgent), badge status SLA, dan riwayat percakapan dengan tim bantuan.",
+    "flowDesc": "User buat tiket bantuan -> Tentukan prioritas -> Kirim keluhan -> Tampilkan di thread balasan tiket.",
+    "flowDiagram": "[ Buat Tiket Bantuan ] \u2500\u2500\u25b6 [ Antrean Support SLA ] \u2500\u2500\u25b6 [ Thread Balasan Agen Support ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Form pengajuan tiket support dengan pemilihan tingkat prioritas",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Thread percakapan bantuan dengan bubble pesan pengguna & agen",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Status badge SLA (Open, In Progress, Resolved)",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Kirim balasan pesan tiket baru terhubung ke Go BFF",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Lampiran screenshot gambar via presigned upload",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/SupportTicketingModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"support-ticketing-module\">\n  <div class=\"ticket-thread-box\">...</div>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk alur auto-scroll pada thread pesan baru.",
+    "dod": [
+      "SLA status indicators",
+      "Priority selector radio group"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-CHG-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "UI Changelog Interaktif, Filter Tipe & Hotkey (Modul 12: ChangelogModule.vue)",
+    "category": "Studio Modul 12 (Changelog & Rilis)",
+    "service": "services/02-dashboard-cms/src/components/dashboard/ChangelogModule.vue",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Halaman log rilis versi sistem transparan mengikuti tata kelola SemVer di AGENTS.md, dilengkapi filter tipe rilis, pencarian cepat, dan shortcut keyboard.",
+    "flowDesc": "Buka Changelog -> Render Rilis Terbaru -> Filter Tipe (Feature, Fix, Security) -> Hotkey CMD+K untuk pencarian.",
+    "flowDiagram": "[ changelog.ts Dataset ] \u2500\u2500\u25b6 [ ChangelogModule.vue ] \u2500\u2500\u25b6 [ Interactive Release Timeline ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Garis waktu rilis sistem dengan badge versi SemVer resmi",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Filter tag kategori (Feature, Fix, Improvement, Security, Perf)",
+        "done": true
+      },
+      {
+        "text": "Pembenahan Tampilan UI: Shortcut keyboard CMD+K / CTRL+K untuk pencarian cepat",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Sinkronisasi dataset changelog otomatis dari endpoint release API",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/src/components/dashboard/ChangelogModule.vue",
+    "codeLang": "VUE",
+    "codeSnippet": "<div class=\"changelog-module\">\n  <div class=\"release-timeline\">...</div>\n</div>",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk styling accordion release item.",
+    "dod": [
+      "SemVer compliant display",
+      "Keyboard navigation CMD+K"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-MKT-01",
+    "division": "Irgi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Irgi (Frontend Web Specialist)",
+    "title": "Website Pemasaran & Landing Page Konversi Tinggi (services/04-marketing-site)",
+    "category": "Marketing & Conversion (04-marketing-site)",
+    "service": "services/04-marketing-site/src/",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Membangun website pemasaran utama HeroCMS berbasis React 19 dengan skor Largest Contentful Paint (LCP) < 1.2 detik, demo interaktif, dan formulir pendaftaran akun cepat.",
+    "flowDesc": "Pengunjung Masuk Landing Page -> Evaluasi Hero Headline -> Interaksi dengan Demo Playground -> Cek Harga -> Klik Daftar Akun.",
+    "flowDiagram": "[ Pengunjung Marketing Site ] \u2500\u2500\u25b6 [ Hero Showcase & Playground ] \u2500\u2500\u25b6 [ Signup Form ] \u2500\u2500\u25b6 [ Provisioning CMS ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Hero headline memikat, demo playground interaktif, kalkulator harga",
+        "done": true
+      },
+      {
+        "text": "Optimasi Performa Web: Skor LCP < 1.2 detik dan audit keamanan directory traversal lolos",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Frontend: Form pendaftaran akun baru terhubung langsung ke register API backend",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Frontend: Integrasi Google Analytics 4 / Plausible event tracking",
+        "done": false
+      }
+    ],
+    "codeFile": "services/04-marketing-site/src/App.tsx",
+    "codeLang": "TYPESCRIPT",
+    "codeSnippet": "export function App() {\n  return (\n    <div className=\"marketing-canvas\">\n      <HeroHeader />\n      <InteractivePlayground />\n      <PricingCalculator />\n    </div>\n  );\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Irgi untuk A/B testing copywriting dan conversion funnel.",
+    "dod": [
+      "LCP < 1.2s pada Lighthouse",
+      "Mobile responsive 100%"
+    ],
+    "serviceGroup": "04-marketing-site"
+  },
+  {
+    "id": "TSK-CNT-02",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "Go Docker Engine SDK Container Lifecycle Provisioning",
+    "category": "Container Orchestration (03-provision-orchestrator)",
+    "service": "services/03-provision-orchestrator/internal/docker/",
+    "status": "progress",
+    "priority": "P1 - CRITICAL",
+    "phase": "Ongoing (Fondasi Beres Dicentang)",
+    "lead": "Membuat mekanisme spawning kontainer mandiri berbasis Go Docker SDK dengan batas cgroups 256MB RAM, non-root user UID 10001, dan health probe otomatis.",
+    "flowDesc": "POST /api/v1/containers/provision -> Validasi Subdomain -> Generate Compose Config -> docker.Client.ContainerCreate -> docker.Client.ContainerStart -> Return Container IP.",
+    "flowDiagram": "[ API Provision Request ] \u2500\u2500\u25b6 [ Docker SDK Client ] \u2500\u2500\u25b6 [ ContainerCreate ] \u2500\u2500\u25b6 [ ContainerStart ] \u2500\u2500\u25b6 Active",
+    "checklist": [
+      {
+        "text": "Perancangan Arsitektur: Desain state machine lifecycle kontainer (spawn, stop, restart, delete)",
+        "done": true
+      },
+      {
+        "text": "Audit Keamanan: Validasi nama kontainer dan pengecekan docker privilege",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Orchestrator: Pemanggilan client.ContainerCreate dengan cgroups memori 256MB",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Orchestrator: Endpoint POST /api/v1/containers/provision dengan latensi < 4.5s",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Orchestrator: Background worker health check dan auto-restart jika crash",
+        "done": false
+      }
+    ],
+    "codeFile": "services/03-provision-orchestrator/internal/docker/provisioner.go",
+    "codeLang": "GO",
+    "codeSnippet": "func (p *Provisioner) CreateTenantContainer(ctx context.Context, tenantID, subdomain string) (string, error) {\n    resp, err := p.cli.ContainerCreate(ctx, \n        &container.Config{\n            Image: \"herocms/tenant-node:v1.0\",\n            User:  \"10001:10001\",\n        },\n        &container.HostConfig{\n            Resources: container.Resources{Memory: 256 * 1024 * 1024},\n        },\n        nil, nil, \"hero_tenant_\" + subdomain,\n    )\n    if err != nil { return \"\", err }\n    return resp.ID, p.cli.ContainerStart(ctx, resp.ID, container.StartOptions{})\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Fondasi Beres). Target Handover ke Andalusia untuk integrasi live Docker Engine daemon.",
+    "dod": [
+      "Waktu spawn < 4.5 detik",
+      "Status kontainer terupdate di database"
+    ],
+    "serviceGroup": "03-provision-orchestrator"
+  },
+  {
+    "id": "TSK-CNT-03",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "Live Interactive Terminal Log Streaming Engine",
+    "category": "Backend BFF (02-dashboard-cms)",
+    "service": "services/02-dashboard-cms/cmd/server/",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Mesin streaming log kontainer interaktif melalui WebSocket / SSE dengan filter multi-kategori (traffic, traefik, engine, docker, system).",
+    "flowDesc": "Frontend buka Terminal -> Buka WebSocket /ws/logs/:id -> Backend membaca Stdout/Stderr via ContainerLogs SDK -> Push chunks ke browser.",
+    "flowDiagram": "[ Docker Engine SDK Stdout ] \u2500\u2500\u25b6 [ Go Backend WS Handler ] \u2500\u2500\u25b6 [ WebSocket Stream ] \u2500\u2500\u25b6 [ Terminal UI ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Modal terminal interaktif multi-level log di dashboard",
+        "done": true
+      },
+      {
+        "text": "Perancangan Arsitektur: Desain buffer log 500 baris terakhir per kontainer",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Backend: WebSocket / SSE handler stream stdout/stderr langsung dari Docker SDK",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Backend: Endpoint GET /api/v1/containers/:id/logs?tail=100",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/handler/logs.go",
+    "codeLang": "GO",
+    "codeSnippet": "func StreamLogsHandler(c *gin.Context) {\n    containerID := c.Param(\"id\")\n    reader, err := dockerCli.ContainerLogs(c.Request.Context(), containerID, container.LogsOptions{\n        ShowStdout: true, ShowStderr: true, Follow: true, Tail: \"100\",\n    })\n    if err != nil { c.AbortWithStatus(500); return }\n    defer reader.Close()\n    c.Stream(func(w io.Writer) bool {\n        buf := make([]byte, 1024)\n        n, err := reader.Read(buf)\n        if err != nil { return false }\n        w.Write(buf[:n])\n        return true\n    })\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk sambungan WebSocket pipeline riil.",
+    "dod": [
+      "Realtime log streaming",
+      "Zero memory leak pada koneksi idle"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-CNT-04",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "Container Emergency Controls (Restart & Maintenance Drainage)",
+    "category": "Backend BFF (02-dashboard-cms)",
+    "service": "services/02-dashboard-cms/internal/handler/",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Handler backend untuk merestart kontainer secara aman dengan graceful drainage timeout dan saklar pemeliharaan situs.",
+    "flowDesc": "Request Restart -> Kirim SIGTERM ke PID 1 -> Tunggu 10s -> Jika belum berhenti kirim SIGKILL -> Jalankan ulang kontainer.",
+    "flowDiagram": "[ Tombol Restart ] \u2500\u2500\u25b6 [ POST /api/v1/containers/:id/restart ] \u2500\u2500\u25b6 [ SIGTERM (10s) ] \u2500\u2500\u25b6 [ Restart Container ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Tombol saklar reboot darurat dan maintenance mode di pod view",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Backend: Handler POST /api/v1/containers/:id/restart dengan SIGTERM timeout 10s",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Backend: Handler POST /api/v1/containers/:id/maintenance switch status di DB",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/handler/container_control.go",
+    "codeLang": "GO",
+    "codeSnippet": "func RestartContainerHandler(c *gin.Context) {\n    id := c.Param(\"id\")\n    timeout := 10\n    err := dockerCli.ContainerRestart(c.Request.Context(), id, container.StopOptions{Timeout: &timeout})\n    if err != nil { c.JSON(500, gin.H{\"error\": err.Error()}); return }\n    c.JSON(200, gin.H{\"success\": true, \"message\": \"Container restarted cleanly\"})\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk verifikasi proses graceful shutdown.",
+    "dod": [
+      "Graceful SIGTERM execution",
+      "Zero file corruption pada kontainer"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-EDT-03",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "API Simpan & Publikasi Konfigurasi Blok ke Kontainer",
+    "category": "Backend BFF (02-dashboard-cms)",
+    "service": "services/02-dashboard-cms/internal/handler/editor.go",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Endpoint untuk menyimpan draft susunan JSON blok website dan mempublikasikan versi HTML/CSS statis terkompilasi langsung ke kontainer tenant.",
+    "flowDesc": "Editor kirim JSON blocks -> Simpan draft di PostgreSQL -> Kompilasi static HTML template -> Write ke volume kontainer tenant.",
+    "flowDiagram": "[ Editor Blocks JSON ] \u2500\u2500\u25b6 [ PUT /api/v1/sites/:id/blocks ] \u2500\u2500\u25b6 [ PostgreSQL DB ]\n                                        \u2502 (Publish)\n                                        \u25bc\n                 [ Static HTML Compiler ] \u2500\u2500\u25b6 [ Mount Volume Kontainer ]",
+    "checklist": [
+      {
+        "text": "Perancangan Skema: Format JSON schema blocks_json per halaman situs",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Backend: Endpoint PUT /api/v1/sites/:id/blocks untuk simpan draft",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Backend: Endpoint POST /api/v1/sites/:id/publish kompilasi static HTML ke volume kontainer",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/handler/editor.go",
+    "codeLang": "GO",
+    "codeSnippet": "func SaveBlocksHandler(c *gin.Context) {\n    siteID := c.Param(\"id\")\n    var payload BlockSavePayload\n    if err := c.ShouldBindJSON(&payload); err != nil { c.AbortWithStatus(400); return }\n    // Simpan JSON ke tabel site_blocks dengan RLS\n    c.JSON(200, gin.H{\"success\": true})\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk generator HTML static publisher.",
+    "dod": [
+      "Draft autosave latency < 150ms",
+      "Published site live < 1s"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-EDT-04",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "AI Block Content Generator (Copilot Teks & Gambar)",
+    "category": "AI Copilot Service (05-ai-agent-service)",
+    "service": "services/05-ai-agent-service/internal/llm/",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Microservice AI untuk menghasilkan konten teks headline, deskripsi produk, artikel blog, dan gambar visual dari prompt teks.",
+    "flowDesc": "User ketik prompt -> Request ke 05-ai-agent-service -> Panggil Gemini API / Local LLM -> Stream tokens SSE -> Injeksi ke blok editor.",
+    "flowDiagram": "[ User Prompt ] \u2500\u2500\u25b6 [ AI Agent Service (:8087) ] \u2500\u2500\u25b6 [ Gemini API ] \u2500\u2500\u25b6 [ SSE Stream ] \u2500\u2500\u25b6 [ Visual Block ]",
+    "checklist": [
+      {
+        "text": "Pembenahan Tampilan UI: Tombol Copilot 'Bantu Tulis Konten AI' pada editor visual",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real AI: Endpoint POST /api/v1/ai/generate-block ke Gemini API / Claude",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real AI: Stream response SSE dengan Time-To-First-Token < 800ms",
+        "done": false
+      }
+    ],
+    "codeFile": "services/05-ai-agent-service/internal/llm/copilot.go",
+    "codeLang": "GO",
+    "codeSnippet": "func GenerateBlockContent(ctx context.Context, prompt string) (<-chan string, error) {\n    // Panggil model LLM dan return streaming channel\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk orkestrasi model AI.",
+    "dod": [
+      "TTFT < 800ms",
+      "Valid JSON Schema output"
+    ],
+    "serviceGroup": "05-ai-agent-service"
+  },
+  {
+    "id": "TSK-ART-03",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "BFF CRUD API Postingan Artikel & SEO Metadata",
+    "category": "Backend BFF (02-dashboard-cms)",
+    "service": "services/02-dashboard-cms/internal/handler/posts.go",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Endpoint RESTful API lengkap untuk manajemen postingan artikel, validasi keunikan slug per-tenant, pagination server-side, dan tagging SEO meta.",
+    "flowDesc": "Request REST API -> Gin Controller -> Validasi Request -> Query Database dengan RLS session -> Return Response.",
+    "flowDiagram": "[ HTTP Client ] \u2500\u2500\u25b6 [ Gin Posts Router ] \u2500\u2500\u25b6 [ PostsHandler CRUD ] \u2500\u2500\u25b6 [ DB with RLS ]",
+    "checklist": [
+      {
+        "text": "Desain Kontrak API: Struktur payload artikel, tag kategori, dan slug generator",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Backend: Endpoint GET /api/v1/posts dengan filter status & search",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Backend: Endpoint POST /api/v1/posts, PUT, DELETE dengan validasi tenant RLS",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/handler/posts.go",
+    "codeLang": "GO",
+    "codeSnippet": "func CreatePostHandler(c *gin.Context) {\n    tenantID := c.MustGet(\"tenant_id\").(string)\n    var req PostCreateRequest\n    if err := c.ShouldBindJSON(&req); err != nil { c.AbortWithStatus(400); return }\n    // Insert post with tenantID\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk integrasi handler database.",
+    "dod": [
+      "Unique slug constraint per tenant",
+      "Full CRUD operations"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-MED-02",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "Presigned S3 Upload Handler & Magic Bytes Verification",
+    "category": "Backend Storage (02-dashboard-cms)",
+    "service": "services/02-dashboard-cms/internal/storage/minio.go",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Pembuatan upload URL presigned MinIO S3 agar browser dapat mengunggah file langsung ke storage tanpa membebani memori backend Go.",
+    "flowDesc": "Frontend minta upload token -> Backend generate S3 presigned PUT URL -> Frontend upload langsung ke MinIO -> MinIO webhook notif ke backend.",
+    "flowDiagram": "[ Browser ] \u2500\u2500( 1. Minta Presigned URL )\u2500\u2500\u25b6 [ Go Backend ]\n       \u2502                                            \u2502\n       \u2502 ( 2. Kembalikan Presigned PUT URL )       \u2502\n       \u25bc                                            \u25bc\n[ Direct Upload File ke MinIO S3 ] \u2500\u2500( 3. Webhook Notif )\u2500\u2500\u25b6 [ DB Metadata ]",
+    "checklist": [
+      {
+        "text": "Audit Keamanan: Validasi Magic Bytes anti-webshell dan pencegahan eksekusi di MinIO",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Backend: Endpoint POST /api/v1/media/presign-upload menghasilkan Presigned PUT URL",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Backend: Webhook verifikasi ukuran file pasca upload untuk pemotongan kuota",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/storage/minio.go",
+    "codeLang": "GO",
+    "codeSnippet": "func GeneratePresignedUpload(bucket, objectKey string) (string, error) {\n    url, err := minioClient.PresignedPutObject(context.Background(), bucket, objectKey, 15*time.Minute)\n    return url.String(), err\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk wiring MinIO Go SDK.",
+    "dod": [
+      "Presigned URL expiry 15 menit",
+      "Zero backend RAM inflation"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-TPL-02",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "AI Theme & Template Generator Engine",
+    "category": "AI Copilot Service (05-ai-agent-service)",
+    "service": "services/05-ai-agent-service/internal/generator/",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Generator cerdas yang mampu menerjemahkan deskripsi bisnis pengguna menjadi susunan template website lengkap dalam bentuk JSON blocks.",
+    "flowDesc": "Input Prompt Bisnis -> Ekstraksi Palet Warna & Font -> Susun Tata Letak Blok -> Validasi JSON Schema -> Output Template Blueprint.",
+    "flowDiagram": "[ \"Toko Kue Kering Buatan Rumah\" ] \u2500\u2500\u25b6 [ AI Template Engine ] \u2500\u2500\u25b6 [ Complete Blueprint JSON ]",
+    "checklist": [
+      {
+        "text": "Perancangan Schema: Template JSON blueprint 4 vertikal bisnis terstandarisasi",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real AI: Generator otomatis tema warna, font pairing, dan copywriting dari satu prompt",
+        "done": false
+      }
+    ],
+    "codeFile": "services/05-ai-agent-service/internal/generator/theme.go",
+    "codeLang": "GO",
+    "codeSnippet": "func GenerateThemeFromPrompt(prompt string) (*BlueprintTemplate, error) {\n    // Generate valid blueprint JSON\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk integrasi prompt engineering.",
+    "dod": [
+      "Compliant with Visual Editor blocks",
+      "Valid JSON Schema"
+    ],
+    "serviceGroup": "05-ai-agent-service"
+  },
+  {
+    "id": "TSK-DOM-02",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "DNS Verification Background Worker (CNAME Propagation)",
+    "category": "Backend DNS (02-dashboard-cms)",
+    "service": "services/02-dashboard-cms/internal/service/dns.go",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Worker background untuk mengecek kueri DNS CNAME domain pelanggan sebelum mendaftarkannya ke Traefik guna menghindari rate limit Let's Encrypt.",
+    "flowDesc": "Worker membaca domain pending -> Kueri CNAME ke nameserver publik -> Jika match edge.herocms.id -> Update status verified -> Trigger Traefik.",
+    "flowDiagram": "[ Domain Pending di DB ] \u2500\u2500\u25b6 [ Go DNS Resolver Worker ] \u2500\u2500\u25b6 [ CNAME Cek: edge.herocms.id ] \u2500\u2500\u25b6 Verified",
+    "checklist": [
+      {
+        "text": "Desain Alur Kerja: Prosedur verifikasi domain sebelum didaftarkan ke SSL Let's Encrypt",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Backend: Worker background kueri DNS CNAME ke edge.herocms.id",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Backend: Update status domain verified dan trigger injeksi config Traefik",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/service/dns.go",
+    "codeLang": "GO",
+    "codeSnippet": "func VerifyCNAME(domain, expectedTarget string) bool {\n    cname, err := net.LookupCNAME(domain)\n    if err != nil { return false }\n    return strings.TrimSuffix(cname, \".\") == strings.TrimSuffix(expectedTarget, \".\")\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk goroutine worker pool.",
+    "dod": [
+      "Background worker non-blocking",
+      "Zero false positive verification"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-ANL-03",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "Telemetry Hit Ingestion Middleware (GDPR-Safe)",
+    "category": "Backend Telemetry (02-dashboard-cms)",
+    "service": "services/02-dashboard-cms/internal/middleware/tracker.go",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Middleware pencatat kunjungan website secara anonim (hash IP dengan salt harian) tanpa menambah latensi respon halaman bagi pengunjung.",
+    "flowDesc": "Request Halaman Masuk -> Hit Ingestion Middleware (Async) -> Hash IP & Ekstrak Referer -> Kirim ke Redis Channel -> Forward response.",
+    "flowDiagram": "[ Pengunjung Website ] \u2500\u2500\u25b6 [ Web Response (< 15ms) ]\n           \u2502 (Async Non-blocking)\n           \u25bc\n[ SHA256 Salted Hash IP ] \u2500\u2500\u25b6 [ Push to Redis Buffer ]",
+    "checklist": [
+      {
+        "text": "Desain Privasi Data: Format payload hit anonim (hash SHA256 IP + salt harian)",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Backend: Gin middleware non-blocking asinkron kirim data hit ke Redis channel",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/middleware/tracker.go",
+    "codeLang": "GO",
+    "codeSnippet": "func TelemetryTracker() gin.HandlerFunc {\n    return func(c *gin.Context) {\n        c.Next()\n        go func(ip, path, ua string) {\n            // Push async to Redis\n        }(c.ClientIP(), c.Request.URL.Path, c.Request.UserAgent())\n    }\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk async buffer channel.",
+    "dod": [
+      "Zero added latency (< 0.2ms)",
+      "GDPR-safe IP hashing"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-WBH-02",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "Anti-SSRF Safe Webhook Dispatcher",
+    "category": "Backend Webhook (02-dashboard-cms)",
+    "service": "services/02-dashboard-cms/internal/service/webhook.go",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Mesin pengirim HTTP POST webhook keluar dengan proteksi pemblokiran IP privat internal guna mencegah serangan Server-Side Request Forgery.",
+    "flowDesc": "Event Trigger -> Validasi URL Target -> Tolak jika IP 127.0.0.1 / 10.0.0.0/8 / 169.254.169.254 -> Eksekusi HTTP POST dengan timeout 3s.",
+    "flowDiagram": "[ Event Trigger ] \u2500\u2500\u25b6 [ Anti-SSRF DNS Resolver ]\n                               \u2502\n            \u251c\u2500\u2500 IP Internal \u2500\u2500\u25b6 ABORT 400 \"Private IP Forbidden\"\n            \u2514\u2500\u2500 IP Publik   \u2500\u2500\u25b6 HTTP POST Payload (Timeout 3s)",
+    "checklist": [
+      {
+        "text": "Audit Keamanan: Validasi anti-SSRF pemblokiran IP internal (127.0.0.1, 10.0.0.0/8)",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Backend: Worker HTTP client dengan custom DialContext anti-DNS rebinding",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Backend: Mekanisme retry eksponensial (3x coba) jika endpoint target timeout",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/service/webhook.go",
+    "codeLang": "GO",
+    "codeSnippet": "func SafeDispatchWebhook(targetURL string, payload []byte) error {\n    // Custom dialer checking IP range\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk pool worker dispatcher.",
+    "dod": [
+      "Zero internal network probing",
+      "Timeout 3 seconds"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-WBH-03",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "n8n Social Media Auto-Poster Workflow Automation",
+    "category": "Workflow Automation (05-ai-agent-service)",
+    "service": "services/05-ai-agent-service/workflows/",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Workflow otomasi n8n yang menerima webhook saat artikel baru dipublikasikan, menghasilkan ringkasan caption via AI, dan mempostingnya otomatis ke media sosial.",
+    "flowDesc": "Webhook post.published diterima -> Ekstrak Judul & Cuplikan -> AI buat caption Instagram & Telegram -> Kirim API Post ke Medsos.",
+    "flowDiagram": "[ Webhook post.published ] \u2500\u2500\u25b6 [ n8n Workflow ] \u2500\u2500\u25b6 [ AI Caption Generator ] \u2500\u2500\u25b6 [ Instagram & Telegram ]",
+    "checklist": [
+      {
+        "text": "Perancangan Alur: Pemetaan event post.published ke trigger n8n webhook",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Workflow: Integrasi n8n node Instagram Graph API & Telegram Bot",
+        "done": false
+      }
+    ],
+    "codeFile": "services/05-ai-agent-service/workflows/autoposter.json",
+    "codeLang": "JSON",
+    "codeSnippet": "{ \"nodes\": [ { \"name\": \"Webhook Trigger\", \"type\": \"n8n-nodes-base.webhook\" } ] }",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk integrasi n8n instance.",
+    "dod": [
+      "Automated social dispatch",
+      "Error fallback logging"
+    ],
+    "serviceGroup": "05-ai-agent-service"
+  },
+  {
+    "id": "TSK-BIL-02",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "Payment Gateway Integration (Midtrans / Xendit SDK)",
+    "category": "Billing Engine (01-admin-console & BFF)",
+    "service": "services/01-admin-console/app/Http/Controllers/Billing/",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Integrasi pembayaran gateway resmi Midtrans Snap untuk transaksi upgrade paket, verifikasi webhook notifikasi lunas, dan auto-upgrade kuota tenant.",
+    "flowDesc": "User klik bayar -> Backend buat Snap Token -> User bayar via QRIS/VA -> Midtrans kirim Webhook -> Verifikasi Signature -> Upgrade Kuota.",
+    "flowDiagram": "[ Klik Bayar ] \u2500\u2500\u25b6 [ Create Snap Token ] \u2500\u2500\u25b6 [ User Pay QRIS ]\n                                                      \u2502\n[ Auto Upgrade Kuota ] \u25c0\u2500\u2500 [ Signature Verified ] \u25c0\u2500\u2500 [ Webhook Notification ]",
+    "checklist": [
+      {
+        "text": "Desain Kontrak: Spesifikasi payload checkout dan verifikasi SHA512 signature",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Payment: Endpoint POST /api/v1/billing/checkout menghasilkan Midtrans Snap Token",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Payment: Webhook handler POST /api/v1/billing/notification auto-upgrade kuota tenant",
+        "done": false
+      }
+    ],
+    "codeFile": "services/01-admin-console/app/Http/Controllers/Billing/PaymentController.php",
+    "codeLang": "PHP",
+    "codeSnippet": "public function handleWebhook(Request $request) {\n    // Validasi signature Midtrans\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk pengamanan endpoint webhook billing.",
+    "dod": [
+      "Verifikasi SHA512 signature",
+      "Idempotent payment processing"
+    ],
+    "serviceGroup": "01-admin-console"
+  },
+  {
+    "id": "TSK-SUP-02",
+    "division": "Andalusia",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Andalusia (Full Stack Lead)",
+    "title": "Admin Helpdesk Resolver (Laravel 11 Filament)",
+    "category": "Admin Console (01-admin-console)",
+    "service": "services/01-admin-console",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Tampilan Beres Dicentang)",
+    "lead": "Dashboard internal admin berbasis Laravel 11 Filament untuk tim dukungan membalas tiket, mengubah status SLA, dan melihat kondisi kontainer pelapor.",
+    "flowDesc": "Admin buka Filament -> Lihat antrean tiket support -> Inspect status kontainer user -> Tulis balasan -> Kirim notif ke tenant.",
+    "flowDiagram": "[ Antrean Tiket Filament ] \u2500\u2500\u25b6 [ Inspect Kondisi Pod Pelapor ] \u2500\u2500\u25b6 [ Balas Tiket & Tutup Kasus ]",
+    "checklist": [
+      {
+        "text": "Perancangan Relasi: Skema relasi tiket support, pesan, dan lampiran",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Admin: Filament Resource Tiket Bantuan dengan quick view status kontainer pelapor",
+        "done": false
+      }
+    ],
+    "codeFile": "services/01-admin-console/app/Filament/Resources/TicketResource.php",
+    "codeLang": "PHP",
+    "codeSnippet": "class TicketResource extends Resource {\n    // Filament resource definition\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Tampilan UI Beres). Target Handover ke Andalusia untuk Filament setup.",
+    "dod": [
+      "Filament resource ready",
+      "Quick inspection view"
+    ],
+    "serviceGroup": "01-admin-console"
+  },
+  {
+    "id": "TSK-DB-01",
+    "division": "Risqi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Risqi (Database Specialist)",
+    "title": "PostgreSQL 16 Multi-Tenant Row-Level Security (RLS) Engine",
+    "category": "Database Core (PostgreSQL 16)",
+    "service": "deploy/sql/01_schema_and_rls.sql",
+    "status": "progress",
+    "priority": "P1 - CRITICAL",
+    "phase": "Ongoing (Fondasi Beres Dicentang)",
+    "lead": "Menerapkan Row-Level Security (RLS) pada tabel sites, posts, media_assets, dan invoices untuk menjamin isolasi data mutlak antar-tenant setingkat engine PostgreSQL.",
+    "flowDesc": "Koneksi DB dimulai -> SET LOCAL app.current_tenant_id = 'xxx' -> Kueri SELECT/UPDATE -> Kernel PostgreSQL memfilter hanya baris tenant terkait.",
+    "flowDiagram": "[ SQL Query: SELECT * FROM sites ]\n       \u2502\n       \u25bc\n[ PostgreSQL RLS Policy Engine ]\n       \u2502 Mengevaluasi: tenant_id = current_setting('app.current_tenant_id')\n       \u25bc\n[ Hasil Terfilter 100% Khusus Tenant Aktif ]",
+    "checklist": [
+      {
+        "text": "Perancangan Skema: Kolom tenant_id UUID mandatory pada seluruh tabel data tenant",
+        "done": true
+      },
+      {
+        "text": "Security Policy: Sintaks ALTER TABLE ENABLE ROW LEVEL SECURITY dan isolation policy",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real DB: Eksekusi DDL migrasi dan penegakan policy di production PostgreSQL",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real DB: Indeks GIN pada kolom JSONB site_blocks untuk kueri cepat",
+        "done": false
+      }
+    ],
+    "codeFile": "deploy/sql/01_schema_and_rls.sql",
+    "codeLang": "SQL",
+    "codeSnippet": "ALTER TABLE sites ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY tenant_isolation_sites_policy ON sites\nFOR ALL USING (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);",
+    "aiNotes": "Dikerjakan oleh Rizal (Fondasi Beres). Target Handover ke Risqi untuk migrasi real DB dan query performance tuning.",
+    "dod": [
+      "RLS enabled pada 100% tabel tenant",
+      "Zero cross-tenant data leakage"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-DB-02",
+    "division": "Risqi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Risqi (Database Specialist)",
+    "title": "PostgreSQL Automated Backup Cron & Disaster Recovery",
+    "category": "Database Operations",
+    "service": "deploy/scripts/backup.sh",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Fondasi Beres Dicentang)",
+    "lead": "Membuat skrip otomatisasi pencadangan database PostgreSQL menggunakan pg_dump dengan kompresi gzip dan rotasi backup 30 hari ke MinIO S3.",
+    "flowDesc": "Cron Trigger (tiap 6 jam) -> Eksekusi pg_dump gzip -> Upload ke bucket backup MinIO -> Hapus backup berusia > 30 hari -> Kirim alert jika gagal.",
+    "flowDiagram": "[ Cron Scheduler (0 */6 * * *) ] \u2500\u2500\u25b6 [ pg_dump | gzip ] \u2500\u2500\u25b6 [ MinIO S3 Backup Bucket ]",
+    "checklist": [
+      {
+        "text": "Perancangan Script: Skrip pg_dump dengan kompresi gzip dan rotasi backup 30 hari",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Backup: Cron container backup otomatis berjalan setiap 6 jam",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Backup: Sinkronisasi salinan file backup ke bucket MinIO S3 terisolasi",
+        "done": false
+      }
+    ],
+    "codeFile": "deploy/scripts/backup.sh",
+    "codeLang": "BASH",
+    "codeSnippet": "#!/bin/bash\nTIMESTAMP=$(date +%Y%m%d_%H%M%S)\nBACKUP_FILE=\"/backups/herocms_$TIMESTAMP.sql.gz\"\npg_dump -U herocms herocms_db | gzip > \"$BACKUP_FILE\"\nfind /backups -type f -mtime +30 -name \"*.sql.gz\" -delete",
+    "aiNotes": "Dikerjakan oleh Rizal (Fondasi Beres). Target Handover ke Risqi untuk otomasi cron di server staging.",
+    "dod": [
+      "Backup terkompresi < 5 menit",
+      "Retensi 30 hari aman"
+    ],
+    "serviceGroup": "03-provision-orchestrator"
+  },
+  {
+    "id": "TSK-ANL-02",
+    "division": "Risqi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Risqi (Database Specialist)",
+    "title": "Redis 7 Sorted Sets (ZSET) Hit Counter (<1ms)",
+    "category": "In-Memory Engine (Redis 7)",
+    "service": "services/02-dashboard-cms/internal/redis/telemetry.go",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Fondasi Beres Dicentang)",
+    "lead": "Mesin penghitung top-views artikel berbasis Redis Sorted Sets (ZSET) dengan waktu respon < 1ms untuk mencegah lonjakan kueri disk PostgreSQL.",
+    "flowDesc": "Pengunjung buka artikel -> Eksekusi ZINCRBY tenant:{id}:top_views 1 article_id -> Redis menaikkan skor -> ZREVRANGE untuk ranking.",
+    "flowDiagram": "[ Hit Pengunjung ] \u2500\u2500\u25b6 [ ZINCRBY tenant:99:top_views 1 \"article-slug\" ] \u2500\u2500\u25b6 Latensi < 0.5ms",
+    "checklist": [
+      {
+        "text": "Arsitektur Kunci: Desain struktur key tenant:{id}:top_views menggunakan ZINCRBY",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Redis: Eksekusi command ZREVRANGEBYSCORE dengan latensi < 1ms",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Redis: Background cron agregasi hit harian dari Redis ke PostgreSQL",
+        "done": false
+      }
+    ],
+    "codeFile": "services/02-dashboard-cms/internal/redis/telemetry.go",
+    "codeLang": "GO",
+    "codeSnippet": "func RecordView(ctx context.Context, tenantID, articleSlug string) error {\n    key := fmt.Sprintf(\"tenant:%s:top_views\", tenantID)\n    return redisClient.ZIncrBy(ctx, key, 1, articleSlug).Err()\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Fondasi Beres). Target Handover ke Risqi untuk persistensi batch harian ke DB.",
+    "dod": [
+      "Latensi agregasi < 1ms pada 10.000 req/s",
+      "Data agregat sinkron"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-MED-03",
+    "division": "Risqi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Risqi (Database Specialist)",
+    "title": "MinIO S3 Tenant Bucket Isolation & Quota Enforcement",
+    "category": "Object Storage (MinIO S3)",
+    "service": "deploy/minio/",
+    "status": "progress",
+    "priority": "P1 - HIGH",
+    "phase": "Ongoing (Fondasi Beres Dicentang)",
+    "lead": "Pengaturan isolasi direktori tenant pada MinIO S3 (`bucket/tenants/{tenant_id}/`) dan penghitungan agregat pemakaian kuota storage.",
+    "flowDesc": "Upload S3 Selesai -> Kueri Agregat SUM(file_size) per tenant_id -> Bandingkan dengan max_storage paket -> Tolak jika kuota penuh.",
+    "flowDiagram": "[ MinIO Bucket ] \u2500\u2500\u25b6 [/tenants/{tenant_A}/] & [/tenants/{tenant_B}/] \u2500\u2500\u25b6 [ Quota Aggregator ]",
+    "checklist": [
+      {
+        "text": "Perancangan Folder: Struktur prefix bucket/tenants/{tenant_id}/assets/ terisolasi",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Storage: Trigger database atau kueri agregat SUM(file_size) per tenant",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Storage: Pemblokiran otomatis upload presigned saat kuota paket habis",
+        "done": false
+      }
+    ],
+    "codeFile": "deploy/sql/01_schema_and_rls.sql",
+    "codeLang": "SQL",
+    "codeSnippet": "SELECT COALESCE(SUM(file_size), 0) FROM media_assets WHERE tenant_id = 'xxx';",
+    "aiNotes": "Dikerjakan oleh Rizal (Fondasi Beres). Target Handover ke Risqi untuk trigger database kalkulasi kuota.",
+    "dod": [
+      "Isolasi direktori S3 ketat",
+      "Quota enforcement terverifikasi"
+    ],
+    "serviceGroup": "02-dashboard-cms"
+  },
+  {
+    "id": "TSK-BIL-03",
+    "division": "Risqi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Risqi (Database Specialist)",
+    "title": "Skema Database Subscriptions & Automatic Suspension",
+    "category": "Database Core (PostgreSQL 16)",
+    "service": "deploy/sql/01_schema_and_rls.sql",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Fondasi Beres Dicentang)",
+    "lead": "Skema pencatatan periode aktif langganan, relasi paket, tanggal jatuh tempo, dan masa tenggang (grace-period) sebelum kontainer di-suspend.",
+    "flowDesc": "Tabel subscriptions -> Kolom expires_at -> Worker harian cek tanggal kadaluarsa -> Jika lewat 7 hari -> Update status kontainer 'suspended'.",
+    "flowDiagram": "[ subscriptions Table ] \u2500\u2500( expires_at < NOW() + 7 days )\u2500\u2500\u25b6 [ Auto Suspend Worker ]",
+    "checklist": [
+      {
+        "text": "Pemodelan Relasi: Tabel subscriptions, plans, dan payment_transactions",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real DB: Database cron worker auto-suspend status kontainer jika telat bayar 7 hari",
+        "done": false
+      }
+    ],
+    "codeFile": "deploy/sql/01_schema_and_rls.sql",
+    "codeLang": "SQL",
+    "codeSnippet": "CREATE TABLE subscriptions (\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,\n    plan_tier VARCHAR(50) NOT NULL,\n    status VARCHAR(50) DEFAULT 'active',\n    expires_at TIMESTAMP WITH TIME ZONE NOT NULL\n);",
+    "aiNotes": "Dikerjakan oleh Rizal (Fondasi Beres). Target Handover ke Risqi untuk skrip migrasi real.",
+    "dod": [
+      "Relasi database valid",
+      "Auto-suspend query teruji"
+    ],
+    "serviceGroup": "01-admin-console"
+  },
+  {
+    "id": "TSK-INV-02",
+    "division": "Risqi",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Risqi (Database Specialist)",
+    "title": "Skema Database Invoices & Multi-Tenant Isolation",
+    "category": "Database Core (PostgreSQL 16)",
+    "service": "deploy/sql/01_schema_and_rls.sql",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Fondasi Beres Dicentang)",
+    "lead": "Tabel riwayat faktur tagihan pelanggan dengan nomor invoice unik per tahun, nominal Rupiah, metadata bukti bayar, dan proteksi RLS.",
+    "flowDesc": "Tabel invoices terikat tenant_id -> Aktifkan RLS -> Indeks composite (tenant_id, created_at DESC) -> Kueri instan.",
+    "flowDiagram": "[ invoices Table ] \u2500\u2500\u25b6 [ Composite Index (tenant_id, created_at DESC) ] \u2500\u2500\u25b6 Fast Query",
+    "checklist": [
+      {
+        "text": "Pemodelan Relasi: Tabel invoices dengan relasi tenant_id dan RLS policy aktif",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real DB: Composite index (tenant_id, created_at DESC) untuk query performa tinggi",
+        "done": false
+      }
+    ],
+    "codeFile": "deploy/sql/01_schema_and_rls.sql",
+    "codeLang": "SQL",
+    "codeSnippet": "CREATE TABLE invoices (\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,\n    invoice_number VARCHAR(100) NOT NULL UNIQUE,\n    amount NUMERIC(12, 2) NOT NULL,\n    status VARCHAR(50) NOT NULL,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "aiNotes": "Dikerjakan oleh Rizal (Fondasi Beres). Target Handover ke Risqi untuk indeks performa.",
+    "dod": [
+      "Composite index kencang",
+      "RLS verified"
+    ],
+    "serviceGroup": "01-admin-console"
+  },
+  {
+    "id": "TSK-MOB-01",
+    "division": "Tyno",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Tyno (Mobile Specialist)",
+    "title": "Mobile Companion App (iOS & Android Telemetry & Emergency Reboot)",
+    "category": "Mobile Companion (Flutter / React Native)",
+    "service": "mobile-companion/",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Kontrak API Beres Dicentang)",
+    "lead": "Aplikasi smartphone pendamping pemilik website untuk memantau pengunjung live, status kontainer, dan melakukan reboot darurat dengan konfirmasi FaceID.",
+    "flowDesc": "User buka HP -> Autentikasi FaceID -> Ambil ringkasan telemetri -> Tombol darurat reboot kontainer jika website mengalami kendala.",
+    "flowDiagram": "[ Mobile Companion App ] \u2500\u2500( Biometric FaceID )\u2500\u2500\u25b6 [ Dashboard Ringkas ] \u2500\u2500\u25b6 [ Emergency Reboot ]",
+    "checklist": [
+      {
+        "text": "Perancangan Kontrak API: OpenAPI spesifikasi endpoint mobile untuk ringkasan telemetri",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Mobile: Layar telemetri live pengunjung & status kontainer di smartphone",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Mobile: Tombol darurat reboot kontainer dengan konfirmasi Biometrik FaceID",
+        "done": false
+      }
+    ],
+    "codeFile": "mobile-companion/lib/screens/dashboard.dart",
+    "codeLang": "DART",
+    "codeSnippet": "class DashboardScreen extends StatelessWidget {\n  // Mobile telemetry widget\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Kontrak API Beres). Target Handover ke Tyno untuk implementasi kode aplikasi mobile.",
+    "dod": [
+      "FaceID confirmation on reboot",
+      "Offline-first caching"
+    ],
+    "serviceGroup": "06-mobile-companion"
+  },
+  {
+    "id": "TSK-MOB-02",
+    "division": "Tyno",
+    "pic": "Rizal (Pelaksana Aktif)",
+    "handoverTo": "Tyno (Mobile Specialist)",
+    "title": "Mobile Push Notifications FCM (Leads, Invoice & Alert Kuota)",
+    "category": "Mobile Companion (Firebase FCM)",
+    "service": "mobile-companion/",
+    "status": "progress",
+    "priority": "P2 - MEDIUM",
+    "phase": "Ongoing (Kontrak API Beres Dicentang)",
+    "lead": "Pengiriman push notification instan ke ponsel pelanggan saat ada pesan kontak baru dari pengunjung, kuota kontainer mendekati batas (90%), atau invoice terbit.",
+    "flowDesc": "Event di Backend -> Kirim Notif ke FCM API -> HP Pelanggan Menerima Notif -> Deep link langsung ke halaman terkait di app.",
+    "flowDiagram": "[ Backend Alert Event ] \u2500\u2500\u25b6 [ Firebase Cloud Messaging ] \u2500\u2500\u25b6 [ Smartphone Push Notification ]",
+    "checklist": [
+      {
+        "text": "Desain Notifikasi: Format payload FCM untuk alert pemakaian kuota > 90% dan invoice terbit",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real Mobile: Registrasi token FCM device ke database tenant",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real Mobile: Deep-linking notifikasi langsung membuka halaman terkait di aplikasi",
+        "done": false
+      }
+    ],
+    "codeFile": "mobile-companion/lib/services/fcm.dart",
+    "codeLang": "DART",
+    "codeSnippet": "void setupFCM() {\n  FirebaseMessaging.onMessage.listen((RemoteMessage message) {\n    // Show local notification\n  });\n}",
+    "aiNotes": "Dikerjakan oleh Rizal (Kontrak API Beres). Target Handover ke Tyno untuk integrasi Firebase FCM SDK.",
+    "dod": [
+      "Instant delivery < 2 detik",
+      "Deep-linking ke invoice/leads"
+    ],
+    "serviceGroup": "06-mobile-companion"
+  },
+  {
+    "id": "TSK-QA-01",
+    "division": "Paijo",
+    "pic": "Paijo (Lead PM & QA/QC)",
+    "handoverTo": "Paijo (QA & QC Specialist)",
+    "title": "Automated E2E Playwright Regression & Visual Quality Suite",
+    "category": "QA & Visual Testing",
+    "service": "services/02-dashboard-cms",
+    "serviceGroup": "02-dashboard-cms",
+    "codeFile": "docs/project-management/qa-e2e/playwright.config.ts",
+    "codeLang": "typescript",
+    "status": "ONGOING",
+    "priority": "Critical",
+    "phase": "Phase 2",
+    "lead": "Pengujian otomatis antarmuka browser menyeluruh (End-to-End) menggunakan Playwright untuk memvalidasi alur registrasi, pembuatan kontainer, interaksi editor blok, dan responsivitas mobile tanpa regresi visual.",
+    "flowDesc": "Test Runner -> Headless Chromium/WebKit/Firefox -> Simulasi Klik & Drag-and-Drop -> Screenshot Visual Comparison -> Laporan Lolos/Gagal",
+    "flowDiagram": "graph LR\n  A[CI Test Runner] --> B[Headless Chromium]\n  B --> C[Uji 12 Modul Studio]\n  C --> D[Visual Diff Comparison]\n  D --> E{Lolos DoD?}\n  E -->|Ya| F[Green Check]\n  E -->|Tidak| G[Alert Blocker]",
+    "checklist": [
+      {
+        "text": "Perancangan Skenario: Matriks 12 alur pengujian E2E Studio dan formulir pembuatan website",
+        "done": true
+      },
+      {
+        "text": "Desain Arsitektur: Konfigurasi Playwright multi-viewport (Desktop, iPad, iPhone 14)",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real QA: Eksekusi otomatis Playwright test run di headless Chromium",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QA: Screenshot visual diff comparison untuk mendeteksi pergeseran layout CSS",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QA: Pengujian auto-recovery saat koneksi internet offline",
+        "done": false
+      }
+    ],
+    "codeSnippet": "import { defineConfig, devices } from '@playwright/test';\nexport default defineConfig({\n  testDir: './e2e',\n  timeout: 30000,\n  retries: 2,\n  projects: [\n    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },\n    { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },\n  ],\n});",
+    "aiNotes": "Paijo AI memvalidasi tidak ada regresi visual pada Studio canvas dan modal dialog sebelum commit disetujui.",
+    "dod": "Suite Playwright berjalan hijau (zero failures), screenshot diff < 0.1%, dan laporan tersimpan di artefak."
+  },
+  {
+    "id": "TSK-QA-02",
+    "division": "Paijo",
+    "pic": "Paijo (Lead PM & QA/QC)",
+    "handoverTo": "Paijo (Lead Technical PM)",
+    "title": "Sprint Backlog Orchestration & Definition of Done (DoD) Gatekeeping",
+    "category": "Project Governance",
+    "service": "docs/project-management",
+    "serviceGroup": "02-dashboard-cms",
+    "codeFile": "docs/project-management/index.html",
+    "codeLang": "javascript",
+    "status": "ONGOING",
+    "priority": "High",
+    "phase": "Phase 1",
+    "lead": "Manajemen backlog sprint interaktif, validasi ketat setiap PR terhadap kriteria Definition of Done (DoD), serta pendistribusian tugas baru ke 5 rekan tim secara aktif tanpa henti.",
+    "flowDesc": "Analisis Kebutuhan -> Pemetaan Task Granular -> Penugasan Anggota Tim -> Audit Kualitas Hasil -> Update SemVer Changelog",
+    "flowDiagram": "graph LR\n  A[Sprint Request] --> B[Breakdown Task]\n  B --> C[Matriks Penugasan]\n  C --> D[Verifikasi DoD]\n  D --> E[Changelog & Release]",
+    "checklist": [
+      {
+        "text": "Standar Tata Kelola: Matriks penugasan tim, kamus istilah arsitektur ramah, dan 4 vertikal bisnis",
+        "done": true
+      },
+      {
+        "text": "Tooling Dashboard: Mission Control portal dengan dual-mode grouping (Divisi & 6 Microservices)",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real PM: Verifikasi harian DoD (Zero-CSS duplication, test passed, SemVer bump) per commit",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real PM: Otomasi notifikasi sprint blockers ke channel Telegram / Slack tim",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real PM: Evaluasi beban kerja sprint (workload balancing) antar anggota tim",
+        "done": false
+      }
+    ],
+    "codeSnippet": "export interface DoDChecklist {\n  zeroCssDuplication: boolean;\n  pentestSuitePassed: boolean;\n  semVerChangelogLogged: boolean;\n  responsiveMobileVerified: boolean;\n  noHeavyArrayInVue: boolean;\n}",
+    "aiNotes": "Setiap pull request atau task tim harus melalui gerbang DoD Paijo sebelum boleh dinyatakan selesai.",
+    "dod": "Seluruh 5 pilar DoD terverifikasi tanpa celah, dokumentasi sinkron di portal dan markdown."
+  },
+  {
+    "id": "TSK-QA-03",
+    "division": "Paijo",
+    "pic": "Paijo (Lead PM & QA/QC)",
+    "handoverTo": "Paijo (QA & QC Specialist)",
+    "title": "Cross-Service Security Pentest & Compliance Gatekeeper",
+    "category": "Security QA",
+    "service": "services/03-provision-orchestrator",
+    "serviceGroup": "03-provision-orchestrator",
+    "codeFile": ".agents/skills/herocms-pentest-runner/SKILL.md",
+    "codeLang": "bash",
+    "status": "ONGOING",
+    "priority": "Critical",
+    "phase": "Phase 1",
+    "lead": "Audit kualitas keamanan berkala pada seluruh rute API, proteksi Traefik injection, cgroups resource abuse, JWT forgery, serta mitigasi OWASP Top 10 sebelum rilis produksi.",
+    "flowDesc": "Trigger Pre-Commit -> Jalankan Suite Pentest Per-Service -> Deteksi Kerentanan HTTP -> Blokir Commit jika Gagal -> Izinkan Rilis jika Lolos",
+    "flowDiagram": "graph LR\n  A[Git Commit Trigger] --> B[Pentest Runner]\n  B --> C[Uji Brute Force & JWT]\n  C --> D[Uji Traefik Injection]\n  D --> E{Status PASS?}\n  E -->|Ya| F[Commit Approved]\n  E -->|Tidak| G[Abort Commit]",
+    "checklist": [
+      {
+        "text": "Gatekeeping Security: Kebijakan wajib pentest runner lolos (PASS) sebelum git commit di AGENTS.md",
+        "done": true
+      },
+      {
+        "text": "Skenario Uji: Pengujian black-box brute force, header HSTS, dan CORS per-service",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real QC: Automated nightly security scan pada endpoint staging multi-tenant",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QC: Fuzz testing pada router Traefik dynamic labels untuk deteksi bypass karakter unik",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QC: Verifikasi isolasi RLS PostgreSQL menggunakan kueri SQL injection acak",
+        "done": false
+      }
+    ],
+    "codeSnippet": "#!/usr/bin/env bash\n# Paijo QC Pentest Gatekeeper\nSERVICES=('02-dashboard-cms' '03-provision-orchestrator' '04-marketing-site')\nfor svc in \"${SERVICES[@]}\"; do\n  (cd \"services/$svc\" && go test -v ./pentest/...) || exit 1\ndone\necho 'All Security Gates Passed!'",
+    "aiNotes": "Audit keamanan dilakukan di level HTTP black-box independen dari implementasi internal kode.",
+    "dod": "Hasil uji pentest 100% PASS (atau SKIP jika servis belum dinyalakan), zero critical vulnerabilities."
+  },
+  {
+    "id": "TSK-QA-04",
+    "division": "Paijo",
+    "pic": "Paijo (Lead PM & QA/QC)",
+    "handoverTo": "Paijo (QA & QC Specialist)",
+    "title": "Cross-Service API Contract & OpenAPI Schema Drift Verifier",
+    "category": "Contract Testing",
+    "service": "services/01-admin-console",
+    "serviceGroup": "01-admin-console",
+    "codeFile": "services/01-admin-console/docs/api-contracts.json",
+    "codeLang": "json",
+    "status": "ONGOING",
+    "priority": "High",
+    "phase": "Phase 2",
+    "lead": "Pengujian integritas kontrak API antar microservices (BFF Go, Orchestrator Docker, Laravel Filament, dan Mobile App) untuk mencegah kegagalan komunikasi data.",
+    "flowDesc": "Ekstraksi OpenAPI Spec -> Bandingkan dengan Schema Konsumer -> Validasi Payload Webhook -> Deteksi Schema Drift -> Laporan Kompatibilitas",
+    "flowDiagram": "graph LR\n  A[BFF Spec] --> C[Contract Verifier]\n  B[Laravel Admin Spec] --> C\n  C --> D[Uji Kompatibilitas]\n  D --> E{Breaking Changes?}\n  E -->|Tidak| F[Compatible]\n  E -->|Ya| G[Reject PR]",
+    "checklist": [
+      {
+        "text": "Desain Kontrak: Standardisasi format respon JSON konsisten { success, data, message, error }",
+        "done": true
+      },
+      {
+        "text": "Schema Definition: Spesifikasi skema payload event webhook Midtrans dan invoice status",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real QC: Automated contract testing (Pact / Prism mock server) antar service",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QC: Schema drift detection validator untuk mencegah breaking change tipe data",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QC: Sinkronisasi otomatis OpenAPI spec ke mock server tim frontend Irgi & Tyno",
+        "done": false
+      }
+    ],
+    "codeSnippet": "{\n  \"swagger\": \"2.0\",\n  \"info\": { \"title\": \"HeroCMS Unified Contracts\", \"version\": \"1.14.0\" },\n  \"paths\": {\n    \"/api/v1/containers/provision\": { \"post\": { \"responses\": { \"200\": { \"description\": \"Container Spawning OK\" } } } }\n  }\n}",
+    "aiNotes": "Mencegah situasi di mana backend mengubah field JSON tanpa memberitahu frontend web atau mobile.",
+    "dod": "Kontrak OpenAPI lolos verifikasi drift linting dan mock server dapat dikonsumsi frontend tanpa error."
+  },
+  {
+    "id": "TSK-QA-05",
+    "division": "Paijo",
+    "pic": "Paijo (Lead PM & QA/QC)",
+    "handoverTo": "Paijo (QA & QC Specialist)",
+    "title": "Performance & Core Web Vitals Auditing (LCP, CLS, INP)",
+    "category": "Performance QA",
+    "service": "services/04-marketing-site",
+    "serviceGroup": "04-marketing-site",
+    "codeFile": "services/04-marketing-site/lighthouserc.json",
+    "codeLang": "json",
+    "status": "ONGOING",
+    "priority": "High",
+    "phase": "Phase 2",
+    "lead": "Pengujian benchmark performa web berkala pada Marketing Site dan Studio Dashboard: memastikan LCP < 1.2 detik, CLS = 0, bundle code-splitting terpisah, dan HTTP cache aktif.",
+    "flowDesc": "Build Static Assets -> Inspect Chunks Size -> Run Lighthouse CI -> Ukur Waktu Render (CWV) -> Validasi Ambang Batas 90+",
+    "flowDiagram": "graph LR\n  A[Production Build] --> B[Bundle Inspection]\n  B --> C[Lighthouse CI Audit]\n  C --> D[Ukur LCP, CLS, INP]\n  D --> E{Skor > 90?}\n  E -->|Ya| F[Pass]\n  E -->|Tidak| G[Optimize Assets]",
+    "checklist": [
+      {
+        "text": "Benchmark Target: Ambang batas metrik Core Web Vitals (LCP < 1.2s, CLS 0, INP < 200ms) di SKILL.md",
+        "done": true
+      },
+      {
+        "text": "Vendor Code Splitting: Verifikasi manualChunks vue-vendor dan lucide-icons di vite.config.ts",
+        "done": true
+      },
+      {
+        "text": "Integrasi Real QA: Automated Lighthouse CI audit pada build artifact marketing site & studio",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QA: Stress test simulasi 500 koneksi bersamaan (load test via k6 / autocannon)",
+        "done": false
+      },
+      {
+        "text": "Integrasi Real QA: Audit HTTP cache headers (Cache-Control: immutable) pada aset statis Traefik",
+        "done": false
+      }
+    ],
+    "codeSnippet": "{\n  \"ci\": {\n    \"assert\": {\n      \"assertions\": {\n        \"categories:performance\": [\"error\", { \"minScore\": 0.9 }],\n        \"largest-contentful-paint\": [\"error\", { \"maxNumericValue\": 1200 }],\n        \"cumulative-layout-shift\": [\"error\", { \"maxNumericValue\": 0.05 }]\n      }\n    }\n  }\n}",
+    "aiNotes": "Performa landing page langsung berdampak pada konversi pendaftaran tenant HeroCMS.",
+    "dod": "Skor Lighthouse Performance >= 95, LCP < 1.2s, CLS < 0.05, dan zero chunking warning."
+  }
+]
