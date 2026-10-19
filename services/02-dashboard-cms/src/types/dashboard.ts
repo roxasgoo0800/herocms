@@ -254,7 +254,20 @@ export interface ChangelogRelease {
   releaseDate: string;
   title: string;
   summary: string;
+  service?: string;
+  serviceName?: string;
   badge?: 'Latest' | 'Stable' | 'LTS';
   items: ChangelogItem[];
   author: string;
+}
+
+export interface MicroserviceVersion {
+  id: string;
+  name: string;
+  version: string;
+  serviceFolder: string;
+  badge: 'Latest' | 'Stable' | 'Active';
+  stack: string;
+  lastUpdated: string;
+  leadPic: string;
 }

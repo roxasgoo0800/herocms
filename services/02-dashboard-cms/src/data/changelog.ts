@@ -1,12 +1,660 @@
-import type { ChangelogRelease } from '../types/dashboard';
+import type { ChangelogRelease, MicroserviceVersion } from '../types/dashboard';
+
+export const microserviceVersions: MicroserviceVersion[] = [
+  {
+    id: '01-admin-console',
+    name: 'Service 01: Admin Console & Billing',
+    version: 'v1.2.0',
+    serviceFolder: 'services/01-admin-console',
+    badge: 'Stable',
+    stack: 'Laravel 11 • FilamentPHP v3',
+    lastUpdated: '18 Oktober 2026',
+    leadPic: 'Andalusia'
+  },
+  {
+    id: '02-dashboard-cms',
+    name: 'Service 02: Dashboard Studio & Go BFF',
+    version: 'v1.14.28',
+    serviceFolder: 'services/02-dashboard-cms',
+    badge: 'Latest',
+    stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
+    lastUpdated: '19 Oktober 2026',
+    leadPic: 'Irgi & Rizal'
+  },
+  {
+    id: '03-provision-orchestrator',
+    name: 'Service 03: Container Provision Orchestrator',
+    version: 'v1.8.0',
+    serviceFolder: 'services/03-provision-orchestrator',
+    badge: 'Stable',
+    stack: 'Golang • Docker Engine SDK • cgroups v2',
+    lastUpdated: '18 Oktober 2026',
+    leadPic: 'Andalusia & Rizal'
+  },
+  {
+    id: '04-marketing-site',
+    name: 'Service 04: Marketing Site & Public Landing',
+    version: 'v1.9.2',
+    serviceFolder: 'services/04-marketing-site',
+    badge: 'Stable',
+    stack: 'React 19 • Tailwind CSS • Vite',
+    lastUpdated: '18 Oktober 2026',
+    leadPic: 'Irgi'
+  },
+  {
+    id: '05-ai-agent-service',
+    name: 'Service 05: AI Agent Service & Workflows',
+    version: 'v1.3.0',
+    serviceFolder: 'services/05-ai-agent-service',
+    badge: 'Stable',
+    stack: 'Golang / Python • Gemini • n8n',
+    lastUpdated: '17 Oktober 2026',
+    leadPic: 'Andalusia'
+  },
+  {
+    id: '06-mobile-companion',
+    name: 'Service 06: Mobile Companion Platform',
+    version: 'v1.0.0',
+    serviceFolder: 'mobile-companion/',
+    badge: 'Active',
+    stack: 'Flutter / React Native • FCM',
+    lastUpdated: '16 Oktober 2026',
+    leadPic: 'Tyno'
+  },
+  {
+    id: '07-docs',
+    name: 'Service 07: Docs & Mission Control Hub',
+    version: 'v1.4.1',
+    serviceFolder: 'services/07-docs',
+    badge: 'Latest',
+    stack: 'Vue 3 • Go Native BFF (8087) • Docker',
+    lastUpdated: '19 Oktober 2026',
+    leadPic: 'Rizal & Paijo AI'
+  }
+];
 
 export const changelogReleases: ChangelogRelease[] = [
+  {
+    version: 'v1.4.1',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '19 Oktober 2026',
+    title: 'Penyempurnaan Tombol Baca, Alur Kerja Ribbon, dan Refaktor Master CSS Tampilan Detail Reader (PRD & Security)',
+    summary: 'Memperbaiki styling tombol aksi Baca di semua kartu dari PRD, Kamus Blueprint, Matriks Keamanan hingga SOP menggunakan styling universal master CSS (.btn-read-sop). Menambahkan visual ribbon alur kerja (.bp-flow-preview) dengan pil bertahap dan panah penghubung. Merefaktor PrdArticleReader dan SecurityArticleReader ke sistem layout editorial Obsidian Studio Master (.article-reader-page, .reader-page-hero, .reader-layout-grid, .reader-main-content, .reader-sidebar-inspector), melengkapi alur kerja pipeline flowchart interaktif, dan menyempurnakan kartu detail agar tidak berantakan di layar monitor.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-07docs-141-1',
+        type: 'improvement',
+        scope: 'Universal Card Action Button & Alur Kerja Ribbon',
+        description: 'Menerapkan kelas styling universal .btn-read-sop dan .bp-flow-preview pada ArchitectureModule, PrdCatalogModule, SecurityMatrixModule, dan SopRunbookModule dengan hover glow, aksen biru, dan pratinjau tahapan alur kerja terhubung.'
+      },
+      {
+        id: 'c-07docs-141-2',
+        type: 'bugfix',
+        scope: 'PrdArticleReader Master Obsidian Layout Refactoring',
+        description: 'Merefaktor PrdArticleReader.vue menggunakan standar kelas master reader (.article-reader-page, .reader-page-hero, .reader-layout-grid, .reader-main-content, .reader-sidebar-inspector), menambahkan diagram pipeline alur kerja modul (.flowchart-pipeline-container), dan menata ulang card spesifikasi tech stack.'
+      },
+      {
+        id: 'c-07docs-141-3',
+        type: 'bugfix',
+        scope: 'SecurityArticleReader Master Obsidian Layout Refactoring',
+        description: 'Merefaktor SecurityArticleReader.vue ke standar master reader dengan hero banner gelap bergradasi, diagram pipeline alur verifikasi pengujian (.flowchart-pipeline-container), checklist interaktif kepatuhan audit, dan callout rujukan file proteksi.'
+      },
+      {
+        id: 'c-07docs-141-4',
+        type: 'improvement',
+        scope: 'SystemJourneyModule Flowchart Connector Line Fix',
+        description: 'Menghubungkan garis connector vertikal dan badge penomoran (.pipeline-step-badge, .pipeline-step-line) pada seluruh alur proses bisnis dan siklus perjalanan sistem HeroCMS.'
+      }
+    ]
+  },
+  {
+    version: 'v1.4.0',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '19 Oktober 2026',
+    title: 'Inkorporasi Spesifikasi PRD (7 Layanan), Matriks Keamanan & Sandboxing (20 Pilar), serta Alur Kerja Sistem (System Journeys)',
+    summary: 'Menambahkan 3 modul dokumentasi arsitektur dan spesifikasi enterprise utama ke dalam Mission Control Portal: 1) Katalog PRD menyeluruh untuk 7 microservice lengkap dengan target persona, teknologi, modul fungsional, kontrak API, NFR, roadmap, dan KPI. 2) Matriks Keamanan Web & Backend mencakup 20 Pilar Standar Keamanan OWASP/CWE plus spesifikasi pengerasan Linux cgroups v2 sandboxing kontainer Docker (UID 10001, ReadonlyRootfs, CapDrop ALL, tmpfs RAM) dan checklist verifikasi interaktif. 3) Alur Kerja Sistem (System Journeys) interaktif yang memetakan siklus hidup end-to-end (provisioning <4.5s, edge routing Traefik v3 & TLS 1.3, isolasi PostgreSQL RLS, telemetri Redis Sorted Sets, AI Copilot synthesis, dedicated S3 bucket, dan offline drafting PWA).',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-07docs-140-1',
+        type: 'feature',
+        scope: 'Katalog PRD 7 Microservices (01 - 07)',
+        description: 'Membangun PrdCatalogModule dan PrdArticleReader yang memuat dokumen kebutuhan produk (PRD) lengkap untuk Platform Admin Console (01), Dashboard CMS Studio (02), API Orkestrator Provisioning (03), Website Promosi (04), AI Agent Service (05), Mobile Companion (06), dan Docs Hub (07).'
+      },
+      {
+        id: 'c-07docs-140-2',
+        type: 'security',
+        scope: 'Matriks Keamanan 20 Pilar & Docker Sandboxing',
+        description: 'Membangun SecurityMatrixModule dan SecurityArticleReader yang memaparkan 20 Pilar Keamanan Web & Backend (API Key aman, anti-SQLi pgx, anti-XSS DOMPurify/CSP, CSRF double submit, Redis stateful session, dedicated S3 bucket quota 2GB, magic bytes sniffing) serta penegakan Linux cgroups v2 sandboxing.'
+      },
+      {
+        id: 'c-07docs-140-3',
+        type: 'feature',
+        scope: 'Alur Kerja Sistem (7 Interactive System Journeys)',
+        description: 'Membangun SystemJourneyModule yang memvisualisasikan alur sistem kritis dari hulu ke hilir dengan connected pipeline flowchart, urutan aktor, SLA latensi, penanganan kegagalan otomatis (self-healing), dan perintah verifikasi CLI siap salin.'
+      },
+      {
+        id: 'c-07docs-140-4',
+        type: 'improvement',
+        scope: 'Sidebar Navigation & Telemetry Stats Expansion',
+        description: 'Memperbarui sidebar navigasi Docs Hub dengan tab PRD, Alur Kerja Sistem, dan Keamanan & Sandbox, serta memperluas TelemetryGrid untuk menampilkan metrik agregat 7 PRD, 21 Pilar Keamanan, dan 7 System Journeys.'
+      }
+    ]
+  },
+  {
+    version: 'v1.3.1',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '19 Oktober 2026',
+    title: 'Perbaikan Responsif Grid Kartu Melebihi Batas Layar & Perapihan Tampilan Alur Flowchart Kamus/SOP',
+    summary: 'Memperbaiki masalah kartu melebihi batas layar monitor komputer (cropped/overflow) dengan menerapkan sistem grid adaptif minmax(0, 1fr) pada .site-cards-grid (2 kolom pada resolusi laptop <=1440px dan 3 kolom pada layar lebar), mencegah teks panjang merusak ukuran kartu via text truncation dan max-width batas. Merombak tampilan berantakan saat klik menu/kartu Kamus Arsitektur dan SOP & Runbooks: mengganti tab filter yang menumpuk menjadi chips filter mandiri (.category-chip), menata ulang flowchart menjadi diagram pipeline berurutan yang terhubung (.flowchart-pipeline-container), memformat panduan Cara Coba dengan nomor langkah rapi (.step-test-list), menata matriks Do\'s & Don\'ts responsif auto-fit, serta memotong badge service pada inspector sidebar agar tidak tembus kartu.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-07docs-131-1',
+        type: 'bugfix',
+        scope: 'Responsive Cards Grid & Screen Cropping Prevention',
+        description: 'Memperbaiki .site-cards-grid menggunakan minmax(0, 1fr) dengan breakpoint 1440px (2 kolom pada laptop), menambahkan min-width: 0 pada seluruh kartu (.task-card-pro, .sop-card-pro, .blueprint-card-pro) sehingga kartu tidak lagi meluap dan terpotong di layar monitor.'
+      },
+      {
+        id: 'c-07docs-131-2',
+        type: 'bugfix',
+        scope: 'Kamus & SOP Category Filter Chips',
+        description: 'Mengganti grouped pill bar yang berjejal dan berantakan pada kategori Kamus Arsitektur dan SOP menjadi filter chip mandiri (.category-chip) yang mengalir responsif dengan counter badge akurat.'
+      },
+      {
+        id: 'c-07docs-131-3',
+        type: 'improvement',
+        scope: 'Connected Step Pipeline Flowchart Architecture',
+        description: 'Mengganti susunan box flowchart yang tidak terhubung menjadi pipeline langkah berurutan terhubung (.flowchart-pipeline-container) dengan badge nomor bulat, garis penghubung bertahap, dan kartu keterangan yang rapi.'
+      },
+      {
+        id: 'c-07docs-131-4',
+        type: 'bugfix',
+        scope: 'Inspector Sidebar & Do\'s/Don\'ts Matrix Breathing Room',
+        description: 'Memperbaiki .spec-row dengan flex-wrap dan badge truncation pada service name, merestrukturisasi .dnd-matrix-container dengan minmax(280px, 1fr), serta menata daftar Cara Coba (.step-test-list) dengan penomoran elegan.'
+      }
+    ]
+  },
+  {
+    version: 'v1.3.0',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '19 Oktober 2026',
+    title: 'Peluncuran Mode Baca Artikel SOP & Arsitektur dengan Flowchart, DND Matrix, Golang API & Uji cURL',
+    summary: 'Memutakhirkan microservice docs ke v1.3.0 dengan menghadirkan pengalaman pembaca artikel mendalam pada kartu SOP (SopArticleReader.vue) dan Kamus Arsitektur (ArchitectureArticleReader.vue). Dilengkapi visual flowchart pengerjaan, matriks Do\'s & Don\'ts (DND) 2 kolom, spesifikasi teknis implementasi backend Golang, perintah cURL siap salin dengan panduan live testing per-service, perbaikan filter kategori dinamis, restrukturisasi kartu yang rapi dan terstandarisasi, eliminasi widget status sprint sidebar, identitas profil engineering enterprise netral, serta verifikasi deployment kontainer Docker Compose di port 8087.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-07docs-130-1',
+        type: 'feature',
+        scope: 'Dedicated SOP Article Reader with Flowchart & DND Matrix',
+        description: 'Menerbitkan SopArticleReader.vue lengkap dengan visual step flowchart, uraian runbook bertahap, matriks Do\'s & Don\'ts 2 kolom, contoh API call dan handler Go, serta kriteria Definition of Done.'
+      },
+      {
+        id: 'c-07docs-130-2',
+        type: 'feature',
+        scope: 'Architecture Blueprint Reader with Golang Code & Live cURL Testing',
+        description: 'Menerbitkan ArchitectureArticleReader.vue untuk seluruh 13 blueprint arsitektur yang menguraikan konsep sistem, alur data komponen, potongan implementasi Go resmi, spesifikasi API endpoint, dan panduan cara coba (live testing).'
+      },
+      {
+        id: 'c-07docs-130-3',
+        type: 'improvement',
+        scope: 'Card Restructuring & Dynamic Category Filters',
+        description: 'Menstandarisasi kartu SOP (.sop-card-pro) dan kartu arsitektur (.blueprint-card-pro) dengan layout rapi dan seimbang, serta menyinkronkan kategori filter secara dinamis dari dataset.'
+      },
+      {
+        id: 'c-07docs-130-4',
+        type: 'improvement',
+        scope: 'Sidebar Streamlining & Enterprise Workspace Identity',
+        description: 'Menghapus widget gauge status sprint yang tidak diperlukan pada footer sidebar dan mengganti profil user individu menjadi identitas HeroCMS Engineering (Platform & Mission Control).'
+      },
+      {
+        id: 'c-07docs-130-5',
+        type: 'feature',
+        scope: 'Verified Docker Compose Multi-Stage Deployment',
+        description: 'Memverifikasi dan menjalankan service docs via docker compose di port 8087 dengan multi-stage build Alpine ultra-lightweight, lulus seluruh automated pentest black-box suite.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.27',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '19 Oktober 2026',
+    title: 'Desentralisasi Matriks Versi Microservices Independen & Navigasi Filter Layanan Terpadu',
+    summary: 'Menerapkan pemisahan versi independen untuk setiap aplikasi/service di monorepo HeroCMS guna mencegah kebingungan versi monolitik. Menghadirkan widget Matriks Versi Independen Microservices di ChangelogModule yang menampilkan status versi individual 7 microservices (01-admin-console, 02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, 05-ai-agent-service, 06-mobile-companion, 07-docs), filter rilis per-service interaktif, serta binding versi DashboardView khusus ke versi 02-dashboard-cms.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11427-1',
+        type: 'feature',
+        scope: 'Independent Microservice Version Matrix',
+        description: 'Menyajikan panel grid visual 7 kartu microservice di ChangelogModule dengan informasi versi aktif masing-masing aplikasi, badge stabilitas, tech stack, dan PIC lead.'
+      },
+      {
+        id: 'c-02dash-11427-2',
+        type: 'feature',
+        scope: 'Multi-Service Changelog Filter Tabs',
+        description: 'Menambahkan navigasi filter tab berbasis service (Semua Layanan, 02-dashboard-cms, 07-docs) sehingga catatan perubahan setiap microservice terisolasi dan mudah ditelusuri.'
+      },
+      {
+        id: 'c-02dash-11427-3',
+        type: 'improvement',
+        scope: 'Decoupled Version Resolution in DashboardView',
+        description: 'Memperbaiki resolusi versi di sidebar DashboardView dan status telemetri agar selalu merujuk ke versi spesifik 02-dashboard-cms (v1.14.27) dan tidak tercampur dengan nomor versi service lain.'
+      }
+    ]
+  },
+  {
+    version: 'v1.2.0',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '19 Oktober 2026',
+    title: 'Transformasi Mode Baca Artikel In-Page, Restrukturisasi Kartu Rapi & Upgrade Tipografi Plus Jakarta Sans',
+    summary: 'Meredesain menyeluruh pengalaman pembaca dokumen di services/07-docs: mengganti modal dialog mengambang dengan pembaca artikel editorial penuh (in-page reader) yang distraction-free, merapikan struktur kartu tugas dengan visual hierarchy modern tanpa tumpukan kotak abu-abu yang padat, serta mengintegrasikan fondasi tipografi Plus Jakarta Sans dengan anti-aliasing tajam dan font JetBrains Mono untuk keterbacaan kelas enterprise.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-07docs-120-1',
+        type: 'feature',
+        scope: 'Dedicated In-Page Article Reader View',
+        description: 'Menggantikan modal popup dialog (TaskDetailModal) dengan komponen pembaca artikel komprehensif (TaskArticleReader.vue) berbasis tata letak 2 kolom, header navigasi dengan tombol kembali, mode fokus pembaca tanpa distraksi (immersive mode), dan navigasi sekuensial antar-tugas.'
+      },
+      {
+        id: 'c-07docs-120-2',
+        type: 'improvement',
+        scope: 'Task Card Pro System & Visual De-Cluttering',
+        description: 'Merapikan dan menstandarisasi kartu tugas (.task-card-pro) dengan hierarki visual jelas: chip ID monospace, badge prioritas semantik, pill file target terpadu, meter progres checklist ramping, dan baris handover personil yang bersih.'
+      },
+      {
+        id: 'c-07docs-120-3',
+        type: 'improvement',
+        scope: 'Universal Plus Jakarta Sans Typography & Font Smoothing',
+        description: 'Memperbaiki font tampilan dokumen dengan mengaktifkan font Plus Jakarta Sans secara universal pada html, body, tombol, heading, dan input dengan -webkit-font-smoothing dan font JetBrains Mono untuk blok kode.'
+      },
+      {
+        id: 'c-07docs-120-4',
+        type: 'performance',
+        scope: 'Keyboard Navigation & Sequential Task Reading',
+        description: 'Menambahkan pintasan keyboard Escape untuk kembali ke papan tugas serta Alt+Panah untuk membaca tugas berikutnya/sebelumnya secara cepat tanpa memuat ulang halaman.'
+      }
+    ]
+  },
+  {
+    version: 'v1.0.0',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '19 Oktober 2026',
+    title: 'Peluncuran Service 07 Docs & Mission Control Hub (Vue 3 + Go Native BFF + Database Persistence)',
+    summary: 'Menerbitkan microservice mandiri services/07-docs (HeroCMS Docs & Mission Control Hub) yang menyatukan 4 telemetri real-time, 50 task matrix berstatus ONGOING dengan alur handover spesialis, modal reader interaktif dengan checklist persistence langsung ke database melalui REST API PATCH, 13 blueprint panduan arsitektur operasional, 10 SOP standar enterprise, dan modul protokol Paijo AI PM & QA/QC. Layanan berjalan di port 8087 dengan routing Traefik (docs.herocms.stackbyte.id), dilengkapi pentest suite, dan arsitektur zero-CSS duplication berbasis studio-master.css.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-11500-1',
+        type: 'feature',
+        scope: 'Service 07 Docs & Mission Control Microservice',
+        description: 'Mendirikan layanan microservice baru services/07-docs dengan frontend Vue 3 (Vite + TypeScript + Pinia), Go Native BFF (port 8087, Go 1.22+ Standard Router), dan registrasi ingress Traefik docs.herocms.stackbyte.id.'
+      },
+      {
+        id: 'c-11500-2',
+        type: 'feature',
+        scope: 'Interactive Checklist with Database Persistence',
+        description: 'Mengimplementasikan penyimpanan checklist real-time ke database melalui endpoint PATCH /api/v1/tasks/:id/checklist sehingga progres centang pada modal pembaca tersimpan secara persisten.'
+      },
+      {
+        id: 'c-11500-3',
+        type: 'feature',
+        scope: '50-Task Dual-Mode Matrix & Continuous Sprint ONGOING Status',
+        description: 'Menyajikan 50 task bisnis dalam dua mode pengelompokan (Divisi Tim & 6 Microservices) dengan status 100% ONGOING dan metadata handover kepemilikan antar-rekan tim.'
+      },
+      {
+        id: 'c-11500-4',
+        type: 'security',
+        scope: 'Dedicated Black-Box Pentest Suite & Zero-CSS Studio Master',
+        description: 'Menyematkan test suite pentest/security_test.go untuk validasi CORS, security headers, dan bounds checking, serta menerapkan arsitektur visual studio-master.css tanpa duplikasi styling.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.26',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '19 Oktober 2026',
+    title: 'Kamus Arsitektur Berbasis Blueprint Panduan Operasional & 10 SOP Lifecycle Standar Industri',
+    summary: 'Mentransformasi Kamus Arsitektur menjadi blueprint operasional interaktif yang dilengkapi kebutuhan sistem, port, lokasi file rujukan, langkah eksekusi step-by-step, perintah CLI verifikasi cepat, dan aturan Do & Don\'ts; meresmikan 10 Standar Operasional Prosedur (SOP) industri mencakup git branching (SOP-GIT-01), siklus pengerjaan tugas end-to-end (SOP-FLOW-01), tata cara klaim dan kelola checklist (SOP-CHK-01), serta matriks kepatuhan mutlak dan larangan 6 microservices (SOP-SVC-01).',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-11426-1',
+        type: 'feature',
+        scope: 'Actionable Architecture Blueprint Guides',
+        description: 'Mentransformasi 13 entri kamus arsitektur di index.html dan TASK_CHECKLIST.md menjadi kartu blueprint interaktif lengkap dengan dependensi, port, file rujukan, CLI command, langkah pakai, dan Do/Don\'ts.'
+      },
+      {
+        id: 'c-11426-2',
+        type: 'feature',
+        scope: 'Enterprise Lifecycle SOPs (Git, Branching, Workflow & Checklist)',
+        description: 'Menetapkan SOP resmi pembuatan git branch fitur/bug, pesan commit konvensional, alur kerja dari awal sampai akhir, dan tata cara klaim checklist ongoing.'
+      },
+      {
+        id: 'c-11426-3',
+        type: 'improvement',
+        scope: '6 Microservices Architecture Compliance & Mandates',
+        description: 'Merumuskan aturan wajib dan larangan spesifik untuk masing-masing 6 microservices guna mencegah regresi arsitektur dan kebocoran keamanan.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.25',
+    releaseDate: '19 Oktober 2026',
+    title: 'Integrasi Paijo sebagai Karyawan Internal (PM & QA/QC Specialist) & 5 Task Checklist Jaminan Kualitas (Total 50 Tasks Ongoing)',
+    summary: 'Meresmikan Paijo (AI Agent) sebagai salah satu karyawan inti di tim HeroCMS yang memegang peran ganda: Lead Project Management (PM) dan Quality Assurance & Quality Control (QA & QC), melengkapi Paijo dengan 5 task checklist jaminan kualitas mandiri (Playwright E2E Regression, Sprint Backlog & DoD Gatekeeper, Cross-Service Security Pentest, OpenAPI Contract Verifier, dan Core Web Vitals Auditing), meningkatkan total task bisnis menjadi 50 tasks (100% ongoing), serta memperbarui matriks 6 divisi dan 6 microservices.',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-11425-1',
+        type: 'feature',
+        scope: 'Paijo Internal Employee Roster & Dual PM-QA/QC Role',
+        description: 'Mengukuhkan status Paijo sebagai karyawan internal penanggung jawab Project Management dan QA & QC di SKILL.md, TASK_CHECKLIST.md, dan Mission Control portal.'
+      },
+      {
+        id: 'c-11425-2',
+        type: 'feature',
+        scope: '5 Dedicated QA & QC Tasks Suite (Total 50 Tasks Ongoing)',
+        description: 'Menambahkan 5 task checklist granular khusus untuk Paijo (TSK-QA-01 hingga TSK-QA-05) dengan status 100% ongoing, mencakup E2E browser regression, gatekeeping Definition of Done, audit pentest, verifikasi kontrak API, dan benchmark Web Vitals.'
+      },
+      {
+        id: 'c-11425-3',
+        type: 'improvement',
+        scope: '6 Divisions & 6 Microservices Synchronization',
+        description: 'Menyelaraskan filter pill, selector persona, dan telemetri portal menjadi 6 Divisi (Rizal, Irgi, Andalusia, Risqi, Tyno, Paijo) dan 6 Microservices (01 Admin, 02 Studio, 03 Orchestrator, 04 Marketing, 05 AI Agent, 06 Mobile).'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.24',
+    releaseDate: '19 Oktober 2026',
+    title: 'Pemisahan Matriks Tugas Berdasarkan 6 Microservices & Dual-Grouping Mode (Divisi & Services)',
+    summary: 'Menyediakan pemisahan matriks pekerjaan bisnis berdasarkan 6 layanan microservices arsitektur HeroCMS (01-admin-console, 02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, 05-ai-agent-service, 06-mobile-companion) di samping pengelompokan 5 divisi keahlian tim, menambahkan toggle switcher interaktif dan tab navigasi khusus per-service di portal Mission Control, serta menyinkronkan TASK_CHECKLIST.md.',
+    author: 'HeroCMS Dev / Paijo AI Agent (PM)',
+    items: [
+      {
+        id: 'c-11424-1',
+        type: 'feature',
+        scope: 'Dual-Mode Task Grouping (Division & Service)',
+        description: 'Menambahkan tombol pengalih (toggle) dan tab navigasi mandiri untuk melihat 45 tugas bisnis terkelompok berdasarkan 5 Divisi Tim atau berdasarkan 6 Microservices.'
+      },
+      {
+        id: 'c-11424-2',
+        type: 'feature',
+        scope: '6 Microservices Architecture Granular Mapping',
+        description: 'Memetakan seluruh 45 task ke dalam 6 direktori service: Service 01 Admin Console (4 tasks), Service 02 Studio & BFF (29 tasks), Service 03 Orchestrator & Infra (6 tasks), Service 04 Marketing Site (1 task), Service 05 AI Agent Service (3 tasks), dan Service 06 Mobile Companion (2 tasks).'
+      },
+      {
+        id: 'c-11424-3',
+        type: 'improvement',
+        scope: 'Interactive Service Filter Pills & Dynamic Metadata',
+        description: 'Menghadirkan pil filter per-service (01 Admin, 02 Studio, 03 Orchestrator, 04 Marketing, 05 AI Agent, 06 Mobile) dengan informasi direktori path, tech stack, dan PIC penanggung jawab service.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.23',
+    releaseDate: '19 Oktober 2026',
+    title: 'Penataan Roster 5 Anggota Tim, Eliminasi Kartu Pelaksana & Kamus Arsitektur Ramah Pengguna',
+    summary: 'Memperbarui profil keahlian 5 anggota tim inti (Andalusia Full Stack Lead jago BE & FE, Irgi Frontend Web Specialist, Risqi Database Management Specialist, Rizal DevOps/Security & Rancang Bangun Awal, Tyno Mobile Specialist) serta menegaskan peran Paijo AI sebagai Active Project Manager, menghapus kartu Pelaksana Aktif dari telemetri, dan memaparkan seluruh komponen arsitektur sistem ke dalam istilah teknis yang manusiawi dan mudah dipahami.',
+    author: 'HeroCMS Dev / Paijo AI Agent (PM)',
+    items: [
+      {
+        id: 'c-11423-1',
+        type: 'improvement',
+        scope: 'Team Governance & Active PM Protocol',
+        description: 'Menegaskan keahlian 5 anggota tim di SKILL.md, TASK_CHECKLIST.md, dan Mission Control portal: Andalusia (Full Stack Lead), Irgi (Frontend Web), Risqi (Database Management), Rizal (DevOps, Security & Rancang Awal FE/BE), Tyno (Mobile Frontend), dan Paijo AI (Lead Technical PM).'
+      },
+      {
+        id: 'c-11423-2',
+        type: 'improvement',
+        scope: 'Telemetry Grid & Clean Overview',
+        description: 'Menutup / menghapus kartu telemetri Dikerjakan Aktif (Pelaksana) dari portal Mission Control dan menyajikan 4 kartu telemetri berimbang: Total Task Bisnis (45), Status 100% Ongoing, Cakupan 6 Area Microservices, dan Tim Pelaksana & Handover.'
+      },
+      {
+        id: 'c-11423-3',
+        type: 'feature',
+        scope: 'Friendly Architecture Dictionary',
+        description: 'Menulis ulang seluruh entri kamus arsitektur di index.html dan dokumentasi teknis ke dalam bahasa yang komunikatif, ramah, dan mudah dipahami tanpa mengurangi ketelitian teknis.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.22',
+    releaseDate: '19 Oktober 2026',
+    title: 'Restorasi Matriks 45 Task Granular, Eliminasi Metrik Kesiapan Sprint & Tracking Handover Tim (Pelaksana: Rizal)',
+    summary: 'Memulihkan kelengkapan matriks seluruh task bisnis menjadi 45 task granular mencakup 12 modul Studio dan 5 services microservices HeroCMS, menghapus metrik estimasi kesiapan rilis sprint, menetapkan status seluruh task menjadi 100% ONGOING (proses real berjalan), mendokumentasikan Rizal sebagai pelaksana aktif pembenahan tampilan (seluruh item UI dicentang pada checklist), serta memetakan rencana serah terima (handover) ke rekan tim sesuai jobdesk spesifik (Andalusia, Irgi, Risqi, Tyno, Rizal).',
+    author: 'HeroCMS Dev (Rizal) / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11422-1',
+        type: 'improvement',
+        scope: 'Task Matrix & Granular Coverage',
+        description: 'Menyajikan seluruh 45 task bisnis riil yang mencakup 12 modul Studio dan seluruh services microservices di docs/project-management/index.html dan TASK_CHECKLIST.md tanpa terpotong.'
+      },
+      {
+        id: 'c-11422-2',
+        type: 'improvement',
+        scope: 'Telemetry & Sprint Metric Removal',
+        description: 'Menghapus kartu telemetri Kesiapan Rilis Sprint (Jujur) sesuai instruksi karena pekerjaan terus berkembang, dan menggantikannya dengan metrik transparansi task ongoing, pelaksana aktif (Rizal), dan target handover.'
+      },
+      {
+        id: 'c-11422-3',
+        type: 'feature',
+        scope: 'Interactive Checklist UI Status & Handover Tracking',
+        description: 'Menegakkan status 100% ONGOING pada seluruh task, menandai item pembenahan tampilan UI sebagai [SELESAI] / dicentang pada checklist, dan memetakan target serah terima ke Andalusia (BE), Irgi (FE), Risqi (DB), dan Tyno (Mobile).'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.21',
+    releaseDate: '19 Oktober 2026',
+    title: 'Ekspansi Peran Rizal ke Tim Backend Engineering (DevOps, Security & Backend Lead)',
+    summary: 'Memperluas matriks penugasan resmi Rizal untuk mencakup pengembangan backend Go BFF (autentikasi middleware JWT, rate limiting, security handlers) bersama Andalusia, serta memperbarui Mission Control persona filter, SOP, dan dataset runbook di seluruh repositori.',
+    author: 'HeroCMS Dev / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11421-1',
+        type: 'improvement',
+        scope: 'Team Governance & Backend Ownership',
+        description: 'Memperbarui penetapan peran Rizal menjadi DevOps, Security & Backend Specialist di SKILL.md, TASK_CHECKLIST.md, KAMUS_DAN_SOP_HEROCMS.md, dan index.html.'
+      },
+      {
+        id: 'c-11421-2',
+        type: 'feature',
+        scope: 'Go BFF Auth & Security Middleware Task',
+        description: 'Menambahkan task TSK-BE-SEC-01 ke antrean pengerjaan Rizal mencakup implementasi JWT ED25519 asymmetric verification dan Redis memory bucket rate-limiting.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.20',
+    releaseDate: '19 Oktober 2026',
+    title: 'Transformasi Portal Mission Control ke Reader View Artikel Teknis, Pengelompokan Divisi & Mode Fokus Petugas',
+    summary: 'Merombak arsitektur antarmuka docs/project-management/index.html dari modal dialog ringkas menjadi Dedicated Technical Article Reader View (mengikuti standar Reader Mode HeroCMS Studio), menambahkan fitur pengelompokan task berbasis divisi tim (DevOps & Security, Frontend Web, Backend & Fullstack, Database, Mobile), mengintegrasikan Mode Fokus Petugas ("Sedang Melihat Sebagai..."), menyajikan checklist interaktif bertahap, serta mengkalibrasi ulang metrik kesiapan sprint menjadi rasio realistis (fokus aktif pada 02-dashboard-cms dan 04-marketing-site).',
+    author: 'HeroCMS Dev / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11420-1',
+        type: 'feature',
+        scope: 'Technical Article Reader View Architecture',
+        description: 'Membangun antarmuka baca artikel teknis 2 kolom dengan diagram alur arsitektur, checklist interaktif yang dapat dicentang langsung, dan mockup terminal kode macOS.'
+      },
+      {
+        id: 'c-11420-2',
+        type: 'improvement',
+        scope: 'Division Grouping & User Persona Switcher',
+        description: 'Menambahkan pengelompokan kartu per divisi dan dropdown pemilih profil pengguna agar setiap anggota (terutama Rizal) langsung tahu apa yang harus dikerjakan tanpa kebingungan.'
+      },
+      {
+        id: 'c-11420-3',
+        type: 'improvement',
+        scope: 'Realistic Sprint Readiness Calibration',
+        description: 'Mengkalibrasi ulang persentase kesiapan rilis menjadi 18% untuk mencerminkan fase fondasi aktif pada 02-dashboard-cms dan 04-marketing-site.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.19',
+    releaseDate: '19 Oktober 2026',
+    title: 'Penjabaran Matriks 36 Task Granular 12 Modul Studio & Katalog Kontrak API Microservices',
+    summary: 'Menjabarkan secara mendalam 36 task teknis berbasis 12 modul resmi di services/02-dashboard-cms dan hubungannya ke seluruh microservices (01-admin, 03-provision, 04-marketing, 05-ai-agent, Mobile). Menyusun model bisnis SaaS terukur (4 vertikal blueprint), katalog spesifikasi API BFF, serta memperbarui Mission Control portal dengan dataset granular.',
+    author: 'HeroCMS Dev / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11419-1',
+        type: 'improvement',
+        scope: 'Granular Service Task Matrix',
+        description: 'Menyusun rincian tugas teknis mendalam per-petugas (Andalusia, Irgi, Risqi, Rizal, Tyno) di docs/project-management/TASK_CHECKLIST.md untuk seluruh 12 modul Studio.'
+      },
+      {
+        id: 'c-11419-2',
+        type: 'feature',
+        scope: 'Core API Specification Catalog',
+        description: 'Mendokumentasikan kontrak API BFF lengkap (/auth, /containers, /sites/blocks, /media, /telemetry) dan log pengerjaan di docs/KAMUS_DAN_SOP_HEROCMS.md.'
+      },
+      {
+        id: 'c-11419-3',
+        type: 'improvement',
+        scope: 'Interactive Mission Control Portal Sync',
+        description: 'Memperbarui dataset di docs/project-management/index.html dengan 36 tugas terperinci sehingga telemetri kesiapan rilis dan filter modul sinkron 100%.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.18',
+    releaseDate: '19 Oktober 2026',
+    title: 'Portal Interaktif HeroCMS Mission Control, Kamus Arsitektur & Skill SOP Tim',
+    summary: 'Menerbitkan portal interaktif mandiri HeroCMS Mission Control berbasis web (docs/project-management/index.html) dengan tema Studio resmi, meluncurkan Buku Kamus Arsitektur & SOP Pengerjaan Lengkap (docs/KAMUS_DAN_SOP_HEROCMS.md), serta meresmikan Master Skill .agents/skills/herocms-team-governance-and-sop sebagai rujukan permanen seluruh anggota tim dan AI Agent.',
+    author: 'HeroCMS Dev / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11418-1',
+        type: 'feature',
+        scope: 'Interactive Mission Control Portal',
+        description: 'Membangun aplikasi portal HTML mandiri dengan telemetri kesiapan rilis, papan tugas dengan filter petugas & pencarian real-time, tab kamus arsitektur, dan modal detail DoD.'
+      },
+      {
+        id: 'c-11418-2',
+        type: 'feature',
+        scope: 'Master Architecture & SOP Bible',
+        description: 'Menerbitkan docs/KAMUS_DAN_SOP_HEROCMS.md yang memuat glosarium teknis (RLS, cgroups v2, Traefik dynamic labels, ZSET, dll) serta runbook SOP pengerjaan per-divisi.'
+      },
+      {
+        id: 'c-11418-3',
+        type: 'improvement',
+        scope: 'AI Team Governance Skill',
+        description: 'Menambahkan skill resmi .agents/skills/herocms-team-governance-and-sop untuk memandu tata kelola tim dan standar pengerjaan kode.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.17',
+    releaseDate: '19 Oktober 2026',
+    title: 'Pembagian Divisi Bisnis Enterprise & Inisiasi Task Checklist PM (Paijo AI Agent)',
+    summary: 'Mendefinisikan matriks penugasan dan roadmap divisi bisnis lintas tim (Andalusia: Fullstack, Irgi: Frontend Web, Risqi: Database Management, Rizal: DevOps & Security, Tyno: Mobile Companion App) serta menginisiasi Single Source of Truth manajemen proyek berbasis Git di docs/project-management/TASK_CHECKLIST.md di bawah koordinasi Paijo AI Agent.',
+    author: 'HeroCMS Dev / Paijo AI Agent',
+    items: [
+      {
+        id: 'c-11417-1',
+        type: 'improvement',
+        scope: 'Project Management & Team Governance',
+        description: 'Membentuk dokumen living task checklist terstruktur di docs/project-management/TASK_CHECKLIST.md untuk melacak backlog, KPI, dan protokol pelaporan tim.'
+      },
+      {
+        id: 'c-11417-2',
+        type: 'improvement',
+        scope: 'Multi-Division Roster & Architecture Mapping',
+        description: 'Memetakan tanggung jawab teknis, mitigasi bottleneck, dan dependensi API contracts untuk 5 anggota tim inti pada skala bisnis SaaS.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.16',
+    releaseDate: '19 Oktober 2026',
+    title: 'Pemisahan Suite Pentest Modular Per-Service (services/<service>/pentest/)',
+    summary: 'Menata ulang seluruh suite pengujian penetrasi (pentest) dari root monorepo menjadi modular per-service di dalam direktori masing-masing layanan (contoh: services/02-dashboard-cms/pentest/). Dengan pemisahan ini, setiap modul memiliki domain pengujian keamanan yang terisolasi, mandiri, dan rapi sesuai batasan tanggung jawab servisnya.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11416-1',
+        type: 'improvement',
+        scope: 'Per-Service Pentest Architecture',
+        description: 'Memindahkan dan mengisolasi berkas pentest ke subfolder pentest/ pada masing-masing service (02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, 05-ai-agent-service).'
+      },
+      {
+        id: 'c-11416-2',
+        type: 'improvement',
+        scope: 'Pentest Runner Skill & Standards Update',
+        description: 'Memperbarui skill herocms-pentest-runner dan AGENTS.md Bagian 9 untuk mendukung eksekusi verifikasi keamanan per-service.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.15',
+    releaseDate: '19 Oktober 2026',
+    title: 'Integrasi Skill Pentest Pre-Commit & Audit Keamanan Mandatori Sebelum PR',
+    summary: 'Menambahkan skill resmi herocms-pentest-runner (.agents/skills/herocms-pentest-runner) dan menetapkan Bagian 9 pada AGENTS.md mengenai standar audit keamanan mandatori. Setiap pengembang dan AI Agent diwajibkan menjalankan rangkaian pengujian pentest black-box HTTP di direktori pentest/ sebelum melakukan git commit atau membuka Pull Request.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11415-1',
+        type: 'feature',
+        scope: 'Pre-Commit & Pre-PR Pentest Skill',
+        description: 'Membuat modul skill herocms-pentest-runner yang memandu eksekusi otomatis audit Traefik injection, Redis injection, brute-force auth, dan path traversal.'
+      },
+      {
+        id: 'c-11415-2',
+        type: 'improvement',
+        scope: 'AGENTS.md Mandatory Security Standard',
+        description: 'Menambahkan aturan Section 9 pada AGENTS.md yang mewajibkan status 100% PASS pada suite pentest sebelum kode di-push dan di-merge ke main.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.14',
+    releaseDate: '19 Oktober 2026',
+    title: 'Isolasi Rangkaian Uji & Pentest ke Direktori Terpusat pentest/',
+    summary: 'Memisahkan seluruh berkas pengujian penetrasi (pentest) dan unit test (*_test.go) dari direktori kode produksi (services/*) ke direktori root pentest/ terisolasi. Penataan ini memastikan kode aplikasi tetap bersih, rapi, dan modular tanpa mencampurkan skrip pengujian internal ke dalam pohon berkas implementasi layanan.',
+    author: 'HeroCMS Dev / AI Agent',
+    items: [
+      {
+        id: 'c-11414-1',
+        type: 'improvement',
+        scope: 'Test Suite & Pentest Folder Segregation',
+        description: 'Memindahkan 12 berkas *_test.go dari 02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, dan 05-ai-agent-service ke struktur pentest/ terpusat.'
+      },
+      {
+        id: 'c-11414-2',
+        type: 'improvement',
+        scope: 'Pentest Documentation & Architecture Hygiene',
+        description: 'Menambahkan pentest/README.md sebagai panduan arsitektur pengujian dan pemetaan terhadap laporan audit QC_AND_PENTEST_REPORT.md.'
+      }
+    ]
+  },
   {
     version: 'v1.14.13',
     releaseDate: '18 Oktober 2026',
     title: 'Fix Code Block Background Leak & Upgrade to Ray.so / VS Code Terminal Editor Styling',
     summary: 'Memperbaiki dan meningkatkan tampilan cuplikan kode di Reader Mode artikel: (1) Memperbaiki selector CSS inline code (.reader-prose-body code) yang sebelumnya bocor ke dalam blok <pre><code> sehingga menghasilkan highlight putih/abu-abu yang mengganggu di balik baris teks; (2) Merombak kartu kode (.reader-code-card) menjadi antarmuka terminal/editor modern setara Ray.so dan VS Code: tab file aktif dengan ikon FileCode, language badge GO 1.22, gutter nomor baris digital (01-04), palet syntax highlighting Tokyo Night / One Dark Pro, dan status footer real-time dengan pulsing live dot Redis counter.',
-    badge: 'Latest',
     author: 'HeroCMS Dev / AI Agent',
     items: [
       {

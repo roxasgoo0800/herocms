@@ -163,6 +163,33 @@ services:
       - "traefik.http.routers.herocms-marketing.service=herocms-marketing-svc"
       - "traefik.http.services.herocms-marketing-svc.loadbalancer.server.port=80"
 
+  # ---------------------------------------------------------------------------
+  # 6. Service 07: Docs & Mission Control Hub (Native Golang Host + Vue 3 SPA)
+  # ---------------------------------------------------------------------------
+  docs:
+    build:
+      context: ./services/07-docs
+      dockerfile: Dockerfile
+    image: roxas0800/herocms-docs:latest
+    container_name: herocms_docs
+    restart: unless-stopped
+    networks:
+      - app-network
+      - traefik_network
+    environment:
+      PORT: 8087
+      DIST_DIR: /app/dist
+    ports:
+      - "${DOCS_PORT:-8087}:8087"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_network"
+      - "traefik.http.routers.herocms-docs.rule=Host(`docs.herocms.stackbyte.id`) || Host(`docs.localhost`)"
+      - "traefik.http.routers.herocms-docs.entrypoints=web"
+      - "traefik.http.routers.herocms-docs.middlewares=security-headers@file,gzip-compress@file"
+      - "traefik.http.routers.herocms-docs.service=herocms-docs-svc"
+      - "traefik.http.services.herocms-docs-svc.loadbalancer.server.port=8087"
+
 volumes:
   postgres_data:
     name: herocms_postgres_data
