@@ -1,0 +1,15 @@
+# Build output & node
+node_modules
+dist/
+*.tsbuildinfo
+*.local
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Golang binaries
+docs-server
+bin/
+*.exe

@@ -2,11 +2,45 @@ import type { ChangelogRelease } from '../types/dashboard';
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.15.0',
+    releaseDate: '19 Oktober 2026',
+    title: 'Peluncuran Service 07 Docs & Mission Control Hub (Vue 3 + Go Native BFF + Database Persistence)',
+    summary: 'Menerbitkan microservice mandiri services/07-docs (HeroCMS Docs & Mission Control Hub) yang menyatukan 4 telemetri real-time, 50 task matrix berstatus ONGOING dengan alur handover spesialis, modal reader interaktif dengan checklist persistence langsung ke database melalui REST API PATCH, 13 blueprint panduan arsitektur operasional, 10 SOP standar enterprise, dan modul protokol Paijo AI PM & QA/QC. Layanan berjalan di port 8087 dengan routing Traefik (docs.herocms.stackbyte.id), dilengkapi pentest suite, dan arsitektur zero-CSS duplication berbasis studio-master.css.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-11500-1',
+        type: 'feature',
+        scope: 'Service 07 Docs & Mission Control Microservice',
+        description: 'Mendirikan layanan microservice baru services/07-docs dengan frontend Vue 3 (Vite + TypeScript + Pinia), Go Native BFF (port 8087, Go 1.22+ Standard Router), dan registrasi ingress Traefik docs.herocms.stackbyte.id.'
+      },
+      {
+        id: 'c-11500-2',
+        type: 'feature',
+        scope: 'Interactive Checklist with Database Persistence',
+        description: 'Mengimplementasikan penyimpanan checklist real-time ke database melalui endpoint PATCH /api/v1/tasks/:id/checklist sehingga progres centang pada modal pembaca tersimpan secara persisten.'
+      },
+      {
+        id: 'c-11500-3',
+        type: 'feature',
+        scope: '50-Task Dual-Mode Matrix & Continuous Sprint ONGOING Status',
+        description: 'Menyajikan 50 task bisnis dalam dua mode pengelompokan (Divisi Tim & 6 Microservices) dengan status 100% ONGOING dan metadata handover kepemilikan antar-rekan tim.'
+      },
+      {
+        id: 'c-11500-4',
+        type: 'security',
+        scope: 'Dedicated Black-Box Pentest Suite & Zero-CSS Studio Master',
+        description: 'Menyematkan test suite pentest/security_test.go untuk validasi CORS, security headers, dan bounds checking, serta menerapkan arsitektur visual studio-master.css tanpa duplikasi styling.'
+      }
+    ]
+  },
+  {
     version: 'v1.14.26',
     releaseDate: '19 Oktober 2026',
     title: 'Kamus Arsitektur Berbasis Blueprint Panduan Operasional & 10 SOP Lifecycle Standar Industri',
     summary: 'Mentransformasi Kamus Arsitektur menjadi blueprint operasional interaktif yang dilengkapi kebutuhan sistem, port, lokasi file rujukan, langkah eksekusi step-by-step, perintah CLI verifikasi cepat, dan aturan Do & Don\'ts; meresmikan 10 Standar Operasional Prosedur (SOP) industri mencakup git branching (SOP-GIT-01), siklus pengerjaan tugas end-to-end (SOP-FLOW-01), tata cara klaim dan kelola checklist (SOP-CHK-01), serta matriks kepatuhan mutlak dan larangan 6 microservices (SOP-SVC-01).',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
