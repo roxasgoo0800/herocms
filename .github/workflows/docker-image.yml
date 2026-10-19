@@ -24,6 +24,9 @@ jobs:
           - name: marketing-site
             context: ./services/04-marketing-site
             image: roxas0800/herocms-marketing
+          - name: docs-hub
+            context: ./services/07-docs
+            image: roxas0800/herocms-docs
 
     steps:
       - name: Checkout repository
