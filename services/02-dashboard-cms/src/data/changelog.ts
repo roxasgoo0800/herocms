@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.20.1',
+    version: 'v1.21.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.21.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Komprehensif Modul Faktur & E-Faktur: Filter Multi-Kanal, Visualisasi Alokasi Fiskal Bulanan & Pratinjau KOP Pajak Live',
+    summary: 'Merombak arsitektur modul Faktur & Riwayat Tagihan Resmi (InvoicesHistoryModule) menjadi sistem penagihan enterprise interaktif: (1) Bilah filter pencarian mutakhir dengan selektor kanal pembayaran spesifik (BCA VA, QRIS, Visa Corporate, Mandiri Bill) dan tombol salin instan nomor faktur satu-klik; (2) Tab Rekapitulasi Pajak PPN 11% dilengkapi grafik batang visualisasi alokasi fiskal bulanan (DPP vs PPN 11%) serta kode verifikasi NTPN resmi; (3) Tab Profil Wajib Pajak 2 kolom terpadu yang menampilkan formulir identitas perpajakan badan usaha berdampingan dengan Pratinjau KOP Dokumen E-Faktur sinkronisasi langsung (Live Sync KOP Preview); (4) Penyempurnaan lembar dokumen kertas E-Faktur digital berstempel lunas dan stempel QR Code validasi DJP.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12100-1',
+        type: 'feature',
+        scope: 'Multi-Channel Payment Filter & Instant Invoice Copy Tool',
+        description: 'Menyediakan filter dropdown kanal pembayaran spesifik pada buku besar faktur serta tombol salin nomor faktur langsung ke clipboard dengan indikator status reaktif.'
+      },
+      {
+        id: 'c-02dash-12100-2',
+        type: 'feature',
+        scope: 'Monthly Fiscal Spending & Tax Stacked Bar Visualizer',
+        description: 'Menyematkan visualisasi grafik batang komparasi pengeluaran bulanan (Dasar Pengenaan Pajak vs PPN 11%) disertai kode NTPN per transaksi pada tabel rekonsiliasi.'
+      },
+      {
+        id: 'c-02dash-12100-3',
+        type: 'feature',
+        scope: 'Interactive 2-Column Tax Profile with Live E-Faktur KOP Preview',
+        description: 'Menyajikan tata letak 2 kolom pada pengaturan wajib pajak: formulir konfigurasi di sisi kiri dan pratinjau KOP surat faktur pajak digital di sisi kanan yang merespons perubahan data secara instan.'
+      }
+    ]
+  },
+  {
     version: 'v1.20.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Pemisahan Hierarki Tagline Kartu Paket (Zero-Overlap) & Integrasi Checkout Pembayaran Langsung Kalkulator Simulasi Cluster',
     summary: 'Memperbaiki tata letak kartu paket aktif berjalan (.plan-crown-card) dengan memisahkan teks deskripsi tagline ke dalam baris penuh mandiri (.crown-full-tagline) di bawah bar judul dan harga (.crown-top-bar), secara mutlak mengeliminasi masalah tombol "Ganti / Upgrade Paket" yang menimpa paragraf deskripsi di semua resolusi. Menambahkan kapabilitas Checkout & Pembayaran Langsung pada Kalkulator Simulasi Resource Cluster Kustom (Tab 3) sehingga pengguna dapat langsung membayar estimasi spesifikasi kustom via 4 kanal pembayaran resmi (BCA VA, QRIS, Visa, Mandiri Bill), mengaktifkan kuota kluster seketika, dan otomatis menerbitkan E-Faktur resmi PMK-60.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
