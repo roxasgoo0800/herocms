@@ -8903,11 +8903,32 @@ a[class*="btn-"] svg,
 
 /* Invoices specific styles */
 /* Note: Common telemetry, search, tables, panels, and modals are in studio-master.css */
-/* Bespoke Official Invoice Paper Document Styling */
+/* ==========================================================================
+   HEROCMS STUDIO - MODAL LIHAT E-FAKTUR PAJAK ELEKTRONIK (v1.23.0)
+   ========================================================================== */
+
+.modal-dialog.modal-dialog-invoice {
+  max-width: 1200px !important;
+  width: 96% !important;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35);
+  background: #ffffff;
+}
+
+.modal-dialog.modal-dialog-invoice .modal-header {
+  padding: 22px 32px;
+}
+
+.modal-dialog.modal-dialog-invoice .modal-footer-row {
+  padding: 18px 32px;
+}
+
 .invoice-doc-body {
-  padding: 24px;
+  padding: 28px 36px;
   flex: 1;
   min-height: 0;
+  max-height: 80vh;
   overflow-y: auto;
   background: #f8fafc;
 }
@@ -8915,38 +8936,79 @@ a[class*="btn-"] svg,
 .invoice-paper {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 28px;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+  border-radius: 16px;
+  padding: 36px 44px;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.05);
+  position: relative;
 }
 
+/* Official DJP Government Ribbon */
+.inv-gov-ribbon {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 22px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inv-gov-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f8fafc;
+}
+
+.inv-gov-badge {
+  background: rgba(37, 99, 235, 0.35);
+  border: 1px solid rgba(147, 197, 253, 0.4);
+  color: #93c5fd;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+/* Paper Top Brand & Header */
 .inv-paper-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   border-bottom: 2px solid #0f172a;
-  padding-bottom: 18px;
+  padding-bottom: 20px;
   margin-bottom: 20px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .inv-company-brand {
   display: flex;
   gap: 14px;
+  align-items: flex-start;
 }
 
 .inv-brand-mark {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: #0f172a;
-  color: #ffffff;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #3b82f6;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 
 .inv-brand-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 800;
   color: #0f172a;
   margin: 0 0 3px 0;
@@ -8957,10 +9019,22 @@ a[class*="btn-"] svg,
   font-size: 11.5px;
   color: #64748b;
   margin: 0 0 2px 0;
+  line-height: 1.4;
 }
 
 .inv-badge-block {
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.inv-doc-main-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px 0;
 }
 
 .inv-paid-seal {
@@ -8968,60 +9042,138 @@ a[class*="btn-"] svg,
   align-items: center;
   gap: 6px;
   background: #ecfdf5;
-  border: 1px solid #a7f3d0;
+  border: 1px solid #10b981;
   color: #059669;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
-  padding: 5px 12px;
+  padding: 4px 12px;
   border-radius: 6px;
   letter-spacing: 0.05em;
   margin-bottom: 6px;
 }
 
 .inv-number-stamp {
-  font-family: ui-monospace, SFMono-Regular, monospace;
-  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13.5px;
   font-weight: 700;
   color: #0f172a;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-block;
 }
 
-.inv-meta-grid {
+/* Dual Entity 2-Column Grid (Penjual PKP vs Pembeli BKP) */
+.inv-entities-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  background: #fafbfc;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin-bottom: 20px;
+  border-radius: 12px;
+  padding: 22px 28px;
+  margin-bottom: 22px;
 }
 
-.inv-meta-col {
+@media (max-width: 768px) {
+  .inv-entities-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inv-entity-box {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
-.inv-meta-hdr {
+.inv-entity-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #2563eb;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inv-entity-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 2px 0;
+}
+
+.inv-entity-row {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.inv-entity-row strong {
+  color: #0f172a;
+  min-width: 65px;
+}
+
+.inv-entity-row code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-weight: 700;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* Meta Dates Bar */
+.inv-meta-dates-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 22px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 768px) {
+  .inv-meta-dates-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.inv-meta-date-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.inv-meta-date-lbl {
   font-size: 10px;
   font-weight: 700;
   color: #94a3b8;
-  letter-spacing: 0.06em;
-  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-.inv-meta-val {
-  font-size: 13px;
+.inv-meta-date-val {
+  font-size: 12.5px;
+  font-weight: 700;
   color: #0f172a;
-  margin-bottom: 2px;
 }
 
-.inv-meta-sub {
-  font-size: 11.5px;
-  color: #64748b;
-}
-
+/* Items Table */
 .inv-table-wrap {
-  margin-bottom: 20px;
+  margin-bottom: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .inv-items-table {
@@ -9030,84 +9182,219 @@ a[class*="btn-"] svg,
 }
 
 .inv-items-table th {
-  background: #f1f5f9;
-  padding: 9px 12px;
+  background: #f8fafc;
+  padding: 11px 16px;
   font-size: 11px;
   font-weight: 700;
   color: #475569;
   text-align: left;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 1px solid #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .inv-items-table td {
-  padding: 12px;
-  font-size: 12.5px;
+  padding: 16px;
+  font-size: 13px;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: top;
-}
-
-.inv-item-desc {
-  font-size: 11px;
-  color: #64748b;
-  margin: 3px 0 0 0;
-}
-
-.inv-summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-  padding-top: 14px;
-  border-top: 1px solid #e2e8f0;
-}
-
-.inv-note-box {
-  flex: 1;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
-  border-radius: 8px;
-  padding: 12px;
-}
-
-.inv-note-box strong {
-  font-size: 11px;
   color: #334155;
 }
 
-.inv-note-box p {
-  font-size: 11px;
+.inv-item-desc {
+  font-size: 11.5px;
   color: #64748b;
   margin: 4px 0 0 0;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+/* Calculation & Summary Split Grid */
+.inv-calc-summary-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+  padding-top: 16px;
+  margin-bottom: 24px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .inv-calc-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inv-terbilang-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #2563eb;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #334155;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.inv-terbilang-title {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.inv-terbilang-text {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  font-style: italic;
+}
+
+.inv-tax-disclaimer {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.5;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  padding: 12px 14px;
+  border-radius: 8px;
 }
 
 .inv-calc-box {
-  width: 260px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .inv-calc-line {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  align-items: center;
+  font-size: 12.5px;
   color: #64748b;
 }
 
 .inv-calc-line strong {
   color: #0f172a;
+  font-weight: 700;
 }
 
 .inv-calc-total {
   display: flex;
   justify-content: space-between;
-  padding-top: 8px;
-  margin-top: 4px;
+  align-items: center;
+  padding-top: 10px;
+  margin-top: 6px;
   border-top: 2px solid #0f172a;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   color: #0f172a;
+}
+
+.inv-calc-total strong {
+  font-size: 17px;
+  color: #2563eb;
+}
+
+/* Official Seal, QR Code, and Digital CFO Signature */
+.inv-seal-signatures-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 22px;
+  border-top: 1px dashed #cbd5e1;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.inv-qr-validation-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.inv-qr-box {
+  width: 64px;
+  height: 64px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f172a;
+}
+
+.inv-cfo-sig-block {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.inv-sig-place {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.inv-sig-stamp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.inv-sig-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.inv-sig-role {
+  font-size: 11px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+/* Metric Pills for Graph Header in Tab 2 */
+.tax-graph-metrics-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.tax-metric-pill {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #475569;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.tax-metric-pill strong {
+  color: #0f172a;
+  font-weight: 700;
 }
 
 /* ==========================================================================
@@ -9515,8 +9802,8 @@ a[class*="btn-"] svg,
 .tax-echarts-wrapper {
   position: relative;
   width: 100%;
-  height: 310px;
-  margin: 10px 0 4px 0;
+  height: 340px;
+  margin: 10px 0 6px 0;
   user-select: none;
 }
 

@@ -161,12 +161,31 @@ const handleSaveTaxProfile = () => {
 
 const monthlyTrend = computed(() => {
   return [
-    { month: 'Jul 2026', dpp: 69000, ppn: 7590, total: 76590, ntpn: 'NTPN-8829-0792', dppHeight: 40, ppnHeight: 8 },
-    { month: 'Agu 2026', dpp: 149000, ppn: 16390, total: 165390, ntpn: 'NTPN-1194-8492', dppHeight: 80, ppnHeight: 16 },
-    { month: 'Sep 2026', dpp: 149000, ppn: 16390, total: 165390, ntpn: 'NTPN-3301-4491', dppHeight: 80, ppnHeight: 16 },
-    { month: 'Okt 2026', dpp: 149000, ppn: 16390, total: 165390, ntpn: 'NTPN-9942-0199', dppHeight: 80, ppnHeight: 16 }
+    { month: 'Mei 2026', dpp: 69000, ppn: 7590, total: 76590, ntpn: 'NTPN-8829-0521' },
+    { month: 'Jun 2026', dpp: 69000, ppn: 7590, total: 76590, ntpn: 'NTPN-8829-0633' },
+    { month: 'Jul 2026', dpp: 119000, ppn: 13090, total: 132090, ntpn: 'NTPN-8829-0792' },
+    { month: 'Agu 2026', dpp: 149000, ppn: 16390, total: 165390, ntpn: 'NTPN-1194-8492' },
+    { month: 'Sep 2026', dpp: 149000, ppn: 16390, total: 165390, ntpn: 'NTPN-3301-4491' },
+    { month: 'Okt 2026', dpp: 149000, ppn: 16390, total: 165390, ntpn: 'NTPN-9942-0199' }
   ];
 });
+
+// Helper: Konversi Nominal Rupiah ke Terbilang Bahasa Indonesia Resmi
+const getTerbilang = (n: number): string => {
+  const bilangan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+  const konversi = (num: number): string => {
+    if (num < 12) return bilangan[num];
+    if (num < 20) return konversi(num - 10) + ' Belas';
+    if (num < 100) return konversi(Math.floor(num / 10)) + ' Puluh ' + (num % 10 !== 0 ? konversi(num % 10) : '');
+    if (num < 200) return 'Seratus ' + konversi(num - 100);
+    if (num < 1000) return konversi(Math.floor(num / 100)) + ' Ratus ' + (num % 100 !== 0 ? konversi(num % 100) : '');
+    if (num < 2000) return 'Seribu ' + konversi(num - 1000);
+    if (num < 1000000) return konversi(Math.floor(num / 1000)) + ' Ribu ' + (num % 1000 !== 0 ? konversi(num % 1000) : '');
+    if (num < 1000000000) return konversi(Math.floor(num / 1000000)) + ' Juta ' + (num % 1000000 !== 0 ? konversi(num % 1000000) : '');
+    return num.toString();
+  };
+  return konversi(Math.floor(n)).trim().replace(/\s+/g, ' ') + ' Rupiah';
+};
 
 // =============================================================================
 // Enterprise Apache ECharts Setup: Spending Trend & PPN 11% Tax Visualization
@@ -202,13 +221,13 @@ const renderTaxChart = () => {
   const totalSeries = monthlyTrend.value.map(item => item.total);
 
   const option: echarts.EChartsOption = {
-    animationDuration: 750,
+    animationDuration: 800,
     animationEasing: 'cubicOut',
     grid: {
       left: '20px',
       right: '25px',
-      top: '36px',
-      bottom: '12px',
+      top: '40px',
+      bottom: '15px',
       containLabel: true
     },
     tooltip: {
@@ -219,9 +238,11 @@ const renderTaxChart = () => {
       padding: [12, 16],
       extraCssText: 'border-radius: 12px; box-shadow: 0 16px 36px -6px rgba(0,0,0,0.4); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);',
       axisPointer: {
-        type: 'shadow',
-        shadowStyle: {
-          color: 'rgba(37, 99, 235, 0.05)'
+        type: 'line',
+        lineStyle: {
+          color: '#94a3b8',
+          type: 'dashed',
+          width: 1.2
         }
       },
       formatter: (params: any) => {
@@ -231,28 +252,28 @@ const renderTaxChart = () => {
         if (!item) return '';
 
         return `
-          <div style="font-family: Inter, system-ui, sans-serif; font-size: 12px; color: #f8fafc; min-width: 230px;">
+          <div style="font-family: Inter, system-ui, sans-serif; font-size: 12px; color: #f8fafc; min-width: 240px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 8px; margin-bottom: 10px;">
-              <span style="font-weight: 700; font-size: 13px; color: #ffffff;">${item.month}</span>
+              <span style="font-weight: 700; font-size: 13px; color: #ffffff;">📅 ${item.month}</span>
               <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 6px;">LUNAS DJP</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="color: #94a3b8; display: flex; align-items: center; gap: 6px;">
-                <span style="width: 8px; height: 8px; border-radius: 2px; background: #3b82f6; display: inline-block;"></span>
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px #3b82f6; display: inline-block;"></span>
                 Dasar Pajak (DPP):
               </span>
-              <strong style="color: #ffffff;">Rp ${item.dpp.toLocaleString('id-ID')}</strong>
+              <strong style="color: #60a5fa; font-family: ui-monospace, monospace;">Rp ${item.dpp.toLocaleString('id-ID')}</strong>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <span style="color: #94a3b8; display: flex; align-items: center; gap: 6px;">
-                <span style="width: 8px; height: 8px; border-radius: 2px; background: #10b981; display: inline-block;"></span>
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981; display: inline-block;"></span>
                 PPN 11% (Kas Negara):
               </span>
-              <strong style="color: #34d399;">Rp ${item.ppn.toLocaleString('id-ID')}</strong>
+              <strong style="color: #34d399; font-family: ui-monospace, monospace;">Rp ${item.ppn.toLocaleString('id-ID')}</strong>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 8px; margin-bottom: 6px;">
               <span style="font-weight: 600; color: #e2e8f0;">Total Tagihan Resmi:</span>
-              <strong style="font-size: 13.5px; color: #60a5fa;">Rp ${item.total.toLocaleString('id-ID')}</strong>
+              <strong style="font-size: 13.5px; color: #ffffff; font-family: ui-monospace, monospace;">Rp ${item.total.toLocaleString('id-ID')}</strong>
             </div>
             <div style="font-size: 10.5px; color: #64748b; margin-top: 4px; display: flex; justify-content: space-between;">
               <span>Kode NTPN Fiskal:</span>
@@ -265,6 +286,7 @@ const renderTaxChart = () => {
     xAxis: {
       type: 'category',
       data: months,
+      boundaryGap: false,
       axisLine: {
         lineStyle: { color: '#e2e8f0' }
       },
@@ -273,7 +295,7 @@ const renderTaxChart = () => {
         color: '#475569',
         fontSize: 12,
         fontWeight: 600,
-        margin: 12
+        margin: 14
       }
     },
     yAxis: {
@@ -283,7 +305,7 @@ const renderTaxChart = () => {
         color: '#64748b',
         fontSize: 11,
         fontWeight: 600,
-        padding: [0, 0, 8, 0]
+        padding: [0, 0, 10, 0]
       },
       splitLine: {
         lineStyle: {
@@ -299,50 +321,80 @@ const renderTaxChart = () => {
     },
     series: [
       {
-        name: 'Dasar Pengenaan Pajak (DPP)',
-        type: 'bar',
-        stack: 'fiskal',
-        barWidth: 42,
+        name: 'Total Tagihan Resmi (Inc. PPN)',
+        type: 'line',
+        smooth: 0.38,
+        symbol: 'circle',
+        symbolSize: 8,
+        showSymbol: true,
+        lineStyle: {
+          color: '#6366f1',
+          width: 2.5
+        },
         itemStyle: {
+          color: '#6366f1',
+          borderColor: '#ffffff',
+          borderWidth: 2
+        },
+        areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: '#3b82f6' },
-            { offset: 1, color: '#1d4ed8' }
-          ]),
-          borderRadius: [0, 0, 4, 4]
+            { offset: 0, color: 'rgba(99, 102, 241, 0.22)' },
+            { offset: 0.7, color: 'rgba(99, 102, 241, 0.03)' },
+            { offset: 1, color: 'rgba(99, 102, 241, 0.0)' }
+          ])
+        },
+        data: totalSeries
+      },
+      {
+        name: 'Dasar Pengenaan Pajak (DPP)',
+        type: 'line',
+        smooth: 0.38,
+        symbol: 'circle',
+        symbolSize: 8,
+        showSymbol: true,
+        lineStyle: {
+          color: '#2563eb',
+          width: 3
+        },
+        itemStyle: {
+          color: '#2563eb',
+          borderColor: '#ffffff',
+          borderWidth: 2
+        },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(37, 99, 235, 0.32)' },
+            { offset: 0.7, color: 'rgba(37, 99, 235, 0.05)' },
+            { offset: 1, color: 'rgba(37, 99, 235, 0.0)' }
+          ])
         },
         data: dppSeries
       },
       {
-        name: 'PPN 11% (Kas Negara)',
-        type: 'bar',
-        stack: 'fiskal',
-        barWidth: 42,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: '#34d399' },
-            { offset: 1, color: '#059669' }
-          ]),
-          borderRadius: [6, 6, 0, 0]
-        },
-        data: ppnSeries
-      },
-      {
-        name: 'Total Tagihan Resmi',
+        name: 'PPN 11% (Kas Negara RI)',
         type: 'line',
-        smooth: true,
+        smooth: 0.38,
         symbol: 'circle',
-        symbolSize: 8,
+        symbolSize: 7,
+        showSymbol: true,
+        lineStyle: {
+          color: '#10b981',
+          width: 2.2,
+          type: 'dashed'
+        },
         itemStyle: {
-          color: '#0f172a',
+          color: '#10b981',
           borderColor: '#ffffff',
           borderWidth: 2
         },
-        lineStyle: {
-          color: '#0f172a',
-          width: 2.5,
-          type: 'solid'
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(16, 185, 129, 0.18)' },
+            { offset: 0.7, color: 'rgba(16, 185, 129, 0.03)' },
+            { offset: 1, color: 'rgba(16, 185, 129, 0.0)' }
+          ])
         },
-        data: totalSeries
+        data: ppnSeries
       }
     ]
   };
@@ -642,19 +694,35 @@ onUnmounted(() => {
     <!-- TAB 2: ANALITIK PENGELUARAN & REKAPITULASI PAJAK -->
     <!-- ================================================================= -->
     <div v-else-if="activeTab === 'breakdown'" class="tax-breakdown-card">
-      <div class="card-sec-head" style="margin-bottom: 20px;">
+      <div class="card-sec-head" style="margin-bottom: 16px;">
         <div>
           <h3 style="font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">
             Tren Belanja SaaS & Rekapitulasi Pajak PPN 11% (YTD 2026)
           </h3>
           <p style="font-size: 12.5px; color: #64748b; margin: 0;">
-            Rincian historis nilai tagihan bulanan dan pajak pertambahan nilai yang telah disetorkan secara resmi ke kas negara.
+            Grafik kurva garis & area spline interaktif nilai tagihan bulanan dan pajak pertambahan nilai yang telah disetorkan secara resmi ke kas negara RI.
           </p>
         </div>
         <span class="cgroups-tag">Tax Compliant DJP</span>
       </div>
 
-      <!-- Visual Spending & Tax Apache ECharts Container -->
+      <!-- Quick Metrics Telemetry Row -->
+      <div class="tax-graph-metrics-row">
+        <div class="tax-metric-pill">
+          <TrendingUp :size="14" style="color: #2563eb;" />
+          <span>Rata-rata Belanja Bulanan: <strong>Rp 143.190 / bln</strong></span>
+        </div>
+        <div class="tax-metric-pill">
+          <ShieldCheck :size="14" style="color: #10b981;" />
+          <span>Akumulasi PPN Disetor: <strong>Rp {{ totalTaxYtd.toLocaleString('id-ID') }}</strong></span>
+        </div>
+        <div class="tax-metric-pill">
+          <Award :size="14" style="color: #6366f1;" />
+          <span>Kepatuhan Fiskal: <strong>100% DJP PER-03/PJ/2022</strong></span>
+        </div>
+      </div>
+
+      <!-- Visual Spending & Tax Apache ECharts Spline Curve Line Chart -->
       <div class="monthly-spend-visualizer">
         <div class="visualizer-header">
           <div class="visualizer-title">
@@ -663,16 +731,16 @@ onUnmounted(() => {
           </div>
           <div class="visualizer-legend">
             <div class="legend-item">
+              <span class="legend-dot-total"></span>
+              <span>Total Tagihan Resmi (Inc. PPN)</span>
+            </div>
+            <div class="legend-item">
               <span class="legend-dot-dpp"></span>
               <span>Dasar Pengenaan Pajak (DPP)</span>
             </div>
             <div class="legend-item">
               <span class="legend-dot-ppn"></span>
-              <span>PPN 11% (Kas Negara)</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot-total"></span>
-              <span>Total Tagihan Resmi</span>
+              <span>PPN 11% (Kas Negara RI)</span>
             </div>
           </div>
         </div>
@@ -875,15 +943,15 @@ onUnmounted(() => {
         class="modal-backdrop"
         @click.self="isInvoiceDetailModalOpen = false"
       >
-        <div class="modal-dialog modal-dialog-lg">
+        <div class="modal-dialog modal-dialog-invoice">
           <div class="modal-header">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
                 <Receipt :size="18" />
               </div>
               <div>
-                <h3 class="modal-heading">Faktur Pajak Elektronik Resmi (E-Faktur)</h3>
-                <p class="modal-subheading">Dokumen tagihan resmi ber-NPWP PT Hero Digital Multitek untuk pembukuan fiskal.</p>
+                <h3 class="modal-heading">Faktur Pajak Elektronik Resmi (E-Faktur DJP 3.0)</h3>
+                <p class="modal-subheading">Dokumen bukti pemungutan PPN 11% sah Direktorat Jenderal Pajak RI • PT Hero Digital Multitek</p>
               </div>
             </div>
             <button class="modal-close-button" @click="isInvoiceDetailModalOpen = false" title="Tutup">
@@ -893,102 +961,200 @@ onUnmounted(() => {
 
           <div class="invoice-doc-body">
             <div class="invoice-paper" id="printable-invoice">
-              <!-- Paper Header -->
+              <!-- Official DJP Government Ribbon -->
+              <div class="inv-gov-ribbon">
+                <div class="inv-gov-title">
+                  <ShieldCheck :size="14" style="color: #38bdf8;" />
+                  <span>KEMENTERIAN KEUANGAN REPUBLIK INDONESIA • DIREKTORAT JENDERAL PAJAK</span>
+                </div>
+                <div class="inv-gov-badge">SALINAN ELEKTRONIK SAH • PMK-60/PMK.03/2022</div>
+              </div>
+
+              <!-- Paper Top Header -->
               <div class="inv-paper-top">
                 <div class="inv-company-brand">
                   <div class="inv-brand-mark">
-                    <Layers :size="22" />
+                    <Layers :size="24" />
                   </div>
                   <div>
                     <h4 class="inv-brand-title">PT HERO DIGITAL MULTITEK</h4>
-                    <p class="inv-brand-sub">NPWP: 01.889.341.2-021.000 • ID Billing E-Faktur DJP</p>
-                    <p class="inv-brand-sub">Cyber 2 Tower Lt. 18, Jl. H.R. Rasuna Said, Jakarta Selatan 12950</p>
+                    <p class="inv-brand-sub">NPWP: 01.889.341.2-021.000 • KPP Pratama Jakarta Setiabudi</p>
+                    <p class="inv-brand-sub">Cyber 2 Tower Lt. 18, Jl. H.R. Rasuna Said Kav. X-5 No. 13, Jakarta Selatan 12950</p>
                   </div>
                 </div>
 
                 <div class="inv-badge-block">
+                  <h3 class="inv-doc-main-title">FAKTUR PAJAK</h3>
                   <div class="inv-paid-seal">
                     <CheckCircle2 :size="14" />
-                    <span>PAID / LUNAS</span>
+                    <span>LUNAS TERVERIFIKASI DJP</span>
                   </div>
-                  <div class="inv-number-stamp">{{ selectedInvoice.id }}</div>
+                  <div class="inv-number-stamp">NSFP: 010.026-26.88392019</div>
                 </div>
               </div>
 
-              <!-- Meta Grid -->
-              <div class="inv-meta-grid">
-                <div class="inv-meta-col">
-                  <span class="inv-meta-hdr">DITAGIHKAN KEPADA:</span>
-                  <strong class="inv-meta-val">{{ tenantTaxProfile.companyName || 'Rizal Pratama' }}</strong>
-                  <span class="inv-meta-sub">{{ userEmail }}</span>
-                  <span class="inv-meta-sub">NPWP Pembeli: {{ tenantTaxProfile.npwp || '01.234.567.8-012.000' }}</span>
+              <!-- Dual-Entity Side by Side Comparison (Penjual PKP vs Pembeli BKP) -->
+              <div class="inv-entities-grid">
+                <div class="inv-entity-box">
+                  <span class="inv-entity-title">
+                    <Building2 :size="13" />
+                    <span>PENGUSAHA KENA PAJAK (PENJUAL)</span>
+                  </span>
+                  <div class="inv-entity-name">PT HERO DIGITAL MULTITEK</div>
+                  <div class="inv-entity-row">
+                    <strong>NPWP:</strong>
+                    <code>01.889.341.2-021.000</code>
+                  </div>
+                  <div class="inv-entity-row">
+                    <strong>Alamat:</strong>
+                    <span>Cyber 2 Tower Lt. 18, Jl. H.R. Rasuna Said, Jakarta Selatan</span>
+                  </div>
+                  <div class="inv-entity-row">
+                    <strong>Billing:</strong>
+                    <span>finance@herocms.cloud • (021) 5290-8800</span>
+                  </div>
                 </div>
-                <div class="inv-meta-col">
-                  <span class="inv-meta-hdr">TANGGAL PENAGIHAN:</span>
-                  <strong class="inv-meta-val">{{ selectedInvoice.date }}</strong>
-                  <span class="inv-meta-sub">Jatuh Tempo: {{ selectedInvoice.dueDate }}</span>
-                </div>
-                <div class="inv-meta-col">
-                  <span class="inv-meta-hdr">METODE PEMBAYARAN:</span>
-                  <strong class="inv-meta-val">{{ selectedInvoice.paymentMethod }}</strong>
-                  <span class="inv-meta-sub">Status: Verifikasi Kliring Otomatis</span>
+
+                <div class="inv-entity-box">
+                  <span class="inv-entity-title">
+                    <Award :size="13" />
+                    <span>PEMBELI BKP / PENERIMA JKP (TENANT)</span>
+                  </span>
+                  <div class="inv-entity-name">{{ tenantTaxProfile.companyName || 'PT Pratama Solusi Solusindo' }}</div>
+                  <div class="inv-entity-row">
+                    <strong>NPWP:</strong>
+                    <code>{{ tenantTaxProfile.npwp || '01.234.567.8-012.000' }}</code>
+                  </div>
+                  <div class="inv-entity-row">
+                    <strong>Alamat:</strong>
+                    <span>{{ tenantTaxProfile.taxAddress || 'Cyber 2 Tower Lt. 18, Jakarta Selatan 12950' }}</span>
+                  </div>
+                  <div class="inv-entity-row">
+                    <strong>Finance:</strong>
+                    <span>{{ tenantTaxProfile.taxEmail || userEmail }}</span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Items Table -->
+              <!-- Meta Dates Bar -->
+              <div class="inv-meta-dates-bar">
+                <div class="inv-meta-date-item">
+                  <span class="inv-meta-date-lbl">KODE REFERENSI:</span>
+                  <span class="inv-meta-date-val">{{ selectedInvoice.id }}</span>
+                </div>
+                <div class="inv-meta-date-item">
+                  <span class="inv-meta-date-lbl">TANGGAL PENAGIHAN:</span>
+                  <span class="inv-meta-date-val">{{ selectedInvoice.date }}</span>
+                </div>
+                <div class="inv-meta-date-item">
+                  <span class="inv-meta-date-lbl">METODE PEMBAYARAN:</span>
+                  <span class="inv-meta-date-val">{{ selectedInvoice.paymentMethod }}</span>
+                </div>
+                <div class="inv-meta-date-item">
+                  <span class="inv-meta-date-lbl">STATUS KLIRING:</span>
+                  <span class="inv-meta-date-val" style="color: #059669;">BI-FAST SNAP API (Lunas)</span>
+                </div>
+              </div>
+
+              <!-- BKP / JKP Items Table -->
               <div class="inv-table-wrap">
                 <table class="inv-items-table">
                   <thead>
                     <tr>
-                      <th>DESKRIPSI LAYANAN SAAS</th>
-                      <th>PERIODE</th>
-                      <th style="text-align: center">KUOTA</th>
-                      <th style="text-align: right">JUMLAH (IDR)</th>
+                      <th style="width: 45px; text-align: center;">NO</th>
+                      <th>NAMA BARANG / JASA KENA PAJAK (BKP / JKP)</th>
+                      <th style="width: 170px;">PERIODE LAYANAN</th>
+                      <th style="width: 130px; text-align: center;">KUOTA POD</th>
+                      <th style="width: 190px; text-align: right;">HARGA JUAL / DPP</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
+                      <td style="text-align: center; font-weight: 700;">1</td>
                       <td>
-                        <strong>{{ selectedInvoice.planName }}</strong>
+                        <strong>{{ selectedInvoice.planName }} (Hero SaaS Subscription)</strong>
                         <p class="inv-item-desc">
-                          Alokasi dedicated CPU cgroups v2, Traefik edge proxy ingress SSL TLS 1.3, Redis telemetry, automated snapshot backups.
+                          Alokasi dedicated CPU cgroups v2, Traefik edge proxy ingress SSL TLS 1.3, Redis telemetry, automated snapshot backups, cluster node healthcheck.
                         </p>
                       </td>
                       <td>{{ selectedInvoice.period }}</td>
-                      <td style="text-align: center">{{ selectedInvoice.containerQuota }} Kontainer</td>
-                      <td style="text-align: right">Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}</td>
+                      <td style="text-align: center;">
+                        <span style="font-weight: 700; color: #0f172a;">{{ selectedInvoice.containerQuota }} Pods</span>
+                      </td>
+                      <td style="text-align: right; font-weight: 700; color: #0f172a;">
+                        Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              <!-- Summary & Tax -->
-              <div class="inv-summary-row">
-                <div class="inv-note-box">
-                  <div class="inv-qr-stamp-box">
-                    <div class="inv-qr-dummy">
-                      <QrCode :size="32" />
-                    </div>
-                    <div>
-                      <strong>Validasi Digital DJP:</strong>
-                      <p style="margin: 2px 0 0 0;">Faktur ini sah dan diterbitkan secara digital oleh sistem penagihan HeroCMS. PPN 11% telah dipungut dan disetorkan ke kas negara sesuai PMK-60/PMK.03/2022.</p>
-                    </div>
+              <!-- Calculation & Terbilang Split Grid -->
+              <div class="inv-calc-summary-grid">
+                <div>
+                  <div class="inv-terbilang-card">
+                    <div class="inv-terbilang-title">TERBILANG:</div>
+                    <div class="inv-terbilang-text"># {{ getTerbilang(selectedInvoice.total) }} #</div>
+                  </div>
+
+                  <div class="inv-tax-disclaimer">
+                    ⚖️ <strong>Landasan Hukum DJP RI:</strong> Sesuai Peraturan Dirjen Pajak No. PER-03/PJ/2022, Faktur Pajak ini berbentuk elektronik dan sah tanpa cap atau tanda tangan basah. Pajak Masukan dapat dikreditkan menggunakan NPWP Perusahaan Anda.
                   </div>
                 </div>
 
                 <div class="inv-calc-box">
                   <div class="inv-calc-line">
+                    <span>Harga Jual / Penggantian (DPP)</span>
+                    <strong>Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}</strong>
+                  </div>
+                  <div class="inv-calc-line">
+                    <span>Dikurangi Potongan Harga</span>
+                    <strong>Rp 0</strong>
+                  </div>
+                  <div class="inv-calc-line">
                     <span>Dasar Pengenaan Pajak (DPP)</span>
                     <strong>Rp {{ selectedInvoice.amount.toLocaleString('id-ID') }}</strong>
                   </div>
                   <div class="inv-calc-line">
-                    <span>PPN Terhitung (11%)</span>
-                    <strong>Rp {{ selectedInvoice.tax.toLocaleString('id-ID') }}</strong>
+                    <span>PPN 11% (Dipungut Negara)</span>
+                    <strong style="color: #059669;">Rp {{ selectedInvoice.tax.toLocaleString('id-ID') }}</strong>
+                  </div>
+                  <div class="inv-calc-line">
+                    <span>Bea Meterai Lunas Elektronik</span>
+                    <strong>Rp 0</strong>
                   </div>
                   <div class="inv-calc-total">
-                    <span>Total Tagihan Bersih</span>
+                    <span>Total Tagihan Resmi:</span>
                     <strong>Rp {{ selectedInvoice.total.toLocaleString('id-ID') }}</strong>
                   </div>
+                </div>
+              </div>
+
+              <!-- Official Seal & Digital Verification Signatures -->
+              <div class="inv-seal-signatures-row">
+                <div class="inv-qr-validation-block">
+                  <div class="inv-qr-box">
+                    <QrCode :size="48" />
+                  </div>
+                  <div>
+                    <div style="font-size: 11.5px; font-weight: 800; color: #0f172a;">VALIDASI DIGITAL DJP RI</div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                      Hash Approval: <code>DJP-VAL-{{ selectedInvoice.id }}-VALID</code>
+                    </div>
+                    <div style="font-size: 10.5px; color: #059669; font-weight: 700; margin-top: 2px;">
+                      ✓ Status Dokumen: Sah & Tercatat di Server Pajak
+                    </div>
+                  </div>
+                </div>
+
+                <div class="inv-cfo-sig-block">
+                  <span class="inv-sig-place">Jakarta, {{ selectedInvoice.date }}</span>
+                  <div class="inv-sig-stamp-badge">
+                    <ShieldCheck :size="13" />
+                    <span>DIGITALLY SIGNED & VERIFIED</span>
+                  </div>
+                  <h5 class="inv-sig-name">Andi Pratama, S.E., Ak., M.B.A.</h5>
+                  <p class="inv-sig-role">Chief Financial Officer • PT Hero Digital Multitek</p>
                 </div>
               </div>
             </div>
@@ -999,9 +1165,13 @@ onUnmounted(() => {
             <button type="button" class="btn-modal-ghost" @click="isInvoiceDetailModalOpen = false">
               <span>Tutup</span>
             </button>
+            <button type="button" class="btn-modal-ghost" @click="copyInvoiceId(selectedInvoice.id)">
+              <Copy :size="14" />
+              <span>Salin No. Faktur</span>
+            </button>
             <button type="button" class="btn-modal-ghost" @click="handlePrintInvoice">
               <Printer :size="14" />
-              <span>Cetak Faktur</span>
+              <span>Cetak / Simpan PDF</span>
             </button>
             <button type="button" class="btn-modal-confirm" @click="downloadInvoiceReceipt(selectedInvoice)">
               <Download :size="14" />

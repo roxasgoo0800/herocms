@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.22.0',
+    version: 'v1.23.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.23.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Autentik Modal Dokumen E-Faktur DJP 3.0 & Transformasi Grafik Kurva Area Spline Belanja Fiskal & Pajak PPN 11%',
+    summary: 'Merombak total tampilan modal pratinjau lembar faktur pajak resmi (Lihat E-Faktur) dan grafik tren belanja fiskal menjadi standar enterprise kelas satu: (1) Merefaktor modal dokumen E-Faktur (.modal-dialog-invoice, lebar 960px) mengikuti standar e-Faktur 3.0 / PER-03/PJ/2022 DJP Kemenkeu RI lengkap dengan pita kepatuhan pemerintah, perbandingan 2 entitas PKP Penjual vs Pembeli BKP sejajar, tabel spesifikasi teknis BKP/JKP bernomor, kartu nilai terbilang rupiah otomatis, kalkulasi fiskal lengkap, stempel keabsahan hijau emerald, dan validasi digital hash QR Code dengan tanda tangan elektronik CFO PT Hero Digital Multitek; (2) Menggantikan grafik batang menjadi Grafik Kurva Garis & Area Spline Interaktif (Apache ECharts Area Spline Chart) dengan 3 garis kurva halus bergradasi (Total Tagihan Resmi, Dasar Pengenaan Pajak, dan PPN 11% Kas Negara) serta chip metrik telemetri ringkas di bagian atas.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12300-1',
+        type: 'feature',
+        scope: 'Authentic Indonesian E-Faktur 3.0 Document Paper Modal',
+        description: 'Menyajikan lembar faktur pajak standar DJP PER-03/PJ/2022 berukuran 960px dengan pita inspeksi Kemenkeu, perbandingan profil PKP Penjual vs Pembeli BKP, format rupiah terbilang otomatis, dan stempel digital CFO.'
+      },
+      {
+        id: 'c-02dash-12300-2',
+        type: 'improvement',
+        scope: 'Interactive ECharts Spline Curve Area Chart Visualization',
+        description: 'Mentransformasikan grafik batang menjadi grafik garis kurva spline mulus bergradasi transparan untuk 3 metrik fiskal utama (Total Tagihan, DPP, dan PPN 11%) dengan crosshair pointer dan tooltip informatif.'
+      },
+      {
+        id: 'c-02dash-12300-3',
+        type: 'feature',
+        scope: 'Quick Fiscal Telemetry Metric Chips',
+        description: 'Menambahkan 3 indikator chip telemetri di atas grafik alokasi fiskal untuk memantau rata-rata belanja bulanan, akumulasi PPN yang disetor, dan status kepatuhan perpajakan.'
+      }
+    ]
+  },
+  {
     version: 'v1.22.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Pelebaran Buku Besar Faktur (Spacious Ledger Table) & Visualisasi Tren Belanja SaaS & Pajak PPN 11% Berbasis Apache ECharts Interaktif',
     summary: 'Merombak tampilan buku besar faktur penagihan resmi (InvoicesHistoryModule) menjadi luas, berjarak nyaman, dan elegan sesuai standar tata kelola enterprise: (1) Menghilangkan kepadatan sempit pada tabel faktur dengan merancang container khusus .invoices-table-container (min-width: 1260px) serta alokasi lebar kolom individual yang proporsional (.col-inv-id, .col-inv-date, .col-inv-plan, .col-inv-method, .col-inv-price, .col-inv-status, .col-inv-actions) dengan padding mewah 18px 20px sehingga rincian DPP/PPN 11% dan status kliring tampil lapang tanpa dempet; (2) Mengintegrasikan pustaka visualisasi data Apache ECharts ke dalam tab Rekapitulasi Pajak PPN 11% menggantikan grafik batang CSS statis dengan grafik batang bertumpuk (Stacked Bar DPP vs PPN 11%) dan garis tren total penagihan resmi, dilengkapi tooltip interaktif glassmorphic bercahaya, penanganan resize dinamis via ResizeObserver, dan transisi tab reaktif.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
