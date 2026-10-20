@@ -6,6 +6,9 @@ import type {
   MediaAssetItem,
   CustomDomainItem,
   WebhookItem,
+  PersonalAccessToken,
+  PatScopeDefinition,
+  WebhookDeliveryLog,
   InvoiceItem,
   SupportTicketItem
 } from '../types/dashboard';
@@ -314,22 +317,175 @@ export const initialCmsPages: CmsPage[] = [
 
 export const initialMediaAssets: MediaAssetItem[] = [];
 
+export const availablePatScopes: PatScopeDefinition[] = [
+  // Konten & Headless CMS
+  {
+    id: 'content:read',
+    name: 'Baca Artikel & Halaman (Headless CMS)',
+    category: 'content',
+    categoryLabel: 'Konten & Headless CMS',
+    action: 'read',
+    description: 'Mengambil konten artikel, blog post, halaman statis, kategori, dan tags untuk Next.js / Nuxt / Mobile App.'
+  },
+  {
+    id: 'content:write',
+    name: 'Tulis & Sunting Draft Konten',
+    category: 'content',
+    categoryLabel: 'Konten & Headless CMS',
+    action: 'write',
+    description: 'Membuat draft artikel baru, update isi artikel, dan mengelola tag dari aplikasi eksternal.'
+  },
+  // Formulir & Leads CRM
+  {
+    id: 'leads:read',
+    name: 'Baca Data Leads & Pesan Masuk',
+    category: 'leads',
+    categoryLabel: 'Formulir Kontak & Leads CRM',
+    action: 'read',
+    description: 'Mengunduh data pengirim formulir kontak, pesan pengunjung, dan email newsletter ke sistem CRM eksternal.'
+  },
+  {
+    id: 'leads:write',
+    name: 'Kirim Data Submit Formulir',
+    category: 'leads',
+    categoryLabel: 'Formulir Kontak & Leads CRM',
+    action: 'write',
+    description: 'Mengirimkan payload form kontak dari landing page statis eksternal langsung ke database tenant.'
+  },
+  // Media Assets
+  {
+    id: 'media:read',
+    name: 'Akses Katalog Media & URL CDN',
+    category: 'media',
+    categoryLabel: 'Media Assets & CDN S3',
+    action: 'read',
+    description: 'Membaca daftar file gambar, thumbnail, dan link publik CDN Cloudflare/S3.'
+  },
+  {
+    id: 'media:upload',
+    name: 'Unggah Aset Gambar & Berkas Baru',
+    category: 'media',
+    categoryLabel: 'Media Assets & CDN S3',
+    action: 'upload',
+    description: 'Mengunggah file media (PNG, JPG, WebP, SVG, PDF) langsung ke bucket penyimpanan S3.'
+  },
+  // Telemetri & Analitik
+  {
+    id: 'telemetry:read',
+    name: 'Baca Ringkasan Metrik & Pageviews',
+    category: 'telemetry',
+    categoryLabel: 'Telemetri & Analitik',
+    action: 'read',
+    description: 'Membaca statistik hit rate harian, total tayangan halaman (pageviews), dan rata-rata TTFB latency.'
+  },
+  // Pusat Bantuan
+  {
+    id: 'tickets:read',
+    name: 'Pantau Status Tiket Bantuan',
+    category: 'tickets',
+    categoryLabel: 'Pusat Bantuan & Support',
+    action: 'read',
+    description: 'Melihat status tiket pertanyaan teknis, riwayat percakapan, dan SLA tanggapan tim support.'
+  }
+];
+
+export const initialPersonalAccessTokens: PersonalAccessToken[] = [
+  {
+    id: 'pat_1',
+    name: 'Mobile App Flutter (Headless Reader)',
+    tokenPrefix: 'hero_pat_9942_fltr',
+    tokenMasked: 'hero_pat_9942_••••••••••••e8a1',
+    scopes: ['content:read', 'media:read'],
+    createdAt: '10 Oktober 2026',
+    expiresAt: '90 Hari',
+    lastUsedAt: '12 menit lalu',
+    status: 'active'
+  },
+  {
+    id: 'pat_2',
+    name: 'Zapier Webhook Lead Forwarder',
+    tokenPrefix: 'hero_pat_9942_zapr',
+    tokenMasked: 'hero_pat_9942_••••••••••••92b4',
+    scopes: ['leads:read', 'leads:write'],
+    createdAt: '01 Oktober 2026',
+    expiresAt: 'Tidak Pernah',
+    lastUsedAt: '2 jam lalu',
+    status: 'active'
+  },
+  {
+    id: 'pat_3',
+    name: 'Marketing Site Next.js Jamstack',
+    tokenPrefix: 'hero_pat_9942_nxtj',
+    tokenMasked: 'hero_pat_9942_••••••••••••44cc',
+    scopes: ['content:read', 'media:read', 'leads:write', 'telemetry:read'],
+    createdAt: '15 September 2026',
+    expiresAt: '1 Tahun',
+    lastUsedAt: '3 menit lalu',
+    status: 'active'
+  }
+];
+
 export const initialWebhooks: WebhookItem[] = [
   {
     id: 'wh_1',
-    name: 'Discord Notification Bot',
+    name: 'Discord Notification Channel (#editorial-alerts)',
     url: 'https://discord.com/api/webhooks/12894.../hero-alerts',
-    events: ['site.deployed', 'form.submitted'],
+    secretKey: 'whsec_9942_dc_88a91c2d3e4f',
+    events: ['article.published', 'lead.received'],
     status: 'active',
     lastTriggered: '10 menit lalu'
   },
   {
     id: 'wh_2',
-    name: 'Slack Dev Channel Ingress',
+    name: 'Slack Leads & Growth Bot (#leads-crm)',
     url: 'https://hooks.slack.com/services/T00/B00/XXXXX',
-    events: ['site.deployed', 'traffic.anomaly'],
+    secretKey: 'whsec_9942_sl_77b82e3f4g5h',
+    events: ['lead.received', 'traffic.spike'],
     status: 'active',
     lastTriggered: '1 jam lalu'
+  }
+];
+
+export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
+  {
+    id: 'del_1',
+    webhookId: 'wh_1',
+    webhookName: 'Discord Notification Channel',
+    event: 'article.published',
+    statusCode: 200,
+    durationMs: 42,
+    timestamp: '10 menit lalu',
+    status: 'success'
+  },
+  {
+    id: 'del_2',
+    webhookId: 'wh_2',
+    webhookName: 'Slack Leads & Growth Bot',
+    event: 'lead.received',
+    statusCode: 200,
+    durationMs: 38,
+    timestamp: '1 jam lalu',
+    status: 'success'
+  },
+  {
+    id: 'del_3',
+    webhookId: 'wh_1',
+    webhookName: 'Discord Notification Channel',
+    event: 'ssl.renewed',
+    statusCode: 200,
+    durationMs: 45,
+    timestamp: '5 jam lalu',
+    status: 'success'
+  },
+  {
+    id: 'del_4',
+    webhookId: 'wh_2',
+    webhookName: 'Slack Leads & Growth Bot',
+    event: 'traffic.spike',
+    statusCode: 200,
+    durationMs: 39,
+    timestamp: '1 hari lalu',
+    status: 'success'
   }
 ];
 

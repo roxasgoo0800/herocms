@@ -191,13 +191,49 @@ export interface CustomDomainItem {
   addedDate: string;
 }
 
+export type PatScopeCategory = 'content' | 'leads' | 'media' | 'telemetry' | 'tickets';
+
+export interface PatScopeDefinition {
+  id: string;
+  name: string;
+  category: PatScopeCategory;
+  categoryLabel: string;
+  action: 'read' | 'write' | 'upload';
+  description: string;
+}
+
+export interface PersonalAccessToken {
+  id: string;
+  name: string;
+  tokenPrefix: string;
+  tokenMasked: string;
+  rawToken?: string;
+  scopes: string[];
+  createdAt: string;
+  expiresAt: string;
+  lastUsedAt: string;
+  status: 'active' | 'revoked' | 'expired';
+}
+
 export interface WebhookItem {
   id: string;
   name: string;
   url: string;
+  secretKey?: string;
   events: string[];
   status: 'active' | 'paused';
   lastTriggered: string;
+}
+
+export interface WebhookDeliveryLog {
+  id: string;
+  webhookId: string;
+  webhookName: string;
+  event: string;
+  statusCode: number;
+  durationMs: number;
+  timestamp: string;
+  status: 'success' | 'failed';
 }
 
 export interface InvoiceItem {

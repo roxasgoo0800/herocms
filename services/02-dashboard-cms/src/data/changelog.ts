@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.16.4',
+    version: 'v1.17.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.17.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Arsitektur Webhooks Notifikasi Event & Peluncuran Personal Access Tokens (PAT) dengan Granular Scopes Filter',
+    summary: 'Merombak total arsitektur modul Webhooks & API Developer menjadi sistem integrasi tingkat aplikasi yang aman dan terisolasi. Mengeliminasi kontrol lifecycle kontainer (stop/start/deploy) dan pipeline CI/CD dari API publik pengguna demi mencegah celah keamanan infrastruktur. Menghadirkan kapabilitas Personal Access Tokens (PAT) layaknya GitHub/Cloudflare dengan filter izin granular per kategori (Headless CMS, Prospek/Leads, CDN Media S3, Telemetri, dan Support), dialog pengungkapan token satu kali (One-Time Reveal) berstandar Zero-Knowledge, pembaruan webhook berfokus pada notifikasi event aman (Discord, Slack, Zapier), serta tabel inspeksi riwayat pengiriman payload (Delivery Logs) real-time.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11700-1',
+        type: 'feature',
+        scope: 'Personal Access Tokens (PAT) Engine & Granular Scopes Filter',
+        description: 'Menerapkan sistem Personal Access Tokens (PAT) dengan matriks filter izin (scopes) granular layaknya Cloudflare API Tokens dan GitHub PAT. Scopes terbagi ke dalam 5 kategori modular (content:read, content:write, leads:read, leads:write, media:read, media:upload, telemetry:read, tickets:read) dengan toggle "Pilih Semua" per kategori.'
+      },
+      {
+        id: 'c-02dash-11700-2',
+        type: 'security',
+        scope: 'Zero-Container Lifecycle API Policy & Zero-Knowledge Token Vault',
+        description: 'Menghapus endpoint dan skrip kontrol siklus hidup kontainer (start/stop/restart) serta alur CI/CD dari API publik tenant demi mengamankan isolasi docker host. Menambahkan dialog One-Time Token Reveal dengan peringatan keamanan ketat bahwa raw token tidak pernah disimpan di database server.'
+      },
+      {
+        id: 'c-02dash-11700-3',
+        type: 'feature',
+        scope: 'Outgoing Webhook Event Notification & Real-Time Delivery Logs Table',
+        description: 'Merefaktor webhook outgoing agar berfokus murni pada notifikasi event aplikasi aman (article.published, lead.received, ssl.renewed, traffic.spike, backup.completed) dengan header HMAC-SHA256 signature (X-HeroCMS-Signature), tombol simulasi Test Ping langsung, serta tabel riwayat log pengiriman (Delivery Logs) yang menampilkan HTTP 200 OK dan latensi dispatch.'
+      },
+      {
+        id: 'c-02dash-11700-4',
+        type: 'improvement',
+        scope: 'Headless REST API Interactive Documentation & Responsive UI',
+        description: 'Menambahkan tab dokumentasi interaktif Headless REST API v1 lengkap dengan contoh cuplikan kode cURL, TypeScript/Node.js SDK, Golang, dan Python, serta menjamin tata letak tombol aksi dan modal footers selalu berjejer rapi secara horizontal (side-by-side) tanpa wrapping ganjil di seluruh variasi resolusi layar.'
+      }
+    ]
+  },
+  {
     version: 'v1.16.4',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Perbaikan Full-Bleed Edge-to-Edge Visual Editor & Eliminasi Pemotongan Ruang Kosong Sebelah Kanan Lintas Layar',
     summary: 'Memperbaiki masalah penyusutan (shrink) dan pemotongan kanvas Visual Editor yang menyisakan ruang kosong (blank empty space) di sisi kanan layar pada resolusi laptop, desktop QHD (1440px), hingga 4K Ultrawide (2480px+). Mengisolasi kontainer editor (.is-editor-workspace) dari batasan max-width dan padding content-scroll-pane umum, menonaktifkan header duplikat saat mode editor aktif, serta memastikan area kanvas dan toolbar studio membentang 100% penuh dari tepi ke tepi (edge-to-edge full width).',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

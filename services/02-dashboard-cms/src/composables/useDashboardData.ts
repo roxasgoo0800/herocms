@@ -8,6 +8,9 @@ import type {
   MediaAssetItem,
   CustomDomainItem,
   WebhookItem,
+  PersonalAccessToken,
+  PatScopeDefinition,
+  WebhookDeliveryLog,
   InvoiceItem,
   ToastMessage,
   SupportTicketItem,
@@ -24,7 +27,10 @@ import {
   initialArticles,
   initialCmsPages,
   initialMediaAssets,
+  availablePatScopes,
+  initialPersonalAccessTokens,
   initialWebhooks,
+  initialWebhookDeliveryLogs,
   initialSupportTickets
 } from '../data/dashboard-seeds';
 import type { OfficialTemplateItem } from '../data/templates-data';
@@ -991,23 +997,120 @@ const deleteMedia = async (med: MediaAssetItem) => {
   }
 };
 
-// Webhooks & API Keys State
+// Personal Access Tokens (PAT) & Scoped API Keys State
+const patScopes = ref<PatScopeDefinition[]>([...availablePatScopes]);
+const personalAccessTokens = ref<PersonalAccessToken[]>([...initialPersonalAccessTokens]);
+const webhookDeliveryLogs = ref<WebhookDeliveryLog[]>([...initialWebhookDeliveryLogs]);
+
+const createPersonalAccessToken = (
+  name: string,
+  scopes: string[],
+  expiresOption: string = '90 Hari'
+): { token: PersonalAccessToken; rawToken: string } => {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let randomHash = '';
+  for (let i = 0; i < 32; i++) {
+    randomHash += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const prefix = `hero_pat_9942_${name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 4) || 'api'}`;
+  const rawToken = `${prefix}_${randomHash}`;
+  const suffix = randomHash.slice(-4);
+  const tokenMasked = `${prefix}_••••••••••••${suffix}`;
+
+  const newToken: PersonalAccessToken = {
+    id: `pat_${Date.now()}`,
+    name,
+    tokenPrefix: prefix,
+    tokenMasked,
+    rawToken,
+    scopes: [...scopes],
+    createdAt: 'Hari ini',
+    expiresAt: expiresOption,
+    lastUsedAt: 'Belum pernah digunakan',
+    status: 'active'
+  };
+
+  personalAccessTokens.value.unshift(newToken);
+  showToast(`Token '${name}' berhasil dibuat dengan ${scopes.length} cakupan scope!`, 'success');
+  return { token: newToken, rawToken };
+};
+
+const revokePersonalAccessToken = (id: string) => {
+  const token = personalAccessTokens.value.find(t => t.id === id);
+  if (token) {
+    token.status = 'revoked';
+    showToast(`Token '${token.name}' telah dicabut (revoked) dan akses dinonaktifkan.`, 'info');
+  }
+};
+
+const deletePersonalAccessToken = (id: string) => {
+  const idx = personalAccessTokens.value.findIndex(t => t.id === id);
+  if (idx !== -1) {
+    const deletedName = personalAccessTokens.value[idx].name;
+    personalAccessTokens.value.splice(idx, 1);
+    showToast(`Token '${deletedName}' telah dihapus permanen.`, 'info');
+  }
+};
+
+// Webhooks State & Event Notification Dispatcher
 const webhooks = ref<WebhookItem[]>([...initialWebhooks]);
 
-const apiKey = ref('hero_sec_live_9942a8b9c1d2e3f4g5h6');
-const isApiKeyRevealed = ref(false);
+const addWebhook = (name: string, url: string, events: string[], secretKey?: string) => {
+  const generatedSecret = secretKey || `whsec_9942_${Math.random().toString(36).substring(2, 10)}`;
+  const newWh: WebhookItem = {
+    id: `wh_${Date.now()}`,
+    name,
+    url,
+    secretKey: generatedSecret,
+    events: [...events],
+    status: 'active',
+    lastTriggered: 'Belum pernah dipicu'
+  };
+  webhooks.value.push(newWh);
+  showToast(`Webhook '${name}' berhasil didaftarkan!`, 'success');
+  return newWh;
+};
 
-const copyApiKey = () => {
-  navigator.clipboard.writeText(apiKey.value);
-  showToast('API Key disalin ke clipboard!', 'info');
+const deleteWebhook = (id: string) => {
+  const idx = webhooks.value.findIndex(w => w.id === id);
+  if (idx !== -1) {
+    const name = webhooks.value[idx].name;
+    webhooks.value.splice(idx, 1);
+    showToast(`Webhook '${name}' telah dihapus.`, 'info');
+  }
+};
+
+const toggleWebhookStatus = (id: string) => {
+  const wh = webhooks.value.find(w => w.id === id);
+  if (wh) {
+    wh.status = wh.status === 'active' ? 'paused' : 'active';
+    showToast(`Webhook '${wh.name}' kini ${wh.status === 'active' ? 'Aktif' : 'Dijeda'}.`, 'info');
+  }
 };
 
 const testWebhook = (wh: WebhookItem) => {
-  showToast(`Mengirim ping uji coba ke ${wh.name}...`, 'info');
+  showToast(`Mengirim simulasi event '${wh.events[0] || 'article.published'}' ke ${wh.name}...`, 'info');
   setTimeout(() => {
+    const duration = Math.floor(32 + Math.random() * 25);
     wh.lastTriggered = 'Baru saja';
-    showToast(`Webhook ${wh.name} sukses merespon HTTP 200 OK!`, 'success');
-  }, 1000);
+
+    const logEntry: WebhookDeliveryLog = {
+      id: `del_${Date.now()}`,
+      webhookId: wh.id,
+      webhookName: wh.name,
+      event: wh.events[0] || 'article.published',
+      statusCode: 200,
+      durationMs: duration,
+      timestamp: 'Baru saja',
+      status: 'success'
+    };
+    webhookDeliveryLogs.value.unshift(logEntry);
+    if (webhookDeliveryLogs.value.length > 20) {
+      webhookDeliveryLogs.value.pop();
+    }
+
+    showToast(`Webhook '${wh.name}' sukses merespon HTTP 200 OK (${duration}ms)!`, 'success');
+  }, 750);
 };
 
 // Helper to get current tenant author details dynamically
@@ -1629,10 +1732,16 @@ export function useDashboardData() {
     uploadMediaFiles,
     deleteMedia,
     webhooks,
-    apiKey,
-    isApiKeyRevealed,
-    copyApiKey,
+    addWebhook,
+    deleteWebhook,
+    toggleWebhookStatus,
     testWebhook,
+    patScopes,
+    personalAccessTokens,
+    webhookDeliveryLogs,
+    createPersonalAccessToken,
+    revokePersonalAccessToken,
+    deletePersonalAccessToken,
     supportTickets,
     selectedTicket,
     isCreateTicketModalOpen,
