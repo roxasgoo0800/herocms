@@ -64,11 +64,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '07-docs',
     name: 'Service 07: Docs & Mission Control Hub',
-    version: 'v1.4.1',
+    version: 'v1.5.0',
     serviceFolder: 'services/07-docs',
     badge: 'Latest',
     stack: 'Vue 3 • Go Native BFF (8087) • Docker',
-    lastUpdated: '19 Oktober 2026',
+    lastUpdated: '20 Oktober 2026',
     leadPic: 'Rizal & Paijo AI'
   }
 ];

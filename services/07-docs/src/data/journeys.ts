@@ -424,5 +424,77 @@ export const systemJourneys: SystemJourney[] = [
       }
     ],
     verificationCli: 'navigator.serviceWorker.getRegistration().then(r => r.sync.register("sync-article-drafts"))'
+  },
+  {
+    id: 'JRN-08',
+    title: 'Siklus Penagihan Resmi SaaS, Rekonsiliasi Fiskal PPN 11%, dan Penerbitan E-Faktur DJP Otomatis',
+    category: 'billing',
+    badge: 'E-Faktur & Fiscal Billing',
+    latencySla: '< 1.2 Detik Penerbitan E-Faktur',
+    summary: 'Alur end-to-end penagihan langganan cloud SaaS, kalkulasi Dasar Pengenaan Pajak (DPP) vs PPN 11% kas negara, rekonsiliasi kliring pembayaran multi-kanal, penerbitan dokumen E-Faktur resmi standar PER-03/PJ/2022, hingga pemetaan kurva tren alokasi fiskal interaktif.',
+    actors: [
+      'Tenant Finance Lead',
+      'HeroCMS Billing Store (Pinia)',
+      'SNAP Banking Gateway',
+      'HeroCMS BFF & Ledger Service',
+      'Apache ECharts Fiscal Engine'
+    ],
+    steps: [
+      {
+        stepNum: 1,
+        actor: 'Tenant Finance Lead',
+        action: 'Pemilihan Paket atau Checkout Cluster Kustom',
+        technicalDetail: 'Tenant memilih paket langganan (Starter/Pro/Enterprise) atau menentukan kapasitas CPU & RAM pada Kalkulator Simulasi Cluster. Pinia store useDashboardData mengkalkulasi DPP pokok, PPN 11%, dan total biaya serta mengarahkan ke kanal pembayaran.',
+        outcome: 'Invoice penagihan berstatus unconfirmed terbentuk dengan rincian kuota kontainer dan spesifikasi Traefik ingress.'
+      },
+      {
+        stepNum: 2,
+        actor: 'SNAP Banking Gateway',
+        action: 'Kliring Transaksi Multi-Kanal (BCA, QRIS, Visa, Mandiri)',
+        technicalDetail: 'Tenant menyelesaikan transfer pembayaran melalui Virtual Account, QRIS Dinamis, Kartu Korporat, atau Bill Payment. Banking gateway mengirimkan notifikasi settlement webhook ke backend yang diverifikasi dengan signature SHA512.',
+        outcome: 'Status tagihan berubah seketika menjadi LUNAS (Settled) dan kuota resource cluster tenant diaktifkan otomatis.'
+      },
+      {
+        stepNum: 3,
+        actor: 'HeroCMS BFF & Ledger Service',
+        action: 'Penerbitan Nomor Seri Faktur Pajak (NSFP) & Kode NTPN',
+        technicalDetail: 'Sistem penagihan secara otomatis mengalokasikan nomor seri faktur pajak DJP dan mencatatkan nomor bukti potong negara. ID Faktur INV-2026-XXXX diasosiasikan dengan NSFP 010.026-XX dan kode unik NTPN untuk keperluan audit pembukuan fiskal.',
+        outcome: 'Data transaksi tersimpan pada buku besar dengan status siap kredit pajak masukan.'
+      },
+      {
+        stepNum: 4,
+        actor: 'HeroCMS Billing Store (Pinia)',
+        action: 'Pencatatan Buku Besar Lapang (1260px)',
+        technicalDetail: 'Transaksi baru otomatis tampil pada tabel buku besar .invoices-ledger-table yang lega tanpa dempet. Tabel berdimensi min-width 1260px mengalokasikan lebar terdedikasi pada 7 kolom dengan padding sel 18px 20px.',
+        outcome: 'Pengguna dapat mencari, menyaring berdasarkan kanal bayar, dan menyalin nomor faktur dengan satu klik.'
+      },
+      {
+        stepNum: 5,
+        actor: 'HeroCMS Billing Store (Pinia)',
+        action: 'Rendering Lembar Dokumen E-Faktur 1200px Widescreen',
+        technicalDetail: 'Tenant mengklik "Lihat E-Faktur" untuk membuka lembar dokumen faktur pajak elektronik standar Kemenkeu RI. Modal 1200px merender KOP DJP PER-03/PJ/2022, perbandingan 2 entitas PKP Penjual vs Pembeli BKP, rincian BKP/JKP bernomor, nominal terbilang otomatis, dan QR Code approval DJP.',
+        outcome: 'Dokumen sah dapat langsung dicetak ke PDF atau diunduh sebagai arsip pembukuan keuangan.'
+      },
+      {
+        stepNum: 6,
+        actor: 'Apache ECharts Fiscal Engine',
+        action: 'Pemutakhiran Kurva Spline ECharts Alokasi Fiskal',
+        technicalDetail: 'Tab Rekapitulasi Pajak PPN 11% secara reaktif memperbarui visualisasi kurva area spline alokasi fiskal bulanan. Mesin ECharts canvas merender 3 garis kurva halus (Total Tagihan Resmi, DPP Pokok, dan PPN 11%) dengan crosshair pointer dan floating glassmorphic tooltip IDR.',
+        outcome: 'Tim manajemen dan finance memperoleh transparansi penuh mengenai tren pengeluaran SaaS dan setoran pajak masukan.'
+      }
+    ],
+    failureModes: [
+      {
+        issue: 'NPWP pembeli belum diisi pada profil wajib pajak saat penerbitan E-Faktur.',
+        detection: 'Validasi form tenantTaxProfile mendeteksi string kosong pada field NPWP.',
+        autoRecovery: 'Sistem otomatis mengarahkan ke Tab 3 (Profil Wajib Pajak) dengan Live Sync KOP Preview untuk melengkapi identitas perpajakan.'
+      },
+      {
+        issue: 'Wadah kontainer ECharts canvas belum terpasang di DOM saat perpindahan tab.',
+        detection: 'taxChartContainerRef bernilai null sebelum transisi tab selesai.',
+        autoRecovery: 'Gunakan watch(activeTab) yang dibungkus dengan nextTick() untuk menjamin kontainer DOM siap sebelum echarts.init() dipanggil.'
+      }
+    ],
+    verificationCli: 'cd services/02-dashboard-cms && go test -v ./pentest/... && npm run build'
   }
 ];
