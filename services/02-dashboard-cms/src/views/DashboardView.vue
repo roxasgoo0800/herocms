@@ -275,6 +275,7 @@ const handleLogout = async () => {
     <div
       class="app-shell"
       :class="{
+        'editor-active-mode': activeMenu === 'editor',
         'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden,
         'reader-immersive-mode': activeMenu === 'content' && activeArticleForReader && isReaderSidebarHidden,
         'dashboard-choreographed-enter': isDashboardEntering,
@@ -584,7 +585,7 @@ const handleLogout = async () => {
       </div>
 
       <!-- Main Dynamic Workspace View (Modular per-menu components) -->
-      <main class="content-scroll-pane">
+      <main class="content-scroll-pane" :class="{ 'is-editor-workspace': activeMenu === 'editor' }">
         <ContainersModule v-if="activeMenu === 'containers'" />
         <VisualEditorModule v-else-if="activeMenu === 'editor'" />
         <ContentArticlesModule v-else-if="activeMenu === 'content'" />

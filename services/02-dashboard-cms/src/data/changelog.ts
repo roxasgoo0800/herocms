@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.16.3',
+    version: 'v1.16.4',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.16.4',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Perbaikan Full-Bleed Edge-to-Edge Visual Editor & Eliminasi Pemotongan Ruang Kosong Sebelah Kanan Lintas Layar',
+    summary: 'Memperbaiki masalah penyusutan (shrink) dan pemotongan kanvas Visual Editor yang menyisakan ruang kosong (blank empty space) di sisi kanan layar pada resolusi laptop, desktop QHD (1440px), hingga 4K Ultrawide (2480px+). Mengisolasi kontainer editor (.is-editor-workspace) dari batasan max-width dan padding content-scroll-pane umum, menonaktifkan header duplikat saat mode editor aktif, serta memastikan area kanvas dan toolbar studio membentang 100% penuh dari tepi ke tepi (edge-to-edge full width).',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11604-1',
+        type: 'bugfix',
+        scope: 'Visual Editor Workspace Isolation (.is-editor-workspace)',
+        description: 'Menerapkan kelas khusus .is-editor-workspace pada kontainer utama saat activeMenu === "editor" dengan padding: 0 !important, margin: 0 !important, max-width: none !important, dan width: 100% !important. Mengeliminasi pembatasan max-width 1680px/1880px dari media queries Tier 3 & Tier 4 yang sebelumnya menyebabkan editor menyusut dan menyisakan ruang kosong di sebelah kanan.'
+      },
+      {
+        id: 'c-02dash-11604-2',
+        type: 'bugfix',
+        scope: 'Top Nav Header Auto-Hide on Editor Mode (.editor-active-mode)',
+        description: 'Menyembunyikan top-nav-header dashboard secara otomatis saat mode editor aktif sehingga tidak ada tumpang tindih header ganda dan visual editor mendapatkan ruang vertikal 100vh penuh secara native.'
+      },
+      {
+        id: 'c-02dash-11604-3',
+        type: 'improvement',
+        scope: 'Visual Studio Root & Viewport Sizing (visual-editor.css)',
+        description: 'Mengoptimalkan .visual-studio-root menjadi width: 100%; max-width: 100%; height: 100%; min-height: 100%; sehingga studio command bar, left dock, dan infinite canvas artboard dapat memanfaatkan 100% lebar layar secara presisi.'
+      },
+      {
+        id: 'c-02dash-11604-4',
+        type: 'bugfix',
+        scope: 'Reader Mode Grid Full Expansion (.reader-layout-grid)',
+        description: 'Menghapus batasan max-width 960px/1340px dan justify-content: start pada reader-layout-grid dan reader-editorial-hero di layar besar agar konten baca artikel membentang proporsional dan tidak terpotong sepihak di sisi kanan.'
+      }
+    ]
+  },
+  {
     version: 'v1.16.3',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Penataan Horizontal Sejajar (Side-by-Side Berjejer) untuk Grup Tombol Aksi, Card Action Bars, Modal Footers & Segmented Filter Bars',
     summary: 'Memperbaiki tata letak kelompok tombol aksi yang sebelumnya mengalami pemecahan baris baru ("enter gitu / stacking vertikal") sehingga kembali berjejer rapi secara horizontal (side-by-side) di seluruh resolusi (720px, 1080px, 1440px, 2480px+). Mengeliminasi paksaan flex-direction: column dan column-reverse pada card-action-bar, modal-footer, reader navigation bar, dan pod analytics footer. Menambahkan proteksi Universal Side-by-Side Button Protection di studio-master.css dengan scrollbar sentuh mulus (touch horizontal scrolling) saat ruang sempit.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

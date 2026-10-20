@@ -435,21 +435,26 @@ a[class*="btn-"] svg,
   }
 }
 
-/* Editor Immersive Mode: Hide Sidebar & Top Header for maximum wide workspace */
+/* Editor Immersive Mode & Active Mode: Full-bleed edge-to-edge canvas with zero constraints */
 .app-shell.editor-immersive-mode .app-sidebar {
   display: none !important;
 }
 
+.app-shell.editor-active-mode .top-nav-header,
 .app-shell.editor-immersive-mode .top-nav-header {
   display: none !important;
 }
 
-.app-shell.editor-immersive-mode .content-scroll-pane {
+.app-shell.editor-active-mode .content-scroll-pane,
+.app-shell.editor-immersive-mode .content-scroll-pane,
+.content-scroll-pane.is-editor-workspace {
   padding: 0 !important;
   margin: 0 !important;
-  width: 100vw !important;
+  max-width: none !important;
+  width: 100% !important;
   height: 100vh !important;
   overflow: hidden !important;
+  box-sizing: border-box !important;
 }
 
 /* Reader Immersive Mode: Hide Sidebar to provide distraction-free reading space */
@@ -20952,7 +20957,7 @@ a[class*="btn-"] svg,
     font-size: 0.76rem;
   }
 
-  .content-scroll-pane {
+  .content-scroll-pane:not(.is-editor-workspace) {
     padding: 14px 12px 48px;
   }
 
@@ -21465,7 +21470,7 @@ a[class*="btn-"] svg,
 
 /* 4. Tier 2: Screen 1080 (1024px to 1366px Laptops & Desktops) */
 @media (min-width: 721px) and (max-width: 1366px) {
-  .content-scroll-pane {
+  .content-scroll-pane:not(.is-editor-workspace) {
     padding: 24px 26px 56px;
   }
 
@@ -21507,7 +21512,7 @@ a[class*="btn-"] svg,
 
 /* 5. Tier 3: Screen 1440 (1367px to 1919px QHD / 2K Desktops) */
 @media (min-width: 1367px) and (max-width: 1919px) {
-  .content-scroll-pane {
+  .content-scroll-pane:not(.is-editor-workspace) {
     max-width: 1680px;
     margin: 0 auto;
     padding: 28px 36px 64px;
@@ -21537,12 +21542,23 @@ a[class*="btn-"] svg,
   .reader-layout-grid {
     grid-template-columns: minmax(0, 1fr) 320px;
     gap: 28px;
+    width: 100%;
+  }
+
+  .reader-main-content {
+    max-width: none;
+    width: 100%;
+  }
+
+  .reader-editorial-hero {
+    max-width: none;
+    width: 100%;
   }
 }
 
 /* 6. Tier 4: Screen 2480+ (4K UHD 2160p / 2480px / 3840px / Ultrawide) */
 @media (min-width: 1920px) {
-  .content-scroll-pane {
+  .content-scroll-pane:not(.is-editor-workspace) {
     max-width: 1880px;
     margin: 0 auto;
     padding: 34px 48px 80px;
@@ -21567,17 +21583,19 @@ a[class*="btn-"] svg,
   }
 
   .reader-layout-grid {
-    grid-template-columns: minmax(0, 960px) 340px;
+    grid-template-columns: minmax(0, 1fr) 340px;
     gap: 36px;
-    justify-content: start;
+    width: 100%;
   }
 
   .reader-main-content {
-    max-width: 960px;
+    max-width: none;
+    width: 100%;
   }
 
   .reader-editorial-hero {
-    max-width: 1340px;
+    max-width: none;
+    width: 100%;
   }
 
   .pro-panel {
@@ -21586,7 +21604,7 @@ a[class*="btn-"] svg,
 }
 
 @media (min-width: 2400px) {
-  .content-scroll-pane {
+  .content-scroll-pane:not(.is-editor-workspace) {
     max-width: 2340px;
     padding: 40px 64px 96px;
   }
