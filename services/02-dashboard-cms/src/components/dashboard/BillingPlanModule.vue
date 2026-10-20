@@ -16,7 +16,9 @@ import {
   X,
   ShieldCheck,
   Calculator,
-  ArrowRight
+  Building2,
+  QrCode,
+  RefreshCw
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { SubscriptionPlanCatalogItem, ContainerSite } from '../../types/dashboard';
@@ -26,10 +28,11 @@ const {
   usedContainersCount,
   containers,
   subscriptionPlansCatalog,
-  changeUserPlan,
   activeContainerId,
   activeMenu,
   openCreateModal,
+  openInvoiceDetail,
+  processBillingPaymentAndCreateInvoice,
   showToast
 } = useDashboardData();
 
@@ -50,29 +53,107 @@ const decrementAddon = () => {
   if (addonSlotQty.value > 1) addonSlotQty.value--;
 };
 
-const handleBuyAddon = () => {
-  userPlan.value.maxContainers += addonSlotQty.value;
-  showToast(`Berhasil menambahkan ${addonSlotQty.value} slot kontainer! Kuota kini ${userPlan.value.maxContainers} kontainer.`, 'success');
-  addonSlotQty.value = 1;
-};
+// Checkout & Integrated Payment State
+interface CheckoutData {
+  type: 'addon' | 'upgrade';
+  title: string;
+  description: string;
+  qty?: number;
+  planId?: 'starter' | 'pro' | 'agency';
+  planName?: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  newContainersCount: number;
+  targetPlan?: SubscriptionPlanCatalogItem;
+}
 
-// Modals State
-const isUpgradeModalOpen = ref(false);
-const selectedTargetPlan = ref<SubscriptionPlanCatalogItem | null>(null);
-const selectedPaymentMethod = ref('visa');
+const isCheckoutModalOpen = ref(false);
+const checkoutData = ref<CheckoutData | null>(null);
+const checkoutPaymentMethod = ref('BCA Virtual Account (Auto-Debit)');
+const isProcessingPayment = ref(false);
 
 const isPaymentModalOpen = ref(false);
 const activeBillingCard = ref('Visa Card •••• 4242');
 
-const openUpgradeModal = (plan: SubscriptionPlanCatalogItem) => {
-  selectedTargetPlan.value = plan;
-  isUpgradeModalOpen.value = true;
+const openAddonCheckout = () => {
+  const subtotal = addonSlotQty.value * 49000;
+  const tax = Math.round(subtotal * 0.11);
+  const total = subtotal + tax;
+  checkoutData.value = {
+    type: 'addon',
+    title: `Ekspansi +${addonSlotQty.value} Slot Kontainer Docker`,
+    description: `Penambahan kapasitas runtime ${addonSlotQty.value} kontainer otonom dengan isolasi CPU/RAM cgroups v2 dan rute Traefik SSL mandiri.`,
+    qty: addonSlotQty.value,
+    subtotal,
+    tax,
+    total,
+    newContainersCount: userPlan.value.maxContainers + addonSlotQty.value
+  };
+  isCheckoutModalOpen.value = true;
 };
 
-const confirmUpgradePlan = () => {
-  if (!selectedTargetPlan.value) return;
-  changeUserPlan(selectedTargetPlan.value.id);
-  isUpgradeModalOpen.value = false;
+const openUpgradeCheckout = (plan: SubscriptionPlanCatalogItem) => {
+  const subtotal = billingCycle.value === 'monthly' ? plan.priceMonthly : plan.priceAnnualMonthly * 12;
+  const tax = Math.round(subtotal * 0.11);
+  const total = subtotal + tax;
+  checkoutData.value = {
+    type: 'upgrade',
+    title: `Upgrade Paket Langganan: ${plan.name}`,
+    description: `Migrasi paket ke ${plan.name} (${plan.containers} Kontainer, ${plan.cpu}, ${plan.ram}, ${plan.storage}).`,
+    planId: plan.id,
+    planName: plan.name,
+    subtotal,
+    tax,
+    total,
+    newContainersCount: plan.containers,
+    targetPlan: plan
+  };
+  isCheckoutModalOpen.value = true;
+};
+
+const processCheckoutPayment = () => {
+  if (!checkoutData.value) return;
+  isProcessingPayment.value = true;
+
+  setTimeout(() => {
+    const data = checkoutData.value!;
+    let invoicePlanName = data.title;
+    const periodStr = '20 Okt 2026 - 20 Nov 2026';
+
+    if (data.type === 'addon' && data.qty) {
+      userPlan.value.maxContainers += data.qty;
+      invoicePlanName = `Ekspansi +${data.qty} Slot Kontainer Docker (cgroups v2)`;
+    } else if (data.type === 'upgrade' && data.targetPlan) {
+      const p = data.targetPlan;
+      userPlan.value = {
+        name: p.name,
+        price: `${p.priceMonthlyFormatted} / bln`,
+        maxContainers: p.containers,
+        cpuPerContainer: p.cpu,
+        ramPerContainer: p.ram,
+        storageQuota: p.storage
+      };
+      invoicePlanName = `${p.name} (Multi-Tenant Docker Cluster)`;
+    }
+
+    // GENERATE OFFICIAL INVOICE REAL-TIME IN INVOICE LEDGER
+    const newInvoice = processBillingPaymentAndCreateInvoice({
+      planName: invoicePlanName,
+      amount: data.subtotal,
+      paymentMethod: checkoutPaymentMethod.value,
+      period: periodStr,
+      containerQuota: userPlan.value.maxContainers
+    });
+
+    isProcessingPayment.value = false;
+    isCheckoutModalOpen.value = false;
+
+    showToast(`Pembayaran Rp ${data.total.toLocaleString('id-ID')} Berhasil! Faktur ${newInvoice.id} resmi terbit & kuota aktif.`, 'success');
+
+    // Immediately open the generated official invoice document modal for the user!
+    openInvoiceDetail(newInvoice);
+  }, 600);
 };
 
 const savePaymentMethod = () => {
@@ -229,10 +310,10 @@ const simulatedCost = computed(() => {
     <div v-if="activeTab === 'allocation'" class="billing-hero-grid">
       <!-- Left Column: Active Plan Crown Card & Pod Topology Visualizer -->
       <div class="billing-left-stack">
-        <!-- 1. The Crown Jewel Active Plan Card -->
+        <!-- 1. The Crown Jewel Active Plan Card (Refactored: Non-Overlapping Clean Header) -->
         <div class="plan-crown-card">
-          <div class="plan-banner-top">
-            <div class="plan-title-block">
+          <div class="plan-crown-header">
+            <div class="plan-crown-title-group">
               <span class="plan-crown-badge">
                 <span class="pulse-mini-dot"></span>
                 PAKET AKTIF SAAT INI • {{ userPlan.name }}
@@ -243,10 +324,10 @@ const simulatedCost = computed(() => {
               </p>
             </div>
 
-            <div class="plan-price-block">
-              <div class="plan-rate">{{ userPlan.price }}</div>
-              <span class="plan-period">Tagihan berikutnya: 12 November 2026</span>
-              <button @click="activeTab = 'plans'" class="btn-upgrade-action">
+            <div class="plan-crown-price-group">
+              <div class="plan-crown-rate">{{ userPlan.price }}</div>
+              <span class="plan-crown-period">Tagihan berikutnya: 12 November 2026</span>
+              <button type="button" @click="activeTab = 'plans'" class="btn-crown-upgrade">
                 <Sparkles :size="13" />
                 <span>Ganti / Upgrade Paket</span>
               </button>
@@ -385,7 +466,7 @@ const simulatedCost = computed(() => {
 
       <!-- Right Column: Add-on Slot Machine & Enterprise Callout -->
       <div class="billing-right-stack">
-        <!-- 1. Add-on Slot Machine Card -->
+        <!-- 1. Add-on Slot Machine Card with Integrated Checkout -->
         <div class="pro-panel addon-expansion-card">
           <div class="addon-badge">
             <Sparkles :size="12" />
@@ -422,7 +503,8 @@ const simulatedCost = computed(() => {
               </div>
             </div>
 
-            <button class="btn-confirm-addon" @click="handleBuyAddon">
+            <!-- Triggers Integrated Checkout Modal -->
+            <button class="btn-confirm-addon" @click="openAddonCheckout">
               <Plus :size="15" />
               <span>Tambah +{{ addonSlotQty }} Slot Sekarang</span>
             </button>
@@ -532,7 +614,7 @@ const simulatedCost = computed(() => {
             </ul>
           </div>
 
-          <!-- Bottom Action Button -->
+          <!-- Bottom Action Button with Integrated Checkout -->
           <div style="margin-top: 14px;">
             <button
               v-if="userPlan.name.toLowerCase().includes(plan.name.toLowerCase())"
@@ -545,9 +627,9 @@ const simulatedCost = computed(() => {
             <button
               v-else
               class="btn-plan-select"
-              @click="openUpgradeModal(plan)"
+              @click="openUpgradeCheckout(plan)"
             >
-              <span>Pilih / Beralih ke Paket Ini</span>
+              <span>Pilih & Bayar Paket Ini</span>
               <ChevronRight :size="13" />
             </button>
           </div>
@@ -666,125 +748,181 @@ const simulatedCost = computed(() => {
     </div>
 
     <!-- ================================================================= -->
-    <!-- MODAL 1: KONFIRMASI UPGRADE / GANTI PAKET LANGGANAN -->
+    <!-- MODAL 1: CHECKOUT PEMBAYARAN INSTAN & PENERBITAN FAKTUR RESMI -->
     <!-- ================================================================= -->
     <Teleport to="body">
       <div
-        v-if="isUpgradeModalOpen && selectedTargetPlan"
+        v-if="isCheckoutModalOpen && checkoutData"
         class="modal-backdrop"
-        @click.self="isUpgradeModalOpen = false"
+        @click.self="isCheckoutModalOpen = false"
       >
-        <div class="modal-dialog modal-dialog-upgrade">
+        <div class="modal-dialog modal-dialog-checkout">
+          <!-- Modal Header -->
           <div class="modal-header">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
-                <Sparkles :size="18" />
+                <CreditCard :size="18" />
               </div>
               <div>
-                <h3 class="modal-heading">Konfirmasi Perubahan Paket Langganan</h3>
-                <p class="modal-subheading">Periksa penyesuaian alokasi resource kontainer dan metode pembayaran.</p>
+                <h3 class="modal-heading">Checkout & Aktivasi Layanan Instan</h3>
+                <p class="modal-subheading">Selesaikan pembayaran untuk mengaktifkan kuota runtime dan menerbitkan E-Faktur resmi.</p>
               </div>
             </div>
-            <button class="modal-close-button" @click="isUpgradeModalOpen = false" title="Tutup">
+            <button class="modal-close-button" @click="isCheckoutModalOpen = false" title="Tutup">
               <X :size="16" />
             </button>
           </div>
 
           <div class="modal-form-body">
-            <!-- Comparison Strip -->
-            <div class="upgrade-comparison-strip">
-              <div class="upgrade-plan-box">
-                <span class="upgrade-plan-label">Paket Saat Ini</span>
-                <span class="upgrade-plan-name">{{ userPlan.name }}</span>
-                <span class="upgrade-plan-price">{{ userPlan.price }}</span>
-              </div>
+            <!-- 1. Order Summary Box -->
+            <div class="checkout-summary-box">
+              <div class="checkout-item-title">{{ checkoutData.title }}</div>
+              <p class="checkout-item-desc">{{ checkoutData.description }}</p>
 
-              <div class="upgrade-arrow-glyph">
-                <ArrowRight :size="20" />
-              </div>
-
-              <div class="upgrade-plan-box" style="text-align: right;">
-                <span class="upgrade-plan-label">Paket Baru Target</span>
-                <span class="upgrade-plan-name" style="color: #2563eb;">{{ selectedTargetPlan.name }}</span>
-                <span class="upgrade-plan-price">{{ selectedTargetPlan.priceMonthlyFormatted }} / bln</span>
-              </div>
+              <table class="checkout-calc-table">
+                <tbody>
+                  <tr>
+                    <td>Dasar Pengenaan Pajak (DPP)</td>
+                    <td style="text-align: right; font-weight: 600;">Rp {{ checkoutData.subtotal.toLocaleString('id-ID') }}</td>
+                  </tr>
+                  <tr>
+                    <td>Pajak Pertambahan Nilai (PPN 11%)</td>
+                    <td style="text-align: right; font-weight: 600; color: #059669;">Rp {{ checkoutData.tax.toLocaleString('id-ID') }}</td>
+                  </tr>
+                  <tr class="total-row">
+                    <td>Total Tagihan Bersih</td>
+                    <td style="text-align: right;">Rp {{ checkoutData.total.toLocaleString('id-ID') }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <!-- Resource Differences Table -->
-            <table class="upgrade-specs-table">
-              <thead>
-                <tr>
-                  <th>Spesifikasi Sumber Daya</th>
-                  <th>Sebelumnya</th>
-                  <th>Setelah Upgrade</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Slot Kontainer Docker</strong></td>
-                  <td>{{ userPlan.maxContainers }} Kontainer</td>
-                  <td><strong style="color: #059669;">{{ selectedTargetPlan.containers }} Kontainer Otonom</strong></td>
-                </tr>
-                <tr>
-                  <td><strong>Dedicated vCPU Limit</strong></td>
-                  <td>{{ userPlan.cpuPerContainer }}</td>
-                  <td><strong style="color: #059669;">{{ selectedTargetPlan.cpu }}</strong></td>
-                </tr>
-                <tr>
-                  <td><strong>Memori RAM per Kontainer</strong></td>
-                  <td>{{ userPlan.ramPerContainer }}</td>
-                  <td><strong style="color: #059669;">{{ selectedTargetPlan.ram }}</strong></td>
-                </tr>
-                <tr>
-                  <td><strong>NVMe S3 Media Bucket</strong></td>
-                  <td>{{ userPlan.storageQuota }}</td>
-                  <td><strong style="color: #059669;">{{ selectedTargetPlan.storage }}</strong></td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Payment Method Selection -->
-            <div class="form-group-block">
+            <!-- 2. Select Payment Method Grid -->
+            <div class="form-group-block" style="margin-bottom: 14px;">
               <label class="input-label-row">
-                <span class="label-text">Pilih Sumber Pembayaran Tagihan</span>
+                <span class="label-text">Pilih Metode Pembayaran</span>
+                <span class="label-badge-optional">Verifikasi Instan</span>
               </label>
-              <select v-model="selectedPaymentMethod" class="form-select-input">
-                <option value="visa">Visa Card •••• 4242 (Default)</option>
-                <option value="qris">QRIS Otomatis (GoPay, OVO, ShopeePay)</option>
-                <option value="bca">BCA Virtual Account (Auto Confirm)</option>
-                <option value="mandiri">Mandiri Bill Payment</option>
-              </select>
+
+              <div class="checkout-methods-grid">
+                <div
+                  class="checkout-method-card"
+                  :class="{ active: checkoutPaymentMethod === 'BCA Virtual Account (Auto-Debit)' }"
+                  @click="checkoutPaymentMethod = 'BCA Virtual Account (Auto-Debit)'"
+                >
+                  <div class="checkout-method-icon">
+                    <Building2 :size="16" />
+                  </div>
+                  <div class="checkout-method-info">
+                    <strong>BCA Virtual Account</strong>
+                    <span>Auto-Debit / Kliring Instan</span>
+                  </div>
+                </div>
+
+                <div
+                  class="checkout-method-card"
+                  :class="{ active: checkoutPaymentMethod === 'QRIS Dinamis (GoPay / OVO / Dana)' }"
+                  @click="checkoutPaymentMethod = 'QRIS Dinamis (GoPay / OVO / Dana)'"
+                >
+                  <div class="checkout-method-icon">
+                    <QrCode :size="16" />
+                  </div>
+                  <div class="checkout-method-info">
+                    <strong>QRIS Dinamis</strong>
+                    <span>GoPay, OVO, ShopeePay</span>
+                  </div>
+                </div>
+
+                <div
+                  class="checkout-method-card"
+                  :class="{ active: checkoutPaymentMethod === 'Visa Card •••• 4242' }"
+                  @click="checkoutPaymentMethod = 'Visa Card •••• 4242'"
+                >
+                  <div class="checkout-method-icon">
+                    <CreditCard :size="16" />
+                  </div>
+                  <div class="checkout-method-info">
+                    <strong>Visa •••• 4242</strong>
+                    <span>Kartu Kredit / Debit Default</span>
+                  </div>
+                </div>
+
+                <div
+                  class="checkout-method-card"
+                  :class="{ active: checkoutPaymentMethod === 'Mandiri Bill Payment' }"
+                  @click="checkoutPaymentMethod = 'Mandiri Bill Payment'"
+                >
+                  <div class="checkout-method-icon">
+                    <Layers :size="16" />
+                  </div>
+                  <div class="checkout-method-info">
+                    <strong>Mandiri Bill</strong>
+                    <span>ATM / Livin' Mandiri</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <!-- Prorated Advisory Notice -->
-            <div class="api-notice-banner" style="margin-bottom: 16px;">
-              <div class="notice-icon-box">
-                <ShieldCheck :size="16" />
+            <!-- 3. Dynamic Payment Simulation Preview Box -->
+            <div class="checkout-pay-preview-box">
+              <div v-if="checkoutPaymentMethod.includes('QRIS')" class="checkout-qr-box">
+                <QrCode :size="48" />
               </div>
-              <div class="notice-content">
-                <h4 class="notice-title">Perhitungan Prorata Otomatis</h4>
-                <p class="notice-desc">
-                  Sisa tagihan siklus aktif Anda akan dikreditkan secara prorata untuk mengurangi biaya tagihan pertama paket baru.
+              <div v-else-if="checkoutPaymentMethod.includes('BCA')" style="width: 50px; height: 50px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <Building2 :size="24" />
+              </div>
+              <div v-else style="width: 50px; height: 50px; border-radius: 8px; background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <CreditCard :size="24" />
+              </div>
+
+              <div>
+                <strong style="font-size: 13px; color: #0f172a; display: block; margin-bottom: 2px;">
+                  {{ checkoutPaymentMethod }}
+                </strong>
+                <p v-if="checkoutPaymentMethod.includes('QRIS')" style="font-size: 11.5px; color: #64748b; margin: 0;">
+                  Pindai QRIS di atas dengan aplikasi e-wallet pilihan Anda. Status pembayaran akan terverifikasi otomatis.
+                </p>
+                <p v-else-if="checkoutPaymentMethod.includes('BCA')" style="font-size: 11.5px; color: #64748b; margin: 0;">
+                  Nomor VA: <strong>8802 9942 1089</strong> • Bank Central Asia. Tagihan terverifikasi seketika setelah transfer.
+                </p>
+                <p v-else style="font-size: 11.5px; color: #64748b; margin: 0;">
+                  Tagihan sebesar Rp {{ checkoutData.total.toLocaleString('id-ID') }} akan otomatis diproses via payment gateway.
                 </p>
               </div>
             </div>
 
-            <!-- Modal Footer Actions (Guaranteed Side-by-Side) -->
+            <!-- Legal Notice -->
+            <div class="api-notice-banner" style="margin-bottom: 18px;">
+              <div class="notice-icon-box">
+                <ShieldCheck :size="16" />
+              </div>
+              <div class="notice-content">
+                <h4 class="notice-title">Penerbitan E-Faktur Resmi Otomatis</h4>
+                <p class="notice-desc">
+                  Begitu pembayaran berhasil, dokumen faktur pajak elektronik resmi ber-NPWP PT Hero Digital Multitek akan langsung terbit dan tercatat di buku besar akun Anda.
+                </p>
+              </div>
+            </div>
+
+            <!-- Modal Footer (Guaranteed Side-by-Side) -->
             <div class="modal-footer-row">
               <button
                 type="button"
                 class="btn-modal-ghost"
-                @click="isUpgradeModalOpen = false"
+                :disabled="isProcessingPayment"
+                @click="isCheckoutModalOpen = false"
               >
                 Batal
               </button>
               <button
                 type="button"
                 class="btn-modal-confirm"
-                @click="confirmUpgradePlan"
+                :disabled="isProcessingPayment"
+                @click="processCheckoutPayment"
               >
-                <Check :size="14" />
-                <span>Konfirmasi & Terapkan Paket Sekarang</span>
+                <RefreshCw v-if="isProcessingPayment" :size="14" class="spin-anim" />
+                <Check v-else :size="14" />
+                <span>{{ isProcessingPayment ? 'Memproses Kliring Bank...' : `Bayar Rp ${checkoutData.total.toLocaleString('id-ID')} & Terbitkan Faktur` }}</span>
               </button>
             </div>
           </div>

@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.19.0',
+    version: 'v1.19.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.19.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Perbaikan Penumpukan Tombol Upgrade Paket & Integrasi Alur Checkout Pembayaran Langsung dengan E-Faktur Otomatis',
+    summary: 'Memperbaiki tata letak header kartu paket berjalan (.plan-crown-header) untuk mengeliminasi penumpukan teks dan tombol "Ganti / Upgrade Paket" di semua resolusi layar (720p, 1080p, 1440p, 2480p+). Menambahkan alur Checkout & Pembayaran Langsung terpadu pada penambahan slot kontainer maupun upgrade paket langganan (mendukung 4 metode pembayaran: BCA VA, QRIS Dinamis, Visa Corporate, Mandiri Bill) yang secara instan menerbitkan Faktur Pajak Resmi (E-Faktur PPN 11%) ke buku besar faktur serta langsung memunculkan pratinjau dokumen faktur lunas siap cetak/unduh.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11910-1',
+        type: 'bugfix',
+        scope: 'Plan Crown Header Non-Overlapping Layout Protection',
+        description: 'Meredesain struktur kartu paket utama menggunakan .plan-crown-header terpisah dengan grouping judul dan harga otomatis, mencegah tombol aksi bertumpuk di atas deskripsi kuota pada viewport 720p dan 1080p.'
+      },
+      {
+        id: 'c-02dash-11910-2',
+        type: 'feature',
+        scope: 'Integrated Instant Checkout & Payment Gateway Modal',
+        description: 'Menyediakan modal checkout terintegrasi (680px) untuk penambahan slot kontainer dan upgrade paket dengan kalkulasi DPP + PPN 11%, instruksi pembayaran instan, dan 4 kanal pembayaran resmi.'
+      },
+      {
+        id: 'c-02dash-11910-3',
+        type: 'feature',
+        scope: 'Automatic Tax E-Faktur Issuance & Reactive Ledger Sync',
+        description: 'Otomatisasi penerbitan faktur pajak lunas (INV-2026-10-XXXX) ke dalam buku besar InvoicesHistoryModule begitu pembayaran dikonfirmasi, sekaligus memunculkan dialog dokumen E-Faktur resmi seketika.'
+      }
+    ]
+  },
+  {
     version: 'v1.19.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Refaktor Modul Faktur & Riwayat Tagihan Resmi (E-Faktur): Buku Besar, Rekapitulasi Pajak PPN 11% & Profil Wajib Pajak Badan',
     summary: 'Merombak antarmuka modul Faktur & Invoice resmi menjadi sistem penagihan enterprise komprehensif 3-Tab: (1) Buku Besar Faktur interaktif dengan pencarian cepat, filter tahun, clickable row inspection, dan ekspor batch dokumen; (2) Tab Rekapitulasi Pajak PPN 11% & Tren Belanja SaaS menampilkan historis pengeluaran bulanan dan sertifikat kepatuhan fiskal terintegrasi; (3) Tab Pengaturan Profil Wajib Pajak untuk mengonfigurasi identitas PT/Badan Usaha, NPWP 16 digit format baru, alamat kantor resmi, serta otomatisasi pengiriman PDF faktur pajak ke email finance; (4) Pembaruan lembar E-Faktur resmi dengan stempel digital QR Code validasi DJP dan rincian DPP & PPN 11% sesuai PMK-60/PMK.03/2022.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

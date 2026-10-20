@@ -746,6 +746,35 @@ sistem penagihan otomatis HeroCMS Cloud Platform.`;
   showToast(`Faktur ${inv.id} berhasil diunduh!`, 'success');
 };
 
+const processBillingPaymentAndCreateInvoice = (params: {
+  planName: string;
+  amount: number;
+  paymentMethod: string;
+  period: string;
+  containerQuota: number;
+}): InvoiceItem => {
+  const tax = Math.round(params.amount * 0.11);
+  const total = params.amount + tax;
+  const newInvoiceId = `INV-2026-10-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  const newInvoice: InvoiceItem = {
+    id: newInvoiceId,
+    date: '20 Okt 2026',
+    dueDate: '20 Okt 2026',
+    planName: params.planName,
+    period: params.period,
+    amount: params.amount,
+    tax: tax,
+    total: total,
+    status: 'paid',
+    paymentMethod: params.paymentMethod,
+    containerQuota: params.containerQuota
+  };
+
+  invoices.value.unshift(newInvoice);
+  return newInvoice;
+};
+
 // Custom Domains State
 const normalizeCustomDomain = (dom: any): CustomDomainItem => {
   return {
@@ -1775,6 +1804,7 @@ export function useDashboardData() {
     isInvoiceDetailModalOpen,
     openInvoiceDetail,
     downloadInvoiceReceipt,
+    processBillingPaymentAndCreateInvoice,
     customDomains,
     newDomainInput,
     targetContainerForDomain,
