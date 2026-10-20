@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.18.0',
+    version: 'v1.18.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.18.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Penguatan Proteksi Universal Side-by-Side Baris Aksi Tabel & Sinkronisasi Faktur Tagihan Oktober',
+    summary: 'Menerapkan proteksi tata letak tombol baris aksi universal (Anti-Enter / Strict Non-Wrapping) untuk seluruh tabel dan kartu (.row-actions, .ticket-col-actions, .endpoint-actions, .page-card-actions) di semua variasi resolusi layar (720p, 1080p, 1440p, 2480p+). Memperbarui dataset riwayat penagihan resmi dengan faktur periode berjalan Oktober 2026 dan menyinkronkan jadwal perpanjangan otomatis berikutnya ke 15 November 2026.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11801-1',
+        type: 'improvement',
+        scope: 'Universal Side-by-Side Action Buttons Enforced',
+        description: 'Menjamin seluruh tombol aksi baris tabel (Lihat E-Faktur, Unduh, Selesaikan Tiket, Hapus, Salin) tetap berdampingan horizontal tanpa mengalami pematahan baris canggung di resolusi rendah maupun tinggi.'
+      },
+      {
+        id: 'c-02dash-11801-2',
+        type: 'fix',
+        scope: 'Current October 2026 Billing Invoice & Telemetry Sync',
+        description: 'Menyinkronkan data invoice periode berjalan INV-2026-10-0994 (Lunas) dan memperbarui telemetri jadwal penagihan berikutnya menjadi 15 November 2026.'
+      }
+    ]
+  },
+  {
     version: 'v1.18.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Refaktor Eye-Catching Modul Kapasitas Runtime & Paket Langganan: Peta Topologi Pod Node, Matriks 3-Tier Harga & Simulator Custom Cluster',
     summary: 'Merombak tampilan dan kapabilitas fungsional modul Kapasitas Runtime & Paket Langganan menjadi sangat atraktif, intuitif, dan responsif (720p hingga 2480p+). Menghadirkan: (1) Cluster 4 Kartu Telemetri Komersial real-time (Slot Kontainer, CPU CFS, RAM cgroups v2, S3 Storage); (2) Crown Jewel Plan Card dengan visual ambient top gradient, kapsul kapabilitas aktif, dan manajemen metode penagihan; (3) Peta Topologi Slot Node interaktif yang memvisualisasikan kontainer aktif lengkap dengan telemetri runtime serta slot kosong siap deploy; (4) Matriks 3-Tier Pilihan Paket (Starter, Pro, Agency) dengan toggle siklus Bulanan vs Tahunan (Diskon 20%) dan modal konfirmasi perubahan paket prorata; (5) Kalkulator Simulasi Resource Cluster Kustom dinamis dengan slider interaktif dan kalkulasi PPN 11%.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

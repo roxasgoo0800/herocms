@@ -23600,6 +23600,36 @@ a[class*="btn-"] svg,
     }
   }
 
+  /* Universal Anti-Enter / Side-by-Side Protection for Row Action Groups (720p - 2480p+) */
+  .row-actions,
+  .ticket-col-actions,
+  .endpoint-actions,
+  .page-card-actions,
+  .card-actions-group,
+  .domain-header-actions,
+  .header-actions {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+  }
+
+  .row-actions button,
+  .row-actions a,
+  .ticket-col-actions button,
+  .ticket-col-actions a,
+  .endpoint-actions button,
+  .page-card-actions button,
+  .header-actions button,
+  .btn-invoice-view,
+  .btn-invoice-dl,
+  .btn-resolve-quick,
+  .btn-open-thread {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
   /* Article Detail & Reader Responsiveness on 720px */
   .reader-header-nav-bar {
     display: flex !important;

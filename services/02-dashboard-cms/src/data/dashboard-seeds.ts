@@ -123,6 +123,19 @@ export const officialTemplates: OfficialTemplateItem[] = officialTemplatesData;
 
 export const initialInvoices: InvoiceItem[] = [
   {
+    id: 'INV-2026-10-0994',
+    date: '15 Okt 2026',
+    dueDate: '22 Okt 2026',
+    planName: 'Hero Pro Plan (Multi-Tenant Docker)',
+    period: '15 Okt 2026 - 15 Nov 2026',
+    amount: 149000,
+    tax: 16390,
+    total: 165390,
+    status: 'paid',
+    paymentMethod: 'BCA Virtual Account (Auto-Debit)',
+    containerQuota: 3
+  },
+  {
     id: 'INV-2026-09-0891',
     date: '15 Sep 2026',
     dueDate: '22 Sep 2026',

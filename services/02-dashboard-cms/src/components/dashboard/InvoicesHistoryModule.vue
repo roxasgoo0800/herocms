@@ -92,7 +92,7 @@ const handlePrintInvoice = () => {
         <div class="telemetry-top">
           <span class="telemetry-label">TAGIHAN BERIKUTNYA</span>
         </div>
-        <div class="telemetry-val">Rp 149.000 <span class="badge-online">15 Okt 2026</span></div>
+        <div class="telemetry-val">Rp 149.000 <span class="badge-online">15 Nov 2026</span></div>
         <div class="telemetry-sub"><span>Perpanjangan otomatis via BCA VA</span></div>
       </div>
 
@@ -102,7 +102,7 @@ const handlePrintInvoice = () => {
           <span class="telemetry-label">STATUS KELAYAKAN</span>
         </div>
         <div class="telemetry-val">100% <span class="badge-online">Lunas</span></div>
-        <div class="telemetry-sub"><span>3 Transaksi lunas tanpa tunggakan</span></div>
+        <div class="telemetry-sub"><span>{{ invoices.length }} Transaksi lunas tanpa tunggakan</span></div>
       </div>
 
       <div class="telemetry-card accent-purple">
