@@ -1123,5 +1123,84 @@ To open last HTML report run:
       "Dilarang meloloskan Pull Request jika ada assertion error pada pengujian browser.",
       "Dilarang menggunakan timeout statis (sleep) yang lama; gunakan waitForSelector."
     ]
+  },
+  {
+    id: "BP-EFAKTUR-01",
+    term: "Arsitektur Penagihan Resmi SaaS & E-Faktur DJP 3.0 (PER-03/PJ/2022)",
+    category: "Monetisasi & Billing SaaS",
+    service: "02-dashboard-cms",
+    serviceName: "Service 02: Dashboard Studio & Go BFF",
+    icon: "📑",
+    definition: "Sistem pembukuan dan penerbitan faktur pajak elektronik resmi ber-NPWP PT Hero Digital Multitek untuk rekonsiliasi akuntansi perusahaan, audit PPN 11%, dan bukti potong fiskal DJP dilengkapi visualisasi analitik kurva spline Apache ECharts.",
+    requirements: ["Vue 3 Composition API", "Apache ECharts v6.1+", "DJP PER-03/PJ/2022", "PMK-60/PMK.03/2022", "UUID / NSFP Generator", "ResizeObserver"],
+    fileReference: "services/02-dashboard-cms/src/components/dashboard/InvoicesHistoryModule.vue",
+    cliCommand: "cd services/02-dashboard-cms && npm run build",
+    guideSteps: [
+      "Tenant melakukan perpanjangan paket atau checkout simulasi cluster kustom via 4 kanal pembayaran.",
+      "Go BFF dan Billing Gateway memverifikasi pembayaran lunas (settlement) via SNAP API.",
+      "Sistem menerbitkan Nomor Seri Faktur Pajak (NSFP) dan kode NTPN unik secara otomatis.",
+      "Lembar dokumen E-Faktur 1200px widescreen di-render dengan komparasi 2 entitas, format rupiah terbilang otomatis, dan QR Code approval DJP.",
+      "Visualisasi alokasi fiskal bulanan (DPP vs PPN 11%) di-update secara reaktif menggunakan kurva spline Apache ECharts."
+    ],
+    doAndDont: "WAJIB hitung PPN 11% secara presisi dari Dasar Pengenaan Pajak (DPP); DILARANG menampilkan lembar faktur resmi tanpa mencantumkan NPWP 16-digit dan stempel persetujuan digital DJP.",
+    flowchart: [
+      "Pelanggan memilih paket atau checkout cluster kustom di Studio (02)",
+      "Gateway pembayaran BI-FAST / SNAP API memverifikasi status settlement",
+      "Backend mencatat transaksi dengan rincian DPP dan PPN 11%",
+      "Sistem menerbitkan dokumen E-Faktur resmi dengan Nomor Seri Faktur Pajak (NSFP)",
+      "Studio merender lembar faktur 1200px widescreen berstempel QR Code DJP",
+      "Grafik kurva spline Apache ECharts memetakan tren pengeluaran dan setoran pajak secara interaktif"
+    ],
+    inDepthExplanation: "Arsitektur penagihan komersial HeroCMS mematuhi standar hukum perpajakan Republik Indonesia (PER-03/PJ/2022 dan PMK-60/PMK.03/2022). Setiap transaksi yang berhasil menghasilkan dokumen Faktur Pajak Elektronik resmi (E-Faktur) lengkap dengan pita kepatuhan Kemenkeu RI, komparasi dual entitas PKP Penjual vs Pembeli BKP, format rupiah terbilang otomatis, kode unik NTPN, approval hash QR Code DJP, dan stempel tanda tangan digital CFO PT Hero Digital Multitek. Di sisi analitik visual, adopsi Apache ECharts dengan kurva spline hermite mulus (smooth: 0.38) menyajikan visualisasi area bergradasi 3 dimensi fiskal (Total Tagihan Resmi, DPP, dan PPN 11% Kas Negara) yang dioptimasi dengan ResizeObserver dan tab watcher reaktif guna menjamin zero memory leak.",
+    golangImplementation: {
+      file: "services/02-dashboard-cms/src/components/dashboard/InvoicesHistoryModule.vue",
+      explanation: "Integrasi visualisasi kurva spline Apache ECharts dan rendering dokumen lembar faktur pajak resmi DJP 3.0.",
+      codeSnippet: `// Apache ECharts Reactive Spline Area Curve Integration
+const renderTaxChart = () => {
+  if (!taxChartInstance) return;
+  const months = monthlyTrend.value.map(item => item.month);
+  const dppSeries = monthlyTrend.value.map(item => item.dpp);
+  const ppnSeries = monthlyTrend.value.map(item => item.ppn);
+  const totalSeries = monthlyTrend.value.map(item => item.total);
+
+  const option: echarts.EChartsOption = {
+    animationDuration: 800,
+    animationEasing: 'cubicOut',
+    grid: { left: '20px', right: '25px', top: '40px', bottom: '15px', containLabel: true },
+    tooltip: { trigger: 'axis', backgroundColor: 'rgba(15, 23, 42, 0.96)', borderRadius: 12 },
+    xAxis: { type: 'category', data: months, boundaryGap: false },
+    yAxis: { type: 'value', name: 'Nilai Fiskal (IDR)' },
+    series: [
+      { name: 'Total Tagihan (Inc. PPN)', type: 'line', smooth: 0.38, data: totalSeries },
+      { name: 'DPP Pokok', type: 'line', smooth: 0.38, data: dppSeries },
+      { name: 'PPN 11% Kas Negara', type: 'line', smooth: 0.38, lineStyle: { type: 'dashed' }, data: ppnSeries }
+    ]
+  };
+  taxChartInstance.setOption(option, true);
+};`
+    },
+    apiEndpoint: {
+      title: "Sinkronisasi & Verifikasi Faktur Pajak Elektronik DJP",
+      method: "GET",
+      path: "/api/v1/invoices/:id/efaktur",
+      port: 8085,
+      description: "Menyajikan data lembar E-Faktur DJP 3.0 dengan stempel NTPN dan validasi QR Code perpajakan.",
+      curlCommand: "curl -s http://127.0.0.1:8085/api/v1/invoices/INV-2026-0881/efaktur",
+      responseSample: `{\n  "nsfp": "010.003-26.98214300",\n  "status": "APPROVED",\n  "dpp": 2850000,\n  "ppn": 313500,\n  "ntpn": "E9A128B47C501F29"\n}`,
+      howToTest: [
+        "Akses menu Faktur & Riwayat Tagihan Resmi di HeroCMS Studio.",
+        "Verifikasi tabel buku besar lapang (1260px) dan klik 'Lihat E-Faktur' untuk memastikan modal 1200px terbuka.",
+        "Periksa kurva spline Apache ECharts pada Tab 2 dan verifikasi keabsahan stempel DJP."
+      ]
+    },
+    dos: [
+      "Wajib memverifikasi NPWP 16 digit pada profil wajib pajak sebelum mencetak dokumen E-Faktur.",
+      "Wajib membersihkan instansiasi ECharts via dispose() dan ResizeObserver disconnect pada unmount komponen.",
+      "Wajib menerapkan format nominal Rupiah dan terbilang bahasa Indonesia yang baku."
+    ],
+    donts: [
+      "Dilarang menerbitkan dokumen E-Faktur tanpa kode referensi penagihan dan stempel verifikasi lunas.",
+      "Dilarang menggunakan grafik batang kaku jika pengguna membutuhkan kurva tren pengeluaran fiskal periodik."
+    ]
   }
 ];

@@ -137,7 +137,7 @@ export const microservicePrds: MicroservicePrd[] = [
     title: 'Dashboard CMS (HeroCMS Studio - Portal Pelanggan)',
     serviceName: '02-dashboard-cms',
     badge: 'Customer Studio & PWA',
-    version: 'v1.14.28-PROD',
+    version: 'v1.23.0-PROD',
     targetAudience: [
       'Software Engineer & Developer Portofolio',
       'Penulis Independen & Tim Media Editorial',
@@ -150,13 +150,14 @@ export const microservicePrds: MicroservicePrd[] = [
       runtime: 'Node 20 LTS (Dev) / Static SPA Nginx Alpine (Prod)',
       databases: ['PostgreSQL 16 via Go API (RLS Enforced)', 'IndexedDB (Offline Cache)'],
       keyLibraries: [
+        'Apache ECharts v6.1+ (High-Res Spline Canvas)',
         'vite-plugin-pwa (Workbox 7)',
         'Tiptap Block Editor v2',
         'Lucide Icons Vue',
         'DOMPurify'
       ]
     },
-    summary: 'Studio manajemen situs web berbasis no-code / low-code berkinerja tinggi dengan visual editor live, publishing engine artikel & studi kasus, manajemen media terintegrasi S3, kontrol siklus hidup kontainer Docker mandiri, dan dukungan mandatori Progressive Web App (PWA) untuk akses offline instan.',
+    summary: 'Studio manajemen situs web berbasis no-code / low-code berkinerja tinggi dengan visual editor live, publishing engine artikel & studi kasus, manajemen media terintegrasi S3, kontrol siklus hidup kontainer Docker mandiri, modul penagihan faktur pajak resmi DJP 3.0 dengan visualisasi kurva spline ECharts, serta dukungan mandatori Progressive Web App (PWA) untuk akses offline instan.',
     coreModules: [
       {
         name: 'Situs & Kontainer (Multi-Site Hub & CaaS Lifecycle)',
@@ -166,6 +167,43 @@ export const microservicePrds: MicroservicePrd[] = [
           'CRUD Runtime Kontainer: Start, Stop, Restart, dan Destroy dengan cgroups resource limits.',
           'Live streaming logs kontainer Docker langsung di antarmuka web via WebSocket.',
           'Indikator status kesehatan kontainer (Running, Stopped, Provisioning, Degraded).'
+        ]
+      },
+      {
+        name: 'Faktur & E-Faktur DJP 3.0 Resmi (Fiscal Billing & Spline Trend)',
+        desc: 'Sistem buku besar penagihan resmi dan penerbitan faktur pajak elektronik standar Kemenkeu RI.',
+        capabilities: [
+          'Buku besar faktur penagihan resmi lapang (min-width: 1260px) dengan 7 kolom terdedikasi dan padding sel 18px 20px.',
+          'Multi-channel payment filter (BCA Virtual Account, QRIS Dinamis, Visa Corporate Card, Mandiri Bill Payment).',
+          'Modal Dokumen E-Faktur Resmi 1200px widescreen berstandar PER-03/PJ/2022 DJP Kemenkeu RI lengkap dengan pita kepatuhan pemerintah, perbandingan dual entitas PKP Penjual vs Pembeli BKP sejajar, rincian BKP/JKP bernomor, kartu nilai rupiah terbilang otomatis, validasi QR Code approval DJP, dan stempel tanda tangan digital CFO.',
+          'Grafik Alokasi Fiskal Spline Area Curve interaktif (Apache ECharts) dengan kurva hermite mulus (smooth: 0.38), 3 garis analitik (Total Tagihan Resmi, DPP, PPN 11%), chips telemetri ringkas, crosshair pointer, dan floating glassmorphic tooltip IDR.',
+          'Profil Wajib Pajak Badan 2 kolom terpadu dengan Live Sync KOP Surat Faktur Pajak.'
+        ]
+      },
+      {
+        name: 'Kapasitas & Paket Billing (Capacity & Pod Quota Matrix)',
+        desc: 'Pusat pengelolaan kuota komputasi dan simulasi cluster resource kustom.',
+        capabilities: [
+          'Topologi visualisasi resource pod kontainer dinamis dengan indikator alokasi CPU cgroups v2.',
+          'Arsitektur kartu paket aktif berjalan zero-overlap dengan tagline baris penuh .crown-full-tagline.',
+          'Kalkulator Simulasi Resource Cluster Kustom dengan kapabilitas Checkout & Pembayaran Langsung via 4 kanal pembayaran resmi (BCA, QRIS, Visa, Mandiri) yang menerbitkan E-Faktur otomatis.'
+        ]
+      },
+      {
+        name: 'Modal Pembuatan Situs Web Baru (Smart Architecture Provisioning)',
+        desc: 'Alur kerja pembuatan website baru dengan preview langsung dan auto-slug.',
+        capabilities: [
+          'Split-layout 2 kolom 980px dengan live canvas browser mockup interaktif.',
+          'Sinkronisasi auto-slug cerdas dari nama situs ke subdomain URL tanpa jeda.',
+          'Pilihan arsitektur preset (Portfolio Dev, SaaS Landing, Enterprise Docs, Editorial Magazine).'
+        ]
+      },
+      {
+        name: 'Integrasi Pengembang: Scoped PAT & Webhook Playground',
+        desc: 'Pusat integrasi API pihak ketiga dan manajemen token akses personal.',
+        capabilities: [
+          'Modal Generate Personal Access Token (PAT) 900px responsif dengan preset scopes cepat (Full Admin, Read-Only, Deployer).',
+          'Webhook delivery inspector & in-browser REST API playground interaktif.'
         ]
       },
       {

@@ -2,13 +2,43 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.5.0',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '20 Oktober 2026',
+    title: 'Dokumentasi Komprehensif Arsitektur E-Faktur DJP 3.0, Visualisasi Fiskal ECharts, Blueprint Penagihan & System Journey JRN-08',
+    summary: 'Memperbarui seluruh pilar dokumentasi Mission Control Docs Hub untuk mencakup kapabilitas penagihan enterprise dan modul Dashboard Studio terbaru: (1) Pembaruan PRD-02 Dashboard CMS ke versi v1.23.0-PROD mencakup E-Faktur DJP 3.0, Apache ECharts spline area visualizer, buku besar faktur 1260px, checkout simulasi cluster kustom, modal website split-layout 980px, dan scoped PAT; (2) Blueprint Arsitektur baru BP-EFAKTUR-01; (3) System Journey baru JRN-08 Siklus Penagihan Resmi SaaS & Rekonsiliasi PPN 11%.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & HeroCMS Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-150-1',
+        type: 'feature',
+        scope: 'Pembaruan PRD-02 Dashboard CMS Studio v1.23.0',
+        description: 'Mendokumentasikan modul Faktur & E-Faktur DJP 3.0, integrasi Apache ECharts spline area curve, buku besar lapang 1260px, simulasi cluster checkout, dan modal 980px pembuatan situs baru.'
+      },
+      {
+        id: 'c-07docs-150-2',
+        type: 'feature',
+        scope: 'Blueprint Arsitektur BP-EFAKTUR-01 Penagihan Resmi & E-Faktur DJP 3.0',
+        description: 'Menyusun kamus blueprint arsitektur teknis penagihan resmi SaaS, standar PER-03/PJ/2022 & PMK-60, approval hash QR Code DJP, tanda tangan digital CFO, dan kode implementasi Vue 3 ECharts.'
+      },
+      {
+        id: 'c-07docs-150-3',
+        type: 'feature',
+        scope: 'System Journey JRN-08 Siklus Penagihan SaaS & Rekonsiliasi PPN 11%',
+        description: 'Memetakan 6 tahapan alur hidup transaksi komersial dari pemilihan paket / simulasi cluster kustom, kliring multi-kanal, pencatatan buku besar, hingga rendering modal E-Faktur 1200px.'
+      }
+    ]
+  },
+  {
     version: 'v1.4.1',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '19 Oktober 2026',
     title: 'Penyempurnaan Tombol Baca, Alur Kerja Ribbon, dan Refaktor Master CSS Tampilan Detail Reader (PRD & Security)',
     summary: 'Memperbaiki styling tombol aksi Baca di semua kartu dari PRD, Kamus Blueprint, Matriks Keamanan hingga SOP menggunakan styling universal master CSS (.btn-read-sop). Menambahkan visual ribbon alur kerja (.bp-flow-preview) dengan pil bertahap dan panah penghubung. Merefaktor PrdArticleReader dan SecurityArticleReader ke sistem layout editorial Obsidian Studio Master (.article-reader-page, .reader-page-hero, .reader-layout-grid, .reader-main-content, .reader-sidebar-inspector), melengkapi alur kerja pipeline flowchart interaktif, dan menyempurnakan kartu detail agar tidak berantakan di layar monitor.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

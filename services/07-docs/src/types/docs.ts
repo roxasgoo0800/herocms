@@ -225,7 +225,7 @@ export interface SystemJourneyFailureMode {
 export interface SystemJourney {
   id: string;
   title: string;
-  category: 'deployment' | 'routing' | 'database' | 'telemetry' | 'ai' | 'storage' | 'pwa';
+  category: 'deployment' | 'routing' | 'database' | 'telemetry' | 'ai' | 'storage' | 'pwa' | 'billing';
   badge: string;
   latencySla: string;
   summary: string;
