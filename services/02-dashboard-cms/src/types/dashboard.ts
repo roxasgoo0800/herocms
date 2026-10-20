@@ -229,11 +229,15 @@ export interface WebhookDeliveryLog {
   id: string;
   webhookId: string;
   webhookName: string;
+  targetUrl?: string;
   event: string;
   statusCode: number;
   durationMs: number;
   timestamp: string;
   status: 'success' | 'failed';
+  requestHeaders?: Record<string, string>;
+  requestPayload?: any;
+  responseBody?: string;
 }
 
 export interface InvoiceItem {

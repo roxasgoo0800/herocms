@@ -450,42 +450,125 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
   {
     id: 'del_1',
     webhookId: 'wh_1',
-    webhookName: 'Discord Notification Channel',
+    webhookName: 'Discord Notification Channel (#editorial-alerts)',
+    targetUrl: 'https://discord.com/api/webhooks/12894.../hero-alerts',
     event: 'article.published',
     statusCode: 200,
     durationMs: 42,
     timestamp: '10 menit lalu',
-    status: 'success'
+    status: 'success',
+    requestHeaders: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'HeroCMS-Webhook-Dispatcher/1.0',
+      'X-HeroCMS-Delivery-ID': 'del_1_9942a8f',
+      'X-HeroCMS-Signature': 't=1729420200,v1=9f82d1c4e7a83b2c019d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b'
+    },
+    requestPayload: {
+      event: 'article.published',
+      timestamp: '2026-10-20T07:00:00Z',
+      tenant_id: 'tenant-9942',
+      data: {
+        article_id: 'art_8821',
+        title: 'Membangun Arsitektur Cloud Mandiri & Multi-Tenant',
+        slug: 'membangun-arsitektur-cloud-mandiri',
+        author: 'Rizal Pratama',
+        published_at: '2026-10-20T07:00:00Z',
+        url: 'https://rizalpratama.cloudcms.app/artikel/membangun-arsitektur-cloud-mandiri'
+      }
+    },
+    responseBody: '{"id": "1290349812903", "type": 0, "content": "Artikel Baru Terbit: Membangun Arsitektur Cloud Mandiri", "channel_id": "128940029"}'
   },
   {
     id: 'del_2',
     webhookId: 'wh_2',
-    webhookName: 'Slack Leads & Growth Bot',
+    webhookName: 'Slack Leads & Growth Bot (#leads-crm)',
+    targetUrl: 'https://hooks.slack.com/services/T00/B00/XXXXX',
     event: 'lead.received',
     statusCode: 200,
     durationMs: 38,
     timestamp: '1 jam lalu',
-    status: 'success'
+    status: 'success',
+    requestHeaders: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'HeroCMS-Webhook-Dispatcher/1.0',
+      'X-HeroCMS-Delivery-ID': 'del_2_9942b4c',
+      'X-HeroCMS-Signature': 't=1729416600,v1=4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b'
+    },
+    requestPayload: {
+      event: 'lead.received',
+      timestamp: '2026-10-20T06:00:00Z',
+      tenant_id: 'tenant-9942',
+      data: {
+        lead_id: 'lead_9942_01',
+        name: 'Budi Santoso',
+        email: 'budi@enterprise.co.id',
+        company: 'PT Solusi Bangsa Digital',
+        message: 'Tertarik dengan implementasi HeroCMS untuk 50 kontainer website.',
+        source_site: 'rizalpratama.cloudcms.app'
+      }
+    },
+    responseBody: 'ok'
   },
   {
     id: 'del_3',
     webhookId: 'wh_1',
-    webhookName: 'Discord Notification Channel',
+    webhookName: 'Discord Notification Channel (#editorial-alerts)',
+    targetUrl: 'https://discord.com/api/webhooks/12894.../hero-alerts',
     event: 'ssl.renewed',
     statusCode: 200,
     durationMs: 45,
     timestamp: '5 jam lalu',
-    status: 'success'
+    status: 'success',
+    requestHeaders: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'HeroCMS-Webhook-Dispatcher/1.0',
+      'X-HeroCMS-Delivery-ID': 'del_3_9942c1d',
+      'X-HeroCMS-Signature': 't=1729402200,v1=8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f'
+    },
+    requestPayload: {
+      event: 'ssl.renewed',
+      timestamp: '2026-10-20T02:00:00Z',
+      tenant_id: 'tenant-9942',
+      data: {
+        domain: 'rizalpratama.cloudcms.app',
+        issuer: "Let's Encrypt Authority X3",
+        tls_version: 'TLS 1.3',
+        valid_until: '2027-01-18T00:00:00Z',
+        edge_router: 'traefik-v3-edge-01'
+      }
+    },
+    responseBody: '{"id": "1290349812904", "type": 0, "content": "Sertifikat SSL Let\'s Encrypt TLS 1.3 Sukses Diperbarui", "channel_id": "128940029"}'
   },
   {
     id: 'del_4',
     webhookId: 'wh_2',
-    webhookName: 'Slack Leads & Growth Bot',
+    webhookName: 'Slack Leads & Growth Bot (#leads-crm)',
+    targetUrl: 'https://hooks.slack.com/services/T00/B00/XXXXX',
     event: 'traffic.spike',
     statusCode: 200,
     durationMs: 39,
     timestamp: '1 hari lalu',
-    status: 'success'
+    status: 'success',
+    requestHeaders: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'HeroCMS-Webhook-Dispatcher/1.0',
+      'X-HeroCMS-Delivery-ID': 'del_4_9942d3e',
+      'X-HeroCMS-Signature': 't=1729333800,v1=1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b'
+    },
+    requestPayload: {
+      event: 'traffic.spike',
+      timestamp: '2026-10-19T07:00:00Z',
+      tenant_id: 'tenant-9942',
+      data: {
+        container_id: 'cnt_9942_01',
+        subdomain: 'rizalpratama.cloudcms.app',
+        requests_per_minute: 4820,
+        normal_baseline: 450,
+        ratio: '10.7x spike',
+        action_taken: 'Traefik rate-limit & edge caching activated'
+      }
+    },
+    responseBody: 'ok'
   }
 ];
 

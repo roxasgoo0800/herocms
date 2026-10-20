@@ -1089,28 +1089,79 @@ const toggleWebhookStatus = (id: string) => {
 };
 
 const testWebhook = (wh: WebhookItem) => {
-  showToast(`Mengirim simulasi event '${wh.events[0] || 'article.published'}' ke ${wh.name}...`, 'info');
+  const eventName = wh.events[0] || 'article.published';
+  showToast(`Mengirim simulasi event '${eventName}' ke ${wh.name}...`, 'info');
   setTimeout(() => {
     const duration = Math.floor(32 + Math.random() * 25);
     wh.lastTriggered = 'Baru saja';
+    const nowIso = new Date().toISOString();
 
     const logEntry: WebhookDeliveryLog = {
       id: `del_${Date.now()}`,
       webhookId: wh.id,
       webhookName: wh.name,
-      event: wh.events[0] || 'article.published',
+      targetUrl: wh.url,
+      event: eventName,
       statusCode: 200,
       durationMs: duration,
       timestamp: 'Baru saja',
-      status: 'success'
+      status: 'success',
+      requestHeaders: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'HeroCMS-Webhook-Dispatcher/1.0',
+        'X-HeroCMS-Delivery-ID': `del_${Date.now().toString(36)}`,
+        'X-HeroCMS-Signature': `t=${Math.floor(Date.now() / 1000)},v1=${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
+      },
+      requestPayload: {
+        event: eventName,
+        timestamp: nowIso,
+        tenant_id: 'tenant-9942',
+        data: {
+          test: true,
+          triggered_by: 'manual_ping',
+          endpoint: wh.name,
+          url: wh.url
+        }
+      },
+      responseBody: '{"status": 200, "success": true, "message": "Ping received successfully"}'
     };
     webhookDeliveryLogs.value.unshift(logEntry);
-    if (webhookDeliveryLogs.value.length > 20) {
+    if (webhookDeliveryLogs.value.length > 25) {
       webhookDeliveryLogs.value.pop();
     }
 
     showToast(`Webhook '${wh.name}' sukses merespon HTTP 200 OK (${duration}ms)!`, 'success');
   }, 750);
+};
+
+const redeliverWebhookEvent = (log: WebhookDeliveryLog) => {
+  showToast(`Mengirim ulang event '${log.event}' ke ${log.webhookName}...`, 'info');
+  setTimeout(() => {
+    const duration = Math.floor(28 + Math.random() * 20);
+    const newLog: WebhookDeliveryLog = {
+      id: `del_${Date.now()}`,
+      webhookId: log.webhookId,
+      webhookName: log.webhookName,
+      targetUrl: log.targetUrl,
+      event: log.event,
+      statusCode: 200,
+      durationMs: duration,
+      timestamp: 'Baru saja',
+      status: 'success',
+      requestHeaders: {
+        ...(log.requestHeaders || {}),
+        'X-HeroCMS-Delivery-ID': `del_retry_${Date.now().toString(36)}`,
+        'X-HeroCMS-Signature': `t=${Math.floor(Date.now() / 1000)},v1=${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
+      },
+      requestPayload: log.requestPayload || { event: log.event, status: 'retry' },
+      responseBody: log.responseBody || '{"status": 200, "message": "Redelivered successfully"}'
+    };
+    webhookDeliveryLogs.value.unshift(newLog);
+    if (webhookDeliveryLogs.value.length > 25) {
+      webhookDeliveryLogs.value.pop();
+    }
+    showToast(`Pengiriman ulang event '${log.event}' berhasil (HTTP 200 OK, ${duration}ms)!`, 'success');
+  }, 700);
 };
 
 // Helper to get current tenant author details dynamically
@@ -1736,6 +1787,7 @@ export function useDashboardData() {
     deleteWebhook,
     toggleWebhookStatus,
     testWebhook,
+    redeliverWebhookEvent,
     patScopes,
     personalAccessTokens,
     webhookDeliveryLogs,

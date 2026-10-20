@@ -27,10 +27,11 @@ import {
   Globe,
   RefreshCw,
   Info,
-  Sparkles
+  Sparkles,
+  Eye
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
-import type { PersonalAccessToken, PatScopeCategory } from '../../types/dashboard';
+import type { PersonalAccessToken, PatScopeCategory, WebhookDeliveryLog } from '../../types/dashboard';
 
 const {
   webhooks,
@@ -38,12 +39,15 @@ const {
   deleteWebhook,
   toggleWebhookStatus,
   testWebhook,
+  redeliverWebhookEvent,
   patScopes,
   personalAccessTokens,
   webhookDeliveryLogs,
   createPersonalAccessToken,
   revokePersonalAccessToken,
   deletePersonalAccessToken,
+  articles,
+  mediaAssets,
   showToast
 } = useDashboardData();
 
@@ -60,6 +64,184 @@ const isSnippetCopied = ref(false);
 const isCreatePatModalOpen = ref(false);
 const isOneTimeModalOpen = ref(false);
 const isAddWebhookModalOpen = ref(false);
+const isDeliveryInspectorOpen = ref(false);
+
+// Inspector state
+const selectedDeliveryLog = ref<WebhookDeliveryLog | null>(null);
+const inspectorActiveTab = ref<'request' | 'response'>('request');
+const isInspectorPayloadCopied = ref(false);
+
+const openDeliveryInspector = (log: WebhookDeliveryLog) => {
+  selectedDeliveryLog.value = log;
+  inspectorActiveTab.value = 'request';
+  isDeliveryInspectorOpen.value = true;
+};
+
+const handleRedeliverFromInspector = () => {
+  if (!selectedDeliveryLog.value) return;
+  redeliverWebhookEvent(selectedDeliveryLog.value);
+  selectedDeliveryLog.value.timestamp = 'Baru saja';
+};
+
+const copyInspectorPayload = () => {
+  if (!selectedDeliveryLog.value?.requestPayload) return;
+  navigator.clipboard.writeText(JSON.stringify(selectedDeliveryLog.value.requestPayload, null, 2));
+  isInspectorPayloadCopied.value = true;
+  showToast('Request payload disalin!', 'info');
+  setTimeout(() => {
+    isInspectorPayloadCopied.value = false;
+  }, 2000);
+};
+
+// Interactive API Playground state
+const playgroundSelectedToken = ref<string>('');
+const playgroundEndpoint = ref<string>('/api/v1/content/articles');
+const playgroundMethod = ref<'GET' | 'POST'>('GET');
+const isPlaygroundExecuting = ref(false);
+const playgroundResponse = ref<any>(null);
+const playgroundMeta = ref<{ status: number; durationMs: number; statusText: string } | null>(null);
+const isPlaygroundResponseCopied = ref(false);
+
+// Auto-select first active PAT for playground
+if (personalAccessTokens.value.length > 0) {
+  const activeToken = personalAccessTokens.value.find(t => t.status === 'active') || personalAccessTokens.value[0];
+  playgroundSelectedToken.value = activeToken.id;
+}
+
+const onPlaygroundEndpointChange = () => {
+  if (playgroundEndpoint.value === '/api/v1/leads/submit') {
+    playgroundMethod.value = 'POST';
+  } else {
+    playgroundMethod.value = 'GET';
+  }
+};
+
+const executePlaygroundRequest = () => {
+  isPlaygroundExecuting.value = true;
+  setTimeout(() => {
+    const token = personalAccessTokens.value.find(t => t.id === playgroundSelectedToken.value);
+    const duration = Math.floor(14 + Math.random() * 18);
+
+    if (!token || token.status === 'revoked') {
+      playgroundMeta.value = {
+        status: 401,
+        statusText: 'Unauthorized',
+        durationMs: duration
+      };
+      playgroundResponse.value = {
+        error: 'Unauthorized',
+        message: 'Personal Access Token tidak valid atau telah dicabut (revoked).',
+        code: 'AUTH_TOKEN_INVALID'
+      };
+      isPlaygroundExecuting.value = false;
+      return;
+    }
+
+    let requiredScope = 'content:read';
+    if (playgroundEndpoint.value.includes('/content/')) requiredScope = 'content:read';
+    if (playgroundEndpoint.value === '/api/v1/leads/submit') requiredScope = 'leads:write';
+    if (playgroundEndpoint.value.includes('/media/')) requiredScope = 'media:read';
+    if (playgroundEndpoint.value.includes('/telemetry/')) requiredScope = 'telemetry:read';
+
+    if (!token.scopes.includes(requiredScope)) {
+      playgroundMeta.value = {
+        status: 403,
+        statusText: 'Forbidden',
+        durationMs: duration
+      };
+      playgroundResponse.value = {
+        error: 'Forbidden',
+        message: `Token '${token.name}' tidak memiliki cakupan izin scope '${requiredScope}' yang dibutuhkan.`,
+        code: 'INSUFFICIENT_SCOPES',
+        required_scope: requiredScope,
+        token_scopes: token.scopes
+      };
+      isPlaygroundExecuting.value = false;
+      return;
+    }
+
+    playgroundMeta.value = {
+      status: 200,
+      statusText: 'OK',
+      durationMs: duration
+    };
+
+    if (playgroundEndpoint.value === '/api/v1/content/articles') {
+      playgroundResponse.value = {
+        status: 'success',
+        endpoint: '/api/v1/content/articles',
+        tenant: 'tenant-9942',
+        total: articles.value.length,
+        data: articles.value.slice(0, 3).map(a => ({
+          id: a.id,
+          title: a.title,
+          slug: a.slug,
+          category: a.category,
+          author: a.author,
+          views: a.views,
+          status: a.status,
+          published_at: a.publishedAt
+        }))
+      };
+    } else if (playgroundEndpoint.value === '/api/v1/content/articles/membangun-arsitektur-cloud-mandiri') {
+      const art = articles.value[0] || {
+        id: 'art_8821',
+        title: 'Membangun Arsitektur Cloud Mandiri',
+        slug: 'membangun-arsitektur-cloud-mandiri',
+        author: 'Rizal Pratama'
+      };
+      playgroundResponse.value = {
+        status: 'success',
+        data: {
+          ...art,
+          content_markdown: '# Membangun Arsitektur Cloud Mandiri\\n\\nHeroCMS Studio menyajikan isolasi kontainer mandiri dengan Edge Traefik v3...'
+        }
+      };
+    } else if (playgroundEndpoint.value === '/api/v1/leads/submit') {
+      playgroundResponse.value = {
+        status: 'success',
+        message: 'Formulir kontak berhasil diterima dan diarsipkan ke leads CRM.',
+        lead_id: `lead_${Date.now()}`,
+        created_at: new Date().toISOString()
+      };
+    } else if (playgroundEndpoint.value === '/api/v1/media/assets') {
+      playgroundResponse.value = {
+        status: 'success',
+        total_assets: mediaAssets.value.length,
+        data: mediaAssets.value.slice(0, 4).map(m => ({
+          id: m.id,
+          name: m.name,
+          url: m.url,
+          size: m.size,
+          mime_type: m.type
+        }))
+      };
+    } else if (playgroundEndpoint.value === '/api/v1/telemetry/overview') {
+      playgroundResponse.value = {
+        status: 'success',
+        telemetry: {
+          tenant_id: 'tenant-9942',
+          total_pageviews_weekly: 14280,
+          average_ttfb_ms: 1.8,
+          active_containers: 3,
+          ssl_status: 'valid_tls_1.3'
+        }
+      };
+    }
+
+    isPlaygroundExecuting.value = false;
+  }, 350);
+};
+
+const copyPlaygroundResponse = () => {
+  if (!playgroundResponse.value) return;
+  navigator.clipboard.writeText(JSON.stringify(playgroundResponse.value, null, 2));
+  isPlaygroundResponseCopied.value = true;
+  showToast('Respons JSON playground disalin!', 'info');
+  setTimeout(() => {
+    isPlaygroundResponseCopied.value = false;
+  }, 2000);
+};
 
 // One-time token reveal container
 const revealedRawToken = ref('');
@@ -975,22 +1157,40 @@ const copyActiveSnippet = () => {
                 <th>Latensi</th>
                 <th>Waktu Pengiriman</th>
                 <th>Status</th>
+                <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="log in webhookDeliveryLogs" :key="log.id">
+              <tr
+                v-for="log in webhookDeliveryLogs"
+                :key="log.id"
+                class="delivery-log-row-interactive"
+                @click="openDeliveryInspector(log)"
+              >
                 <td><strong>{{ log.webhookName }}</strong></td>
                 <td><span class="event-pill">{{ log.event }}</span></td>
                 <td>
-                  <span class="code-badge-200">
-                    <CheckCircle2 :size="11" />
-                    {{ log.statusCode }} OK
+                  <span :class="log.statusCode >= 200 && log.statusCode < 300 ? 'code-badge-200' : 'code-badge-error'">
+                    <CheckCircle2 v-if="log.statusCode >= 200 && log.statusCode < 300" :size="11" />
+                    <AlertTriangle v-else :size="11" />
+                    {{ log.statusCode }} {{ log.statusCode === 200 ? 'OK' : 'Error' }}
                   </span>
                 </td>
                 <td><span class="latency-tag">{{ log.durationMs }}ms</span></td>
                 <td>{{ log.timestamp }}</td>
                 <td>
                   <span class="rate-badge">Terkirim</span>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn-inspect-log"
+                    @click.stop="openDeliveryInspector(log)"
+                    title="Buka detail payload dan header"
+                  >
+                    <Eye :size="11" />
+                    <span>Inspeksi</span>
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -1061,6 +1261,92 @@ const copyActiveSnippet = () => {
 
         <div class="code-terminal-view">
           <pre><code>{{ codeSnippets[activeCodeTab] }}</code></pre>
+        </div>
+      </div>
+
+      <!-- Interactive In-Browser REST API Playground Card -->
+      <div class="api-playground-card">
+        <div class="playground-title-row">
+          <div>
+            <h4 class="playground-title-text">
+              <Sparkles :size="15" style="color: #2563eb;" />
+              <span>Interactive REST API Request Playground ("Try It Out")</span>
+            </h4>
+            <p class="playground-subtitle">
+              Uji coba request langsung di dalam browser menggunakan token PAT aktif Anda. Mendukung validasi scope otomatis dan live data.
+            </p>
+          </div>
+          <span class="playground-badge-pill">Live In-Browser Runner</span>
+        </div>
+
+        <!-- Request Config Bar -->
+        <div class="playground-request-bar">
+          <select v-model="playgroundMethod" class="playground-method-select">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+          </select>
+
+          <select
+            v-model="playgroundEndpoint"
+            class="playground-endpoint-select"
+            @change="onPlaygroundEndpointChange"
+          >
+            <option value="/api/v1/content/articles">GET /api/v1/content/articles (Daftar Artikel)</option>
+            <option value="/api/v1/content/articles/membangun-arsitektur-cloud-mandiri">GET /api/v1/content/articles/{slug} (Detail Artikel)</option>
+            <option value="/api/v1/leads/submit">POST /api/v1/leads/submit (Submit Formulir Prospek)</option>
+            <option value="/api/v1/media/assets">GET /api/v1/media/assets (Media & CDN URLs)</option>
+            <option value="/api/v1/telemetry/overview">GET /api/v1/telemetry/overview (Telemetri Situs)</option>
+          </select>
+
+          <select v-model="playgroundSelectedToken" class="playground-token-picker" title="Pilih Personal Access Token untuk otentikasi">
+            <option v-for="t in personalAccessTokens" :key="t.id" :value="t.id">
+              PAT: {{ t.name }} ({{ t.status === 'active' ? 'Aktif' : 'Dicabut' }})
+            </option>
+          </select>
+
+          <button
+            type="button"
+            class="btn-playground-execute"
+            :disabled="isPlaygroundExecuting || personalAccessTokens.length === 0"
+            @click="executePlaygroundRequest"
+          >
+            <RefreshCw v-if="isPlaygroundExecuting" :size="13" class="spin-anim" />
+            <Send v-else :size="13" />
+            <span>{{ isPlaygroundExecuting ? 'Mengirim...' : 'Kirim Request' }}</span>
+          </button>
+        </div>
+
+        <!-- Terminal Output View -->
+        <div class="playground-terminal-view">
+          <div class="playground-terminal-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Response JSON Output</span>
+              <span
+                v-if="playgroundMeta"
+                class="playground-status-pill"
+                :class="playgroundMeta.status >= 200 && playgroundMeta.status < 300 ? 'success' : 'error'"
+              >
+                {{ playgroundMeta.status }} {{ playgroundMeta.statusText }} • {{ playgroundMeta.durationMs }}ms
+              </span>
+            </div>
+
+            <button
+              v-if="playgroundResponse"
+              type="button"
+              class="btn-pat-copy-mini"
+              @click="copyPlaygroundResponse"
+            >
+              <Check v-if="isPlaygroundResponseCopied" :size="11" />
+              <Copy v-else :size="11" />
+              <span>{{ isPlaygroundResponseCopied ? 'Tersalin' : 'Salin Output' }}</span>
+            </button>
+          </div>
+
+          <div class="playground-terminal-body">
+            <pre v-if="playgroundResponse" class="playground-code-pre"><code>{{ JSON.stringify(playgroundResponse, null, 2) }}</code></pre>
+            <pre v-else class="playground-code-pre" style="color: #64748b;"><code>// Tekan tombol "Kirim Request" di atas untuk mengeksekusi endpoint live dengan Personal Access Token yang dipilih.
+// Server akan memvalidasi header Bearer Token dan hak akses scopes secara otomatis.</code></pre>
+          </div>
         </div>
       </div>
 
@@ -1637,6 +1923,186 @@ const copyActiveSnippet = () => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- MODAL 4: WEBHOOK DELIVERY INSPECTOR (REQUEST/RESPONSE & REDELIVER) -->
+      <!-- ================================================================= -->
+      <div
+        v-if="isDeliveryInspectorOpen && selectedDeliveryLog"
+        class="modal-backdrop"
+        @click.self="isDeliveryInspectorOpen = false"
+      >
+        <div class="modal-dialog modal-dialog-inspector">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box" style="background: #eff6ff; color: #0284c7;">
+                <Activity :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Webhook Delivery Inspector</h3>
+                <p class="modal-subheading">
+                  Detail pengiriman payload event, status HTTP response, dan log HMAC-SHA256 signature.
+                </p>
+              </div>
+            </div>
+            <button
+              class="modal-close-button"
+              @click="isDeliveryInspectorOpen = false"
+              title="Tutup"
+            >
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-form-body">
+            <!-- 1. Metadata Strip -->
+            <div class="inspector-meta-strip">
+              <div class="inspector-meta-item">
+                <span class="inspector-meta-label">TARGET WEBHOOK</span>
+                <span class="inspector-meta-value">{{ selectedDeliveryLog.webhookName }}</span>
+              </div>
+              <div class="inspector-meta-item">
+                <span class="inspector-meta-label">EVENT TYPE</span>
+                <span class="inspector-meta-value" style="font-family: ui-monospace, monospace; color: #0284c7;">{{ selectedDeliveryLog.event }}</span>
+              </div>
+              <div class="inspector-meta-item">
+                <span class="inspector-meta-label">STATUS & LATENSI</span>
+                <span class="inspector-meta-value">
+                  <span :class="selectedDeliveryLog.statusCode >= 200 && selectedDeliveryLog.statusCode < 300 ? 'code-badge-200' : 'code-badge-error'">
+                    {{ selectedDeliveryLog.statusCode }} OK • {{ selectedDeliveryLog.durationMs }}ms
+                  </span>
+                </span>
+              </div>
+              <div class="inspector-meta-item">
+                <span class="inspector-meta-label">WAKTU DISPATCH</span>
+                <span class="inspector-meta-value">{{ selectedDeliveryLog.timestamp }}</span>
+              </div>
+            </div>
+
+            <!-- Target URL Box -->
+            <div class="endpoint-url-box" style="margin-bottom: 14px;">
+              <code>{{ selectedDeliveryLog.targetUrl || 'https://api.discord.com/api/webhooks/...' }}</code>
+            </div>
+
+            <!-- 2. Subtabs: Request vs Response -->
+            <div class="inspector-subtabs">
+              <button
+                type="button"
+                class="inspector-tab-btn"
+                :class="{ active: inspectorActiveTab === 'request' }"
+                @click="inspectorActiveTab = 'request'"
+              >
+                <Code :size="13" />
+                <span>Request (Headers & Payload)</span>
+              </button>
+              <button
+                type="button"
+                class="inspector-tab-btn"
+                :class="{ active: inspectorActiveTab === 'response' }"
+                @click="inspectorActiveTab = 'response'"
+              >
+                <CheckCircle2 :size="13" />
+                <span>Response (HTTP Body)</span>
+              </button>
+            </div>
+
+            <!-- Subtab 1: Request -->
+            <div v-if="inspectorActiveTab === 'request'">
+              <!-- Request Headers Table -->
+              <div style="margin-bottom: 12px;">
+                <label class="input-label-row" style="margin-bottom: 6px;">
+                  <span class="label-text">Request Headers (dengan RFC 9421 Timestamp & HMAC-SHA256)</span>
+                </label>
+                <table class="inspector-headers-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 200px;">Header Name</th>
+                      <th>Header Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Content-Type</td>
+                      <td>application/json</td>
+                    </tr>
+                    <tr>
+                      <td>User-Agent</td>
+                      <td>HeroCMS-Webhook-Dispatcher/v1.17</td>
+                    </tr>
+                    <tr>
+                      <td>X-HeroCMS-Event</td>
+                      <td>{{ selectedDeliveryLog.event }}</td>
+                    </tr>
+                    <tr>
+                      <td>X-HeroCMS-Delivery</td>
+                      <td>{{ selectedDeliveryLog.id }}</td>
+                    </tr>
+                    <tr>
+                      <td>X-HeroCMS-Signature</td>
+                      <td>{{ selectedDeliveryLog.requestHeaders?.['X-HeroCMS-Signature'] || 't=1774075190,v1=9f82abb742a8b98c76...' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Request Payload JSON -->
+              <div>
+                <label class="input-label-row" style="margin-bottom: 6px;">
+                  <span class="label-text">Dispatched JSON Payload</span>
+                  <span class="label-badge-optional">POST Body</span>
+                </label>
+                <div class="inspector-terminal-box">
+                  <button
+                    type="button"
+                    class="btn-copy-preview-payload"
+                    @click="copyInspectorPayload"
+                    title="Salin Request JSON"
+                  >
+                    <Check v-if="isInspectorPayloadCopied" :size="11" />
+                    <Copy v-else :size="11" />
+                    <span>{{ isInspectorPayloadCopied ? 'Tersalin' : 'Salin JSON' }}</span>
+                  </button>
+                  <pre class="inspector-code-pre"><code>{{ JSON.stringify(selectedDeliveryLog.requestPayload || { event: selectedDeliveryLog.event, timestamp: selectedDeliveryLog.timestamp }, null, 2) }}</code></pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtab 2: Response -->
+            <div v-else-if="inspectorActiveTab === 'response'">
+              <div>
+                <label class="input-label-row" style="margin-bottom: 6px;">
+                  <span class="label-text">Remote Webhook Endpoint Response Body</span>
+                  <span class="label-badge-optional">HTTP {{ selectedDeliveryLog.statusCode }}</span>
+                </label>
+                <div class="inspector-terminal-box">
+                  <pre class="inspector-code-pre"><code>{{ selectedDeliveryLog.responseBody || '{\n  "status": 200,\n  "message": "Webhook payload received and queued successfully"\n}' }}</code></pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal Footer Actions (Guaranteed Side-by-Side) -->
+            <div class="modal-footer-row" style="margin-top: 18px;">
+              <button
+                type="button"
+                class="btn-modal-ghost"
+                @click="isDeliveryInspectorOpen = false"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                class="btn-modal-confirm"
+                @click="handleRedeliverFromInspector"
+              >
+                <RefreshCw :size="13" />
+                <span>Kirim Ulang Event (Redeliver)</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </Teleport>

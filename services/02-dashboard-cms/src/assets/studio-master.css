@@ -9394,6 +9394,334 @@ a[class*="btn-"] svg,
 }
 
 /* ==========================================================================
+   INDUSTRIAL FEATURE 1: INTERACTIVE WEBHOOK DELIVERY INSPECTOR (REQUEST/RESPONSE)
+   ========================================================================== */
+.delivery-log-row-interactive {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.delivery-log-row-interactive:hover td {
+  background: #f1f5f9;
+}
+
+.btn-inspect-log {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0284c7;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-inspect-log:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+/* Modal Delivery Inspector Dialog */
+.modal-dialog-inspector {
+  max-width: 780px !important;
+  width: min(780px, 94vw) !important;
+}
+
+.inspector-meta-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 680px) {
+  .inspector-meta-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.inspector-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.inspector-meta-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.inspector-meta-value {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.inspector-subtabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 14px;
+  padding-bottom: 6px;
+}
+
+.inspector-tab-btn {
+  background: transparent;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #64748b;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inspector-tab-btn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.inspector-tab-btn.active {
+  color: #0284c7;
+  background: #eff6ff;
+}
+
+.inspector-headers-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  margin-bottom: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.inspector-headers-table th {
+  background: #f8fafc;
+  padding: 8px 12px;
+  color: #475569;
+  font-weight: 700;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.inspector-headers-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.inspector-terminal-box {
+  background: #090d16;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 12px 14px;
+  max-height: 220px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.inspector-code-pre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: #38bdf8;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   INDUSTRIAL FEATURE 2: INTERACTIVE IN-BROWSER REST API PLAYGROUND
+   ========================================================================== */
+.api-playground-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.playground-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.playground-title-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.playground-subtitle {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.playground-badge-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.playground-request-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.playground-method-select {
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  font-weight: 800;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+}
+
+.playground-endpoint-select {
+  flex: 1;
+  min-width: 240px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0f172a;
+  outline: none;
+}
+
+.playground-token-picker {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: #334155;
+  outline: none;
+}
+
+.btn-playground-execute {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #2563eb;
+  border: none;
+  color: #ffffff;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-playground-execute:hover {
+  background: #1d4ed8;
+}
+
+.btn-playground-execute:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.playground-terminal-view {
+  background: #090d16;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.playground-terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.playground-status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: ui-monospace, monospace;
+  padding: 2px 7px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.playground-status-pill.success {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.playground-status-pill.error {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+}
+
+.playground-terminal-body {
+  padding: 14px 16px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.playground-code-pre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: #38bdf8;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
    HEADLESS REST API DOCS & SDK EXPLORER
    ========================================================================== */
 .api-docs-container {

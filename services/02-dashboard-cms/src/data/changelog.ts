@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.17.2',
+    version: 'v1.17.3',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.17.3',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Interactive Webhook Delivery Inspector (Request/Response) & In-Browser Headless REST API Playground ("Try It Out")',
+    summary: 'Menambahkan fitur standar industri terdepan untuk integrasi developer di HeroCMS: (1) Interactive Webhook Delivery Inspector Drawer/Modal dengan inspeksi detail HTTP request header (RFC 9421 anti-replay timestamp & HMAC-SHA256 signature), JSON payload yang dikirim, respon remote server, serta kapabilitas Redeliver (Kirim Ulang Event); (2) In-Browser Interactive Headless REST API Request Playground ("Try It Out") pada tab REST API & SDK dengan simulasi otentikasi Bearer Token PAT, validasi granular scope otomatis, dan respon data CMS real-time (Articles, Leads, Media, Telemetry) tanpa risiko kontainer.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11703-1',
+        type: 'feature',
+        scope: 'Interactive Webhook Delivery Inspector Modal (.modal-dialog-inspector: 780px)',
+        description: 'Tabel riwayat pengiriman webhook kini interaktif (clickable row & tombol inspeksi) untuk membuka modal inspector lengkap dengan metadata strip, URL target, status latensi, dan tab pemisah Request vs Response.'
+      },
+      {
+        id: 'c-02dash-11703-2',
+        type: 'security',
+        scope: 'RFC 9421 Anti-Replay Timestamp & HMAC-SHA256 Delivery Verification',
+        description: 'Menampilkan header inspeksi keamanan X-HeroCMS-Signature dengan format anti-replay timestamp (t=<timestamp>,v1=<hmac>) beserta X-HeroCMS-Delivery ID untuk verifikasi integritas pesan di sisi penerima.'
+      },
+      {
+        id: 'c-02dash-11703-3',
+        type: 'feature',
+        scope: 'Manual Event Redelivery Engine (Kirim Ulang Event)',
+        description: 'Menyediakan tombol "Kirim Ulang Event (Redeliver)" langsung di dalam modal inspector dengan telemetri dispatch ulang instan dan pembaruan timestamp log pengiriman.'
+      },
+      {
+        id: 'c-02dash-11703-4',
+        type: 'feature',
+        scope: 'In-Browser Headless REST API Playground ("Try It Out")',
+        description: 'Menyematkan playground interaktif pada tab REST API & SDK untuk mengeksekusi endpoint live (/content/articles, /leads/submit, /media/assets, /telemetry/overview) menggunakan token PAT aktif, lengkap dengan validasi 401 Unauthorized dan 403 Forbidden bila scope tidak mencukupi.'
+      }
+    ]
+  },
+  {
     version: 'v1.17.2',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Penyempurnaan Responsivitas & Tata Letak Dialog Modal Generate Personal Access Token (PAT)',
     summary: 'Memperluas dan merombak tata letak dialog modal Generate Personal Access Token (PAT) dari sebelumnya berukuran sempit (620px) menjadi modal luas adaptif 900px (.modal-dialog-pat) dengan grid responsif di seluruh resolusi (720p, 1080p, 1440p, 2480p+). Menata formulir input nama token dan masa berlaku secara berdampingan (2-column settings grid), menyematkan bar template izin cepat (Quick Scope Presets: Jamstack Reader, Content Writer, Lead Collector, Full Access), memperluas matriks kartu izin modular dengan hover lift dan checkmark status, serta menambahkan bilah ringkasan izin aktif (Live Scope Summary Strip) sebelum tombol eksekusi.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
