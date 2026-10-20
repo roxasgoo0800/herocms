@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.19.1',
+    version: 'v1.20.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.20.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Perombakan Dialog Pembuatan Website Baru: Studio Split-Layout 980px, Live Canvas Browser Mockup & Sinkronisasi Subdomain Cerdas',
+    summary: 'Merombak arsitektur dan antarmuka dialog modal Pembuatan Website Baru (.modal-dialog-create-site) dari sebelumnya berukuran sempit 580px dan berantakan menjadi modal studio interaktif seluas 980px dengan sistem 2 kolom responsif: (1) Kolom Konfigurasi Terstruktur meliputi pemilihan blueprint 2x2 berfitur lengkap, formulir identitas dengan auto-slug generator cerdas dan verifikasi ketersediaan subdomain Traefik Edge real-time, serta pemilih palet warna aksen brand dinamis; (2) Kolom Pratinjau Live Kanvas menampilkan mockup jendela browser lengkap dengan address bar SSL TLS 1.3, hero banner reaktif yang menyesuaikan nama dan warna aksen secara instan, serta kartu telemetri alokasi runtime kontainer Docker cgroups v2 dan bar kapasitas kuota langganan; (3) Perluasan dialog konfigurasi blueprint (.blueprint-config-dialog) menjadi 760px dan pemantapan tombol aksi side-by-side anti-wrap.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12000-1',
+        type: 'feature',
+        scope: 'Expansive 980px Studio Modal Architecture (.modal-dialog-create-site)',
+        description: 'Memperluas dimensi dialog pembuatan website menjadi 980px dengan tata letak split-grid 2 kolom yang lapang, seimbang, dan eye-catching di seluruh resolusi layar (720p, 1080p, 1440p, 2480p+).'
+      },
+      {
+        id: 'c-02dash-12000-2',
+        type: 'feature',
+        scope: 'Interactive Real-Time Browser Mockup & Live Canvas Preview',
+        description: 'Menyematkan frame mockup jendela browser macOS dengan address bar SSL TLS 1.3 dan pratinjau kanvas dinamis yang merespons perubahan nama website, slogan, blueprint, serta warna aksen secara instan.'
+      },
+      {
+        id: 'c-02dash-12000-3',
+        type: 'improvement',
+        scope: 'Smart Auto-Slug Generator & Traefik Edge Subdomain Checker',
+        description: 'Menyediakan fitur sinkronisasi otomatis nama situs ke subdomain URL ramah SEO dengan tombol re-sync serta validasi ketersediaan rute edge Traefik v3 HTTP/3 secara langsung.'
+      },
+      {
+        id: 'c-02dash-12000-4',
+        type: 'improvement',
+        scope: 'Container Telemetry Specs & Plan Quota Progress Meter',
+        description: 'Menampilkan telemetri alokasi sumber daya kontainer (0.5 vCPU, 256 MB RAM, Let\'s Encrypt Auto) dan widget progres pemakaian kuota slot kontainer paket langganan secara transparan.'
+      }
+    ]
+  },
+  {
     version: 'v1.19.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Perbaikan Penumpukan Tombol Upgrade Paket & Integrasi Alur Checkout Pembayaran Langsung dengan E-Faktur Otomatis',
     summary: 'Memperbaiki tata letak header kartu paket berjalan (.plan-crown-header) untuk mengeliminasi penumpukan teks dan tombol "Ganti / Upgrade Paket" di semua resolusi layar (720p, 1080p, 1440p, 2480p+). Menambahkan alur Checkout & Pembayaran Langsung terpadu pada penambahan slot kontainer maupun upgrade paket langganan (mendukung 4 metode pembayaran: BCA VA, QRIS Dinamis, Visa Corporate, Mandiri Bill) yang secara instan menerbitkan Faktur Pajak Resmi (E-Faktur PPN 11%) ke buku besar faktur serta langsung memunculkan pratinjau dokumen faktur lunas siap cetak/unduh.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

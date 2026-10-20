@@ -42,7 +42,10 @@ import {
   Trash2,
   Lock,
   AlertTriangle,
-  Menu
+  Menu,
+  Rocket,
+  Zap,
+  Check
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 import { generateContainerLogs, type ContainerLogEntry } from '../data/container-logs';
@@ -109,14 +112,93 @@ interface BlueprintTemplate {
   desc: string;
   icon: any;
   badge?: string;
+  tagline: string;
+  features: string[];
 }
 
 const blueprintOptions: BlueprintTemplate[] = [
-  { id: 'business', name: 'Toko Online & Retail', desc: 'Etalase produk, diskon & WhatsApp checkout', icon: ShoppingBag, badge: 'Flagship' },
-  { id: 'portfolio', name: 'Portofolio Teknis', desc: 'Studi kasus & cloud telemetry', icon: Briefcase },
-  { id: 'blog', name: 'Blog & Editorial', desc: 'Artikel, publikasi & berita', icon: BookOpen },
-  { id: 'education', name: 'Pusat Edukasi LMS', desc: 'Silabus kursus & modul', icon: GraduationCap }
+  {
+    id: 'business',
+    name: 'Toko Online & Retail',
+    desc: 'Etalase produk komersial, promo diskon & checkout langsung via WhatsApp.',
+    icon: ShoppingBag,
+    badge: 'Flagship',
+    tagline: 'Komersial & E-Commerce',
+    features: ['Katalog Produk Dinamis', 'Order WhatsApp Instan', 'Tracking Pesanan']
+  },
+  {
+    id: 'portfolio',
+    name: 'Portofolio Teknis & Pro',
+    desc: 'Showcase karya digital, rekayasa cloud & metrik telemetri runtime.',
+    icon: Briefcase,
+    badge: 'Populer',
+    tagline: 'Personal & Professional',
+    features: ['Showcase Portofolio Pro', 'Riwayat Pengalaman', 'Form Kontak Cepat']
+  },
+  {
+    id: 'blog',
+    name: 'Media Editorial & Blog',
+    desc: 'Publikasi artikel, berita multimedia & optimasi SEO mesin pencari tinggi.',
+    icon: BookOpen,
+    badge: 'SEO Top',
+    tagline: 'Editorial & Jurnalistik',
+    features: ['Sistem Kategori & Tag', 'Format Baca Fokus', 'Sitemap Generator']
+  },
+  {
+    id: 'education',
+    name: 'Pusat Edukasi LMS',
+    desc: 'Akademi pelatihan, silabus kurikulum kursus & registrasi peserta online.',
+    icon: GraduationCap,
+    badge: 'Akademik',
+    tagline: 'Pendidikan & Kursus',
+    features: ['Silabus Kurikulum Kursus', 'Pendaftaran Peserta', 'Portal Materi Edukasi']
+  }
 ];
+
+const brandColorPresets = [
+  { id: 'blue', hex: '#2563eb', label: 'Royal Blue' },
+  { id: 'emerald', hex: '#059669', label: 'Emerald' },
+  { id: 'violet', hex: '#7c3aed', label: 'Violet' },
+  { id: 'amber', hex: '#d97706', label: 'Amber' },
+  { id: 'rose', hex: '#e11d48', label: 'Rose' },
+  { id: 'slate', hex: '#0f172a', label: 'Deep Slate' }
+];
+
+const isSubdomainManuallyEdited = ref(false);
+
+const autoSlugFromName = (name: string) => {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .slice(0, 32);
+};
+
+const onSiteNameInput = () => {
+  if (!isSubdomainManuallyEdited.value) {
+    newSiteForm.value.subdomain = autoSlugFromName(newSiteForm.value.name);
+  }
+};
+
+const onSubdomainManualInput = () => {
+  isSubdomainManuallyEdited.value = true;
+};
+
+const forceResyncSubdomain = () => {
+  newSiteForm.value.subdomain = autoSlugFromName(newSiteForm.value.name);
+  isSubdomainManuallyEdited.value = false;
+};
+
+const selectedBlueprint = computed(() => {
+  return blueprintOptions.find(b => b.id === newSiteForm.value.category) || blueprintOptions[0];
+});
+
+watch(isCreateModalOpen, (isOpen) => {
+  if (isOpen) {
+    isSubdomainManuallyEdited.value = false;
+  }
+});
 
 // Real-time subdomain availability check
 const isSubdomainAvailable = (sub: string) => {
@@ -602,20 +684,27 @@ const handleLogout = async () => {
     </div>
 
     <!-- ============================================================= -->
-    <!-- MODAL: BUAT SITUS & KONTAINER (HANDCRAFTED MINIMALIST SAAS)  -->
+    <!-- MODAL: BUAT SITUS & KONTAINER BARU (EXPANSIVE STUDIO DESIGN)  -->
     <!-- ============================================================= -->
     <Teleport to="body">
       <div v-if="isCreateModalOpen" class="modal-backdrop" @click.self="isCreateModalOpen = false">
-        <div class="modal-dialog">
-          <!-- Header -->
-          <div class="modal-header">
+        <div class="modal-dialog modal-dialog-create-site">
+          <!-- 1. Header Bar -->
+          <div class="modal-header create-site-header">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box">
-                <Layers :size="18" />
+              <div class="create-site-header-glyph">
+                <Rocket :size="20" />
               </div>
               <div>
-                <h3 class="modal-heading">Buat Situs Baru</h3>
-                <p class="modal-subheading">Inisialisasi kontainer Docker mandiri dengan routing Traefik v3.</p>
+                <div class="create-site-title-row">
+                  <h3 class="modal-heading">Buat Website & Deploy Kontainer Baru</h3>
+                  <span class="badge-status running" style="font-size: 0.68rem; font-weight: 700;">
+                    <Zap :size="10" /> Ready to Provision
+                  </span>
+                </div>
+                <p class="modal-subheading">
+                  Inisialisasi kontainer mandiri terisolasi (cgroups v2) dengan sertifikat SSL otomatis dan routing Traefik v3 HTTP/3.
+                </p>
               </div>
             </div>
             <button class="modal-close-button" @click="isCreateModalOpen = false" title="Tutup">
@@ -623,122 +712,305 @@ const handleLogout = async () => {
             </button>
           </div>
 
-          <form @submit.prevent="handleCreateContainer" class="modal-form">
-            <!-- 1. Blueprint Selection -->
-            <div class="form-field-group">
-              <label class="field-title">Pilih Blueprint Awal</label>
-              <div class="template-selector-grid">
-                <button
-                  type="button"
-                  v-for="tpl in blueprintOptions"
-                  :key="tpl.id"
-                  class="template-option"
-                  :class="{ active: newSiteForm.category === tpl.id }"
-                  @click="newSiteForm.category = tpl.id as any"
-                >
-                  <div class="template-option-icon">
-                    <component :is="tpl.icon" :size="15" />
+          <form @submit.prevent="handleCreateContainer" class="create-site-form">
+            <!-- 2-Column Responsive Studio Layout -->
+            <div class="create-site-split-grid">
+              
+              <!-- LEFT COLUMN: Form Controls & Blueprints -->
+              <div class="create-site-fields-col">
+                
+                <!-- 1. Blueprint Architecture Selection -->
+                <div class="create-step-block">
+                  <div class="create-step-header">
+                    <span class="step-num-pill">1</span>
+                    <span class="step-title-text">Pilih Blueprint Arsitektur Situs</span>
+                    <span class="step-helper-badge">4 Ekosistem Tersedia</span>
                   </div>
-                  <div class="template-option-text">
-                    <div class="template-option-name" style="display: flex; align-items: center; gap: 6px;">
-                      <span>{{ tpl.name }}</span>
-                      <span v-if="tpl.badge" style="font-size: 0.62rem; color: #ea580c; background: #fff7ed; border: 1px solid #fed7aa; padding: 1px 5px; border-radius: 4px; font-weight: 700;">
-                        {{ tpl.badge }}
+
+                  <div class="blueprint-cards-grid">
+                    <button
+                      type="button"
+                      v-for="tpl in blueprintOptions"
+                      :key="tpl.id"
+                      class="blueprint-card-item"
+                      :class="{ active: newSiteForm.category === tpl.id }"
+                      @click="newSiteForm.category = tpl.id as any"
+                    >
+                      <div class="blueprint-card-top">
+                        <div class="blueprint-card-icon" :class="'icon-' + tpl.id">
+                          <component :is="tpl.icon" :size="16" />
+                        </div>
+                        <div class="blueprint-card-badges">
+                          <span v-if="tpl.badge" class="blueprint-pill-badge" :class="'pill-' + tpl.id">
+                            {{ tpl.badge }}
+                          </span>
+                          <span class="blueprint-radio-check" :class="{ checked: newSiteForm.category === tpl.id }">
+                            <Check v-if="newSiteForm.category === tpl.id" :size="11" stroke-width="3" />
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="blueprint-card-body">
+                        <h4 class="blueprint-card-name">{{ tpl.name }}</h4>
+                        <p class="blueprint-card-desc">{{ tpl.desc }}</p>
+                      </div>
+
+                      <div class="blueprint-card-footer">
+                        <span class="blueprint-feature-tag" v-for="(feat, fIdx) in tpl.features.slice(0, 2)" :key="fIdx">
+                          {{ feat }}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 2. Domain & Identity Configuration -->
+                <div class="create-step-block">
+                  <div class="create-step-header">
+                    <span class="step-num-pill">2</span>
+                    <span class="step-title-text">Konfigurasi Identitas & Rute Subdomain</span>
+                  </div>
+
+                  <div class="create-form-inputs-group">
+                    <!-- Website Name -->
+                    <div class="create-input-row">
+                      <label class="create-field-label" for="modal-site-name">
+                        <span>Nama Website</span>
+                        <span class="field-req-dot">*</span>
+                      </label>
+                      <input
+                        id="modal-site-name"
+                        v-model="newSiteForm.name"
+                        @input="onSiteNameInput"
+                        type="text"
+                        placeholder="Contoh: Toko Kopi Sejahtera"
+                        class="create-text-input"
+                        required
+                        autocomplete="off"
+                      />
+                    </div>
+
+                    <!-- Subdomain Edge Input -->
+                    <div class="create-input-row">
+                      <div class="subdomain-label-row">
+                        <label class="create-field-label" for="modal-subdomain">
+                          <span>Subdomain Edge Cloud</span>
+                          <span class="field-req-dot">*</span>
+                        </label>
+                        <button
+                          type="button"
+                          class="btn-resync-slug"
+                          @click="forceResyncSubdomain"
+                          title="Sinkronkan ulang dari nama website"
+                          v-if="isSubdomainManuallyEdited"
+                        >
+                          <RotateCw :size="11" />
+                          <span>Sinkronkan Nama</span>
+                        </button>
+                      </div>
+
+                      <div class="create-url-container">
+                        <span class="url-addon-prefix">
+                          <Lock :size="12" class="url-addon-lock" />
+                          https://
+                        </span>
+                        <input
+                          id="modal-subdomain"
+                          v-model="newSiteForm.subdomain"
+                          @input="onSubdomainManualInput"
+                          type="text"
+                          placeholder="nama-situs"
+                          class="create-url-core"
+                          required
+                          autocomplete="off"
+                        />
+                        <span class="url-addon-suffix">.cloudcms.app</span>
+                      </div>
+
+                      <!-- Subdomain Live Availability Feedback -->
+                      <div class="subdomain-check-feedback" v-if="newSiteForm.subdomain.trim()">
+                        <span v-if="isSubdomainAvailable(newSiteForm.subdomain)" class="feedback-avail">
+                          <CheckCircle2 :size="12" /> Subdomain tersedia & rute edge Traefik v3 siap dialokasikan
+                        </span>
+                        <span v-else class="feedback-taken">
+                          <AlertCircle :size="12" /> Subdomain sudah digunakan oleh kontainer lain
+                        </span>
+                      </div>
+                      <p class="field-helper-text" v-else>
+                        Rute edge Traefik v3 otomatis menerbitkan sertifikat TLS v1.3 Let's Encrypt Wildcard.
+                      </p>
+                    </div>
+
+                    <!-- Role / Headline -->
+                    <div class="create-input-row">
+                      <div class="field-title-flex">
+                        <label class="create-field-label" for="modal-role">Headline atau Slogan Situs</label>
+                        <span class="field-optional-badge">Opsional</span>
+                      </div>
+                      <input
+                        id="modal-role"
+                        v-model="newSiteForm.role"
+                        type="text"
+                        placeholder="Contoh: Solusi Kebutuhan Retail & Grosir Terlengkap"
+                        class="create-text-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. Visual Accent Brand Color -->
+                <div class="create-step-block">
+                  <div class="create-step-header">
+                    <span class="step-num-pill">3</span>
+                    <span class="step-title-text">Palet Warna Aksen Brand</span>
+                  </div>
+
+                  <div class="color-presets-row">
+                    <button
+                      type="button"
+                      v-for="color in brandColorPresets"
+                      :key="color.id"
+                      class="color-preset-btn"
+                      :class="{ active: newSiteForm.accentColor === color.hex }"
+                      :style="{ '--swatch-color': color.hex }"
+                      @click="newSiteForm.accentColor = color.hex"
+                      :title="color.label"
+                    >
+                      <span class="color-swatch-dot" :style="{ backgroundColor: color.hex }"></span>
+                      <span class="color-preset-label">{{ color.label }}</span>
+                      <Check v-if="newSiteForm.accentColor === color.hex" :size="12" class="color-check-icon" />
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- RIGHT COLUMN: Live Studio Preview & Telemetry Specs -->
+              <div class="create-site-preview-col">
+                
+                <!-- Live Browser Mockup Card -->
+                <div class="create-mockup-frame">
+                  <div class="mockup-frame-header">
+                    <div class="mac-traffic-lights">
+                      <span class="mac-dot mac-red"></span>
+                      <span class="mac-dot mac-yellow"></span>
+                      <span class="mac-dot mac-green"></span>
+                    </div>
+                    <div class="mockup-address-pill">
+                      <Lock :size="11" style="color: #10b981;" />
+                      <span class="mockup-url-text">
+                        https://{{ (newSiteForm.subdomain || 'nama-situs').toLowerCase() }}.cloudcms.app
                       </span>
                     </div>
-                    <div class="template-option-desc">{{ tpl.desc }}</div>
+                    <span class="mockup-tls-tag">TLS 1.3</span>
                   </div>
-                  <div class="template-option-radio">
-                    <div class="radio-dot"></div>
+
+                  <!-- Mockup Canvas Screen -->
+                  <div class="mockup-canvas-screen">
+                    <div class="mockup-site-banner" :style="{ background: `linear-gradient(135deg, ${newSiteForm.accentColor || '#2563eb'} 0%, #0f172a 100%)` }">
+                      <div class="mockup-brand-row">
+                        <div class="mockup-avatar-box">
+                          <component :is="selectedBlueprint.icon" :size="18" />
+                        </div>
+                        <div class="mockup-badge-blueprint">
+                          {{ selectedBlueprint.tagline }}
+                        </div>
+                      </div>
+
+                      <h4 class="mockup-site-title">
+                        {{ newSiteForm.name || 'Nama Website Anda' }}
+                      </h4>
+                      <p class="mockup-site-headline">
+                        {{ newSiteForm.role || 'Website Resmi HeroCMS Cloud' }}
+                      </p>
+
+                      <div class="mockup-action-demo">
+                        <span class="mockup-demo-btn" :style="{ backgroundColor: newSiteForm.accentColor || '#2563eb' }">
+                          Kunjungi Situs
+                        </span>
+                        <span class="mockup-demo-ghost">
+                          Hubungi Kami
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="mockup-features-strip">
+                      <div class="mockup-feature-chip" v-for="(feat, fIdx) in selectedBlueprint.features" :key="fIdx">
+                        <Check :size="11" style="color: #059669;" />
+                        <span>{{ feat }}</span>
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                <!-- Container Runtime Allocation Box -->
+                <div class="create-telemetry-card">
+                  <div class="telemetry-card-title-row">
+                    <div class="telemetry-card-icon-box">
+                      <Server :size="14" />
+                    </div>
+                    <div>
+                      <h5 class="telemetry-card-title">Alokasi Runtime Kontainer</h5>
+                      <span class="telemetry-card-sub">Isolasi Kernel Linux cgroups v2</span>
+                    </div>
+                  </div>
+
+                  <div class="telemetry-specs-grid">
+                    <div class="telemetry-spec-item">
+                      <span class="spec-label">CPU Limit</span>
+                      <strong class="spec-value">{{ userPlan.cpuPerContainer || '0.5 vCPU' }}</strong>
+                    </div>
+                    <div class="telemetry-spec-item">
+                      <span class="spec-label">RAM Alokasi</span>
+                      <strong class="spec-value">{{ userPlan.ramPerContainer || '256 MB' }}</strong>
+                    </div>
+                    <div class="telemetry-spec-item">
+                      <span class="spec-label">Edge Ingress</span>
+                      <strong class="spec-value">Traefik v3 (1.8ms)</strong>
+                    </div>
+                    <div class="telemetry-spec-item">
+                      <span class="spec-label">Sertifikat SSL</span>
+                      <strong class="spec-value">Let's Encrypt Auto</strong>
+                    </div>
+                  </div>
+
+                  <!-- Quota Utilization Bar -->
+                  <div class="create-quota-widget">
+                    <div class="quota-widget-header">
+                      <span>Kapasitas Slot Kontainer</span>
+                      <strong>{{ containers.length + 1 }} dari {{ userPlan.maxContainers }} Slot ({{ userPlan.name }})</strong>
+                    </div>
+                    <div class="quota-progress-track">
+                      <div
+                        class="quota-progress-fill"
+                        :style="{ width: `${Math.min(100, Math.round(((containers.length + 1) / userPlan.maxContainers) * 100))}%` }"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="modal-footer-row create-site-footer">
+              <div class="create-footer-note">
+                <span class="pulse-green-sm"></span>
+                <span>Traefik Edge & Docker Host Siap Menerima Beban Kerja</span>
+              </div>
+              <div class="create-footer-buttons">
+                <button type="button" class="btn-modal-ghost" @click="isCreateModalOpen = false">
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  class="btn-modal-confirm btn-create-deploy"
+                  :disabled="!newSiteForm.name.trim() || !newSiteForm.subdomain.trim() || !isSubdomainAvailable(newSiteForm.subdomain)"
+                >
+                  <Rocket :size="15" />
+                  <span>Deploy & Luncurkan Kontainer</span>
                 </button>
               </div>
-            </div>
-
-            <!-- 2. Nama Website -->
-            <div class="form-field-group">
-              <label class="field-title" for="modal-site-name">
-                Nama Website
-                <span class="field-req-dot">*</span>
-              </label>
-              <input
-                id="modal-site-name"
-                v-model="newSiteForm.name"
-                type="text"
-                placeholder="Contoh: Portofolio Rizal Pratama"
-                class="field-text-input"
-                required
-              />
-            </div>
-
-            <!-- 3. Subdomain Field -->
-            <div class="form-field-group">
-              <label class="field-title" for="modal-subdomain">
-                Subdomain
-                <span class="field-req-dot">*</span>
-              </label>
-              <div class="url-input-container">
-                <span class="url-addon-prefix">
-                  <Globe :size="13" class="url-addon-icon" />
-                  https://
-                </span>
-                <input
-                  id="modal-subdomain"
-                  v-model="newSiteForm.subdomain"
-                  type="text"
-                  placeholder="nama-situs"
-                  class="url-core-input"
-                  required
-                />
-                <span class="url-addon-suffix">.cloudcms.app</span>
-              </div>
-              <!-- Real-time Subdomain Availability Feedback -->
-              <div class="subdomain-check-feedback" v-if="newSiteForm.subdomain.trim()">
-                <span v-if="isSubdomainAvailable(newSiteForm.subdomain)" class="feedback-avail">
-                  <CheckCircle2 :size="12" /> Subdomain tersedia & rute edge Traefik siap dialokasikan
-                </span>
-                <span v-else class="feedback-taken">
-                  <AlertCircle :size="12" /> Subdomain sudah digunakan oleh kontainer lain
-                </span>
-              </div>
-              <p class="field-helper-text" v-else>
-                Rute edge Traefik otomatis menerbitkan sertifikat SSL TLS v1.3 Let's Encrypt.
-              </p>
-            </div>
-
-            <!-- 4. Headline / Peran -->
-            <div class="form-field-group">
-              <div class="field-title-flex">
-                <label class="field-title" for="modal-role">Headline atau Peran</label>
-                <span class="field-optional-badge">Opsional</span>
-              </div>
-              <input
-                id="modal-role"
-                v-model="newSiteForm.role"
-                type="text"
-                placeholder="e.g. Senior Software & Cloud Architect"
-                class="field-text-input"
-              />
-            </div>
-
-            <!-- 5. Resource Allocation Spec Note -->
-            <div class="resource-spec-callout">
-              <Server :size="13" class="spec-callout-icon" />
-              <div class="spec-callout-text">
-                <span>Alokasi runtime: </span>
-                <strong>0.5 vCPU</strong> • <strong>256 MB RAM</strong> (cgroups v2) • Traefik v3 Proxy
-              </div>
-            </div>
-
-            <!-- 6. Footer Actions -->
-            <div class="modal-footer-row">
-              <button type="button" class="btn-modal-ghost" @click="isCreateModalOpen = false">
-                Batal
-              </button>
-              <button type="submit" class="btn-modal-confirm">
-                <Plus :size="14" />
-                <span>Deploy Kontainer</span>
-              </button>
             </div>
           </form>
         </div>

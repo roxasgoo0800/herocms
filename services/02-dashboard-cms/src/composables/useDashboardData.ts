@@ -378,7 +378,8 @@ const newSiteForm = ref({
   name: '',
   subdomain: '',
   category: 'business' as 'portfolio' | 'blog' | 'education' | 'business',
-  role: ''
+  role: '',
+  accentColor: '#2563eb'
 });
 
 const openCreateModal = (category?: 'portfolio' | 'blog' | 'education' | 'business') => {
@@ -390,6 +391,7 @@ const openCreateModal = (category?: 'portfolio' | 'blog' | 'education' | 'busine
   newSiteForm.value.name = '';
   newSiteForm.value.subdomain = '';
   newSiteForm.value.role = '';
+  newSiteForm.value.accentColor = '#2563eb';
   if (category) newSiteForm.value.category = category;
   isCreateModalOpen.value = true;
 };
@@ -424,7 +426,7 @@ const handleCreateContainer = () => {
     ssl: true,
     roleOrHeadline: newSiteForm.value.role || 'Website Resmi ' + newSiteForm.value.name,
     bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
-    accentColor: '#2563eb',
+    accentColor: newSiteForm.value.accentColor || '#2563eb',
     lastDeployed: 'Baru saja'
   };
 
