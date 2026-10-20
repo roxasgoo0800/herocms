@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.18.1',
+    version: 'v1.19.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.19.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Modul Faktur & Riwayat Tagihan Resmi (E-Faktur): Buku Besar, Rekapitulasi Pajak PPN 11% & Profil Wajib Pajak Badan',
+    summary: 'Merombak antarmuka modul Faktur & Invoice resmi menjadi sistem penagihan enterprise komprehensif 3-Tab: (1) Buku Besar Faktur interaktif dengan pencarian cepat, filter tahun, clickable row inspection, dan ekspor batch dokumen; (2) Tab Rekapitulasi Pajak PPN 11% & Tren Belanja SaaS menampilkan historis pengeluaran bulanan dan sertifikat kepatuhan fiskal terintegrasi; (3) Tab Pengaturan Profil Wajib Pajak untuk mengonfigurasi identitas PT/Badan Usaha, NPWP 16 digit format baru, alamat kantor resmi, serta otomatisasi pengiriman PDF faktur pajak ke email finance; (4) Pembaruan lembar E-Faktur resmi dengan stempel digital QR Code validasi DJP dan rincian DPP & PPN 11% sesuai PMK-60/PMK.03/2022.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11900-1',
+        type: 'feature',
+        scope: 'Interactive Invoices Ledger & Batch Archival Download',
+        description: 'Menyajikan buku besar faktur lengkap dengan status kelayakan 100% lunas, pencarian instan, filter tahun penagihan, tombol ekspor CSV laporan keuangan, dan fitur unduh seluruh berkas faktur dalam satu arsip terpadu.'
+      },
+      {
+        id: 'c-02dash-11900-2',
+        type: 'feature',
+        scope: 'VAT Tax Reconciliation & Monthly SaaS Spending Analytics',
+        description: 'Menambahkan tab rekapitulasi pajak PPN 11% dan tren belanja bulanan (Juli s/d Oktober 2026) disertai sertifikat kepatuhan wajib pajak resmi ber-NPWP PT Hero Digital Multitek.'
+      },
+      {
+        id: 'c-02dash-11900-3',
+        type: 'feature',
+        scope: 'Corporate Tenant Tax Profile & 16-Digit NPWP Configuration',
+        description: 'Menyematkan formulir pengaturan identitas perpajakan badan usaha untuk pencantuman otomatis nama PT, NPWP 16 digit format baru, alamat resmi faktur, serta toggle otomatisasi pengiriman PDF E-Faktur ke email finance.'
+      },
+      {
+        id: 'c-02dash-11900-4',
+        type: 'improvement',
+        scope: 'Digital E-Faktur Paper Modal with DJP QR Verification Stamp',
+        description: 'Menyempurnakan dialog dokumen faktur pajak digital berstempel lunas resmi, verifikasi QR Code DJP, rincian DPP dan PPN 11%, serta tombol aksi cetak dan unduh yang berdampingan secara presisi.'
+      }
+    ]
+  },
+  {
     version: 'v1.18.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Penguatan Proteksi Universal Side-by-Side Baris Aksi Tabel & Sinkronisasi Faktur Tagihan Oktober',
     summary: 'Menerapkan proteksi tata letak tombol baris aksi universal (Anti-Enter / Strict Non-Wrapping) untuk seluruh tabel dan kartu (.row-actions, .ticket-col-actions, .endpoint-actions, .page-card-actions) di semua variasi resolusi layar (720p, 1080p, 1440p, 2480p+). Memperbarui dataset riwayat penagihan resmi dengan faktur periode berjalan Oktober 2026 dan menyinkronkan jadwal perpanjangan otomatis berikutnya ke 15 November 2026.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
@@ -92,7 +128,7 @@ export const changelogReleases: ChangelogRelease[] = [
       },
       {
         id: 'c-02dash-11801-2',
-        type: 'fix',
+        type: 'bugfix',
         scope: 'Current October 2026 Billing Invoice & Telemetry Sync',
         description: 'Menyinkronkan data invoice periode berjalan INV-2026-10-0994 (Lunas) dan memperbarui telemetri jadwal penagihan berikutnya menjadi 15 November 2026.'
       }
