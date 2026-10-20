@@ -9667,6 +9667,408 @@ a[class*="btn-"] svg,
   line-height: 1.3;
 }
 
+/* ==========================================================================
+   REFRACTORED REFINEMENT: WEBHOOK ADD MODAL (PRESETS, CATEGORIZED EVENTS, LIVE JSON PREVIEW)
+   ========================================================================== */
+/* Webhook Target Platform Presets Grid */
+.webhook-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 680px) {
+  .webhook-presets-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.webhook-preset-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.webhook-preset-card:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.webhook-preset-card.active {
+  background: #f0f9ff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.webhook-preset-icon-box {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.webhook-preset-card.active .webhook-preset-icon-box {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.webhook-preset-icon-box.discord { color: #5865f2; }
+.webhook-preset-icon-box.slack { color: #4a154b; }
+.webhook-preset-icon-box.zapier { color: #ff4a00; }
+.webhook-preset-icon-box.custom { color: #0284c7; }
+
+.webhook-preset-card.active .webhook-preset-icon-box.discord,
+.webhook-preset-card.active .webhook-preset-icon-box.slack,
+.webhook-preset-card.active .webhook-preset-icon-box.zapier,
+.webhook-preset-card.active .webhook-preset-icon-box.custom {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.webhook-preset-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.webhook-preset-desc {
+  font-size: 10.5px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.webhook-preset-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+/* Preset Guidance Tip Box */
+.preset-helper-tip-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: #475569;
+}
+
+.preset-helper-tip-box strong {
+  color: #0f172a;
+}
+
+/* Secret Key Control Box */
+.secret-key-field-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #090d16;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.secret-prefix-tag {
+  font-size: 10px;
+  font-weight: 800;
+  font-family: ui-monospace, monospace;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.secret-code-display {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  color: #f1f5f9;
+  letter-spacing: 0.05em;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.secret-actions-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.btn-secret-tool {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-secret-tool:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.btn-secret-tool.copied {
+  background: #065f46;
+  border-color: #059669;
+  color: #ffffff;
+}
+
+/* Categorized Notification Events Grid */
+.webhook-event-groups-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.webhook-group-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.webhook-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.webhook-group-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.webhook-group-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.webhook-group-count {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #64748b;
+  background: #e2e8f0;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.btn-group-toggle-all {
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-group-toggle-all:hover {
+  background: #eff6ff;
+}
+
+.webhook-event-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .webhook-event-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.webhook-event-select-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 9px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.webhook-event-select-card:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.webhook-event-select-card.active {
+  background: #f0f9ff;
+  border-color: #0284c7;
+}
+
+.webhook-event-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.webhook-event-id {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0284c7;
+}
+
+.webhook-event-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.webhook-event-desc {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+/* Live Dynamic JSON Payload Preview Section */
+.payload-preview-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.payload-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.payload-preview-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.payload-event-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.payload-event-tab-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  font-family: ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.payload-event-tab-btn:hover {
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.payload-event-tab-btn.active {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #38bdf8;
+}
+
+.payload-terminal-box {
+  background: #090d16;
+  padding: 12px 14px;
+  max-height: 170px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.payload-code-pre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11.5px;
+  color: #38bdf8;
+  line-height: 1.5;
+}
+
+.btn-copy-preview-payload {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-copy-preview-payload:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
 /* Modal Footer Buttons - Strictly Side-by-Side and Never Wrap */
 .modal-footer-row {
   display: flex !important;

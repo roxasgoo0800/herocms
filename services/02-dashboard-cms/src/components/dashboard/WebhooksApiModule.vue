@@ -20,7 +20,14 @@ import {
   Pause,
   Play,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  MessageSquare,
+  Hash,
+  Zap,
+  Globe,
+  RefreshCw,
+  Info,
+  Sparkles
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { PersonalAccessToken, PatScopeCategory } from '../../types/dashboard';
@@ -72,34 +79,307 @@ const newWebhookForm = ref({
   events: ['article.published', 'lead.received'] as string[]
 });
 
-// Safe Outgoing Notification Events (strictly event alerts, no container/lifecycle controls)
-const availableNotificationEvents = [
+// Target Platform Presets for Webhooks
+type PresetType = 'discord' | 'slack' | 'zapier' | 'custom';
+const selectedPreset = ref<PresetType>('discord');
+
+const webhookPresets = [
   {
-    id: 'article.published',
-    label: 'Konten Editorial Terbit',
-    desc: 'Dipicu saat artikel baru diterbitkan dari CMS Studio'
+    id: 'discord' as PresetType,
+    name: 'Discord Webhook',
+    desc: 'Alert channel bot Discord',
+    icon: MessageSquare,
+    badge: 'Populer',
+    placeholder: 'https://discord.com/api/webhooks/128.../xyz',
+    defaultName: 'Discord Alur Notifikasi Editorial (#editorial-alerts)',
+    tip: 'Salin Webhook URL dari Server Settings > Integrations > Webhooks di server Discord Anda.',
+    defaultEvents: ['article.published', 'lead.received']
   },
   {
-    id: 'lead.received',
-    label: 'Formulir Kontak Masuk (Lead)',
-    desc: 'Payload data kiriman form dari pengunjung situs publik'
+    id: 'slack' as PresetType,
+    name: 'Slack Incoming',
+    desc: 'Bot alert channel Slack',
+    icon: Hash,
+    badge: 'Pro',
+    placeholder: 'https://hooks.slack.com/services/T00/B00/XXXXX',
+    defaultName: 'Slack Leads & Growth Bot (#leads-crm)',
+    tip: 'Gunakan URL Incoming Webhooks dari integrasi Slack App pada workspace Anda.',
+    defaultEvents: ['lead.received', 'traffic.spike']
   },
   {
-    id: 'ssl.renewed',
-    label: 'Sertifikat SSL Diperbarui',
-    desc: 'Konfirmasi Let\'s Encrypt auto-renewal sukses di Edge Traefik v3'
+    id: 'zapier' as PresetType,
+    name: 'Zapier / Make',
+    desc: 'Otomasi CRM, Sheet & App',
+    icon: Zap,
+    badge: 'Automasi',
+    placeholder: 'https://hooks.zapier.com/hooks/catch/12345/abcde',
+    defaultName: 'Zapier Event & Lead Relay',
+    tip: 'Buat trigger Catch Webhook di Zapier untuk meneruskan payload ke 5.000+ aplikasi cloud.',
+    defaultEvents: ['article.published', 'lead.received', 'backup.completed']
   },
   {
-    id: 'traffic.spike',
-    label: 'Peringatan Lonjakan Trafik',
-    desc: 'Notifikasi saat kunjungan melonjak melampaui batas wajar'
-  },
-  {
-    id: 'backup.completed',
-    label: 'Snapshot Backup Selesai',
-    desc: 'Konfirmasi backup database dan media sukses terarsip'
+    id: 'custom' as PresetType,
+    name: 'Custom HTTP API',
+    desc: 'Endpoint API REST Anda',
+    icon: Globe,
+    badge: 'Universal',
+    placeholder: 'https://api.perusahaan.com/v1/webhook',
+    defaultName: 'Backend Event Webhook Listener (HTTPS)',
+    tip: 'Payload HTTP POST JSON standar berkecepatan tinggi bertanda tangan HMAC-SHA256.',
+    defaultEvents: ['article.published', 'lead.received', 'ssl.renewed']
   }
 ];
+
+const selectPreset = (presetId: PresetType) => {
+  selectedPreset.value = presetId;
+  const preset = webhookPresets.find(p => p.id === presetId);
+  if (!preset) return;
+
+  const isPreviousDefault = webhookPresets.some(p => p.defaultName === newWebhookForm.value.name);
+  if (!newWebhookForm.value.name.trim() || isPreviousDefault) {
+    newWebhookForm.value.name = preset.defaultName;
+  }
+  newWebhookForm.value.events = [...preset.defaultEvents];
+};
+
+// Categorized Notification Events for Add Modal
+interface WebhookEventCategory {
+  id: string;
+  name: string;
+  icon: any;
+  events: Array<{
+    id: string;
+    label: string;
+    desc: string;
+  }>;
+}
+
+const webhookEventCategories: WebhookEventCategory[] = [
+  {
+    id: 'editorial',
+    name: 'Konten & Editorial CMS',
+    icon: FileText,
+    events: [
+      {
+        id: 'article.published',
+        label: 'Konten Editorial Terbit',
+        desc: 'Dipicu saat artikel baru diterbitkan secara publik dari CMS Studio'
+      },
+      {
+        id: 'article.updated',
+        label: 'Pembaruan Konten Artikel',
+        desc: 'Dipicu saat konten artikel yang sudah terbit diperbarui'
+      }
+    ]
+  },
+  {
+    id: 'leads',
+    name: 'Formulir Kontak & Prospek (Leads CRM)',
+    icon: Layers,
+    events: [
+      {
+        id: 'lead.received',
+        label: 'Formulir Kontak Masuk (Lead)',
+        desc: 'Payload data kiriman pesan formulir konsultasi/kontak dari pengunjung situs publik'
+      }
+    ]
+  },
+  {
+    id: 'edge_security',
+    name: 'Edge Ingress & Keamanan Sistem',
+    icon: ShieldCheck,
+    events: [
+      {
+        id: 'ssl.renewed',
+        label: 'Sertifikat SSL Diperbarui',
+        desc: 'Konfirmasi sertifikat Let\'s Encrypt TLS 1.3 sukses diperpanjang otomatis di Edge Traefik v3'
+      },
+      {
+        id: 'traffic.spike',
+        label: 'Peringatan Lonjakan Trafik',
+        desc: 'Notifikasi otomatis saat volume kunjungan melonjak melewati batas wajar'
+      }
+    ]
+  },
+  {
+    id: 'maintenance',
+    name: 'Pemeliharaan & Cadangan Data',
+    icon: Clock,
+    events: [
+      {
+        id: 'backup.completed',
+        label: 'Snapshot Backup Selesai',
+        desc: 'Konfirmasi arsip snapshot database PostgreSQL dan MinIO S3 sukses tersimpan'
+      }
+    ]
+  }
+];
+
+const isCategoryAllSelected = (cat: WebhookEventCategory) => {
+  return cat.events.every(e => newWebhookForm.value.events.includes(e.id));
+};
+
+const getCategoryCount = (cat: WebhookEventCategory) => {
+  return cat.events.filter(e => newWebhookForm.value.events.includes(e.id)).length;
+};
+
+const toggleCategoryAllEvents = (cat: WebhookEventCategory) => {
+  const allSel = isCategoryAllSelected(cat);
+  if (allSel) {
+    newWebhookForm.value.events = newWebhookForm.value.events.filter(
+      id => !cat.events.some(e => e.id === id)
+    );
+    if (newWebhookForm.value.events.length === 0) {
+      newWebhookForm.value.events = ['article.published'];
+      showToast('Minimal 1 event notifikasi harus tetap terpilih.', 'info');
+    }
+  } else {
+    for (const e of cat.events) {
+      if (!newWebhookForm.value.events.includes(e.id)) {
+        newWebhookForm.value.events.push(e.id);
+      }
+    }
+  }
+};
+
+const toggleWebhookEvent = (eventId: string) => {
+  const idx = newWebhookForm.value.events.indexOf(eventId);
+  if (idx > -1) {
+    if (newWebhookForm.value.events.length > 1) {
+      newWebhookForm.value.events.splice(idx, 1);
+    } else {
+      showToast('Minimal harus memilih 1 event notifikasi.', 'info');
+    }
+  } else {
+    newWebhookForm.value.events.push(eventId);
+  }
+};
+
+// Secret Signing Key Management
+const isRollingSecret = ref(false);
+const isSecretCopied = ref(false);
+
+const regenerateSecretKey = () => {
+  isRollingSecret.value = true;
+  setTimeout(() => {
+    newWebhookForm.value.secretKey = `whsec_9942_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 8)}`;
+    isRollingSecret.value = false;
+    showToast('Secret signing key baru berhasil di-generate!', 'info');
+  }, 250);
+};
+
+const copySecretKey = () => {
+  if (!newWebhookForm.value.secretKey) return;
+  navigator.clipboard.writeText(newWebhookForm.value.secretKey);
+  isSecretCopied.value = true;
+  showToast('Secret key berhasil disalin!', 'success');
+  setTimeout(() => {
+    isSecretCopied.value = false;
+  }, 2000);
+};
+
+// Live Dynamic JSON Payload Preview
+const selectedPreviewEvent = ref<string>('article.published');
+const isPayloadCopied = ref(false);
+
+const getSamplePayload = (eventId: string) => {
+  const nowIso = new Date().toISOString();
+  switch (eventId) {
+    case 'article.published':
+    case 'article.updated':
+      return {
+        event: eventId,
+        timestamp: nowIso,
+        tenant_id: 'tenant-9942',
+        webhook_id: 'wh_auto_generated',
+        data: {
+          article_id: 'art_8821',
+          title: 'Membangun Arsitektur Cloud Mandiri & Multi-Tenant',
+          slug: 'membangun-arsitektur-cloud-mandiri',
+          category: 'Teknologi & Cloud',
+          author: 'Rizal Pratama',
+          published_at: nowIso,
+          url: 'https://rizalpratama.cloudcms.app/artikel/membangun-arsitektur-cloud-mandiri'
+        }
+      };
+    case 'lead.received':
+      return {
+        event: 'lead.received',
+        timestamp: nowIso,
+        tenant_id: 'tenant-9942',
+        webhook_id: 'wh_auto_generated',
+        data: {
+          lead_id: 'lead_9942_01',
+          name: 'Budi Santoso',
+          email: 'budi@enterprise.co.id',
+          phone: '+6281234567890',
+          company: 'PT Solusi Bangsa Digital',
+          message: 'Tertarik dengan implementasi HeroCMS untuk 50 kontainer website.',
+          source_site: 'rizalpratama.cloudcms.app'
+        }
+      };
+    case 'ssl.renewed':
+      return {
+        event: 'ssl.renewed',
+        timestamp: nowIso,
+        tenant_id: 'tenant-9942',
+        webhook_id: 'wh_auto_generated',
+        data: {
+          domain: 'rizalpratama.cloudcms.app',
+          issuer: "Let's Encrypt Authority X3",
+          tls_version: 'TLS 1.3',
+          valid_until: '2027-01-18T00:00:00Z',
+          edge_router: 'traefik-v3-edge-01'
+        }
+      };
+    case 'traffic.spike':
+      return {
+        event: 'traffic.spike',
+        timestamp: nowIso,
+        tenant_id: 'tenant-9942',
+        webhook_id: 'wh_auto_generated',
+        data: {
+          container_id: 'cnt_9942_01',
+          subdomain: 'rizalpratama.cloudcms.app',
+          requests_per_minute: 4820,
+          normal_baseline: 450,
+          ratio: '10.7x spike',
+          action_taken: 'Traefik rate-limit & edge caching activated'
+        }
+      };
+    case 'backup.completed':
+      return {
+        event: 'backup.completed',
+        timestamp: nowIso,
+        tenant_id: 'tenant-9942',
+        webhook_id: 'wh_auto_generated',
+        data: {
+          backup_id: 'snap_20261020_9942',
+          size_compressed: '142.5 MB',
+          postgres_tables: 38,
+          s3_objects_archived: 124,
+          storage_target: 'cold-storage-cluster-jkt'
+        }
+      };
+    default:
+      return {
+        event: eventId,
+        timestamp: nowIso,
+        tenant_id: 'tenant-9942',
+        status: 'simulated'
+      };
+  }
+};
+
+const copyPreviewPayload = () => {
+  const jsonStr = JSON.stringify(getSamplePayload(selectedPreviewEvent.value), null, 2);
+  navigator.clipboard.writeText(jsonStr);
+  isPayloadCopied.value = true;
+  showToast('Contoh JSON payload berhasil disalin!', 'info');
+  setTimeout(() => {
+    isPayloadCopied.value = false;
+  }, 2000);
+};
 
 // Scope categories for PAT matrix
 const scopeCategories: Array<{ id: PatScopeCategory; label: string; icon: any }> = [
@@ -149,20 +429,6 @@ const toggleScopeItem = (scopeId: string) => {
     newPatForm.value.selectedScopes.splice(idx, 1);
   } else {
     newPatForm.value.selectedScopes.push(scopeId);
-  }
-};
-
-// Webhook events toggle
-const toggleWebhookEvent = (eventId: string) => {
-  const idx = newWebhookForm.value.events.indexOf(eventId);
-  if (idx > -1) {
-    if (newWebhookForm.value.events.length > 1) {
-      newWebhookForm.value.events.splice(idx, 1);
-    } else {
-      showToast('Minimal harus memilih 1 event notifikasi.', 'info');
-    }
-  } else {
-    newWebhookForm.value.events.push(eventId);
   }
 };
 
@@ -231,12 +497,14 @@ const handleDelete = (token: PersonalAccessToken) => {
 
 // Webhook Creation Handler
 const openAddWebhookModal = () => {
+  selectedPreset.value = 'discord';
   newWebhookForm.value = {
-    name: '',
+    name: 'Discord Alur Notifikasi Editorial (#editorial-alerts)',
     url: '',
-    secretKey: `whsec_9942_${Math.random().toString(36).substring(2, 10)}`,
+    secretKey: `whsec_9942_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 8)}`,
     events: ['article.published', 'lead.received']
   };
+  selectedPreviewEvent.value = 'article.published';
   isAddWebhookModalOpen.value = true;
 };
 
@@ -1031,7 +1299,7 @@ const copyActiveSnippet = () => {
     </Teleport>
 
     <!-- ================================================================= -->
-    <!-- MODAL 3: TAMBAH OUTGOING WEBHOOK BARU -->
+    <!-- MODAL 3: TAMBAH OUTGOING WEBHOOK BARU (REFAKTOR PRESET & EVENT GROUPS) -->
     <!-- ================================================================= -->
     <Teleport to="body">
       <div
@@ -1039,15 +1307,16 @@ const copyActiveSnippet = () => {
         class="modal-backdrop"
         @click.self="isAddWebhookModalOpen = false"
       >
-        <div class="modal-dialog">
+        <div class="modal-dialog" style="max-width: 720px;">
+          <!-- Modal Header -->
           <div class="modal-header">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box">
+              <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
                 <Webhook :size="18" />
               </div>
               <div>
-                <h3 class="modal-heading">Tambah Webhook Endpoint</h3>
-                <p class="modal-subheading">Konfigurasikan URL target penerima payload event notifikasi JSON.</p>
+                <h3 class="modal-heading">Tambah Webhook Endpoint Notifikasi</h3>
+                <p class="modal-subheading">Kirimkan payload HTTP POST JSON real-time ke Discord, Slack, Zapier, atau endpoint API server.</p>
               </div>
             </div>
             <button
@@ -1060,76 +1329,206 @@ const copyActiveSnippet = () => {
           </div>
 
           <form @submit.prevent="handleAddWebhookSubmit" class="modal-form-body">
+            <!-- 1. Platform Presets Selector -->
             <div class="form-group-block">
               <label class="input-label-row">
-                <span class="label-text">Nama Integrasi</span>
+                <span class="label-text">Pilih Platform Target (Preset Integrasi)</span>
+                <span class="label-badge-optional">Rekomendasi Cepat</span>
+              </label>
+              <div class="webhook-presets-grid">
+                <div
+                  v-for="preset in webhookPresets"
+                  :key="preset.id"
+                  class="webhook-preset-card"
+                  :class="{ active: selectedPreset === preset.id }"
+                  @click="selectPreset(preset.id)"
+                >
+                  <span class="webhook-preset-badge">{{ preset.badge }}</span>
+                  <div
+                    class="webhook-preset-icon-box"
+                    :class="preset.id"
+                  >
+                    <component :is="preset.icon" :size="17" />
+                  </div>
+                  <strong class="webhook-preset-name">{{ preset.name }}</strong>
+                  <span class="webhook-preset-desc">{{ preset.desc }}</span>
+                </div>
+              </div>
+
+              <!-- Preset Guidance Tip Box -->
+              <div class="preset-helper-tip-box">
+                <Info :size="14" style="color: #2563eb; flex-shrink: 0;" />
+                <span class="helper-tip-text">
+                  <strong>Tips {{ webhookPresets.find(p => p.id === selectedPreset)?.name }}:</strong>
+                  {{ webhookPresets.find(p => p.id === selectedPreset)?.tip }}
+                </span>
+              </div>
+            </div>
+
+            <!-- 2. Integration Name & Endpoint URL -->
+            <div class="form-group-block">
+              <label class="input-label-row">
+                <span class="label-text">Nama Integrasi Webhook</span>
                 <span class="label-badge-optional">Wajib</span>
               </label>
               <input
                 v-model="newWebhookForm.name"
                 type="text"
                 class="form-text-input"
-                placeholder="Contoh: Discord Alur Notifikasi Editorial (#leads-crm)"
+                placeholder="Contoh: Discord Alur Notifikasi Editorial (#editorial-alerts)"
                 required
-                autofocus
               />
             </div>
 
             <div class="form-group-block">
               <label class="input-label-row">
                 <span class="label-text">Target URL Endpoint (Wajib HTTPS)</span>
-                <span class="label-badge-optional">Wajib</span>
+                <span class="label-badge-optional">Protokol Terenkripsi TLS 1.3</span>
               </label>
               <input
                 v-model="newWebhookForm.url"
                 type="url"
                 class="form-text-input"
-                placeholder="https://discord.com/api/webhooks/... atau https://api.anda.com/hook"
+                :placeholder="webhookPresets.find(p => p.id === selectedPreset)?.placeholder || 'https://api.perusahaan.com/v1/webhook'"
                 required
               />
             </div>
 
+            <!-- 3. Secret Signing Key (HMAC-SHA256) -->
             <div class="form-group-block">
               <label class="input-label-row">
-                <span class="label-text">Secret Signing Key (HMAC-SHA256)</span>
-                <span class="label-badge-optional">Auto-generated</span>
+                <span class="label-text">Kunci Tanda Tangan Rahasia (HMAC-SHA256 Secret)</span>
+                <span class="label-badge-optional">Header: X-HeroCMS-Signature</span>
               </label>
-              <input
-                v-model="newWebhookForm.secretKey"
-                type="text"
-                class="form-text-input"
-                readonly
-              />
-            </div>
-
-            <div class="form-group-block">
-              <label class="input-label-row">
-                <span class="label-text">Pilih Event Notifikasi Yang Dikirim</span>
-                <span class="label-badge-optional">{{ newWebhookForm.events.length }} dipilih</span>
-              </label>
-              <div class="events-checklist-grid">
-                <div
-                  v-for="ev in availableNotificationEvents"
-                  :key="ev.id"
-                  class="event-check-box"
-                  :class="{ active: newWebhookForm.events.includes(ev.id) }"
-                  @click="toggleWebhookEvent(ev.id)"
-                >
-                  <div class="event-check-box-top">
-                    <strong>{{ ev.id }}</strong>
-                    <div
-                      class="custom-checkbox"
-                      :class="{ checked: newWebhookForm.events.includes(ev.id) }"
-                    >
-                      <Check v-if="newWebhookForm.events.includes(ev.id)" :size="12" />
-                    </div>
-                  </div>
-                  <div class="event-check-title">{{ ev.label }}</div>
-                  <div class="event-check-desc">{{ ev.desc }}</div>
+              <div class="secret-key-field-wrap">
+                <span class="secret-prefix-tag">HMAC-SHA256</span>
+                <code class="secret-code-display">{{ newWebhookForm.secretKey }}</code>
+                <div class="secret-actions-wrap">
+                  <button
+                    type="button"
+                    class="btn-secret-tool"
+                    :disabled="isRollingSecret"
+                    @click="regenerateSecretKey"
+                    title="Generate kunci secret baru"
+                  >
+                    <RefreshCw :size="12" :class="{ 'spin-anim': isRollingSecret }" />
+                    <span>{{ isRollingSecret ? 'Rolling...' : 'Roll Secret' }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-secret-tool"
+                    :class="{ copied: isSecretCopied }"
+                    @click="copySecretKey"
+                    title="Salin secret key"
+                  >
+                    <Check v-if="isSecretCopied" :size="12" />
+                    <Copy v-else :size="12" />
+                    <span>{{ isSecretCopied ? 'Tersalin' : 'Salin' }}</span>
+                  </button>
                 </div>
               </div>
             </div>
 
+            <!-- 4. Grouped Notification Events Selection -->
+            <div class="form-group-block">
+              <label class="input-label-row">
+                <span class="label-text">Pilih Event Notifikasi Yang Dikirim</span>
+                <span class="label-badge-optional">{{ newWebhookForm.events.length }} event aktif</span>
+              </label>
+
+              <div class="webhook-event-groups-container">
+                <div
+                  v-for="cat in webhookEventCategories"
+                  :key="cat.id"
+                  class="webhook-group-card"
+                >
+                  <div class="webhook-group-head">
+                    <div class="webhook-group-title-row">
+                      <component :is="cat.icon" :size="14" style="color: #64748b;" />
+                      <span class="webhook-group-title">{{ cat.name }}</span>
+                      <span class="webhook-group-count">
+                        {{ getCategoryCount(cat) }} / {{ cat.events.length }}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn-group-toggle-all"
+                      @click="toggleCategoryAllEvents(cat)"
+                    >
+                      {{ isCategoryAllSelected(cat) ? 'Hapus Semua' : 'Pilih Semua' }}
+                    </button>
+                  </div>
+
+                  <div class="webhook-event-grid">
+                    <div
+                      v-for="ev in cat.events"
+                      :key="ev.id"
+                      class="webhook-event-select-card"
+                      :class="{ active: newWebhookForm.events.includes(ev.id) }"
+                      @click="toggleWebhookEvent(ev.id)"
+                    >
+                      <div class="webhook-event-top">
+                        <code class="webhook-event-id">{{ ev.id }}</code>
+                        <div
+                          class="custom-checkbox"
+                          :class="{ checked: newWebhookForm.events.includes(ev.id) }"
+                        >
+                          <Check v-if="newWebhookForm.events.includes(ev.id)" :size="11" />
+                        </div>
+                      </div>
+                      <div class="webhook-event-title">{{ ev.label }}</div>
+                      <div class="webhook-event-desc">{{ ev.desc }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Live Dynamic JSON Payload Preview -->
+            <div class="form-group-block">
+              <label class="input-label-row">
+                <span class="label-text">Pratinjau JSON Payload Real-Time</span>
+                <span class="label-badge-optional">Format Data Terkirim</span>
+              </label>
+
+              <div class="payload-preview-section">
+                <div class="payload-preview-header">
+                  <div class="payload-preview-title-wrap">
+                    <Sparkles :size="13" style="color: #0284c7;" />
+                    <span>Pilih Sampel Event Payload:</span>
+                  </div>
+
+                  <div class="payload-event-tabs">
+                    <button
+                      type="button"
+                      v-for="ev in ['article.published', 'lead.received', 'ssl.renewed', 'traffic.spike', 'backup.completed']"
+                      :key="ev"
+                      class="payload-event-tab-btn"
+                      :class="{ active: selectedPreviewEvent === ev }"
+                      @click="selectedPreviewEvent = ev"
+                    >
+                      {{ ev }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="payload-terminal-box">
+                  <button
+                    type="button"
+                    class="btn-copy-preview-payload"
+                    @click="copyPreviewPayload"
+                    title="Salin contoh JSON payload"
+                  >
+                    <Check v-if="isPayloadCopied" :size="11" />
+                    <Copy v-else :size="11" />
+                    <span>{{ isPayloadCopied ? 'Tersalin' : 'Salin JSON' }}</span>
+                  </button>
+                  <pre class="payload-code-pre"><code>{{ JSON.stringify(getSamplePayload(selectedPreviewEvent), null, 2) }}</code></pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal Footer Actions (Guaranteed Side-by-Side) -->
             <div class="modal-footer-row">
               <button
                 type="button"
@@ -1140,7 +1539,7 @@ const copyActiveSnippet = () => {
               </button>
               <button type="submit" class="btn-modal-confirm">
                 <Plus :size="14" />
-                <span>Simpan Webhook</span>
+                <span>Simpan Webhook Endpoint</span>
               </button>
             </div>
           </form>

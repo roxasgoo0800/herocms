@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.17.0',
+    version: 'v1.17.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.17.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Modal Tambah Webhook Endpoint: Preset Terintegrasi (Discord/Slack/Zapier/Custom), Pengelompokan Event & Live JSON Payload Preview',
+    summary: 'Menyempurnakan dialog modal Tambah Webhook Endpoint pada modul Webhooks & API Developer. Menambahkan pilihan preset platform instan (Discord, Slack, Zapier, Custom HTTP Server) dengan tips format URL dan konfigurasi otomatis. Mengelompokkan event notifikasi ke dalam kategori tematik (Konten & Editorial, Formulir Kontak & Prospek, Edge Ingress & Keamanan, Pemeliharaan & Cadangan) disertai kontrol "Pilih Semua" per kategori. Menyematkan generator kunci HMAC-SHA256 secret mandiri dengan tombol roll & copy, serta pratinjau dinamis JSON payload real-time interaktif dengan navigasi per-event dan proteksi tata letak tombol berjejer horizontal (side-by-side).',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11701-1',
+        type: 'feature',
+        scope: 'Webhook Platform Presets (Discord, Slack, Zapier, Custom)',
+        description: 'Menyediakan kartu preset target terintegrasi yang secara otomatis mengisi nama integrasi, placeholder URL yang tepat, tips panduan konfigurasi, dan rekomendasi event notifikasi yang sesuai untuk masing-masing platform.'
+      },
+      {
+        id: 'c-02dash-11701-2',
+        type: 'improvement',
+        scope: 'Categorized Notification Events Matrix',
+        description: 'Mengorganisir checklist event notifikasi ke dalam 4 kategori terstruktur dengan ikon, counter jumlah terpilih, dan tombol toggle "Pilih Semua / Hapus Semua" per kelompok event.'
+      },
+      {
+        id: 'c-02dash-11701-3',
+        type: 'feature',
+        scope: 'Live Dynamic JSON Payload Preview Terminal',
+        description: 'Menyematkan terminal pratinjau payload JSON real-time interaktif di dalam modal dengan tab navigasi sampel per event (article.published, lead.received, ssl.renewed, traffic.spike, backup.completed) serta tombol salin JSON instan.'
+      },
+      {
+        id: 'c-02dash-11701-4',
+        type: 'security',
+        scope: 'HMAC-SHA256 Secret Key Management in Modal',
+        description: 'Menyertakan field kunci tanda tangan rahasia (HMAC-SHA256) terintegrasi dengan aksi regenerasi rahasia (roll secret) beranimasi dan salin ke clipboard untuk verifikasi header X-HeroCMS-Signature.'
+      }
+    ]
+  },
+  {
     version: 'v1.17.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Refaktor Arsitektur Webhooks Notifikasi Event & Peluncuran Personal Access Tokens (PAT) dengan Granular Scopes Filter',
     summary: 'Merombak total arsitektur modul Webhooks & API Developer menjadi sistem integrasi tingkat aplikasi yang aman dan terisolasi. Mengeliminasi kontrol lifecycle kontainer (stop/start/deploy) dan pipeline CI/CD dari API publik pengguna demi mencegah celah keamanan infrastruktur. Menghadirkan kapabilitas Personal Access Tokens (PAT) layaknya GitHub/Cloudflare dengan filter izin granular per kategori (Headless CMS, Prospek/Leads, CDN Media S3, Telemetri, dan Support), dialog pengungkapan token satu kali (One-Time Reveal) berstandar Zero-Knowledge, pembaruan webhook berfokus pada notifikasi event aman (Discord, Slack, Zapier), serta tabel inspeksi riwayat pengiriman payload (Delivery Logs) real-time.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
