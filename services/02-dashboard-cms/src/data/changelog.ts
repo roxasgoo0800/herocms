@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.21.0',
+    version: 'v1.22.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.22.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Pelebaran Buku Besar Faktur (Spacious Ledger Table) & Visualisasi Tren Belanja SaaS & Pajak PPN 11% Berbasis Apache ECharts Interaktif',
+    summary: 'Merombak tampilan buku besar faktur penagihan resmi (InvoicesHistoryModule) menjadi luas, berjarak nyaman, dan elegan sesuai standar tata kelola enterprise: (1) Menghilangkan kepadatan sempit pada tabel faktur dengan merancang container khusus .invoices-table-container (min-width: 1260px) serta alokasi lebar kolom individual yang proporsional (.col-inv-id, .col-inv-date, .col-inv-plan, .col-inv-method, .col-inv-price, .col-inv-status, .col-inv-actions) dengan padding mewah 18px 20px sehingga rincian DPP/PPN 11% dan status kliring tampil lapang tanpa dempet; (2) Mengintegrasikan pustaka visualisasi data Apache ECharts ke dalam tab Rekapitulasi Pajak PPN 11% menggantikan grafik batang CSS statis dengan grafik batang bertumpuk (Stacked Bar DPP vs PPN 11%) dan garis tren total penagihan resmi, dilengkapi tooltip interaktif glassmorphic bercahaya, penanganan resize dinamis via ResizeObserver, dan transisi tab reaktif.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12200-1',
+        type: 'improvement',
+        scope: 'Invoices Ledger Table Spacious Layout & Sizing',
+        description: 'Menerapkan lebar tabel minimal 1260px dengan padding sel luas (18px 20px) dan penetapan lebar terdedikasi pada seluruh 7 kolom dokumen resmi, menghilangkan efek sempit/dempet antar konten penagihan.'
+      },
+      {
+        id: 'c-02dash-12200-2',
+        type: 'feature',
+        scope: 'Interactive Apache ECharts Fiscal Spending & VAT Visualizer',
+        description: 'Menyematkan mesin rendering Apache ECharts canvas beresolusi tinggi pada grafik tren fiskal bulanan (Dasar Pengenaan Pajak vs PPN 11% Kas Negara) dengan tooltip informatif berformat rupiah (IDR).'
+      },
+      {
+        id: 'c-02dash-12200-3',
+        type: 'performance',
+        scope: 'Reactive Tab Lifecycle & Memory Leak Prevention',
+        description: 'Mengelola instansiasi ECharts secara reaktif menggunakan watch(activeTab) dan nextTick(), serta menjamin pelepasan memori (dispose & disconnect ResizeObserver) pada siklus unmount.'
+      }
+    ]
+  },
+  {
     version: 'v1.21.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Refaktor Komprehensif Modul Faktur & E-Faktur: Filter Multi-Kanal, Visualisasi Alokasi Fiskal Bulanan & Pratinjau KOP Pajak Live',
     summary: 'Merombak arsitektur modul Faktur & Riwayat Tagihan Resmi (InvoicesHistoryModule) menjadi sistem penagihan enterprise interaktif: (1) Bilah filter pencarian mutakhir dengan selektor kanal pembayaran spesifik (BCA VA, QRIS, Visa Corporate, Mandiri Bill) dan tombol salin instan nomor faktur satu-klik; (2) Tab Rekapitulasi Pajak PPN 11% dilengkapi grafik batang visualisasi alokasi fiskal bulanan (DPP vs PPN 11%) serta kode verifikasi NTPN resmi; (3) Tab Profil Wajib Pajak 2 kolom terpadu yang menampilkan formulir identitas perpajakan badan usaha berdampingan dengan Pratinjau KOP Dokumen E-Faktur sinkronisasi langsung (Live Sync KOP Preview); (4) Penyempurnaan lembar dokumen kertas E-Faktur digital berstempel lunas dan stempel QR Code validasi DJP.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

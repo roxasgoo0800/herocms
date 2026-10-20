@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import * as echarts from 'echarts';
 import {
   Clock,
   CheckCircle2,
@@ -166,6 +167,210 @@ const monthlyTrend = computed(() => {
     { month: 'Okt 2026', dpp: 149000, ppn: 16390, total: 165390, ntpn: 'NTPN-9942-0199', dppHeight: 80, ppnHeight: 16 }
   ];
 });
+
+// =============================================================================
+// Enterprise Apache ECharts Setup: Spending Trend & PPN 11% Tax Visualization
+// =============================================================================
+const taxChartContainerRef = ref<HTMLDivElement | null>(null);
+let taxChartInstance: echarts.ECharts | null = null;
+let taxResizeObserver: ResizeObserver | null = null;
+
+const initTaxChart = () => {
+  if (!taxChartContainerRef.value) return;
+  if (taxChartInstance) {
+    taxChartInstance.dispose();
+  }
+  taxChartInstance = echarts.init(taxChartContainerRef.value, undefined, {
+    renderer: 'canvas'
+  });
+  renderTaxChart();
+
+  if (!taxResizeObserver && taxChartContainerRef.value) {
+    taxResizeObserver = new ResizeObserver(() => {
+      taxChartInstance?.resize();
+    });
+    taxResizeObserver.observe(taxChartContainerRef.value);
+  }
+};
+
+const renderTaxChart = () => {
+  if (!taxChartInstance) return;
+
+  const months = monthlyTrend.value.map(item => item.month);
+  const dppSeries = monthlyTrend.value.map(item => item.dpp);
+  const ppnSeries = monthlyTrend.value.map(item => item.ppn);
+  const totalSeries = monthlyTrend.value.map(item => item.total);
+
+  const option: echarts.EChartsOption = {
+    animationDuration: 750,
+    animationEasing: 'cubicOut',
+    grid: {
+      left: '20px',
+      right: '25px',
+      top: '36px',
+      bottom: '12px',
+      containLabel: true
+    },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(15, 23, 42, 0.96)',
+      borderColor: 'rgba(255, 255, 255, 0.12)',
+      borderWidth: 1,
+      padding: [12, 16],
+      extraCssText: 'border-radius: 12px; box-shadow: 0 16px 36px -6px rgba(0,0,0,0.4); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);',
+      axisPointer: {
+        type: 'shadow',
+        shadowStyle: {
+          color: 'rgba(37, 99, 235, 0.05)'
+        }
+      },
+      formatter: (params: any) => {
+        if (!Array.isArray(params) || params.length === 0) return '';
+        const idx = params[0].dataIndex;
+        const item = monthlyTrend.value[idx];
+        if (!item) return '';
+
+        return `
+          <div style="font-family: Inter, system-ui, sans-serif; font-size: 12px; color: #f8fafc; min-width: 230px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 8px; margin-bottom: 10px;">
+              <span style="font-weight: 700; font-size: 13px; color: #ffffff;">${item.month}</span>
+              <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 6px;">LUNAS DJP</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                <span style="width: 8px; height: 8px; border-radius: 2px; background: #3b82f6; display: inline-block;"></span>
+                Dasar Pajak (DPP):
+              </span>
+              <strong style="color: #ffffff;">Rp ${item.dpp.toLocaleString('id-ID')}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                <span style="width: 8px; height: 8px; border-radius: 2px; background: #10b981; display: inline-block;"></span>
+                PPN 11% (Kas Negara):
+              </span>
+              <strong style="color: #34d399;">Rp ${item.ppn.toLocaleString('id-ID')}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 8px; margin-bottom: 6px;">
+              <span style="font-weight: 600; color: #e2e8f0;">Total Tagihan Resmi:</span>
+              <strong style="font-size: 13.5px; color: #60a5fa;">Rp ${item.total.toLocaleString('id-ID')}</strong>
+            </div>
+            <div style="font-size: 10.5px; color: #64748b; margin-top: 4px; display: flex; justify-content: space-between;">
+              <span>Kode NTPN Fiskal:</span>
+              <code style="color: #cbd5e1; font-family: monospace;">${item.ntpn}</code>
+            </div>
+          </div>
+        `;
+      }
+    },
+    xAxis: {
+      type: 'category',
+      data: months,
+      axisLine: {
+        lineStyle: { color: '#e2e8f0' }
+      },
+      axisTick: { show: false },
+      axisLabel: {
+        color: '#475569',
+        fontSize: 12,
+        fontWeight: 600,
+        margin: 12
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Nilai Fiskal (IDR)',
+      nameTextStyle: {
+        color: '#64748b',
+        fontSize: 11,
+        fontWeight: 600,
+        padding: [0, 0, 8, 0]
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#f1f5f9',
+          type: 'dashed'
+        }
+      },
+      axisLabel: {
+        color: '#64748b',
+        fontSize: 11,
+        formatter: (val: number) => `Rp ${(val / 1000).toLocaleString('id-ID')}k`
+      }
+    },
+    series: [
+      {
+        name: 'Dasar Pengenaan Pajak (DPP)',
+        type: 'bar',
+        stack: 'fiskal',
+        barWidth: 42,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#3b82f6' },
+            { offset: 1, color: '#1d4ed8' }
+          ]),
+          borderRadius: [0, 0, 4, 4]
+        },
+        data: dppSeries
+      },
+      {
+        name: 'PPN 11% (Kas Negara)',
+        type: 'bar',
+        stack: 'fiskal',
+        barWidth: 42,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#34d399' },
+            { offset: 1, color: '#059669' }
+          ]),
+          borderRadius: [6, 6, 0, 0]
+        },
+        data: ppnSeries
+      },
+      {
+        name: 'Total Tagihan Resmi',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        itemStyle: {
+          color: '#0f172a',
+          borderColor: '#ffffff',
+          borderWidth: 2
+        },
+        lineStyle: {
+          color: '#0f172a',
+          width: 2.5,
+          type: 'solid'
+        },
+        data: totalSeries
+      }
+    ]
+  };
+
+  taxChartInstance.setOption(option, true);
+};
+
+watch(activeTab, (newTab) => {
+  if (newTab === 'breakdown') {
+    nextTick(() => {
+      initTaxChart();
+    });
+  }
+});
+
+onMounted(() => {
+  if (activeTab.value === 'breakdown') {
+    nextTick(() => {
+      initTaxChart();
+    });
+  }
+});
+
+onUnmounted(() => {
+  taxResizeObserver?.disconnect();
+  taxChartInstance?.dispose();
+  taxChartInstance = null;
+});
 </script>
 
 <template>
@@ -287,7 +492,7 @@ const monthlyTrend = computed(() => {
     <!-- ================================================================= -->
     <!-- TAB 1: BUKU BESAR FAKTUR (LEDGER & INVOICES LIST) -->
     <!-- ================================================================= -->
-    <div v-if="activeTab === 'ledger'" class="ledger-panel">
+    <div v-if="activeTab === 'ledger'" class="invoices-ledger-panel">
       <!-- Toolbar Filters -->
       <div class="invoice-filter-bar">
         <div class="invoice-filter-left">
@@ -346,18 +551,18 @@ const monthlyTrend = computed(() => {
         </div>
       </div>
 
-      <!-- Table Wrapper -->
-      <div class="table-responsive">
-        <table class="ledger-table">
+      <!-- Spacious Invoices Table Container -->
+      <div class="invoices-table-container">
+        <table class="invoices-ledger-table">
           <thead>
             <tr>
-              <th>NO. FAKTUR</th>
-              <th>TANGGAL PENAGIHAN</th>
-              <th>DESKRIPSI PAKET</th>
-              <th>METODE BAYAR</th>
-              <th>TOTAL (INC. PPN)</th>
-              <th>STATUS KLIRING</th>
-              <th style="text-align: right">DOKUMEN RESMI</th>
+              <th class="col-inv-id">NO. FAKTUR</th>
+              <th class="col-inv-date">TANGGAL PENAGIHAN</th>
+              <th class="col-inv-plan">DESKRIPSI PAKET</th>
+              <th class="col-inv-method">METODE BAYAR</th>
+              <th class="col-inv-price">TOTAL (INC. PPN)</th>
+              <th class="col-inv-status">STATUS KLIRING</th>
+              <th class="col-inv-actions" style="text-align: right">DOKUMEN RESMI</th>
             </tr>
           </thead>
           <tbody>
@@ -367,7 +572,7 @@ const monthlyTrend = computed(() => {
               style="cursor: pointer;"
               @click="openInvoiceDetail(inv)"
             >
-              <td>
+              <td class="col-inv-id">
                 <div class="invoice-id-badge" @click.stop>
                   <Receipt :size="13" class="receipt-icon" />
                   <code>{{ inv.id }}</code>
@@ -381,17 +586,17 @@ const monthlyTrend = computed(() => {
                   </button>
                 </div>
               </td>
-              <td>
+              <td class="col-inv-date">
                 <div class="date-cell">{{ inv.date }}</div>
-                <span style="font-size: 11px; color: #94a3b8;">Jatuh tempo: {{ inv.dueDate }}</span>
+                <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Jatuh tempo: {{ inv.dueDate }}</div>
               </td>
-              <td>
+              <td class="col-inv-plan">
                 <div class="inv-plan-cell">
                   <strong>{{ inv.planName }}</strong>
                   <span class="inv-period-text">Periode: {{ inv.period }}</span>
                 </div>
               </td>
-              <td>
+              <td class="col-inv-method">
                 <span
                   class="payment-method-tag"
                   :class="inv.paymentMethod.toLowerCase().includes('bca') ? 'tag-bca' : (inv.paymentMethod.toLowerCase().includes('qris') ? 'tag-qris' : 'tag-card')"
@@ -399,19 +604,19 @@ const monthlyTrend = computed(() => {
                   {{ inv.paymentMethod }}
                 </span>
               </td>
-              <td>
+              <td class="col-inv-price">
                 <div class="price-cell">
                   <strong class="total-price-val">Rp {{ inv.total.toLocaleString('id-ID') }}</strong>
                   <span class="tax-note">DPP: Rp {{ inv.amount.toLocaleString('id-ID') }} • PPN 11%: Rp {{ inv.tax.toLocaleString('id-ID') }}</span>
                 </div>
               </td>
-              <td>
+              <td class="col-inv-status">
                 <span class="status-badge-paid">
                   <Check :size="11" />
                   <span>LUNAS</span>
                 </span>
               </td>
-              <td style="text-align: right" @click.stop>
+              <td class="col-inv-actions" style="text-align: right" @click.stop>
                 <div class="row-actions">
                   <button class="btn-invoice-view" @click="openInvoiceDetail(inv)" title="Lihat Lembar Faktur Pajak Resmi">
                     <FileText :size="13" />
@@ -449,12 +654,12 @@ const monthlyTrend = computed(() => {
         <span class="cgroups-tag">Tax Compliant DJP</span>
       </div>
 
-      <!-- Visual Spending & Tax Bar Chart -->
+      <!-- Visual Spending & Tax Apache ECharts Container -->
       <div class="monthly-spend-visualizer">
         <div class="visualizer-header">
           <div class="visualizer-title">
             <TrendingUp :size="16" style="color: #2563eb;" />
-            <span>Grafik Alokasi Fiskal Bulanan (Net DPP vs PPN 11%)</span>
+            <span>Grafik Alokasi Fiskal Bulanan Interaktif (Net DPP vs PPN 11%)</span>
           </div>
           <div class="visualizer-legend">
             <div class="legend-item">
@@ -465,18 +670,15 @@ const monthlyTrend = computed(() => {
               <span class="legend-dot-ppn"></span>
               <span>PPN 11% (Kas Negara)</span>
             </div>
+            <div class="legend-item">
+              <span class="legend-dot-total"></span>
+              <span>Total Tagihan Resmi</span>
+            </div>
           </div>
         </div>
 
-        <div class="visualizer-bars-grid">
-          <div v-for="item in monthlyTrend" :key="item.month" class="month-bar-col">
-            <div class="month-bar-track" :title="`${item.month}: DPP Rp ${item.dpp.toLocaleString('id-ID')} + PPN Rp ${item.ppn.toLocaleString('id-ID')}`">
-              <div class="month-bar-ppn" :style="{ height: `${item.ppnHeight}px` }"></div>
-              <div class="month-bar-dpp" :style="{ height: `${item.dppHeight}px` }"></div>
-            </div>
-            <span class="month-bar-val">Rp {{ item.total.toLocaleString('id-ID') }}</span>
-            <span class="month-bar-label">{{ item.month }}</span>
-          </div>
+        <div class="tax-echarts-wrapper">
+          <div ref="taxChartContainerRef" class="tax-echarts-canvas"></div>
         </div>
       </div>
 
