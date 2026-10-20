@@ -33,7 +33,6 @@ import {
   Wrench
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
-import PodDetailAnalyticsView from './PodDetailAnalyticsView.vue';
 import type { ContainerSite } from '../../types/dashboard';
 
 const {
@@ -177,27 +176,17 @@ const selectForEditor = (containerId: string) => {
   activeMenu.value = 'editor';
 };
 
-const openContainerDetail = (c: ContainerSite) => {
+const navigateToAnalytics = (c: ContainerSite) => {
   selectedContainerForDetail.value = c;
+  activeMenu.value = 'analytics';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 </script>
 
 <template>
   <div class="containers-root-wrapper">
-    <!-- 1. Full-Page Pod Detail & Cloudflare Analytics View -->
-    <PodDetailAnalyticsView
-      v-if="selectedContainerForDetail"
-      :container="selectedContainerForDetail"
-      @back="selectedContainerForDetail = null"
-      @purge-cache="purgeEdgeCache"
-      @open-logs="openLogsModal"
-      @toggle-maintenance="openMaintenanceModal"
-      @open-editor="(c) => selectForEditor(c.id)"
-    />
-
-    <!-- 2. Main Situs & Kontainer Overview List (Cards vs Table) -->
-    <section v-else class="fade-in-section">
+    <!-- Main Situs & Kontainer Overview List (Cards vs Table) -->
+    <section class="fade-in-section">
       <!-- Page Title & Quick Infrastructure Summary -->
       <div class="page-intro-row">
       <div>
@@ -392,8 +381,8 @@ const openContainerDetail = (c: ContainerSite) => {
               <div class="site-title-row">
                 <h3
                   class="site-title-text"
-                  @click="openContainerDetail(c)"
-                  title="Lihat Detail Pod & Analitik Lengkap"
+                  @click="selectForEditor(c.id)"
+                  title="Buka Website di Visual Editor"
                 >
                   {{ c.name }}
                 </h3>
@@ -465,7 +454,7 @@ const openContainerDetail = (c: ContainerSite) => {
         </div>
 
         <!-- Live Traffic Activity & Momentum Sparkline Strip -->
-        <div class="card-momentum-strip" @click="openContainerDetail(c)" title="Lihat Grafik Traffic & Analitik Lengkap">
+        <div class="card-momentum-strip" @click="navigateToAnalytics(c)" title="Lihat Trafik di Menu Analitik & Telemetri">
           <div class="momentum-left-meta">
             <div class="momentum-title-flex">
               <Activity :size="12" style="color: #2563eb;" />
@@ -541,7 +530,7 @@ const openContainerDetail = (c: ContainerSite) => {
         </div>
 
         <!-- Edge Performance Strip -->
-        <div class="edge-telemetry-strip" @click="openContainerDetail(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
+        <div class="edge-telemetry-strip">
           <div class="edge-telemetry-left">
             <span class="edge-badge emerald">
               <Zap :size="10" />
@@ -567,15 +556,6 @@ const openContainerDetail = (c: ContainerSite) => {
             >
               <Edit3 :size="13" />
               <span>Editor</span>
-            </button>
-
-            <button
-              class="btn-open-analytics-action"
-              @click="openContainerDetail(c)"
-              title="Lihat Detail Pod, Geo Analitik & Graph Cloudflare"
-            >
-              <Activity :size="13" />
-              <span>Analitik</span>
             </button>
           </div>
 
@@ -697,7 +677,7 @@ const openContainerDetail = (c: ContainerSite) => {
                     <Server v-else :size="16" />
                   </div>
                   <div class="table-site-info">
-                    <span class="table-site-title" style="cursor: pointer;" @click="openContainerDetail(c)" title="Lihat Detail Pod & Analitik">{{ c.name }}</span>
+                    <span class="table-site-title" style="cursor: pointer;" @click="selectForEditor(c.id)" title="Buka di Visual Editor">{{ c.name }}</span>
                     <div class="table-site-meta">
                       <span>{{ c.templateName }}</span>
                       <span class="site-id-tag">#{{ c.id }}</span>
@@ -786,7 +766,7 @@ const openContainerDetail = (c: ContainerSite) => {
               <!-- Latency & Protocol -->
               <td>
                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                  <span class="edge-badge blue" style="align-self: flex-start; cursor: pointer;" @click="openContainerDetail(c)" title="Klik untuk Buka Detail Pod & Geo Analitik Cloudflare">
+                  <span class="edge-badge blue" style="align-self: flex-start;">
                     ⚡ 1.2ms TTFB
                   </span>
                   <span style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Traefik v3.1 TLS 1.3</span>
@@ -808,16 +788,6 @@ const openContainerDetail = (c: ContainerSite) => {
                   >
                     <Edit3 :size="13" />
                     <span>Editor</span>
-                  </button>
-
-                  <button
-                    class="btn-open-analytics-action"
-                    style="padding: 5px 9px; font-size: 0.72rem;"
-                    @click="openContainerDetail(c)"
-                    title="Lihat Detail Pod, Geo Analitik & Graph Cloudflare"
-                  >
-                    <Activity :size="12" />
-                    <span>Analitik</span>
                   </button>
 
                   <div class="runtime-btn-group">

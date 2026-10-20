@@ -60,7 +60,7 @@ const InvoicesHistoryModule = defineAsyncComponent(() => import('../components/d
 const SupportTicketingModule = defineAsyncComponent(() => import('../components/dashboard/SupportTicketingModule.vue'));
 const ChangelogModule = defineAsyncComponent(() => import('../components/dashboard/ChangelogModule.vue'));
 import { useSplashTransition } from '../composables/useSplashTransition';
-import { microserviceVersions } from '../data/changelog';
+import { changelogReleases } from '../data/changelog';
 
 const router = useRouter();
 const { isDashboardEntering } = useSplashTransition();
@@ -98,7 +98,7 @@ const {
 } = useDashboardData();
 
 const dashboardVersion = computed(() =>
-  microserviceVersions.find(s => s.id === '02-dashboard-cms')?.version || 'v1.14.27'
+  changelogReleases[0]?.version || 'v1.14.28'
 );
 const latestSystemVersion = dashboardVersion;
 
@@ -466,9 +466,9 @@ const handleLogout = async () => {
           <span>HeroCMS Studio</span>
           <ChevronRight :size="14" class="crumb-sep" />
           <span
-            :class="(activeMenu === 'content' && activeArticleForReader) || (activeMenu === 'containers' && selectedContainerForDetail) ? 'crumb-link' : 'crumb-current'"
-            @click="(activeMenu === 'content' && activeArticleForReader) ? (activeArticleForReader = null) : (activeMenu === 'containers' && selectedContainerForDetail) ? (selectedContainerForDetail = null) : null"
-            :title="(activeMenu === 'content' && activeArticleForReader) ? 'Kembali ke Daftar Artikel' : (activeMenu === 'containers' && selectedContainerForDetail) ? 'Kembali ke Semua Kontainer' : undefined"
+            :class="(activeMenu === 'content' && activeArticleForReader) || (activeMenu === 'analytics' && selectedContainerForDetail) ? 'crumb-link' : 'crumb-current'"
+            @click="(activeMenu === 'content' && activeArticleForReader) ? (activeArticleForReader = null) : (activeMenu === 'analytics' && selectedContainerForDetail) ? (selectedContainerForDetail = null) : null"
+            :title="(activeMenu === 'content' && activeArticleForReader) ? 'Kembali ke Daftar Artikel' : (activeMenu === 'analytics' && selectedContainerForDetail) ? 'Kembali ke Ikhtisar Telemetri Fleet' : undefined"
           >
             {{
               activeMenu === 'containers' ? 'Situs & Kontainer' :
@@ -491,7 +491,7 @@ const handleLogout = async () => {
               {{ activeArticleForReader.title }}
             </span>
           </template>
-          <template v-if="activeMenu === 'containers' && selectedContainerForDetail">
+          <template v-if="(activeMenu === 'analytics' || activeMenu === 'containers') && selectedContainerForDetail">
             <ChevronRight :size="14" class="crumb-sep" />
             <span class="crumb-current crumb-article-title" :title="selectedContainerForDetail.name" style="color: #2563eb; font-weight: 700;">
               {{ selectedContainerForDetail.subdomain }}

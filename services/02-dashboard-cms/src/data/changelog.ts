@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.14.28',
+    version: 'v1.16.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '19 Oktober 2026',
+    lastUpdated: '20 Oktober 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,152 +75,116 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
-    version: 'v1.4.1',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Penyempurnaan Tombol Baca, Alur Kerja Ribbon, dan Refaktor Master CSS Tampilan Detail Reader (PRD & Security)',
-    summary: 'Memperbaiki styling tombol aksi Baca di semua kartu dari PRD, Kamus Blueprint, Matriks Keamanan hingga SOP menggunakan styling universal master CSS (.btn-read-sop). Menambahkan visual ribbon alur kerja (.bp-flow-preview) dengan pil bertahap dan panah penghubung. Merefaktor PrdArticleReader dan SecurityArticleReader ke sistem layout editorial Obsidian Studio Master (.article-reader-page, .reader-page-hero, .reader-layout-grid, .reader-main-content, .reader-sidebar-inspector), melengkapi alur kerja pipeline flowchart interaktif, dan menyempurnakan kartu detail agar tidak berantakan di layar monitor.',
+    version: 'v1.16.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Konsolidasi Analitik Terpadu, Integrasi Pod Detail Deep-Dive, Perbaikan Master CSS & Ekspansi Telemetri Vitals',
+    summary: 'Menghapus tombol analitik pada menu Situs & Kontainer (ContainersModule.vue) dan mengonsolidasikan seluruh kapabilitas observabilitas ke menu Analitik & Telemetri (AnalyticsTelemetryModule.vue). Modul Analitik kini mendukung Dual-View Mode (Ikhtisar Fleet Global vs Detail Pod & Kontainer Mandiri) dengan navigasi langsung dan pemilih pod terpadu. Memperbaiki dan menstandarkan styling CSS master button (.btn-primary, .btn-ghost-sm, .terminal-filter-pill). Memperluas metrik telemetri dengan Core Web Vitals RUM (LCP, INP, CLS, FCP, TTFB, Burn Rate), persebaran Edge POPs Ingress Traefik (Jakarta, Singapura, US, Tokyo, Frankfurt), distribusi protokol jaringan (HTTP/3 QUIC vs HTTP/2), efisiensi kompresi Brotli 11, atribusi perangkat/OS/browser, serta metrik kesehatan pool PostgreSQL RLS dan Redis In-Memory.',
     badge: 'Latest',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
-        id: 'c-07docs-141-1',
+        id: 'c-02dash-11600-1',
         type: 'improvement',
-        scope: 'Universal Card Action Button & Alur Kerja Ribbon',
-        description: 'Menerapkan kelas styling universal .btn-read-sop dan .bp-flow-preview pada ArchitectureModule, PrdCatalogModule, SecurityMatrixModule, dan SopRunbookModule dengan hover glow, aksen biru, dan pratinjau tahapan alur kerja terhubung.'
+        scope: 'Konsolidasi Analitik & Hapus Tombol di Kontainer (ContainersModule.vue)',
+        description: 'Menghapus tombol analitik yang redundan dari kartu grid dan baris tabel kontainer. Mengalihkan alur observabilitas sepenuhnya ke menu Analitik & Telemetri.'
       },
       {
-        id: 'c-07docs-141-2',
-        type: 'bugfix',
-        scope: 'PrdArticleReader Master Obsidian Layout Refactoring',
-        description: 'Merefaktor PrdArticleReader.vue menggunakan standar kelas master reader (.article-reader-page, .reader-page-hero, .reader-layout-grid, .reader-main-content, .reader-sidebar-inspector), menambahkan diagram pipeline alur kerja modul (.flowchart-pipeline-container), dan menata ulang card spesifikasi tech stack.'
+        id: 'c-02dash-11600-2',
+        type: 'feature',
+        scope: 'Dual-View Mode & Integrasi Pod Detail (AnalyticsTelemetryModule.vue)',
+        description: 'Menyediakan switcher mode antara Ikhtisar Fleet Global dan Detail Pod & Kontainer Mandiri lengkap dengan Apache ECharts, log stream hit, kalender uptime SLA 30 hari, dan inspeksi kernel cgroups v2.'
       },
       {
-        id: 'c-07docs-141-3',
-        type: 'bugfix',
-        scope: 'SecurityArticleReader Master Obsidian Layout Refactoring',
-        description: 'Merefaktor SecurityArticleReader.vue ke standar master reader dengan hero banner gelap bergradasi, diagram pipeline alur verifikasi pengujian (.flowchart-pipeline-container), checklist interaktif kepatuhan audit, dan callout rujukan file proteksi.'
+        id: 'c-02dash-11600-3',
+        type: 'fix',
+        scope: 'Standarisasi CSS Button & Master Tokens (studio-master.css)',
+        description: 'Menambahkan styling resmi untuk .btn-primary, .btn-ghost-sm, dan .terminal-filter-pill agar tombol Export dan aksi tabel ter-CSS sempurna sesuai tema HeroCMS Studio.'
       },
       {
-        id: 'c-07docs-141-4',
-        type: 'improvement',
-        scope: 'SystemJourneyModule Flowchart Connector Line Fix',
-        description: 'Menghubungkan garis connector vertikal dan badge penomoran (.pipeline-step-badge, .pipeline-step-line) pada seluruh alur proses bisnis dan siklus perjalanan sistem HeroCMS.'
+        id: 'c-02dash-11600-4',
+        type: 'feature',
+        scope: 'Ekspansi Telemetri Core Web Vitals RUM & Edge POPs (fleet-telemetry.ts)',
+        description: 'Memperkaya data telemetri dengan 6 metrik Core Web Vitals (LCP, INP, CLS, FCP, TTFB, Burn Rate), pemantauan latensi 5 Edge POP Data Centers, serta distribusi HTTP/3 QUIC dan kompresi Brotli.'
+      },
+      {
+        id: 'c-02dash-11600-5',
+        type: 'feature',
+        scope: 'Atribusi Privasi Klien & Kesehatan PostgreSQL RLS (AnalyticsTelemetryModule.vue)',
+        description: 'Menampilkan distribusi perangkat, peramban, dan sistem operasi pengunjung, serta utilitas koneksi PostgreSQL RLS dan jejak memori cache Redis In-Memory.'
       }
     ]
   },
   {
-    version: 'v1.4.0',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Inkorporasi Spesifikasi PRD (7 Layanan), Matriks Keamanan & Sandboxing (20 Pilar), serta Alur Kerja Sistem (System Journeys)',
-    summary: 'Menambahkan 3 modul dokumentasi arsitektur dan spesifikasi enterprise utama ke dalam Mission Control Portal: 1) Katalog PRD menyeluruh untuk 7 microservice lengkap dengan target persona, teknologi, modul fungsional, kontrak API, NFR, roadmap, dan KPI. 2) Matriks Keamanan Web & Backend mencakup 20 Pilar Standar Keamanan OWASP/CWE plus spesifikasi pengerasan Linux cgroups v2 sandboxing kontainer Docker (UID 10001, ReadonlyRootfs, CapDrop ALL, tmpfs RAM) dan checklist verifikasi interaktif. 3) Alur Kerja Sistem (System Journeys) interaktif yang memetakan siklus hidup end-to-end (provisioning <4.5s, edge routing Traefik v3 & TLS 1.3, isolasi PostgreSQL RLS, telemetri Redis Sorted Sets, AI Copilot synthesis, dedicated S3 bucket, dan offline drafting PWA).',
+    version: 'v1.15.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Transformasi Modul Telemetri & Audit Performa Fleet Enterprise (SLA, Peak Traffic & Security Audit)',
+    summary: 'Merombak menyeluruh modul Analitik & Telemetri (AnalyticsTelemetryModule.vue) menjadi Pusat Audit Keandalan & Observabilitas Fleet (Macro Fleet Telemetry Hub). Menghadirkan fitur Scope Switcher (Semua Situs vs Kontainer Tertentu), metrik kepatuhan SLA & beban puncak (Peak RPS), audit anggaran kesalahan status HTTP RFC 9110 (2xx, 3xx, 4xx, 5xx), tabel komparasi saturasi armada kontainer & risiko OOM cgroups v2, audit keamanan penyerapan ancaman (Rate Limiting 429 & WAF), query Top Pages Redis In-Memory, log stream Kafka Redpanda terfilter, serta kemampuan ekspor laporan audit kepatuhan resmi dalam format JSON.',
     badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
-        id: 'c-07docs-140-1',
+        id: 'c-02dash-11500-1',
         type: 'feature',
-        scope: 'Katalog PRD 7 Microservices (01 - 07)',
-        description: 'Membangun PrdCatalogModule dan PrdArticleReader yang memuat dokumen kebutuhan produk (PRD) lengkap untuk Platform Admin Console (01), Dashboard CMS Studio (02), API Orkestrator Provisioning (03), Website Promosi (04), AI Agent Service (05), Mobile Companion (06), dan Docs Hub (07).'
+        scope: 'Interactive Fleet Scope Switcher & Timeframe',
+        description: 'Menyediakan filter evaluasi dinamis antara Semua Situs (Global Fleet) dan kontainer spesifik dengan rentang waktu 24 jam, 7 hari, dan 30 hari.'
       },
       {
-        id: 'c-07docs-140-2',
+        id: 'c-02dash-11500-2',
+        type: 'feature',
+        scope: 'RFC 9110 HTTP Status & SLA Error Budget Audit',
+        description: 'Menyajikan matriks audit kode respon HTTP (2xx, 3xx, 4xx, 5xx) beserta visualisasi sisa anggaran kesalahan (Error Budget) dan status kepatuhan SLA (<0.10% threshold).'
+      },
+      {
+        id: 'c-02dash-11500-3',
+        type: 'feature',
+        scope: 'Fleet Resource Saturation & OOM Risk Benchmark Table',
+        description: 'Tabel komparasi seluruh armada kontainer dengan data pangsa trafik, latensi rata-rata edge, peak CPU, alokasi RAM cgroups v2, skor risiko OOM, dan tombol pintas Buka Analitik Pod.'
+      },
+      {
+        id: 'c-02dash-11500-4',
         type: 'security',
-        scope: 'Matriks Keamanan 20 Pilar & Docker Sandboxing',
-        description: 'Membangun SecurityMatrixModule dan SecurityArticleReader yang memaparkan 20 Pilar Keamanan Web & Backend (API Key aman, anti-SQLi pgx, anti-XSS DOMPurify/CSP, CSRF double submit, Redis stateful session, dedicated S3 bucket quota 2GB, magic bytes sniffing) serta penegakan Linux cgroups v2 sandboxing.'
+        scope: 'Threat Ingestion & Bot Classification Audit',
+        description: 'Panel audit penangkal eksploitasi WAF, mitigasi Rate Limiter 429, klasifikasi trafik manusia vs crawler bot, dan rincian negara asal penetrasi yang diblokir.'
       },
       {
-        id: 'c-07docs-140-3',
+        id: 'c-02dash-11500-5',
         type: 'feature',
-        scope: 'Alur Kerja Sistem (7 Interactive System Journeys)',
-        description: 'Membangun SystemJourneyModule yang memvisualisasikan alur sistem kritis dari hulu ke hilir dengan connected pipeline flowchart, urutan aktor, SLA latensi, penanganan kegagalan otomatis (self-healing), dan perintah verifikasi CLI siap salin.'
-      },
-      {
-        id: 'c-07docs-140-4',
-        type: 'improvement',
-        scope: 'Sidebar Navigation & Telemetry Stats Expansion',
-        description: 'Memperbarui sidebar navigasi Docs Hub dengan tab PRD, Alur Kerja Sistem, dan Keamanan & Sandbox, serta memperluas TelemetryGrid untuk menampilkan metrik agregat 7 PRD, 21 Pilar Keamanan, dan 7 System Journeys.'
+        scope: 'Compliance SLA Audit Report JSON Export',
+        description: 'Fasilitas unduh satu-klik laporan kepatuhan SLA dan telemetri resmi dalam format JSON terstruktur untuk kebutuhan audit eksternal dan manajemen.'
       }
     ]
   },
   {
-    version: 'v1.3.1',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Perbaikan Responsif Grid Kartu Melebihi Batas Layar & Perapihan Tampilan Alur Flowchart Kamus/SOP',
-    summary: 'Memperbaiki masalah kartu melebihi batas layar monitor komputer (cropped/overflow) dengan menerapkan sistem grid adaptif minmax(0, 1fr) pada .site-cards-grid (2 kolom pada resolusi laptop <=1440px dan 3 kolom pada layar lebar), mencegah teks panjang merusak ukuran kartu via text truncation dan max-width batas. Merombak tampilan berantakan saat klik menu/kartu Kamus Arsitektur dan SOP & Runbooks: mengganti tab filter yang menumpuk menjadi chips filter mandiri (.category-chip), menata ulang flowchart menjadi diagram pipeline berurutan yang terhubung (.flowchart-pipeline-container), memformat panduan Cara Coba dengan nomor langkah rapi (.step-test-list), menata matriks Do\'s & Don\'ts responsif auto-fit, serta memotong badge service pada inspector sidebar agar tidak tembus kartu.',
+    version: 'v1.14.28',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Isolasi Catatan Rilis Mandiri Service 02 Dashboard CMS & Eliminasi Dependensi Lintas-Layanan',
+    summary: 'Menerapkan pemisahan mutlak catatan rilis khusus untuk Service 02: Dashboard Studio & Go BFF. Menghapus entri rilis microservice lain (seperti Service 07 Docs) dari dataset dashboard, memindahkan arsip 07-docs ke direktori resminya di services/07-docs/src/data/changelog.ts, menyederhanakan antarmuka ChangelogModule menjadi pembaca rilis studio murni dengan telemetri versi mandiri, filter kategori bersih, serta menyelaraskan tata kelola Semantic Versioning independen sesuai standar arsitektur monorepo.',
     badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
-        id: 'c-07docs-131-1',
-        type: 'bugfix',
-        scope: 'Responsive Cards Grid & Screen Cropping Prevention',
-        description: 'Memperbaiki .site-cards-grid menggunakan minmax(0, 1fr) dengan breakpoint 1440px (2 kolom pada laptop), menambahkan min-width: 0 pada seluruh kartu (.task-card-pro, .sop-card-pro, .blueprint-card-pro) sehingga kartu tidak lagi meluap dan terpotong di layar monitor.'
-      },
-      {
-        id: 'c-07docs-131-2',
-        type: 'bugfix',
-        scope: 'Kamus & SOP Category Filter Chips',
-        description: 'Mengganti grouped pill bar yang berjejal dan berantakan pada kategori Kamus Arsitektur dan SOP menjadi filter chip mandiri (.category-chip) yang mengalir responsif dengan counter badge akurat.'
-      },
-      {
-        id: 'c-07docs-131-3',
+        id: 'c-02dash-11428-1',
         type: 'improvement',
-        scope: 'Connected Step Pipeline Flowchart Architecture',
-        description: 'Mengganti susunan box flowchart yang tidak terhubung menjadi pipeline langkah berurutan terhubung (.flowchart-pipeline-container) dengan badge nomor bulat, garis penghubung bertahap, dan kartu keterangan yang rapi.'
+        scope: 'Decoupled Service Changelog Architecture',
+        description: 'Mengisolasi dataset changelog agar murni hanya memuat riwayat pembaruan dan patch dari Service 02: Dashboard Studio, mencegah kontaminasi entri antar-microservice.'
       },
       {
-        id: 'c-07docs-131-4',
+        id: 'c-02dash-11428-2',
         type: 'bugfix',
-        scope: 'Inspector Sidebar & Do\'s/Don\'ts Matrix Breathing Room',
-        description: 'Memperbaiki .spec-row dengan flex-wrap dan badge truncation pada service name, merestrukturisasi .dnd-matrix-container dengan minmax(280px, 1fr), serta menata daftar Cara Coba (.step-test-list) dengan penomoran elegan.'
-      }
-    ]
-  },
-  {
-    version: 'v1.3.0',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Peluncuran Mode Baca Artikel SOP & Arsitektur dengan Flowchart, DND Matrix, Golang API & Uji cURL',
-    summary: 'Memutakhirkan microservice docs ke v1.3.0 dengan menghadirkan pengalaman pembaca artikel mendalam pada kartu SOP (SopArticleReader.vue) dan Kamus Arsitektur (ArchitectureArticleReader.vue). Dilengkapi visual flowchart pengerjaan, matriks Do\'s & Don\'ts (DND) 2 kolom, spesifikasi teknis implementasi backend Golang, perintah cURL siap salin dengan panduan live testing per-service, perbaikan filter kategori dinamis, restrukturisasi kartu yang rapi dan terstandarisasi, eliminasi widget status sprint sidebar, identitas profil engineering enterprise netral, serta verifikasi deployment kontainer Docker Compose di port 8087.',
-    badge: 'Stable',
-    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
-    items: [
+        scope: 'ChangelogModule UI Streamlining',
+        description: 'Menghapus tombol filter lintas-service dan widget matriks multi-layanan dari tampilan ChangelogModule, menghadirkan antarmuka pelacak rilis studio yang bersih, fokus, dan bebas bug.'
+      },
       {
-        id: 'c-07docs-130-1',
+        id: 'c-02dash-11428-3',
         type: 'feature',
-        scope: 'Dedicated SOP Article Reader with Flowchart & DND Matrix',
-        description: 'Menerbitkan SopArticleReader.vue lengkap dengan visual step flowchart, uraian runbook bertahap, matriks Do\'s & Don\'ts 2 kolom, contoh API call dan handler Go, serta kriteria Definition of Done.'
-      },
-      {
-        id: 'c-07docs-130-2',
-        type: 'feature',
-        scope: 'Architecture Blueprint Reader with Golang Code & Live cURL Testing',
-        description: 'Menerbitkan ArchitectureArticleReader.vue untuk seluruh 13 blueprint arsitektur yang menguraikan konsep sistem, alur data komponen, potongan implementasi Go resmi, spesifikasi API endpoint, dan panduan cara coba (live testing).'
-      },
-      {
-        id: 'c-07docs-130-3',
-        type: 'improvement',
-        scope: 'Card Restructuring & Dynamic Category Filters',
-        description: 'Menstandarisasi kartu SOP (.sop-card-pro) dan kartu arsitektur (.blueprint-card-pro) dengan layout rapi dan seimbang, serta menyinkronkan kategori filter secara dinamis dari dataset.'
-      },
-      {
-        id: 'c-07docs-130-4',
-        type: 'improvement',
-        scope: 'Sidebar Streamlining & Enterprise Workspace Identity',
-        description: 'Menghapus widget gauge status sprint yang tidak diperlukan pada footer sidebar dan mengganti profil user individu menjadi identitas HeroCMS Engineering (Platform & Mission Control).'
-      },
-      {
-        id: 'c-07docs-130-5',
-        type: 'feature',
-        scope: 'Verified Docker Compose Multi-Stage Deployment',
-        description: 'Memverifikasi dan menjalankan service docs via docker compose di port 8087 dengan multi-stage build Alpine ultra-lightweight, lulus seluruh automated pentest black-box suite.'
+        scope: 'Independent Docs Changelog Persistence',
+        description: 'Memindahkan 6 versi rilis Service 07 Docs (v1.0.0 s/d v1.4.1) ke services/07-docs/src/data/changelog.ts dengan pengetikan TypeScript lengkap.'
       }
     ]
   },
@@ -231,7 +195,7 @@ export const changelogReleases: ChangelogRelease[] = [
     releaseDate: '19 Oktober 2026',
     title: 'Desentralisasi Matriks Versi Microservices Independen & Navigasi Filter Layanan Terpadu',
     summary: 'Menerapkan pemisahan versi independen untuk setiap aplikasi/service di monorepo HeroCMS guna mencegah kebingungan versi monolitik. Menghadirkan widget Matriks Versi Independen Microservices di ChangelogModule yang menampilkan status versi individual 7 microservices (01-admin-console, 02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, 05-ai-agent-service, 06-mobile-companion, 07-docs), filter rilis per-service interaktif, serta binding versi DashboardView khusus ke versi 02-dashboard-cms.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
@@ -251,78 +215,6 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Decoupled Version Resolution in DashboardView',
         description: 'Memperbaiki resolusi versi di sidebar DashboardView dan status telemetri agar selalu merujuk ke versi spesifik 02-dashboard-cms (v1.14.27) dan tidak tercampur dengan nomor versi service lain.'
-      }
-    ]
-  },
-  {
-    version: 'v1.2.0',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Transformasi Mode Baca Artikel In-Page, Restrukturisasi Kartu Rapi & Upgrade Tipografi Plus Jakarta Sans',
-    summary: 'Meredesain menyeluruh pengalaman pembaca dokumen di services/07-docs: mengganti modal dialog mengambang dengan pembaca artikel editorial penuh (in-page reader) yang distraction-free, merapikan struktur kartu tugas dengan visual hierarchy modern tanpa tumpukan kotak abu-abu yang padat, serta mengintegrasikan fondasi tipografi Plus Jakarta Sans dengan anti-aliasing tajam dan font JetBrains Mono untuk keterbacaan kelas enterprise.',
-    badge: 'Latest',
-    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
-    items: [
-      {
-        id: 'c-07docs-120-1',
-        type: 'feature',
-        scope: 'Dedicated In-Page Article Reader View',
-        description: 'Menggantikan modal popup dialog (TaskDetailModal) dengan komponen pembaca artikel komprehensif (TaskArticleReader.vue) berbasis tata letak 2 kolom, header navigasi dengan tombol kembali, mode fokus pembaca tanpa distraksi (immersive mode), dan navigasi sekuensial antar-tugas.'
-      },
-      {
-        id: 'c-07docs-120-2',
-        type: 'improvement',
-        scope: 'Task Card Pro System & Visual De-Cluttering',
-        description: 'Merapikan dan menstandarisasi kartu tugas (.task-card-pro) dengan hierarki visual jelas: chip ID monospace, badge prioritas semantik, pill file target terpadu, meter progres checklist ramping, dan baris handover personil yang bersih.'
-      },
-      {
-        id: 'c-07docs-120-3',
-        type: 'improvement',
-        scope: 'Universal Plus Jakarta Sans Typography & Font Smoothing',
-        description: 'Memperbaiki font tampilan dokumen dengan mengaktifkan font Plus Jakarta Sans secara universal pada html, body, tombol, heading, dan input dengan -webkit-font-smoothing dan font JetBrains Mono untuk blok kode.'
-      },
-      {
-        id: 'c-07docs-120-4',
-        type: 'performance',
-        scope: 'Keyboard Navigation & Sequential Task Reading',
-        description: 'Menambahkan pintasan keyboard Escape untuk kembali ke papan tugas serta Alt+Panah untuk membaca tugas berikutnya/sebelumnya secara cepat tanpa memuat ulang halaman.'
-      }
-    ]
-  },
-  {
-    version: 'v1.0.0',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Peluncuran Service 07 Docs & Mission Control Hub (Vue 3 + Go Native BFF + Database Persistence)',
-    summary: 'Menerbitkan microservice mandiri services/07-docs (HeroCMS Docs & Mission Control Hub) yang menyatukan 4 telemetri real-time, 50 task matrix berstatus ONGOING dengan alur handover spesialis, modal reader interaktif dengan checklist persistence langsung ke database melalui REST API PATCH, 13 blueprint panduan arsitektur operasional, 10 SOP standar enterprise, dan modul protokol Paijo AI PM & QA/QC. Layanan berjalan di port 8087 dengan routing Traefik (docs.herocms.stackbyte.id), dilengkapi pentest suite, dan arsitektur zero-CSS duplication berbasis studio-master.css.',
-    badge: 'Stable',
-    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
-    items: [
-      {
-        id: 'c-11500-1',
-        type: 'feature',
-        scope: 'Service 07 Docs & Mission Control Microservice',
-        description: 'Mendirikan layanan microservice baru services/07-docs dengan frontend Vue 3 (Vite + TypeScript + Pinia), Go Native BFF (port 8087, Go 1.22+ Standard Router), dan registrasi ingress Traefik docs.herocms.stackbyte.id.'
-      },
-      {
-        id: 'c-11500-2',
-        type: 'feature',
-        scope: 'Interactive Checklist with Database Persistence',
-        description: 'Mengimplementasikan penyimpanan checklist real-time ke database melalui endpoint PATCH /api/v1/tasks/:id/checklist sehingga progres centang pada modal pembaca tersimpan secara persisten.'
-      },
-      {
-        id: 'c-11500-3',
-        type: 'feature',
-        scope: '50-Task Dual-Mode Matrix & Continuous Sprint ONGOING Status',
-        description: 'Menyajikan 50 task bisnis dalam dua mode pengelompokan (Divisi Tim & 6 Microservices) dengan status 100% ONGOING dan metadata handover kepemilikan antar-rekan tim.'
-      },
-      {
-        id: 'c-11500-4',
-        type: 'security',
-        scope: 'Dedicated Black-Box Pentest Suite & Zero-CSS Studio Master',
-        description: 'Menyematkan test suite pentest/security_test.go untuk validasi CORS, security headers, dan bounds checking, serta menerapkan arsitektur visual studio-master.css tanpa duplikasi styling.'
       }
     ]
   },

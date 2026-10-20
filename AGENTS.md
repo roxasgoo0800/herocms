@@ -76,8 +76,11 @@ Aturan ini berlaku untuk **seluruh aplikasi web, landing page, dan modul fronten
 ---
 
 ## 8. Standar Changelog & Semantic Versioning (Wajib untuk AI Agent & Developer)
-Setiap AI Agent maupun pengembang yang melakukan modifikasi kode, penambahan fitur, atau perbaikan bug di repositori HeroCMS **WAJIB** mencatat perubahan secara terstruktur ke dalam dataset changelog resmi di:
-[`services/02-dashboard-cms/src/data/changelog.ts`](file:///Users/rizalfahmi/Documents/React/herocms/services/02-dashboard-cms/src/data/changelog.ts)
+Setiap AI Agent maupun pengembang yang melakukan modifikasi kode, penambahan fitur, atau perbaikan bug di repositori HeroCMS **WAJIB** mencatat perubahan secara terstruktur ke dalam dataset changelog resmi di **masing-masing direktori service** yang dimodifikasi:
+- **Service 02 Dashboard CMS**: [`services/02-dashboard-cms/src/data/changelog.ts`](file:///Users/rizalfahmi/Documents/React/herocms/services/02-dashboard-cms/src/data/changelog.ts)
+- **Service 07 Docs Hub**: [`services/07-docs/src/data/changelog.ts`](file:///Users/rizalfahmi/Documents/React/herocms/services/07-docs/src/data/changelog.ts)
+- Layanan lainnya di folder layanannya masing-masing saat dirilis.
+- **Larangan Keras Campur Aduk**: **DILARANG KERAS** mencampurkan entri rilis service lain ke dalam dataset changelog `02-dashboard-cms`. Setiap service mengelola riwayat rilisnya sendiri-sendiri secara terisolasi.
 
 - **Aturan Penomoran Versi (Semantic Versioning: `vMajor.Minor.Patch/Revision`)**:
   1. **Major (`X.0.0`)**: Digunakan jika ada perubahan arsitektur fundamental, perombakan database/API yang bersifat breaking change, atau perombakan sistem UI/UX secara radikal.

@@ -1,14 +1,16 @@
 ---
 name: herocms-changelog-semver
-description: Prosedur pencatatan perubahan rilis dan penomoran versi Semantic Versioning (SemVer) sesuai mandat AGENTS.md ke dataset services/02-dashboard-cms/src/data/changelog.ts. Gunakan setiap kali menyelesaikan fitur, perbaikan bug, atau refaktor di HeroCMS.
+description: Prosedur pencatatan perubahan rilis dan penomoran versi Semantic Versioning (SemVer) sesuai mandat AGENTS.md ke dataset changelog independen per-service (misal: services/02-dashboard-cms/src/data/changelog.ts, services/07-docs/src/data/changelog.ts). Gunakan setiap kali menyelesaikan fitur, perbaikan bug, atau refaktor di HeroCMS.
 ---
 
 # HeroCMS Changelog & Semantic Versioning Skill (`herocms-changelog-semver`)
 
-Skill ini memandu AI Agent dalam memenuhi **kewajiban pembaruan Changelog & penomoran Semantic Versioning** sesuai aturan resmi di [`AGENTS.md`](file:///home/rizal/Documents/Project/herocms/AGENTS.md).
+Skill ini memandu AI Agent dalam memenuhi **kewajiban pembaruan Changelog & penomoran Semantic Versioning** sesuai aturan resmi di [`AGENTS.md`](file:///Users/rizalfahmi/Documents/React/herocms/AGENTS.md).
 
-Setiap AI Agent maupun developer yang menyelesaikan tugas di repositori HeroCMS **WAJIB** mencatat perubahannya ke dalam:
-`services/02-dashboard-cms/src/data/changelog.ts`
+Setiap AI Agent maupun developer yang menyelesaikan tugas di repositori HeroCMS **WAJIB** mencatat perubahannya ke dalam direktori service masing-masing:
+- **Service 02 Dashboard CMS**: `services/02-dashboard-cms/src/data/changelog.ts`
+- **Service 07 Docs Hub**: `services/07-docs/src/data/changelog.ts`
+- **Aturan Mutlak**: Dilarang keras mencampurkan riwayat rilis service lain ke dalam changelog `02-dashboard-cms`. Setiap service memiliki catatan rilis mandiri.
 
 ---
 

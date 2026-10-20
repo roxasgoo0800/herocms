@@ -406,11 +406,11 @@ const exportTelemetry = () => {
       <div class="breadcrumb-left-group">
         <button type="button" class="btn-back-to-list" @click="emit('back')">
           <ArrowLeft :size="14" />
-          <span>Kembali ke Daftar Kontainer</span>
+          <span>Kembali ke Ikhtisar Telemetri Fleet</span>
         </button>
 
         <div class="breadcrumb-trail">
-          <span style="cursor: pointer;" @click="emit('back')">Situs & Kontainer</span>
+          <span style="cursor: pointer;" @click="emit('back')">Telemetri Fleet Global</span>
           <span class="divider">/</span>
           <span class="current" style="color: #2563eb;">{{ container.subdomain }}</span>
           <span class="divider">/</span>
