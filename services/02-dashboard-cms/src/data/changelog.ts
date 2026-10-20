@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.20.0',
+    version: 'v1.20.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.20.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Pemisahan Hierarki Tagline Kartu Paket (Zero-Overlap) & Integrasi Checkout Pembayaran Langsung Kalkulator Simulasi Cluster',
+    summary: 'Memperbaiki tata letak kartu paket aktif berjalan (.plan-crown-card) dengan memisahkan teks deskripsi tagline ke dalam baris penuh mandiri (.crown-full-tagline) di bawah bar judul dan harga (.crown-top-bar), secara mutlak mengeliminasi masalah tombol "Ganti / Upgrade Paket" yang menimpa paragraf deskripsi di semua resolusi. Menambahkan kapabilitas Checkout & Pembayaran Langsung pada Kalkulator Simulasi Resource Cluster Kustom (Tab 3) sehingga pengguna dapat langsung membayar estimasi spesifikasi kustom via 4 kanal pembayaran resmi (BCA VA, QRIS, Visa, Mandiri Bill), mengaktifkan kuota kluster seketika, dan otomatis menerbitkan E-Faktur resmi PMK-60.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12010-1',
+        type: 'bugfix',
+        scope: 'Plan Crown Card Layout Strict Tier Separation',
+        description: 'Meredesain struktur kartu paket utama menggunakan .crown-top-bar (khusus judul dan harga/tombol) serta baris penuh .crown-full-tagline terpisah di bawahnya, mencegah teks deskripsi bertumpuk atau melenceng di bawah tombol aksi.'
+      },
+      {
+        id: 'c-02dash-12010-2',
+        type: 'feature',
+        scope: 'Custom Cluster Simulation Checkout & Instant Payment',
+        description: 'Menyediakan tombol "Bayar & Aktifkan Cluster Sekarang" pada Kalkulator Simulasi Resource Kustom yang langsung membuka modal checkout, menghitung DPP + PPN 11%, memperbarui kuota paket, dan menerbitkan E-Faktur resmi berstempel DJP.'
+      }
+    ]
+  },
+  {
     version: 'v1.20.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Perombakan Dialog Pembuatan Website Baru: Studio Split-Layout 980px, Live Canvas Browser Mockup & Sinkronisasi Subdomain Cerdas',
     summary: 'Merombak arsitektur dan antarmuka dialog modal Pembuatan Website Baru (.modal-dialog-create-site) dari sebelumnya berukuran sempit 580px dan berantakan menjadi modal studio interaktif seluas 980px dengan sistem 2 kolom responsif: (1) Kolom Konfigurasi Terstruktur meliputi pemilihan blueprint 2x2 berfitur lengkap, formulir identitas dengan auto-slug generator cerdas dan verifikasi ketersediaan subdomain Traefik Edge real-time, serta pemilih palet warna aksen brand dinamis; (2) Kolom Pratinjau Live Kanvas menampilkan mockup jendela browser lengkap dengan address bar SSL TLS 1.3, hero banner reaktif yang menyesuaikan nama dan warna aksen secara instan, serta kartu telemetri alokasi runtime kontainer Docker cgroups v2 dan bar kapasitas kuota langganan; (3) Perluasan dialog konfigurasi blueprint (.blueprint-config-dialog) menjadi 760px dan pemantapan tombol aksi side-by-side anti-wrap.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

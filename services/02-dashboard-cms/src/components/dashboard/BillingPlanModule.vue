@@ -55,7 +55,7 @@ const decrementAddon = () => {
 
 // Checkout & Integrated Payment State
 interface CheckoutData {
-  type: 'addon' | 'upgrade';
+  type: 'addon' | 'upgrade' | 'custom_cluster';
   title: string;
   description: string;
   qty?: number;
@@ -66,6 +66,12 @@ interface CheckoutData {
   total: number;
   newContainersCount: number;
   targetPlan?: SubscriptionPlanCatalogItem;
+  customSpecs?: {
+    containers: number;
+    cpu: string;
+    ram: string;
+    storage: number;
+  };
 }
 
 const isCheckoutModalOpen = ref(false);
@@ -135,6 +141,17 @@ const processCheckoutPayment = () => {
         storageQuota: p.storage
       };
       invoicePlanName = `${p.name} (Multi-Tenant Docker Cluster)`;
+    } else if (data.type === 'custom_cluster' && data.customSpecs) {
+      const cs = data.customSpecs;
+      userPlan.value = {
+        name: `Custom Enterprise (${cs.containers} Pods)`,
+        price: `Rp ${data.total.toLocaleString('id-ID')} / bln`,
+        maxContainers: cs.containers,
+        cpuPerContainer: cs.cpu,
+        ramPerContainer: cs.ram,
+        storageQuota: `${cs.storage} GB NVMe`
+      };
+      invoicePlanName = `Custom Cluster Deployment (${cs.containers} Pods, ${cs.cpu}, ${cs.ram})`;
     }
 
     // GENERATE OFFICIAL INVOICE REAL-TIME IN INVOICE LEDGER
@@ -189,6 +206,28 @@ const simulatedCost = computed(() => {
 
   return { subtotal, tax, total };
 });
+
+const openCustomClusterCheckout = () => {
+  const subtotal = simulatedCost.value.subtotal;
+  const tax = simulatedCost.value.tax;
+  const total = simulatedCost.value.total;
+  checkoutData.value = {
+    type: 'custom_cluster',
+    title: `Alokasi Custom Cluster (${simContainers.value} Kontainer Dedicated)`,
+    description: `Spesifikasi runtime kustom: ${simContainers.value} Kontainer, ${simCpu.value} vCPU/pod, ${simRam.value} MB RAM cgroups v2, dan ${simStorage.value} GB NVMe Media Storage.`,
+    subtotal,
+    tax,
+    total,
+    newContainersCount: simContainers.value,
+    customSpecs: {
+      containers: simContainers.value,
+      cpu: `${simCpu.value} vCPU`,
+      ram: `${simRam.value} MB`,
+      storage: simStorage.value
+    }
+  };
+  isCheckoutModalOpen.value = true;
+};
 </script>
 
 <template>
@@ -310,29 +349,33 @@ const simulatedCost = computed(() => {
     <div v-if="activeTab === 'allocation'" class="billing-hero-grid">
       <!-- Left Column: Active Plan Crown Card & Pod Topology Visualizer -->
       <div class="billing-left-stack">
-        <!-- 1. The Crown Jewel Active Plan Card (Refactored: Non-Overlapping Clean Header) -->
+        <!-- 1. The Crown Jewel Active Plan Card (100% Non-Overlapping Architecture) -->
         <div class="plan-crown-card">
-          <div class="plan-crown-header">
-            <div class="plan-crown-title-group">
+          <div class="crown-top-bar">
+            <div class="crown-title-box">
               <span class="plan-crown-badge">
                 <span class="pulse-mini-dot"></span>
                 PAKET AKTIF SAAT INI • {{ userPlan.name }}
               </span>
               <h2 class="plan-name-headline">{{ userPlan.name }}</h2>
-              <p class="plan-tagline">
-                Arsitektur multi-tenant mandiri dengan isolasi kernel cgroups v2, Traefik v3 HTTP/3 edge routing, dan automasi SSL TLS 1.3 Let's Encrypt.
-              </p>
             </div>
 
-            <div class="plan-crown-price-group">
-              <div class="plan-crown-rate">{{ userPlan.price }}</div>
-              <span class="plan-crown-period">Tagihan berikutnya: 12 November 2026</span>
+            <div class="crown-price-cta-box">
+              <div class="crown-price-line">
+                <span class="crown-price-val">{{ userPlan.price }}</span>
+              </div>
+              <span class="crown-period-tag">Tagihan berikutnya: 12 November 2026</span>
               <button type="button" @click="activeTab = 'plans'" class="btn-crown-upgrade">
                 <Sparkles :size="13" />
                 <span>Ganti / Upgrade Paket</span>
               </button>
             </div>
           </div>
+
+          <!-- Dedicated Full-Width Tagline Row (100% width, zero collision) -->
+          <p class="crown-full-tagline">
+            Arsitektur multi-tenant mandiri dengan isolasi kernel cgroups v2, Traefik v3 HTTP/3 edge routing, dan automasi SSL TLS 1.3 Let's Encrypt.
+          </p>
 
           <!-- Feature Capsules Strip -->
           <div class="plan-crown-features">
@@ -736,14 +779,25 @@ const simulatedCost = computed(() => {
           </span>
         </div>
 
-        <button
-          type="button"
-          class="btn-primary-gradient"
-          @click="showToast(`Konfigurasi kluster custom (${simContainers} Kontainer, ${simCpu} vCPU, ${simRam}MB RAM) disimpan. Tim Solutions Engineer akan mengonfirmasi via email.`, 'success')"
-        >
-          <Sparkles :size="14" />
-          <span>Ajukan Konfigurasi Custom Cluster</span>
-        </button>
+        <div class="sim-cost-actions-row">
+          <button
+            type="button"
+            class="btn-checkout-cluster"
+            @click="openCustomClusterCheckout"
+          >
+            <CreditCard :size="15" />
+            <span>Bayar & Aktifkan Cluster Sekarang</span>
+          </button>
+
+          <button
+            type="button"
+            class="btn-consult-cluster"
+            @click="showToast(`Konfigurasi kluster custom (${simContainers} Kontainer, ${simCpu} vCPU, ${simRam}MB RAM) disimpan. Tim Solutions Engineer akan mengonfirmasi via email.`, 'info')"
+          >
+            <Sparkles :size="14" />
+            <span>Konsultasi Khusus / SLA</span>
+          </button>
+        </div>
       </div>
     </div>
 
