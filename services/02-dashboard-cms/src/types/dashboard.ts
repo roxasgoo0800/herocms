@@ -23,6 +23,23 @@ export interface UserPlan {
   storageQuota: string;
 }
 
+export interface SubscriptionPlanCatalogItem {
+  id: 'starter' | 'pro' | 'agency';
+  name: string;
+  badge: string;
+  isPopular?: boolean;
+  priceMonthly: number;
+  priceAnnualMonthly: number;
+  priceMonthlyFormatted: string;
+  priceAnnualFormatted: string;
+  containers: number;
+  ram: string;
+  cpu: string;
+  storage: string;
+  tagline: string;
+  features: string[];
+}
+
 export interface ContainerSite {
   id: string;
   name: string;

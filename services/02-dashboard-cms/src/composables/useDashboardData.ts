@@ -31,7 +31,8 @@ import {
   initialPersonalAccessTokens,
   initialWebhooks,
   initialWebhookDeliveryLogs,
-  initialSupportTickets
+  initialSupportTickets,
+  subscriptionPlansCatalog
 } from '../data/dashboard-seeds';
 import type { OfficialTemplateItem } from '../data/templates-data';
 
@@ -110,6 +111,20 @@ const showToast = (text: string, type: 'success' | 'info' | 'error' = 'success')
   setTimeout(() => {
     toastMessage.value = null;
   }, 3500);
+};
+
+const changeUserPlan = (planId: 'starter' | 'pro' | 'agency') => {
+  const target = subscriptionPlansCatalog.find(p => p.id === planId);
+  if (!target) return;
+  userPlan.value = {
+    name: target.name,
+    price: `${target.priceMonthlyFormatted} / bln`,
+    maxContainers: target.containers,
+    cpuPerContainer: target.cpu,
+    ramPerContainer: target.ram,
+    storageQuota: target.storage
+  };
+  showToast(`Paket langganan berhasil dialihkan ke ${target.name}! Kuota runtime kini ${target.containers} slot kontainer.`, 'success');
 };
 
 // Containers State
@@ -1708,6 +1723,8 @@ export function useDashboardData() {
     isEditorSidebarHidden,
     userEmail,
     userPlan,
+    subscriptionPlansCatalog,
+    changeUserPlan,
     toastMessage,
     showToast,
     containers,

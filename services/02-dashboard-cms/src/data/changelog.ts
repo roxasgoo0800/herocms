@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.17.3',
+    version: 'v1.18.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.18.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Eye-Catching Modul Kapasitas Runtime & Paket Langganan: Peta Topologi Pod Node, Matriks 3-Tier Harga & Simulator Custom Cluster',
+    summary: 'Merombak tampilan dan kapabilitas fungsional modul Kapasitas Runtime & Paket Langganan menjadi sangat atraktif, intuitif, dan responsif (720p hingga 2480p+). Menghadirkan: (1) Cluster 4 Kartu Telemetri Komersial real-time (Slot Kontainer, CPU CFS, RAM cgroups v2, S3 Storage); (2) Crown Jewel Plan Card dengan visual ambient top gradient, kapsul kapabilitas aktif, dan manajemen metode penagihan; (3) Peta Topologi Slot Node interaktif yang memvisualisasikan kontainer aktif lengkap dengan telemetri runtime serta slot kosong siap deploy; (4) Matriks 3-Tier Pilihan Paket (Starter, Pro, Agency) dengan toggle siklus Bulanan vs Tahunan (Diskon 20%) dan modal konfirmasi perubahan paket prorata; (5) Kalkulator Simulasi Resource Cluster Kustom dinamis dengan slider interaktif dan kalkulasi PPN 11%.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11800-1',
+        type: 'feature',
+        scope: 'Interactive Container Node Topology Map (.pod-topology-grid)',
+        description: 'Menyajikan visualisasi topologi slot kontainer nyata: slot terpakai menampilkan status running, domain rute Traefik, dan telemetri CPU/RAM, sedangkan slot kosong menyajikan akses langsung untuk deploy kontainer baru.'
+      },
+      {
+        id: 'c-02dash-11800-2',
+        type: 'feature',
+        scope: '3-Tier Subscription Pricing Matrix with Annual Discount Toggle',
+        description: 'Menambahkan katalog perbandingan paket interaktif (Starter, Pro, Agency) dengan switch siklus penagihan Bulanan vs Tahunan (Diskon 20%) serta status paket aktif pengguna saat ini.'
+      },
+      {
+        id: 'c-02dash-11800-3',
+        type: 'feature',
+        scope: 'Dynamic Custom Cluster Resource Simulator (.calculator-simulator-card)',
+        description: 'Kalkulator interaktif berbasis slider untuk menghitung simulasi biaya runtime kustom (Kontainer 1-25, CPU 0.25-2.0 vCPU, RAM 256MB-4GB, S3 Storage 1-100GB) lengkap dengan rincian subtotal dan PPN 11%.'
+      },
+      {
+        id: 'c-02dash-11800-4',
+        type: 'improvement',
+        scope: 'Prorated Plan Upgrade Confirmation & Billing Method Modals',
+        description: 'Menyematkan dialog modal konfirmasi upgrade paket (680px) dengan perbandingan spesifikasi sebelumnya vs target, pemberitahuan prorata otomatis, serta dialog manajemen metode pembayaran utama.'
+      }
+    ]
+  },
+  {
     version: 'v1.17.3',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Interactive Webhook Delivery Inspector (Request/Response) & In-Browser Headless REST API Playground ("Try It Out")',
     summary: 'Menambahkan fitur standar industri terdepan untuk integrasi developer di HeroCMS: (1) Interactive Webhook Delivery Inspector Drawer/Modal dengan inspeksi detail HTTP request header (RFC 9421 anti-replay timestamp & HMAC-SHA256 signature), JSON payload yang dikirim, respon remote server, serta kapabilitas Redeliver (Kirim Ulang Event); (2) In-Browser Interactive Headless REST API Request Playground ("Try It Out") pada tab REST API & SDK dengan simulasi otentikasi Bearer Token PAT, validasi granular scope otomatis, dan respon data CMS real-time (Articles, Leads, Media, Telemetry) tanpa risiko kontainer.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

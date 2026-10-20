@@ -1,5 +1,6 @@
 import type {
   UserPlan,
+  SubscriptionPlanCatalogItem,
   ContainerSite,
   ContentArticle,
   CmsPage,
@@ -24,6 +25,76 @@ export const initialUserPlan: UserPlan = {
   ramPerContainer: '256 MB',
   storageQuota: '2 GB SSD'
 };
+
+export const subscriptionPlansCatalog: SubscriptionPlanCatalogItem[] = [
+  {
+    id: 'starter',
+    name: 'Hero Starter',
+    badge: 'Pemula & Uji Coba',
+    priceMonthly: 49000,
+    priceAnnualMonthly: 39000,
+    priceMonthlyFormatted: 'Rp 49.000',
+    priceAnnualFormatted: 'Rp 39.000',
+    containers: 1,
+    ram: '256 MB',
+    cpu: '0.5 vCPU',
+    storage: '1 GB NVMe',
+    tagline: 'Ideal untuk portofolio tunggal, proyek riset, atau situs pribadi.',
+    features: [
+      '1 Kontainer Docker Otonom',
+      'Traefik v3 TLS Let\'s Encrypt SSL',
+      'PostgreSQL RLS Database Terisolasi',
+      'MinIO S3 Media Storage (1 GB)',
+      'Subdomain default herocms.id',
+      'Dukungan Komunitas & Dokumentasi'
+    ]
+  },
+  {
+    id: 'pro',
+    name: 'Hero Pro',
+    badge: 'Paling Populer',
+    isPopular: true,
+    priceMonthly: 149000,
+    priceAnnualMonthly: 119000,
+    priceMonthlyFormatted: 'Rp 149.000',
+    priceAnnualFormatted: 'Rp 119.000',
+    containers: 3,
+    ram: '256 MB / kontainer',
+    cpu: '0.5 vCPU / kontainer',
+    storage: '2 GB NVMe per site',
+    tagline: 'Solusi lengkap untuk profesional kreatif, studio & tim berkembang.',
+    features: [
+      '3 Kontainer Docker Otonom (Ekspansi Slot)',
+      'Visual Live Canvas Page Builder',
+      'Traefik v3 HTTP/3 & Custom Ingress SSL',
+      'Scoped Webhooks & Headless REST API',
+      'Real-Time Analytics (Redis ZSET)',
+      'Dukungan Multi-Tenant RLS Penuh'
+    ]
+  },
+  {
+    id: 'agency',
+    name: 'Hero Agency & Enterprise',
+    badge: 'Skala Bisnis & Tim',
+    priceMonthly: 399000,
+    priceAnnualMonthly: 319000,
+    priceMonthlyFormatted: 'Rp 399.000',
+    priceAnnualFormatted: 'Rp 319.000',
+    containers: 10,
+    ram: '512 MB / kontainer',
+    cpu: '1.0 vCPU / kontainer',
+    storage: '10 GB NVMe per site',
+    tagline: 'Performa tinggi untuk agensi digital dengan puluhan website klien.',
+    features: [
+      '10 Kontainer Docker Otonom Terisolasi',
+      'Custom Domain Tanpa Batas',
+      'Dedicated CFS CPU Quota & 512 MB RAM',
+      'Webhook & API Headless Integration',
+      'Audit Log & Keamanan Enterprise',
+      'Dukungan Teknis Prioritas 24/7 SLA 99.95%'
+    ]
+  }
+];
 
 export const initialContainers: ContainerSite[] = [
   {
