@@ -1379,6 +1379,14 @@ a[class*="btn-"] svg,
   padding: 4px;
   gap: 3px;
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.segmented-filter-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .segment-pill {
@@ -1394,6 +1402,8 @@ a[class*="btn-"] svg,
   align-items: center;
   gap: 7px;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .segment-pill:hover {
@@ -1966,13 +1976,14 @@ a[class*="btn-"] svg,
   padding-top: 12px;
   border-top: 1px solid #f1f5f9;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .card-action-left {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .btn-action-primary {
@@ -1989,6 +2000,8 @@ a[class*="btn-"] svg,
   cursor: pointer;
   transition: all 0.12s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .btn-action-primary:hover {
@@ -2000,6 +2013,8 @@ a[class*="btn-"] svg,
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
 .btn-icon-ctrl {
@@ -3851,7 +3866,11 @@ a[class*="btn-"] svg,
 }
 
 /* Modal Actions */
-.modal-footer-row {
+.modal-footer,
+.modal-footer-row,
+.modal-footer-bespoke,
+.rich-modal-footer,
+.studio-modal-footer {
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -3861,6 +3880,16 @@ a[class*="btn-"] svg,
   border-top: 1px solid #f4f4f5;
   width: 100%;
   box-sizing: border-box;
+  flex-wrap: nowrap;
+}
+
+.modal-footer button,
+.modal-footer-row button,
+.modal-footer-bespoke button,
+.rich-modal-footer button,
+.studio-modal-footer button {
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .btn-modal-ghost {
@@ -6153,7 +6182,21 @@ a[class*="btn-"] svg,
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.domain-header-actions::-webkit-scrollbar {
+  display: none;
+}
+
+.domain-header-actions button,
+.domain-header-actions a,
+.domain-header-actions div {
+  flex-shrink: 0;
+  white-space: nowrap !important;
 }
 
 .ssl-status-badge {
@@ -10330,7 +10373,14 @@ a[class*="btn-"] svg,
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.batch-action-buttons::-webkit-scrollbar {
+  display: none;
 }
 
 .btn-batch-action {
@@ -10346,6 +10396,8 @@ a[class*="btn-"] svg,
   border: 1px solid rgba(255, 255, 255, 0.18);
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .btn-batch-action:hover {
@@ -10497,12 +10549,19 @@ a[class*="btn-"] svg,
 }
 
 .segmented-filter-bar {
-  display: flex;
+  display: inline-flex;
   gap: 4px;
   background: #f1f5f9;
   padding: 3px;
   border-radius: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.segmented-filter-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .segment-pill {
@@ -10515,6 +10574,8 @@ a[class*="btn-"] svg,
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .segment-pill.active {
@@ -17916,7 +17977,20 @@ a[class*="btn-"] svg,
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.footer-right-buttons::-webkit-scrollbar {
+  display: none;
+}
+
+.footer-right-buttons button,
+.footer-right-buttons a {
+  flex-shrink: 0;
+  white-space: nowrap !important;
 }
 
 .btn-analytics-export {
@@ -20027,7 +20101,14 @@ a[class*="btn-"] svg,
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.reader-header-nav-actions::-webkit-scrollbar {
+  display: none;
 }
 
 .btn-reader-action-secondary {
@@ -20945,28 +21026,39 @@ a[class*="btn-"] svg,
   }
 
   .card-action-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
   }
 
   .card-action-left {
-    width: 100%;
+    width: auto !important;
+    flex: 0 0 auto !important;
   }
 
   .btn-action-primary {
-    width: 100%;
-    justify-content: center;
+    width: auto !important;
+    padding: 6px 12px !important;
+    white-space: nowrap !important;
   }
 
   .runtime-btn-group {
-    width: 100%;
-    justify-content: space-between;
+    width: auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
   }
 
   .btn-icon-ctrl {
-    flex: 1;
-    height: 32px;
+    width: 29px !important;
+    height: 29px !important;
+    flex: 0 0 29px !important;
   }
 
   .resource-gauges-row {
@@ -21101,13 +21193,18 @@ a[class*="btn-"] svg,
   }
 
   .reply-actions-row {
-    flex-direction: column-reverse;
-    gap: 8px;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
   }
 
   .reply-actions-row button {
-    width: 100%;
-    justify-content: center;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
   }
 
   .plan-banner-top {
@@ -21121,15 +21218,19 @@ a[class*="btn-"] svg,
   }
 
   .plan-meta-footer {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px;
+    flex-wrap: nowrap !important;
   }
 
   .btn-change-payment,
   .btn-confirm-addon {
-    width: 100%;
-    justify-content: center;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
   }
 
   .modal-footer,
@@ -21137,10 +21238,14 @@ a[class*="btn-"] svg,
   .modal-footer-bespoke,
   .rich-modal-footer,
   .studio-modal-footer {
-    flex-direction: column-reverse !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
     gap: 8px !important;
     padding-top: 14px !important;
     width: 100% !important;
+    flex-wrap: nowrap !important;
   }
 
   .modal-footer button,
@@ -21148,32 +21253,68 @@ a[class*="btn-"] svg,
   .modal-footer-bespoke button,
   .rich-modal-footer button,
   .studio-modal-footer button {
-    width: 100% !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
     justify-content: center !important;
-    padding: 9px 14px !important;
+    padding: 8px 14px !important;
+    white-space: nowrap !important;
+  }
+
+  @media (max-width: 480px) {
+    .modal-footer button,
+    .modal-footer-row button,
+    .modal-footer-bespoke button,
+    .rich-modal-footer button,
+    .studio-modal-footer button {
+      flex: 1 1 0 !important;
+      padding: 8px 10px !important;
+      font-size: 0.78rem !important;
+    }
   }
 
   /* Article Detail & Reader Responsiveness on 720px */
   .reader-header-nav-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 8px !important;
     padding: 10px 12px;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .reader-header-nav-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .btn-reader-back {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding: 6px 8px !important;
+    font-size: 0.74rem !important;
   }
 
   .reader-header-nav-actions {
-    flex-wrap: wrap;
-    gap: 6px;
-    width: 100%;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
   }
 
   .reader-header-nav-actions button,
   .reader-header-nav-actions a {
-    flex: 1;
-    min-width: 90px;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: auto !important;
     justify-content: center;
     font-size: 0.72rem;
     padding: 6px 10px;
+    white-space: nowrap !important;
   }
 
   .reader-editorial-hero {
@@ -21234,23 +21375,46 @@ a[class*="btn-"] svg,
 
   /* Pod Analytics View on 720px */
   .pod-breadcrumb-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .pod-breadcrumb-bar::-webkit-scrollbar {
+    display: none;
   }
 
   .footer-right-buttons {
-    flex-wrap: wrap;
-    gap: 6px;
-    width: 100%;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .footer-right-buttons::-webkit-scrollbar {
+    display: none;
   }
 
   .footer-right-buttons button,
   .footer-right-buttons a {
-    flex: 1;
-    min-width: 110px;
+    flex: 0 0 auto !important;
+    min-width: auto !important;
+    width: auto !important;
     justify-content: center;
     font-size: 0.72rem;
+    padding: 6px 10px;
+    white-space: nowrap !important;
   }
 
   .pod-hero-card {
@@ -21271,14 +21435,31 @@ a[class*="btn-"] svg,
   }
 
   .terminal-ctrl-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 8px !important;
   }
 
   .terminal-actions {
-    flex-wrap: wrap;
-    gap: 8px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .terminal-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .terminal-actions button {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
 }
 
@@ -21430,4 +21611,73 @@ a[class*="btn-"] svg,
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 16px;
   }
+}
+
+/* ==========================================================================
+   7. Universal Side-by-Side (Berjejer) Button Protection Across All Viewports
+   Enforces inline row flow and prevents unwanted newlines ("enter") for all
+   control button clusters, modal action footers, segmented tabs, and toolbars.
+   ========================================================================== */
+.btn-group,
+.button-group,
+.action-group,
+.actions-group,
+.header-actions,
+.header-action-group,
+.toolbar-actions,
+.modal-footer,
+.modal-footer-row,
+.modal-footer-bespoke,
+.rich-modal-footer,
+.studio-modal-footer,
+.card-action-bar,
+.runtime-btn-group,
+.segmented-filter-bar,
+.status-tabs-pill,
+.table-actions-cell,
+.table-actions-strip,
+.reader-header-nav-actions,
+.footer-right-buttons,
+.spotlight-actions-row,
+.tpl-card-actions-row,
+.preview-actions-group,
+.batch-action-buttons,
+.reply-actions-row,
+.token-btn-group,
+.embed-format-btn-group,
+.viewmode-toggle-group,
+.tools-segment,
+.history-segment,
+.device-switcher-dock,
+.slot-stepper-row {
+  flex-wrap: nowrap !important;
+}
+
+.btn-group > button,
+.button-group > button,
+.action-group > button,
+.actions-group > button,
+.header-actions > button,
+.header-action-group > button,
+.toolbar-actions > button,
+.card-action-bar button,
+.runtime-btn-group button,
+.segmented-filter-bar button,
+.status-tabs-pill button,
+.table-actions-cell button,
+.table-actions-strip button,
+.reader-header-nav-actions button,
+.reader-header-nav-actions a,
+.footer-right-buttons button,
+.footer-right-buttons a,
+.spotlight-actions-row button,
+.tpl-card-actions-row button,
+.preview-actions-group button,
+.batch-action-buttons button,
+.reply-actions-row button,
+.token-btn-group button,
+.embed-format-btn-group button,
+.slot-stepper-row button {
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }

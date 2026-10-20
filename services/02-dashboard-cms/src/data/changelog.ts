@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.16.2',
+    version: 'v1.16.3',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,55 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.16.3',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Penataan Horizontal Sejajar (Side-by-Side Berjejer) untuk Grup Tombol Aksi, Card Action Bars, Modal Footers & Segmented Filter Bars',
+    summary: 'Memperbaiki tata letak kelompok tombol aksi yang sebelumnya mengalami pemecahan baris baru ("enter gitu / stacking vertikal") sehingga kembali berjejer rapi secara horizontal (side-by-side) di seluruh resolusi (720px, 1080px, 1440px, 2480px+). Mengeliminasi paksaan flex-direction: column dan column-reverse pada card-action-bar, modal-footer, reader navigation bar, dan pod analytics footer. Menambahkan proteksi Universal Side-by-Side Button Protection di studio-master.css dengan scrollbar sentuh mulus (touch horizontal scrolling) saat ruang sempit.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11603-1',
+        type: 'bugfix',
+        scope: 'Card Action Bar Inline Alignment (.card-action-bar)',
+        description: 'Menghapus pemecahan baris column pada .card-action-bar di resolusi <= 720px dan mengunci flex-wrap: nowrap. Tombol Editor [✏️ Editor] dan kelompok tombol runtime kontainer [▶][■][⚡][🗑] kini tetap sejajar berdampingan dalam satu baris horizontal tanpa terpisah baris.'
+      },
+      {
+        id: 'c-02dash-11603-2',
+        type: 'bugfix',
+        scope: 'Modal Dialog Action Footers (.modal-footer, .modal-footer-row, dll.)',
+        description: 'Mendefinisikan styling flex horizontal dasar untuk .modal-footer yang sebelumnya absen di desktop, serta mencabut aturan column-reverse 100% full-width di mobile/720px. Tombol dialog ("Batal", "Deploy Kontainer", "Simpan Artikel", "Cetak E-Faktur", "Uji Ulang DNS") kini selalu berjejer horizontal berdampingan dengan ukuran proporsional.'
+      },
+      {
+        id: 'c-02dash-11603-3',
+        type: 'bugfix',
+        scope: 'Segmented Filter Bars & Control Pills (.segmented-filter-bar, .status-tabs-pill)',
+        description: 'Mengubah flex-wrap: wrap menjadi flex-wrap: nowrap dengan overflow-x: auto pada .segmented-filter-bar dan .status-tabs-pill. Tombol filter kategori, status, dan timeframe kini tidak lagi patah atau menumpuk ke baris kedua di dalam kapsul abu-abu.'
+      },
+      {
+        id: 'c-02dash-11603-4',
+        type: 'bugfix',
+        scope: 'Reader Navigation Header & Pod Analytics Toolbar (.reader-header-nav-actions, .footer-right-buttons)',
+        description: 'Mengunci baris horizontal tanpa wrapping pada header artikel reader (.reader-header-nav-bar) dan footer pod telemetry (.footer-right-buttons). Tombol aksi (Bagikan, Buka Web, Sunting, Export CSV, Purge Cache, Terminal) tetap berjejer satu baris dengan overflow horizontal terproteksi.'
+      },
+      {
+        id: 'c-02dash-11603-5',
+        type: 'improvement',
+        scope: 'Universal Side-by-Side Button Protection (studio-master.css)',
+        description: 'Menerapkan aturan flex-wrap: nowrap !important dan button { white-space: nowrap !important; flex-shrink: 0; } universal pada seluruh kelas kluster tombol Studio (toolbar, actions cell, command bar, batch action, reply actions, dsb.) di seluruh tingkatan resolusi.'
+      }
+    ]
+  },
+  {
     version: 'v1.16.2',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Standarisasi Text Anti-Wrap & Integritas Button/Span (Anti-Enter) Lintas Resolusi',
     summary: 'Mengimplementasikan sistem Universal Text Anti-Wrap & Button/Span Integrity System pada studio-master.css. Mengatasi masalah teks terputus/terpotong menjadi beberapa baris ("terkena enter") pada tombol, badge, status pill, metric card, navigation tab, breadcrumbs, dan form label saat ukuran viewport berubah (720px, 1080px, 1440px, hingga 2480px+). Memastikan seluruh tombol aksi (action buttons), segmented filter, dan status tags tetap utuh pada satu baris (single-line intact) dengan flex-wrap yang aman pada kontainer induk.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
