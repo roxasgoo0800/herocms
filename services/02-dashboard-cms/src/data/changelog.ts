@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.16.0',
+    version: 'v1.16.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,61 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.16.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Arsitektur Responsif Multi-Tier Lintas Resolusi (720px, 1080px, 1440px, 2480px+ Ultrawide), Mobile Navigation Drawer, Universal Modal & Reader Fluid Reflow',
+    summary: 'Mengimplementasikan sistem desain responsif multi-tier komprehensif di seluruh modul antarmuka Studio CMS. Mengatasi masalah tata letak pada layar 720px (mobile/tablet), 1080px (laptop/standar desktop), 1440px (QHD 2K), hingga 2480px+ (4K UHD & Ultrawide). Menyediakan sidebar off-canvas drawer dengan tombol hamburger di top header dan backdrop interaktif untuk layar <= 1024px. Mengoptimasi seluruh formulir modal dialog, footer actions, dan pemilih konfigurasi menjadi form fleksibel dan bottom-sheet ergonomis. Memperbaiki mode baca artikel (Article Reader) dan editor markdown agar tidak terjadi kebocoran scroll horizontal, serta menerapkan pembatasan max-width pada monitor ultrawide agar konten teks tetap ergonomis dibaca.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11601-1',
+        type: 'feature',
+        scope: 'Mobile Navigation Drawer & Hamburger System (DashboardView.vue & studio-master.css)',
+        description: 'Mentransformasi sidebar menjadi off-canvas navigation drawer pada layar <= 1024px dengan tombol toggle hamburger di header navigasi, backdrop penutup interaktif, keyboard listener tombol Escape, dan penutupan otomatis saat memilih menu.'
+      },
+      {
+        id: 'c-02dash-11601-2',
+        type: 'bugfix',
+        scope: 'Universal Form & Modal Responsiveness pada 720px (studio-master.css)',
+        description: 'Menstandarkan seluruh dialog modal (.modal-dialog, .modal-dialog-lg, .modal-dialog-media-studio, .blueprint-config-dialog) agar beradaptasi menjadi bottom-sheet mobile pada <= 720px. Merombak multi-column form rows (.form-row-2col, .form-row-3col, .events-checklist-grid, .cert-detail-row) menjadi 1 kolom vertikal, dan mengubah modal footer (.modal-footer, .modal-footer-row, .modal-footer-bespoke, .rich-modal-footer, .studio-modal-footer) menjadi tombol bertumpuk (column-reverse full-width).'
+      },
+      {
+        id: 'c-02dash-11601-3',
+        type: 'bugfix',
+        scope: 'Detail Artikel & Reader View Responsiveness (ContentArticlesModule.vue & studio-master.css)',
+        description: 'Mengoptimalkan layout artikel reader (.reader-layout-grid, .reader-header-nav-bar, .reader-editorial-hero, .reader-main-content) agar bertumpuk rapi di layar kecil, tombol aksi membungkus (wrap), hero title proporsional, serta mengisolasi blok kode (pre/code) dan gambar agar tidak memicu kebocoran horizontal scroll.'
+      },
+      {
+        id: 'c-02dash-11601-4',
+        type: 'improvement',
+        scope: 'Tier 2 (1080p) & Tier 3 (1440p 2K) Balanced Card & Telemetry Grids (studio-master.css)',
+        description: 'Menerapkan grid 2 kolom seimbang untuk kartu kontainer, blueprint template, artikel, dan media assets pada rentang 721px-1366px, serta mengekspansinya ke 3 kolom kartu dan 4 kolom telemetri dengan batasan max-width 1680px pada monitor 1440p.'
+      },
+      {
+        id: 'c-02dash-11601-5',
+        type: 'improvement',
+        scope: 'Tier 4 (2480px+ 4K UHD & Ultrawide Ergonomics) Container Bounds (studio-master.css)',
+        description: 'Membatasi lebar baca artikel maksimal 960px pada monitor ultrawide untuk mencegah baris teks terlalu panjang yang melelahkan mata, serta mengekspansi kartu grid kontainer dan katalog template secara seimbang menjadi 4-5 kolom pada viewport 1920px hingga 2400px+.'
+      },
+      {
+        id: 'c-02dash-11601-6',
+        type: 'bugfix',
+        scope: 'Universal Table Responsive Anti-Overflow Shell (studio-master.css)',
+        description: 'Menjamin seluruh tabel data (.table-responsive-shell, .container-table-card, .pro-table, .ledger-table, .inv-table-wrap) memiliki kemampuan horizontal touch scroll yang mulus tanpa merusak tata letak shell aplikasi utama.'
+      }
+    ]
+  },
+  {
     version: 'v1.16.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Konsolidasi Analitik Terpadu, Integrasi Pod Detail Deep-Dive, Perbaikan Master CSS & Ekspansi Telemetri Vitals',
     summary: 'Menghapus tombol analitik pada menu Situs & Kontainer (ContainersModule.vue) dan mengonsolidasikan seluruh kapabilitas observabilitas ke menu Analitik & Telemetri (AnalyticsTelemetryModule.vue). Modul Analitik kini mendukung Dual-View Mode (Ikhtisar Fleet Global vs Detail Pod & Kontainer Mandiri) dengan navigasi langsung dan pemilih pod terpadu. Memperbaiki dan menstandarkan styling CSS master button (.btn-primary, .btn-ghost-sm, .terminal-filter-pill). Memperluas metrik telemetri dengan Core Web Vitals RUM (LCP, INP, CLS, FCP, TTFB, Burn Rate), persebaran Edge POPs Ingress Traefik (Jakarta, Singapura, US, Tokyo, Frankfurt), distribusi protokol jaringan (HTTP/3 QUIC vs HTTP/2), efisiensi kompresi Brotli 11, atribusi perangkat/OS/browser, serta metrik kesehatan pool PostgreSQL RLS dan Redis In-Memory.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
@@ -98,7 +146,7 @@ export const changelogReleases: ChangelogRelease[] = [
       },
       {
         id: 'c-02dash-11600-3',
-        type: 'fix',
+        type: 'bugfix',
         scope: 'Standarisasi CSS Button & Master Tokens (studio-master.css)',
         description: 'Menambahkan styling resmi untuk .btn-primary, .btn-ghost-sm, dan .terminal-filter-pill agar tombol Export dan aksi tabel ter-CSS sempurna sesuai tema HeroCMS Studio.'
       },

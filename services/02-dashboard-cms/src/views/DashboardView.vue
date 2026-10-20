@@ -41,7 +41,8 @@ import {
   Download,
   Trash2,
   Lock,
-  AlertTriangle
+  AlertTriangle,
+  Menu
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 import { generateContainerLogs, type ContainerLogEntry } from '../data/container-logs';
@@ -242,8 +243,21 @@ const handleTerminalRestart = async () => {
   }, 1200);
 };
 
+// Responsive Mobile Navigation Drawer State
+const isMobileNavOpen = ref(false);
+
+const selectMenu = (menuKey: string) => {
+  activeMenu.value = menuKey as any;
+  isMobileNavOpen.value = false;
+};
+
 onMounted(async () => {
   await syncWithBackend();
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isMobileNavOpen.value) {
+      isMobileNavOpen.value = false;
+    }
+  });
 });
 
 // Smooth scroll ke atas saat berganti menu antarmuka
@@ -263,11 +277,19 @@ const handleLogout = async () => {
       :class="{
         'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden,
         'reader-immersive-mode': activeMenu === 'content' && activeArticleForReader && isReaderSidebarHidden,
-        'dashboard-choreographed-enter': isDashboardEntering
+        'dashboard-choreographed-enter': isDashboardEntering,
+        'mobile-nav-open': isMobileNavOpen
       }"
     >
-    <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
-    <aside class="app-sidebar">
+      <!-- Mobile Backdrop Overlay for Screens <= 1024px -->
+      <div
+        v-if="isMobileNavOpen"
+        class="mobile-nav-backdrop"
+        @click="isMobileNavOpen = false"
+      ></div>
+
+      <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
+      <aside class="app-sidebar">
       <!-- Workspace Brand Switcher -->
       <div class="sidebar-header">
         <div class="workspace-brand-header">
@@ -293,7 +315,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'containers' }"
-            @click="activeMenu = 'containers'"
+            @click="selectMenu('containers')"
           >
             <FolderKanban :size="17" />
             <span class="nav-link-text">Situs & Kontainer</span>
@@ -303,7 +325,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'editor' }"
-            @click="activeMenu = 'editor'"
+            @click="selectMenu('editor')"
             :disabled="containers.length === 0"
           >
             <Edit3 :size="17" />
@@ -313,7 +335,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'content' }"
-            @click="activeMenu = 'content'"
+            @click="selectMenu('content')"
           >
             <FileText :size="17" />
             <span class="nav-link-text">Artikel & Halaman</span>
@@ -323,7 +345,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'media' }"
-            @click="activeMenu = 'media'"
+            @click="selectMenu('media')"
           >
             <HardDrive :size="17" />
             <span class="nav-link-text">Media Assets (S3)</span>
@@ -333,7 +355,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'templates' }"
-            @click="activeMenu = 'templates'"
+            @click="selectMenu('templates')"
           >
             <Palette :size="17" />
             <span class="nav-link-text">Katalog Template</span>
@@ -345,7 +367,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'domains' }"
-            @click="activeMenu = 'domains'"
+            @click="selectMenu('domains')"
           >
             <Globe :size="17" />
             <span class="nav-link-text">Custom Domain & DNS</span>
@@ -355,7 +377,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'analytics' }"
-            @click="activeMenu = 'analytics'"
+            @click="selectMenu('analytics')"
           >
             <TrendingUp :size="17" />
             <span class="nav-link-text">Analitik & Telemetri</span>
@@ -364,7 +386,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'webhooks' }"
-            @click="activeMenu = 'webhooks'"
+            @click="selectMenu('webhooks')"
           >
             <Webhook :size="17" />
             <span class="nav-link-text">Webhooks & API</span>
@@ -376,7 +398,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'billing' }"
-            @click="activeMenu = 'billing'"
+            @click="selectMenu('billing')"
           >
             <CreditCard :size="17" />
             <span class="nav-link-text">Kapasitas & Paket</span>
@@ -385,7 +407,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'invoices' }"
-            @click="activeMenu = 'invoices'"
+            @click="selectMenu('invoices')"
           >
             <Receipt :size="17" />
             <span class="nav-link-text">Faktur & Invoice</span>
@@ -398,7 +420,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'tickets' }"
-            @click="activeMenu = 'tickets'"
+            @click="selectMenu('tickets')"
           >
             <LifeBuoy :size="17" />
             <span class="nav-link-text">Tiket Support</span>
@@ -411,7 +433,7 @@ const handleLogout = async () => {
           <button
             class="nav-link"
             :class="{ active: activeMenu === 'changelog' }"
-            @click="activeMenu = 'changelog'"
+            @click="selectMenu('changelog')"
           >
             <History :size="17" />
             <span class="nav-link-text">Changelog & Rilis</span>
@@ -438,7 +460,7 @@ const handleLogout = async () => {
           </div>
           <div class="gauge-footer">
             <span>{{ userPlan.cpuPerContainer }} • {{ userPlan.ramPerContainer }}</span>
-            <button class="link-upgrade" @click="activeMenu = 'billing'">Upgrade</button>
+            <button class="link-upgrade" @click="selectMenu('billing')">Upgrade</button>
           </div>
         </div>
 
@@ -462,41 +484,54 @@ const handleLogout = async () => {
     <div class="app-main-area">
       <!-- Sticky Glassmorphism Header -->
       <header class="top-nav-header">
-        <div class="breadcrumbs">
-          <span>HeroCMS Studio</span>
-          <ChevronRight :size="14" class="crumb-sep" />
-          <span
-            :class="(activeMenu === 'content' && activeArticleForReader) || (activeMenu === 'analytics' && selectedContainerForDetail) ? 'crumb-link' : 'crumb-current'"
-            @click="(activeMenu === 'content' && activeArticleForReader) ? (activeArticleForReader = null) : (activeMenu === 'analytics' && selectedContainerForDetail) ? (selectedContainerForDetail = null) : null"
-            :title="(activeMenu === 'content' && activeArticleForReader) ? 'Kembali ke Daftar Artikel' : (activeMenu === 'analytics' && selectedContainerForDetail) ? 'Kembali ke Ikhtisar Telemetri Fleet' : undefined"
+        <div class="top-nav-left-cluster" style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+          <!-- Mobile Drawer Hamburger Toggle (visible on <= 1024px) -->
+          <button
+            type="button"
+            class="btn-mobile-nav-toggle"
+            @click="isMobileNavOpen = !isMobileNavOpen"
+            :title="isMobileNavOpen ? 'Tutup Menu Navigasi' : 'Buka Menu Navigasi'"
           >
-            {{
-              activeMenu === 'containers' ? 'Situs & Kontainer' :
-              activeMenu === 'editor' ? 'Editor Visual Studio' :
-              activeMenu === 'content' ? 'Artikel & Halaman CMS' :
-              activeMenu === 'media' ? 'Media Assets & Storage S3' :
-              activeMenu === 'templates' ? 'Katalog Template & Pricelist' :
-              activeMenu === 'domains' ? 'Custom Domain & DNS Traefik' :
-              activeMenu === 'analytics' ? 'Analitik Real-Time (Kafka & Redis)' :
-              activeMenu === 'webhooks' ? 'Webhooks & Integrasi API' :
-              activeMenu === 'billing' ? 'Kapasitas & Paket Langganan' :
-              activeMenu === 'invoices' ? 'Faktur & Riwayat Invoice Resmi' :
-              activeMenu === 'tickets' ? 'Pusat Bantuan & Tiket Support' :
-              'Changelog & Catatan Rilis Sistem'
-            }}
-          </span>
-          <template v-if="activeMenu === 'content' && activeArticleForReader">
+            <Menu v-if="!isMobileNavOpen" :size="17" />
+            <X v-else :size="17" />
+          </button>
+
+          <div class="breadcrumbs">
+            <span>HeroCMS Studio</span>
             <ChevronRight :size="14" class="crumb-sep" />
-            <span class="crumb-current crumb-article-title" :title="activeArticleForReader.title">
-              {{ activeArticleForReader.title }}
+            <span
+              :class="(activeMenu === 'content' && activeArticleForReader) || (activeMenu === 'analytics' && selectedContainerForDetail) ? 'crumb-link' : 'crumb-current'"
+              @click="(activeMenu === 'content' && activeArticleForReader) ? (activeArticleForReader = null) : (activeMenu === 'analytics' && selectedContainerForDetail) ? (selectedContainerForDetail = null) : null"
+              :title="(activeMenu === 'content' && activeArticleForReader) ? 'Kembali ke Daftar Artikel' : (activeMenu === 'analytics' && selectedContainerForDetail) ? 'Kembali ke Ikhtisar Telemetri Fleet' : undefined"
+            >
+              {{
+                activeMenu === 'containers' ? 'Situs & Kontainer' :
+                activeMenu === 'editor' ? 'Editor Visual Studio' :
+                activeMenu === 'content' ? 'Artikel & Halaman CMS' :
+                activeMenu === 'media' ? 'Media Assets & Storage S3' :
+                activeMenu === 'templates' ? 'Katalog Template & Pricelist' :
+                activeMenu === 'domains' ? 'Custom Domain & DNS Traefik' :
+                activeMenu === 'analytics' ? 'Analitik Real-Time (Kafka & Redis)' :
+                activeMenu === 'webhooks' ? 'Webhooks & Integrasi API' :
+                activeMenu === 'billing' ? 'Kapasitas & Paket Langganan' :
+                activeMenu === 'invoices' ? 'Faktur & Riwayat Invoice Resmi' :
+                activeMenu === 'tickets' ? 'Pusat Bantuan & Tiket Support' :
+                'Changelog & Catatan Rilis Sistem'
+              }}
             </span>
-          </template>
-          <template v-if="(activeMenu === 'analytics' || activeMenu === 'containers') && selectedContainerForDetail">
-            <ChevronRight :size="14" class="crumb-sep" />
-            <span class="crumb-current crumb-article-title" :title="selectedContainerForDetail.name" style="color: #2563eb; font-weight: 700;">
-              {{ selectedContainerForDetail.subdomain }}
-            </span>
-          </template>
+            <template v-if="activeMenu === 'content' && activeArticleForReader">
+              <ChevronRight :size="14" class="crumb-sep" />
+              <span class="crumb-current crumb-article-title" :title="activeArticleForReader.title">
+                {{ activeArticleForReader.title }}
+              </span>
+            </template>
+            <template v-if="(activeMenu === 'analytics' || activeMenu === 'containers') && selectedContainerForDetail">
+              <ChevronRight :size="14" class="crumb-sep" />
+              <span class="crumb-current crumb-article-title" :title="selectedContainerForDetail.name" style="color: #2563eb; font-weight: 700;">
+                {{ selectedContainerForDetail.subdomain }}
+              </span>
+            </template>
+          </div>
         </div>
 
         <!-- Top Actions -->
