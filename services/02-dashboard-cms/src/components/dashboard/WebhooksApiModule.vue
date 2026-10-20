@@ -390,6 +390,28 @@ const scopeCategories: Array<{ id: PatScopeCategory; label: string; icon: any }>
   { id: 'tickets', label: 'Pusat Bantuan & Support', icon: ShieldCheck }
 ];
 
+// Quick Scope Presets for PAT Generation
+type PatPresetType = 'jamstack' | 'writer' | 'leads' | 'all' | 'custom';
+const activePatPreset = ref<PatPresetType>('jamstack');
+
+const applyPatPreset = (preset: PatPresetType) => {
+  activePatPreset.value = preset;
+  switch (preset) {
+    case 'jamstack':
+      newPatForm.value.selectedScopes = ['content:read', 'media:read'];
+      break;
+    case 'writer':
+      newPatForm.value.selectedScopes = ['content:read', 'content:write', 'media:read', 'media:upload'];
+      break;
+    case 'leads':
+      newPatForm.value.selectedScopes = ['leads:read', 'leads:write'];
+      break;
+    case 'all':
+      newPatForm.value.selectedScopes = patScopes.value.map(s => s.id);
+      break;
+  }
+};
+
 const getScopesByCategory = (cat: PatScopeCategory) => {
   return patScopes.value.filter(s => s.category === cat);
 };
@@ -421,6 +443,7 @@ const toggleCategoryAll = (cat: PatScopeCategory) => {
       }
     }
   }
+  activePatPreset.value = 'custom';
 };
 
 const toggleScopeItem = (scopeId: string) => {
@@ -430,10 +453,12 @@ const toggleScopeItem = (scopeId: string) => {
   } else {
     newPatForm.value.selectedScopes.push(scopeId);
   }
+  activePatPreset.value = 'custom';
 };
 
 // PAT Creation Handler
 const openCreatePatModal = () => {
+  activePatPreset.value = 'jamstack';
   newPatForm.value = {
     name: '',
     expiresOption: '90 Hari',
@@ -1092,7 +1117,7 @@ const copyActiveSnippet = () => {
     </div>
 
     <!-- ================================================================= -->
-    <!-- MODAL 1: BUAT PERSONAL ACCESS TOKEN BARU -->
+    <!-- MODAL 1: BUAT PERSONAL ACCESS TOKEN BARU (EXPANSIVE & RESPONSIVE) -->
     <!-- ================================================================= -->
     <Teleport to="body">
       <div
@@ -1100,15 +1125,16 @@ const copyActiveSnippet = () => {
         class="modal-backdrop"
         @click.self="isCreatePatModalOpen = false"
       >
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-pat">
+          <!-- Modal Header -->
           <div class="modal-header">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box">
+              <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
                 <Key :size="18" />
               </div>
               <div>
                 <h3 class="modal-heading">Generate Personal Access Token (PAT)</h3>
-                <p class="modal-subheading">Konfigurasikan nama, masa berlaku, dan cakupan izin akses (scopes).</p>
+                <p class="modal-subheading">Konfigurasikan nama, masa berlaku, dan cakupan izin akses (scopes) granular.</p>
               </div>
             </div>
             <button
@@ -1121,41 +1147,89 @@ const copyActiveSnippet = () => {
           </div>
 
           <form @submit.prevent="handleCreatePat" class="modal-form-body">
-            <!-- Token Name -->
-            <div class="form-group-block">
-              <label class="input-label-row">
-                <span class="label-text">Nama Token (Deskripsi Penggunaan)</span>
-                <span class="label-badge-optional">Wajib</span>
-              </label>
-              <input
-                v-model="newPatForm.name"
-                type="text"
-                class="form-text-input"
-                placeholder="Misal: Next.js Jamstack Blog, Mobile Flutter App, Zapier CRM"
-                required
-                autofocus
-              />
+            <!-- 1. Top Settings: Token Name & Expiration (Responsive 2-Col Grid) -->
+            <div class="pat-modal-settings-grid">
+              <div class="form-group-block" style="margin-bottom: 0;">
+                <label class="input-label-row">
+                  <span class="label-text">Nama Token (Deskripsi Penggunaan)</span>
+                  <span class="label-badge-optional">Wajib</span>
+                </label>
+                <input
+                  v-model="newPatForm.name"
+                  type="text"
+                  class="form-text-input"
+                  placeholder="Contoh: Next.js Jamstack Blog, Flutter Mobile Reader, Zapier CRM"
+                  required
+                  autofocus
+                />
+              </div>
+
+              <div class="form-group-block" style="margin-bottom: 0;">
+                <label class="input-label-row">
+                  <span class="label-text">Masa Berlaku (Expiration)</span>
+                  <span class="label-badge-optional" style="color: #059669; font-weight: 700;">Keamanan Direkomendasikan</span>
+                </label>
+                <select v-model="newPatForm.expiresOption" class="form-select-input">
+                  <option value="30 Hari">30 Hari</option>
+                  <option value="60 Hari">60 Hari</option>
+                  <option value="90 Hari">90 Hari (Rekomendasi Keamanan)</option>
+                  <option value="1 Tahun">1 Tahun</option>
+                  <option value="Tidak Pernah">Tidak Pernah Expired (No Expiration)</option>
+                </select>
+              </div>
             </div>
 
-            <!-- Expiration Dropdown -->
-            <div class="form-group-block">
-              <label class="input-label-row">
-                <span class="label-text">Masa Berlaku (Expiration)</span>
-              </label>
-              <select v-model="newPatForm.expiresOption" class="form-select-input">
-                <option value="30 Hari">30 Hari</option>
-                <option value="60 Hari">60 Hari</option>
-                <option value="90 Hari">90 Hari (Rekomendasi Keamanan)</option>
-                <option value="1 Tahun">1 Tahun</option>
-                <option value="Tidak Pernah">Tidak Pernah Expired (No Expiration)</option>
-              </select>
+            <!-- 2. Quick Scope Presets Selector Bar -->
+            <div class="pat-quick-presets-bar">
+              <div class="pat-quick-presets-label">
+                <Sparkles :size="14" style="color: #2563eb;" />
+                <span>Pilihan Template Izin Cepat:</span>
+              </div>
+              <div class="pat-preset-buttons">
+                <button
+                  type="button"
+                  class="btn-pat-preset-pill"
+                  :class="{ active: activePatPreset === 'jamstack' }"
+                  @click="applyPatPreset('jamstack')"
+                >
+                  <FileText :size="12" />
+                  <span>Jamstack Reader (2 scope)</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-pat-preset-pill"
+                  :class="{ active: activePatPreset === 'writer' }"
+                  @click="applyPatPreset('writer')"
+                >
+                  <Key :size="12" />
+                  <span>Content Writer (4 scope)</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-pat-preset-pill"
+                  :class="{ active: activePatPreset === 'leads' }"
+                  @click="applyPatPreset('leads')"
+                >
+                  <Layers :size="12" />
+                  <span>Lead Collector (2 scope)</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-pat-preset-pill"
+                  :class="{ active: activePatPreset === 'all' }"
+                  @click="applyPatPreset('all')"
+                >
+                  <CheckCircle2 :size="12" />
+                  <span>Semua Izin (Full Access)</span>
+                </button>
+              </div>
             </div>
 
-            <!-- Scopes Selection Matrix -->
+            <!-- 3. Granular Scopes Filter Matrix -->
             <div class="form-group-block">
               <label class="input-label-row">
-                <span class="label-text">Cakupan Izin (Granular Scopes Filter)</span>
-                <span class="label-badge-optional">{{ newPatForm.selectedScopes.length }} dipilih</span>
+                <span class="label-text">Matriks Cakupan Izin Granular (Scopes)</span>
+                <span class="label-badge-optional">{{ newPatForm.selectedScopes.length }} scope terpilih</span>
               </label>
 
               <div class="scopes-matrix-container">
@@ -1166,10 +1240,10 @@ const copyActiveSnippet = () => {
                 >
                   <div class="scope-category-head">
                     <div class="scope-category-title-wrap">
-                      <component :is="cat.icon" :size="14" style="color: #64748b;" />
-                      <span class="scope-category-name">{{ cat.label }}</span>
+                      <component :is="cat.icon" :size="15" style="color: #475569;" />
+                      <strong class="scope-category-name">{{ cat.label }}</strong>
                       <span class="scope-category-count">
-                        {{ getCategorySelectedCount(cat.id) }} / {{ getScopesByCategory(cat.id).length }}
+                        {{ getCategorySelectedCount(cat.id) }} dari {{ getScopesByCategory(cat.id).length }} dipilih
                       </span>
                     </div>
                     <button
@@ -1206,6 +1280,26 @@ const copyActiveSnippet = () => {
               </div>
             </div>
 
+            <!-- 4. Active Permissions Live Summary Strip -->
+            <div class="pat-scopes-live-summary">
+              <div class="pat-summary-left">
+                <ShieldCheck :size="14" style="color: #059669;" />
+                <span>Ikhtisar Izin Aktif:</span>
+                <span class="pat-summary-count-badge">{{ newPatForm.selectedScopes.length }} scope diizinkan</span>
+              </div>
+              <div class="pat-summary-chips">
+                <span
+                  v-for="sc in newPatForm.selectedScopes"
+                  :key="sc"
+                  class="pat-scope-chip"
+                  :class="sc.split(':')[0]"
+                >
+                  {{ sc }}
+                </span>
+              </div>
+            </div>
+
+            <!-- 5. Modal Footer Actions (Guaranteed Side-by-Side) -->
             <div class="modal-footer-row">
               <button
                 type="button"
@@ -1216,7 +1310,7 @@ const copyActiveSnippet = () => {
               </button>
               <button type="submit" class="btn-modal-confirm">
                 <Key :size="14" />
-                <span>Generate Token</span>
+                <span>Generate Token PAT</span>
               </button>
             </div>
           </form>
@@ -1225,7 +1319,7 @@ const copyActiveSnippet = () => {
     </Teleport>
 
     <!-- ================================================================= -->
-    <!-- MODAL 2: ONE-TIME TOKEN REVEAL DIALOG (KRITIS) -->
+    <!-- MODAL 2: ONE-TIME TOKEN REVEAL DIALOG (EXPANSIVE & ZERO-KNOWLEDGE) -->
     <!-- ================================================================= -->
     <Teleport to="body">
       <div
@@ -1233,7 +1327,7 @@ const copyActiveSnippet = () => {
         class="modal-backdrop"
         @click.self="isOneTimeModalOpen = false"
       >
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-onetime">
           <div class="modal-header">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #fef3c7; color: #b45309;">

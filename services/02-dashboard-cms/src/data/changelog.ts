@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.17.1',
+    version: 'v1.17.2',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.17.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Penyempurnaan Responsivitas & Tata Letak Dialog Modal Generate Personal Access Token (PAT)',
+    summary: 'Memperluas dan merombak tata letak dialog modal Generate Personal Access Token (PAT) dari sebelumnya berukuran sempit (620px) menjadi modal luas adaptif 900px (.modal-dialog-pat) dengan grid responsif di seluruh resolusi (720p, 1080p, 1440p, 2480p+). Menata formulir input nama token dan masa berlaku secara berdampingan (2-column settings grid), menyematkan bar template izin cepat (Quick Scope Presets: Jamstack Reader, Content Writer, Lead Collector, Full Access), memperluas matriks kartu izin modular dengan hover lift dan checkmark status, serta menambahkan bilah ringkasan izin aktif (Live Scope Summary Strip) sebelum tombol eksekusi.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11702-1',
+        type: 'improvement',
+        scope: 'Expansive PAT Modal Sizing (.modal-dialog-pat: 900px)',
+        description: 'Menerapkan lebar modal adaptif max-width: 900px (width: min(900px, 94vw)) untuk menghilangkan kesan sempit dan sesak pada dialog pembuatan token PAT di berbagai layar monitor dan laptop.'
+      },
+      {
+        id: 'c-02dash-11702-2',
+        type: 'feature',
+        scope: 'Quick Scope Presets Selector Bar',
+        description: 'Menambahkan tombol template izin cepat (Jamstack Reader, Content Writer, Lead Collector, Semua Izin) di atas matriks cakupan izin agar pengguna dapat mengonfigurasi set permissions dalam 1 klik instan.'
+      },
+      {
+        id: 'c-02dash-11702-3',
+        type: 'improvement',
+        scope: 'Adaptive 2-Column Settings Grid & Multi-Column Scopes Cards',
+        description: 'Mengubah field input nama token dan dropdown masa berlaku menjadi grid 2 kolom sejajar yang responsif, serta menata kartu-kartu izin granular menjadi grid multi-kolom adaptif minmax(280px, 1fr).'
+      },
+      {
+        id: 'c-02dash-11702-4',
+        type: 'improvement',
+        scope: 'Live Active Scopes Summary Strip & One-Time Reveal Dialog Sizing',
+        description: 'Menyematkan bilah ringkasan izin aktif di bagian bawah form untuk memvalidasi scope sebelum pembuatan token, serta memperluas dialog One-Time Reveal (.modal-dialog-onetime: 680px) agar string raw token tampil lapang tanpa line-break canggung.'
+      }
+    ]
+  },
+  {
     version: 'v1.17.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Refaktor Modal Tambah Webhook Endpoint: Preset Terintegrasi (Discord/Slack/Zapier/Custom), Pengelompokan Event & Live JSON Payload Preview',
     summary: 'Menyempurnakan dialog modal Tambah Webhook Endpoint pada modul Webhooks & API Developer. Menambahkan pilihan preset platform instan (Discord, Slack, Zapier, Custom HTTP Server) dengan tips format URL dan konfigurasi otomatis. Mengelompokkan event notifikasi ke dalam kategori tematik (Konten & Editorial, Formulir Kontak & Prospek, Edge Ingress & Keamanan, Pemeliharaan & Cadangan) disertai kontrol "Pilih Semua" per kategori. Menyematkan generator kunci HMAC-SHA256 secret mandiri dengan tombol roll & copy, serta pratinjau dinamis JSON payload real-time interaktif dengan navigasi per-event dan proteksi tata letak tombol berjejer horizontal (side-by-side).',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
