@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.16.1',
+    version: 'v1.16.2',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.16.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Standarisasi Text Anti-Wrap & Integritas Button/Span (Anti-Enter) Lintas Resolusi',
+    summary: 'Mengimplementasikan sistem Universal Text Anti-Wrap & Button/Span Integrity System pada studio-master.css. Mengatasi masalah teks terputus/terpotong menjadi beberapa baris ("terkena enter") pada tombol, badge, status pill, metric card, navigation tab, breadcrumbs, dan form label saat ukuran viewport berubah (720px, 1080px, 1440px, hingga 2480px+). Memastikan seluruh tombol aksi (action buttons), segmented filter, dan status tags tetap utuh pada satu baris (single-line intact) dengan flex-wrap yang aman pada kontainer induk.',
+    badge: 'Latest',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11602-1',
+        type: 'bugfix',
+        scope: 'Universal Button & Inline Span Anti-Wrap (studio-master.css)',
+        description: 'Menerapkan aturan white-space: nowrap !important pada seluruh elemen button dan span di dalamnya (.btn-primary, .btn-ghost-sm, .btn-top-create, .btn-action-primary, .btn-modal-confirm, .btn-reader-action-*, dll.) agar teks label tombol tidak pernah terpotong ke baris baru.'
+      },
+      {
+        id: 'c-02dash-11602-2',
+        type: 'bugfix',
+        scope: 'Semantic Badges, Status Pills & Counters Integrity (studio-master.css)',
+        description: 'Menstandarkan seluruh badge status (.radar-status-pill, .badge-status, .standard-badge, .pod-meta-pill, .dns-valid-pill, .ssl-status-badge, .hud-pill, .pill-metric, .tag-chip, dll.) dengan white-space: nowrap !important dan flex-shrink: 0.'
+      },
+      {
+        id: 'c-02dash-11602-3',
+        type: 'improvement',
+        scope: 'Action Toolbars & Header Flex-Wrap Safe Zones (studio-master.css)',
+        description: 'Menambahkan flex-wrap: wrap yang aman pada toolbar aksi (.card-action-bar, .footer-right-buttons, .reader-header-nav-actions, .filter-toolbar, .page-intro-row, .quota-quick-pills) sehingga tombol membungkus sebagai satu kesatuan utuh tanpa merusak teks di dalam tombol.'
+      },
+      {
+        id: 'c-02dash-11602-4',
+        type: 'bugfix',
+        scope: 'Top Breadcrumbs, Navigation & Table Cells (studio-master.css)',
+        description: 'Memastikan breadcrumb navigasi atas (.breadcrumbs, .crumb-current, .crumb-link), brand tags, dan sel aksi tabel (.table-actions-cell) tidak mengalami wrapping internal saat ruang viewport menyempit.'
+      }
+    ]
+  },
+  {
     version: 'v1.16.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '20 Oktober 2026',
     title: 'Arsitektur Responsif Multi-Tier Lintas Resolusi (720px, 1080px, 1440px, 2480px+ Ultrawide), Mobile Navigation Drawer, Universal Modal & Reader Fluid Reflow',
     summary: 'Mengimplementasikan sistem desain responsif multi-tier komprehensif di seluruh modul antarmuka Studio CMS. Mengatasi masalah tata letak pada layar 720px (mobile/tablet), 1080px (laptop/standar desktop), 1440px (QHD 2K), hingga 2480px+ (4K UHD & Ultrawide). Menyediakan sidebar off-canvas drawer dengan tombol hamburger di top header dan backdrop interaktif untuk layar <= 1024px. Mengoptimasi seluruh formulir modal dialog, footer actions, dan pemilih konfigurasi menjadi form fleksibel dan bottom-sheet ergonomis. Memperbaiki mode baca artikel (Article Reader) dan editor markdown agar tidak terjadi kebocoran scroll horizontal, serta menerapkan pembatasan max-width pada monitor ultrawide agar konten teks tetap ergonomis dibaca.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

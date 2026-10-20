@@ -57,6 +57,317 @@ html {
   background: transparent;
 }
 
+/* ==========================================================================
+   UNIVERSAL TEXT ANTI-WRAP & BUTTON/SPAN INTEGRITY SYSTEM (ANTI-ENTER)
+   Strictly prevents buttons, badges, status pills, tabs, metrics, and labels
+   from breaking into awkward multiline text ("terkena enter") across all resolutions.
+   ========================================================================== */
+
+/* 1. All Button Elements, Action Links & Inline Triggers */
+button,
+a[class*="btn-"],
+a.btn-primary,
+a.btn-ghost-sm,
+input[type="button"],
+input[type="submit"],
+.btn-primary,
+.btn-ghost-sm,
+.btn-top-create,
+.btn-modal-confirm,
+.btn-modal-ghost,
+.btn-modal-danger,
+.btn-modal-confirm-destructive,
+.btn-modal-confirm-bespoke,
+.btn-modal-ghost-bespoke,
+.btn-action-primary,
+.btn-table-action,
+.btn-card-read-action,
+.btn-primary-card-action,
+.btn-reader-action-primary,
+.btn-reader-action-secondary,
+.btn-reader-back,
+.btn-top-back-reader,
+.btn-top-reader-toggle,
+.btn-top-reader-action,
+.btn-analytics-export,
+.btn-view-mode,
+.btn-view-mode-pill,
+.btn-segmented-tab,
+.btn-deploy-template,
+.btn-card-preview,
+.btn-preview-action-apply,
+.btn-preview-action-deploy,
+.btn-ai-architect,
+.btn-device-pill,
+.btn-upgrade-action,
+.btn-change-payment,
+.btn-confirm-addon,
+.btn-step,
+.btn-connect-domain,
+.btn-ping-dns,
+.btn-copy-all-dns,
+.btn-resolve-in-modal,
+.btn-resolve-quick,
+.btn-send-reply,
+.btn-open-thread,
+.btn-test-ping,
+.btn-test-webhook,
+.btn-roll-key,
+.btn-token-tool,
+.btn-invoice-view,
+.btn-invoice-dl,
+.btn-year-tab,
+.btn-studio-header-action,
+.btn-canvas-theme,
+.btn-canvas-action,
+.btn-dam-browse,
+.btn-embed-chip,
+.btn-inspector-copy,
+.btn-slot-create,
+.btn-mobile-nav-toggle,
+.btn-url-action,
+.btn-mini-copy,
+.btn-visit-site,
+.btn-del-domain,
+.btn-action-icon,
+.btn-card-icon-action,
+.btn-primary-gradient,
+.btn-primary-ghost,
+.dock-action-btn,
+.code-tab,
+.cf-time-btn,
+.telemetry-pill-btn,
+.sim-btn-primary,
+.sim-btn-secondary,
+.sim-btn-nav-cta,
+.sim-btn-tier-cta,
+.sim-btn-card-action,
+.sim-btn-cta-action,
+.custom-filter-trigger-btn,
+[class*="btn-"] {
+  white-space: nowrap !important;
+}
+
+/* Ensure spans and inline text inside any button never wrap into multiple lines */
+button span,
+a[class*="btn-"] span,
+[class*="btn-"] span,
+.btn-primary span,
+.btn-ghost-sm span,
+.btn-top-create span,
+.btn-modal-confirm span,
+.btn-modal-ghost span,
+.btn-action-primary span,
+.btn-table-action span,
+.btn-reader-action-primary span,
+.btn-reader-action-secondary span,
+.btn-reader-back span,
+.btn-view-mode-pill span,
+.btn-analytics-export span,
+.btn-connect-domain span,
+.btn-ping-dns span,
+.btn-copy-all-dns span,
+.btn-confirm-addon span,
+.btn-upgrade-action span,
+.btn-change-payment span,
+.btn-slot-create span,
+.btn-resolve-in-modal span,
+.btn-resolve-quick span,
+.btn-send-reply span,
+.btn-open-thread span,
+.btn-studio-header-action span,
+.btn-canvas-theme span,
+.btn-preview-action-apply span,
+.btn-preview-action-deploy span,
+.btn-card-preview span,
+.btn-deploy-template span,
+.btn-invoice-view span,
+.btn-invoice-dl span,
+.btn-test-ping span,
+.btn-token-tool span,
+.code-tab span {
+  white-space: nowrap !important;
+  flex-shrink: 0;
+}
+
+/* Ensure SVG icons inside buttons maintain crisp aspect ratio and never get squished */
+button svg,
+a[class*="btn-"] svg,
+[class*="btn-"] svg {
+  flex-shrink: 0;
+}
+
+/* 2. Universal Semantic Badges, Status Indicators, Chips & Counter Pills */
+.badge,
+[class*="badge-"],
+[class*="-badge"],
+.pill,
+[class*="pill-"],
+[class*="-pill"],
+.tag,
+[class*="tag-"],
+[class*="-tag"],
+.chip,
+[class*="chip-"],
+[class*="-chip"],
+.radar-status-pill,
+.radar-status-pill span,
+.badge-status,
+.status-pill,
+.status-badge,
+.status-badge-paid,
+.release-status-badge,
+.release-version-badge,
+.entry-scope-badge,
+.entry-badge-tag,
+.pill-metric,
+.pill-metric span,
+.pill-metric strong,
+.pill-metric-highlight,
+.pill-metric-highlight span,
+.pill-metric-highlight strong,
+.pill-count,
+.pod-meta-pill,
+.pod-meta-pill span,
+.standard-badge,
+.standard-badge span,
+.edge-status-tag,
+.edge-status-tag span,
+.edge-badge,
+.edge-badge span,
+.edge-telemetry-sub,
+.edge-telemetry-sub span,
+.edge-cached-tag,
+.edge-cached-tag span,
+.site-template-badge,
+.site-category-badge,
+.site-id-tag,
+.hud-pill,
+.hud-pill span,
+.hud-pill strong,
+.hud-badge-s3,
+.cgroups-tag,
+.inv-paid-seal,
+.inv-number-stamp,
+.tag-chip,
+.reader-tag-chip,
+.pop-latency-badge,
+.dns-valid-pill,
+.dns-valid-pill span,
+.ssl-status-badge,
+.ssl-status-badge span,
+.priority-pill,
+.status-chip,
+.feedback-avail,
+.feedback-taken,
+.custom-domain-pill,
+.custom-domain-pill span,
+.pipe-meta-pill,
+.pipe-meta-pill span,
+.vital-code-badge,
+.vital-sub-note,
+.slot-badge,
+.shortcut-tag,
+.confidence-badge,
+.confidence-badge span,
+.editorial-cat-chip,
+.cover-read-time,
+.cover-read-time span,
+.art-status-chip,
+.art-status-chip span,
+.cover-telemetry-pill,
+.cover-telemetry-pill span,
+.art-views-badge,
+.art-views-badge span,
+.site-tag,
+.views-cell span,
+.date-cell span,
+.payment-method-tag,
+.total-price-val,
+.tax-note,
+.file-size-tag,
+.dimensions-tag,
+.tpl-type-pill,
+.tpl-tier-pill,
+.lighthouse-score,
+.price-val,
+.tc-val,
+.tc-lbl,
+.metric-num,
+.metric-label,
+.spec-live-pill,
+.record-badge,
+.diag-item,
+.diag-item span,
+.vault-env-chip,
+.pulse-badge,
+.badge-online,
+.badge-growth-pill {
+  white-space: nowrap !important;
+  flex-shrink: 0;
+}
+
+/* 3. Filter Controls, Navigation Tabs & Segment Pills */
+.segment-pill,
+.segment-pill span,
+.terminal-filter-pill,
+.terminal-filter-pill span,
+.btn-segmented-tab,
+.btn-segmented-tab span,
+.view-mode-pill,
+.view-mode-pill span,
+.year-pill,
+.year-pill span,
+.btn-tab-pill,
+.status-tabs-pill button,
+.nav-link,
+.nav-link-text,
+.nav-badge {
+  white-space: nowrap !important;
+}
+
+/* 4. Breadcrumbs, Header Clusters & Workspace Brand */
+.breadcrumbs,
+.breadcrumbs span,
+.crumb-current,
+.crumb-link,
+.crumb-article-title,
+.crumb-sep,
+.top-nav-left-cluster,
+.top-nav-left-cluster span,
+.top-actions,
+.workspace-brand-text,
+.workspace-name,
+.workspace-tier,
+.brand-title,
+.brand-plan-row {
+  white-space: nowrap !important;
+}
+
+/* 5. URL Inputs, Mono Previews, and Addons */
+.url-prefix,
+.url-addon-prefix,
+.url-addon-suffix,
+.url-mono,
+.table-url-mono,
+.table-url-mono span,
+.domain-protocol,
+.token-prefix {
+  white-space: nowrap !important;
+  flex-shrink: 0;
+}
+
+/* 6. Form Field Labels, Optional Tags, and Meta Hints */
+.form-field-label,
+.field-title,
+.input-label-sm,
+.input-label-row,
+.field-optional-badge,
+.field-req-dot,
+.label-badge-optional {
+  white-space: nowrap !important;
+}
+
 .dashboard-root-layout {
   min-height: 100vh;
   display: flex;
@@ -701,6 +1012,8 @@ html {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 
 .page-title {
@@ -720,6 +1033,7 @@ html {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .pill-metric {
@@ -961,6 +1275,7 @@ html {
   gap: 16px;
   margin-bottom: 22px;
   width: 100%;
+  flex-wrap: wrap;
 }
 
 .search-command-shell {
@@ -1651,6 +1966,7 @@ html {
   padding-top: 12px;
   border-top: 1px solid #f1f5f9;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .card-action-left {
@@ -2086,6 +2402,8 @@ html {
   align-items: center;
   gap: 8px;
   justify-content: flex-end;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .table-slot-row {
@@ -17598,6 +17916,7 @@ html {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .btn-analytics-export {
@@ -19708,6 +20027,7 @@ html {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .btn-reader-action-secondary {
