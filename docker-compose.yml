@@ -184,7 +184,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_network"
-      - "traefik.http.routers.herocms-docs.rule=Host(`docs.herocms.stackbyte.id`) || Host(`docs.localhost`)"
+      - "traefik.http.routers.herocms-docs.rule=Host(`docs-herocms.stackbyte.id`) || Host(`docs.localhost`)"
       - "traefik.http.routers.herocms-docs.entrypoints=web"
       - "traefik.http.routers.herocms-docs.middlewares=security-headers@file,gzip-compress@file"
       - "traefik.http.routers.herocms-docs.service=herocms-docs-svc"

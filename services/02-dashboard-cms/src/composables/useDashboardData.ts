@@ -8,6 +8,9 @@ import type {
   MediaAssetItem,
   CustomDomainItem,
   WebhookItem,
+  PersonalAccessToken,
+  PatScopeDefinition,
+  WebhookDeliveryLog,
   InvoiceItem,
   ToastMessage,
   SupportTicketItem,
@@ -24,8 +27,12 @@ import {
   initialArticles,
   initialCmsPages,
   initialMediaAssets,
+  availablePatScopes,
+  initialPersonalAccessTokens,
   initialWebhooks,
-  initialSupportTickets
+  initialWebhookDeliveryLogs,
+  initialSupportTickets,
+  subscriptionPlansCatalog
 } from '../data/dashboard-seeds';
 import type { OfficialTemplateItem } from '../data/templates-data';
 
@@ -104,6 +111,20 @@ const showToast = (text: string, type: 'success' | 'info' | 'error' = 'success')
   setTimeout(() => {
     toastMessage.value = null;
   }, 3500);
+};
+
+const changeUserPlan = (planId: 'starter' | 'pro' | 'agency') => {
+  const target = subscriptionPlansCatalog.find(p => p.id === planId);
+  if (!target) return;
+  userPlan.value = {
+    name: target.name,
+    price: `${target.priceMonthlyFormatted} / bln`,
+    maxContainers: target.containers,
+    cpuPerContainer: target.cpu,
+    ramPerContainer: target.ram,
+    storageQuota: target.storage
+  };
+  showToast(`Paket langganan berhasil dialihkan ke ${target.name}! Kuota runtime kini ${target.containers} slot kontainer.`, 'success');
 };
 
 // Containers State
@@ -357,7 +378,8 @@ const newSiteForm = ref({
   name: '',
   subdomain: '',
   category: 'business' as 'portfolio' | 'blog' | 'education' | 'business',
-  role: ''
+  role: '',
+  accentColor: '#2563eb'
 });
 
 const openCreateModal = (category?: 'portfolio' | 'blog' | 'education' | 'business') => {
@@ -369,6 +391,7 @@ const openCreateModal = (category?: 'portfolio' | 'blog' | 'education' | 'busine
   newSiteForm.value.name = '';
   newSiteForm.value.subdomain = '';
   newSiteForm.value.role = '';
+  newSiteForm.value.accentColor = '#2563eb';
   if (category) newSiteForm.value.category = category;
   isCreateModalOpen.value = true;
 };
@@ -403,7 +426,7 @@ const handleCreateContainer = () => {
     ssl: true,
     roleOrHeadline: newSiteForm.value.role || 'Website Resmi ' + newSiteForm.value.name,
     bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
-    accentColor: '#2563eb',
+    accentColor: newSiteForm.value.accentColor || '#2563eb',
     lastDeployed: 'Baru saja'
   };
 
@@ -725,6 +748,35 @@ sistem penagihan otomatis HeroCMS Cloud Platform.`;
   showToast(`Faktur ${inv.id} berhasil diunduh!`, 'success');
 };
 
+const processBillingPaymentAndCreateInvoice = (params: {
+  planName: string;
+  amount: number;
+  paymentMethod: string;
+  period: string;
+  containerQuota: number;
+}): InvoiceItem => {
+  const tax = Math.round(params.amount * 0.11);
+  const total = params.amount + tax;
+  const newInvoiceId = `INV-2026-10-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  const newInvoice: InvoiceItem = {
+    id: newInvoiceId,
+    date: '20 Okt 2026',
+    dueDate: '20 Okt 2026',
+    planName: params.planName,
+    period: params.period,
+    amount: params.amount,
+    tax: tax,
+    total: total,
+    status: 'paid',
+    paymentMethod: params.paymentMethod,
+    containerQuota: params.containerQuota
+  };
+
+  invoices.value.unshift(newInvoice);
+  return newInvoice;
+};
+
 // Custom Domains State
 const normalizeCustomDomain = (dom: any): CustomDomainItem => {
   return {
@@ -991,23 +1043,171 @@ const deleteMedia = async (med: MediaAssetItem) => {
   }
 };
 
-// Webhooks & API Keys State
+// Personal Access Tokens (PAT) & Scoped API Keys State
+const patScopes = ref<PatScopeDefinition[]>([...availablePatScopes]);
+const personalAccessTokens = ref<PersonalAccessToken[]>([...initialPersonalAccessTokens]);
+const webhookDeliveryLogs = ref<WebhookDeliveryLog[]>([...initialWebhookDeliveryLogs]);
+
+const createPersonalAccessToken = (
+  name: string,
+  scopes: string[],
+  expiresOption: string = '90 Hari'
+): { token: PersonalAccessToken; rawToken: string } => {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let randomHash = '';
+  for (let i = 0; i < 32; i++) {
+    randomHash += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const prefix = `hero_pat_9942_${name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 4) || 'api'}`;
+  const rawToken = `${prefix}_${randomHash}`;
+  const suffix = randomHash.slice(-4);
+  const tokenMasked = `${prefix}_••••••••••••${suffix}`;
+
+  const newToken: PersonalAccessToken = {
+    id: `pat_${Date.now()}`,
+    name,
+    tokenPrefix: prefix,
+    tokenMasked,
+    rawToken,
+    scopes: [...scopes],
+    createdAt: 'Hari ini',
+    expiresAt: expiresOption,
+    lastUsedAt: 'Belum pernah digunakan',
+    status: 'active'
+  };
+
+  personalAccessTokens.value.unshift(newToken);
+  showToast(`Token '${name}' berhasil dibuat dengan ${scopes.length} cakupan scope!`, 'success');
+  return { token: newToken, rawToken };
+};
+
+const revokePersonalAccessToken = (id: string) => {
+  const token = personalAccessTokens.value.find(t => t.id === id);
+  if (token) {
+    token.status = 'revoked';
+    showToast(`Token '${token.name}' telah dicabut (revoked) dan akses dinonaktifkan.`, 'info');
+  }
+};
+
+const deletePersonalAccessToken = (id: string) => {
+  const idx = personalAccessTokens.value.findIndex(t => t.id === id);
+  if (idx !== -1) {
+    const deletedName = personalAccessTokens.value[idx].name;
+    personalAccessTokens.value.splice(idx, 1);
+    showToast(`Token '${deletedName}' telah dihapus permanen.`, 'info');
+  }
+};
+
+// Webhooks State & Event Notification Dispatcher
 const webhooks = ref<WebhookItem[]>([...initialWebhooks]);
 
-const apiKey = ref('hero_sec_live_9942a8b9c1d2e3f4g5h6');
-const isApiKeyRevealed = ref(false);
+const addWebhook = (name: string, url: string, events: string[], secretKey?: string) => {
+  const generatedSecret = secretKey || `whsec_9942_${Math.random().toString(36).substring(2, 10)}`;
+  const newWh: WebhookItem = {
+    id: `wh_${Date.now()}`,
+    name,
+    url,
+    secretKey: generatedSecret,
+    events: [...events],
+    status: 'active',
+    lastTriggered: 'Belum pernah dipicu'
+  };
+  webhooks.value.push(newWh);
+  showToast(`Webhook '${name}' berhasil didaftarkan!`, 'success');
+  return newWh;
+};
 
-const copyApiKey = () => {
-  navigator.clipboard.writeText(apiKey.value);
-  showToast('API Key disalin ke clipboard!', 'info');
+const deleteWebhook = (id: string) => {
+  const idx = webhooks.value.findIndex(w => w.id === id);
+  if (idx !== -1) {
+    const name = webhooks.value[idx].name;
+    webhooks.value.splice(idx, 1);
+    showToast(`Webhook '${name}' telah dihapus.`, 'info');
+  }
+};
+
+const toggleWebhookStatus = (id: string) => {
+  const wh = webhooks.value.find(w => w.id === id);
+  if (wh) {
+    wh.status = wh.status === 'active' ? 'paused' : 'active';
+    showToast(`Webhook '${wh.name}' kini ${wh.status === 'active' ? 'Aktif' : 'Dijeda'}.`, 'info');
+  }
 };
 
 const testWebhook = (wh: WebhookItem) => {
-  showToast(`Mengirim ping uji coba ke ${wh.name}...`, 'info');
+  const eventName = wh.events[0] || 'article.published';
+  showToast(`Mengirim simulasi event '${eventName}' ke ${wh.name}...`, 'info');
   setTimeout(() => {
+    const duration = Math.floor(32 + Math.random() * 25);
     wh.lastTriggered = 'Baru saja';
-    showToast(`Webhook ${wh.name} sukses merespon HTTP 200 OK!`, 'success');
-  }, 1000);
+    const nowIso = new Date().toISOString();
+
+    const logEntry: WebhookDeliveryLog = {
+      id: `del_${Date.now()}`,
+      webhookId: wh.id,
+      webhookName: wh.name,
+      targetUrl: wh.url,
+      event: eventName,
+      statusCode: 200,
+      durationMs: duration,
+      timestamp: 'Baru saja',
+      status: 'success',
+      requestHeaders: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'HeroCMS-Webhook-Dispatcher/1.0',
+        'X-HeroCMS-Delivery-ID': `del_${Date.now().toString(36)}`,
+        'X-HeroCMS-Signature': `t=${Math.floor(Date.now() / 1000)},v1=${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
+      },
+      requestPayload: {
+        event: eventName,
+        timestamp: nowIso,
+        tenant_id: 'tenant-9942',
+        data: {
+          test: true,
+          triggered_by: 'manual_ping',
+          endpoint: wh.name,
+          url: wh.url
+        }
+      },
+      responseBody: '{"status": 200, "success": true, "message": "Ping received successfully"}'
+    };
+    webhookDeliveryLogs.value.unshift(logEntry);
+    if (webhookDeliveryLogs.value.length > 25) {
+      webhookDeliveryLogs.value.pop();
+    }
+
+    showToast(`Webhook '${wh.name}' sukses merespon HTTP 200 OK (${duration}ms)!`, 'success');
+  }, 750);
+};
+
+const redeliverWebhookEvent = (log: WebhookDeliveryLog) => {
+  showToast(`Mengirim ulang event '${log.event}' ke ${log.webhookName}...`, 'info');
+  setTimeout(() => {
+    const duration = Math.floor(28 + Math.random() * 20);
+    const newLog: WebhookDeliveryLog = {
+      id: `del_${Date.now()}`,
+      webhookId: log.webhookId,
+      webhookName: log.webhookName,
+      targetUrl: log.targetUrl,
+      event: log.event,
+      statusCode: 200,
+      durationMs: duration,
+      timestamp: 'Baru saja',
+      status: 'success',
+      requestHeaders: {
+        ...(log.requestHeaders || {}),
+        'X-HeroCMS-Delivery-ID': `del_retry_${Date.now().toString(36)}`,
+        'X-HeroCMS-Signature': `t=${Math.floor(Date.now() / 1000)},v1=${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
+      },
+      requestPayload: log.requestPayload || { event: log.event, status: 'retry' },
+      responseBody: log.responseBody || '{"status": 200, "message": "Redelivered successfully"}'
+    };
+    webhookDeliveryLogs.value.unshift(newLog);
+    if (webhookDeliveryLogs.value.length > 25) {
+      webhookDeliveryLogs.value.pop();
+    }
+    showToast(`Pengiriman ulang event '${log.event}' berhasil (HTTP 200 OK, ${duration}ms)!`, 'success');
+  }, 700);
 };
 
 // Helper to get current tenant author details dynamically
@@ -1554,6 +1754,8 @@ export function useDashboardData() {
     isEditorSidebarHidden,
     userEmail,
     userPlan,
+    subscriptionPlansCatalog,
+    changeUserPlan,
     toastMessage,
     showToast,
     containers,
@@ -1604,6 +1806,7 @@ export function useDashboardData() {
     isInvoiceDetailModalOpen,
     openInvoiceDetail,
     downloadInvoiceReceipt,
+    processBillingPaymentAndCreateInvoice,
     customDomains,
     newDomainInput,
     targetContainerForDomain,
@@ -1629,10 +1832,17 @@ export function useDashboardData() {
     uploadMediaFiles,
     deleteMedia,
     webhooks,
-    apiKey,
-    isApiKeyRevealed,
-    copyApiKey,
+    addWebhook,
+    deleteWebhook,
+    toggleWebhookStatus,
     testWebhook,
+    redeliverWebhookEvent,
+    patScopes,
+    personalAccessTokens,
+    webhookDeliveryLogs,
+    createPersonalAccessToken,
+    revokePersonalAccessToken,
+    deletePersonalAccessToken,
     supportTickets,
     selectedTicket,
     isCreateTicketModalOpen,

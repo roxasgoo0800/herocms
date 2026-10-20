@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.14.28',
+    version: 'v1.23.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '19 Oktober 2026',
+    lastUpdated: '20 Oktober 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,152 +75,698 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
-    version: 'v1.4.1',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Penyempurnaan Tombol Baca, Alur Kerja Ribbon, dan Refaktor Master CSS Tampilan Detail Reader (PRD & Security)',
-    summary: 'Memperbaiki styling tombol aksi Baca di semua kartu dari PRD, Kamus Blueprint, Matriks Keamanan hingga SOP menggunakan styling universal master CSS (.btn-read-sop). Menambahkan visual ribbon alur kerja (.bp-flow-preview) dengan pil bertahap dan panah penghubung. Merefaktor PrdArticleReader dan SecurityArticleReader ke sistem layout editorial Obsidian Studio Master (.article-reader-page, .reader-page-hero, .reader-layout-grid, .reader-main-content, .reader-sidebar-inspector), melengkapi alur kerja pipeline flowchart interaktif, dan menyempurnakan kartu detail agar tidak berantakan di layar monitor.',
+    version: 'v1.23.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Autentik Modal Dokumen E-Faktur DJP 3.0 & Transformasi Grafik Kurva Area Spline Belanja Fiskal & Pajak PPN 11%',
+    summary: 'Merombak total tampilan modal pratinjau lembar faktur pajak resmi (Lihat E-Faktur) dan grafik tren belanja fiskal menjadi standar enterprise kelas satu: (1) Merefaktor modal dokumen E-Faktur (.modal-dialog-invoice, lebar 960px) mengikuti standar e-Faktur 3.0 / PER-03/PJ/2022 DJP Kemenkeu RI lengkap dengan pita kepatuhan pemerintah, perbandingan 2 entitas PKP Penjual vs Pembeli BKP sejajar, tabel spesifikasi teknis BKP/JKP bernomor, kartu nilai terbilang rupiah otomatis, kalkulasi fiskal lengkap, stempel keabsahan hijau emerald, dan validasi digital hash QR Code dengan tanda tangan elektronik CFO PT Hero Digital Multitek; (2) Menggantikan grafik batang menjadi Grafik Kurva Garis & Area Spline Interaktif (Apache ECharts Area Spline Chart) dengan 3 garis kurva halus bergradasi (Total Tagihan Resmi, Dasar Pengenaan Pajak, dan PPN 11% Kas Negara) serta chip metrik telemetri ringkas di bagian atas.',
     badge: 'Latest',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
-        id: 'c-07docs-141-1',
+        id: 'c-02dash-12300-1',
+        type: 'feature',
+        scope: 'Authentic Indonesian E-Faktur 3.0 Document Paper Modal',
+        description: 'Menyajikan lembar faktur pajak standar DJP PER-03/PJ/2022 berukuran 960px dengan pita inspeksi Kemenkeu, perbandingan profil PKP Penjual vs Pembeli BKP, format rupiah terbilang otomatis, dan stempel digital CFO.'
+      },
+      {
+        id: 'c-02dash-12300-2',
         type: 'improvement',
-        scope: 'Universal Card Action Button & Alur Kerja Ribbon',
-        description: 'Menerapkan kelas styling universal .btn-read-sop dan .bp-flow-preview pada ArchitectureModule, PrdCatalogModule, SecurityMatrixModule, dan SopRunbookModule dengan hover glow, aksen biru, dan pratinjau tahapan alur kerja terhubung.'
+        scope: 'Interactive ECharts Spline Curve Area Chart Visualization',
+        description: 'Mentransformasikan grafik batang menjadi grafik garis kurva spline mulus bergradasi transparan untuk 3 metrik fiskal utama (Total Tagihan, DPP, dan PPN 11%) dengan crosshair pointer dan tooltip informatif.'
       },
       {
-        id: 'c-07docs-141-2',
-        type: 'bugfix',
-        scope: 'PrdArticleReader Master Obsidian Layout Refactoring',
-        description: 'Merefaktor PrdArticleReader.vue menggunakan standar kelas master reader (.article-reader-page, .reader-page-hero, .reader-layout-grid, .reader-main-content, .reader-sidebar-inspector), menambahkan diagram pipeline alur kerja modul (.flowchart-pipeline-container), dan menata ulang card spesifikasi tech stack.'
-      },
-      {
-        id: 'c-07docs-141-3',
-        type: 'bugfix',
-        scope: 'SecurityArticleReader Master Obsidian Layout Refactoring',
-        description: 'Merefaktor SecurityArticleReader.vue ke standar master reader dengan hero banner gelap bergradasi, diagram pipeline alur verifikasi pengujian (.flowchart-pipeline-container), checklist interaktif kepatuhan audit, dan callout rujukan file proteksi.'
-      },
-      {
-        id: 'c-07docs-141-4',
-        type: 'improvement',
-        scope: 'SystemJourneyModule Flowchart Connector Line Fix',
-        description: 'Menghubungkan garis connector vertikal dan badge penomoran (.pipeline-step-badge, .pipeline-step-line) pada seluruh alur proses bisnis dan siklus perjalanan sistem HeroCMS.'
+        id: 'c-02dash-12300-3',
+        type: 'feature',
+        scope: 'Quick Fiscal Telemetry Metric Chips',
+        description: 'Menambahkan 3 indikator chip telemetri di atas grafik alokasi fiskal untuk memantau rata-rata belanja bulanan, akumulasi PPN yang disetor, dan status kepatuhan perpajakan.'
       }
     ]
   },
   {
-    version: 'v1.4.0',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Inkorporasi Spesifikasi PRD (7 Layanan), Matriks Keamanan & Sandboxing (20 Pilar), serta Alur Kerja Sistem (System Journeys)',
-    summary: 'Menambahkan 3 modul dokumentasi arsitektur dan spesifikasi enterprise utama ke dalam Mission Control Portal: 1) Katalog PRD menyeluruh untuk 7 microservice lengkap dengan target persona, teknologi, modul fungsional, kontrak API, NFR, roadmap, dan KPI. 2) Matriks Keamanan Web & Backend mencakup 20 Pilar Standar Keamanan OWASP/CWE plus spesifikasi pengerasan Linux cgroups v2 sandboxing kontainer Docker (UID 10001, ReadonlyRootfs, CapDrop ALL, tmpfs RAM) dan checklist verifikasi interaktif. 3) Alur Kerja Sistem (System Journeys) interaktif yang memetakan siklus hidup end-to-end (provisioning <4.5s, edge routing Traefik v3 & TLS 1.3, isolasi PostgreSQL RLS, telemetri Redis Sorted Sets, AI Copilot synthesis, dedicated S3 bucket, dan offline drafting PWA).',
+    version: 'v1.22.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Pelebaran Buku Besar Faktur (Spacious Ledger Table) & Visualisasi Tren Belanja SaaS & Pajak PPN 11% Berbasis Apache ECharts Interaktif',
+    summary: 'Merombak tampilan buku besar faktur penagihan resmi (InvoicesHistoryModule) menjadi luas, berjarak nyaman, dan elegan sesuai standar tata kelola enterprise: (1) Menghilangkan kepadatan sempit pada tabel faktur dengan merancang container khusus .invoices-table-container (min-width: 1260px) serta alokasi lebar kolom individual yang proporsional (.col-inv-id, .col-inv-date, .col-inv-plan, .col-inv-method, .col-inv-price, .col-inv-status, .col-inv-actions) dengan padding mewah 18px 20px sehingga rincian DPP/PPN 11% dan status kliring tampil lapang tanpa dempet; (2) Mengintegrasikan pustaka visualisasi data Apache ECharts ke dalam tab Rekapitulasi Pajak PPN 11% menggantikan grafik batang CSS statis dengan grafik batang bertumpuk (Stacked Bar DPP vs PPN 11%) dan garis tren total penagihan resmi, dilengkapi tooltip interaktif glassmorphic bercahaya, penanganan resize dinamis via ResizeObserver, dan transisi tab reaktif.',
     badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
-        id: 'c-07docs-140-1',
-        type: 'feature',
-        scope: 'Katalog PRD 7 Microservices (01 - 07)',
-        description: 'Membangun PrdCatalogModule dan PrdArticleReader yang memuat dokumen kebutuhan produk (PRD) lengkap untuk Platform Admin Console (01), Dashboard CMS Studio (02), API Orkestrator Provisioning (03), Website Promosi (04), AI Agent Service (05), Mobile Companion (06), dan Docs Hub (07).'
+        id: 'c-02dash-12200-1',
+        type: 'improvement',
+        scope: 'Invoices Ledger Table Spacious Layout & Sizing',
+        description: 'Menerapkan lebar tabel minimal 1260px dengan padding sel luas (18px 20px) dan penetapan lebar terdedikasi pada seluruh 7 kolom dokumen resmi, menghilangkan efek sempit/dempet antar konten penagihan.'
       },
       {
-        id: 'c-07docs-140-2',
+        id: 'c-02dash-12200-2',
+        type: 'feature',
+        scope: 'Interactive Apache ECharts Fiscal Spending & VAT Visualizer',
+        description: 'Menyematkan mesin rendering Apache ECharts canvas beresolusi tinggi pada grafik tren fiskal bulanan (Dasar Pengenaan Pajak vs PPN 11% Kas Negara) dengan tooltip informatif berformat rupiah (IDR).'
+      },
+      {
+        id: 'c-02dash-12200-3',
+        type: 'performance',
+        scope: 'Reactive Tab Lifecycle & Memory Leak Prevention',
+        description: 'Mengelola instansiasi ECharts secara reaktif menggunakan watch(activeTab) dan nextTick(), serta menjamin pelepasan memori (dispose & disconnect ResizeObserver) pada siklus unmount.'
+      }
+    ]
+  },
+  {
+    version: 'v1.21.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Komprehensif Modul Faktur & E-Faktur: Filter Multi-Kanal, Visualisasi Alokasi Fiskal Bulanan & Pratinjau KOP Pajak Live',
+    summary: 'Merombak arsitektur modul Faktur & Riwayat Tagihan Resmi (InvoicesHistoryModule) menjadi sistem penagihan enterprise interaktif: (1) Bilah filter pencarian mutakhir dengan selektor kanal pembayaran spesifik (BCA VA, QRIS, Visa Corporate, Mandiri Bill) dan tombol salin instan nomor faktur satu-klik; (2) Tab Rekapitulasi Pajak PPN 11% dilengkapi grafik batang visualisasi alokasi fiskal bulanan (DPP vs PPN 11%) serta kode verifikasi NTPN resmi; (3) Tab Profil Wajib Pajak 2 kolom terpadu yang menampilkan formulir identitas perpajakan badan usaha berdampingan dengan Pratinjau KOP Dokumen E-Faktur sinkronisasi langsung (Live Sync KOP Preview); (4) Penyempurnaan lembar dokumen kertas E-Faktur digital berstempel lunas dan stempel QR Code validasi DJP.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12100-1',
+        type: 'feature',
+        scope: 'Multi-Channel Payment Filter & Instant Invoice Copy Tool',
+        description: 'Menyediakan filter dropdown kanal pembayaran spesifik pada buku besar faktur serta tombol salin nomor faktur langsung ke clipboard dengan indikator status reaktif.'
+      },
+      {
+        id: 'c-02dash-12100-2',
+        type: 'feature',
+        scope: 'Monthly Fiscal Spending & Tax Stacked Bar Visualizer',
+        description: 'Menyematkan visualisasi grafik batang komparasi pengeluaran bulanan (Dasar Pengenaan Pajak vs PPN 11%) disertai kode NTPN per transaksi pada tabel rekonsiliasi.'
+      },
+      {
+        id: 'c-02dash-12100-3',
+        type: 'feature',
+        scope: 'Interactive 2-Column Tax Profile with Live E-Faktur KOP Preview',
+        description: 'Menyajikan tata letak 2 kolom pada pengaturan wajib pajak: formulir konfigurasi di sisi kiri dan pratinjau KOP surat faktur pajak digital di sisi kanan yang merespons perubahan data secara instan.'
+      }
+    ]
+  },
+  {
+    version: 'v1.20.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Pemisahan Hierarki Tagline Kartu Paket (Zero-Overlap) & Integrasi Checkout Pembayaran Langsung Kalkulator Simulasi Cluster',
+    summary: 'Memperbaiki tata letak kartu paket aktif berjalan (.plan-crown-card) dengan memisahkan teks deskripsi tagline ke dalam baris penuh mandiri (.crown-full-tagline) di bawah bar judul dan harga (.crown-top-bar), secara mutlak mengeliminasi masalah tombol "Ganti / Upgrade Paket" yang menimpa paragraf deskripsi di semua resolusi. Menambahkan kapabilitas Checkout & Pembayaran Langsung pada Kalkulator Simulasi Resource Cluster Kustom (Tab 3) sehingga pengguna dapat langsung membayar estimasi spesifikasi kustom via 4 kanal pembayaran resmi (BCA VA, QRIS, Visa, Mandiri Bill), mengaktifkan kuota kluster seketika, dan otomatis menerbitkan E-Faktur resmi PMK-60.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12010-1',
+        type: 'bugfix',
+        scope: 'Plan Crown Card Layout Strict Tier Separation',
+        description: 'Meredesain struktur kartu paket utama menggunakan .crown-top-bar (khusus judul dan harga/tombol) serta baris penuh .crown-full-tagline terpisah di bawahnya, mencegah teks deskripsi bertumpuk atau melenceng di bawah tombol aksi.'
+      },
+      {
+        id: 'c-02dash-12010-2',
+        type: 'feature',
+        scope: 'Custom Cluster Simulation Checkout & Instant Payment',
+        description: 'Menyediakan tombol "Bayar & Aktifkan Cluster Sekarang" pada Kalkulator Simulasi Resource Kustom yang langsung membuka modal checkout, menghitung DPP + PPN 11%, memperbarui kuota paket, dan menerbitkan E-Faktur resmi berstempel DJP.'
+      }
+    ]
+  },
+  {
+    version: 'v1.20.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Perombakan Dialog Pembuatan Website Baru: Studio Split-Layout 980px, Live Canvas Browser Mockup & Sinkronisasi Subdomain Cerdas',
+    summary: 'Merombak arsitektur dan antarmuka dialog modal Pembuatan Website Baru (.modal-dialog-create-site) dari sebelumnya berukuran sempit 580px dan berantakan menjadi modal studio interaktif seluas 980px dengan sistem 2 kolom responsif: (1) Kolom Konfigurasi Terstruktur meliputi pemilihan blueprint 2x2 berfitur lengkap, formulir identitas dengan auto-slug generator cerdas dan verifikasi ketersediaan subdomain Traefik Edge real-time, serta pemilih palet warna aksen brand dinamis; (2) Kolom Pratinjau Live Kanvas menampilkan mockup jendela browser lengkap dengan address bar SSL TLS 1.3, hero banner reaktif yang menyesuaikan nama dan warna aksen secara instan, serta kartu telemetri alokasi runtime kontainer Docker cgroups v2 dan bar kapasitas kuota langganan; (3) Perluasan dialog konfigurasi blueprint (.blueprint-config-dialog) menjadi 760px dan pemantapan tombol aksi side-by-side anti-wrap.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12000-1',
+        type: 'feature',
+        scope: 'Expansive 980px Studio Modal Architecture (.modal-dialog-create-site)',
+        description: 'Memperluas dimensi dialog pembuatan website menjadi 980px dengan tata letak split-grid 2 kolom yang lapang, seimbang, dan eye-catching di seluruh resolusi layar (720p, 1080p, 1440p, 2480p+).'
+      },
+      {
+        id: 'c-02dash-12000-2',
+        type: 'feature',
+        scope: 'Interactive Real-Time Browser Mockup & Live Canvas Preview',
+        description: 'Menyematkan frame mockup jendela browser macOS dengan address bar SSL TLS 1.3 dan pratinjau kanvas dinamis yang merespons perubahan nama website, slogan, blueprint, serta warna aksen secara instan.'
+      },
+      {
+        id: 'c-02dash-12000-3',
+        type: 'improvement',
+        scope: 'Smart Auto-Slug Generator & Traefik Edge Subdomain Checker',
+        description: 'Menyediakan fitur sinkronisasi otomatis nama situs ke subdomain URL ramah SEO dengan tombol re-sync serta validasi ketersediaan rute edge Traefik v3 HTTP/3 secara langsung.'
+      },
+      {
+        id: 'c-02dash-12000-4',
+        type: 'improvement',
+        scope: 'Container Telemetry Specs & Plan Quota Progress Meter',
+        description: 'Menampilkan telemetri alokasi sumber daya kontainer (0.5 vCPU, 256 MB RAM, Let\'s Encrypt Auto) dan widget progres pemakaian kuota slot kontainer paket langganan secara transparan.'
+      }
+    ]
+  },
+  {
+    version: 'v1.19.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Perbaikan Penumpukan Tombol Upgrade Paket & Integrasi Alur Checkout Pembayaran Langsung dengan E-Faktur Otomatis',
+    summary: 'Memperbaiki tata letak header kartu paket berjalan (.plan-crown-header) untuk mengeliminasi penumpukan teks dan tombol "Ganti / Upgrade Paket" di semua resolusi layar (720p, 1080p, 1440p, 2480p+). Menambahkan alur Checkout & Pembayaran Langsung terpadu pada penambahan slot kontainer maupun upgrade paket langganan (mendukung 4 metode pembayaran: BCA VA, QRIS Dinamis, Visa Corporate, Mandiri Bill) yang secara instan menerbitkan Faktur Pajak Resmi (E-Faktur PPN 11%) ke buku besar faktur serta langsung memunculkan pratinjau dokumen faktur lunas siap cetak/unduh.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11910-1',
+        type: 'bugfix',
+        scope: 'Plan Crown Header Non-Overlapping Layout Protection',
+        description: 'Meredesain struktur kartu paket utama menggunakan .plan-crown-header terpisah dengan grouping judul dan harga otomatis, mencegah tombol aksi bertumpuk di atas deskripsi kuota pada viewport 720p dan 1080p.'
+      },
+      {
+        id: 'c-02dash-11910-2',
+        type: 'feature',
+        scope: 'Integrated Instant Checkout & Payment Gateway Modal',
+        description: 'Menyediakan modal checkout terintegrasi (680px) untuk penambahan slot kontainer dan upgrade paket dengan kalkulasi DPP + PPN 11%, instruksi pembayaran instan, dan 4 kanal pembayaran resmi.'
+      },
+      {
+        id: 'c-02dash-11910-3',
+        type: 'feature',
+        scope: 'Automatic Tax E-Faktur Issuance & Reactive Ledger Sync',
+        description: 'Otomatisasi penerbitan faktur pajak lunas (INV-2026-10-XXXX) ke dalam buku besar InvoicesHistoryModule begitu pembayaran dikonfirmasi, sekaligus memunculkan dialog dokumen E-Faktur resmi seketika.'
+      }
+    ]
+  },
+  {
+    version: 'v1.19.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Modul Faktur & Riwayat Tagihan Resmi (E-Faktur): Buku Besar, Rekapitulasi Pajak PPN 11% & Profil Wajib Pajak Badan',
+    summary: 'Merombak antarmuka modul Faktur & Invoice resmi menjadi sistem penagihan enterprise komprehensif 3-Tab: (1) Buku Besar Faktur interaktif dengan pencarian cepat, filter tahun, clickable row inspection, dan ekspor batch dokumen; (2) Tab Rekapitulasi Pajak PPN 11% & Tren Belanja SaaS menampilkan historis pengeluaran bulanan dan sertifikat kepatuhan fiskal terintegrasi; (3) Tab Pengaturan Profil Wajib Pajak untuk mengonfigurasi identitas PT/Badan Usaha, NPWP 16 digit format baru, alamat kantor resmi, serta otomatisasi pengiriman PDF faktur pajak ke email finance; (4) Pembaruan lembar E-Faktur resmi dengan stempel digital QR Code validasi DJP dan rincian DPP & PPN 11% sesuai PMK-60/PMK.03/2022.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11900-1',
+        type: 'feature',
+        scope: 'Interactive Invoices Ledger & Batch Archival Download',
+        description: 'Menyajikan buku besar faktur lengkap dengan status kelayakan 100% lunas, pencarian instan, filter tahun penagihan, tombol ekspor CSV laporan keuangan, dan fitur unduh seluruh berkas faktur dalam satu arsip terpadu.'
+      },
+      {
+        id: 'c-02dash-11900-2',
+        type: 'feature',
+        scope: 'VAT Tax Reconciliation & Monthly SaaS Spending Analytics',
+        description: 'Menambahkan tab rekapitulasi pajak PPN 11% dan tren belanja bulanan (Juli s/d Oktober 2026) disertai sertifikat kepatuhan wajib pajak resmi ber-NPWP PT Hero Digital Multitek.'
+      },
+      {
+        id: 'c-02dash-11900-3',
+        type: 'feature',
+        scope: 'Corporate Tenant Tax Profile & 16-Digit NPWP Configuration',
+        description: 'Menyematkan formulir pengaturan identitas perpajakan badan usaha untuk pencantuman otomatis nama PT, NPWP 16 digit format baru, alamat resmi faktur, serta toggle otomatisasi pengiriman PDF E-Faktur ke email finance.'
+      },
+      {
+        id: 'c-02dash-11900-4',
+        type: 'improvement',
+        scope: 'Digital E-Faktur Paper Modal with DJP QR Verification Stamp',
+        description: 'Menyempurnakan dialog dokumen faktur pajak digital berstempel lunas resmi, verifikasi QR Code DJP, rincian DPP dan PPN 11%, serta tombol aksi cetak dan unduh yang berdampingan secara presisi.'
+      }
+    ]
+  },
+  {
+    version: 'v1.18.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Penguatan Proteksi Universal Side-by-Side Baris Aksi Tabel & Sinkronisasi Faktur Tagihan Oktober',
+    summary: 'Menerapkan proteksi tata letak tombol baris aksi universal (Anti-Enter / Strict Non-Wrapping) untuk seluruh tabel dan kartu (.row-actions, .ticket-col-actions, .endpoint-actions, .page-card-actions) di semua variasi resolusi layar (720p, 1080p, 1440p, 2480p+). Memperbarui dataset riwayat penagihan resmi dengan faktur periode berjalan Oktober 2026 dan menyinkronkan jadwal perpanjangan otomatis berikutnya ke 15 November 2026.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11801-1',
+        type: 'improvement',
+        scope: 'Universal Side-by-Side Action Buttons Enforced',
+        description: 'Menjamin seluruh tombol aksi baris tabel (Lihat E-Faktur, Unduh, Selesaikan Tiket, Hapus, Salin) tetap berdampingan horizontal tanpa mengalami pematahan baris canggung di resolusi rendah maupun tinggi.'
+      },
+      {
+        id: 'c-02dash-11801-2',
+        type: 'bugfix',
+        scope: 'Current October 2026 Billing Invoice & Telemetry Sync',
+        description: 'Menyinkronkan data invoice periode berjalan INV-2026-10-0994 (Lunas) dan memperbarui telemetri jadwal penagihan berikutnya menjadi 15 November 2026.'
+      }
+    ]
+  },
+  {
+    version: 'v1.18.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Eye-Catching Modul Kapasitas Runtime & Paket Langganan: Peta Topologi Pod Node, Matriks 3-Tier Harga & Simulator Custom Cluster',
+    summary: 'Merombak tampilan dan kapabilitas fungsional modul Kapasitas Runtime & Paket Langganan menjadi sangat atraktif, intuitif, dan responsif (720p hingga 2480p+). Menghadirkan: (1) Cluster 4 Kartu Telemetri Komersial real-time (Slot Kontainer, CPU CFS, RAM cgroups v2, S3 Storage); (2) Crown Jewel Plan Card dengan visual ambient top gradient, kapsul kapabilitas aktif, dan manajemen metode penagihan; (3) Peta Topologi Slot Node interaktif yang memvisualisasikan kontainer aktif lengkap dengan telemetri runtime serta slot kosong siap deploy; (4) Matriks 3-Tier Pilihan Paket (Starter, Pro, Agency) dengan toggle siklus Bulanan vs Tahunan (Diskon 20%) dan modal konfirmasi perubahan paket prorata; (5) Kalkulator Simulasi Resource Cluster Kustom dinamis dengan slider interaktif dan kalkulasi PPN 11%.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11800-1',
+        type: 'feature',
+        scope: 'Interactive Container Node Topology Map (.pod-topology-grid)',
+        description: 'Menyajikan visualisasi topologi slot kontainer nyata: slot terpakai menampilkan status running, domain rute Traefik, dan telemetri CPU/RAM, sedangkan slot kosong menyajikan akses langsung untuk deploy kontainer baru.'
+      },
+      {
+        id: 'c-02dash-11800-2',
+        type: 'feature',
+        scope: '3-Tier Subscription Pricing Matrix with Annual Discount Toggle',
+        description: 'Menambahkan katalog perbandingan paket interaktif (Starter, Pro, Agency) dengan switch siklus penagihan Bulanan vs Tahunan (Diskon 20%) serta status paket aktif pengguna saat ini.'
+      },
+      {
+        id: 'c-02dash-11800-3',
+        type: 'feature',
+        scope: 'Dynamic Custom Cluster Resource Simulator (.calculator-simulator-card)',
+        description: 'Kalkulator interaktif berbasis slider untuk menghitung simulasi biaya runtime kustom (Kontainer 1-25, CPU 0.25-2.0 vCPU, RAM 256MB-4GB, S3 Storage 1-100GB) lengkap dengan rincian subtotal dan PPN 11%.'
+      },
+      {
+        id: 'c-02dash-11800-4',
+        type: 'improvement',
+        scope: 'Prorated Plan Upgrade Confirmation & Billing Method Modals',
+        description: 'Menyematkan dialog modal konfirmasi upgrade paket (680px) dengan perbandingan spesifikasi sebelumnya vs target, pemberitahuan prorata otomatis, serta dialog manajemen metode pembayaran utama.'
+      }
+    ]
+  },
+  {
+    version: 'v1.17.3',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Interactive Webhook Delivery Inspector (Request/Response) & In-Browser Headless REST API Playground ("Try It Out")',
+    summary: 'Menambahkan fitur standar industri terdepan untuk integrasi developer di HeroCMS: (1) Interactive Webhook Delivery Inspector Drawer/Modal dengan inspeksi detail HTTP request header (RFC 9421 anti-replay timestamp & HMAC-SHA256 signature), JSON payload yang dikirim, respon remote server, serta kapabilitas Redeliver (Kirim Ulang Event); (2) In-Browser Interactive Headless REST API Request Playground ("Try It Out") pada tab REST API & SDK dengan simulasi otentikasi Bearer Token PAT, validasi granular scope otomatis, dan respon data CMS real-time (Articles, Leads, Media, Telemetry) tanpa risiko kontainer.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11703-1',
+        type: 'feature',
+        scope: 'Interactive Webhook Delivery Inspector Modal (.modal-dialog-inspector: 780px)',
+        description: 'Tabel riwayat pengiriman webhook kini interaktif (clickable row & tombol inspeksi) untuk membuka modal inspector lengkap dengan metadata strip, URL target, status latensi, dan tab pemisah Request vs Response.'
+      },
+      {
+        id: 'c-02dash-11703-2',
         type: 'security',
-        scope: 'Matriks Keamanan 20 Pilar & Docker Sandboxing',
-        description: 'Membangun SecurityMatrixModule dan SecurityArticleReader yang memaparkan 20 Pilar Keamanan Web & Backend (API Key aman, anti-SQLi pgx, anti-XSS DOMPurify/CSP, CSRF double submit, Redis stateful session, dedicated S3 bucket quota 2GB, magic bytes sniffing) serta penegakan Linux cgroups v2 sandboxing.'
+        scope: 'RFC 9421 Anti-Replay Timestamp & HMAC-SHA256 Delivery Verification',
+        description: 'Menampilkan header inspeksi keamanan X-HeroCMS-Signature dengan format anti-replay timestamp (t=<timestamp>,v1=<hmac>) beserta X-HeroCMS-Delivery ID untuk verifikasi integritas pesan di sisi penerima.'
       },
       {
-        id: 'c-07docs-140-3',
+        id: 'c-02dash-11703-3',
         type: 'feature',
-        scope: 'Alur Kerja Sistem (7 Interactive System Journeys)',
-        description: 'Membangun SystemJourneyModule yang memvisualisasikan alur sistem kritis dari hulu ke hilir dengan connected pipeline flowchart, urutan aktor, SLA latensi, penanganan kegagalan otomatis (self-healing), dan perintah verifikasi CLI siap salin.'
+        scope: 'Manual Event Redelivery Engine (Kirim Ulang Event)',
+        description: 'Menyediakan tombol "Kirim Ulang Event (Redeliver)" langsung di dalam modal inspector dengan telemetri dispatch ulang instan dan pembaruan timestamp log pengiriman.'
       },
       {
-        id: 'c-07docs-140-4',
-        type: 'improvement',
-        scope: 'Sidebar Navigation & Telemetry Stats Expansion',
-        description: 'Memperbarui sidebar navigasi Docs Hub dengan tab PRD, Alur Kerja Sistem, dan Keamanan & Sandbox, serta memperluas TelemetryGrid untuk menampilkan metrik agregat 7 PRD, 21 Pilar Keamanan, dan 7 System Journeys.'
+        id: 'c-02dash-11703-4',
+        type: 'feature',
+        scope: 'In-Browser Headless REST API Playground ("Try It Out")',
+        description: 'Menyematkan playground interaktif pada tab REST API & SDK untuk mengeksekusi endpoint live (/content/articles, /leads/submit, /media/assets, /telemetry/overview) menggunakan token PAT aktif, lengkap dengan validasi 401 Unauthorized dan 403 Forbidden bila scope tidak mencukupi.'
       }
     ]
   },
   {
-    version: 'v1.3.1',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Perbaikan Responsif Grid Kartu Melebihi Batas Layar & Perapihan Tampilan Alur Flowchart Kamus/SOP',
-    summary: 'Memperbaiki masalah kartu melebihi batas layar monitor komputer (cropped/overflow) dengan menerapkan sistem grid adaptif minmax(0, 1fr) pada .site-cards-grid (2 kolom pada resolusi laptop <=1440px dan 3 kolom pada layar lebar), mencegah teks panjang merusak ukuran kartu via text truncation dan max-width batas. Merombak tampilan berantakan saat klik menu/kartu Kamus Arsitektur dan SOP & Runbooks: mengganti tab filter yang menumpuk menjadi chips filter mandiri (.category-chip), menata ulang flowchart menjadi diagram pipeline berurutan yang terhubung (.flowchart-pipeline-container), memformat panduan Cara Coba dengan nomor langkah rapi (.step-test-list), menata matriks Do\'s & Don\'ts responsif auto-fit, serta memotong badge service pada inspector sidebar agar tidak tembus kartu.',
+    version: 'v1.17.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Penyempurnaan Responsivitas & Tata Letak Dialog Modal Generate Personal Access Token (PAT)',
+    summary: 'Memperluas dan merombak tata letak dialog modal Generate Personal Access Token (PAT) dari sebelumnya berukuran sempit (620px) menjadi modal luas adaptif 900px (.modal-dialog-pat) dengan grid responsif di seluruh resolusi (720p, 1080p, 1440p, 2480p+). Menata formulir input nama token dan masa berlaku secara berdampingan (2-column settings grid), menyematkan bar template izin cepat (Quick Scope Presets: Jamstack Reader, Content Writer, Lead Collector, Full Access), memperluas matriks kartu izin modular dengan hover lift dan checkmark status, serta menambahkan bilah ringkasan izin aktif (Live Scope Summary Strip) sebelum tombol eksekusi.',
     badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
-        id: 'c-07docs-131-1',
-        type: 'bugfix',
-        scope: 'Responsive Cards Grid & Screen Cropping Prevention',
-        description: 'Memperbaiki .site-cards-grid menggunakan minmax(0, 1fr) dengan breakpoint 1440px (2 kolom pada laptop), menambahkan min-width: 0 pada seluruh kartu (.task-card-pro, .sop-card-pro, .blueprint-card-pro) sehingga kartu tidak lagi meluap dan terpotong di layar monitor.'
-      },
-      {
-        id: 'c-07docs-131-2',
-        type: 'bugfix',
-        scope: 'Kamus & SOP Category Filter Chips',
-        description: 'Mengganti grouped pill bar yang berjejal dan berantakan pada kategori Kamus Arsitektur dan SOP menjadi filter chip mandiri (.category-chip) yang mengalir responsif dengan counter badge akurat.'
-      },
-      {
-        id: 'c-07docs-131-3',
+        id: 'c-02dash-11702-1',
         type: 'improvement',
-        scope: 'Connected Step Pipeline Flowchart Architecture',
-        description: 'Mengganti susunan box flowchart yang tidak terhubung menjadi pipeline langkah berurutan terhubung (.flowchart-pipeline-container) dengan badge nomor bulat, garis penghubung bertahap, dan kartu keterangan yang rapi.'
+        scope: 'Expansive PAT Modal Sizing (.modal-dialog-pat: 900px)',
+        description: 'Menerapkan lebar modal adaptif max-width: 900px (width: min(900px, 94vw)) untuk menghilangkan kesan sempit dan sesak pada dialog pembuatan token PAT di berbagai layar monitor dan laptop.'
       },
       {
-        id: 'c-07docs-131-4',
-        type: 'bugfix',
-        scope: 'Inspector Sidebar & Do\'s/Don\'ts Matrix Breathing Room',
-        description: 'Memperbaiki .spec-row dengan flex-wrap dan badge truncation pada service name, merestrukturisasi .dnd-matrix-container dengan minmax(280px, 1fr), serta menata daftar Cara Coba (.step-test-list) dengan penomoran elegan.'
+        id: 'c-02dash-11702-2',
+        type: 'feature',
+        scope: 'Quick Scope Presets Selector Bar',
+        description: 'Menambahkan tombol template izin cepat (Jamstack Reader, Content Writer, Lead Collector, Semua Izin) di atas matriks cakupan izin agar pengguna dapat mengonfigurasi set permissions dalam 1 klik instan.'
+      },
+      {
+        id: 'c-02dash-11702-3',
+        type: 'improvement',
+        scope: 'Adaptive 2-Column Settings Grid & Multi-Column Scopes Cards',
+        description: 'Mengubah field input nama token dan dropdown masa berlaku menjadi grid 2 kolom sejajar yang responsif, serta menata kartu-kartu izin granular menjadi grid multi-kolom adaptif minmax(280px, 1fr).'
+      },
+      {
+        id: 'c-02dash-11702-4',
+        type: 'improvement',
+        scope: 'Live Active Scopes Summary Strip & One-Time Reveal Dialog Sizing',
+        description: 'Menyematkan bilah ringkasan izin aktif di bagian bawah form untuk memvalidasi scope sebelum pembuatan token, serta memperluas dialog One-Time Reveal (.modal-dialog-onetime: 680px) agar string raw token tampil lapang tanpa line-break canggung.'
       }
     ]
   },
   {
-    version: 'v1.3.0',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Peluncuran Mode Baca Artikel SOP & Arsitektur dengan Flowchart, DND Matrix, Golang API & Uji cURL',
-    summary: 'Memutakhirkan microservice docs ke v1.3.0 dengan menghadirkan pengalaman pembaca artikel mendalam pada kartu SOP (SopArticleReader.vue) dan Kamus Arsitektur (ArchitectureArticleReader.vue). Dilengkapi visual flowchart pengerjaan, matriks Do\'s & Don\'ts (DND) 2 kolom, spesifikasi teknis implementasi backend Golang, perintah cURL siap salin dengan panduan live testing per-service, perbaikan filter kategori dinamis, restrukturisasi kartu yang rapi dan terstandarisasi, eliminasi widget status sprint sidebar, identitas profil engineering enterprise netral, serta verifikasi deployment kontainer Docker Compose di port 8087.',
+    version: 'v1.17.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Modal Tambah Webhook Endpoint: Preset Terintegrasi (Discord/Slack/Zapier/Custom), Pengelompokan Event & Live JSON Payload Preview',
+    summary: 'Menyempurnakan dialog modal Tambah Webhook Endpoint pada modul Webhooks & API Developer. Menambahkan pilihan preset platform instan (Discord, Slack, Zapier, Custom HTTP Server) dengan tips format URL dan konfigurasi otomatis. Mengelompokkan event notifikasi ke dalam kategori tematik (Konten & Editorial, Formulir Kontak & Prospek, Edge Ingress & Keamanan, Pemeliharaan & Cadangan) disertai kontrol "Pilih Semua" per kategori. Menyematkan generator kunci HMAC-SHA256 secret mandiri dengan tombol roll & copy, serta pratinjau dinamis JSON payload real-time interaktif dengan navigasi per-event dan proteksi tata letak tombol berjejer horizontal (side-by-side).',
     badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
-        id: 'c-07docs-130-1',
+        id: 'c-02dash-11701-1',
         type: 'feature',
-        scope: 'Dedicated SOP Article Reader with Flowchart & DND Matrix',
-        description: 'Menerbitkan SopArticleReader.vue lengkap dengan visual step flowchart, uraian runbook bertahap, matriks Do\'s & Don\'ts 2 kolom, contoh API call dan handler Go, serta kriteria Definition of Done.'
+        scope: 'Webhook Platform Presets (Discord, Slack, Zapier, Custom)',
+        description: 'Menyediakan kartu preset target terintegrasi yang secara otomatis mengisi nama integrasi, placeholder URL yang tepat, tips panduan konfigurasi, dan rekomendasi event notifikasi yang sesuai untuk masing-masing platform.'
       },
       {
-        id: 'c-07docs-130-2',
-        type: 'feature',
-        scope: 'Architecture Blueprint Reader with Golang Code & Live cURL Testing',
-        description: 'Menerbitkan ArchitectureArticleReader.vue untuk seluruh 13 blueprint arsitektur yang menguraikan konsep sistem, alur data komponen, potongan implementasi Go resmi, spesifikasi API endpoint, dan panduan cara coba (live testing).'
-      },
-      {
-        id: 'c-07docs-130-3',
+        id: 'c-02dash-11701-2',
         type: 'improvement',
-        scope: 'Card Restructuring & Dynamic Category Filters',
-        description: 'Menstandarisasi kartu SOP (.sop-card-pro) dan kartu arsitektur (.blueprint-card-pro) dengan layout rapi dan seimbang, serta menyinkronkan kategori filter secara dinamis dari dataset.'
+        scope: 'Categorized Notification Events Matrix',
+        description: 'Mengorganisir checklist event notifikasi ke dalam 4 kategori terstruktur dengan ikon, counter jumlah terpilih, dan tombol toggle "Pilih Semua / Hapus Semua" per kelompok event.'
       },
       {
-        id: 'c-07docs-130-4',
-        type: 'improvement',
-        scope: 'Sidebar Streamlining & Enterprise Workspace Identity',
-        description: 'Menghapus widget gauge status sprint yang tidak diperlukan pada footer sidebar dan mengganti profil user individu menjadi identitas HeroCMS Engineering (Platform & Mission Control).'
-      },
-      {
-        id: 'c-07docs-130-5',
+        id: 'c-02dash-11701-3',
         type: 'feature',
-        scope: 'Verified Docker Compose Multi-Stage Deployment',
-        description: 'Memverifikasi dan menjalankan service docs via docker compose di port 8087 dengan multi-stage build Alpine ultra-lightweight, lulus seluruh automated pentest black-box suite.'
+        scope: 'Live Dynamic JSON Payload Preview Terminal',
+        description: 'Menyematkan terminal pratinjau payload JSON real-time interaktif di dalam modal dengan tab navigasi sampel per event (article.published, lead.received, ssl.renewed, traffic.spike, backup.completed) serta tombol salin JSON instan.'
+      },
+      {
+        id: 'c-02dash-11701-4',
+        type: 'security',
+        scope: 'HMAC-SHA256 Secret Key Management in Modal',
+        description: 'Menyertakan field kunci tanda tangan rahasia (HMAC-SHA256) terintegrasi dengan aksi regenerasi rahasia (roll secret) beranimasi dan salin ke clipboard untuk verifikasi header X-HeroCMS-Signature.'
+      }
+    ]
+  },
+  {
+    version: 'v1.17.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Refaktor Arsitektur Webhooks Notifikasi Event & Peluncuran Personal Access Tokens (PAT) dengan Granular Scopes Filter',
+    summary: 'Merombak total arsitektur modul Webhooks & API Developer menjadi sistem integrasi tingkat aplikasi yang aman dan terisolasi. Mengeliminasi kontrol lifecycle kontainer (stop/start/deploy) dan pipeline CI/CD dari API publik pengguna demi mencegah celah keamanan infrastruktur. Menghadirkan kapabilitas Personal Access Tokens (PAT) layaknya GitHub/Cloudflare dengan filter izin granular per kategori (Headless CMS, Prospek/Leads, CDN Media S3, Telemetri, dan Support), dialog pengungkapan token satu kali (One-Time Reveal) berstandar Zero-Knowledge, pembaruan webhook berfokus pada notifikasi event aman (Discord, Slack, Zapier), serta tabel inspeksi riwayat pengiriman payload (Delivery Logs) real-time.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11700-1',
+        type: 'feature',
+        scope: 'Personal Access Tokens (PAT) Engine & Granular Scopes Filter',
+        description: 'Menerapkan sistem Personal Access Tokens (PAT) dengan matriks filter izin (scopes) granular layaknya Cloudflare API Tokens dan GitHub PAT. Scopes terbagi ke dalam 5 kategori modular (content:read, content:write, leads:read, leads:write, media:read, media:upload, telemetry:read, tickets:read) dengan toggle "Pilih Semua" per kategori.'
+      },
+      {
+        id: 'c-02dash-11700-2',
+        type: 'security',
+        scope: 'Zero-Container Lifecycle API Policy & Zero-Knowledge Token Vault',
+        description: 'Menghapus endpoint dan skrip kontrol siklus hidup kontainer (start/stop/restart) serta alur CI/CD dari API publik tenant demi mengamankan isolasi docker host. Menambahkan dialog One-Time Token Reveal dengan peringatan keamanan ketat bahwa raw token tidak pernah disimpan di database server.'
+      },
+      {
+        id: 'c-02dash-11700-3',
+        type: 'feature',
+        scope: 'Outgoing Webhook Event Notification & Real-Time Delivery Logs Table',
+        description: 'Merefaktor webhook outgoing agar berfokus murni pada notifikasi event aplikasi aman (article.published, lead.received, ssl.renewed, traffic.spike, backup.completed) dengan header HMAC-SHA256 signature (X-HeroCMS-Signature), tombol simulasi Test Ping langsung, serta tabel riwayat log pengiriman (Delivery Logs) yang menampilkan HTTP 200 OK dan latensi dispatch.'
+      },
+      {
+        id: 'c-02dash-11700-4',
+        type: 'improvement',
+        scope: 'Headless REST API Interactive Documentation & Responsive UI',
+        description: 'Menambahkan tab dokumentasi interaktif Headless REST API v1 lengkap dengan contoh cuplikan kode cURL, TypeScript/Node.js SDK, Golang, dan Python, serta menjamin tata letak tombol aksi dan modal footers selalu berjejer rapi secara horizontal (side-by-side) tanpa wrapping ganjil di seluruh variasi resolusi layar.'
+      }
+    ]
+  },
+  {
+    version: 'v1.16.4',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Perbaikan Full-Bleed Edge-to-Edge Visual Editor & Eliminasi Pemotongan Ruang Kosong Sebelah Kanan Lintas Layar',
+    summary: 'Memperbaiki masalah penyusutan (shrink) dan pemotongan kanvas Visual Editor yang menyisakan ruang kosong (blank empty space) di sisi kanan layar pada resolusi laptop, desktop QHD (1440px), hingga 4K Ultrawide (2480px+). Mengisolasi kontainer editor (.is-editor-workspace) dari batasan max-width dan padding content-scroll-pane umum, menonaktifkan header duplikat saat mode editor aktif, serta memastikan area kanvas dan toolbar studio membentang 100% penuh dari tepi ke tepi (edge-to-edge full width).',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11604-1',
+        type: 'bugfix',
+        scope: 'Visual Editor Workspace Isolation (.is-editor-workspace)',
+        description: 'Menerapkan kelas khusus .is-editor-workspace pada kontainer utama saat activeMenu === "editor" dengan padding: 0 !important, margin: 0 !important, max-width: none !important, dan width: 100% !important. Mengeliminasi pembatasan max-width 1680px/1880px dari media queries Tier 3 & Tier 4 yang sebelumnya menyebabkan editor menyusut dan menyisakan ruang kosong di sebelah kanan.'
+      },
+      {
+        id: 'c-02dash-11604-2',
+        type: 'bugfix',
+        scope: 'Top Nav Header Auto-Hide on Editor Mode (.editor-active-mode)',
+        description: 'Menyembunyikan top-nav-header dashboard secara otomatis saat mode editor aktif sehingga tidak ada tumpang tindih header ganda dan visual editor mendapatkan ruang vertikal 100vh penuh secara native.'
+      },
+      {
+        id: 'c-02dash-11604-3',
+        type: 'improvement',
+        scope: 'Visual Studio Root & Viewport Sizing (visual-editor.css)',
+        description: 'Mengoptimalkan .visual-studio-root menjadi width: 100%; max-width: 100%; height: 100%; min-height: 100%; sehingga studio command bar, left dock, dan infinite canvas artboard dapat memanfaatkan 100% lebar layar secara presisi.'
+      },
+      {
+        id: 'c-02dash-11604-4',
+        type: 'bugfix',
+        scope: 'Reader Mode Grid Full Expansion (.reader-layout-grid)',
+        description: 'Menghapus batasan max-width 960px/1340px dan justify-content: start pada reader-layout-grid dan reader-editorial-hero di layar besar agar konten baca artikel membentang proporsional dan tidak terpotong sepihak di sisi kanan.'
+      }
+    ]
+  },
+  {
+    version: 'v1.16.3',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Penataan Horizontal Sejajar (Side-by-Side Berjejer) untuk Grup Tombol Aksi, Card Action Bars, Modal Footers & Segmented Filter Bars',
+    summary: 'Memperbaiki tata letak kelompok tombol aksi yang sebelumnya mengalami pemecahan baris baru ("enter gitu / stacking vertikal") sehingga kembali berjejer rapi secara horizontal (side-by-side) di seluruh resolusi (720px, 1080px, 1440px, 2480px+). Mengeliminasi paksaan flex-direction: column dan column-reverse pada card-action-bar, modal-footer, reader navigation bar, dan pod analytics footer. Menambahkan proteksi Universal Side-by-Side Button Protection di studio-master.css dengan scrollbar sentuh mulus (touch horizontal scrolling) saat ruang sempit.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11603-1',
+        type: 'bugfix',
+        scope: 'Card Action Bar Inline Alignment (.card-action-bar)',
+        description: 'Menghapus pemecahan baris column pada .card-action-bar di resolusi <= 720px dan mengunci flex-wrap: nowrap. Tombol Editor [✏️ Editor] dan kelompok tombol runtime kontainer [▶][■][⚡][🗑] kini tetap sejajar berdampingan dalam satu baris horizontal tanpa terpisah baris.'
+      },
+      {
+        id: 'c-02dash-11603-2',
+        type: 'bugfix',
+        scope: 'Modal Dialog Action Footers (.modal-footer, .modal-footer-row, dll.)',
+        description: 'Mendefinisikan styling flex horizontal dasar untuk .modal-footer yang sebelumnya absen di desktop, serta mencabut aturan column-reverse 100% full-width di mobile/720px. Tombol dialog ("Batal", "Deploy Kontainer", "Simpan Artikel", "Cetak E-Faktur", "Uji Ulang DNS") kini selalu berjejer horizontal berdampingan dengan ukuran proporsional.'
+      },
+      {
+        id: 'c-02dash-11603-3',
+        type: 'bugfix',
+        scope: 'Segmented Filter Bars & Control Pills (.segmented-filter-bar, .status-tabs-pill)',
+        description: 'Mengubah flex-wrap: wrap menjadi flex-wrap: nowrap dengan overflow-x: auto pada .segmented-filter-bar dan .status-tabs-pill. Tombol filter kategori, status, dan timeframe kini tidak lagi patah atau menumpuk ke baris kedua di dalam kapsul abu-abu.'
+      },
+      {
+        id: 'c-02dash-11603-4',
+        type: 'bugfix',
+        scope: 'Reader Navigation Header & Pod Analytics Toolbar (.reader-header-nav-actions, .footer-right-buttons)',
+        description: 'Mengunci baris horizontal tanpa wrapping pada header artikel reader (.reader-header-nav-bar) dan footer pod telemetry (.footer-right-buttons). Tombol aksi (Bagikan, Buka Web, Sunting, Export CSV, Purge Cache, Terminal) tetap berjejer satu baris dengan overflow horizontal terproteksi.'
+      },
+      {
+        id: 'c-02dash-11603-5',
+        type: 'improvement',
+        scope: 'Universal Side-by-Side Button Protection (studio-master.css)',
+        description: 'Menerapkan aturan flex-wrap: nowrap !important dan button { white-space: nowrap !important; flex-shrink: 0; } universal pada seluruh kelas kluster tombol Studio (toolbar, actions cell, command bar, batch action, reply actions, dsb.) di seluruh tingkatan resolusi.'
+      }
+    ]
+  },
+  {
+    version: 'v1.16.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Standarisasi Text Anti-Wrap & Integritas Button/Span (Anti-Enter) Lintas Resolusi',
+    summary: 'Mengimplementasikan sistem Universal Text Anti-Wrap & Button/Span Integrity System pada studio-master.css. Mengatasi masalah teks terputus/terpotong menjadi beberapa baris ("terkena enter") pada tombol, badge, status pill, metric card, navigation tab, breadcrumbs, dan form label saat ukuran viewport berubah (720px, 1080px, 1440px, hingga 2480px+). Memastikan seluruh tombol aksi (action buttons), segmented filter, dan status tags tetap utuh pada satu baris (single-line intact) dengan flex-wrap yang aman pada kontainer induk.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11602-1',
+        type: 'bugfix',
+        scope: 'Universal Button & Inline Span Anti-Wrap (studio-master.css)',
+        description: 'Menerapkan aturan white-space: nowrap !important pada seluruh elemen button dan span di dalamnya (.btn-primary, .btn-ghost-sm, .btn-top-create, .btn-action-primary, .btn-modal-confirm, .btn-reader-action-*, dll.) agar teks label tombol tidak pernah terpotong ke baris baru.'
+      },
+      {
+        id: 'c-02dash-11602-2',
+        type: 'bugfix',
+        scope: 'Semantic Badges, Status Pills & Counters Integrity (studio-master.css)',
+        description: 'Menstandarkan seluruh badge status (.radar-status-pill, .badge-status, .standard-badge, .pod-meta-pill, .dns-valid-pill, .ssl-status-badge, .hud-pill, .pill-metric, .tag-chip, dll.) dengan white-space: nowrap !important dan flex-shrink: 0.'
+      },
+      {
+        id: 'c-02dash-11602-3',
+        type: 'improvement',
+        scope: 'Action Toolbars & Header Flex-Wrap Safe Zones (studio-master.css)',
+        description: 'Menambahkan flex-wrap: wrap yang aman pada toolbar aksi (.card-action-bar, .footer-right-buttons, .reader-header-nav-actions, .filter-toolbar, .page-intro-row, .quota-quick-pills) sehingga tombol membungkus sebagai satu kesatuan utuh tanpa merusak teks di dalam tombol.'
+      },
+      {
+        id: 'c-02dash-11602-4',
+        type: 'bugfix',
+        scope: 'Top Breadcrumbs, Navigation & Table Cells (studio-master.css)',
+        description: 'Memastikan breadcrumb navigasi atas (.breadcrumbs, .crumb-current, .crumb-link), brand tags, dan sel aksi tabel (.table-actions-cell) tidak mengalami wrapping internal saat ruang viewport menyempit.'
+      }
+    ]
+  },
+  {
+    version: 'v1.16.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Arsitektur Responsif Multi-Tier Lintas Resolusi (720px, 1080px, 1440px, 2480px+ Ultrawide), Mobile Navigation Drawer, Universal Modal & Reader Fluid Reflow',
+    summary: 'Mengimplementasikan sistem desain responsif multi-tier komprehensif di seluruh modul antarmuka Studio CMS. Mengatasi masalah tata letak pada layar 720px (mobile/tablet), 1080px (laptop/standar desktop), 1440px (QHD 2K), hingga 2480px+ (4K UHD & Ultrawide). Menyediakan sidebar off-canvas drawer dengan tombol hamburger di top header dan backdrop interaktif untuk layar <= 1024px. Mengoptimasi seluruh formulir modal dialog, footer actions, dan pemilih konfigurasi menjadi form fleksibel dan bottom-sheet ergonomis. Memperbaiki mode baca artikel (Article Reader) dan editor markdown agar tidak terjadi kebocoran scroll horizontal, serta menerapkan pembatasan max-width pada monitor ultrawide agar konten teks tetap ergonomis dibaca.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11601-1',
+        type: 'feature',
+        scope: 'Mobile Navigation Drawer & Hamburger System (DashboardView.vue & studio-master.css)',
+        description: 'Mentransformasi sidebar menjadi off-canvas navigation drawer pada layar <= 1024px dengan tombol toggle hamburger di header navigasi, backdrop penutup interaktif, keyboard listener tombol Escape, dan penutupan otomatis saat memilih menu.'
+      },
+      {
+        id: 'c-02dash-11601-2',
+        type: 'bugfix',
+        scope: 'Universal Form & Modal Responsiveness pada 720px (studio-master.css)',
+        description: 'Menstandarkan seluruh dialog modal (.modal-dialog, .modal-dialog-lg, .modal-dialog-media-studio, .blueprint-config-dialog) agar beradaptasi menjadi bottom-sheet mobile pada <= 720px. Merombak multi-column form rows (.form-row-2col, .form-row-3col, .events-checklist-grid, .cert-detail-row) menjadi 1 kolom vertikal, dan mengubah modal footer (.modal-footer, .modal-footer-row, .modal-footer-bespoke, .rich-modal-footer, .studio-modal-footer) menjadi tombol bertumpuk (column-reverse full-width).'
+      },
+      {
+        id: 'c-02dash-11601-3',
+        type: 'bugfix',
+        scope: 'Detail Artikel & Reader View Responsiveness (ContentArticlesModule.vue & studio-master.css)',
+        description: 'Mengoptimalkan layout artikel reader (.reader-layout-grid, .reader-header-nav-bar, .reader-editorial-hero, .reader-main-content) agar bertumpuk rapi di layar kecil, tombol aksi membungkus (wrap), hero title proporsional, serta mengisolasi blok kode (pre/code) dan gambar agar tidak memicu kebocoran horizontal scroll.'
+      },
+      {
+        id: 'c-02dash-11601-4',
+        type: 'improvement',
+        scope: 'Tier 2 (1080p) & Tier 3 (1440p 2K) Balanced Card & Telemetry Grids (studio-master.css)',
+        description: 'Menerapkan grid 2 kolom seimbang untuk kartu kontainer, blueprint template, artikel, dan media assets pada rentang 721px-1366px, serta mengekspansinya ke 3 kolom kartu dan 4 kolom telemetri dengan batasan max-width 1680px pada monitor 1440p.'
+      },
+      {
+        id: 'c-02dash-11601-5',
+        type: 'improvement',
+        scope: 'Tier 4 (2480px+ 4K UHD & Ultrawide Ergonomics) Container Bounds (studio-master.css)',
+        description: 'Membatasi lebar baca artikel maksimal 960px pada monitor ultrawide untuk mencegah baris teks terlalu panjang yang melelahkan mata, serta mengekspansi kartu grid kontainer dan katalog template secara seimbang menjadi 4-5 kolom pada viewport 1920px hingga 2400px+.'
+      },
+      {
+        id: 'c-02dash-11601-6',
+        type: 'bugfix',
+        scope: 'Universal Table Responsive Anti-Overflow Shell (studio-master.css)',
+        description: 'Menjamin seluruh tabel data (.table-responsive-shell, .container-table-card, .pro-table, .ledger-table, .inv-table-wrap) memiliki kemampuan horizontal touch scroll yang mulus tanpa merusak tata letak shell aplikasi utama.'
+      }
+    ]
+  },
+  {
+    version: 'v1.16.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Konsolidasi Analitik Terpadu, Integrasi Pod Detail Deep-Dive, Perbaikan Master CSS & Ekspansi Telemetri Vitals',
+    summary: 'Menghapus tombol analitik pada menu Situs & Kontainer (ContainersModule.vue) dan mengonsolidasikan seluruh kapabilitas observabilitas ke menu Analitik & Telemetri (AnalyticsTelemetryModule.vue). Modul Analitik kini mendukung Dual-View Mode (Ikhtisar Fleet Global vs Detail Pod & Kontainer Mandiri) dengan navigasi langsung dan pemilih pod terpadu. Memperbaiki dan menstandarkan styling CSS master button (.btn-primary, .btn-ghost-sm, .terminal-filter-pill). Memperluas metrik telemetri dengan Core Web Vitals RUM (LCP, INP, CLS, FCP, TTFB, Burn Rate), persebaran Edge POPs Ingress Traefik (Jakarta, Singapura, US, Tokyo, Frankfurt), distribusi protokol jaringan (HTTP/3 QUIC vs HTTP/2), efisiensi kompresi Brotli 11, atribusi perangkat/OS/browser, serta metrik kesehatan pool PostgreSQL RLS dan Redis In-Memory.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11600-1',
+        type: 'improvement',
+        scope: 'Konsolidasi Analitik & Hapus Tombol di Kontainer (ContainersModule.vue)',
+        description: 'Menghapus tombol analitik yang redundan dari kartu grid dan baris tabel kontainer. Mengalihkan alur observabilitas sepenuhnya ke menu Analitik & Telemetri.'
+      },
+      {
+        id: 'c-02dash-11600-2',
+        type: 'feature',
+        scope: 'Dual-View Mode & Integrasi Pod Detail (AnalyticsTelemetryModule.vue)',
+        description: 'Menyediakan switcher mode antara Ikhtisar Fleet Global dan Detail Pod & Kontainer Mandiri lengkap dengan Apache ECharts, log stream hit, kalender uptime SLA 30 hari, dan inspeksi kernel cgroups v2.'
+      },
+      {
+        id: 'c-02dash-11600-3',
+        type: 'bugfix',
+        scope: 'Standarisasi CSS Button & Master Tokens (studio-master.css)',
+        description: 'Menambahkan styling resmi untuk .btn-primary, .btn-ghost-sm, dan .terminal-filter-pill agar tombol Export dan aksi tabel ter-CSS sempurna sesuai tema HeroCMS Studio.'
+      },
+      {
+        id: 'c-02dash-11600-4',
+        type: 'feature',
+        scope: 'Ekspansi Telemetri Core Web Vitals RUM & Edge POPs (fleet-telemetry.ts)',
+        description: 'Memperkaya data telemetri dengan 6 metrik Core Web Vitals (LCP, INP, CLS, FCP, TTFB, Burn Rate), pemantauan latensi 5 Edge POP Data Centers, serta distribusi HTTP/3 QUIC dan kompresi Brotli.'
+      },
+      {
+        id: 'c-02dash-11600-5',
+        type: 'feature',
+        scope: 'Atribusi Privasi Klien & Kesehatan PostgreSQL RLS (AnalyticsTelemetryModule.vue)',
+        description: 'Menampilkan distribusi perangkat, peramban, dan sistem operasi pengunjung, serta utilitas koneksi PostgreSQL RLS dan jejak memori cache Redis In-Memory.'
+      }
+    ]
+  },
+  {
+    version: 'v1.15.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Transformasi Modul Telemetri & Audit Performa Fleet Enterprise (SLA, Peak Traffic & Security Audit)',
+    summary: 'Merombak menyeluruh modul Analitik & Telemetri (AnalyticsTelemetryModule.vue) menjadi Pusat Audit Keandalan & Observabilitas Fleet (Macro Fleet Telemetry Hub). Menghadirkan fitur Scope Switcher (Semua Situs vs Kontainer Tertentu), metrik kepatuhan SLA & beban puncak (Peak RPS), audit anggaran kesalahan status HTTP RFC 9110 (2xx, 3xx, 4xx, 5xx), tabel komparasi saturasi armada kontainer & risiko OOM cgroups v2, audit keamanan penyerapan ancaman (Rate Limiting 429 & WAF), query Top Pages Redis In-Memory, log stream Kafka Redpanda terfilter, serta kemampuan ekspor laporan audit kepatuhan resmi dalam format JSON.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11500-1',
+        type: 'feature',
+        scope: 'Interactive Fleet Scope Switcher & Timeframe',
+        description: 'Menyediakan filter evaluasi dinamis antara Semua Situs (Global Fleet) dan kontainer spesifik dengan rentang waktu 24 jam, 7 hari, dan 30 hari.'
+      },
+      {
+        id: 'c-02dash-11500-2',
+        type: 'feature',
+        scope: 'RFC 9110 HTTP Status & SLA Error Budget Audit',
+        description: 'Menyajikan matriks audit kode respon HTTP (2xx, 3xx, 4xx, 5xx) beserta visualisasi sisa anggaran kesalahan (Error Budget) dan status kepatuhan SLA (<0.10% threshold).'
+      },
+      {
+        id: 'c-02dash-11500-3',
+        type: 'feature',
+        scope: 'Fleet Resource Saturation & OOM Risk Benchmark Table',
+        description: 'Tabel komparasi seluruh armada kontainer dengan data pangsa trafik, latensi rata-rata edge, peak CPU, alokasi RAM cgroups v2, skor risiko OOM, dan tombol pintas Buka Analitik Pod.'
+      },
+      {
+        id: 'c-02dash-11500-4',
+        type: 'security',
+        scope: 'Threat Ingestion & Bot Classification Audit',
+        description: 'Panel audit penangkal eksploitasi WAF, mitigasi Rate Limiter 429, klasifikasi trafik manusia vs crawler bot, dan rincian negara asal penetrasi yang diblokir.'
+      },
+      {
+        id: 'c-02dash-11500-5',
+        type: 'feature',
+        scope: 'Compliance SLA Audit Report JSON Export',
+        description: 'Fasilitas unduh satu-klik laporan kepatuhan SLA dan telemetri resmi dalam format JSON terstruktur untuk kebutuhan audit eksternal dan manajemen.'
+      }
+    ]
+  },
+  {
+    version: 'v1.14.28',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '20 Oktober 2026',
+    title: 'Isolasi Catatan Rilis Mandiri Service 02 Dashboard CMS & Eliminasi Dependensi Lintas-Layanan',
+    summary: 'Menerapkan pemisahan mutlak catatan rilis khusus untuk Service 02: Dashboard Studio & Go BFF. Menghapus entri rilis microservice lain (seperti Service 07 Docs) dari dataset dashboard, memindahkan arsip 07-docs ke direktori resminya di services/07-docs/src/data/changelog.ts, menyederhanakan antarmuka ChangelogModule menjadi pembaca rilis studio murni dengan telemetri versi mandiri, filter kategori bersih, serta menyelaraskan tata kelola Semantic Versioning independen sesuai standar arsitektur monorepo.',
+    badge: 'Stable',
+    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-11428-1',
+        type: 'improvement',
+        scope: 'Decoupled Service Changelog Architecture',
+        description: 'Mengisolasi dataset changelog agar murni hanya memuat riwayat pembaruan dan patch dari Service 02: Dashboard Studio, mencegah kontaminasi entri antar-microservice.'
+      },
+      {
+        id: 'c-02dash-11428-2',
+        type: 'bugfix',
+        scope: 'ChangelogModule UI Streamlining',
+        description: 'Menghapus tombol filter lintas-service dan widget matriks multi-layanan dari tampilan ChangelogModule, menghadirkan antarmuka pelacak rilis studio yang bersih, fokus, dan bebas bug.'
+      },
+      {
+        id: 'c-02dash-11428-3',
+        type: 'feature',
+        scope: 'Independent Docs Changelog Persistence',
+        description: 'Memindahkan 6 versi rilis Service 07 Docs (v1.0.0 s/d v1.4.1) ke services/07-docs/src/data/changelog.ts dengan pengetikan TypeScript lengkap.'
       }
     ]
   },
@@ -231,7 +777,7 @@ export const changelogReleases: ChangelogRelease[] = [
     releaseDate: '19 Oktober 2026',
     title: 'Desentralisasi Matriks Versi Microservices Independen & Navigasi Filter Layanan Terpadu',
     summary: 'Menerapkan pemisahan versi independen untuk setiap aplikasi/service di monorepo HeroCMS guna mencegah kebingungan versi monolitik. Menghadirkan widget Matriks Versi Independen Microservices di ChangelogModule yang menampilkan status versi individual 7 microservices (01-admin-console, 02-dashboard-cms, 03-provision-orchestrator, 04-marketing-site, 05-ai-agent-service, 06-mobile-companion, 07-docs), filter rilis per-service interaktif, serta binding versi DashboardView khusus ke versi 02-dashboard-cms.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
@@ -251,78 +797,6 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Decoupled Version Resolution in DashboardView',
         description: 'Memperbaiki resolusi versi di sidebar DashboardView dan status telemetri agar selalu merujuk ke versi spesifik 02-dashboard-cms (v1.14.27) dan tidak tercampur dengan nomor versi service lain.'
-      }
-    ]
-  },
-  {
-    version: 'v1.2.0',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Transformasi Mode Baca Artikel In-Page, Restrukturisasi Kartu Rapi & Upgrade Tipografi Plus Jakarta Sans',
-    summary: 'Meredesain menyeluruh pengalaman pembaca dokumen di services/07-docs: mengganti modal dialog mengambang dengan pembaca artikel editorial penuh (in-page reader) yang distraction-free, merapikan struktur kartu tugas dengan visual hierarchy modern tanpa tumpukan kotak abu-abu yang padat, serta mengintegrasikan fondasi tipografi Plus Jakarta Sans dengan anti-aliasing tajam dan font JetBrains Mono untuk keterbacaan kelas enterprise.',
-    badge: 'Latest',
-    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
-    items: [
-      {
-        id: 'c-07docs-120-1',
-        type: 'feature',
-        scope: 'Dedicated In-Page Article Reader View',
-        description: 'Menggantikan modal popup dialog (TaskDetailModal) dengan komponen pembaca artikel komprehensif (TaskArticleReader.vue) berbasis tata letak 2 kolom, header navigasi dengan tombol kembali, mode fokus pembaca tanpa distraksi (immersive mode), dan navigasi sekuensial antar-tugas.'
-      },
-      {
-        id: 'c-07docs-120-2',
-        type: 'improvement',
-        scope: 'Task Card Pro System & Visual De-Cluttering',
-        description: 'Merapikan dan menstandarisasi kartu tugas (.task-card-pro) dengan hierarki visual jelas: chip ID monospace, badge prioritas semantik, pill file target terpadu, meter progres checklist ramping, dan baris handover personil yang bersih.'
-      },
-      {
-        id: 'c-07docs-120-3',
-        type: 'improvement',
-        scope: 'Universal Plus Jakarta Sans Typography & Font Smoothing',
-        description: 'Memperbaiki font tampilan dokumen dengan mengaktifkan font Plus Jakarta Sans secara universal pada html, body, tombol, heading, dan input dengan -webkit-font-smoothing dan font JetBrains Mono untuk blok kode.'
-      },
-      {
-        id: 'c-07docs-120-4',
-        type: 'performance',
-        scope: 'Keyboard Navigation & Sequential Task Reading',
-        description: 'Menambahkan pintasan keyboard Escape untuk kembali ke papan tugas serta Alt+Panah untuk membaca tugas berikutnya/sebelumnya secara cepat tanpa memuat ulang halaman.'
-      }
-    ]
-  },
-  {
-    version: 'v1.0.0',
-    service: '07-docs',
-    serviceName: 'Service 07: Docs & Mission Control',
-    releaseDate: '19 Oktober 2026',
-    title: 'Peluncuran Service 07 Docs & Mission Control Hub (Vue 3 + Go Native BFF + Database Persistence)',
-    summary: 'Menerbitkan microservice mandiri services/07-docs (HeroCMS Docs & Mission Control Hub) yang menyatukan 4 telemetri real-time, 50 task matrix berstatus ONGOING dengan alur handover spesialis, modal reader interaktif dengan checklist persistence langsung ke database melalui REST API PATCH, 13 blueprint panduan arsitektur operasional, 10 SOP standar enterprise, dan modul protokol Paijo AI PM & QA/QC. Layanan berjalan di port 8087 dengan routing Traefik (docs.herocms.stackbyte.id), dilengkapi pentest suite, dan arsitektur zero-CSS duplication berbasis studio-master.css.',
-    badge: 'Stable',
-    author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
-    items: [
-      {
-        id: 'c-11500-1',
-        type: 'feature',
-        scope: 'Service 07 Docs & Mission Control Microservice',
-        description: 'Mendirikan layanan microservice baru services/07-docs dengan frontend Vue 3 (Vite + TypeScript + Pinia), Go Native BFF (port 8087, Go 1.22+ Standard Router), dan registrasi ingress Traefik docs.herocms.stackbyte.id.'
-      },
-      {
-        id: 'c-11500-2',
-        type: 'feature',
-        scope: 'Interactive Checklist with Database Persistence',
-        description: 'Mengimplementasikan penyimpanan checklist real-time ke database melalui endpoint PATCH /api/v1/tasks/:id/checklist sehingga progres centang pada modal pembaca tersimpan secara persisten.'
-      },
-      {
-        id: 'c-11500-3',
-        type: 'feature',
-        scope: '50-Task Dual-Mode Matrix & Continuous Sprint ONGOING Status',
-        description: 'Menyajikan 50 task bisnis dalam dua mode pengelompokan (Divisi Tim & 6 Microservices) dengan status 100% ONGOING dan metadata handover kepemilikan antar-rekan tim.'
-      },
-      {
-        id: 'c-11500-4',
-        type: 'security',
-        scope: 'Dedicated Black-Box Pentest Suite & Zero-CSS Studio Master',
-        description: 'Menyematkan test suite pentest/security_test.go untuk validasi CORS, security headers, dan bounds checking, serta menerapkan arsitektur visual studio-master.css tanpa duplikasi styling.'
       }
     ]
   },

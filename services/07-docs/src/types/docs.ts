@@ -235,3 +235,24 @@ export interface SystemJourney {
   verificationCli: string;
 }
 
+export type ChangelogType = 'feature' | 'improvement' | 'bugfix' | 'security' | 'performance';
+
+export interface ChangelogItem {
+  id: string;
+  type: ChangelogType;
+  scope: string;
+  description: string;
+}
+
+export interface ChangelogRelease {
+  version: string;
+  service: string;
+  serviceName: string;
+  releaseDate: string;
+  title: string;
+  summary: string;
+  badge?: 'Latest' | 'Stable' | 'LTS';
+  items: ChangelogItem[];
+  author: string;
+}
+
