@@ -1,18 +1,23 @@
 name: Aether Core CI Quality Gate & Automated Incident Reporter
 
 # ==============================================================================
-# AETHER CORE ENTERPRISE CI/CD PIPELINE: QUALITY GATE, INCIDENTS & DOCKER GATEWAY
+# AETHER CORE ENTERPRISE CI/CD PIPELINE: SELECTIVE QUALITY GATE & INCIDENT DISPATCHER
 #
-# Alur Kerja 3 Tahap Terpadu (Chained Pipeline):
-# 1. DETEKSI PERUBAHAN SELEKTIF (dorny/paths-filter@v3):
-#    Hanya menguji service yang disentuh / mengalami modifikasi kode.
-# 2. EVALUASI KRITIS & QUALITY GATE (verify-service):
-#    Menjalankan Go Vet, Security Pentest Suite, npm install, TypeScript type-check,
-#    dan Vite build. Jika gagal -> otomatis menerbitkan GitHub Issue teknis.
-# 3. DOCKER IMAGE BUILD & REGISTRY GATEWAY (build-docker):
-#    Berjalan di sebelah 'verify-service' setelah seluruh quality gate bernilai PASS.
-#    - Di branch kerja (feat/*): Memvalidasi kompilasi Dockerfile (push: false).
-#    - Di branch 'main': Otomatis build dan push image ke Docker Hub.
+# Filosofi & Alur Kerja:
+# 1. PENGUJIAN SELEKTIF (Change Detection):
+#    HANYA menguji & mem-pentest microservice yang sedang "bergerak" (memiliki
+#    perubahan kode, penambahan fitur, atau rilis versi baru). Service yang tidak
+#    disentuh otomatis dilewati (skipped) untuk menghemat waktu dan resource.
+# 2. EVALUASI KRITIS PRE-RELEASE (Pentest & QA/QC):
+#    Memverifikasi Go static analysis (go vet), Security Pentest suite, serta
+#    kompilasi TypeScript & Vite production build pada service terkait.
+# 3. AUTOMATED INCIDENT DISPATCHER:
+#    Jika ditemukan kelemahan atau error, GitHub Actions otomatis menerbitkan
+#    tiket insiden teknis di GitHub Issues (via 'actions/github-script@v7')
+#    lengkap dengan stack trace, analisa penyebab, dan panduan runbook reproduksi.
+# 4. RELEASE & DOCKER BUILD GATEWAY:
+#    Hanya jika seluruh verifikasi bernilai HIJAU (Exit Code 0), tim dapat merilis
+#    tag versi baru (contoh: 02-dashboard-v1.24.0) yang akan memicu docker-release.yml.
 # ==============================================================================
 
 'on':
@@ -74,7 +79,7 @@ jobs:
               - 'docker-compose*.yml'
               - 'scripts/**'
 
-      - name: Bangun Matriks Target Pengujian & Docker
+      - name: Bangun Matriks Target Pengujian
         id: set-matrix
         run: |
           FORCE_ALL="${{ inputs.force_all_services }}"
@@ -90,27 +95,27 @@ jobs:
           NAMES=()
 
           if [ "$RUN_ALL" = "true" ] || [ "${{ steps.filter.outputs.s02 }}" = "true" ]; then
-            SERVICES+=('{"id":"02-dashboard-cms","name":"Service 02: Dashboard CMS Studio","dir":"services/02-dashboard-cms","image":"roxas0800/herocms-dashboard","has_go":true,"has_node":true,"has_pentest":true,"runbook":"cd services/02-dashboard-cms && npm install && npm run build && go test -v ./pentest/..."}')
+            SERVICES+=('{"id":"02-dashboard-cms","name":"Service 02: Dashboard CMS Studio","dir":"services/02-dashboard-cms","has_go":true,"has_node":true,"has_pentest":true,"runbook":"cd services/02-dashboard-cms && npm install && npm run build && go test -v ./pentest/..."}')
             NAMES+=("02-dashboard-cms")
           fi
 
           if [ "$RUN_ALL" = "true" ] || [ "${{ steps.filter.outputs.s03 }}" = "true" ]; then
-            SERVICES+=('{"id":"03-provision-orchestrator","name":"Service 03: Container Provision Orchestrator","dir":"services/03-provision-orchestrator","image":"roxas0800/herocms-orchestrator","has_go":true,"has_node":false,"has_pentest":true,"runbook":"cd services/03-provision-orchestrator && go vet ./... && go test -v ./pentest/..."}')
+            SERVICES+=('{"id":"03-provision-orchestrator","name":"Service 03: Container Provision Orchestrator","dir":"services/03-provision-orchestrator","has_go":true,"has_node":false,"has_pentest":true,"runbook":"cd services/03-provision-orchestrator && go vet ./... && go test -v ./pentest/..."}')
             NAMES+=("03-provision-orchestrator")
           fi
 
           if [ "$RUN_ALL" = "true" ] || [ "${{ steps.filter.outputs.s04 }}" = "true" ]; then
-            SERVICES+=('{"id":"04-marketing-site","name":"Service 04: Marketing Site & Public Portal","dir":"services/04-marketing-site","image":"roxas0800/herocms-marketing","has_go":true,"has_node":true,"has_pentest":true,"runbook":"cd services/04-marketing-site && npm install && npm run build && go test -v ./pentest/..."}')
+            SERVICES+=('{"id":"04-marketing-site","name":"Service 04: Marketing Site & Public Portal","dir":"services/04-marketing-site","has_go":true,"has_node":true,"has_pentest":true,"runbook":"cd services/04-marketing-site && npm install && npm run build && go test -v ./pentest/..."}')
             NAMES+=("04-marketing-site")
           fi
 
           if [ "$RUN_ALL" = "true" ] || [ "${{ steps.filter.outputs.s05 }}" = "true" ]; then
-            SERVICES+=('{"id":"05-ai-agent-service","name":"Service 05: AI Agent & Telemetry Engine","dir":"services/05-ai-agent-service","image":"roxas0800/herocms-ai-agent","has_go":true,"has_node":false,"has_pentest":true,"runbook":"cd services/05-ai-agent-service && go vet ./... && go test -v ./pentest/..."}')
+            SERVICES+=('{"id":"05-ai-agent-service","name":"Service 05: AI Agent & Telemetry Engine","dir":"services/05-ai-agent-service","has_go":true,"has_node":false,"has_pentest":true,"runbook":"cd services/05-ai-agent-service && go vet ./... && go test -v ./pentest/..."}')
             NAMES+=("05-ai-agent-service")
           fi
 
           if [ "$RUN_ALL" = "true" ] || [ "${{ steps.filter.outputs.s07 }}" = "true" ]; then
-            SERVICES+=('{"id":"07-docs","name":"Service 07: Docs & Mission Control Hub","dir":"services/07-docs","image":"roxas0800/herocms-docs","has_go":true,"has_node":true,"has_pentest":true,"runbook":"cd services/07-docs && npm install && npm run build && go test -v ./pentest/..."}')
+            SERVICES+=('{"id":"07-docs","name":"Service 07: Docs & Mission Control Hub","dir":"services/07-docs","has_go":true,"has_node":true,"has_pentest":true,"runbook":"cd services/07-docs && npm install && npm run build && go test -v ./pentest/..."}')
             NAMES+=("07-docs")
           fi
 
@@ -195,6 +200,9 @@ jobs:
           cd ${{ matrix.dir }}
           npm run build 2>&1 | tee /tmp/ci-logs/error-trace.log
 
+      # ========================================================================
+      # TAHAP 3: PEMBUATAN ISSUE OTOMATIS JIKA DITEMUKAN DEFECT / KEGAGALAN
+      # ========================================================================
       - name: Terbitkan Laporan Insiden Teknis ke GitHub Issues
         if: failure()
         uses: actions/github-script@v7
@@ -360,126 +368,4 @@ jobs:
             } catch (apiErr) {
               console.error('Failed to dispatch GitHub Issue via Octokit:', apiErr);
               throw apiErr;
-            }
-
-  # ============================================================================
-  # TAHAP 3: DOCKER CONTAINER IMAGE BUILD & CONDITIONAL REGISTRY PUSH
-  # ============================================================================
-  build-docker:
-    name: 🐳 Docker Build (${{ matrix.name }})
-    needs: [detect-changes, verify-service]
-    if: success() && needs.detect-changes.outputs.has_changes == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
-
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
-
-      - name: Setup QEMU (Multi-Architecture)
-        uses: docker/setup-qemu-action@v3
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Inisialisasi Buffer Log Telemetri Docker
-        run: |
-          mkdir -p /tmp/ci-logs
-          echo "Docker Container Compilation & Build" > /tmp/ci-logs/failed-stage.txt
-          echo "docker buildx build ${{ matrix.dir }}" > /tmp/ci-logs/failed-command.txt
-          echo "No error trace captured." > /tmp/ci-logs/error-trace.log
-
-      - name: Evaluasi Kebijakan Push Docker Hub
-        id: docker-policy
-        run: |
-          # Push ke Docker Hub HANYA jika berada di branch main dan secret tersedia
-          # Jika di branch fitur (feat/*), push dinonaktifkan untuk verifikasi build tanpa mengotori registry
-          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ] && [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "should_push=true" >> $GITHUB_OUTPUT
-            echo "🚀 Mode: PRODUCTION DOCKER HUB PUSH aktif (Branch main)."
-          else
-            echo "should_push=false" >> $GITHUB_OUTPUT
-            echo "🧪 Mode: VERIFIKASI BUILD TEST runner aktif (Push dinonaktifkan untuk branch kerja)."
-          fi
-
-      - name: Login ke Docker Hub
-        if: steps.docker-policy.outputs.should_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Ekstrak Metadata & Tag Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ matrix.image }}
-          tags: |
-            type=raw,value=latest,enable=${{ steps.docker-policy.outputs.should_push == 'true' }}
-            type=sha,format=short,prefix=sha-
-
-      - name: Build (dan Push jika Layak) Image Kontainer
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ matrix.dir }}
-          file: ${{ matrix.dir }}/Dockerfile
-          platforms: linux/amd64
-          push: ${{ steps.docker-policy.outputs.should_push == 'true' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Terbitkan Laporan Insiden Docker Build ke GitHub Issues
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const serviceName = '${{ matrix.name }}';
-            const serviceDir = '${{ matrix.dir }}';
-            const branch = context.ref.replace('refs/heads/', '');
-            const shortSha = context.sha.substring(0, 7);
-            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`;
-
-            const issueTitle = `[CI Incident] ${serviceName}: Docker Build Compilation Failure (${branch})`;
-            const issueBody = [
-              '## 🚨 [CI/CD Automated Incident] Docker Container Compilation Failure',
-              '',
-              '> **Incident Classification:** `CRITICAL_DOCKER_BUILD_FAILURE`  ',
-              '> **Status:** 🔴 FAILED',
-              '',
-              '---',
-              '',
-              '### 1. 📋 Execution Context',
-              '| Parameter | Value |',
-              '| :--- | :--- |',
-              `| **Target Service** | \`${serviceName}\` (\`${serviceDir}\`) |`,
-              `| **Dockerfile** | \`${serviceDir}/Dockerfile\` |`,
-              `| **Git Branch** | \`${branch}\` |`,
-              `| **Commit** | [\`${shortSha}\`](${commitUrl}) |`,
-              `| **Workflow Run** | [Inspect Action Console Trace #${context.runNumber}](${runUrl}) |`,
-              '',
-              '---',
-              '',
-              '### 2. 🛠️ Local Reproduction Runbook',
-              'Jalankan perintah berikut di komputer lokal untuk menguji build container:',
-              '```bash',
-              `docker build -t test-image ${serviceDir}`,
-              '```'
-            ].join('\n');
-
-            try {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: issueTitle,
-                body: issueBody,
-                labels: ['ci-incident', 'docker-build-failure', 'bug']
-              });
-            } catch (err) {
-              console.error('Failed to create Docker incident issue:', err);
             }
