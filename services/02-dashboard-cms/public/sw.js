@@ -1,4 +1,4 @@
-// HeroCMS Studio - Service Worker Auto-Retirement & Cache Invalidation
+// Stack Studio (Aether Core) - Service Worker Auto-Retirement & Cache Invalidation
 // This self-destructing script automatically clears all stale CacheStorage and unregisters itself.
 
 self.addEventListener('install', () => {

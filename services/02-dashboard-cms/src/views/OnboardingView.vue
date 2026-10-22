@@ -33,7 +33,7 @@ const selectedPlan = ref<PlanTier>('pro');
 const plans = [
   {
     id: 'starter' as PlanTier,
-    name: 'Hero Starter',
+    name: 'Stack Starter',
     badge: 'Pemula & Uji Coba',
     price: 49000,
     priceFormatted: 'Rp 49.000',
@@ -47,12 +47,12 @@ const plans = [
       'Traefik v3 TLS Let\'s Encrypt SSL',
       'PostgreSQL RLS Database Terisolasi',
       'MinIO S3 Media Storage (1 GB)',
-      'Subdomain herocms.id'
+      'Subdomain aetherstack.id'
     ]
   },
   {
     id: 'pro' as PlanTier,
-    name: 'Hero Pro',
+    name: 'Stack Pro',
     badge: 'Paling Populer',
     isPopular: true,
     price: 149000,
@@ -72,7 +72,7 @@ const plans = [
   },
   {
     id: 'agency' as PlanTier,
-    name: 'Hero Agency',
+    name: 'Stack Agency',
     badge: 'Perusahaan & Instansi',
     price: 399000,
     priceFormatted: 'Rp 399.000',
@@ -152,7 +152,7 @@ const handleDeployFirstSite = async () => {
 
   setTimeout(() => {
     deployProgress.value = 45;
-    deployLogs.value.push('[TRAEFIK v3] Mendaftarkan router dynamic proxy untuk ' + subdomain.value + '.herocms.id...');
+    deployLogs.value.push('[TRAEFIK v3] Mendaftarkan router dynamic proxy untuk ' + subdomain.value + '.aetherstack.id...');
     deployLogs.value.push('[INGRESS] Menerbitkan sertifikat TLS v1.3 Let\'s Encrypt...');
   }, 700);
 
@@ -194,7 +194,7 @@ const goToDashboard = () => {
           <div class="brand-icon">
             <Layers :size="20" color="#ffffff" />
           </div>
-          <span class="brand-title">HeroCMS <span class="highlight">Studio</span></span>
+          <span class="brand-title">Stack <span class="highlight">Studio</span> <small style="font-size: 0.72rem; color: #64748b; font-weight: 700; margin-left: 6px;">by Aether Core</small></span>
         </div>
 
         <!-- Step Indicator -->
@@ -543,7 +543,7 @@ const goToDashboard = () => {
                 class="subdomain-field"
                 :disabled="isDeploying"
               />
-              <span class="domain-suffix">.herocms.id</span>
+              <span class="domain-suffix">.aetherstack.id</span>
             </div>
             <span class="field-hint">Alamat ingress SSL Traefik v3 yang dapat langsung diakses publik.</span>
           </div>
@@ -598,7 +598,7 @@ const goToDashboard = () => {
 
           <h2 class="success-title">Situs & Kontainer Berhasil Diluncurkan!</h2>
           <p class="success-sub">
-            Kontainer Docker <strong>{{ subdomain }}.herocms.id</strong> telah aktif dengan alokasi cgroups v2, database PostgreSQL RLS, dan router Traefik v3.
+            Kontainer Docker <strong>{{ subdomain }}.aetherstack.id</strong> telah aktif dengan alokasi cgroups v2, database PostgreSQL RLS, dan router Traefik v3.
           </p>
 
           <div class="container-summary-chip">
@@ -608,8 +608,8 @@ const goToDashboard = () => {
             </div>
             <div class="chip-item">
               <span class="chip-label">URL Publik:</span>
-              <a :href="'https://' + subdomain + '.herocms.id'" target="_blank" class="url-link">
-                https://{{ subdomain }}.herocms.id
+              <a :href="'https://' + subdomain + '.aetherstack.id'" target="_blank" class="url-link">
+                https://{{ subdomain }}.aetherstack.id
                 <ExternalLink :size="12" />
               </a>
             </div>

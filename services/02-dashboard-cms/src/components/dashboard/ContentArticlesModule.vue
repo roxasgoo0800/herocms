@@ -303,7 +303,7 @@ const openCreateArticleModal = () => {
   formAuthor.value = 'Rizal Pratama';
   formStatus.value = 'published';
   formExcerpt.value = '';
-  formTags.value = 'HeroCMS, CloudNative, Edge';
+  formTags.value = 'Stack, Aether Core, Edge';
   formMetaTitle.value = '';
   formMetaDesc.value = '';
   formContent.value = `## Pengantar Artikel\n\nTulis konten artikel teknis Anda di sini menggunakan format Markdown yang bersih dan terstruktur.\n\n### Sub-topik Utama\n\nPenjelasan detail arsitektur, implementasi kode, atau panduan konfigurasi sistem.`;
@@ -320,10 +320,10 @@ const openEditArticleModal = (art: ContentArticle) => {
   formAuthor.value = art.author;
   formStatus.value = art.status;
   formExcerpt.value = art.excerpt || '';
-  formTags.value = art.tags ? art.tags.join(', ') : 'HeroCMS, Edge';
+  formTags.value = art.tags ? art.tags.join(', ') : 'Stack, Aether Core, Edge';
   formMetaTitle.value = art.metaTitle || art.title;
   formMetaDesc.value = art.metaDesc || (art.excerpt || '');
-  formContent.value = art.content || `## ${art.title}\n\nKonten artikel disunting melalui HeroCMS Content Studio.`;
+  formContent.value = art.content || `## ${art.title}\n\nKonten artikel disunting melalui Stack Content Studio.`;
   isEditorModalOpen.value = true;
 };
 
@@ -627,7 +627,7 @@ onUnmounted(() => {
                 <span>Arsitektur Isolasi Kernel Linux & Kontainer Nginx</span>
               </h2>
               <p>
-                Setiap tenant HeroCMS beroperasi di dalam sandbox Docker Alpine terisolasi mandiri. Batas memori hard-limit <code>256 MB</code> dan pembatasan alokasi CPU maksimum <code>0.5 vCPU</code> memastikan lonjakan beban pada satu tenant tidak mengganggu stabilitas tenant lain.
+                Setiap tenant Stack beroperasi di dalam sandbox Docker Alpine terisolasi mandiri. Batas memori hard-limit <code>256 MB</code> dan pembatasan alokasi CPU maksimum <code>0.5 vCPU</code> memastikan lonjakan beban pada satu tenant tidak mengganggu stabilitas tenant lain.
               </p>
 
               <div class="reader-info-callout">

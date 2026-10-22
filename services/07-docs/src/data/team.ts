@@ -48,7 +48,7 @@ export const teamMembers: TeamMember[] = [
     pic: "Rizal (Kontrak API Siap)",
     icon: "📱",
     handover: "Tyno (Target Handover Mobile)",
-    focus: "HeroCMS Companion App (Flutter / React Native) untuk Android & iOS.",
+    focus: "Aether Core Stack Companion App (Flutter / React Native) untuk Android & iOS.",
     responsibilities: "Live telemetry monitoring di saku, push notif FCM leads/invoice, dan reboot FaceID."
   },
   {
@@ -131,7 +131,7 @@ export const microservicesList: MicroserviceMeta[] = [
     stack: "React 19 • TypeScript • Tailwind CSS • Vite",
     pic: "Irgi & Paijo (QA)",
     icon: "🚀",
-    lead: "Website pemasaran publik utama HeroCMS untuk landing page berkonversi tinggi, showcase playground interaktif, kalkulator harga, pendaftaran tenant baru, dan audit Core Web Vitals (LCP < 1.2s).",
+    lead: "Website pemasaran publik utama Stack (Aether Core) untuk landing page berkonversi tinggi, showcase playground interaktif, kalkulator harga, pendaftaran tenant baru, dan audit Core Web Vitals (LCP < 1.2s).",
     mandates: [
       "Skor LCP < 1.2 detik, CLS = 0",
       "Sanitasi path routing cegah directory traversal (/../../etc/passwd)",

@@ -185,7 +185,7 @@ const getTypeIcon = (type: ChangelogType) => {
       </div>
     </div>
 
-    <!-- Filter & Search Toolbar (Unified HeroCMS Studio Layout) -->
+    <!-- Filter & Search Toolbar (Unified Stack Studio Layout) -->
     <div class="filter-toolbar" style="margin-bottom: 24px;">
       <div class="search-command-shell">
         <Search :size="15" class="search-lead-glyph" />

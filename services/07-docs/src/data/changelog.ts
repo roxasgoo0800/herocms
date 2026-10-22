@@ -2,13 +2,37 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.5.1',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '22 Oktober 2026',
+    title: 'Penyelarasan Identitas Rebranding: Entitas Perusahaan Aether Core & Produk CMS Stack',
+    summary: 'Memperbarui seluruh pilar dokumentasi Mission Control Docs Hub, kop header, breadcrumbs, dan spesifikasi PRD untuk mencerminkan identitas resmi baru: Aether Core sebagai nama entitas perusahaan dan Stack sebagai nama produk platform CMS otonom.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-151-1',
+        type: 'improvement',
+        scope: 'Branding Alignment Header, Navigation & Mission Control Layout',
+        description: 'Menyelaraskan logo wordmark, breadcrumbs, dan profil tim menjadi Aether Core Docs & Engineering.'
+      },
+      {
+        id: 'c-07docs-151-2',
+        type: 'improvement',
+        scope: 'Penyelarasan Spesifikasi PRD & Dokumen Divisi Layanan',
+        description: 'Memperbarui nama produk portal pelanggan menjadi Stack Studio by Aether Core serta menyelaraskan deskripsi PRD dan pembagian kerja tim.'
+      }
+    ]
+  },
+  {
     version: 'v1.5.0',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '20 Oktober 2026',
     title: 'Dokumentasi Komprehensif Arsitektur E-Faktur DJP 3.0, Visualisasi Fiskal ECharts, Blueprint Penagihan & System Journey JRN-08',
     summary: 'Memperbarui seluruh pilar dokumentasi Mission Control Docs Hub untuk mencakup kapabilitas penagihan enterprise dan modul Dashboard Studio terbaru: (1) Pembaruan PRD-02 Dashboard CMS ke versi v1.23.0-PROD mencakup E-Faktur DJP 3.0, Apache ECharts spline area visualizer, buku besar faktur 1260px, checkout simulasi cluster kustom, modal website split-layout 980px, dan scoped PAT; (2) Blueprint Arsitektur baru BP-EFAKTUR-01; (3) System Journey baru JRN-08 Siklus Penagihan Resmi SaaS & Rekonsiliasi PPN 11%.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & HeroCMS Dev (Rizal)',
     items: [
       {

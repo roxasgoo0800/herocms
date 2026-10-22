@@ -102,10 +102,10 @@ func (s *Services) AuthenticateUser(identifier, password string) (*LoginResult, 
 
 	// 2. Built-in development fallback credentials (when DB is offline or for quick bootstrap)
 	if !authenticated {
-		if (identifier == "admin" || identifier == "admin@herocms.local" || identifier == "admin@cloudcms.app") && password == "admin" {
+		if (identifier == "admin" || identifier == "admin@herocms.local" || identifier == "admin@aethercore.local" || identifier == "admin@aether.local" || identifier == "admin@cloudcms.app") && password == "admin" {
 			authenticated = true
-			email = "admin@herocms.local"
-		} else if identifier == "admin@rizalpratama.cloud" && (password == "admin" || password == "Password123!" || password == "heroCMS2026!") {
+			email = "admin@aethercore.local"
+		} else if identifier == "admin@rizalpratama.cloud" && (password == "admin" || password == "Password123!" || password == "heroCMS2026!" || password == "aetherStack2026!") {
 			authenticated = true
 			email = "admin@rizalpratama.cloud"
 			fullName = "Rizal Pratama"
@@ -124,7 +124,7 @@ func (s *Services) AuthenticateUser(identifier, password string) (*LoginResult, 
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "HeroCMS Studio Auth Service",
+			Issuer:    "Aether Core Stack Studio Auth Service",
 		},
 	}
 
@@ -205,7 +205,7 @@ func (s *Services) RegisterUser(fullName, identifier, password string) (*LoginRe
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "HeroCMS Studio Auth Service",
+			Issuer:    "Aether Core Stack Studio Auth Service",
 		},
 	}
 
@@ -356,7 +356,7 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 		accentColor = input.AccentColor
 	}
 
-	bioIntro := "Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio."
+	bioIntro := "Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio."
 	if input.BioIntro != "" {
 		bioIntro = input.BioIntro
 	}
@@ -577,7 +577,7 @@ func (s *Services) UploadAsset(ctx context.Context, tenantID string, fileHeader 
 		return nil, fmt.Errorf("berkas '%s' diblokir oleh kebijakan keamanan (ekstensi berbahaya dilarang)", fileHeader.Filename)
 	}
 	if !AllowedMediaExtensions[ext] {
-		return nil, fmt.Errorf("tipe berkas '%s' tidak didukung. HeroCMS hanya mendukung gambar (JPG, PNG, WebP, GIF, SVG, AVIF) dan dokumen (PDF, CSV, XLSX, DOCX, TXT)", ext)
+		return nil, fmt.Errorf("tipe berkas '%s' tidak didukung. Stack hanya mendukung gambar (JPG, PNG, WebP, GIF, SVG, AVIF) dan dokumen (PDF, CSV, XLSX, DOCX, TXT)", ext)
 	}
 
 	file, err := fileHeader.Open()
@@ -597,7 +597,7 @@ func (s *Services) UploadAsset(ctx context.Context, tenantID string, fileHeader 
 		strings.HasPrefix(detectedMime, "application/x-sharedlib") ||
 		strings.HasPrefix(detectedMime, "text/x-shellscript") ||
 		strings.HasPrefix(detectedMime, "text/x-php") {
-		return nil, fmt.Errorf("berkas ditolak oleh pertahanan siber HeroCMS: terdeteksi kode biner/skrip berbahaya (%s)", detectedMime)
+		return nil, fmt.Errorf("berkas ditolak oleh pertahanan siber Aether Core Stack: terdeteksi kode biner/skrip berbahaya (%s)", detectedMime)
 	}
 
 	// Deteksi penyamaran (spoofing): gambar berekstensi JPG/PNG/WebP/GIF yang isinya teks/script

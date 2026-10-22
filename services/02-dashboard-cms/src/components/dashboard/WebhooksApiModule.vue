@@ -194,7 +194,7 @@ const executePlaygroundRequest = () => {
         status: 'success',
         data: {
           ...art,
-          content_markdown: '# Membangun Arsitektur Cloud Mandiri\\n\\nHeroCMS Studio menyajikan isolasi kontainer mandiri dengan Edge Traefik v3...'
+          content_markdown: '# Membangun Arsitektur Cloud Mandiri\\n\\nStack Studio menyajikan isolasi kontainer mandiri dengan Edge Traefik v3...'
         }
       };
     } else if (playgroundEndpoint.value === '/api/v1/leads/submit') {
@@ -496,7 +496,7 @@ const getSamplePayload = (eventId: string) => {
           email: 'budi@enterprise.co.id',
           phone: '+6281234567890',
           company: 'PT Solusi Bangsa Digital',
-          message: 'Tertarik dengan implementasi HeroCMS untuk 50 kontainer website.',
+          message: 'Tertarik dengan implementasi Stack untuk 50 kontainer website.',
           source_site: 'rizalpratama.cloudcms.app'
         }
       };
@@ -736,26 +736,26 @@ const handleAddWebhookSubmit = () => {
 // Headless REST API Code snippets
 const codeSnippets = {
   curl: `# 1. Query Daftar Artikel Headless CMS
-curl -X GET "https://api.herocms.cloud/v1/content/articles?status=published" \\
-  -H "Authorization: Bearer hero_pat_9942_••••••••••••" \\
+curl -X GET "https://api.aether.cloud/v1/content/articles?status=published" \\
+  -H "Authorization: Bearer stack_pat_9942_••••••••••••" \\
   -H "Content-Type: application/json"
 
 # 2. Kirim Prospek / Formulir Kontak dari Landing Page
-curl -X POST "https://api.herocms.cloud/v1/leads/submit" \\
-  -H "Authorization: Bearer hero_pat_9942_••••••••••••" \\
+curl -X POST "https://api.aether.cloud/v1/leads/submit" \\
+  -H "Authorization: Bearer stack_pat_9942_••••••••••••" \\
   -H "Content-Type: application/json" \\
   -d '{"name":"Budi Santoso","email":"budi@perusahaan.com","message":"Tertarik demo platform"}'`,
 
-  ts: `import { HeroCMSClient } from '@herocms/sdk';
+  ts: `import { StackClient } from '@aether/stack-sdk';
 
 // Inisialisasi SDK dengan Personal Access Token (PAT)
-const hero = new HeroCMSClient({
-  token: process.env.HEROCMS_PAT_TOKEN, // hero_pat_9942_...
+const stack = new StackClient({
+  token: process.env.STACK_PAT_TOKEN, // stack_pat_9942_...
   tenantId: 'tenant-9942'
 });
 
 // Ambil artikel terbit untuk rendering Next.js / Astro static site
-const { data: articles } = await hero.content.getArticles({
+const { data: articles } = await stack.content.getArticles({
   category: 'Teknologi',
   limit: 10
 });
@@ -767,14 +767,14 @@ console.log('Total artikel terbit:', articles.length);`,
 import (
   "context"
   "fmt"
-  "github.com/herocms/sdk-go/herocms"
+  "github.com/aethercloud/stack-sdk-go/stack"
 )
 
 func main() {
-  // Client Headless CMS resmi HeroCMS
-  client := herocms.NewClient("hero_pat_9942_••••••••••••")
+  // Client Headless CMS resmi Stack
+  client := stack.NewClient("stack_pat_9942_••••••••••••")
 
-  articles, err := client.Content.ListArticles(context.Background(), &herocms.ListOptions{
+  articles, err := client.Content.ListArticles(context.Background(), &stack.ListOptions{
     Status: "published",
     Limit:  20,
   })
@@ -785,10 +785,10 @@ func main() {
   fmt.Printf("Berhasil mengambil %d artikel\\n", len(articles))
 }`,
 
-  py: `from herocms import HeroCMSClient
+  py: `from aether_stack import StackClient
 
 # Inisialisasi client Python untuk analisis atau ingest data
-client = HeroCMSClient(token="hero_pat_9942_••••••••••••")
+client = StackClient(token="stack_pat_9942_••••••••••••")
 
 # Ambil ringkasan performa telemetri situs
 telemetry = client.telemetry.get_overview()
@@ -882,7 +882,7 @@ const copyActiveSnippet = () => {
       <div class="notice-content">
         <h4 class="notice-title">Isolasi Keamanan & Zero-Container Access Policy</h4>
         <p class="notice-desc">
-          API dan Webhooks HeroCMS dirancang khusus untuk integrasi data tingkat aplikasi: <strong>Headless CMS</strong>, <strong>prospek formulir kontak</strong>, dan <strong>notifikasi real-time</strong>. Akses stop/start kontainer dan alur CI/CD sengaja ditiadakan dari publik API untuk mencegah eksploitasi infrastruktur cloud.
+          API dan Webhooks Stack (Aether Core) dirancang khusus untuk integrasi data tingkat aplikasi: <strong>Headless CMS</strong>, <strong>prospek formulir kontak</strong>, dan <strong>notifikasi real-time</strong>. Akses stop/start kontainer dan alur CI/CD sengaja ditiadakan dari publik API untuk mencegah eksploitasi infrastruktur cloud.
         </p>
       </div>
     </div>
@@ -1043,7 +1043,7 @@ const copyActiveSnippet = () => {
         </div>
         <h4 class="pat-empty-title">Belum Ada Personal Access Token</h4>
         <p class="pat-empty-desc">
-          Buat token pertama Anda untuk mengintegrasikan website publik atau aplikasi mobile dengan konten HeroCMS secara terisolasi.
+          Buat token pertama Anda untuk mengintegrasikan website publik atau aplikasi mobile dengan konten Stack secara terisolasi.
         </p>
         <button class="btn-primary-gradient" @click="openCreatePatModal">
           <Plus :size="14" />
@@ -1061,12 +1061,12 @@ const copyActiveSnippet = () => {
           <div>
             <h3 class="endpoints-title">Endpoint Webhook Notifikasi</h3>
             <p class="endpoints-desc">
-              HeroCMS akan mengirim payload HTTP POST JSON bertanda tangan HMAC-SHA256 ke endpoint Discord, Slack, atau server webhook Anda saat event terpicu.
+              Stack by Aether Core akan mengirim payload HTTP POST JSON bertanda tangan HMAC-SHA256 ke endpoint Discord, Slack, atau server webhook Anda saat event terpicu.
             </p>
           </div>
           <div class="security-signature-chip">
             <ShieldCheck :size="12" />
-            <span>Tanda Tangan Header: <code>X-HeroCMS-Signature</code></span>
+            <span>Tanda Tangan Header: <code>X-Stack-Signature</code></span>
           </div>
         </div>
 
@@ -1206,12 +1206,12 @@ const copyActiveSnippet = () => {
       <div class="api-docs-hero">
         <h3 class="api-docs-hero-title">Headless REST API Endpoint Reference</h3>
         <p class="api-docs-hero-desc">
-          Akses konten CMS secara headless untuk Jamstack frontend (Next.js, Nuxt, Astro, SvelteKit) atau terima submit formulir prospek langsung ke HeroCMS Studio database.
+          Akses konten CMS secara headless untuk Jamstack frontend (Next.js, Nuxt, Astro, SvelteKit) atau terima submit formulir prospek langsung ke Stack Studio database.
         </p>
 
         <div class="api-auth-example-box">
           <span class="auth-header-label">FORMAT OTENTIKASI WAJIB:</span>
-          <code class="auth-header-code">Authorization: Bearer hero_pat_9942_••••••••••••••••••••••••••••••••</code>
+          <code class="auth-header-code">Authorization: Bearer stack_pat_9942_••••••••••••••••••••••••••••••••</code>
         </div>
       </div>
 
@@ -1250,7 +1250,7 @@ const copyActiveSnippet = () => {
           </div>
 
           <div style="display: flex; align-items: center; gap: 12px;">
-            <span class="api-target-info">Base URL: <code>https://api.herocms.cloud/v1</code></span>
+            <span class="api-target-info">Base URL: <code>https://api.aether.cloud/v1</code></span>
             <button class="btn-pat-copy-mini" @click="copyActiveSnippet">
               <Check v-if="isSnippetCopied" :size="13" />
               <Copy v-else :size="13" />
@@ -1640,7 +1640,7 @@ const copyActiveSnippet = () => {
               <div>
                 <h4 class="one-time-warning-title">Token Ini Hanya Ditampilkan Satu Kali!</h4>
                 <p class="one-time-warning-desc">
-                  Demi kepatuhan standar keamanan data (Zero-Knowledge Architecture), HeroCMS <strong>tidak pernah menyimpan raw token</strong> di database. Jika Anda menutup dialog ini tanpa menyalin, Anda harus membuat token baru.
+                  Demi kepatuhan standar keamanan data (Zero-Knowledge Architecture), Stack (Aether Core) <strong>tidak pernah menyimpan raw token</strong> di database. Jika Anda menutup dialog ini tanpa menyalin, Anda harus membuat token baru.
                 </p>
               </div>
             </div>
@@ -1778,7 +1778,7 @@ const copyActiveSnippet = () => {
             <div class="form-group-block">
               <label class="input-label-row">
                 <span class="label-text">Kunci Tanda Tangan Rahasia (HMAC-SHA256 Secret)</span>
-                <span class="label-badge-optional">Header: X-HeroCMS-Signature</span>
+                <span class="label-badge-optional">Header: X-Stack-Signature</span>
               </label>
               <div class="secret-key-field-wrap">
                 <span class="secret-prefix-tag">HMAC-SHA256</span>
@@ -2031,19 +2031,19 @@ const copyActiveSnippet = () => {
                     </tr>
                     <tr>
                       <td>User-Agent</td>
-                      <td>HeroCMS-Webhook-Dispatcher/v1.17</td>
+                      <td>AetherCore-Stack-Webhook-Dispatcher/v1.17</td>
                     </tr>
                     <tr>
-                      <td>X-HeroCMS-Event</td>
+                      <td>X-Stack-Event</td>
                       <td>{{ selectedDeliveryLog.event }}</td>
                     </tr>
                     <tr>
-                      <td>X-HeroCMS-Delivery</td>
+                      <td>X-Stack-Delivery</td>
                       <td>{{ selectedDeliveryLog.id }}</td>
                     </tr>
                     <tr>
-                      <td>X-HeroCMS-Signature</td>
-                      <td>{{ selectedDeliveryLog.requestHeaders?.['X-HeroCMS-Signature'] || 't=1774075190,v1=9f82abb742a8b98c76...' }}</td>
+                      <td>X-Stack-Signature</td>
+                      <td>{{ selectedDeliveryLog.requestHeaders?.['X-Stack-Signature'] || selectedDeliveryLog.requestHeaders?.['X-HeroCMS-Signature'] || 't=1774075190,v1=9f82abb742a8b98c76...' }}</td>
                     </tr>
                   </tbody>
                 </table>

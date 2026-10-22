@@ -548,7 +548,7 @@ const exportTelemetry = () => {
         <div>
           <strong style="font-size: 0.78rem; color: #0f172a;">Arsitektur Telemetri Standar Industri Dunia:</strong>
           <span style="font-size: 0.74rem; color: #64748b; margin-left: 6px;">
-            HeroCMS mengadopsi standar PaaS global berikut untuk menjamin transparansi infrastruktur penuh:
+            Stack by Aether Core mengadopsi standar PaaS global berikut untuk menjamin transparansi infrastruktur penuh:
           </span>
         </div>
       </div>

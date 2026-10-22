@@ -1,4 +1,4 @@
-// HeroCMS Studio - Unified Dashboard Types
+// Aether Core Stack Studio - Unified Dashboard Types
 
 export type ActiveMenu =
   | 'containers'

@@ -96,8 +96,11 @@ onUnmounted(() => {
 
         <!-- Brand Wordmark -->
         <h1 class="brand-wordmark">
-          HeroCMS <span class="wordmark-highlight">Studio</span>
+          Stack <span class="wordmark-highlight">Studio</span>
         </h1>
+        <div style="font-size: 0.76rem; font-weight: 700; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 3px; margin-bottom: 2px;">
+          by Aether Core
+        </div>
 
         <!-- Black Loading Bar directly under Logo -->
         <div class="splash-progress-track">

@@ -13,8 +13,8 @@ export const FaqSection: React.FC = () => {
 
   const faqs: FaqItem[] = [
     {
-      q: 'Apa perbedaan mendasar HeroCMS dengan WordPress atau Strapi biasa?',
-      a: 'Pada CMS tradisional, ribuan situs sering kali berbagi satu proses server monolitik, sehingga jika ada satu plugin rentan atau situs memakan banyak memori, seluruh server dapat terganggu. Pada HeroCMS, setiap website pelanggan di-deploy ke dalam kontainer Docker terisolasi mandiri dengan batas 0.5 CPU dan 256MB RAM (cgroups v2). Hal ini memberikan isolasi keamanan level sistem operasi, waktu muat sangat cepat (< 80ms TTFB), dan kemudahan migrasi.'
+      q: 'Apa perbedaan mendasar Stack dengan WordPress atau Strapi biasa?',
+      a: 'Pada CMS tradisional, ribuan situs sering kali berbagi satu proses server monolitik, sehingga jika ada satu plugin rentan atau situs memakan banyak memori, seluruh server dapat terganggu. Pada Stack (Aether Core), setiap website pelanggan di-deploy ke dalam kontainer Docker terisolasi mandiri dengan batas 0.5 CPU dan 256MB RAM (cgroups v2). Hal ini memberikan isolasi keamanan level sistem operasi, waktu muat sangat cepat (< 80ms TTFB), dan kemudahan migrasi.'
     },
     {
       q: 'Bagaimana cara kerja domain kustom dan sertifikat SSL otomatis?',

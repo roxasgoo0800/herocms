@@ -1,5 +1,5 @@
 /**
- * HeroCMS Studio API Client
+ * Aether Core Stack Studio API Client
  * Berkomunikasi dengan Go Backend & BFF (:8085 / Vite Proxy /api)
  * Dilengkapi dengan PWA Cookie Support & Proteksi CSRF (Double Submit Cookie)
  */

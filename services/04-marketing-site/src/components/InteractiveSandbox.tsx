@@ -328,7 +328,7 @@ export const InteractiveSandbox: React.FC = () => {
               {/* URL Pill Bar */}
               <div className="browser-url-pill" style={{ background: '#ffffff', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)' }}>
                 <Lock size={12} color="var(--brand-emerald)" />
-                <span style={{ fontWeight: 500 }}>https://{currentSlug}.herocms.app</span>
+                <span style={{ fontWeight: 500 }}>https://{currentSlug}.stack.app</span>
               </div>
 
               {/* View Switcher Tabs */}
@@ -483,17 +483,17 @@ export const InteractiveSandbox: React.FC = () => {
                   <div>&gt; Validating tenant credentials: tenant_{currentSlug} [OK]</div>
                   <div>&gt; Enforcing Linux cgroups limits: Memory=256MB, CPU=0.5 [OK]</div>
                   <div>&gt; Security profile: User=10001:10001, ReadonlyRootfs=true [OK]</div>
-                  <div>&gt; Spawning container from image: herocms-tenant-runtime:alpine-v1</div>
+                  <div>&gt; Spawning container from image: aether-stack-runtime:alpine-v1</div>
                   <div style={{ color: '#4ade80' }}>&gt; Container ID: c_{currentSlug}_99fa started successfully</div>
                   <div>&gt; Injecting Traefik dynamic labels:</div>
                   <div style={{ color: '#fbbf24', paddingLeft: '12px' }}>
-                    traefik.http.routers.tenant-{currentSlug}.rule=Host(`{currentSlug}.herocms.app`)
+                    traefik.http.routers.tenant-{currentSlug}.rule=Host(`{currentSlug}.stack.app`)
                   </div>
                   <div style={{ color: '#fbbf24', paddingLeft: '12px' }}>
                     traefik.http.routers.tenant-{currentSlug}.tls.certresolver=letsencrypt
                   </div>
                   <div style={{ color: '#4ade80', marginTop: '8px' }}>
-                    [SUCCESS] Site is live and accessible at https://{currentSlug}.herocms.app (TTFB: 78ms)
+                    [SUCCESS] Site is live and accessible at https://{currentSlug}.stack.app (TTFB: 78ms)
                   </div>
                 </div>
 

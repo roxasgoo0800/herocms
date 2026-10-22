@@ -1,4 +1,4 @@
-# Platform Cloud CMS Multi-Tenant & Orkestrasi Kontainer Otonom
+# Aether Core Stack — Platform Cloud CMS Multi-Tenant & Orkestrasi Kontainer Otonom
 
 Platform Cloud CMS multi-tenant berkinerja tinggi dengan kemampuan otomatisasi pembuatan kontainer Docker mandiri untuk setiap website pelanggan, dilengkapi asisten kecerdasan buatan (AI Copilot), dan analitik pengunjung *real-time*.
 
@@ -92,7 +92,7 @@ Buka browser di: **[http://localhost:8085](http://localhost:8085)** (atau `http:
 
 #### Kredensial Pengujian Development:
 - **Akun Administrator Default**:
-  - Username / Email: `admin` atau `admin@herocms.id`
+  - Username / Email: `admin`, `admin@aethercore.local`, atau `admin@herocms.id`
   - Kata Sandi: `admin`
   *(Otomatis di-seed ke database PostgreSQL saat backend startup).*
 

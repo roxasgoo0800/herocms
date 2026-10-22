@@ -1,4 +1,4 @@
-// HeroCMS Studio - Pod & Container Cloudflare-Style Edge Analytics Dataset
+// Aether Core Stack Studio - Pod & Container Cloudflare-Style Edge Analytics Dataset
 import type { ContainerSite } from '../types/dashboard';
 
 export interface GeoCountryStat {
@@ -286,7 +286,7 @@ export const generatePodAnalytics = (container: ContainerSite): PodAnalyticsRepo
     processes: [
       { pid: 1, name: 'dumb-init', command: '/usr/bin/dumb-init -- /entrypoint.sh', cpuPct: 0.1, memoryMB: 2.2, threads: 1, status: 'sleeping', uptime: container.uptime },
       { pid: 14, name: 'traefik-sidecar', command: 'traefik proxy --api.insecure=false --entrypoints.web', cpuPct: 1.4, memoryMB: 18.6, threads: 4, status: 'running', uptime: container.uptime },
-      { pid: 28, name: 'herocms-ssr-worker', command: 'herocms-app serve --port=8080 --workers=4', cpuPct: 8.6, memoryMB: 56.4, threads: 8, status: 'running', uptime: container.uptime },
+      { pid: 28, name: 'stack-ssr-worker', command: 'stack-app serve --port=8080 --workers=4', cpuPct: 8.6, memoryMB: 56.4, threads: 8, status: 'running', uptime: container.uptime },
       { pid: 42, name: 'redis-cache-engine', command: 'redis-server --maxmemory 32mb --save ""', cpuPct: 0.4, memoryMB: 8.2, threads: 2, status: 'sleeping', uptime: container.uptime }
     ],
     // Vercel & Plausible Daily Visitor Hit Attribution Log
@@ -483,7 +483,7 @@ export const generatePodAnalytics = (container: ContainerSite): PodAnalyticsRepo
       {
         buildId: `build-${container.id}-41`,
         title: 'Optimasi Gambar WebP & Minifikasi Skrip',
-        author: 'HeroCMS Auto-Optimizer',
+        author: 'Stack Auto-Optimizer (Aether Core)',
         timeAgo: 'Kemarin, 14:20 WIB',
         status: 'Superseded',
         commitHash: '7a12bc9'

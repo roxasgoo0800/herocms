@@ -1,0 +1,371 @@
+name: Aether Core CI Quality Gate & Automated Incident Reporter
+
+# ==============================================================================
+# AETHER CORE ENTERPRISE CI/CD PIPELINE: SELECTIVE QUALITY GATE & INCIDENT DISPATCHER
+#
+# Filosofi & Alur Kerja:
+# 1. PENGUJIAN SELEKTIF (Change Detection):
+#    HANYA menguji & mem-pentest microservice yang sedang "bergerak" (memiliki
+#    perubahan kode, penambahan fitur, atau rilis versi baru). Service yang tidak
+#    disentuh otomatis dilewati (skipped) untuk menghemat waktu dan resource.
+# 2. EVALUASI KRITIS PRE-RELEASE (Pentest & QA/QC):
+#    Memverifikasi Go static analysis (go vet), Security Pentest suite, serta
+#    kompilasi TypeScript & Vite production build pada service terkait.
+# 3. AUTOMATED INCIDENT DISPATCHER:
+#    Jika ditemukan kelemahan atau error, GitHub Actions otomatis menerbitkan
+#    tiket insiden teknis di GitHub Issues (via 'actions/github-script@v7')
+#    lengkap dengan stack trace, analisa penyebab, dan panduan runbook reproduksi.
+# 4. RELEASE & DOCKER BUILD GATEWAY:
+#    Hanya jika seluruh verifikasi bernilai HIJAU (Exit Code 0), tim dapat merilis
+#    tag versi baru (contoh: 02-dashboard-v1.24.0) yang akan memicu docker-release.yml.
+# ==============================================================================
+
+'on':
+  push:
+    branches:
+      - main
+      - master
+      - 'feat/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      force_all_services:
+        description: 'Paksa jalankan pengujian ke seluruh microservice (Full Suite)'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  # ============================================================================
+  # TAHAP 1: DETEKSI PERUBAHAN & PEMBENTUKAN MATRIKS SELEKTIF
+  # ============================================================================
+  detect-changes:
+    name: 🔍 Deteksi Microservice yang Berubah
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has_changes: ${{ steps.set-matrix.outputs.has_changes }}
+      changed_list: ${{ steps.set-matrix.outputs.changed_list }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Analisis Perubahan Path Monorepo
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            s02:
+              - 'services/02-dashboard-cms/**'
+            s03:
+              - 'services/03-provision-orchestrator/**'
+            s04:
+              - 'services/04-marketing-site/**'
+            s05:
+              - 'services/05-ai-agent-service/**'
+            s07:
+              - 'services/07-docs/**'
+            global:
+              - '.github/workflows/**'
+              - 'deploy/**'
+              - 'docker-compose*.yml'
+              - 'scripts/**'
+
+      - name: Bangun Matriks Target Pengujian
+        id: set-matrix
+        run: |
+          FORCE_ALL="${{ inputs.force_all_services }}"
+          IS_GLOBAL="${{ steps.filter.outputs.global }}"
+
+          RUN_ALL=false
+          if [ "$FORCE_ALL" = "true" ] || [ "$IS_GLOBAL" = "true" ]; then
+            RUN_ALL=true
+            echo "⚡ Mode Full Suite aktif (perubahan global atau trigger manual)."
+          fi
+
+          SERVICES=()
+          NAMES=()
+
+          if [ "$RUN_ALL" = "true" ] || [ "${{ steps.filter.outputs.s02 }}" = "true" ]; then
+            SERVICES+=('{"id":"02-dashboard-cms","name":"Service 02: Dashboard CMS Studio","dir":"services/02-dashboard-cms","has_go":true,"has_node":true,"has_pentest":true,"runbook":"cd services/02-dashboard-cms && npm install && npm run build && go test -v ./pentest/..."}')
+            NAMES+=("02-dashboard-cms")
+          fi
+
+          if [ "$RUN_ALL" = "true" ] || [ "${{ steps.filter.outputs.s03 }}" = "true" ]; then
+            SERVICES+=('{"id":"03-provision-orchestrator","name":"Service 03: Container Provision Orchestrator","dir":"services/03-provision-orchestrator","has_go":true,"has_node":false,"has_pentest":true,"runbook":"cd services/03-provision-orchestrator && go vet ./... && go test -v ./pentest/..."}')
+            NAMES+=("03-provision-orchestrator")
+          fi
+
+          if [ "$RUN_ALL" = "true" ] || [ "${{ steps.filter.outputs.s04 }}" = "true" ]; then
+            SERVICES+=('{"id":"04-marketing-site","name":"Service 04: Marketing Site & Public Portal","dir":"services/04-marketing-site","has_go":true,"has_node":true,"has_pentest":true,"runbook":"cd services/04-marketing-site && npm install && npm run build && go test -v ./pentest/..."}')
+            NAMES+=("04-marketing-site")
+          fi
+
+          if [ "$RUN_ALL" = "true" ] || [ "${{ steps.filter.outputs.s05 }}" = "true" ]; then
+            SERVICES+=('{"id":"05-ai-agent-service","name":"Service 05: AI Agent & Telemetry Engine","dir":"services/05-ai-agent-service","has_go":true,"has_node":false,"has_pentest":true,"runbook":"cd services/05-ai-agent-service && go vet ./... && go test -v ./pentest/..."}')
+            NAMES+=("05-ai-agent-service")
+          fi
+
+          if [ "$RUN_ALL" = "true" ] || [ "${{ steps.filter.outputs.s07 }}" = "true" ]; then
+            SERVICES+=('{"id":"07-docs","name":"Service 07: Docs & Mission Control Hub","dir":"services/07-docs","has_go":true,"has_node":true,"has_pentest":true,"runbook":"cd services/07-docs && npm install && npm run build && go test -v ./pentest/..."}')
+            NAMES+=("07-docs")
+          fi
+
+          if [ ${#SERVICES[@]} -eq 0 ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "changed_list=none" >> $GITHUB_OUTPUT
+            echo "matrix={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "ℹ️ Tidak ada program microservice yang disentuh. Quality gate dilewati."
+          else
+            JSON_ARRAY=$(IFS=,; echo "[${SERVICES[*]}]")
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "changed_list=${NAMES[*]}" >> $GITHUB_OUTPUT
+            echo "matrix={\"include\":$JSON_ARRAY}" >> $GITHUB_OUTPUT
+            echo "🚀 Target microservice yang diuji: ${NAMES[*]}"
+          fi
+
+  # ============================================================================
+  # TAHAP 2: EKSEKUSI PENTEST, QA & QUALITY GATE PADA SERVICE YANG BERUBAH
+  # ============================================================================
+  verify-service:
+    name: 🛡️ Quality Gate (${{ matrix.name }})
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go Runtime Environment
+        if: ${{ matrix.has_go }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.22'
+          cache: false
+
+      - name: Setup Node.js 20 Environment
+        if: ${{ matrix.has_node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Inisialisasi Buffer Log Telemetri
+        run: |
+          mkdir -p /tmp/ci-logs
+          echo "Inisialisasi Lingkungan & Toolchain" > /tmp/ci-logs/failed-stage.txt
+          echo "n/a" > /tmp/ci-logs/failed-command.txt
+          echo "Belum ada error trace." > /tmp/ci-logs/error-trace.log
+
+      - name: Go Static Analysis (go vet)
+        if: ${{ matrix.has_go }}
+        run: |
+          echo "Go Static Analysis (go vet ./...)" > /tmp/ci-logs/failed-stage.txt
+          echo "cd ${{ matrix.dir }} && go vet ./..." > /tmp/ci-logs/failed-command.txt
+          cd ${{ matrix.dir }}
+          go vet ./... 2>&1 | tee /tmp/ci-logs/error-trace.log
+
+      - name: Eksekusi Security Pentest Suite
+        if: ${{ matrix.has_pentest }}
+        run: |
+          echo "Security Pentest Suite Verification" > /tmp/ci-logs/failed-stage.txt
+          echo "cd ${{ matrix.dir }} && go test -v ./pentest/..." > /tmp/ci-logs/failed-command.txt
+          cd ${{ matrix.dir }}
+          go test -v ./pentest/... 2>&1 | tee /tmp/ci-logs/error-trace.log
+
+      - name: Install Node.js NPM Dependencies
+        if: ${{ matrix.has_node }}
+        run: |
+          echo "Node.js NPM Package Resolution (npm install)" > /tmp/ci-logs/failed-stage.txt
+          echo "cd ${{ matrix.dir }} && npm install" > /tmp/ci-logs/failed-command.txt
+          cd ${{ matrix.dir }}
+          npm install 2>&1 | tee /tmp/ci-logs/error-trace.log
+
+      - name: Compile Frontend & Type-Check (TypeScript / Vite)
+        if: ${{ matrix.has_node }}
+        run: |
+          echo "Frontend Compilation & Static Type-Check (npm run build)" > /tmp/ci-logs/failed-stage.txt
+          echo "cd ${{ matrix.dir }} && npm run build" > /tmp/ci-logs/failed-command.txt
+          cd ${{ matrix.dir }}
+          npm run build 2>&1 | tee /tmp/ci-logs/error-trace.log
+
+      # ========================================================================
+      # TAHAP 3: PEMBUATAN ISSUE OTOMATIS JIKA DITEMUKAN DEFECT / KEGAGALAN
+      # ========================================================================
+      - name: Terbitkan Laporan Insiden Teknis ke GitHub Issues
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            let failedStage = 'Unknown Stage';
+            let failedCommand = 'Unknown Command';
+            let errorLog = 'No error logs captured.';
+
+            try {
+              if (fs.existsSync('/tmp/ci-logs/failed-stage.txt')) {
+                failedStage = fs.readFileSync('/tmp/ci-logs/failed-stage.txt', 'utf8').trim();
+              }
+              if (fs.existsSync('/tmp/ci-logs/failed-command.txt')) {
+                failedCommand = fs.readFileSync('/tmp/ci-logs/failed-command.txt', 'utf8').trim();
+              }
+              if (fs.existsSync('/tmp/ci-logs/error-trace.log')) {
+                const rawLog = fs.readFileSync('/tmp/ci-logs/error-trace.log', 'utf8');
+                const lines = rawLog.split('\n');
+                errorLog = lines.slice(-60).join('\n').trim();
+              }
+            } catch (err) {
+              console.error('Failed to read telemetry log buffer:', err);
+            }
+
+            let anomalyCategory = 'Unclassified Quality Gate Regression';
+            if (errorLog.includes('TS5033') || errorLog.includes('TS2322') || errorLog.includes('error TS')) {
+              anomalyCategory = 'TypeScript Compiler Assertion Failure (Type Incompatibility or Missing Field)';
+            } else if (errorLog.includes('FAIL:') || errorLog.includes('--- FAIL')) {
+              anomalyCategory = 'Security Pentest Suite Regression (Assertion or Vulnerability Detected)';
+            } else if (errorLog.includes('vet:')) {
+              anomalyCategory = 'Go Static Analysis Lint / Vet Warning';
+            } else if (errorLog.includes('ENOENT') || errorLog.includes('command not found')) {
+              anomalyCategory = 'Missing Executable Binary or Toolchain Dependency';
+            } else if (errorLog.includes('ERR!') || errorLog.includes('npm error')) {
+              anomalyCategory = 'Node Package Resolution / Lifecycle Script Failure';
+            }
+
+            const serviceId = '${{ matrix.id }}';
+            const serviceName = '${{ matrix.name }}';
+            const serviceDir = '${{ matrix.dir }}';
+            const runbook = '${{ matrix.runbook }}';
+            const branch = context.ref.replace('refs/heads/', '');
+            const commitSha = context.sha;
+            const shortSha = commitSha.substring(0, 7);
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${commitSha}`;
+
+            const issueTitle = `[CI Incident] ${serviceName}: ${failedStage} (${branch})`;
+            const primaryLabel = 'ci-incident';
+            const serviceLabel = `service:${serviceId}`;
+
+            const issueBody = [
+              '## 🚨 [CI/CD Automated Incident] Quality Gate Failure Telemetry',
+              '',
+              '> **Incident Classification:** `CRITICAL_QUALITY_GATE_BREACH`  ',
+              '> **Telemetry Source:** GitHub Actions Runner (`ubuntu-latest`)  ',
+              '> **Diagnostic Engine:** Aether Core CI Quality Inspector  ',
+              '> **Status:** 🔴 FAILED (Exit Code != 0)',
+              '',
+              '---',
+              '',
+              '### 1. 📋 Execution Context & Artifact Telemetry',
+              '| Parameter | Value |',
+              '| :--- | :--- |',
+              `| **Target Service** | \`${serviceName}\` (\`${serviceDir}\`) |`,
+              `| **Failed Stage** | **${failedStage}** |`,
+              `| **Anomaly Category** | \`${anomalyCategory}\` |`,
+              `| **Git Ref / Branch** | \`${branch}\` (\`${context.ref}\`) |`,
+              `| **Triggering Commit** | [\`${shortSha}\`](${commitUrl}) |`,
+              `| **Triggered By** | @${context.actor} |`,
+              `| **CI Workflow Run** | [Inspect Full Action Console Trace #${context.runNumber}](${runUrl}) |`,
+              '',
+              '---',
+              '',
+              '### 2. 🔍 Diagnostic Root Cause & Terminal Trace',
+              'The internal quality gate intercepted an abnormal exit code while executing the following command:',
+              '```bash',
+              `$ ${failedCommand}`,
+              '```',
+              '',
+              '#### Captured Standard Error & Console Output (Tail 60 Lines):',
+              '<details open>',
+              '<summary><b>Click to expand/collapse raw execution trace</b></summary>',
+              '',
+              '```log',
+              errorLog,
+              '```',
+              '</details>',
+              '',
+              '---',
+              '',
+              '### 3. 🔬 Heuristic Hypotheses & Impact Analysis',
+              `- **Defect Hypothesis**: ${anomalyCategory}.`,
+              '- **Failure Scope**: Mencegah proses pembuatan image Docker produksi dan berpotensi menyebabkan regresi jika di-deploy ke tenant cluster.',
+              `- **Affected Subsystem**: \`${serviceDir}\``,
+              '',
+              '---',
+              '',
+              '### 4. 🛠️ Local Reproduction Runbook (Developer Quick-Fix Guide)',
+              'Gunakan perintah CLI berikut untuk mengisolasi dan mereproduksi kegagalan di mesin lokal Anda:',
+              '',
+              '```bash',
+              '# 1. Pastikan branch lokal tersinkronisasi',
+              `git checkout ${branch}`,
+              `git pull origin ${branch}`,
+              '',
+              '# 2. Jalankan perintah verifikasi isolasi lokal',
+              runbook,
+              '```',
+              '',
+              '---',
+              '',
+              '### 5. ✅ Definition of Done (DoD) Checklist',
+              '- [ ] Reproduksi error di lokal menggunakan perintah runbook di atas.',
+              '- [ ] Perbaiki tipe TypeScript, bug logika, atau regresi assertion pentest terkait.',
+              '- [ ] Jalankan verifikasi lokal hingga keluar status **PASS** (exit code 0).',
+              '- [ ] Commit dan push perbaikan untuk memvalidasi ulang pada pipeline CI.',
+              '- [ ] Tutup tiket insiden ini jika pipeline GitHub Actions telah kembali hijau.',
+              '',
+              '---',
+              '*Laporan insiden otomatis diterbitkan oleh Aether Core CI Quality Gate Engine.*'
+            ].join('\n');
+
+            try {
+              const { data: openIssues } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                labels: primaryLabel
+              });
+
+              const existingIssue = openIssues.find(issue =>
+                issue.title.includes(serviceName) && issue.title.includes(failedStage)
+              );
+
+              if (existingIssue) {
+                console.log(`[DEDUPLICATION] Found open incident #${existingIssue.number}. Appending telemetry update...`);
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: existingIssue.number,
+                  body: `### 🔁 Recurring Incident Telemetry Update\n\n` +
+                        `Quality gate mengalami kegagalan berulang pada commit [\`${shortSha}\`](${commitUrl}) (Run [#${context.runNumber}](${runUrl})).\n\n` +
+                        `**Failed Stage:** \`${failedStage}\`\n` +
+                        `**Command:** \`${failedCommand}\`\n\n` +
+                        `<details><summary><b>View Updated Error Trace</b></summary>\n\n\`\`\`log\n${errorLog}\n\`\`\`\n</details>`
+                });
+              } else {
+                console.log(`[NEW INCIDENT] Creating fresh incident issue for ${serviceName}...`);
+                const created = await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: issueTitle,
+                  body: issueBody,
+                  labels: [primaryLabel, serviceLabel, 'bug', 'automated-report']
+                });
+                console.log(`[SUCCESS] Incident issue #${created.data.number} created: ${created.data.html_url}`);
+              }
+            } catch (apiErr) {
+              console.error('Failed to dispatch GitHub Issue via Octokit:', apiErr);
+              throw apiErr;
+            }

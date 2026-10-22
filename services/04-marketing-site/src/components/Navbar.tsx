@@ -49,9 +49,12 @@ export const Navbar: React.FC = () => {
             fontSize: '1.2rem',
             fontWeight: 800,
             color: '#0f172a',
-            letterSpacing: '-0.03em'
+            letterSpacing: '-0.03em',
+            display: 'inline-flex',
+            alignItems: 'baseline',
+            gap: '6px'
           }}>
-            Hero<span style={{ color: 'var(--brand-blue)' }}>CMS</span>
+            Stack<span style={{ color: 'var(--brand-blue)', fontSize: '0.82rem', fontWeight: 600 }}>by Aether Core</span>
           </span>
         </a>
 

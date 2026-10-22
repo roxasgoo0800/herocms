@@ -79,7 +79,7 @@ const handleLogin = async (e?: Event) => {
       updateUserEmail(activeEmail);
       if (res.plan) {
         userPlan.value = {
-          name: res.plan.name || 'Hero Pro Plan',
+          name: res.plan.name || 'Stack Pro Plan',
           price: res.plan.price || 'Rp 149.000 / bln',
           maxContainers: res.plan.maxContainers || 3,
           cpuPerContainer: res.plan.cpuLimit || '0.5 vCPU',
@@ -182,7 +182,8 @@ const handleRegister = async (e?: Event) => {
           <Layers :size="22" color="#ffffff" />
         </div>
         <div class="brand-title-wrap">
-          <h1 class="brand-wordmark">HeroCMS <span class="wordmark-highlight">Studio</span></h1>
+          <h1 class="brand-wordmark">Stack <span class="wordmark-highlight">Studio</span></h1>
+          <div style="font-size: 0.76rem; font-weight: 700; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px;">by Aether Core</div>
         </div>
       </header>
 
