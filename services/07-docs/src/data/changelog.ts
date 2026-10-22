@@ -2,13 +2,37 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.5.2',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '22 Oktober 2026',
+    title: 'Dokumentasi Sistem Quality Gate CI/CD Selektif, Skrip Pra-Commit Lokal & Triase Insiden GitHub Otomatis',
+    summary: 'Memperbarui seluruh pilar dokumentasi Mission Control Docs Hub dengan menambahkan SOP dan Blueprint Arsitektur pengujian kualitas otomatis: (1) Penambahan SOP-CICD-01 Standar Selective Quality Gate CI/CD & Automated Incident Triage GitHub Actions; (2) Penambahan Blueprint Arsitektur BP-CICD-01; (3) Dokumentasi skrip verifikasi pra-commit lokal scripts/test-changed.sh; (4) Dokumentasi alur 4 tahap rilis enterprise (Quality Gate -> PR Merge -> Tag Release -> Docker Hub).',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-152-1',
+        type: 'feature',
+        scope: 'SOP & Blueprint CI/CD Quality Gate & Incident Dispatcher',
+        description: 'Menambahkan SOP-CICD-01 dan Blueprint BP-CICD-01 ke sistem dokumentasi interaktif Mission Control Hub.'
+      },
+      {
+        id: 'c-07docs-152-2',
+        type: 'improvement',
+        scope: 'Dokumentasi Utilitas Skrip Pra-Commit Lokal test-changed.sh',
+        description: 'Mendokumentasikan tata cara penggunaan skrip pengujian selektif lokal sebelum developer melakukan git push.'
+      }
+    ]
+  },
+  {
     version: 'v1.5.1',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '22 Oktober 2026',
     title: 'Penyelarasan Identitas Rebranding: Entitas Perusahaan Aether Core & Produk CMS Stack',
     summary: 'Memperbarui seluruh pilar dokumentasi Mission Control Docs Hub, kop header, breadcrumbs, dan spesifikasi PRD untuk mencerminkan identitas resmi baru: Aether Core sebagai nama entitas perusahaan dan Stack sebagai nama produk platform CMS otonom.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
     items: [
       {

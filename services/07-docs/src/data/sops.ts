@@ -676,8 +676,8 @@ PASS`
   "totalTasks": 50,
   "ongoingTasks": 50,
   "totalServices": 7,
-  "totalBlueprints": 13,
-  "totalSops": 10,
+  "totalBlueprints": 14,
+  "totalSops": 11,
   "qaQualityScore": "100%"
 }`
     },
@@ -685,6 +685,79 @@ PASS`
       "Kriteria Definition of Done (DoD) terverifikasi lengkap.",
       "Pengujian browser otomatis bebas error konsol JavaScript.",
       "Paijo (PM & QA/QC) menerbitkan sign-off persetujuan rilis."
+    ]
+  },
+  {
+    id: "SOP-CICD-01",
+    title: "Standar Selective Quality Gate CI/CD & Automated Incident Triage GitHub Actions",
+    category: "CI/CD & Keamanan",
+    pic: "Paijo (PM & QA) & Rizal",
+    badge: "Mandatori",
+    purpose: "Menjamin seluruh microservice diuji secara ketat (pentest, go vet, TypeScript type-check, dan Vite build) hanya pada service yang bergerak sebelum rilis, serta menerbitkan laporan insiden otomatis ke GitHub Issues jika terjadi kegagalan.",
+    flowchart: [
+      "Developer melakukan commit & push ke feature branch",
+      "GitHub Actions memicu ci-internal-tests.yml",
+      "Tahap 1: Deteksi path per-service dengan dorny/paths-filter",
+      "Tahap 2: Menjalankan matriks Quality Gate pada service yang berubah",
+      "Jika GAGAL: Terbitkan issue otomatis dengan stack trace & runbook",
+      "Jika LOLOS: CI hijau, siap untuk merge PR ke main",
+      "Setelah merge ke main: Publikasikan Tag Rilis untuk memicu docker-release.yml"
+    ],
+    steps: [
+      "Jalankan skrip validasi lokal sebelum push: ./scripts/test-changed.sh untuk memastikan 0 error dan pentest PASS.",
+      "Push commit ke branch fitur feat/<task-id>-<slug> dan buka Pull Request ke branch main.",
+      "Workflow .github/workflows/ci-internal-tests.yml akan mengevaluasi path-filter monorepo.",
+      "Hanya microservice yang mengalami perubahan kode atau bump version yang akan diuji dalam matriks parallel runner.",
+      "Jika ditemukan kegagalan kompilasi atau regresi pentest, GitHub Actions otomatis menerbitkan tiket insiden teknis di GitHub Issues.",
+      "Gunakan perintah pada bagian Runbook di GitHub Issue untuk mereproduksi kegagalan di komputer lokal.",
+      "Setelah seluruh Quality Gate berstatus Success (Hijau), gabungkan PR ke branch main.",
+      "Buat Tag Rilis GitHub Release (format: <service>-vX.Y.Z) untuk memicu pembuatan dan pengunggahan Docker image resmi."
+    ],
+    dos: [
+      "Wajib menjalankan ./scripts/test-changed.sh sebelum git push.",
+      "Wajib memeriksa tiket GitHub Issues jika pipeline CI berstatus merah.",
+      "Wajib menyelesaikan kriteria DoD di tiket insiden sebelum menutup issue.",
+      "Wajib menggunakan format tag resmi saat rilis: 02-dashboard-vX.Y.Z, 07-docs-vX.Y.Z, dll."
+    ],
+    donts: [
+      "Dilarang memicu build Docker image langsung dari branch kerja (feat/*).",
+      "Dilarang mengabaikan pengujian pentest lokal maupun CI.",
+      "Dilarang melakukan merge PR jika status Quality Gate belum berstatus hijau (Success).",
+      "Dilarang menutup tiket insiden CI tanpa menyertakan bukti perbaikan (fix commit)."
+    ],
+    commands: [
+      "./scripts/test-changed.sh",
+      "./scripts/test-changed.sh 02",
+      "git push origin feat/dashboard-cms",
+      "gh workflow run ci-internal-tests.yml"
+    ],
+    apiExample: {
+      title: "Pengecekan Status Healthz & Versi Binary Pasca Uji Kualitas",
+      service: "02-dashboard-cms",
+      endpoint: "/healthz",
+      method: "GET",
+      description: "Memastikan service Go BFF sehat dan siap dideploy setelah lolos quality gate.",
+      curl: "curl -s http://127.0.0.1:8085/healthz",
+      goHandlerSnippet: `// Endpoint health check terverifikasi bebas celah keamanan
+router.GET("/healthz", func(c *gin.Context) {
+    c.JSON(http.StatusOK, gin.H{
+        "service": "Stack Studio Backend & Static Host (Aether Core)",
+        "status":  "healthy",
+        "time":    time.Now().UTC().Format(time.RFC3339),
+    })
+})`,
+      responseSample: `{
+  "service": "Stack Studio Backend & Static Host (Aether Core)",
+  "status": "healthy",
+  "database": true,
+  "redis": true,
+  "s3": true
+}`
+    },
+    verificationCriteria: [
+      "Pipeline CI ci-internal-tests.yml berstatus hijau (Success) di GitHub Actions.",
+      "Semua pentest suite (pentest/...) bernilai PASS tanpa assertion error.",
+      "Tidak ada tiket insiden baru yang diterbitkan di GitHub Issues."
     ]
   }
 ];
