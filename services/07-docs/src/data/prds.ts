@@ -30,7 +30,7 @@ export const microservicePrds: MicroservicePrd[] = [
     coreModules: [
       {
         name: 'Manajemen Siklus Hidup Tenant & Langganan',
-        desc: 'Kontrol penuh terhadap seluruh tenant terdaftar di platform HeroCMS.',
+        desc: 'Kontrol penuh terhadap seluruh tenant terdaftar di platform Aether Core (Stack CMS).',
         capabilities: [
           'Pencarian, pemfilteran, dan inspeksi profil tenant multi-parameter (nama, email, slug, tier).',
           'Tindakan suspend, unsuspend, dan penghapusan instance tenant dengan perlindungan konfirmasi ganda.',
@@ -134,7 +134,7 @@ export const microservicePrds: MicroservicePrd[] = [
   {
     id: 'PRD-02',
     serviceId: '02-dashboard-cms',
-    title: 'Dashboard CMS (HeroCMS Studio - Portal Pelanggan)',
+    title: 'Dashboard CMS (Stack Studio - Portal Pelanggan by Aether Core)',
     serviceName: '02-dashboard-cms',
     badge: 'Customer Studio & PWA',
     version: 'v1.23.0-PROD',
@@ -325,7 +325,7 @@ export const microservicePrds: MicroservicePrd[] = [
     badge: 'Core Engine & Docker SDK',
     version: 'v1.0.0-PROD',
     targetAudience: [
-      'Sistem HeroCMS Studio (Internal Caller)',
+      'Sistem Stack Studio (Internal Caller)',
       'Site Reliability Engineers (SRE)',
       'CI/CD Pipeline Automation'
     ],
@@ -519,7 +519,7 @@ export const microservicePrds: MicroservicePrd[] = [
         endpoint: '/api/v1/auth/register',
         method: 'POST',
         desc: 'Mendaftarkan pengguna baru dari wizard marketing dan menginisialisasi tenant pertama.',
-        samplePayload: '{"name":"Rizal Fahmi","email":"rizal@herocms.app","password":"***","subdomain":"rizal"}'
+        samplePayload: '{"name":"Rizal Fahmi","email":"rizal@aether.app","password":"***","subdomain":"rizal"}'
       },
       {
         endpoint: '/api/v1/public/check-subdomain',
@@ -580,7 +580,7 @@ export const microservicePrds: MicroservicePrd[] = [
     targetAudience: [
       'Dashboard CMS Studio (Integrasi AI Copilot)',
       'Tenant Pengguna Akhir (Bantuan Penulisan & Desain)',
-      'Sistem Analitik Real-Time HeroCMS'
+      'Sistem Analitik Real-Time Stack (Aether Core)'
     ],
     techStack: {
       framework: 'Microservice Golang 1.23+ + n8n Workflow Automation',
@@ -802,7 +802,7 @@ export const microservicePrds: MicroservicePrd[] = [
     badge: 'Docs Hub & Runbooks',
     version: 'v1.4.0-PROD',
     targetAudience: [
-      'Seluruh 6 Divisi Tim HeroCMS (Andalusia, Irgi, Risqi, Rizal, Tyno, Paijo AI)',
+      'Seluruh 6 Divisi Tim Aether Core (Andalusia, Irgi, Risqi, Rizal, Tyno, Paijo AI)',
       'Engineering Lead & Solution Architect',
       'Quality Assurance & Pentester Internal',
       'AI Agent Pair Programmers'
@@ -819,7 +819,7 @@ export const microservicePrds: MicroservicePrd[] = [
         'Pinia Store'
       ]
     },
-    summary: 'Pusat komando dan dokumentasi operasional terpadu (Mission Control Hub) yang menyajikan papan tugas sprint 50 tugas terstruktur, kamus blueprint arsitektur sistem, SOP runbook enterprise, matriks keamanan 20 pilar, alur kerja sistem end-to-end, dan spesifikasi PRD lengkap untuk seluruh 7 microservices dalam ekosistem HeroCMS.',
+    summary: 'Pusat komando dan dokumentasi operasional terpadu (Mission Control Hub) yang menyajikan papan tugas sprint 50 tugas terstruktur, kamus blueprint arsitektur sistem, SOP runbook enterprise, matriks keamanan 20 pilar, alur kerja sistem end-to-end, dan spesifikasi PRD lengkap untuk seluruh microservices dalam ekosistem Aether Core (Stack CMS).',
     coreModules: [
       {
         name: 'Papan Tugas Sprint Terstruktur (50 Tugas Bisnis & Arsitektur)',

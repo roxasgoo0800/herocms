@@ -33,7 +33,7 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("[HEROCMS MARKETING] Web Server running on http://0.0.0.0:%s", port)
+		log.Printf("[AETHER STACK MARKETING] Web Server running on http://0.0.0.0:%s", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}

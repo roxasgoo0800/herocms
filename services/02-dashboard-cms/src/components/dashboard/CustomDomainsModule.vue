@@ -137,7 +137,7 @@ const recheckDnsPoPs = () => {
 const copyAllDnsRecords = (dom: CustomDomainItem) => {
   const cname = dom.cnameRecord || 'edge.cloudcms.app';
   const a = dom.aRecord || '103.144.20.1';
-  const zoneSnippet = `; --- HeroCMS DNS Zone File for ${dom.domain} ---
+  const zoneSnippet = `; --- Stack DNS Zone File (Aether Core) for ${dom.domain} ---
 ; CNAME Record (Subdomain & www)
 www.${dom.domain}.    3600    IN    CNAME    ${cname}.
 ; A Record (Root Apex @)

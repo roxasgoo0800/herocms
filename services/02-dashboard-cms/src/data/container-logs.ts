@@ -1,4 +1,4 @@
-// HeroCMS Studio - Comprehensive Container Runtime & Telemetry Log Generator
+// Aether Core Stack Studio - Comprehensive Container Runtime & Telemetry Log Generator
 import type { ContainerSite } from '../types/dashboard';
 
 export interface ContainerLogEntry {
@@ -72,7 +72,7 @@ export const generateContainerLogs = (container: ContainerSite): ContainerLogEnt
       service: 'engine',
       serviceLabel: 'runtime-engine',
       level: 'info',
-      message: 'HeroCMS Static/SSR Worker spawned (HTTP/2 & HTTP/3 QUIC listener on 0.0.0.0:8080)'
+      message: 'Stack Static/SSR Worker spawned (HTTP/2 & HTTP/3 QUIC listener on 0.0.0.0:8080)'
     },
     {
       id: 'log-7',

@@ -370,7 +370,7 @@ watch(
               <Sparkles :size="14" class="spec-callout-icon" />
               <div class="spec-callout-text">
                 <span>Dedicated Support SLA: </span>
-                Tiket Anda otomatis dialirkan ke queue engineer HeroCMS dengan target respons pertama di bawah 15 menit.
+                Tiket Anda otomatis dialirkan ke queue engineer Aether Core Stack dengan target respons pertama di bawah 15 menit.
               </div>
             </div>
 

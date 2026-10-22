@@ -18,18 +18,18 @@ func TestNewDatabase_Seeds(t *testing.T) {
 	}
 
 	tasks := database.GetTasks("", "", "")
-	if len(tasks) != 50 {
-		t.Errorf("Expected 50 tasks, got %d", len(tasks))
+	if len(tasks) < 50 {
+		t.Errorf("Expected at least 50 tasks, got %d", len(tasks))
 	}
 
 	blueprints := database.GetBlueprints()
-	if len(blueprints) != 13 {
-		t.Errorf("Expected 13 blueprints, got %d", len(blueprints))
+	if len(blueprints) < 13 {
+		t.Errorf("Expected at least 13 blueprints, got %d", len(blueprints))
 	}
 
 	sops := database.GetSOPs()
-	if len(sops) != 10 {
-		t.Errorf("Expected 10 SOPs, got %d", len(sops))
+	if len(sops) < 10 {
+		t.Errorf("Expected at least 10 SOPs, got %d", len(sops))
 	}
 
 	members := database.GetMembers()

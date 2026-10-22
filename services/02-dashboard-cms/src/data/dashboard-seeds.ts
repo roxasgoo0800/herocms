@@ -18,7 +18,7 @@ import { officialTemplatesData, type OfficialTemplateItem } from './templates-da
 export type { OfficialTemplateItem };
 
 export const initialUserPlan: UserPlan = {
-  name: 'Hero Pro Plan',
+  name: 'Stack Pro Plan',
   price: 'Rp 149.000 / bln',
   maxContainers: 3,
   cpuPerContainer: '0.5 vCPU',
@@ -29,7 +29,7 @@ export const initialUserPlan: UserPlan = {
 export const subscriptionPlansCatalog: SubscriptionPlanCatalogItem[] = [
   {
     id: 'starter',
-    name: 'Hero Starter',
+    name: 'Stack Starter',
     badge: 'Pemula & Uji Coba',
     priceMonthly: 49000,
     priceAnnualMonthly: 39000,
@@ -45,13 +45,13 @@ export const subscriptionPlansCatalog: SubscriptionPlanCatalogItem[] = [
       'Traefik v3 TLS Let\'s Encrypt SSL',
       'PostgreSQL RLS Database Terisolasi',
       'MinIO S3 Media Storage (1 GB)',
-      'Subdomain default herocms.id',
+      'Subdomain default aetherstack.id',
       'Dukungan Komunitas & Dokumentasi'
     ]
   },
   {
     id: 'pro',
-    name: 'Hero Pro',
+    name: 'Stack Pro',
     badge: 'Paling Populer',
     isPopular: true,
     priceMonthly: 149000,
@@ -74,7 +74,7 @@ export const subscriptionPlansCatalog: SubscriptionPlanCatalogItem[] = [
   },
   {
     id: 'agency',
-    name: 'Hero Agency & Enterprise',
+    name: 'Stack Enterprise',
     badge: 'Skala Bisnis & Tim',
     priceMonthly: 399000,
     priceAnnualMonthly: 319000,
@@ -126,7 +126,7 @@ export const initialInvoices: InvoiceItem[] = [
     id: 'INV-2026-10-0994',
     date: '15 Okt 2026',
     dueDate: '22 Okt 2026',
-    planName: 'Hero Pro Plan (Multi-Tenant Docker)',
+    planName: 'Stack Pro Plan (Multi-Tenant Docker)',
     period: '15 Okt 2026 - 15 Nov 2026',
     amount: 149000,
     tax: 16390,
@@ -139,7 +139,7 @@ export const initialInvoices: InvoiceItem[] = [
     id: 'INV-2026-09-0891',
     date: '15 Sep 2026',
     dueDate: '22 Sep 2026',
-    planName: 'Hero Pro Plan (Multi-Tenant Docker)',
+    planName: 'Stack Pro Plan (Multi-Tenant Docker)',
     period: '15 Sep 2026 - 15 Okt 2026',
     amount: 149000,
     tax: 16390,
@@ -152,7 +152,7 @@ export const initialInvoices: InvoiceItem[] = [
     id: 'INV-2026-08-0412',
     date: '15 Agu 2026',
     dueDate: '22 Agu 2026',
-    planName: 'Hero Pro Plan (Multi-Tenant Docker)',
+    planName: 'Stack Pro Plan (Multi-Tenant Docker)',
     period: '15 Agu 2026 - 15 Sep 2026',
     amount: 149000,
     tax: 16390,
@@ -165,7 +165,7 @@ export const initialInvoices: InvoiceItem[] = [
     id: 'INV-2026-07-0098',
     date: '15 Jul 2026',
     dueDate: '22 Jul 2026',
-    planName: 'Hero Starter Plan (Single Container)',
+    planName: 'Stack Starter Plan (Single Container)',
     period: '15 Jul 2026 - 15 Agu 2026',
     amount: 69000,
     tax: 7590,
@@ -204,11 +204,11 @@ export const initialArticles: ContentArticle[] = [
     publishedAt: '16 Sep 2026',
     excerpt: 'Membangun platform PaaS multi-tenant berkinerja tinggi menggunakan Docker Engine SDK dan Golang dengan isolasi cgroups v2 ketat.',
     tags: ['#Docker', '#Golang', '#PaaS', '#MultiTenant'],
-    metaTitle: 'Arsitektur Multi-Tenant dengan Docker & Go — HeroCMS Tech',
+    metaTitle: 'Arsitektur Multi-Tenant dengan Docker & Go — Aether Core Stack Tech',
     metaDesc: 'Panduan teknis arsitektur multi-tenant berbasis kontainer Docker mandiri dan Golang orchestrator.',
     content: `## Pendahuluan
 
-Arsitektur multi-tenant modern menuntut isolasi sumber daya yang kokoh tanpa mengorbankan efisiensi komputasi server. Dalam ekosistem HeroCMS, setiap situs tenant dialokasikan dalam kontainer Docker mandiri yang dipantau oleh Go Orchestrator melalui socket \`/var/run/docker.sock\`.
+Arsitektur multi-tenant modern menuntut isolasi sumber daya yang kokoh tanpa mengorbankan efisiensi komputasi server. Dalam ekosistem Stack by Aether Core, setiap situs tenant dialokasikan dalam kontainer Docker mandiri yang dipantau oleh Go Orchestrator melalui socket \`/var/run/docker.sock\`.
 
 ### 1. Pembatasan Kernel Linux dengan cgroups v2
 Setiap instans kontainer dikonfigurasi dengan batas memori maksimum 256MB dan kuota CPU 0.5 core. Hal ini mencegah satu tenant yang mengalami lonjakan lalu lintas menyerap seluruh kapasitas CPU host cluster.
@@ -229,11 +229,11 @@ Konfigurasi routing HTTP/HTTPS ditangani secara dinamis melalui label kontainer 
     publishedAt: '14 Sep 2026',
     excerpt: 'Desain streaming telemetri non-blocking untuk mencatat jutaan hit per detik menggunakan Apache Kafka dan Redis Sorted Sets.',
     tags: ['#Kafka', '#Redis', '#Telemetry', '#Streaming'],
-    metaTitle: 'Penyelarasan Telemetri Real-Time dengan Kafka — HeroCMS',
+    metaTitle: 'Penyelarasan Telemetri Real-Time dengan Kafka — Aether Core Stack',
     metaDesc: 'Pipeline telemetri terdistribusi dengan Redis ZSET dan event streaming Kafka berlatensi rendah.',
     content: `## Streaming Telemetri Non-Blocking
 
-Pencatatan statistik kunjungan halaman web tidak boleh membebani siklus permintaan HTTP pengunjung. HeroCMS memanfaatkan antrean pesan asinkron Apache Kafka yang di-buffer ke Redis Sorted Sets (ZSET).
+Pencatatan statistik kunjungan halaman web tidak boleh membebani siklus permintaan HTTP pengunjung. Stack by Aether Core memanfaatkan antrean pesan asinkron Apache Kafka yang di-buffer ke Redis Sorted Sets (ZSET).
 
 \`\`\`go
 func RecordHit(ctx context.Context, slug string) error {
@@ -256,7 +256,7 @@ Dengan pendekatan ini, waktu eksekusi middleware analitik kurang dari 0.4 milide
     publishedAt: '10 Sep 2026',
     excerpt: 'Strategi penyetelan buffer TCP, HTTP/3 QUIC, dan kompresi Brotli terintegrasi untuk menghasilkan performa web Core Web Vitals sempurna.',
     tags: ['#Traefik', '#DevOps', '#Performance', '#HTTP3'],
-    metaTitle: 'Mengoptimalkan TTFB Edge Traefik v3 — HeroCMS DevOps',
+    metaTitle: 'Mengoptimalkan TTFB Edge Traefik v3 — Aether Core Stack DevOps',
     metaDesc: 'Langkah tuning Traefik v3 untuk mencapai skor Lighthouse 100/100 dan TTFB di bawah 2 milidetik.',
     content: `## Optimasi Jaringan Tepi (Edge Ingress)
 
@@ -275,11 +275,11 @@ Time-to-First-Byte (TTFB) adalah metrik krusial yang mempengaruhi skor Google Co
     publishedAt: 'Draft',
     excerpt: 'Langkah praktis menghubungkan frontend Vue 3 dengan REST API backend Golang untuk membuat portofolio interaktif yang super cepat.',
     tags: ['#Vue3', '#HeadlessCMS', '#Tutorial', '#Frontend'],
-    metaTitle: 'Panduan Portfolio Headless CMS — HeroCMS Tutorial',
+    metaTitle: 'Panduan Portfolio Headless CMS — Aether Core Stack Tutorial',
     metaDesc: 'Tutorial membangun situs personal dan portofolio interaktif dengan arsitektur headless modern.',
     content: `## Arsitektur Headless Kontemporer
 
-Headless CMS memisahkan lapisan penyajian visual (frontend) dari tempat penyimpanan konten dan logika bisnis (backend). Melalui HeroCMS API, pengembang dapat menyajikan konten ke berbagai platform sekaligus.`
+Headless CMS memisahkan lapisan penyajian visual (frontend) dari tempat penyimpanan konten dan logika bisnis (backend). Melalui Stack (Aether Core) API, pengembang dapat menyajikan konten ke berbagai platform sekaligus.`
   },
   {
     id: 'art_5',
@@ -294,7 +294,7 @@ Headless CMS memisahkan lapisan penyajian visual (frontend) dari tempat penyimpa
     publishedAt: '08 Sep 2026',
     excerpt: 'Mendalami struktur unified cgroup hierarchy pada Linux 5.x/6.x untuk mencegah noisy neighbor problem pada server multi-tenant.',
     tags: ['#Linux', '#Kernel', '#Security', '#cgroups'],
-    metaTitle: 'Isolasi Resource cgroups v2 Kernel Linux — HeroCMS',
+    metaTitle: 'Isolasi Resource cgroups v2 Kernel Linux — Aether Core Stack',
     metaDesc: 'Mekanisme isolasi memori dan CPU hard-limit berbasis cgroups v2 untuk kluster Docker multi-tenant.',
     content: `## Hierarki Tunggal cgroups v2
 
@@ -313,7 +313,7 @@ Berbeda dengan cgroups v1 yang memisahkan pengontrol CPU dan memori ke pohon ter
     publishedAt: '05 Sep 2026',
     excerpt: 'Konfigurasi IP rate limiting berbasis token bucket algorithm pada middleware reverse proxy untuk menangkis serangan brute-force.',
     tags: ['#Security', '#WAF', '#RateLimit', '#DDoS'],
-    metaTitle: 'Pencegahan DDoS & Rate Limiting dengan Traefik — HeroCMS Security',
+    metaTitle: 'Pencegahan DDoS & Rate Limiting dengan Traefik — Aether Core Stack Security',
     metaDesc: 'Strategi keamanan mitigasi DDoS dan brute-force menggunakan token bucket middleware Traefik v3.',
     content: `## Mitigasi Ancaman di Lapisan Masuk
 
@@ -363,7 +363,7 @@ export const initialCmsPages: CmsPage[] = [
     updatedAt: '12 Okt 2026',
     isInNavbar: true,
     isInFooter: false,
-    metaTitle: 'Layanan Arsitektur Cloud & DevOps — HeroCMS Solutions',
+    metaTitle: 'Layanan Arsitektur Cloud & DevOps — Aether Core Stack Solutions',
     metaDesc: 'Layanan konsultasi orkestrasi kontainer, konfigurasi high-availability Traefik, dan audit keamanan multi-tenant.',
     content: 'Daftar penawaran paket konsultasi infrastruktur cloud, deployment pipeline CI/CD, dan mitigasi keamanan aplikasi.'
   },
@@ -393,7 +393,7 @@ export const initialCmsPages: CmsPage[] = [
     updatedAt: '06 Okt 2026',
     isInNavbar: false,
     isInFooter: true,
-    metaTitle: 'Kebijakan Privasi & Keamanan Data — HeroCMS Platform',
+    metaTitle: 'Kebijakan Privasi & Keamanan Data — Aether Core Stack Platform',
     metaDesc: 'Dokumentasi kepatuhan privasi data tenant dan perlindungan enkripsi penyimpanan objek S3 MinIO.',
     content: 'Pernyataan kepatuhan hukum mengenai pengelolaan data pribadi pengunjung, cookie teknis, dan penyimpanan log telemetri.'
   }
@@ -477,8 +477,8 @@ export const initialPersonalAccessTokens: PersonalAccessToken[] = [
   {
     id: 'pat_1',
     name: 'Mobile App Flutter (Headless Reader)',
-    tokenPrefix: 'hero_pat_9942_fltr',
-    tokenMasked: 'hero_pat_9942_••••••••••••e8a1',
+    tokenPrefix: 'stack_pat_9942_fltr',
+    tokenMasked: 'stack_pat_9942_••••••••••••e8a1',
     scopes: ['content:read', 'media:read'],
     createdAt: '10 Oktober 2026',
     expiresAt: '90 Hari',
@@ -488,8 +488,8 @@ export const initialPersonalAccessTokens: PersonalAccessToken[] = [
   {
     id: 'pat_2',
     name: 'Zapier Webhook Lead Forwarder',
-    tokenPrefix: 'hero_pat_9942_zapr',
-    tokenMasked: 'hero_pat_9942_••••••••••••92b4',
+    tokenPrefix: 'stack_pat_9942_zapr',
+    tokenMasked: 'stack_pat_9942_••••••••••••92b4',
     scopes: ['leads:read', 'leads:write'],
     createdAt: '01 Oktober 2026',
     expiresAt: 'Tidak Pernah',
@@ -499,8 +499,8 @@ export const initialPersonalAccessTokens: PersonalAccessToken[] = [
   {
     id: 'pat_3',
     name: 'Marketing Site Next.js Jamstack',
-    tokenPrefix: 'hero_pat_9942_nxtj',
-    tokenMasked: 'hero_pat_9942_••••••••••••44cc',
+    tokenPrefix: 'stack_pat_9942_nxtj',
+    tokenMasked: 'stack_pat_9942_••••••••••••44cc',
     scopes: ['content:read', 'media:read', 'leads:write', 'telemetry:read'],
     createdAt: '15 September 2026',
     expiresAt: '1 Tahun',
@@ -543,9 +543,9 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
     status: 'success',
     requestHeaders: {
       'Content-Type': 'application/json',
-      'User-Agent': 'HeroCMS-Webhook-Dispatcher/1.0',
-      'X-HeroCMS-Delivery-ID': 'del_1_9942a8f',
-      'X-HeroCMS-Signature': 't=1729420200,v1=9f82d1c4e7a83b2c019d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b'
+      'User-Agent': 'AetherCore-Stack-Webhook-Dispatcher/1.0',
+      'X-Stack-Delivery-ID': 'del_1_9942a8f',
+      'X-Stack-Signature': 't=1729420200,v1=9f82d1c4e7a83b2c019d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b'
     },
     requestPayload: {
       event: 'article.published',
@@ -574,9 +574,9 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
     status: 'success',
     requestHeaders: {
       'Content-Type': 'application/json',
-      'User-Agent': 'HeroCMS-Webhook-Dispatcher/1.0',
-      'X-HeroCMS-Delivery-ID': 'del_2_9942b4c',
-      'X-HeroCMS-Signature': 't=1729416600,v1=4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b'
+      'User-Agent': 'AetherCore-Stack-Webhook-Dispatcher/1.0',
+      'X-Stack-Delivery-ID': 'del_2_9942b4c',
+      'X-Stack-Signature': 't=1729416600,v1=4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b'
     },
     requestPayload: {
       event: 'lead.received',
@@ -587,7 +587,7 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
         name: 'Budi Santoso',
         email: 'budi@enterprise.co.id',
         company: 'PT Solusi Bangsa Digital',
-        message: 'Tertarik dengan implementasi HeroCMS untuk 50 kontainer website.',
+        message: 'Tertarik dengan implementasi Stack untuk 50 kontainer website.',
         source_site: 'rizalpratama.cloudcms.app'
       }
     },
@@ -597,7 +597,7 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
     id: 'del_3',
     webhookId: 'wh_1',
     webhookName: 'Discord Notification Channel (#editorial-alerts)',
-    targetUrl: 'https://discord.com/api/webhooks/12894.../hero-alerts',
+    targetUrl: 'https://discord.com/api/webhooks/12894.../stack-alerts',
     event: 'ssl.renewed',
     statusCode: 200,
     durationMs: 45,
@@ -605,9 +605,9 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
     status: 'success',
     requestHeaders: {
       'Content-Type': 'application/json',
-      'User-Agent': 'HeroCMS-Webhook-Dispatcher/1.0',
-      'X-HeroCMS-Delivery-ID': 'del_3_9942c1d',
-      'X-HeroCMS-Signature': 't=1729402200,v1=8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f'
+      'User-Agent': 'AetherCore-Stack-Webhook-Dispatcher/1.0',
+      'X-Stack-Delivery-ID': 'del_3_9942c1d',
+      'X-Stack-Signature': 't=1729402200,v1=8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f'
     },
     requestPayload: {
       event: 'ssl.renewed',
@@ -635,9 +635,9 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
     status: 'success',
     requestHeaders: {
       'Content-Type': 'application/json',
-      'User-Agent': 'HeroCMS-Webhook-Dispatcher/1.0',
-      'X-HeroCMS-Delivery-ID': 'del_4_9942d3e',
-      'X-HeroCMS-Signature': 't=1729333800,v1=1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b'
+      'User-Agent': 'AetherCore-Stack-Webhook-Dispatcher/1.0',
+      'X-Stack-Delivery-ID': 'del_4_9942d3e',
+      'X-Stack-Signature': 't=1729333800,v1=1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b'
     },
     requestPayload: {
       event: 'traffic.spike',
@@ -673,7 +673,7 @@ export const initialSupportTickets: SupportTicketItem[] = [
         authorName: 'Rizal Pratama',
         authorRole: 'Tenant Administrator',
         timestamp: '18 Sep 2026, 14:20',
-        message: 'Halo tim support HeroCMS, saya baru saja mengarahkan CNAME *.rizalpratama.cloud ke ingress edge Traefik (103.144.20.12). Namun status verifikasi SSL di dashboard masih pending. Mohon bantuan inspeksi log Let\'s Encrypt ALPN challenge.'
+        message: 'Halo tim support Aether Core Stack, saya baru saja mengarahkan CNAME *.rizalpratama.cloud ke ingress edge Traefik (103.144.20.12). Namun status verifikasi SSL di dashboard masih pending. Mohon bantuan inspeksi log Let\'s Encrypt ALPN challenge.'
       },
       {
         id: 'msg_2',

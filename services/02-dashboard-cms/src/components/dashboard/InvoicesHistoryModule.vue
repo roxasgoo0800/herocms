@@ -110,7 +110,7 @@ const handleExportCSV = () => {
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement('a');
   link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `HeroCMS_Billing_Report_${selectedYear.value}.csv`);
+  link.setAttribute('download', `Aether_Core_Stack_Billing_Report_${selectedYear.value}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -120,9 +120,9 @@ const handleExportCSV = () => {
 const handleDownloadAllReceipts = () => {
   let combinedText = `=======================================================\n`;
   combinedText += `          REKAPITULASI FAKTUR PEMBAYARAN RESMI\n`;
-  combinedText += `              PT HERO DIGITAL MULTITEK\n`;
+  combinedText += `             PT AETHER CORE MULTITEK\n`;
   combinedText += `=======================================================\n`;
-  combinedText += `Wajib Pajak: PT Hero Digital Multitek (NPWP: 01.889.341.2-021.000)\n`;
+  combinedText += `Wajib Pajak: PT Aether Core Multitek (NPWP: 01.889.341.2-021.000)\n`;
   combinedText += `Pelanggan  : Rizal Pratama (${userEmail.value})\n`;
   combinedText += `Perusahaan : ${tenantTaxProfile.value.companyName} (NPWP: ${tenantTaxProfile.value.npwp})\n`;
   combinedText += `Total Transaksi: ${invoices.value.length} Dokumen Lunas\n\n`;
@@ -145,7 +145,7 @@ const handleDownloadAllReceipts = () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `Rekapitulasi-Faktur-HeroCMS-YTD-2026.txt`;
+  link.download = `Rekapitulasi-Faktur-Aether-Core-Stack-YTD-2026.txt`;
   link.click();
   URL.revokeObjectURL(url);
   showToast('Seluruh arsip faktur resmi berhasil diunduh dalam 1 berkas!', 'success');
@@ -1011,7 +1011,7 @@ onUnmounted(() => {
                   </div>
                   <div class="inv-entity-row">
                     <strong>Billing:</strong>
-                    <span>finance@herocms.cloud • (021) 5290-8800</span>
+                    <span>finance@aethercore.cloud • (021) 5290-8800</span>
                   </div>
                 </div>
 

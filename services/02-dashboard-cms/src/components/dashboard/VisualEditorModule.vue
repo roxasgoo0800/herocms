@@ -389,7 +389,7 @@ const loadBlocksForActiveContainer = () => {
   } else {
     const siteName = activeContainer.value?.name || 'Portofolio Rizal Pratama';
     const role = activeContainer.value?.roleOrHeadline || 'Portofolio Teknis Engineer';
-    const bio = activeContainer.value?.bioIntro || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.';
+    const bio = activeContainer.value?.bioIntro || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.';
     pageBlocks.value = createDefaultBlocks(siteName, role, bio);
   }
   if (pageBlocks.value.length > 0) {
@@ -1298,13 +1298,13 @@ const generatedHtmlCode = computed(() => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${containerName} | HeroCMS</title>
+  <title>${containerName} | Stack</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(currentFont.value)}:wght@400;600;700;800&display=swap">
   <link rel="stylesheet" href="./theme.css">
 </head>
 <body class="theme-modern">
-  <!-- HeroCMS Edge Runtime Generated Page -->
+  <!-- Stack Edge Runtime Generated Page (Aether Core) -->
   <!-- Domain: ${domain} -->
   <main class="page-wrapper">
 ${blocksHtml || '    <!-- Belum ada blok ditambahkan -->'}
@@ -1316,7 +1316,7 @@ ${blocksHtml || '    <!-- Belum ada blok ditambahkan -->'}
 const generatedCssCode = computed(() => {
   const accent = activeContainer.value?.accentColor || '#0f172a';
   return `/**
- * HeroCMS Design System Tokens & Generated Styles
+ * Stack Design System Tokens & Generated Styles (Aether Core)
  * Tenant Subdomain: ${activeContainer.value?.subdomain || 'tenant.cloudcms.app'}
  */
 
@@ -1362,13 +1362,13 @@ const generatedDockerCode = computed(() => {
   const name = activeContainer.value?.name || 'Tenant App';
   const safeName = sub.replace(/[^a-zA-Z0-9_-]/g, '_');
 
-  return `# HeroCMS Docker Cgroups Microservice Runtime
+  return `# Stack (Aether Core) Docker Cgroups Microservice Runtime
 # Target Container: ${sub}
 version: '3.8'
 
 services:
   web-runtime:
-    image: herocms/runtime-edge:v3.4-alpine
+    image: aetherstack/runtime-edge:v3.4-alpine
     container_name: ${safeName}
     restart: unless-stopped
     mem_limit: 256m
@@ -1383,7 +1383,7 @@ services:
       - "traefik.http.routers.${safeName}.rule=Host(\`${sub}\`)"
       - "traefik.http.routers.${safeName}.entrypoints=websecure"
       - "traefik.http.routers.${safeName}.tls.certresolver=letsencrypt"
-      - "herocms.tenant.active=true"`;
+      - "aether.tenant.active=true"`;
 });
 
 const currentVsCodeContent = computed(() => {
@@ -1623,7 +1623,7 @@ const executeVsCodeReplaceAll = () => {
 
           <!-- Brand Wordmark -->
           <h1 class="brand-wordmark">
-            HeroCMS <span class="wordmark-highlight">Studio</span>
+            Stack <span class="wordmark-highlight">Studio</span>
             <span class="wordmark-editor-tag">Visual Editor</span>
           </h1>
 
@@ -2289,7 +2289,7 @@ const executeVsCodeReplaceAll = () => {
                         <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
                         <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
                       </div>
-                      <div class="mini-ft-copy"><span>© 2026 HeroCMS Studio</span></div>
+                      <div class="mini-ft-copy"><span>© 2026 Stack Studio</span></div>
                     </div>
                   </div>
 
@@ -3257,13 +3257,13 @@ const executeVsCodeReplaceAll = () => {
               <div v-if="activeVsCodeSidebar === 'explorer'" class="vscode-sidebar-inner">
                 <div class="vscode-explorer-header">
                   <span class="vscode-explorer-title">PENJELAJAH</span>
-                  <span class="vscode-explorer-badge">HEROCMS</span>
+                  <span class="vscode-explorer-badge">STACK</span>
                 </div>
                 <div class="vscode-file-tree">
                   <div class="vscode-tree-section">
                     <div class="vscode-section-head">
                       <ChevronDown :size="12" />
-                      <span>HEROCMS-WORKSPACE</span>
+                      <span>STACK-WORKSPACE</span>
                     </div>
 
                     <div class="vscode-tree-items">
@@ -3539,7 +3539,7 @@ const executeVsCodeReplaceAll = () => {
 
             <!-- Breadcrumbs -->
             <div class="vscode-breadcrumbs-bar">
-              <span class="crumb">herocms</span>
+              <span class="crumb">stack</span>
               <span class="crumb-sep">&gt;</span>
               <span class="crumb">src</span>
               <span class="crumb-sep">&gt;</span>
@@ -3600,7 +3600,7 @@ const executeVsCodeReplaceAll = () => {
                   <RefreshCw :size="11" />
                   <span>0 ⨉ 0 ⚠</span>
                 </span>
-                <span class="status-item highlight">HeroCMS Runtime Edge v3.4</span>
+                <span class="status-item highlight">Stack Runtime Edge v3.4</span>
               </div>
               <div class="vscode-status-right">
                 <span class="status-item">Spasi: 2</span>
@@ -4465,7 +4465,7 @@ const executeVsCodeReplaceAll = () => {
                     <span class="mock-dot green"></span>
                   </div>
                   <div class="mock-url-pill">
-                    preview.herocms.internal/artboard/{{ editingBlockDraft.type.toLowerCase() }}
+                    preview.stack.internal/artboard/{{ editingBlockDraft.type.toLowerCase() }}
                   </div>
                   <button
                     type="button"

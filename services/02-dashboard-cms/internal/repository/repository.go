@@ -246,8 +246,8 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 	VALUES (
 		'99420000-0000-0000-0000-000000009942',
 		'rizal-pratama',
-		'Hero Tenant Rizal Pratama',
-		'Hero Pro Plan',
+		'Aether Core Tenant Rizal Pratama',
+		'Stack Pro Plan',
 		'active',
 		3,
 		2048
@@ -317,8 +317,8 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 	(
 		'99420000-0000-0000-0000-000000000101',
 		'99420000-0000-0000-0000-000000009942',
-		'Arsitektur Multi-Tenant HeroCMS dengan PostgreSQL RLS',
-		'arsitektur-multi-tenant-herocms-rls',
+		'Arsitektur Multi-Tenant Aether Core Stack dengan PostgreSQL RLS',
+		'arsitektur-multi-tenant-aether-core-stack-rls',
 		'Arsitektur',
 		'Rizal Pratama',
 		'published',
@@ -411,7 +411,7 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		'99420000-0000-0000-0000-000000000601',
 		'99420000-0000-0000-0000-000000009942',
 		'INV-2026-09-9942',
-		'Hero Pro Plan',
+		'Stack Pro Plan',
 		'1 Sep 2026 - 30 Sep 2026',
 		149000,
 		16390,
@@ -426,7 +426,7 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		'99420000-0000-0000-0000-000000000602',
 		'99420000-0000-0000-0000-000000009942',
 		'INV-2026-08-9942',
-		'Hero Starter Plan',
+		'Stack Starter Plan',
 		'1 Agu 2026 - 31 Agu 2026',
 		49000,
 		5390,
@@ -505,7 +505,7 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 
 					bIntro := bioIntro.String
 					if bIntro == "" {
-						bIntro = "Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio."
+						bIntro = "Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio."
 					}
 
 					list = append(list, gin.H{
@@ -1455,7 +1455,7 @@ func (r *Repository) GetWebhooks(ctx context.Context, tenantID string) ([]gin.H,
 }
 
 func (r *Repository) GetBillingQuota(ctx context.Context, tenantID string) (gin.H, error) {
-	planName := "Hero Pro Plan"
+	planName := "Stack Pro Plan"
 	priceText := "Rp 149.000 / bln"
 	maxContainers := 3
 	storageQuota := 2048
@@ -1486,10 +1486,10 @@ func (r *Repository) GetBillingQuota(ctx context.Context, tenantID string) (gin.
 
 		switch planTier {
 		case "starter":
-			planName = "Hero Starter Plan"
+			planName = "Stack Starter Plan"
 			priceText = "Rp 49.000 / bln"
 		case "agency":
-			planName = "Hero Agency Plan"
+			planName = "Stack Agency Plan"
 			priceText = "Rp 399.000 / bln"
 		}
 
@@ -1567,8 +1567,8 @@ func (r *Repository) seedInitialData() {
 	r.Articles = []gin.H{
 		{
 			"id":          "art_01",
-			"title":       "Arsitektur Multi-Tenant HeroCMS dengan PostgreSQL RLS",
-			"slug":        "arsitektur-multi-tenant-herocms-rls",
+			"title":       "Arsitektur Multi-Tenant Aether Core Stack dengan PostgreSQL RLS",
+			"slug":        "arsitektur-multi-tenant-aether-core-stack-rls",
 			"category":    "Arsitektur",
 			"status":      "published",
 			"publishedAt": "18 Sep 2026",
@@ -1618,7 +1618,7 @@ func (r *Repository) seedInitialData() {
 	r.Invoices = []gin.H{
 		{
 			"id":             "INV-2026-09-9942",
-			"planName":       "Hero Pro Plan",
+			"planName":       "Stack Pro Plan",
 			"period":         "1 Sep 2026 - 30 Sep 2026",
 			"amount":         149000,
 			"tax":            16390,

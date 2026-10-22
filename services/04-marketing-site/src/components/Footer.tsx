@@ -100,7 +100,7 @@ export const Footer: React.FC = () => {
                     boxShadow: '0 4px 16px rgba(37, 99, 235, 0.4)'
                   }}
                 >
-                  Coba Demo Hero CMS <ArrowRight size={17} />
+                  Coba Demo Stack CMS <ArrowRight size={17} />
                 </a>
                 <a
                   href={appConfig.studioUrl}
@@ -152,8 +152,8 @@ export const Footer: React.FC = () => {
               }}>
                 <Layers size={18} color="#ffffff" />
               </div>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em' }}>
-                Hero<span style={{ color: 'var(--brand-blue)' }}>CMS</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', display: 'inline-flex', alignItems: 'baseline', gap: '6px' }}>
+                Stack<span style={{ color: 'var(--brand-blue)', fontSize: '0.82rem', fontWeight: 600 }}>by Aether Core</span>
               </span>
             </div>
             <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '20px' }}>
@@ -372,7 +372,7 @@ export const Footer: React.FC = () => {
           color: 'var(--text-secondary)'
         }}>
           <div>
-            © 2026 <strong>HeroCMS</strong>. Platform CMS Otonom Skala Enterprise. Hak Cipta Dilindungi.
+            © 2026 <strong>Stack</strong> by <strong>Aether Core</strong>. Platform CMS Otonom Skala Enterprise. Hak Cipta Dilindungi.
           </div>
         </div>
       </div>

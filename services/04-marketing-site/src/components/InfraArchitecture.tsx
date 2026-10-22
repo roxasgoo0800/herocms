@@ -41,7 +41,7 @@ export const InfraArchitecture: React.FC = () => {
             Arsitektur Teruji Tanpa Titik Kegagalan Tunggal
           </h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '680px', margin: '0 auto', fontSize: '1.05rem' }}>
-            Diagram teknis yang mendasari platform HeroCMS, dirancang mengadopsi standar sistem global seperti Ghost Pro, Vercel, dan Fly.io.
+            Diagram teknis yang mendasari platform Stack oleh Aether Core, dirancang mengadopsi standar sistem global seperti Ghost Pro, Vercel, dan Fly.io.
           </p>
         </MotionReveal>
 
@@ -72,7 +72,7 @@ export const InfraArchitecture: React.FC = () => {
           }}>
             <img
               src={infraDiagram}
-              alt="Diagram Arsitektur Infrastruktur HeroCMS Multi-Tenant"
+              alt="Diagram Arsitektur Infrastruktur Stack Multi-Tenant (Aether Core)"
               style={{
                 width: '100%',
                 height: 'auto',
@@ -86,7 +86,7 @@ export const InfraArchitecture: React.FC = () => {
             {!imageLoaded && (
               <div style={{ padding: '40px', textAlign: 'center', color: '#f8fafc' }}>
                 <Cpu size={48} color="#38bdf8" style={{ margin: '0 auto 16px' }} />
-                <h4 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '8px' }}>Arsitektur Multi-Tenant HeroCMS</h4>
+                <h4 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '8px' }}>Arsitektur Multi-Tenant Stack (Aether Core)</h4>
                 <p style={{ color: '#94a3b8', fontSize: '0.9rem', maxWidth: '520px', margin: '0 auto' }}>
                   Traefik v3 Edge Proxy ➔ Docker Swarm / Isolated Tenant Containers (0.5 CPU / 256MB RAM) ➔ PostgreSQL 16 RLS & Redis 7 ➔ Redpanda / Kafka Telemetry
                 </p>

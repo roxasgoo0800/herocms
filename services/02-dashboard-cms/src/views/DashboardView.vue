@@ -381,11 +381,12 @@ const handleLogout = async () => {
           </div>
           <div class="brand-meta">
             <div class="brand-title">
-              HeroCMS <span class="brand-gradient">Studio</span>
+              Stack <span class="brand-gradient">Studio</span>
             </div>
             <div class="brand-plan-row">
               <span class="pulse-green"></span>
               <span class="plan-name">{{ userPlan.name }}</span>
+              <span class="badge-company-chip" style="font-size: 0.68rem; font-weight: 700; color: #475569; background: #f1f5f9; padding: 1px 5px; border-radius: 4px; border: 1px solid #e2e8f0; margin-left: 3px;">Aether Core</span>
             </div>
           </div>
         </div>
@@ -580,7 +581,7 @@ const handleLogout = async () => {
           </button>
 
           <div class="breadcrumbs">
-            <span>HeroCMS Studio</span>
+            <span>Stack Studio</span>
             <ChevronRight :size="14" class="crumb-sep" />
             <span
               :class="(activeMenu === 'content' && activeArticleForReader) || (activeMenu === 'analytics' && selectedContainerForDetail) ? 'crumb-link' : 'crumb-current'"
@@ -921,7 +922,7 @@ const handleLogout = async () => {
                         {{ newSiteForm.name || 'Nama Website Anda' }}
                       </h4>
                       <p class="mockup-site-headline">
-                        {{ newSiteForm.role || 'Website Resmi HeroCMS Cloud' }}
+                        {{ newSiteForm.role || 'Website Resmi Aether Core Stack Cloud' }}
                       </p>
 
                       <div class="mockup-action-demo">

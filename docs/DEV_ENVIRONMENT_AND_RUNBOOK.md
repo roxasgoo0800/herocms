@@ -152,29 +152,68 @@ OLLAMA_BASE_URL=http://127.0.0.1:11434
 
 ---
 
-## 5. Pipeline CI/CD & Peluncuran Produksi
+## 5. Pipeline CI/CD, Selective Quality Gate & Alur Rilis Produksi
+
+Aether Core mengadopsi standar **Selective Quality Gate & Independent Component-Scoped Release** untuk menjamin stabilitas setiap microservice tanpa memboroskan komputasi CI:
 
 ```mermaid
-gitGraph
-    commit id: "Pengembangan Fitur"
-    commit id: "Pull Request"
-    branch staging
-    checkout staging
-    merge main
-    commit id: "Uji CI: Lint, Unit Test, Scan Trivy"
-    commit id: "Build Base Image ke Registry"
-    branch production
-    checkout production
-    merge staging
-    commit id: "Deploy Orchestrator & Traefik"
-    commit id: "Rolling Update Kontainer Tenant"
+flowchart TD
+    Dev["Developer: Koding & Bump Version"] --> PrePush["1. Validasi Lokal: ./scripts/test-changed.sh"]
+    PrePush --> Push["2. Git Push ke Branch Fitur (feat/*)"]
+    
+    subgraph CI ["GitHub Actions: Selective Quality Gate (ci-internal-tests.yml)"]
+        Detect["Deteksi Perubahan Path (dorny/paths-filter@v3)"]
+        Detect --> Matrix["Matriks Paralel Khusus Service yang Berubah"]
+        Matrix --> Checks["Go Vet + Pentest Suite + TypeScript & Vite Build"]
+        Checks --> Eval{"Hasil Pengujian?"}
+        Eval -- "FAIL" --> Issue["🚨 Dispatch GitHub Issue Otomatis (actions/github-script@v7)"]
+        Eval -- "PASS" --> Green["✅ CI Hijau (Success ~1m 46s)"]
+    end
+    
+    Push --> Detect
+    Green --> PR["3. Code Review & Merge PR ke branch main"]
+    PR --> Tag["4. Buat Tag Rilis Mandiri (<service>-vX.Y.Z)"]
+    
+    subgraph Release ["GitHub Actions: Docker Release (docker-release.yml)"]
+        DockerBuild["Build Multi-Arch Docker Image (linux/amd64)"]
+        DockerBuild --> DockerPush["Push ke Docker Hub (roxas0800/herocms-*:latest, :vX.Y.Z)"]
+    end
+    
+    Tag --> DockerBuild
 ```
 
-1. **Pengujian Otomatis:**
-   - Unit Test Go: `go test -v -race ./...`
-   - Pengujian Komponen Frontend: Vitest / Jest
-   - Pemindaian Kerentanan: Trivy memindai image Alpine untuk memastikan bebas celah CVE.
-2. **Eksekusi Produksi:**
-   - Traefik mendengarkan port 80/443 dengan validasi otomatis sertifikat Let's Encrypt.
-   - Go Orchestrator terhubung ke `/var/run/docker.sock` dengan hak akses terbatas grup `docker`.
-   - Pembaruan website tenant berjalan mulus dengan strategi *zero-downtime blue/green deployment*.
+### 5.1. Skrip Verifikasi Pra-Commit Lokal (`scripts/test-changed.sh`)
+Sebelum melakukan commit dan push, jalankan skrip berikut di root repositori:
+```bash
+# Otomatis mendeteksi file berubah dari git status / git diff dan menguji service terkait:
+./scripts/test-changed.sh
+
+# Atau targetkan service tertentu secara spesifik:
+./scripts/test-changed.sh 02         # Khusus Service 02 Dashboard CMS
+./scripts/test-changed.sh 04         # Khusus Service 04 Marketing Site
+./scripts/test-changed.sh 07         # Khusus Service 07 Docs Hub
+./scripts/test-changed.sh all        # Uji seluruh 5 service serentak
+```
+
+### 5.2. Pipeline GitHub Actions (`.github/workflows/ci-internal-tests.yml`)
+1. **Deteksi Path Dinamis (`dorny/paths-filter@v3`)**:
+   - Memetakan file yang dimodifikasi ke direktori `services/*`.
+   - Hanya service yang "bergerak" (ada perubahan kode atau bump versi) yang dimasukkan ke dalam matriks pengujian. Service lainnya otomatis dilewati (*skipped*).
+2. **Evaluasi Keamanan & Kualitas**:
+   - Analisis statis Golang: `go vet ./...`
+   - Pengujian keamanan black-box: `go test -v ./pentest/...`
+   - Resolusi dependensi & kompilasi frontend: `npm install && npm run build` (TypeScript AST & Vite).
+3. **Automated Incident Dispatcher (`actions/github-script@v7`)**:
+   - Jika terjadi kegagalan (exit code != 0), sistem otomatis menangkap buffer log 60 baris terakhir.
+   - Mengklasifikasikan anomali secara heuristik (TypeScript error, Pentest regression, dll).
+   - Melakukan *smart deduplication*: jika tiket terbuka untuk service & stage tersebut sudah ada, ia menambahkan komentar pembaruan; jika belum ada, ia menerbitkan tiket insiden baru di **GitHub Issues** lengkap dengan perintah reproduksi lokal (*Runbook*).
+
+### 5.3. Tata Kelola Rilis Mandiri & Docker Hub (`.github/workflows/docker-release.yml`)
+- Pembuatan dan pengunggahan Docker Image **HANYA** dipicu saat rilis resmi dibuat melalui event GitHub Release (`on: release: types: [published]`).
+- Format tag per-service:
+  - `02-dashboard-vX.Y.Z` ➔ Image: `roxas0800/herocms-dashboard`
+  - `04-marketing-vX.Y.Z` ➔ Image: `roxas0800/herocms-marketing`
+  - `07-docs-vX.Y.Z` ➔ Image: `roxas0800/herocms-docs`
+  - `03-orchestrator-vX.Y.Z` ➔ Image: `roxas0800/herocms-orchestrator`
+  - `05-ai-agent-vX.Y.Z` ➔ Image: `roxas0800/herocms-ai-agent`
+- **Dilarang keras** memicu build & push Docker image dari branch kerja fitur (`feat/*`).

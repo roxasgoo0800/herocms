@@ -782,7 +782,7 @@ const handleConfirmDeploy = async () => {
     <div class="blueprint-workflow-strip">
       <div class="workflow-header-row">
         <h3>Filosofi Blueprint & Alur Kerja Ekosistem</h3>
-        <p>Bagaimana cetak biru arsitektur HeroCMS mentransformasikan konsep desain menjadi layanan web otonom berkinerja tinggi.</p>
+        <p>Bagaimana cetak biru arsitektur Aether Core Stack mentransformasikan konsep desain menjadi layanan web otonom berkinerja tinggi.</p>
       </div>
       <div class="workflow-steps-grid">
         <div v-for="step in blueprintWorkflowSteps" :key="step.step" class="workflow-step-card">

@@ -1,7 +1,7 @@
 {
-  "name": "HeroCMS Studio - Tenant Cloud Console",
-  "short_name": "HeroCMS",
-  "description": "Multi-Tenant Enterprise CMS Cloud Dashboard & Live Visual Studio",
+  "name": "Stack Studio - Aether Core Tenant Cloud Console",
+  "short_name": "Stack",
+  "description": "Aether Core Stack - Multi-Tenant Enterprise CMS Cloud Dashboard & Live Visual Studio",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

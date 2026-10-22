@@ -1202,5 +1202,76 @@ const renderTaxChart = () => {
       "Dilarang menerbitkan dokumen E-Faktur tanpa kode referensi penagihan dan stempel verifikasi lunas.",
       "Dilarang menggunakan grafik batang kaku jika pengguna membutuhkan kurva tren pengeluaran fiskal periodik."
     ]
+  },
+  {
+    id: "BP-CICD-01",
+    term: "Selective Quality Gate CI/CD & Automated Incident Triage",
+    category: "Infrastruktur & CI/CD",
+    service: "07-docs",
+    serviceName: "Platform-Wide CI/CD & Quality Gate Engine",
+    icon: "🛡️",
+    definition: "Arsitektur pengujian otomatis berbasis jalur monorepo selektif (Selective Testing) yang menguji static analysis, pentest suite, dan compile build hanya pada microservice yang mengalami perubahan kode, serta menerbitkan diagnosa teknis otomatis ke GitHub Issues jika terdeteksi regresi.",
+    requirements: ["GitHub Actions Runner (ubuntu-latest)", "dorny/paths-filter@v3", "actions/github-script@v7", "Go 1.22+", "Node.js 20"],
+    fileReference: ".github/workflows/ci-internal-tests.yml",
+    cliCommand: "./scripts/test-changed.sh",
+    guideSteps: [
+      "Developer melakukan commit dan push ke branch fitur feat/*.",
+      "Job detect-changes memindai struktur direktori services/* yang terdampak perubahan.",
+      "Job verify-service secara paralel menjalankan go vet, pentest suite, npm install, dan npm run build.",
+      "Jika terjadi kegagalan (exit code != 0), buffer log telemetri (/tmp/ci-logs) ditangkap dan diklasifikasikan.",
+      "actions/github-script@v7 memeriksa tiket open yang ada; jika ada dilakukan deduplikasi, jika belum maka dibuat GitHub Issue teknis baru.",
+      "Developer mengisolasi dan memperbaiki defect menggunakan runbook lokal, lalu push perbaikan hingga CI berstatus hijau."
+    ],
+    doAndDont: "WAJIB memastikan pentest lolos sebelum merge ke main; DILARANG memicu build Docker Hub dari branch fitur.",
+    flowchart: [
+      "Git Push / PR pada branch kerja",
+      "dorny/paths-filter menganalisis path monorepo",
+      "Matriks dinamis runner terbentuk hanya untuk service yang berubah",
+      "Eksekusi Go Vet + Security Pentest + TypeScript Build",
+      "Evaluasi status exit code runner",
+      "PASS: CI Hijau -> Siap Merge ke Main",
+      "FAIL: GitHub Actions dispatch tiket insiden teknis ke Issues"
+    ],
+    inDepthExplanation: "Dalam arsitektur monorepo skala besar, menjalankan seluruh pengujian end-to-end pada setiap commit memakan waktu lama dan menghabiskan resource server. Dengan Selective Testing berbasis dorny/paths-filter@v3, pipeline CI hanya mengalokasikan runner untuk microservice yang aktif disentuh. Selain itu, fitur automated incident triage mengubah log kegagalan menjadi tiket GitHub Issues yang kaya konteks (stack trace, diagnosa heuristik, dan runbook lokal), sehingga tim engineering dapat menyelesaikan masalah dalam hitungan menit.",
+    golangImplementation: {
+      file: "scripts/test-changed.sh",
+      explanation: "Skrip bash lokal membaca 'git status' dan 'git diff' untuk menjalankan pengujian selektif di komputer pengembang sebelum push.",
+      codeSnippet: `#!/usr/bin/env bash
+# Deteksi microservice yang berubah dari git status
+CHANGED_FILES=$(git status --porcelain | awk '{print $2}')
+for file in $CHANGED_FILES; do
+  case "$file" in
+    services/02-dashboard-cms/*) RUN_02=true ;;
+    services/03-provision-orchestrator/*) RUN_03=true ;;
+    services/04-marketing-site/*) RUN_04=true ;;
+    services/05-ai-agent-service/*) RUN_05=true ;;
+    services/07-docs/*) RUN_07=true ;;
+  esac
+done`
+    },
+    apiEndpoint: {
+      title: "Pengecekan Status Healthz & Versi Binary Pasca Uji Kualitas",
+      method: "GET",
+      path: "/healthz",
+      port: 8085,
+      description: "Memastikan service Go BFF sehat dan siap dideploy setelah lolos quality gate.",
+      curlCommand: "curl -s http://127.0.0.1:8085/healthz",
+      responseSample: `{\n  "service": "Stack Studio Backend & Static Host (Aether Core)",\n  "status": "healthy",\n  "database": true,\n  "redis": true,\n  "s3": true\n}`,
+      howToTest: [
+        "Jalankan ./scripts/test-changed.sh di root repositori.",
+        "Pastikan seluruh pengujian Go Vet, Pentest, dan Frontend Build berstatus PASS.",
+        "Push ke remote branch dan pantau pipeline GitHub Actions di tab Actions."
+      ]
+    },
+    dos: [
+      "Wajib menjalankan skrip ./scripts/test-changed.sh sebelum git push.",
+      "Wajib membaca tiket insiden di GitHub Issues jika CI mengalami kegagalan.",
+      "Wajib mematuhi alur 4 tahap rilis: Quality Gate -> PR Merge -> Tag Release -> Docker Hub."
+    ],
+    donts: [
+      "Dilarang menggabungkan (merge) Pull Request jika quality gate masih berstatus merah.",
+      "Dilarang membypass pengujian pentest suite lokal maupun remote.",
+      "Dilarang memicu push Docker image produksi dari branch fitur."
+    ]
   }
 ];

@@ -98,7 +98,7 @@ watch(selectedContainerForDetail, (newVal) => {
 const exportAuditReport = () => {
   const auditPayload = {
     exportDate: new Date().toISOString(),
-    organization: 'HeroCMS Enterprise Multi-Tenant Fleet',
+    organization: 'Aether Core Stack Enterprise Fleet',
     auditType: 'Cloud SLA & Operational Telemetry Audit',
     complianceStandard: 'ISO 27001 / SOC 2 / RFC 9110 Error Budget',
     evaluatedScope: {
@@ -120,7 +120,7 @@ const exportAuditReport = () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `herocms-sla-audit-${report.value.scopeId}-${report.value.timeframe}-${Date.now()}.json`;
+  a.download = `aether-stack-sla-audit-${report.value.scopeId}-${report.value.timeframe}-${Date.now()}.json`;
   a.click();
   URL.revokeObjectURL(url);
 

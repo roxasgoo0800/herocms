@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.23.0',
+    version: 'v1.24.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '20 Oktober 2026',
+    lastUpdated: '22 Oktober 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -64,16 +64,70 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '07-docs',
     name: 'Service 07: Docs & Mission Control Hub',
-    version: 'v1.5.0',
+    version: 'v1.5.3',
     serviceFolder: 'services/07-docs',
     badge: 'Latest',
     stack: 'Vue 3 • Go Native BFF (8087) • Docker',
-    lastUpdated: '20 Oktober 2026',
+    lastUpdated: '22 Oktober 2026',
     leadPic: 'Rizal & Paijo AI'
   }
 ];
 
 export const changelogReleases: ChangelogRelease[] = [
+  {
+    version: 'v1.24.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '22 Oktober 2026',
+    title: 'Standardisasi Toolchain Go 1.23 & Resolusi Kompatibilitas Multi-Architecture Docker Container Build',
+    summary: 'Memperbaiki kompatibilitas kompilasi kontainer dan pipeline CI/CD: (1) Menyelaraskan persyaratan Go module ke go 1.23 pada backend BFF; (2) Memperbarui dependensi checksum via go mod tidy; (3) Memvalidasi kompatibilitas build kontainer Docker pada arsitektur linux/amd64 dan linux/arm64.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12410-1',
+        type: 'bugfix',
+        scope: 'Go Module Toolchain Version Alignment',
+        description: 'Menyelaraskan go.mod ke go 1.23 untuk kompatibilitas build Alpine Linux dan Docker container.'
+      },
+      {
+        id: 'c-02dash-12410-2',
+        type: 'improvement',
+        scope: 'Checksum Dependensi Go & Build Integrity',
+        description: 'Melakukan peremajaan go.sum dan go mod tidy untuk memastikan integritas pustaka Go backend.'
+      }
+    ]
+  },
+  {
+    version: 'v1.24.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '22 Oktober 2026',
+    title: 'Transformasi Rebranding Universal: Transisi Identitas Perusahaan ke Aether Core & Produk CMS ke Stack',
+    summary: 'Melakukan transformasi jenama resmi (brand identity) pada antarmuka dan backend studio: (1) Menyelaraskan nama entitas induk perusahaan menjadi Aether Core; (2) Memperbarui penamaan resmi produk CMS menjadi Stack (Stack Studio by Aether Core); (3) Merevisi seluruh judul navigasi, breadcrumbs, splash screen loader, onboarding flow, modal otentikasi, modul artikel CMS, generator zone DNS, dan dokumentasi REST API SDK ke identitas baru Aether Core Stack.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12400-1',
+        type: 'feature',
+        scope: 'Branding Identity Transisi ke Aether Core (Company) & Stack (CMS Product)',
+        description: 'Memperbarui logo wordmark, badge, breadcrumbs, splash screen loader, dan console sidebar menjadi Stack Studio by Aether Core.'
+      },
+      {
+        id: 'c-02dash-12400-2',
+        type: 'improvement',
+        scope: 'Penyelarasan Data Mock Seeds, Templates & Onboarding Tiers',
+        description: 'Memperbarui nama paket langganan menjadi Stack Starter, Stack Pro, dan Stack Enterprise, serta menyelaraskan domain default aethercore.cloud pada seluruh simulasi kontainer.'
+      },
+      {
+        id: 'c-02dash-12400-3',
+        type: 'improvement',
+        scope: 'Harmonisasi Dokumentasi REST API, SDK Snippets & Header Signature',
+        description: 'Menyelaraskan contoh cURL, TypeScript, Go, dan Python SDK ke @aethercore/stack-sdk serta mengadopsi header keamanan webhook X-Stack-Signature.'
+      }
+    ]
+  },
   {
     version: 'v1.23.0',
     service: '02-dashboard-cms',
@@ -81,7 +135,7 @@ export const changelogReleases: ChangelogRelease[] = [
     releaseDate: '20 Oktober 2026',
     title: 'Refaktor Autentik Modal Dokumen E-Faktur DJP 3.0 & Transformasi Grafik Kurva Area Spline Belanja Fiskal & Pajak PPN 11%',
     summary: 'Merombak total tampilan modal pratinjau lembar faktur pajak resmi (Lihat E-Faktur) dan grafik tren belanja fiskal menjadi standar enterprise kelas satu: (1) Merefaktor modal dokumen E-Faktur (.modal-dialog-invoice, lebar 960px) mengikuti standar e-Faktur 3.0 / PER-03/PJ/2022 DJP Kemenkeu RI lengkap dengan pita kepatuhan pemerintah, perbandingan 2 entitas PKP Penjual vs Pembeli BKP sejajar, tabel spesifikasi teknis BKP/JKP bernomor, kartu nilai terbilang rupiah otomatis, kalkulasi fiskal lengkap, stempel keabsahan hijau emerald, dan validasi digital hash QR Code dengan tanda tangan elektronik CFO PT Hero Digital Multitek; (2) Menggantikan grafik batang menjadi Grafik Kurva Garis & Area Spline Interaktif (Apache ECharts Area Spline Chart) dengan 3 garis kurva halus bergradasi (Total Tagihan Resmi, Dasar Pengenaan Pajak, dan PPN 11% Kas Negara) serta chip metrik telemetri ringkas di bagian atas.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'HeroCMS Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

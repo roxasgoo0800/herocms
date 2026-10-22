@@ -50,7 +50,7 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("[HEROCMS STUDIO] Golang Backend & Vue Host listening on http://127.0.0.1:%s", cfg.Port)
+		log.Printf("[AETHER CORE STACK STUDIO] Golang Backend & Vue Host listening on http://127.0.0.1:%s", cfg.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v\n", err)
 		}
@@ -59,7 +59,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down HeroCMS Studio server gracefully...")
+	log.Println("Shutting down Stack Studio (Aether Core) server gracefully...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -96,7 +96,7 @@ func SetupRouter(cfg *config.Config, repo *repository.Repository, rdb *redis.Cli
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"service":  "HeroCMS Studio Backend & Static Host",
+			"service":  "Stack Studio Backend & Static Host (Aether Core)",
 			"status":   "healthy",
 			"database": dbConnected,
 			"redis":    redisConnected,

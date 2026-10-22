@@ -72,7 +72,7 @@ const currentBreadcrumbTitle = computed(() => {
               </div>
               <div class="brand-meta">
                 <div class="brand-title">
-                  HeroCMS <span class="brand-gradient">Docs</span>
+                  Aether Core <span class="brand-gradient">Docs</span>
                 </div>
                 <div class="brand-plan-row">
                   <span class="pulse-green"></span>
@@ -181,7 +181,7 @@ const currentBreadcrumbTitle = computed(() => {
                 <ShieldCheck :size="15" color="#2563eb" />
               </div>
               <div class="user-info-text">
-                <div class="user-name">HeroCMS Engineering</div>
+                <div class="user-name">Aether Core Engineering</div>
                 <div class="user-email-sub">Platform & Mission Control</div>
               </div>
             </div>
@@ -193,7 +193,7 @@ const currentBreadcrumbTitle = computed(() => {
           <!-- Glassmorphism Sticky Header -->
           <header class="top-nav-header">
             <div class="breadcrumbs">
-              <span>HeroCMS Docs</span>
+              <span>Aether Core Docs</span>
               <ChevronRight :size="14" class="crumb-sep" />
               <span
                 :class="{ 'crumb-link': store.activeTask || store.activeSop || store.activeBlueprint || store.activePrd || store.activeSecurity }"
@@ -289,7 +289,7 @@ const currentBreadcrumbTitle = computed(() => {
                       store.activeTab === 'tasks' || store.activeTab === 'services' ?
                       'Seluruh 50 tugas bisnis & arsitektur berada dalam fase ONGOING, dilengkapi alur handover kepemilikan dan checklist interaktif.' :
                       store.activeTab === 'prds' ?
-                      'Dokumentasi komprehensif visi, target pengguna, modul fungsional, kontrak API, dan NFR terukur untuk seluruh 7 microservice HeroCMS.' :
+                      'Dokumentasi komprehensif visi, target pengguna, modul fungsional, kontrak API, dan NFR terukur untuk seluruh microservice platform Aether Core (Stack CMS).' :
                       store.activeTab === 'blueprints' ?
                       '13 Blueprint operasional lengkap dengan dependensi, file rujukan, langkah eksekusi, dan perintah CLI siap pakai.' :
                       store.activeTab === 'journeys' ?

@@ -199,7 +199,7 @@ export const PricingCalculator: React.FC = () => {
                 </div>
                 <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.88rem', color: 'var(--text-body)', marginBottom: '32px' }}>
                   <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Check size={16} color="var(--brand-emerald)" /> 1 Kontainer Website Alpine</li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Check size={16} color="var(--brand-emerald)" /> Subdomain *.herocms.app</li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Check size={16} color="var(--brand-emerald)" /> Subdomain *.stack.app</li>
                   <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Check size={16} color="var(--brand-emerald)" /> 10k AI Tokens per bulan</li>
                   <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Check size={16} color="var(--brand-emerald)" /> Traefik Auto-SSL Aktif</li>
                 </ul>

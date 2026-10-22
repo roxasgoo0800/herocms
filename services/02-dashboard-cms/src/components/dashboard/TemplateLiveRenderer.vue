@@ -510,7 +510,7 @@ const handleDemoClick = (actionName: string) => {
               {{ template.category === 'portfolio' ? 'Rizal Pratama' : template.title.split('&')[0] }}
             </div>
             <p :style="{ color: isDarkMode ? '#94a3b8' : '#64748b' }">
-              © 2026 Seluruh Hak Cipta Dilindungi. Ditenagai oleh arsitektur kontainer HeroCMS Studio.
+              © 2026 Seluruh Hak Cipta Dilindungi. Ditenagai oleh arsitektur kontainer Stack Studio (Aether Core).
             </p>
           </div>
           <div class="footer-right">

@@ -377,7 +377,7 @@ export const createDefaultBlocks = (siteName: string, role: string, bio: string)
       type: 'footer',
       name: 'Site Footer',
       title: siteName,
-      subtitle: 'Didukung penuh oleh HeroCMS Studio • Arsitektur Docker & Traefik v3',
+      subtitle: 'Didukung penuh oleh Stack Studio • Arsitektur Docker & Traefik v3',
       isVisible: true,
       isLocked: false,
       styles: {
@@ -603,7 +603,7 @@ export const createLibraryBlock = (type: VisualBlock['type']): VisualBlock => {
         type: 'listgroup',
         name: 'Daftar List Group & Cek',
         badge: 'CHECKLIST FITUR',
-        title: 'Kemampuan Platform HeroCMS',
+        title: 'Kemampuan Platform Stack (Aether Core)',
         subtitle: 'Seluruh spesifikasi teknis dibangun untuk keandalan dan kecepatan tinggi.',
         isVisible: true,
         isLocked: false,
@@ -659,7 +659,7 @@ export const createLibraryBlock = (type: VisualBlock['type']): VisualBlock => {
         type: 'cta',
         name: 'Call To Action',
         title: 'Wujudkan Ide Anda Hari Ini',
-        subtitle: 'Bergabunglah bersama ribuan pengembang yang mempercayai HeroCMS Studio.',
+        subtitle: 'Bergabunglah bersama ribuan pengembang yang mempercayai Stack Studio.',
         buttonText: 'Hubungi Kami',
         buttonUrl: '#',
         isVisible: true,
@@ -689,8 +689,8 @@ export const createLibraryBlock = (type: VisualBlock['type']): VisualBlock => {
         id: newId,
         type: 'footer',
         name: 'Site Footer',
-        title: 'HeroCMS Platform',
-        subtitle: 'Hak Cipta © 2026 HeroCMS Studio. Dilindungi Undang-Undang.',
+        title: 'Stack Platform (Aether Core)',
+        subtitle: 'Hak Cipta © 2026 Stack Studio. Dilindungi Undang-Undang.',
         isVisible: true,
         isLocked: false,
         styles: { paddingY: 36, align: 'center', bgMode: 'transparent' }
@@ -761,7 +761,7 @@ export interface BrandPalette {
 }
 
 export const brandPalettes: BrandPalette[] = [
-  { id: 'hero-slate', name: 'Hero Slate Pro', desc: 'Tema resmi enterprise HeroCMS', textColor: '#0f172a', bgColor: '#ffffff', accentColor: '#2563eb' },
+  { id: 'hero-slate', name: 'Aether Core Slate Pro', desc: 'Tema resmi enterprise Aether Core Stack', textColor: '#0f172a', bgColor: '#ffffff', accentColor: '#2563eb' },
   { id: 'ocean-blue', name: 'Oceanic Cloud', desc: 'Biru royal sejuk & terpercaya', textColor: '#0f172a', bgColor: '#f0f9ff', accentColor: '#0284c7' },
   { id: 'emerald-vault', name: 'Emerald Security', desc: 'Aksen hijau fintech terisolasi', textColor: '#064e3b', bgColor: '#f0fdf4', accentColor: '#059669' },
   { id: 'violet-luxury', name: 'Violet Studio', desc: 'Modern, elegan & berani', textColor: '#1e1b4b', bgColor: '#faf5ff', accentColor: '#7c3aed' },

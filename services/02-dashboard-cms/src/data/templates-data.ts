@@ -269,7 +269,7 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
     defaultRole: 'Senior Cloud & Platform Engineer',
     defaultBio: 'Merancang sistem terdistribusi skala besar, orkestrasi kontainer Docker/Kubernetes mandiri, dan edge router Traefik berlatensi rendah.',
     lighthouseScore: 100,
-    author: 'Hero Core Platform',
+    author: 'Aether Core Platform',
     rating: 4.98,
     downloadsCount: 1420,
     isFeatured: true,
@@ -389,7 +389,7 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
         items: [
           {
             id: 'sc1',
-            title: 'HeroCMS Studio Enterprise',
+            title: 'Stack Studio Enterprise (Aether Core)',
             desc: 'Platform headless CMS & orkestrator kontainer dengan editor visual instan dan caching Redis multi-layer.',
             tag: 'Golang • Vue 3 • Docker'
           },
@@ -434,8 +434,8 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
         id: 'port_footer',
         type: 'footer',
         name: 'Footer Hak Cipta',
-        title: 'HeroCMS Studio',
-        content: '© 2026 Rizal Pratama. Didukung infrastruktur kontainer otonom HeroCMS Platform.',
+        title: 'Stack Studio',
+        content: '© 2026 Rizal Pratama. Didukung infrastruktur kontainer otonom Aether Core Stack.',
         isVisible: true,
         isLocked: false,
         styles: {
@@ -459,7 +459,7 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
     defaultRole: 'Tech Chronicle & Editorial Lab',
     defaultBio: 'Jurnal berkala riset teknologi, rekayasa perangkat lunak, keamanan siber, dan arsitektur terdistribusi modern.',
     lighthouseScore: 100,
-    author: 'Hero Publishing Lab',
+    author: 'Aether Core Publishing Lab',
     rating: 4.95,
     downloadsCount: 1180,
     isFeatured: true,
@@ -523,7 +523,7 @@ export const officialTemplatesData: OfficialTemplateItem[] = [
         items: [
           {
             id: 'a1',
-            title: 'Arsitektur Multi-Tenant HeroCMS dengan PostgreSQL RLS',
+            title: 'Arsitektur Multi-Tenant Aether Core Stack dengan PostgreSQL RLS',
             desc: 'Bagaimana Row-Level Security mengamankan isolasi tenant hingga tingkat query database tanpa kebocoran data.',
             tag: 'Keamanan • 8 Menit Baca',
             price: 'Trending #1'

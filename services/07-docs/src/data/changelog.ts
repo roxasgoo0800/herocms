@@ -2,13 +2,85 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.5.3',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '22 Oktober 2026',
+    title: 'Sinkronisasi Matriks 52 Sprint Tasks, Penambahan Tugas CI/CD & Rebranding, serta Pembaruan Status Pekerjaan Riil',
+    summary: 'Memperbarui basis data interaktif Mission Control Docs Hub: (1) Menambahkan tugas baru TSK-CICD-01 (Selective Quality Gate CI/CD & Automated GitHub Incident Triage); (2) Menambahkan tugas baru TSK-REB-01 (Universal Rebranding Platform: Aether Core & Stack CMS); (3) Memperbarui status riil tugas TSK-OPS-03, TSK-CHG-01, TSK-INV-01, dan TSK-QA-03 menjadi COMPLETED dengan checklist terverifikasi; (4) Sinkronisasi dokumen TASK_CHECKLIST.md dan database SQLite internal.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-153-1',
+        type: 'improvement',
+        scope: 'Sprint Tasks Database & Telemetri 52 Tugas',
+        description: 'Memperbarui dataset tasks.json dengan 2 task baru (TSK-CICD-01, TSK-REB-01) dan menyelaraskan total menjadi 52 tugas terlacak.'
+      },
+      {
+        id: 'c-07docs-153-2',
+        type: 'improvement',
+        scope: 'Sinkronisasi Status Riil Pekerjaan Sprint',
+        description: 'Memperbarui checklist dan status penyelesaian tugas E-Faktur DJP 3.0, CI/CD automated incident dispatch, serta pentest runner.'
+      }
+    ]
+  },
+  {
+    version: 'v1.5.2',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '22 Oktober 2026',
+    title: 'Dokumentasi Sistem Quality Gate CI/CD Selektif, Skrip Pra-Commit Lokal & Triase Insiden GitHub Otomatis',
+    summary: 'Memperbarui seluruh pilar dokumentasi Mission Control Docs Hub dengan menambahkan SOP dan Blueprint Arsitektur pengujian kualitas otomatis: (1) Penambahan SOP-CICD-01 Standar Selective Quality Gate CI/CD & Automated Incident Triage GitHub Actions; (2) Penambahan Blueprint Arsitektur BP-CICD-01; (3) Dokumentasi skrip verifikasi pra-commit lokal scripts/test-changed.sh; (4) Dokumentasi alur 4 tahap rilis enterprise (Quality Gate -> PR Merge -> Tag Release -> Docker Hub).',
+    badge: 'Stable',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-152-1',
+        type: 'feature',
+        scope: 'SOP & Blueprint CI/CD Quality Gate & Incident Dispatcher',
+        description: 'Menambahkan SOP-CICD-01 dan Blueprint BP-CICD-01 ke sistem dokumentasi interaktif Mission Control Hub.'
+      },
+      {
+        id: 'c-07docs-152-2',
+        type: 'improvement',
+        scope: 'Dokumentasi Utilitas Skrip Pra-Commit Lokal test-changed.sh',
+        description: 'Mendokumentasikan tata cara penggunaan skrip pengujian selektif lokal sebelum developer melakukan git push.'
+      }
+    ]
+  },
+  {
+    version: 'v1.5.1',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '22 Oktober 2026',
+    title: 'Penyelarasan Identitas Rebranding: Entitas Perusahaan Aether Core & Produk CMS Stack',
+    summary: 'Memperbarui seluruh pilar dokumentasi Mission Control Docs Hub, kop header, breadcrumbs, dan spesifikasi PRD untuk mencerminkan identitas resmi baru: Aether Core sebagai nama entitas perusahaan dan Stack sebagai nama produk platform CMS otonom.',
+    badge: 'Stable',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-151-1',
+        type: 'improvement',
+        scope: 'Branding Alignment Header, Navigation & Mission Control Layout',
+        description: 'Menyelaraskan logo wordmark, breadcrumbs, dan profil tim menjadi Aether Core Docs & Engineering.'
+      },
+      {
+        id: 'c-07docs-151-2',
+        type: 'improvement',
+        scope: 'Penyelarasan Spesifikasi PRD & Dokumen Divisi Layanan',
+        description: 'Memperbarui nama produk portal pelanggan menjadi Stack Studio by Aether Core serta menyelaraskan deskripsi PRD dan pembagian kerja tim.'
+      }
+    ]
+  },
+  {
     version: 'v1.5.0',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '20 Oktober 2026',
     title: 'Dokumentasi Komprehensif Arsitektur E-Faktur DJP 3.0, Visualisasi Fiskal ECharts, Blueprint Penagihan & System Journey JRN-08',
     summary: 'Memperbarui seluruh pilar dokumentasi Mission Control Docs Hub untuk mencakup kapabilitas penagihan enterprise dan modul Dashboard Studio terbaru: (1) Pembaruan PRD-02 Dashboard CMS ke versi v1.23.0-PROD mencakup E-Faktur DJP 3.0, Apache ECharts spline area visualizer, buku besar faktur 1260px, checkout simulasi cluster kustom, modal website split-layout 980px, dan scoped PAT; (2) Blueprint Arsitektur baru BP-EFAKTUR-01; (3) System Journey baru JRN-08 Siklus Penagihan Resmi SaaS & Rekonsiliasi PPN 11%.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & HeroCMS Dev (Rizal)',
     items: [
       {

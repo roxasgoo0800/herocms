@@ -1,4 +1,4 @@
-// HeroCMS Studio - Enterprise Fleet Telemetry & Audit Dataset
+// Aether Core Stack Studio - Enterprise Fleet Telemetry & Audit Dataset
 import type { ContainerSite } from '../types/dashboard';
 
 export interface AuditSlaOverview {
