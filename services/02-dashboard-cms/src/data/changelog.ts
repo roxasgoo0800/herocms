@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.24.0',
+    version: 'v1.24.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -64,7 +64,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '07-docs',
     name: 'Service 07: Docs & Mission Control Hub',
-    version: 'v1.5.2',
+    version: 'v1.5.3',
     serviceFolder: 'services/07-docs',
     badge: 'Latest',
     stack: 'Vue 3 • Go Native BFF (8087) • Docker',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.24.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '22 Oktober 2026',
+    title: 'Standardisasi Toolchain Go 1.23 & Resolusi Kompatibilitas Multi-Architecture Docker Container Build',
+    summary: 'Memperbaiki kompatibilitas kompilasi kontainer dan pipeline CI/CD: (1) Menyelaraskan persyaratan Go module ke go 1.23 pada backend BFF; (2) Memperbarui dependensi checksum via go mod tidy; (3) Memvalidasi kompatibilitas build kontainer Docker pada arsitektur linux/amd64 dan linux/arm64.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12410-1',
+        type: 'bugfix',
+        scope: 'Go Module Toolchain Version Alignment',
+        description: 'Menyelaraskan go.mod ke go 1.23 untuk kompatibilitas build Alpine Linux dan Docker container.'
+      },
+      {
+        id: 'c-02dash-12410-2',
+        type: 'improvement',
+        scope: 'Checksum Dependensi Go & Build Integrity',
+        description: 'Melakukan peremajaan go.sum dan go mod tidy untuk memastikan integritas pustaka Go backend.'
+      }
+    ]
+  },
+  {
     version: 'v1.24.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '22 Oktober 2026',
     title: 'Transformasi Rebranding Universal: Transisi Identitas Perusahaan ke Aether Core & Produk CMS ke Stack',
     summary: 'Melakukan transformasi jenama resmi (brand identity) pada antarmuka dan backend studio: (1) Menyelaraskan nama entitas induk perusahaan menjadi Aether Core; (2) Memperbarui penamaan resmi produk CMS menjadi Stack (Stack Studio by Aether Core); (3) Merevisi seluruh judul navigasi, breadcrumbs, splash screen loader, onboarding flow, modal otentikasi, modul artikel CMS, generator zone DNS, dan dokumentasi REST API SDK ke identitas baru Aether Core Stack.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

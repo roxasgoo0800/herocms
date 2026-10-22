@@ -1,6 +1,6 @@
 module github.com/cloudcms/ai-agent-service
 
-go 1.27
+go 1.22
 
 require (
 	github.com/gin-gonic/gin v1.10.0
