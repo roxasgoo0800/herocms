@@ -155,10 +155,6 @@ ${dom.domain}.        3600    IN    A        ${a}`;
         <h1 class="page-title">Custom Domain & Edge DNS Ingress</h1>
         <p class="page-desc">Tautkan domain kustom Anda ke proxy edge Traefik v3 dengan sertifikat SSL TLS v1.3 Let's Encrypt otomatis.</p>
       </div>
-      <div class="quota-quick-pills">
-        <span class="pill-metric">Edge Engine: <strong>Traefik v3.1 Ingress</strong></span>
-        <span class="pill-metric-highlight">SSL: <strong>Auto ACME TLS-ALPN-01</strong></span>
-      </div>
     </div>
 
     <!-- 1. Top Telemetry Metrics Grid (Modern Single Corner Watermark Standard) -->

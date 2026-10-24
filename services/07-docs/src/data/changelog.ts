@@ -2,13 +2,67 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.5.5',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '24 Oktober 2026',
+    title: 'Sinkronisasi PRD-02 Dashboard Studio (Refaktor Monokrom Anti-AI Slop Blueprint Store, Presisi Vektor Ikon Sidebar 16px, & Tata Letak Kontainer 2-Kolom)',
+    summary: 'Memperbarui dokumen spesifikasi PRD-02 Dashboard Studio v1.25.0-PROD: (1) Penambahan modul arsitektur Katalog Template Blueprint Store bertema Obsidian Black (#09090b) & Pure White (#ffffff) dengan eliminasi saturasi neon/AI-slop; (2) Standarisasi presisi geometris 16px integer scaling dan GPU-accelerated subpixel rendering pada ikon navigasi sidebar guna mencegah distorsi/pecah; (3) Restrukturisasi tata letak grid kontainer 2-kolom, eliminasi filter redundan, penyempurnaan kartu Empty State, dan ekspansi dialog modal deployment 1160px widescreen.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-155-1',
+        type: 'improvement',
+        scope: 'Spesifikasi PRD-02: Katalog Template Blueprint Store Monokrom',
+        description: 'Mendokumentasikan modul Katalog Template & Blueprint Store bertema Obsidian Black (#09090b) dan Pure White (#ffffff), anti-AI slop tanpa gradasi neon, lencana fitur monokrom (.pulse-badge), dan panggung wireframe mockup (.tpl-mockup-stage).'
+      },
+      {
+        id: 'c-07docs-155-2',
+        type: 'improvement',
+        scope: 'Spesifikasi PRD-02: Presisi Vektor Ikon Sidebar 16px & Subpixel Rendering',
+        description: 'Mendokumentasikan standarisasi 16px integer scaling (16/24) dan GPU subpixel rendering (shape-rendering: geometricPrecision; text-rendering: geometricPrecision; stroke-width: 1.85; transform: translateZ(0); backface-visibility: hidden;) pada navigasi sidebar untuk mengeliminasi distorsi dan aliasing visual.'
+      },
+      {
+        id: 'c-07docs-155-3',
+        type: 'improvement',
+        scope: 'Spesifikasi PRD-02: Grid Kontainer 2-Kolom & Modal Deployment 1160px',
+        description: 'Mendokumentasikan restrukturisasi tata letak grid kartu kontainer 2-kolom seimbang (.site-cards-grid), filter pencarian ringkas tanpa dropdown redundan, status Empty State interaktif, serta modal deploy 1160px dengan proteksi text-wrapping (white-space: normal !important).'
+      }
+    ]
+  },
+  {
+    version: 'v1.5.4',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '24 Oktober 2026',
+    title: 'Sinkronisasi PRD-02 Dashboard Studio v1.25.0 (Pusat Bantuan Live Chat & Animasi Studio) serta Mitigasi Node.js CVE-2026-48930',
+    summary: 'Memperbarui dokumentasi PRD-02 Dashboard Studio ke versi v1.25.0-PROD (mencakup Pusat Bantuan 4 Divisi & Live Chat 1140px model WhatsApp bertema Studio, kapsul chat terpadu, ikon navigasi sidebar berwarna semantik, serta animasi cascade konten), sekaligus meng-upgrade base image frontend-builder ke Node.js 26 (v26.12.1 / node:26-alpine) untuk memitigasi CVE-2026-48930.',
+    badge: 'Stable',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-154-1',
+        type: 'security',
+        scope: 'Mitigasi CVE-2026-48930 & Upgrade Toolchain Node.js 26',
+        description: 'Memperbarui Dockerfile Stage 1 (frontend-builder) ke node:26-alpine dan menyelaraskan environment CI Quality Gate ke Node.js 26.'
+      },
+      {
+        id: 'c-07docs-154-2',
+        type: 'feature',
+        scope: 'Sinkronisasi Spesifikasi PRD-02 Dashboard Studio v1.25.0-PROD',
+        description: 'Mendokumentasikan modul Pusat Bantuan & Live Chat 1140px (4 divisi tujuan, Centang 1/2/Biru + timestamp baca, Unified Chat Capsule), sistem ikon sidebar berwarna semantik (.nav-icon-box), serta koreografi animasi masuk berjenjang (studioCardCascadeIn).'
+      }
+    ]
+  },
+  {
     version: 'v1.5.3',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '22 Oktober 2026',
     title: 'Sinkronisasi Matriks 52 Sprint Tasks, Penambahan Tugas CI/CD & Rebranding, serta Pembaruan Status Pekerjaan Riil',
     summary: 'Memperbarui basis data interaktif Mission Control Docs Hub: (1) Menambahkan tugas baru TSK-CICD-01 (Selective Quality Gate CI/CD & Automated GitHub Incident Triage); (2) Menambahkan tugas baru TSK-REB-01 (Universal Rebranding Platform: Aether Core & Stack CMS); (3) Memperbarui status riil tugas TSK-OPS-03, TSK-CHG-01, TSK-INV-01, dan TSK-QA-03 menjadi COMPLETED dengan checklist terverifikasi; (4) Sinkronisasi dokumen TASK_CHECKLIST.md dan database SQLite internal.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
     items: [
       {

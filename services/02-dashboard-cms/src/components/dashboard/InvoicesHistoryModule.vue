@@ -961,15 +961,6 @@ onUnmounted(() => {
 
           <div class="invoice-doc-body">
             <div class="invoice-paper" id="printable-invoice">
-              <!-- Official DJP Government Ribbon -->
-              <div class="inv-gov-ribbon">
-                <div class="inv-gov-title">
-                  <ShieldCheck :size="14" style="color: #38bdf8;" />
-                  <span>KEMENTERIAN KEUANGAN REPUBLIK INDONESIA • DIREKTORAT JENDERAL PAJAK</span>
-                </div>
-                <div class="inv-gov-badge">SALINAN ELEKTRONIK SAH • PMK-60/PMK.03/2022</div>
-              </div>
-
               <!-- Paper Top Header -->
               <div class="inv-paper-top">
                 <div class="inv-company-brand">

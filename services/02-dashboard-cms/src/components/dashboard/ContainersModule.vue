@@ -259,96 +259,105 @@ const navigateToAnalytics = (c: ContainerSite) => {
       </div>
     </div>
 
-    <!-- 3. Bespoke Search Command, Segmented Filter & View Switcher Bar -->
-    <div class="filter-toolbar">
-      <div class="search-command-shell">
-        <Search :size="15" class="search-lead-glyph" />
-        <input
-          ref="searchInputRef"
-          v-model="searchQuery"
-          type="text"
-          placeholder="Cari situs, subdomain, atau container ID..."
-          class="search-command-input"
-        />
-        <button v-if="searchQuery" class="btn-clear-search" @click="searchQuery = ''" title="Bersihkan">
-          <X :size="13" />
-        </button>
-        <kbd class="shortcut-tag">⌘K</kbd>
+    <!-- 3. Bespoke Search Command, Segmented Status Filter & View Switcher Bar -->
+    <div class="filter-toolbar containers-filter-toolbar">
+      <div class="filter-toolbar-left">
+        <div class="search-command-shell">
+          <Search :size="15" class="search-lead-glyph" />
+          <input
+            ref="searchInputRef"
+            v-model="searchQuery"
+            type="text"
+            placeholder="Cari situs, subdomain, atau container ID..."
+            class="search-command-input"
+          />
+          <button v-if="searchQuery" type="button" class="btn-clear-search" @click="searchQuery = ''" title="Bersihkan">
+            <X :size="13" />
+          </button>
+          <kbd class="shortcut-tag">⌘K</kbd>
+        </div>
       </div>
 
-      <div class="segmented-filter-bar">
-        <button
-          class="segment-pill"
-          :class="{ active: statusFilter === 'all' }"
-          @click="statusFilter = 'all'"
-        >
-          <span>Semua</span>
-          <span class="pill-count">{{ containers.length }}</span>
-        </button>
-        <button
-          class="segment-pill"
-          :class="{ active: statusFilter === 'running' }"
-          @click="statusFilter = 'running'"
-        >
-          <span class="mini-status-dot running"></span>
-          <span>Running</span>
-          <span class="pill-count green">{{ runningContainersCount }}</span>
-        </button>
-        <button
-          class="segment-pill"
-          :class="{ active: statusFilter === 'maintenance' }"
-          @click="statusFilter = 'maintenance'"
-        >
-          <span class="mini-status-dot maintenance"></span>
-          <span>Pemeliharaan</span>
-          <span class="pill-count amber">{{ maintenanceContainersCount }}</span>
-        </button>
-        <button
-          class="segment-pill"
-          :class="{ active: statusFilter === 'stopped' }"
-          @click="statusFilter = 'stopped'"
-        >
-          <span class="mini-status-dot stopped"></span>
-          <span>Standby</span>
-          <span class="pill-count gray">{{ stoppedContainersCount }}</span>
-        </button>
-      </div>
+      <div class="filter-toolbar-right">
+        <div class="segmented-filter-bar">
+          <button
+            type="button"
+            class="segment-pill"
+            :class="{ active: statusFilter === 'all' }"
+            @click="statusFilter = 'all'"
+          >
+            <span>Semua</span>
+            <span class="pill-count">{{ containers.length }}</span>
+          </button>
+          <button
+            type="button"
+            class="segment-pill"
+            :class="{ active: statusFilter === 'running' }"
+            @click="statusFilter = 'running'"
+          >
+            <span class="mini-status-dot running"></span>
+            <span>Running</span>
+            <span class="pill-count green">{{ runningContainersCount }}</span>
+          </button>
+          <button
+            type="button"
+            class="segment-pill"
+            :class="{ active: statusFilter === 'maintenance' }"
+            @click="statusFilter = 'maintenance'"
+          >
+            <span class="mini-status-dot maintenance"></span>
+            <span>Pemeliharaan</span>
+            <span class="pill-count amber">{{ maintenanceContainersCount }}</span>
+          </button>
+          <button
+            type="button"
+            class="segment-pill"
+            :class="{ active: statusFilter === 'stopped' }"
+            @click="statusFilter = 'stopped'"
+          >
+            <span class="mini-status-dot stopped"></span>
+            <span>Standby</span>
+            <span class="pill-count gray">{{ stoppedContainersCount }}</span>
+          </button>
+        </div>
 
-      <!-- View Switcher (Grid View vs Enterprise Table View) -->
-      <div class="view-mode-toggle-group">
+        <!-- View Switcher (Grid View vs Enterprise Table View) -->
+        <div class="view-mode-toggle-group">
+          <button
+            type="button"
+            class="view-mode-btn"
+            :class="{ active: viewMode === 'grid' }"
+            @click="viewMode = 'grid'"
+            title="Tampilan Kartu Visual (Grid View)"
+          >
+            <LayoutGrid :size="14" />
+            <span>Grid</span>
+          </button>
+          <button
+            type="button"
+            class="view-mode-btn"
+            :class="{ active: viewMode === 'table' }"
+            @click="viewMode = 'table'"
+            title="Tampilan Tabel Enterprise (Dense Table)"
+          >
+            <List :size="14" />
+            <span>Tabel</span>
+          </button>
+        </div>
+
+        <!-- Quick Deploy CTA Button -->
         <button
+          v-if="containers.length < userPlan.maxContainers"
           type="button"
-          class="view-mode-btn"
-          :class="{ active: viewMode === 'grid' }"
-          @click="viewMode = 'grid'"
-          title="Tampilan Kartu Visual (Grid View)"
+          class="btn-top-create"
+          style="padding: 8px 14px; font-size: 0.78rem; border-radius: 9px;"
+          @click="openCreateModal()"
+          title="Deploy Kontainer Baru"
         >
-          <LayoutGrid :size="14" />
-          <span>Grid</span>
-        </button>
-        <button
-          type="button"
-          class="view-mode-btn"
-          :class="{ active: viewMode === 'table' }"
-          @click="viewMode = 'table'"
-          title="Tampilan Tabel Enterprise (Dense Table)"
-        >
-          <List :size="14" />
-          <span>Tabel</span>
+          <Plus :size="14" />
+          <span>Deploy Baru</span>
         </button>
       </div>
-
-      <!-- Quick Deploy CTA Button -->
-      <button
-        v-if="containers.length < userPlan.maxContainers"
-        class="btn-top-create"
-        style="padding: 7px 14px; font-size: 0.78rem; border-radius: 8px;"
-        @click="openCreateModal()"
-        title="Deploy Kontainer Baru"
-      >
-        <Plus :size="14" />
-        <span>Deploy Baru</span>
-      </button>
     </div>
 
     <!-- 4A. GRID CARD VIEW (INDUSTRY STANDARD) -->
@@ -490,7 +499,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <div class="gauge-meta">
               <div class="gauge-header-flex">
                 <Cpu :size="11" style="color: #2563eb;" />
-                <span class="gauge-title">CPU CFS QUOTA</span>
+                <span class="gauge-title">CPU</span>
               </div>
               <span class="gauge-val">
                 <strong>{{ c.cpuUsage }}%</strong>
@@ -511,11 +520,11 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <div class="gauge-meta">
               <div class="gauge-header-flex">
                 <HardDrive :size="11" style="color: #059669;" />
-                <span class="gauge-title">RAM MEMCG</span>
+                <span class="gauge-title">RAM</span>
               </div>
               <span class="gauge-val">
-                <strong>{{ c.ramUsage }} MB</strong>
-                <span class="gauge-sub">/ {{ c.ramLimit }} MB</span>
+                <strong>{{ c.ramUsage }}</strong>
+                <span class="gauge-sub">/{{ c.ramLimit }} MB</span>
               </span>
             </div>
             <div class="custom-meter-track">
@@ -620,7 +629,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
         </div>
       </div>
 
-      <!-- Quota Available Slot Placeholders (Fills 3-column grid) -->
+      <!-- Quota Available Slot Placeholders (Fills 2-column grid) -->
       <template v-if="!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers">
         <div
           v-for="slotNum in (userPlan.maxContainers - containers.length)"
@@ -882,19 +891,48 @@ const navigateToAnalytics = (c: ContainerSite) => {
       </div>
     </div>
 
-    <!-- 5. Empty State if search finds nothing -->
-    <div v-else class="empty-state-card" style="margin-top: 10px;">
-      <Server :size="34" style="color: #94a3b8; margin-bottom: 4px;" />
-      <h3>Tidak ada kontainer ditemukan</h3>
-      <p v-if="searchQuery">
-        Tidak ada situs atau kontainer yang cocok dengan kata kunci pencarian "<strong>{{ searchQuery }}</strong>".
+    <!-- 5. Eye-Catching Studio Empty State Card if search or status filter finds nothing -->
+    <div v-else class="empty-state-card">
+      <div class="empty-state-icon-box">
+        <Server :size="24" />
+      </div>
+      <div class="empty-state-badge">FILTER & PENCARIAN KONTAINER</div>
+      <h3 class="empty-state-title">Tidak ada kontainer ditemukan</h3>
+      <p v-if="searchQuery" class="empty-state-desc">
+        Tidak ditemukan situs atau kontainer Docker yang cocok dengan kata kunci pencarian
+        <span class="empty-state-query-chip">"{{ searchQuery }}"</span>.
       </p>
-      <p v-else>
-        Tidak ada kontainer dengan status filter terpilih.
+      <p v-else-if="statusFilter === 'maintenance'" class="empty-state-desc">
+        Saat ini tidak ada kontainer yang sedang berada dalam mode <strong>Pemeliharaan (Maintenance)</strong>. Seluruh layanan Anda beroperasi normal.
       </p>
-      <button class="btn-reset-filter" @click="searchQuery = ''; statusFilter = 'all'">
-        Reset Pencarian & Filter
-      </button>
+      <p v-else-if="statusFilter === 'stopped'" class="empty-state-desc">
+        Saat ini tidak ada kontainer dalam status <strong>Standby (Dihentikan)</strong>. Seluruh pod kontainer Anda sedang aktif melayani trafik.
+      </p>
+      <p v-else class="empty-state-desc">
+        Tidak ada kontainer yang sesuai dengan kombinasi filter yang sedang dipilih saat ini.
+      </p>
+
+      <div class="empty-state-pills">
+        <span class="empty-stat-pill">Running: <strong>{{ runningContainersCount }}</strong></span>
+        <span class="empty-stat-pill">Pemeliharaan: <strong>{{ maintenanceContainersCount }}</strong></span>
+        <span class="empty-stat-pill">Standby: <strong>{{ stoppedContainersCount }}</strong></span>
+      </div>
+
+      <div class="empty-state-actions">
+        <button type="button" class="btn-reset-filter" @click="searchQuery = ''; statusFilter = 'all'">
+          <RotateCw :size="14" />
+          <span>Reset Pencarian & Filter</span>
+        </button>
+        <button
+          v-if="containers.length < userPlan.maxContainers"
+          type="button"
+          class="btn-empty-deploy"
+          @click="openCreateModal()"
+        >
+          <Plus :size="14" />
+          <span>Deploy Website Baru</span>
+        </button>
+      </div>
     </div>
   </section>
 

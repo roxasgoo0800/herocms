@@ -137,7 +137,7 @@ export const microservicePrds: MicroservicePrd[] = [
     title: 'Dashboard CMS (Stack Studio - Portal Pelanggan by Aether Core)',
     serviceName: '02-dashboard-cms',
     badge: 'Customer Studio & PWA',
-    version: 'v1.23.0-PROD',
+    version: 'v1.25.0-PROD',
     targetAudience: [
       'Software Engineer & Developer Portofolio',
       'Penulis Independen & Tim Media Editorial',
@@ -147,7 +147,7 @@ export const microservicePrds: MicroservicePrd[] = [
     techStack: {
       framework: 'Vue 3 (Composition API) + Pinia + Vite',
       language: 'TypeScript 5.5+',
-      runtime: 'Node 20 LTS (Dev) / Static SPA Nginx Alpine (Prod)',
+      runtime: 'Node 26 LTS (CVE-2026-48930 Mitigated) / Static SPA Go Gin BFF (Prod)',
       databases: ['PostgreSQL 16 via Go API (RLS Enforced)', 'IndexedDB (Offline Cache)'],
       keyLibraries: [
         'Apache ECharts v6.1+ (High-Res Spline Canvas)',
@@ -157,16 +157,48 @@ export const microservicePrds: MicroservicePrd[] = [
         'DOMPurify'
       ]
     },
-    summary: 'Studio manajemen situs web berbasis no-code / low-code berkinerja tinggi dengan visual editor live, publishing engine artikel & studi kasus, manajemen media terintegrasi S3, kontrol siklus hidup kontainer Docker mandiri, modul penagihan faktur pajak resmi DJP 3.0 dengan visualisasi kurva spline ECharts, serta dukungan mandatori Progressive Web App (PWA) untuk akses offline instan.',
+    summary: 'Studio manajemen situs web berbasis no-code / low-code berkinerja tinggi dengan visual editor live, publishing engine artikel & studi kasus, manajemen media terintegrasi S3, kontrol siklus hidup kontainer Docker mandiri berarsitektur grid 2-kolom, katalog blueprint arsitektur monokrom anti-slop, modul penagihan faktur pajak resmi DJP 3.0 dengan visualisasi kurva spline ECharts, pusat bantuan & live chat interaktif 1140px, navigasi ikon presisi geometris 16px dengan animasi cascade konten, serta dukungan mandatori Progressive Web App (PWA) untuk akses offline instan.',
     coreModules: [
       {
         name: 'Situs & Kontainer (Multi-Site Hub & CaaS Lifecycle)',
         desc: 'Pusat kendali armada kontainer Docker terisolasi milik pelanggan.',
         capabilities: [
-          'Visual meter kuota kontainer paket (misal: 1/3 Kontainer Terpakai, 2 Slot Bebas).',
-          'CRUD Runtime Kontainer: Start, Stop, Restart, dan Destroy dengan cgroups resource limits.',
+          'Visual meter kuota kontainer paket terfokus (kapasitas slot aktif vs bebas) di baris atas tanpa komplikasi baris metrik CPU/RAM yang sempit.',
+          'Tata letak kartu kontainer 2-kolom seimbang (.site-cards-grid) di seluruh breakpoint layar guna kenyamanan baca dan efisiensi manajemen kontainer.',
+          'Penyaring pencarian terpadu yang ringkas tanpa dropdown kategori redundan, dilengkapi status kartu kosong interaktif (Empty State) dan tombol reset filter elegan.',
+          'CRUD Runtime Kontainer: Start, Stop, Restart, dan Destroy dengan cgroups resource limits serta switcher Grid/Table yang proporsional.',
           'Live streaming logs kontainer Docker langsung di antarmuka web via WebSocket.',
           'Indikator status kesehatan kontainer (Running, Stopped, Provisioning, Degraded).'
+        ]
+      },
+      {
+        name: 'Katalog Template & Blueprint Architecture Store (Monochrome Studio)',
+        desc: 'Pusat kurasi cetak biru arsitektur aplikasi dan sistem situs web berestetika monokrom tinggi.',
+        capabilities: [
+          'Estetika arsitektural Obsidian Black (#09090b) dan Pure White (#ffffff) tanpa saturasi neon atau gradasi artificial (Anti-AI Slop) demi kenyamanan visual profesional.',
+          'Hero spotlight banner monokrom (.blueprint-spotlight-hero) dan panggung mockup wireframe arsitektur (.tpl-mockup-stage).',
+          'Sistem lencana fitur hitam-putih (.pulse-badge) dan tanda centang arsitektur monokrom yang konsisten di setiap kartu template.',
+          'Filter segmen blueprint (Dev Portofolio, SaaS Studio, Editorial News, Documentation Hub, E-Commerce).'
+        ]
+      },
+      {
+        name: 'Pusat Bantuan & Tiket Support (4-Division Routing & Live Chat 1140px)',
+        desc: 'Studio pengaduan layanan multi-divisi terintegrasi dengan diskusi live chat real-time bertema HeroCMS Studio.',
+        capabilities: [
+          'Pemilihan 4 Divisi Tujuan Pengaduan (Technical & Container DevOps, Customer Support CMS, Billing & Faktur Pajak, Domain & SSL Edge) dengan deteksi otomatis identitas akun tanpa input nama manual atau field urgensi.',
+          'Bespoke Studio Custom Dropdown Popover untuk pemilihan Kategori Kendala, Situs/Kontainer Terdampak, dan Filter Divisi.',
+          'Tabel Riwayat & Antrean Tiket Pengaduan terstruktur di bagian bawah formulir.',
+          'Modal Live Chat 2 Kolom 1140px dengan model struktural WhatsApp berbalut tema HeroCMS Studio (#f8fafc dot-grid & Royal Blue #eff6ff/#e0f2fe), indikator mengetik di sisi lawan bicara, status Centang 1 (Terkirim), Centang 2 (Tersampaikan), dan Centang 2 Biru (Dibaca + jam atau tanggal-bulan-tahun), fitur upload gambar/screenshot, pemilih emotikon, serta Unified Chat Input Capsule yang menyatu langsung dengan kanvas chat.'
+        ]
+      },
+      {
+        name: 'Navigasi Ikon Berwarna Semantik & Animasi Staggered Content Cascade',
+        desc: 'Sistem interaksi visual dan koreografi animasi perpindahan modul di seluruh area kerja Dashboard Studio.',
+        capabilities: [
+          '12 Badge Ikon Navigasi Sidebar (.nav-icon-box) berstandar presisi geometris 16px integer scaling (16/24) dengan GPU-accelerated subpixel rendering (shape-rendering: geometricPrecision; text-rendering: geometricPrecision; stroke-width: 1.85; transform: translateZ(0); backface-visibility: hidden;) mengeliminasi distorsi atau tampilan pecah/buram.',
+          'Status inaktif berlatar putih bersih (#ffffff) dengan garis tepi lembut (#d4d4d8) dan ikon hitam (#18181b); status aktif bertransisi menjadi latar pastel semantik sesuai kategori modul, border aksen selaras, dan ikon berwarna cerah.',
+          'Kondisi menu aktif solid non-hoverable mencegah kedipan warna ganda saat kursor melintas.',
+          'Transisi panggung area kerja (studio-workspace-stage) dan animasi masuk berjenjang (studioSectionReveal & studioCardCascadeIn) pada seluruh kartu, formulir, telemetri, dan tabel saat berpindah menu.'
         ]
       },
       {
@@ -193,7 +225,9 @@ export const microservicePrds: MicroservicePrd[] = [
         name: 'Modal Pembuatan Situs Web Baru (Smart Architecture Provisioning)',
         desc: 'Alur kerja pembuatan website baru dengan preview langsung dan auto-slug.',
         capabilities: [
-          'Split-layout 2 kolom 980px dengan live canvas browser mockup interaktif.',
+          'Split-layout 2 kolom 1160px widescreen responsif (.modal-dialog-create-site) dengan live canvas browser mockup interaktif.',
+          'Penataan kartu blueprint dengan perlindungan text-wrapping (white-space: normal !important) mencegah pemotongan dan kebocoran horizontal di kolom formulir sebelah kanan.',
+          'Desain formulir input profesional terstandardisasi dengan ring fokus royal blue dan label field yang rapi.',
           'Sinkronisasi auto-slug cerdas dari nama situs ke subdomain URL tanpa jeda.',
           'Pilihan arsitektur preset (Portfolio Dev, SaaS Landing, Enterprise Docs, Editorial Magazine).'
         ]

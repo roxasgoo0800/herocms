@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  User,
   LogOut,
   ChevronRight,
   Palette,
@@ -45,7 +44,8 @@ import {
   Menu,
   Rocket,
   Zap,
-  Check
+  Check,
+  ArrowUpRight
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 import { generateContainerLogs, type ContainerLogEntry } from '../data/container-logs';
@@ -344,6 +344,10 @@ onMounted(async () => {
 
 // Smooth scroll ke atas saat berganti menu antarmuka
 watch(activeMenu, () => {
+  const pane = document.querySelector('.content-scroll-pane');
+  if (pane) {
+    pane.scrollTo({ top: 0, behavior: 'smooth' });
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
@@ -373,20 +377,21 @@ const handleLogout = async () => {
 
       <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
       <aside class="app-sidebar">
-      <!-- Workspace Brand Switcher -->
+      <!-- Workspace Brand Switcher (Clean Monochrome Black & White Header) -->
       <div class="sidebar-header">
-        <div class="workspace-brand-header">
-          <div class="brand-glyph">
+        <div class="workspace-brand-card" @click="selectMenu('containers')" title="Stack Studio by Aether Core">
+          <div class="brand-glyph-pro">
             <Layers :size="18" color="#ffffff" />
           </div>
           <div class="brand-meta">
-            <div class="brand-title">
-              Stack <span class="brand-gradient">Studio</span>
+            <div class="brand-title-row">
+              <div class="brand-title">
+                Stack <span>Studio</span>
+              </div>
+              <span class="brand-entity-pill">Aether Core</span>
             </div>
             <div class="brand-plan-row">
-              <span class="pulse-green"></span>
               <span class="plan-name">{{ userPlan.name }}</span>
-              <span class="badge-company-chip" style="font-size: 0.68rem; font-weight: 700; color: #475569; background: #f1f5f9; padding: 1px 5px; border-radius: 4px; border: 1px solid #e2e8f0; margin-left: 3px;">Aether Core</span>
             </div>
           </div>
         </div>
@@ -401,7 +406,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'containers' }"
             @click="selectMenu('containers')"
           >
-            <FolderKanban :size="17" />
+            <span class="nav-icon-box icon-blue">
+              <FolderKanban :size="16" />
+            </span>
             <span class="nav-link-text">Situs & Kontainer</span>
             <span class="nav-badge">{{ usedContainersCount }}/{{ userPlan.maxContainers }}</span>
           </button>
@@ -412,7 +419,9 @@ const handleLogout = async () => {
             @click="selectMenu('editor')"
             :disabled="containers.length === 0"
           >
-            <Edit3 :size="17" />
+            <span class="nav-icon-box icon-violet">
+              <Edit3 :size="16" />
+            </span>
             <span class="nav-link-text">Editor Studio Visual</span>
           </button>
 
@@ -421,7 +430,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'content' }"
             @click="selectMenu('content')"
           >
-            <FileText :size="17" />
+            <span class="nav-icon-box icon-emerald">
+              <FileText :size="16" />
+            </span>
             <span class="nav-link-text">Artikel & Halaman</span>
             <span class="nav-badge">{{ articles.length + cmsPages.length }}</span>
           </button>
@@ -431,7 +442,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'media' }"
             @click="selectMenu('media')"
           >
-            <HardDrive :size="17" />
+            <span class="nav-icon-box icon-amber">
+              <HardDrive :size="16" />
+            </span>
             <span class="nav-link-text">Media Assets (S3)</span>
             <span class="nav-badge">{{ mediaStorage.usedStorage }}</span>
           </button>
@@ -441,7 +454,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'templates' }"
             @click="selectMenu('templates')"
           >
-            <Palette :size="17" />
+            <span class="nav-icon-box icon-rose">
+              <Palette :size="16" />
+            </span>
             <span class="nav-link-text">Katalog Template</span>
           </button>
         </nav>
@@ -453,7 +468,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'domains' }"
             @click="selectMenu('domains')"
           >
-            <Globe :size="17" />
+            <span class="nav-icon-box icon-cyan">
+              <Globe :size="16" />
+            </span>
             <span class="nav-link-text">Custom Domain & DNS</span>
             <span class="nav-badge badge-success">SSL</span>
           </button>
@@ -463,7 +480,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'analytics' }"
             @click="selectMenu('analytics')"
           >
-            <TrendingUp :size="17" />
+            <span class="nav-icon-box icon-indigo">
+              <TrendingUp :size="16" />
+            </span>
             <span class="nav-link-text">Analitik & Telemetri</span>
           </button>
 
@@ -472,7 +491,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'webhooks' }"
             @click="selectMenu('webhooks')"
           >
-            <Webhook :size="17" />
+            <span class="nav-icon-box icon-teal">
+              <Webhook :size="16" />
+            </span>
             <span class="nav-link-text">Webhooks & API</span>
           </button>
         </nav>
@@ -484,7 +505,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'billing' }"
             @click="selectMenu('billing')"
           >
-            <CreditCard :size="17" />
+            <span class="nav-icon-box icon-purple">
+              <CreditCard :size="16" />
+            </span>
             <span class="nav-link-text">Kapasitas & Paket</span>
           </button>
 
@@ -493,7 +516,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'invoices' }"
             @click="selectMenu('invoices')"
           >
-            <Receipt :size="17" />
+            <span class="nav-icon-box icon-mint">
+              <Receipt :size="16" />
+            </span>
             <span class="nav-link-text">Faktur & Invoice</span>
             <span class="nav-badge badge-success">Lunas</span>
           </button>
@@ -506,7 +531,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'tickets' }"
             @click="selectMenu('tickets')"
           >
-            <LifeBuoy :size="17" />
+            <span class="nav-icon-box icon-sky">
+              <LifeBuoy :size="16" />
+            </span>
             <span class="nav-link-text">Tiket Support</span>
             <span class="nav-badge badge-warning">1 Aktif</span>
           </button>
@@ -519,21 +546,26 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'changelog' }"
             @click="selectMenu('changelog')"
           >
-            <History :size="17" />
+            <span class="nav-icon-box icon-orange">
+              <History :size="16" />
+            </span>
             <span class="nav-link-text">Changelog & Rilis</span>
             <span class="nav-badge badge-primary">{{ latestSystemVersion }}</span>
           </button>
         </nav>
       </div>
 
-      <!-- Bottom Sidebar: Quota Gauge & User Profile -->
+      <!-- Bottom Sidebar: Quota Gauge & User Profile (Monochrome Black & White) -->
       <div class="sidebar-footer">
-        <!-- Compact Quota Card -->
+        <!-- Spacious Monochrome Container Capacity Card (Without CPU/RAM Chips) -->
         <div class="quota-gauge-widget">
           <div class="gauge-header">
-            <span>Kapasitas Kontainer</span>
-            <strong>{{ usedContainersCount }} / {{ userPlan.maxContainers }}</strong>
+            <span class="gauge-title-label">Kapasitas Kontainer</span>
+            <span class="quota-count-pill">
+              <strong>{{ usedContainersCount }}</strong> / {{ userPlan.maxContainers }} Pod
+            </span>
           </div>
+
           <div class="gauge-segments">
             <span
               v-for="idx in userPlan.maxContainers"
@@ -542,22 +574,26 @@ const handleLogout = async () => {
               :class="{ filled: idx <= usedContainersCount }"
             ></span>
           </div>
-          <div class="gauge-footer">
-            <span>{{ userPlan.cpuPerContainer }} • {{ userPlan.ramPerContainer }}</span>
-            <button class="link-upgrade" @click="selectMenu('billing')">Upgrade</button>
-          </div>
+
+          <button type="button" class="btn-quota-upgrade-cta" @click="selectMenu('billing')">
+            <span>Upgrade Kapasitas</span>
+            <ArrowUpRight :size="13" />
+          </button>
         </div>
 
-        <!-- User Dropdown Strip -->
+        <!-- Monochrome Executive User Profile Pod -->
         <div class="sidebar-user-strip">
-          <div class="user-avatar-small">
-            <User :size="14" color="#2563eb" />
+          <div class="user-avatar-pro">
+            <span class="user-avatar-initials">RP</span>
           </div>
           <div class="user-info-text">
-            <div class="user-name">Rizal Pratama</div>
+            <div class="user-name-row">
+              <span class="user-name">Rizal Pratama</span>
+              <span class="user-role-pill">PRO</span>
+            </div>
             <div class="user-email-sub">{{ userEmail }}</div>
           </div>
-          <button class="btn-sidebar-logout" @click="handleLogout" title="Keluar">
+          <button type="button" class="btn-sidebar-logout" @click="handleLogout" title="Keluar dari Sesi Studio">
             <LogOut :size="14" />
           </button>
         </div>
@@ -669,18 +705,20 @@ const handleLogout = async () => {
 
       <!-- Main Dynamic Workspace View (Modular per-menu components) -->
       <main class="content-scroll-pane" :class="{ 'is-editor-workspace': activeMenu === 'editor' }">
-        <ContainersModule v-if="activeMenu === 'containers'" />
-        <VisualEditorModule v-else-if="activeMenu === 'editor'" />
-        <ContentArticlesModule v-else-if="activeMenu === 'content'" />
-        <MediaAssetsModule v-else-if="activeMenu === 'media'" />
-        <TemplatesCatalogModule v-else-if="activeMenu === 'templates'" />
-        <CustomDomainsModule v-else-if="activeMenu === 'domains'" />
-        <AnalyticsTelemetryModule v-else-if="activeMenu === 'analytics'" />
-        <WebhooksApiModule v-else-if="activeMenu === 'webhooks'" />
-        <BillingPlanModule v-else-if="activeMenu === 'billing'" />
-        <InvoicesHistoryModule v-else-if="activeMenu === 'invoices'" />
-        <SupportTicketingModule v-else-if="activeMenu === 'tickets'" />
-        <ChangelogModule v-else-if="activeMenu === 'changelog'" />
+        <Transition name="studio-workspace-stage" mode="out-in">
+          <ContainersModule v-if="activeMenu === 'containers'" key="menu-containers" />
+          <VisualEditorModule v-else-if="activeMenu === 'editor'" key="menu-editor" />
+          <ContentArticlesModule v-else-if="activeMenu === 'content'" key="menu-content" />
+          <MediaAssetsModule v-else-if="activeMenu === 'media'" key="menu-media" />
+          <TemplatesCatalogModule v-else-if="activeMenu === 'templates'" key="menu-templates" />
+          <CustomDomainsModule v-else-if="activeMenu === 'domains'" key="menu-domains" />
+          <AnalyticsTelemetryModule v-else-if="activeMenu === 'analytics'" key="menu-analytics" />
+          <WebhooksApiModule v-else-if="activeMenu === 'webhooks'" key="menu-webhooks" />
+          <BillingPlanModule v-else-if="activeMenu === 'billing'" key="menu-billing" />
+          <InvoicesHistoryModule v-else-if="activeMenu === 'invoices'" key="menu-invoices" />
+          <SupportTicketingModule v-else-if="activeMenu === 'tickets'" key="menu-tickets" />
+          <ChangelogModule v-else-if="activeMenu === 'changelog'" key="menu-changelog" />
+        </Transition>
       </main>
     </div>
 
@@ -699,7 +737,7 @@ const handleLogout = async () => {
               <div>
                 <div class="create-site-title-row">
                   <h3 class="modal-heading">Buat Website & Deploy Kontainer Baru</h3>
-                  <span class="badge-status running" style="font-size: 0.68rem; font-weight: 700;">
+                  <span class="create-ready-pill">
                     <Zap :size="10" /> Ready to Provision
                   </span>
                 </div>
@@ -765,55 +803,100 @@ const handleLogout = async () => {
                   </div>
                 </div>
 
-                <!-- 2. Domain & Identity Configuration -->
+                <!-- 2. Domain & Identity Configuration (Refactored Eye-Catching Studio Form) -->
                 <div class="create-step-block">
                   <div class="create-step-header">
                     <span class="step-num-pill">2</span>
                     <span class="step-title-text">Konfigurasi Identitas & Rute Subdomain</span>
+                    <span class="step-helper-badge">Auto-SSL TLS 1.3</span>
                   </div>
 
                   <div class="create-form-inputs-group">
-                    <!-- Website Name -->
-                    <div class="create-input-row">
-                      <label class="create-field-label" for="modal-site-name">
-                        <span>Nama Website</span>
-                        <span class="field-req-dot">*</span>
-                      </label>
-                      <input
-                        id="modal-site-name"
-                        v-model="newSiteForm.name"
-                        @input="onSiteNameInput"
-                        type="text"
-                        placeholder="Contoh: Toko Kopi Sejahtera"
-                        class="create-text-input"
-                        required
-                        autocomplete="off"
-                      />
+                    <!-- 2-Column Identity Row: Website Name & Headline -->
+                    <div class="create-identity-dual-grid">
+                      <!-- Website Name -->
+                      <div class="create-field-card">
+                        <div class="create-field-top">
+                          <label class="create-field-label" for="modal-site-name">
+                            <span>Nama Website</span>
+                            <span class="field-req-dot">*</span>
+                          </label>
+                          <span class="create-field-tag required">Wajib</span>
+                        </div>
+                        <div class="create-input-shell">
+                          <span class="create-input-icon">
+                            <Globe :size="15" />
+                          </span>
+                          <input
+                            id="modal-site-name"
+                            v-model="newSiteForm.name"
+                            @input="onSiteNameInput"
+                            type="text"
+                            placeholder="Contoh: Toko Kopi Sejahtera"
+                            class="create-text-input-clean"
+                            required
+                            autocomplete="off"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Role / Headline -->
+                      <div class="create-field-card">
+                        <div class="create-field-top">
+                          <label class="create-field-label" for="modal-role">
+                            <span>Headline / Slogan Situs</span>
+                          </label>
+                          <span class="create-field-tag optional">Opsional</span>
+                        </div>
+                        <div class="create-input-shell">
+                          <span class="create-input-icon">
+                            <FileText :size="15" />
+                          </span>
+                          <input
+                            id="modal-role"
+                            v-model="newSiteForm.role"
+                            type="text"
+                            placeholder="Contoh: Solusi Retail & Grosir"
+                            class="create-text-input-clean"
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <!-- Subdomain Edge Input -->
-                    <div class="create-input-row">
+                    <!-- Subdomain Edge Cloud Capsule -->
+                    <div class="create-field-card create-subdomain-card">
                       <div class="subdomain-label-row">
                         <label class="create-field-label" for="modal-subdomain">
-                          <span>Subdomain Edge Cloud</span>
+                          <span>Alamat Subdomain Edge Cloud</span>
                           <span class="field-req-dot">*</span>
                         </label>
-                        <button
-                          type="button"
-                          class="btn-resync-slug"
-                          @click="forceResyncSubdomain"
-                          title="Sinkronkan ulang dari nama website"
-                          v-if="isSubdomainManuallyEdited"
-                        >
-                          <RotateCw :size="11" />
-                          <span>Sinkronkan Nama</span>
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <button
+                            type="button"
+                            class="btn-resync-slug"
+                            @click="forceResyncSubdomain"
+                            title="Sinkronkan ulang dari nama website"
+                            v-if="isSubdomainManuallyEdited"
+                          >
+                            <RotateCw :size="11" />
+                            <span>Sinkronkan Nama</span>
+                          </button>
+                          <span v-if="newSiteForm.subdomain.trim() && isSubdomainAvailable(newSiteForm.subdomain)" class="subdomain-inline-status avail">
+                            <CheckCircle2 :size="12" /> Tersedia
+                          </span>
+                          <span v-else-if="newSiteForm.subdomain.trim()" class="subdomain-inline-status taken">
+                            <AlertCircle :size="12" /> Sudah Digunakan
+                          </span>
+                          <span v-else class="subdomain-inline-status neutral">
+                            Let's Encrypt Wildcard
+                          </span>
+                        </div>
                       </div>
 
                       <div class="create-url-container">
                         <span class="url-addon-prefix">
                           <Lock :size="12" class="url-addon-lock" />
-                          https://
+                          <span>https://</span>
                         </span>
                         <input
                           id="modal-subdomain"
@@ -827,34 +910,6 @@ const handleLogout = async () => {
                         />
                         <span class="url-addon-suffix">.cloudcms.app</span>
                       </div>
-
-                      <!-- Subdomain Live Availability Feedback -->
-                      <div class="subdomain-check-feedback" v-if="newSiteForm.subdomain.trim()">
-                        <span v-if="isSubdomainAvailable(newSiteForm.subdomain)" class="feedback-avail">
-                          <CheckCircle2 :size="12" /> Subdomain tersedia & rute edge Traefik v3 siap dialokasikan
-                        </span>
-                        <span v-else class="feedback-taken">
-                          <AlertCircle :size="12" /> Subdomain sudah digunakan oleh kontainer lain
-                        </span>
-                      </div>
-                      <p class="field-helper-text" v-else>
-                        Rute edge Traefik v3 otomatis menerbitkan sertifikat TLS v1.3 Let's Encrypt Wildcard.
-                      </p>
-                    </div>
-
-                    <!-- Role / Headline -->
-                    <div class="create-input-row">
-                      <div class="field-title-flex">
-                        <label class="create-field-label" for="modal-role">Headline atau Slogan Situs</label>
-                        <span class="field-optional-badge">Opsional</span>
-                      </div>
-                      <input
-                        id="modal-role"
-                        v-model="newSiteForm.role"
-                        type="text"
-                        placeholder="Contoh: Solusi Kebutuhan Retail & Grosir Terlengkap"
-                        class="create-text-input"
-                      />
                     </div>
                   </div>
                 </div>

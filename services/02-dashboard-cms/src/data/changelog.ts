@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.24.1',
+    version: 'v1.25.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '22 Oktober 2026',
+    lastUpdated: '24 Oktober 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -34,11 +34,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '04-marketing-site',
     name: 'Service 04: Marketing Site & Public Landing',
-    version: 'v1.9.2',
+    version: 'v1.9.3',
     serviceFolder: 'services/04-marketing-site',
     badge: 'Stable',
     stack: 'React 19 • Tailwind CSS • Vite',
-    lastUpdated: '18 Oktober 2026',
+    lastUpdated: '24 Oktober 2026',
     leadPic: 'Irgi'
   },
   {
@@ -64,16 +64,124 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '07-docs',
     name: 'Service 07: Docs & Mission Control Hub',
-    version: 'v1.5.3',
+    version: 'v1.5.4',
     serviceFolder: 'services/07-docs',
     badge: 'Latest',
     stack: 'Vue 3 • Go Native BFF (8087) • Docker',
-    lastUpdated: '22 Oktober 2026',
+    lastUpdated: '24 Oktober 2026',
     leadPic: 'Rizal & Paijo AI'
   }
 ];
 
 export const changelogReleases: ChangelogRelease[] = [
+  {
+    version: 'v1.25.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '24 Oktober 2026',
+    title: 'Refaktor Pusat Bantuan & Live Chat 1140px, Ikon Sidebar Berwarna & Animasi Cascade Konten Studio',
+    summary: 'Merombak total modul Pusat Bantuan & Tiket Support serta menyempurnakan animasi antarmuka Dashboard Studio: (1) Pemilihan 4 Divisi Tujuan Pengaduan dengan deteksi otomatis identitas akun tanpa field urgensi; (2) Modal Live Chat 1140px berdesain model WhatsApp dalam tema HeroCMS Studio (bubble speech tail, indikator mengetik lawan bicara, Centang 1/2/Biru + jam/tanggal dibaca, upload gambar, emotikon, serta Unified Chat Input Capsule menyatu dengan kanvas); (3) Bespoke Custom Dropdown Popover & tabel riwayat tiket di bawah formulir; (4) Ikon menu sidebar berwarna semantik (.nav-icon-box) dengan animasi klik pegas (navSelectSpring) serta animasi transisi berjenjang (staggered card cascade) pada seluruh konten dan kartu di area kerja kanan.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12500-1',
+        type: 'feature',
+        scope: 'Studio Buat Pengaduan 4 Divisi & Identitas Otomatis',
+        description: 'Menyediakan 4 kartu pemilihan divisi tujuan bantuan, deteksi otomatis nama dan email akun dari sesi, pilihan kontainer terkait, serta penghapusan opsi tingkat urgensi.'
+      },
+      {
+        id: 'c-02dash-12500-2',
+        type: 'feature',
+        scope: 'Modal Live Chat Model WhatsApp Tema Studio 1140px & Unified Input Capsule',
+        description: 'Memperbesar ruang diskusi tiket menjadi workspace 2 kolom 1140px dengan model struktural WhatsApp berbalut tema HeroCMS Studio (#f8fafc dot-grid & Royal Blue #eff6ff/#e0f2fe), indikator mengetik lawan bicara, Centang 1/2/Biru beserta timestamp Dibaca, upload gambar, emotikon, dan kapsul input balasan yang menyatu langsung di dalam kanvas chat.'
+      },
+      {
+        id: 'c-02dash-12500-3',
+        type: 'improvement',
+        scope: 'Custom Dropdown Popover & Tabel Riwayat Tiket di Bawah Formulir',
+        description: 'Menghapus badge CS & DevOps Siaga 24/7, mengganti dropdown bawaan browser dengan Bespoke Studio Custom Dropdown Popover (Kategori Kendala, Situs/Kontainer Terdampak, dan Filter Divisi), serta menampilkan pengaduan dalam tabel enterprise di bawah formulir.'
+      },
+      {
+        id: 'c-02dash-12500-4',
+        type: 'feature',
+        scope: 'Ikon Sidebar Berwarna Semantik & Animasi Cascade Konten Workspace',
+        description: 'Menambahkan 12 badge ikon berwarna semantik (.nav-icon-box) pada navigasi sidebar kiri lengkap dengan animasi pegas saat menu dipilih (navSelectSpring & navIconPop), penguncian warna hitam aktif tanpa flicker hover, serta animasi masuk berjenjang (studio-workspace-stage & studioCardCascadeIn) untuk seluruh kartu, tabel, dan formulir di panel kanan.'
+      },
+      {
+        id: 'c-02dash-12500-5',
+        type: 'improvement',
+        scope: 'Monochrome Hitam-Putih Brand Header, Kapasitas Kontainer & Profil User + Anti-Bounce Scroll',
+        description: 'Merombak tampilan kartu judul Stack Studio di kiri atas, kartu Kapasitas Kontainer (tanpa chip CPU/RAM agar lega), serta kartu profil user PRO di kiri bawah dengan palet eksklusif Hitam & Putih (#09090b & #ffffff) tanpa efek neon, ditambah penguncian overscroll-behavior.'
+      },
+      {
+        id: 'c-02dash-12500-6',
+        type: 'improvement',
+        scope: 'Grid 2 Kartu per Baris, Empty State Kontainer & Modal Buat Website 1160px',
+        description: 'Menata ulang grid Situs & Kontainer menjadi 2 kartu per baris, menyempurnakan kartu Empty State ("Tidak ada kontainer ditemukan") beserta tombol Reset Pencarian & Filter, serta memperlebar modal Buat Website & Deploy Kontainer Baru ke 1160px dengan refaktor kartu form input Konfigurasi Identitas & Rute Subdomain.'
+      },
+      {
+        id: 'c-02dash-12500-7',
+        type: 'improvement',
+        scope: 'Background Ikon Menu Aktif & Anti-Neon Monokrom Katalog Template',
+        description: 'Menambahkan background semantik pastel pada ikon sidebar saat status aktif (.nav-link.active .nav-icon-box), serta membersihkan seluruh gradien neon warna-warni (AI Slop) pada Katalog Template & Blueprint Store beralih ke estetika arsitektural monokrom Hitam & Putih (#09090b & #ffffff).'
+      }
+    ]
+  },
+  {
+    version: 'v1.24.3',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '24 Oktober 2026',
+    title: 'Penyempurnaan Responsivitas Kartu Kontainer 1680x1050, Pembersihan Badge Header & Ribon E-Faktur',
+    summary: 'Menerapkan perbaikan UI/UX pada modul Kontainer, Media Assets, Custom Domains, dan Faktur: (1) Menata ulang tombol toggle Grid/Table agar tidak kaku/blocky; (2) Memperbaiki responsivitas kartu kontainer pada resolusi 1680x1050 sehingga CPU dan RAM tidak enter atau patah baris; (3) Menghapus pill metrik Region dan S3 Bucket pada header Media Assets; (4) Menghapus pill Edge Engine Traefik dan SSL Auto ACME pada Custom Domains; (5) Menghapus pita header Kementerian Keuangan pada lembar modal E-Faktur.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12430-1',
+        type: 'improvement',
+        scope: 'Responsivitas Kartu Kontainer & Switcher Grid/Table',
+        description: 'Menyempurnakan styling view-mode-btn dengan padding auto fleksibel dan menyingkat label telemetri CPU & RAM agar pas tanpa enter pada resolusi desktop 1680x1050.'
+      },
+      {
+        id: 'c-02dash-12430-2',
+        type: 'improvement',
+        scope: 'Pembersihan Metadata Header Media & Custom Domain',
+        description: 'Menghapus pill Region dan S3 Bucket pada Media Assets serta badge Edge Engine Traefik dan SSL Auto ACME pada Custom Domains.'
+      },
+      {
+        id: 'c-02dash-12430-3',
+        type: 'improvement',
+        scope: 'Penyederhanaan Lembar Dokumen E-Faktur',
+        description: 'Menghilangkan pita instansi pemerintah Kementerian Keuangan dari bagian atas lembar modal pratinjau faktur pajak.'
+      }
+    ]
+  },
+  {
+    version: 'v1.24.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '24 Oktober 2026',
+    title: 'Mitigasi Kerentanan Keamanan Node.js CVE-2026-48930 (Upgrade Node.js 26.12.1 & Sinkronisasi Lockfile)',
+    summary: 'Memperbarui runtime Node.js ke rilis keamanan terbaru v26.12.1 (node:26-alpine) untuk memitigasi CVE-2026-48930 (Improper Null Termination / Silent Authority Rebinding pada DNS/TLS Resolver Bindings), memperbaiki sinkronisasi package-lock.json pada Rollup 4.65.0, serta menyelaraskan pipeline GitHub Actions CI/CD ke Node.js 26.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12420-1',
+        type: 'security',
+        scope: 'Mitigasi CVE-2026-48930 & Upgrade Toolchain Node.js 26',
+        description: 'Memperbarui base image frontend-builder di Dockerfile ke node:26-alpine dan runtime pengembangan ke Node.js v26.12.1 (npm v11.20.0).'
+      },
+      {
+        id: 'c-02dash-12420-2',
+        type: 'bugfix',
+        scope: 'Resolusi Konflik Dependency Lockfile Rollup & Babel',
+        description: 'Menyinkronkan package-lock.json untuk mengatasi error ENOTEMPTY pada node_modules/rollup saat instalasi dependensi.'
+      }
+    ]
+  },
   {
     version: 'v1.24.1',
     service: '02-dashboard-cms',
@@ -81,7 +189,7 @@ export const changelogReleases: ChangelogRelease[] = [
     releaseDate: '22 Oktober 2026',
     title: 'Standardisasi Toolchain Go 1.23 & Resolusi Kompatibilitas Multi-Architecture Docker Container Build',
     summary: 'Memperbaiki kompatibilitas kompilasi kontainer dan pipeline CI/CD: (1) Menyelaraskan persyaratan Go module ke go 1.23 pada backend BFF; (2) Memperbarui dependensi checksum via go mod tidy; (3) Memvalidasi kompatibilitas build kontainer Docker pada arsitektur linux/amd64 dan linux/arm64.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
