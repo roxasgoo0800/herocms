@@ -716,8 +716,9 @@ a[class*="btn-"] svg,
 }
 
 /* Sidebar Menu Icons (.nav-icon-box):
-   Default = White background (#ffffff), Black border (#09090b), Black icon (#09090b)
-   Active (Clicked) = Colored icon inside crisp white box */
+   Razor-sharp subpixel vector rendering (anti-pecah / anti-aliased)
+   Default = Clean white background, subtle refined border (#d4d4d8), deep crisp icon (#18181b)
+   Active (Clicked) = Semantic pastel background + matching border + colored icon */
 .nav-icon-box {
   width: 28px;
   height: 28px;
@@ -727,25 +728,37 @@ a[class*="btn-"] svg,
   justify-content: center;
   flex-shrink: 0;
   background: #ffffff;
-  border: 1px solid #09090b;
-  color: #09090b;
+  border: 1px solid #d4d4d8;
+  color: #18181b;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transform: translateZ(0);
+  backface-visibility: hidden;
   transition:
-    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
-    background-color 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease,
-    color 0.22s ease;
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.nav-icon-box svg {
+  shape-rendering: geometricPrecision;
+  text-rendering: geometricPrecision;
+  image-rendering: -webkit-optimize-contrast;
+  stroke-width: 1.85;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .nav-link:not(.active):hover:not(:disabled) .nav-icon-box {
-  transform: scale(1.08) rotate(-3deg);
+  transform: scale(1.06);
   background: #f4f4f5;
-  border-color: #09090b;
+  border-color: #a1a1aa;
   color: #09090b;
 }
 
 .nav-link.active .nav-icon-box {
-  animation: navIconPop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: navIconPop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 /* 12 Semantic Icon & Background Colors Activated ONLY When Menu Item is Clicked (.nav-link.active) */

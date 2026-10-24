@@ -407,7 +407,7 @@ const handleLogout = async () => {
             @click="selectMenu('containers')"
           >
             <span class="nav-icon-box icon-blue">
-              <FolderKanban :size="15" />
+              <FolderKanban :size="16" />
             </span>
             <span class="nav-link-text">Situs & Kontainer</span>
             <span class="nav-badge">{{ usedContainersCount }}/{{ userPlan.maxContainers }}</span>
@@ -420,7 +420,7 @@ const handleLogout = async () => {
             :disabled="containers.length === 0"
           >
             <span class="nav-icon-box icon-violet">
-              <Edit3 :size="15" />
+              <Edit3 :size="16" />
             </span>
             <span class="nav-link-text">Editor Studio Visual</span>
           </button>
@@ -431,7 +431,7 @@ const handleLogout = async () => {
             @click="selectMenu('content')"
           >
             <span class="nav-icon-box icon-emerald">
-              <FileText :size="15" />
+              <FileText :size="16" />
             </span>
             <span class="nav-link-text">Artikel & Halaman</span>
             <span class="nav-badge">{{ articles.length + cmsPages.length }}</span>
@@ -443,7 +443,7 @@ const handleLogout = async () => {
             @click="selectMenu('media')"
           >
             <span class="nav-icon-box icon-amber">
-              <HardDrive :size="15" />
+              <HardDrive :size="16" />
             </span>
             <span class="nav-link-text">Media Assets (S3)</span>
             <span class="nav-badge">{{ mediaStorage.usedStorage }}</span>
@@ -455,7 +455,7 @@ const handleLogout = async () => {
             @click="selectMenu('templates')"
           >
             <span class="nav-icon-box icon-rose">
-              <Palette :size="15" />
+              <Palette :size="16" />
             </span>
             <span class="nav-link-text">Katalog Template</span>
           </button>
@@ -469,7 +469,7 @@ const handleLogout = async () => {
             @click="selectMenu('domains')"
           >
             <span class="nav-icon-box icon-cyan">
-              <Globe :size="15" />
+              <Globe :size="16" />
             </span>
             <span class="nav-link-text">Custom Domain & DNS</span>
             <span class="nav-badge badge-success">SSL</span>
@@ -481,7 +481,7 @@ const handleLogout = async () => {
             @click="selectMenu('analytics')"
           >
             <span class="nav-icon-box icon-indigo">
-              <TrendingUp :size="15" />
+              <TrendingUp :size="16" />
             </span>
             <span class="nav-link-text">Analitik & Telemetri</span>
           </button>
@@ -492,7 +492,7 @@ const handleLogout = async () => {
             @click="selectMenu('webhooks')"
           >
             <span class="nav-icon-box icon-teal">
-              <Webhook :size="15" />
+              <Webhook :size="16" />
             </span>
             <span class="nav-link-text">Webhooks & API</span>
           </button>
@@ -506,7 +506,7 @@ const handleLogout = async () => {
             @click="selectMenu('billing')"
           >
             <span class="nav-icon-box icon-purple">
-              <CreditCard :size="15" />
+              <CreditCard :size="16" />
             </span>
             <span class="nav-link-text">Kapasitas & Paket</span>
           </button>
@@ -517,7 +517,7 @@ const handleLogout = async () => {
             @click="selectMenu('invoices')"
           >
             <span class="nav-icon-box icon-mint">
-              <Receipt :size="15" />
+              <Receipt :size="16" />
             </span>
             <span class="nav-link-text">Faktur & Invoice</span>
             <span class="nav-badge badge-success">Lunas</span>
@@ -532,7 +532,7 @@ const handleLogout = async () => {
             @click="selectMenu('tickets')"
           >
             <span class="nav-icon-box icon-sky">
-              <LifeBuoy :size="15" />
+              <LifeBuoy :size="16" />
             </span>
             <span class="nav-link-text">Tiket Support</span>
             <span class="nav-badge badge-warning">1 Aktif</span>
@@ -547,7 +547,7 @@ const handleLogout = async () => {
             @click="selectMenu('changelog')"
           >
             <span class="nav-icon-box icon-orange">
-              <History :size="15" />
+              <History :size="16" />
             </span>
             <span class="nav-link-text">Changelog & Rilis</span>
             <span class="nav-badge badge-primary">{{ latestSystemVersion }}</span>
