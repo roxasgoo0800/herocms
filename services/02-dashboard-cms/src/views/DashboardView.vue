@@ -45,7 +45,6 @@ import {
   Rocket,
   Zap,
   Check,
-  Cpu,
   ArrowUpRight
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
@@ -378,25 +377,21 @@ const handleLogout = async () => {
 
       <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
       <aside class="app-sidebar">
-      <!-- Workspace Brand Switcher (Eye-Catching Executive Console Header) -->
+      <!-- Workspace Brand Switcher (Clean Monochrome Black & White Header) -->
       <div class="sidebar-header">
         <div class="workspace-brand-card" @click="selectMenu('containers')" title="Stack Studio by Aether Core">
           <div class="brand-glyph-pro">
-            <Layers :size="19" color="#ffffff" />
-            <span class="brand-glyph-orb"></span>
+            <Layers :size="18" color="#ffffff" />
           </div>
           <div class="brand-meta">
             <div class="brand-title-row">
               <div class="brand-title">
-                Stack <span class="brand-gradient">Studio</span>
+                Stack <span>Studio</span>
               </div>
               <span class="brand-entity-pill">Aether Core</span>
             </div>
             <div class="brand-plan-row">
-              <span class="pulse-green"></span>
               <span class="plan-name">{{ userPlan.name }}</span>
-              <span class="brand-plan-sep">•</span>
-              <span class="brand-edge-ready">Edge Ready</span>
             </div>
           </div>
         </div>
@@ -560,17 +555,12 @@ const handleLogout = async () => {
         </nav>
       </div>
 
-      <!-- Bottom Sidebar: Quota Gauge & User Profile -->
+      <!-- Bottom Sidebar: Quota Gauge & User Profile (Monochrome Black & White) -->
       <div class="sidebar-footer">
-        <!-- Eye-Catching Cloud Pod Quota Card -->
+        <!-- Spacious Monochrome Container Capacity Card (Without CPU/RAM Chips) -->
         <div class="quota-gauge-widget">
           <div class="gauge-header">
-            <div class="gauge-title-cluster">
-              <span class="quota-icon-badge">
-                <Server :size="12" />
-              </span>
-              <span class="gauge-title-label">Kapasitas Kontainer</span>
-            </div>
+            <span class="gauge-title-label">Kapasitas Kontainer</span>
             <span class="quota-count-pill">
               <strong>{{ usedContainersCount }}</strong> / {{ userPlan.maxContainers }} Pod
             </span>
@@ -585,31 +575,16 @@ const handleLogout = async () => {
             ></span>
           </div>
 
-          <div class="quota-specs-strip">
-            <span class="quota-spec-chip">
-              <Cpu :size="11" />
-              <span>{{ userPlan.cpuPerContainer }}</span>
-            </span>
-            <span class="quota-spec-chip">
-              <HardDrive :size="11" />
-              <span>{{ userPlan.ramPerContainer }}</span>
-            </span>
-          </div>
-
           <button type="button" class="btn-quota-upgrade-cta" @click="selectMenu('billing')">
-            <span class="upgrade-cta-left">
-              <Zap :size="12" />
-              <span>Upgrade Kapasitas</span>
-            </span>
+            <span>Upgrade Kapasitas</span>
             <ArrowUpRight :size="13" />
           </button>
         </div>
 
-        <!-- Eye-Catching Executive User Profile Pod -->
+        <!-- Monochrome Executive User Profile Pod -->
         <div class="sidebar-user-strip">
           <div class="user-avatar-pro">
             <span class="user-avatar-initials">RP</span>
-            <span class="user-online-dot" title="Sesi Aktif & Terenkripsi"></span>
           </div>
           <div class="user-info-text">
             <div class="user-name-row">
@@ -828,55 +803,100 @@ const handleLogout = async () => {
                   </div>
                 </div>
 
-                <!-- 2. Domain & Identity Configuration -->
+                <!-- 2. Domain & Identity Configuration (Refactored Eye-Catching Studio Form) -->
                 <div class="create-step-block">
                   <div class="create-step-header">
                     <span class="step-num-pill">2</span>
                     <span class="step-title-text">Konfigurasi Identitas & Rute Subdomain</span>
+                    <span class="step-helper-badge">Auto-SSL TLS 1.3</span>
                   </div>
 
                   <div class="create-form-inputs-group">
-                    <!-- Website Name -->
-                    <div class="create-input-row">
-                      <label class="create-field-label" for="modal-site-name">
-                        <span>Nama Website</span>
-                        <span class="field-req-dot">*</span>
-                      </label>
-                      <input
-                        id="modal-site-name"
-                        v-model="newSiteForm.name"
-                        @input="onSiteNameInput"
-                        type="text"
-                        placeholder="Contoh: Toko Kopi Sejahtera"
-                        class="create-text-input"
-                        required
-                        autocomplete="off"
-                      />
+                    <!-- 2-Column Identity Row: Website Name & Headline -->
+                    <div class="create-identity-dual-grid">
+                      <!-- Website Name -->
+                      <div class="create-field-card">
+                        <div class="create-field-top">
+                          <label class="create-field-label" for="modal-site-name">
+                            <span>Nama Website</span>
+                            <span class="field-req-dot">*</span>
+                          </label>
+                          <span class="create-field-tag">Wajib</span>
+                        </div>
+                        <div class="create-input-shell">
+                          <span class="create-input-icon">
+                            <Globe :size="15" />
+                          </span>
+                          <input
+                            id="modal-site-name"
+                            v-model="newSiteForm.name"
+                            @input="onSiteNameInput"
+                            type="text"
+                            placeholder="Contoh: Toko Kopi Sejahtera"
+                            class="create-text-input-clean"
+                            required
+                            autocomplete="off"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Role / Headline -->
+                      <div class="create-field-card">
+                        <div class="create-field-top">
+                          <label class="create-field-label" for="modal-role">
+                            <span>Headline / Slogan Situs</span>
+                          </label>
+                          <span class="field-optional-badge">Opsional</span>
+                        </div>
+                        <div class="create-input-shell">
+                          <span class="create-input-icon">
+                            <FileText :size="15" />
+                          </span>
+                          <input
+                            id="modal-role"
+                            v-model="newSiteForm.role"
+                            type="text"
+                            placeholder="Contoh: Solusi Retail & Grosir Terlengkap"
+                            class="create-text-input-clean"
+                          />
+                        </div>
+                      </div>
                     </div>
 
-                    <!-- Subdomain Edge Input -->
-                    <div class="create-input-row">
+                    <!-- Subdomain Edge Cloud Capsule -->
+                    <div class="create-field-card create-subdomain-card">
                       <div class="subdomain-label-row">
                         <label class="create-field-label" for="modal-subdomain">
-                          <span>Subdomain Edge Cloud</span>
+                          <span>Alamat Subdomain Edge Cloud</span>
                           <span class="field-req-dot">*</span>
                         </label>
-                        <button
-                          type="button"
-                          class="btn-resync-slug"
-                          @click="forceResyncSubdomain"
-                          title="Sinkronkan ulang dari nama website"
-                          v-if="isSubdomainManuallyEdited"
-                        >
-                          <RotateCw :size="11" />
-                          <span>Sinkronkan Nama</span>
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <button
+                            type="button"
+                            class="btn-resync-slug"
+                            @click="forceResyncSubdomain"
+                            title="Sinkronkan ulang dari nama website"
+                            v-if="isSubdomainManuallyEdited"
+                          >
+                            <RotateCw :size="11" />
+                            <span>Sinkronkan Nama</span>
+                          </button>
+                          <span v-if="newSiteForm.subdomain.trim() && isSubdomainAvailable(newSiteForm.subdomain)" class="subdomain-inline-status avail">
+                            <CheckCircle2 :size="12" /> Tersedia
+                          </span>
+                          <span v-else-if="newSiteForm.subdomain.trim()" class="subdomain-inline-status taken">
+                            <AlertCircle :size="12" /> Sudah Digunakan
+                          </span>
+                          <span v-else class="subdomain-inline-status neutral">
+                            Let's Encrypt Wildcard
+                          </span>
+                        </div>
                       </div>
 
                       <div class="create-url-container">
                         <span class="url-addon-prefix">
                           <Lock :size="12" class="url-addon-lock" />
-                          https://
+                          <span>https://</span>
                         </span>
                         <input
                           id="modal-subdomain"
@@ -890,34 +910,6 @@ const handleLogout = async () => {
                         />
                         <span class="url-addon-suffix">.cloudcms.app</span>
                       </div>
-
-                      <!-- Subdomain Live Availability Feedback -->
-                      <div class="subdomain-check-feedback" v-if="newSiteForm.subdomain.trim()">
-                        <span v-if="isSubdomainAvailable(newSiteForm.subdomain)" class="feedback-avail">
-                          <CheckCircle2 :size="12" /> Subdomain tersedia & rute edge Traefik v3 siap dialokasikan
-                        </span>
-                        <span v-else class="feedback-taken">
-                          <AlertCircle :size="12" /> Subdomain sudah digunakan oleh kontainer lain
-                        </span>
-                      </div>
-                      <p class="field-helper-text" v-else>
-                        Rute edge Traefik v3 otomatis menerbitkan sertifikat TLS v1.3 Let's Encrypt Wildcard.
-                      </p>
-                    </div>
-
-                    <!-- Role / Headline -->
-                    <div class="create-input-row">
-                      <div class="field-title-flex">
-                        <label class="create-field-label" for="modal-role">Headline atau Slogan Situs</label>
-                        <span class="field-optional-badge">Opsional</span>
-                      </div>
-                      <input
-                        id="modal-role"
-                        v-model="newSiteForm.role"
-                        type="text"
-                        placeholder="Contoh: Solusi Kebutuhan Retail & Grosir Terlengkap"
-                        class="create-text-input"
-                      />
                     </div>
                   </div>
                 </div>

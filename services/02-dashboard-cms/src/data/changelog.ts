@@ -111,8 +111,14 @@ export const changelogReleases: ChangelogRelease[] = [
       {
         id: 'c-02dash-12500-5',
         type: 'improvement',
-        scope: 'Refaktor Brand Header, Kartu Kapasitas Kontainer, Profil User, Filter Kontainer & Anti-Bounce Scroll',
-        description: 'Merombak tampilan kartu judul Stack Studio di kiri atas, kartu telemetri Kapasitas Kontainer beserta tombol Upgrade Kapasitas, kartu profil user PRO di kiri bawah, penambahan Custom Category Dropdown & tombol filter terstruktur di Situs & Kontainer, serta penguncian overscroll-behavior agar halaman tidak tertarik saat scroll mentok atas/bawah.'
+        scope: 'Monochrome Hitam-Putih Brand Header, Kapasitas Kontainer & Profil User + Anti-Bounce Scroll',
+        description: 'Merombak tampilan kartu judul Stack Studio di kiri atas, kartu Kapasitas Kontainer (tanpa chip CPU/RAM agar lega), serta kartu profil user PRO di kiri bawah dengan palet eksklusif Hitam & Putih (#09090b & #ffffff) tanpa efek neon, ditambah penguncian overscroll-behavior.'
+      },
+      {
+        id: 'c-02dash-12500-6',
+        type: 'improvement',
+        scope: 'Grid 2 Kartu per Baris, Empty State Kontainer & Modal Buat Website 1160px',
+        description: 'Menata ulang grid Situs & Kontainer menjadi 2 kartu per baris, menyempurnakan kartu Empty State ("Tidak ada kontainer ditemukan") beserta tombol Reset Pencarian & Filter, serta memperlebar modal Buat Website & Deploy Kontainer Baru ke 1160px dengan refaktor kartu form input Konfigurasi Identitas & Rute Subdomain.'
       }
     ]
   },

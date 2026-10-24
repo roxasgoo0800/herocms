@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import {
   Server,
   Globe,
@@ -30,8 +30,7 @@ import {
   HardDrive,
   TrendingUp,
   Clock,
-  Wrench,
-  ChevronDown
+  Wrench
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
 import type { ContainerSite } from '../../types/dashboard';
@@ -96,7 +95,7 @@ const setEtaPreset = (val: string) => {
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
 // -----------------------------------------------------------------------------
-// View Mode & Category Dropdown Filter
+// View Mode: Grid Cards vs Enterprise Dense Table
 // -----------------------------------------------------------------------------
 const viewMode = ref<'grid' | 'table'>(
   (localStorage.getItem('herocms_containers_view_mode') as 'grid' | 'table') || 'grid'
@@ -105,38 +104,6 @@ const viewMode = ref<'grid' | 'table'>(
 watch(viewMode, (newMode) => {
   localStorage.setItem('herocms_containers_view_mode', newMode);
 });
-
-const categoryFilter = ref<'all' | 'portfolio' | 'business' | 'blog' | 'education'>('all');
-const isCategoryDropdownOpen = ref(false);
-
-const categoryOptions = [
-  { id: 'all' as const, label: 'Semua Kategori', sub: 'Seluruh tipe kontainer', color: '#2563eb' },
-  { id: 'portfolio' as const, label: 'Portofolio', sub: 'Profil & showcase developer', color: '#7c3aed' },
-  { id: 'business' as const, label: 'Bisnis & SaaS', sub: 'Landing page & korporat', color: '#ea580c' },
-  { id: 'blog' as const, label: 'Publikasi & Media', sub: 'Blog & portal artikel', color: '#059669' },
-  { id: 'education' as const, label: 'Edukasi & Kursus', sub: 'Akademi & dokumentasi', color: '#0284c7' }
-];
-
-const activeCategoryOption = computed(() =>
-  categoryOptions.find(opt => opt.id === categoryFilter.value) || categoryOptions[0]
-);
-
-const selectCategoryFilter = (val: 'all' | 'portfolio' | 'business' | 'blog' | 'education') => {
-  categoryFilter.value = val;
-  isCategoryDropdownOpen.value = false;
-};
-
-const displayedContainers = computed(() => {
-  if (categoryFilter.value === 'all') return filteredContainers.value;
-  return filteredContainers.value.filter(c => c.category === categoryFilter.value);
-});
-
-const handleOutsideDropdownClick = (e: MouseEvent) => {
-  const target = e.target as HTMLElement | null;
-  if (!target?.closest('.containers-category-dropdown')) {
-    isCategoryDropdownOpen.value = false;
-  }
-};
 
 // 7-day live traffic activity sparkline curve generator
 const getContainerTrafficSparkline = (c: ContainerSite) => {
@@ -198,12 +165,10 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown);
-  document.addEventListener('click', handleOutsideDropdownClick);
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown);
-  document.removeEventListener('click', handleOutsideDropdownClick);
 });
 
 const selectForEditor = (containerId: string) => {
@@ -294,7 +259,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
       </div>
     </div>
 
-    <!-- 3. Bespoke Search Command, Custom Category Dropdown, Segmented Filter & View Switcher Bar -->
+    <!-- 3. Bespoke Search Command, Segmented Status Filter & View Switcher Bar -->
     <div class="filter-toolbar containers-filter-toolbar">
       <div class="filter-toolbar-left">
         <div class="search-command-shell">
@@ -310,42 +275,6 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <X :size="13" />
           </button>
           <kbd class="shortcut-tag">⌘K</kbd>
-        </div>
-
-        <!-- Bespoke Custom Category Dropdown Popover -->
-        <div class="studio-custom-dropdown-wrap containers-category-dropdown">
-          <button
-            type="button"
-            class="studio-custom-select-btn studio-custom-select-btn-compact"
-            :class="{ open: isCategoryDropdownOpen }"
-            @click="isCategoryDropdownOpen = !isCategoryDropdownOpen"
-          >
-            <div class="custom-select-leading">
-              <span class="custom-select-dot" :style="{ background: activeCategoryOption.color }"></span>
-              <span class="custom-select-title">{{ activeCategoryOption.label }}</span>
-            </div>
-            <ChevronDown :size="14" class="custom-select-chevron" :class="{ rotated: isCategoryDropdownOpen }" />
-          </button>
-
-          <div v-if="isCategoryDropdownOpen" class="studio-custom-select-menu studio-custom-select-menu-filter">
-            <button
-              v-for="opt in categoryOptions"
-              :key="opt.id"
-              type="button"
-              class="studio-custom-select-item"
-              :class="{ selected: categoryFilter === opt.id }"
-              @click="selectCategoryFilter(opt.id)"
-            >
-              <div class="custom-select-item-left">
-                <span class="custom-select-dot" :style="{ background: opt.color }"></span>
-                <div>
-                  <div class="custom-select-item-title">{{ opt.label }}</div>
-                  <div class="custom-select-item-sub">{{ opt.sub }}</div>
-                </div>
-              </div>
-              <Check v-if="categoryFilter === opt.id" :size="14" class="custom-select-check" />
-            </button>
-          </div>
         </div>
       </div>
 
@@ -433,12 +362,12 @@ const navigateToAnalytics = (c: ContainerSite) => {
 
     <!-- 4A. GRID CARD VIEW (INDUSTRY STANDARD) -->
     <div
-      v-if="viewMode === 'grid' && (displayedContainers.length > 0 || (!searchQuery.trim() && statusFilter === 'all' && categoryFilter === 'all' && containers.length < userPlan.maxContainers))"
+      v-if="viewMode === 'grid' && (filteredContainers.length > 0 || (!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers))"
       class="site-cards-grid"
     >
       <!-- Active & Existing Container Cards -->
       <div
-        v-for="c in displayedContainers"
+        v-for="c in filteredContainers"
         :key="c.id"
         class="pro-site-card"
         :class="{ 'card-stopped': c.status === 'stopped' }"
@@ -700,8 +629,8 @@ const navigateToAnalytics = (c: ContainerSite) => {
         </div>
       </div>
 
-      <!-- Quota Available Slot Placeholders (Fills 3-column grid) -->
-      <template v-if="!searchQuery.trim() && statusFilter === 'all' && categoryFilter === 'all' && containers.length < userPlan.maxContainers">
+      <!-- Quota Available Slot Placeholders (Fills 2-column grid) -->
+      <template v-if="!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers">
         <div
           v-for="slotNum in (userPlan.maxContainers - containers.length)"
           :key="'slot-' + slotNum"
@@ -728,7 +657,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
 
     <!-- 4B. DENSE ENTERPRISE TABLE VIEW -->
     <div
-      v-else-if="viewMode === 'table' && (displayedContainers.length > 0 || (!searchQuery.trim() && statusFilter === 'all' && categoryFilter === 'all' && containers.length < userPlan.maxContainers))"
+      v-else-if="viewMode === 'table' && (filteredContainers.length > 0 || (!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers))"
       class="container-table-card"
     >
       <div style="overflow-x: auto;">
@@ -745,7 +674,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="c in displayedContainers" :key="'table-' + c.id">
+            <tr v-for="c in filteredContainers" :key="'table-' + c.id">
               <!-- Site Name & Category -->
               <td>
                 <div class="table-site-cell">
@@ -933,7 +862,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
 
             <!-- Available Quota Table Row -->
             <tr
-              v-if="!searchQuery.trim() && statusFilter === 'all' && categoryFilter === 'all' && containers.length < userPlan.maxContainers"
+              v-if="!searchQuery.trim() && statusFilter === 'all' && containers.length < userPlan.maxContainers"
               class="table-slot-row"
               @click="openCreateModal()"
             >
@@ -962,20 +891,48 @@ const navigateToAnalytics = (c: ContainerSite) => {
       </div>
     </div>
 
-    <!-- 5. Empty State if search finds nothing -->
-    <div v-else class="empty-state-card" style="margin-top: 10px;">
-      <Server :size="34" style="color: #94a3b8; margin-bottom: 4px;" />
-      <h3>Tidak ada kontainer ditemukan</h3>
-      <p v-if="searchQuery">
-        Tidak ada situs atau kontainer yang cocok dengan kata kunci pencarian "<strong>{{ searchQuery }}</strong>".
+    <!-- 5. Eye-Catching Studio Empty State Card if search or status filter finds nothing -->
+    <div v-else class="empty-state-card">
+      <div class="empty-state-icon-box">
+        <Server :size="24" />
+      </div>
+      <div class="empty-state-badge">FILTER & PENCARIAN KONTAINER</div>
+      <h3 class="empty-state-title">Tidak ada kontainer ditemukan</h3>
+      <p v-if="searchQuery" class="empty-state-desc">
+        Tidak ditemukan situs atau kontainer Docker yang cocok dengan kata kunci pencarian
+        <span class="empty-state-query-chip">"{{ searchQuery }}"</span>.
       </p>
-      <p v-else>
-        Tidak ada kontainer dengan status atau kategori filter terpilih.
+      <p v-else-if="statusFilter === 'maintenance'" class="empty-state-desc">
+        Saat ini tidak ada kontainer yang sedang berada dalam mode <strong>Pemeliharaan (Maintenance)</strong>. Seluruh layanan Anda beroperasi normal.
       </p>
-      <button type="button" class="btn-reset-filter" @click="searchQuery = ''; statusFilter = 'all'; categoryFilter = 'all'">
-        <RotateCw :size="14" />
-        <span>Reset Pencarian & Filter</span>
-      </button>
+      <p v-else-if="statusFilter === 'stopped'" class="empty-state-desc">
+        Saat ini tidak ada kontainer dalam status <strong>Standby (Dihentikan)</strong>. Seluruh pod kontainer Anda sedang aktif melayani trafik.
+      </p>
+      <p v-else class="empty-state-desc">
+        Tidak ada kontainer yang sesuai dengan kombinasi filter yang sedang dipilih saat ini.
+      </p>
+
+      <div class="empty-state-pills">
+        <span class="empty-stat-pill">Running: <strong>{{ runningContainersCount }}</strong></span>
+        <span class="empty-stat-pill">Pemeliharaan: <strong>{{ maintenanceContainersCount }}</strong></span>
+        <span class="empty-stat-pill">Standby: <strong>{{ stoppedContainersCount }}</strong></span>
+      </div>
+
+      <div class="empty-state-actions">
+        <button type="button" class="btn-reset-filter" @click="searchQuery = ''; statusFilter = 'all'">
+          <RotateCw :size="14" />
+          <span>Reset Pencarian & Filter</span>
+        </button>
+        <button
+          v-if="containers.length < userPlan.maxContainers"
+          type="button"
+          class="btn-empty-deploy"
+          @click="openCreateModal()"
+        >
+          <Plus :size="14" />
+          <span>Deploy Website Baru</span>
+        </button>
+      </div>
     </div>
   </section>
 
