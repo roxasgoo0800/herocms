@@ -1,7 +1,7 @@
 # ==============================================================================
-# Stage 1: Build Vue 3 + TypeScript Frontend SPA
+# Stage 1: Build Vue 3 + TypeScript Frontend SPA (Node.js 26 Patched CVE-2026-48930)
 # ==============================================================================
-FROM node:20-alpine AS frontend-builder
+FROM node:26-alpine AS frontend-builder
 WORKDIR /app
 
 COPY package*.json ./

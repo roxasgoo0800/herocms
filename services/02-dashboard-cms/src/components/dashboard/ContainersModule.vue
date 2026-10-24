@@ -490,7 +490,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <div class="gauge-meta">
               <div class="gauge-header-flex">
                 <Cpu :size="11" style="color: #2563eb;" />
-                <span class="gauge-title">CPU CFS QUOTA</span>
+                <span class="gauge-title">CPU</span>
               </div>
               <span class="gauge-val">
                 <strong>{{ c.cpuUsage }}%</strong>
@@ -511,11 +511,11 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <div class="gauge-meta">
               <div class="gauge-header-flex">
                 <HardDrive :size="11" style="color: #059669;" />
-                <span class="gauge-title">RAM MEMCG</span>
+                <span class="gauge-title">RAM</span>
               </div>
               <span class="gauge-val">
-                <strong>{{ c.ramUsage }} MB</strong>
-                <span class="gauge-sub">/ {{ c.ramLimit }} MB</span>
+                <strong>{{ c.ramUsage }}</strong>
+                <span class="gauge-sub">/{{ c.ramLimit }} MB</span>
               </span>
             </div>
             <div class="custom-meter-track">

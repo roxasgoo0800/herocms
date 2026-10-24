@@ -155,11 +155,11 @@ jobs:
           go-version: '>=1.22'
           cache: false
 
-      - name: Setup Node.js 20 Environment
+      - name: Setup Node.js 26 Environment
         if: ${{ matrix.has_node }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 26
 
       - name: Inisialisasi Buffer Log Telemetri
         run: |

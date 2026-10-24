@@ -523,14 +523,10 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
     <!-- Header -->
     <div class="page-intro-row">
       <div>
-        <h1 class="page-title">Media Assets & Dokumen S3 MinIO</h1>
+        <h1 class="page-title">Media Assets & Dokumen</h1>
         <p class="page-desc">Pusat Digital Asset Management (DAM) terisolasi untuk foto, vektor, berkas PDF, spreadsheet Excel (.xlsx), dan dokumen Word (.docx) dengan CDN edge proxy Traefik v3.</p>
       </div>
       <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-        <div class="quota-quick-pills">
-          <span class="pill-metric">Region: <strong>ID-JKT-1</strong></span>
-          <span class="pill-metric-highlight">S3 Bucket: <strong>{{ mediaBucketName }}</strong></span>
-        </div>
         <button type="button" class="btn-top-create" @click="triggerFileInput">
           <Plus :size="15" />
           <span>Unggah Berkas Baru</span>

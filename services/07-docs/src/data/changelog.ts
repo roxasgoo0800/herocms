@@ -2,13 +2,37 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.5.4',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '24 Oktober 2026',
+    title: 'Sinkronisasi PRD-02 Dashboard Studio v1.25.0 (Pusat Bantuan Live Chat & Animasi Studio) serta Mitigasi Node.js CVE-2026-48930',
+    summary: 'Memperbarui dokumentasi PRD-02 Dashboard Studio ke versi v1.25.0-PROD (mencakup Pusat Bantuan 4 Divisi & Live Chat 1140px model WhatsApp bertema Studio, kapsul chat terpadu, ikon navigasi sidebar berwarna semantik, serta animasi cascade konten), sekaligus meng-upgrade base image frontend-builder ke Node.js 26 (v26.12.1 / node:26-alpine) untuk memitigasi CVE-2026-48930.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-154-1',
+        type: 'security',
+        scope: 'Mitigasi CVE-2026-48930 & Upgrade Toolchain Node.js 26',
+        description: 'Memperbarui Dockerfile Stage 1 (frontend-builder) ke node:26-alpine dan menyelaraskan environment CI Quality Gate ke Node.js 26.'
+      },
+      {
+        id: 'c-07docs-154-2',
+        type: 'feature',
+        scope: 'Sinkronisasi Spesifikasi PRD-02 Dashboard Studio v1.25.0-PROD',
+        description: 'Mendokumentasikan modul Pusat Bantuan & Live Chat 1140px (4 divisi tujuan, Centang 1/2/Biru + timestamp baca, Unified Chat Capsule), sistem ikon sidebar berwarna semantik (.nav-icon-box), serta koreografi animasi masuk berjenjang (studioCardCascadeIn).'
+      }
+    ]
+  },
+  {
     version: 'v1.5.3',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '22 Oktober 2026',
     title: 'Sinkronisasi Matriks 52 Sprint Tasks, Penambahan Tugas CI/CD & Rebranding, serta Pembaruan Status Pekerjaan Riil',
     summary: 'Memperbarui basis data interaktif Mission Control Docs Hub: (1) Menambahkan tugas baru TSK-CICD-01 (Selective Quality Gate CI/CD & Automated GitHub Incident Triage); (2) Menambahkan tugas baru TSK-REB-01 (Universal Rebranding Platform: Aether Core & Stack CMS); (3) Memperbarui status riil tugas TSK-OPS-03, TSK-CHG-01, TSK-INV-01, dan TSK-QA-03 menjadi COMPLETED dengan checklist terverifikasi; (4) Sinkronisasi dokumen TASK_CHECKLIST.md dan database SQLite internal.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
     items: [
       {

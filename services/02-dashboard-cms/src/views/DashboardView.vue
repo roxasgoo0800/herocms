@@ -401,7 +401,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'containers' }"
             @click="selectMenu('containers')"
           >
-            <FolderKanban :size="17" />
+            <span class="nav-icon-box icon-blue">
+              <FolderKanban :size="15" />
+            </span>
             <span class="nav-link-text">Situs & Kontainer</span>
             <span class="nav-badge">{{ usedContainersCount }}/{{ userPlan.maxContainers }}</span>
           </button>
@@ -412,7 +414,9 @@ const handleLogout = async () => {
             @click="selectMenu('editor')"
             :disabled="containers.length === 0"
           >
-            <Edit3 :size="17" />
+            <span class="nav-icon-box icon-violet">
+              <Edit3 :size="15" />
+            </span>
             <span class="nav-link-text">Editor Studio Visual</span>
           </button>
 
@@ -421,7 +425,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'content' }"
             @click="selectMenu('content')"
           >
-            <FileText :size="17" />
+            <span class="nav-icon-box icon-emerald">
+              <FileText :size="15" />
+            </span>
             <span class="nav-link-text">Artikel & Halaman</span>
             <span class="nav-badge">{{ articles.length + cmsPages.length }}</span>
           </button>
@@ -431,7 +437,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'media' }"
             @click="selectMenu('media')"
           >
-            <HardDrive :size="17" />
+            <span class="nav-icon-box icon-amber">
+              <HardDrive :size="15" />
+            </span>
             <span class="nav-link-text">Media Assets (S3)</span>
             <span class="nav-badge">{{ mediaStorage.usedStorage }}</span>
           </button>
@@ -441,7 +449,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'templates' }"
             @click="selectMenu('templates')"
           >
-            <Palette :size="17" />
+            <span class="nav-icon-box icon-rose">
+              <Palette :size="15" />
+            </span>
             <span class="nav-link-text">Katalog Template</span>
           </button>
         </nav>
@@ -453,7 +463,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'domains' }"
             @click="selectMenu('domains')"
           >
-            <Globe :size="17" />
+            <span class="nav-icon-box icon-cyan">
+              <Globe :size="15" />
+            </span>
             <span class="nav-link-text">Custom Domain & DNS</span>
             <span class="nav-badge badge-success">SSL</span>
           </button>
@@ -463,7 +475,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'analytics' }"
             @click="selectMenu('analytics')"
           >
-            <TrendingUp :size="17" />
+            <span class="nav-icon-box icon-indigo">
+              <TrendingUp :size="15" />
+            </span>
             <span class="nav-link-text">Analitik & Telemetri</span>
           </button>
 
@@ -472,7 +486,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'webhooks' }"
             @click="selectMenu('webhooks')"
           >
-            <Webhook :size="17" />
+            <span class="nav-icon-box icon-teal">
+              <Webhook :size="15" />
+            </span>
             <span class="nav-link-text">Webhooks & API</span>
           </button>
         </nav>
@@ -484,7 +500,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'billing' }"
             @click="selectMenu('billing')"
           >
-            <CreditCard :size="17" />
+            <span class="nav-icon-box icon-purple">
+              <CreditCard :size="15" />
+            </span>
             <span class="nav-link-text">Kapasitas & Paket</span>
           </button>
 
@@ -493,7 +511,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'invoices' }"
             @click="selectMenu('invoices')"
           >
-            <Receipt :size="17" />
+            <span class="nav-icon-box icon-mint">
+              <Receipt :size="15" />
+            </span>
             <span class="nav-link-text">Faktur & Invoice</span>
             <span class="nav-badge badge-success">Lunas</span>
           </button>
@@ -506,7 +526,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'tickets' }"
             @click="selectMenu('tickets')"
           >
-            <LifeBuoy :size="17" />
+            <span class="nav-icon-box icon-sky">
+              <LifeBuoy :size="15" />
+            </span>
             <span class="nav-link-text">Tiket Support</span>
             <span class="nav-badge badge-warning">1 Aktif</span>
           </button>
@@ -519,7 +541,9 @@ const handleLogout = async () => {
             :class="{ active: activeMenu === 'changelog' }"
             @click="selectMenu('changelog')"
           >
-            <History :size="17" />
+            <span class="nav-icon-box icon-orange">
+              <History :size="15" />
+            </span>
             <span class="nav-link-text">Changelog & Rilis</span>
             <span class="nav-badge badge-primary">{{ latestSystemVersion }}</span>
           </button>
@@ -669,18 +693,20 @@ const handleLogout = async () => {
 
       <!-- Main Dynamic Workspace View (Modular per-menu components) -->
       <main class="content-scroll-pane" :class="{ 'is-editor-workspace': activeMenu === 'editor' }">
-        <ContainersModule v-if="activeMenu === 'containers'" />
-        <VisualEditorModule v-else-if="activeMenu === 'editor'" />
-        <ContentArticlesModule v-else-if="activeMenu === 'content'" />
-        <MediaAssetsModule v-else-if="activeMenu === 'media'" />
-        <TemplatesCatalogModule v-else-if="activeMenu === 'templates'" />
-        <CustomDomainsModule v-else-if="activeMenu === 'domains'" />
-        <AnalyticsTelemetryModule v-else-if="activeMenu === 'analytics'" />
-        <WebhooksApiModule v-else-if="activeMenu === 'webhooks'" />
-        <BillingPlanModule v-else-if="activeMenu === 'billing'" />
-        <InvoicesHistoryModule v-else-if="activeMenu === 'invoices'" />
-        <SupportTicketingModule v-else-if="activeMenu === 'tickets'" />
-        <ChangelogModule v-else-if="activeMenu === 'changelog'" />
+        <Transition name="studio-workspace-stage" mode="out-in">
+          <ContainersModule v-if="activeMenu === 'containers'" key="menu-containers" />
+          <VisualEditorModule v-else-if="activeMenu === 'editor'" key="menu-editor" />
+          <ContentArticlesModule v-else-if="activeMenu === 'content'" key="menu-content" />
+          <MediaAssetsModule v-else-if="activeMenu === 'media'" key="menu-media" />
+          <TemplatesCatalogModule v-else-if="activeMenu === 'templates'" key="menu-templates" />
+          <CustomDomainsModule v-else-if="activeMenu === 'domains'" key="menu-domains" />
+          <AnalyticsTelemetryModule v-else-if="activeMenu === 'analytics'" key="menu-analytics" />
+          <WebhooksApiModule v-else-if="activeMenu === 'webhooks'" key="menu-webhooks" />
+          <BillingPlanModule v-else-if="activeMenu === 'billing'" key="menu-billing" />
+          <InvoicesHistoryModule v-else-if="activeMenu === 'invoices'" key="menu-invoices" />
+          <SupportTicketingModule v-else-if="activeMenu === 'tickets'" key="menu-tickets" />
+          <ChangelogModule v-else-if="activeMenu === 'changelog'" key="menu-changelog" />
+        </Transition>
       </main>
     </div>
 

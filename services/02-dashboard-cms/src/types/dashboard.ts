@@ -276,24 +276,47 @@ export interface ToastMessage {
   type: 'success' | 'info' | 'error';
 }
 
+export interface TicketAttachment {
+  id: string;
+  name: string;
+  size: string;
+  dataUrl: string;
+  mimeType?: string;
+}
+
 export interface TicketMessage {
   id: string;
   sender: 'tenant' | 'support';
   authorName: string;
   authorRole: string;
+  authorEmail?: string;
   timestamp: string;
   message: string;
+  attachments?: TicketAttachment[];
+  deliveryStatus?: 'sent' | 'delivered' | 'read';
+  readAt?: string;
 }
+
+export type SupportDepartment =
+  | 'Customer Support & Layanan CMS'
+  | 'Technical & Container (DevOps)'
+  | 'Billing, Paket & Faktur'
+  | 'Domain, DNS & Keamanan SSL';
 
 export interface SupportTicketItem {
   id: string;
   subject: string;
-  category: 'Infrastructure & Container' | 'Edge Proxy & DNS' | 'Visual Editor' | 'Billing & Pajak' | 'API & Webhooks' | 'General';
-  priority: 'p1_urgent' | 'p2_high' | 'p3_normal';
+  department?: SupportDepartment | string;
+  category: string;
+  containerName?: string;
+  reporterName?: string;
+  reporterEmail?: string;
+  priority?: 'p1_urgent' | 'p2_high' | 'p3_normal';
   status: 'open' | 'in_progress' | 'resolved';
   createdAt: string;
   lastUpdated: string;
   assignedEngineer?: string;
+  assignedRole?: string;
   messages: TicketMessage[];
 }
 

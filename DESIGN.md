@@ -102,7 +102,15 @@ Modal dialog di HeroCMS Studio mengikuti standar kartu bersih yang elegan:
 
 ---
 
-## 6. Integrasi dengan Guardrails `antislop`
+## 6. Sistem Ikon Sidebar Berwarna, Koreografi Animasi & Unified Live Chat
+
+- **Ikon Navigasi Berwarna Semantik (`.nav-icon-box`)**: Setiap menu di `app-sidebar` menggunakan wadah ikon `28px x 28px` (`border-radius: 8px`) dengan palet warna semantik terdedikasi (`icon-blue`, `icon-violet`, `icon-emerald`, `icon-amber`, `icon-rose`, `icon-cyan`, `icon-indigo`, `icon-teal`, `icon-purple`, `icon-mint`, `icon-sky`, `icon-orange`). Saat menu dipilih (`.nav-link.active`), tombol menu memutar animasi pegas `navSelectSpring` dan ikon berdenyut dengan `navIconPop`.
+- **Koreografi Transisi Area Kerja & Cascade Kartu (`studio-workspace-stage` & `studioCardCascadeIn`)**: Perpindahan antar-menu dibungkus dalam `<Transition name="studio-workspace-stage" mode="out-in">` dan setiap elemen anak/kartu di dalam `.fade-in-section` muncul secara berjenjang (*staggered entrance*) menggunakan kurva `cubic-bezier(0.16, 1, 0.3, 1)`.
+- **Model Chat WhatsApp Bertema HeroCMS Studio & Unified Input Capsule (`.wa-unified-chat-dock`)**: Ruang diskusi tiket menggunakan model struktural WhatsApp (speech tail kiri/kanan, indikator mengetik lawan bicara, Centang 1/2/Biru + jam/tanggal dibaca) yang dipadukan dengan kanvas `#f8fafc` dot-grid, bubble pelanggan Royal Blue (`#eff6ff` -> `#e0f2fe`), serta kapsul input balasan terpadu yang menyatu langsung di dalam kanvas percakapan.
+
+---
+
+## 7. Integrasi dengan Guardrails `antislop`
 
 - **`DESIGN.md`**: Memberikan arah estetika, token warna, tipografi, dan konsistensi layout yang sesuai dengan kode asli `studio-master.css` dan `studio-animations.css`.
 - **`antislop`** (`.agents/rules/antislop.md`): Bertindak sebagai filter kualitas kode & konten (mencegah teks AI generik/slop, tombol tiruan tanpa fungsi, dan elemen yang tidak berakar pada sistem desain HeroCMS).

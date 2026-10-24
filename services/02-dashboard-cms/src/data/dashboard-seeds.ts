@@ -658,105 +658,159 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
 
 export const initialSupportTickets: SupportTicketItem[] = [
   {
-    id: 'TKT-8921',
-    subject: 'Bantuan Penyetelan Custom SSL Wildcard di Edge Traefik v3',
-    category: 'Edge Proxy & DNS',
-    priority: 'p2_high',
+    id: 'TKT-9042',
+    subject: 'Kontainer Toko Kopi Nusantara Tiba-tiba Standby / Tidak Bisa Diakses',
+    department: 'Technical & Container (DevOps)',
+    category: 'Kontainer Mati / Situs Tidak Bisa Diakses (Down)',
+    containerName: 'Toko Kopi Nusantara (kopinusantara.cloudcms.app)',
+    reporterName: 'Rizal Pratama',
+    reporterEmail: 'rizal@herocms.id',
+    priority: 'p3_normal',
     status: 'in_progress',
-    createdAt: '18 Sep 2026, 14:20',
-    lastUpdated: '10 menit lalu',
-    assignedEngineer: 'Budi Hartono (L2 Cloud DevOps)',
+    createdAt: 'Hari ini, 09:45',
+    lastUpdated: '5 menit lalu',
+    assignedEngineer: 'Budi Hartono',
+    assignedRole: 'L2 Cloud DevOps Engineer',
     messages: [
       {
         id: 'msg_1',
         sender: 'tenant',
         authorName: 'Rizal Pratama',
         authorRole: 'Tenant Administrator',
-        timestamp: '18 Sep 2026, 14:20',
-        message: 'Halo tim support Aether Core Stack, saya baru saja mengarahkan CNAME *.rizalpratama.cloud ke ingress edge Traefik (103.144.20.12). Namun status verifikasi SSL di dashboard masih pending. Mohon bantuan inspeksi log Let\'s Encrypt ALPN challenge.'
+        authorEmail: 'rizal@herocms.id',
+        timestamp: '09:45 WIB',
+        deliveryStatus: 'read',
+        readAt: '09:46 WIB',
+        message: 'Halo tim Technical Support 👋, kontainer situs Toko Kopi Nusantara (kopinusantara.cloudcms.app) tiba-tiba berstatus Standby dan tidak merespons saat diakses publik. Mohon bantuannya untuk pengecekan service kontainer kami 🙏'
       },
       {
         id: 'msg_2',
         sender: 'support',
         authorName: 'Budi Hartono',
         authorRole: 'L2 Cloud DevOps Engineer',
-        timestamp: '18 Sep 2026, 14:35',
-        message: 'Halo Pak Rizal, terima kasih telah menghubungi tim support. Kami sudah melakukan pengecekan pada Traefik dynamic configuration. Propagasi DNS Anda sudah terdeteksi di edge node Jakarta. Sertifikat TLS 1.3 wildcard sedang dalam proses issue otomatis, estimasi selesai dalam 5-10 menit ke depan.'
+        timestamp: '09:48 WIB',
+        message: 'Halo Pak Rizal, laporan Anda sudah kami terima. Kami sedang memeriksa healthcheck pod kontainer kopinusantara.cloudcms.app dan log memory cgroups v2. Apabila ada tangkapan layar (screenshot) pesan error di browser, silakan dilampirkan di chat ini ya 👍'
+      },
+      {
+        id: 'msg_2b',
+        sender: 'tenant',
+        authorName: 'Rizal Pratama',
+        authorRole: 'Tenant Administrator',
+        authorEmail: 'rizal@herocms.id',
+        timestamp: '09:50 WIB',
+        deliveryStatus: 'read',
+        readAt: '09:51 WIB',
+        message: 'Baik Pak Budi, terima kasih respon cepatnya. Saya tunggu kabar hasil pengecekan pod kontainernya ya 🙏'
       }
     ]
   },
   {
-    id: 'TKT-8410',
-    subject: 'Permintaan Penambahan Kuota MinIO S3 Storage ke 5GB',
-    category: 'Infrastructure & Container',
+    id: 'TKT-8921',
+    subject: 'Bantuan Penyetelan Custom Domain & Verifikasi SSL Wildcard',
+    department: 'Domain, DNS & Keamanan SSL',
+    category: 'Custom Domain Belum Terhubung (Propagasi DNS)',
+    containerName: 'Portofolio Rizal Pratama (rizalpratama.cloudcms.app)',
+    reporterName: 'Rizal Pratama',
+    reporterEmail: 'rizal@herocms.id',
     priority: 'p3_normal',
-    status: 'resolved',
-    createdAt: '15 Sep 2026, 09:10',
-    lastUpdated: '15 Sep 2026, 11:30',
-    assignedEngineer: 'Siti Rahma (Storage Infrastructure Admin)',
+    status: 'in_progress',
+    createdAt: '18 Oktober 2026, 14:20',
+    lastUpdated: '19 Oktober 2026, 09:15',
+    assignedEngineer: 'Raka Pratama',
+    assignedRole: 'Network & Edge Security',
     messages: [
       {
         id: 'msg_3',
         sender: 'tenant',
         authorName: 'Rizal Pratama',
         authorRole: 'Tenant Administrator',
-        timestamp: '15 Sep 2026, 09:10',
-        message: 'Selamat pagi, media PDF dan dokumen presentasi kami bertambah. Bisakah alokasi MinIO S3 kami dinaikkan dari 2GB ke 5GB?'
+        authorEmail: 'rizal@herocms.id',
+        timestamp: '18 Oktober 2026, 14:20 WIB',
+        deliveryStatus: 'read',
+        readAt: '18 Oktober 2026, 14:24 WIB',
+        message: 'Halo tim Domain & SSL, saya baru saja mengarahkan CNAME *.rizalpratama.cloud ke server ingress (103.144.20.12). Namun status verifikasi SSL di dashboard masih menunggu propagasi. Mohon bantuannya.'
       },
       {
         id: 'msg_4',
         sender: 'support',
-        authorName: 'Siti Rahma',
-        authorRole: 'Storage Infrastructure Admin',
-        timestamp: '15 Sep 2026, 11:30',
-        message: 'Halo Pak Rizal, penambahan kuota bucket S3 MinIO tenant-9942 sebesar 3GB tambahan telah disetujui dan dialokasikan ke storage cluster NVMe. Kuota efektif sekarang 5GB.'
+        authorName: 'Raka Pratama',
+        authorRole: 'Network & Edge Security',
+        timestamp: '18 Oktober 2026, 14:32 WIB',
+        message: 'Halo Pak Rizal, terima kasih telah menghubungi tim Network & SSL. Propagasi DNS CNAME Anda sudah terdeteksi di node Jakarta. Sertifikat TLS 1.3 sedang diterbitkan otomatis dan akan aktif dalam beberapa menit ke depan ✅'
+      },
+      {
+        id: 'msg_4b',
+        sender: 'tenant',
+        authorName: 'Rizal Pratama',
+        authorRole: 'Tenant Administrator',
+        authorEmail: 'rizal@herocms.id',
+        timestamp: '19 Oktober 2026, 09:12 WIB',
+        deliveryStatus: 'read',
+        readAt: '19 Oktober 2026, 09:15 WIB',
+        message: 'Halo Pak Raka, untuk domain utama sudah aktif HTTPS-nya, sekarang tinggal menunggu propagasi subdomain blog-nya saja. Terima kasih! 🙌'
       }
     ]
   },
   {
-    id: 'TKT-8102',
-    subject: 'Rekonsiliasi Faktur Pajak E-Faktur Masa Agustus 2026',
-    category: 'Billing & Pajak',
+    id: 'TKT-8410',
+    subject: 'Konsultasi Pengaturan Layout Seksi Hero pada Visual Editor',
+    department: 'Customer Support & Layanan CMS',
+    category: 'Kendala Visual Editor & Publikasi Halaman',
+    containerName: 'Portofolio Rizal Pratama (rizalpratama.cloudcms.app)',
+    reporterName: 'Rizal Pratama',
+    reporterEmail: 'rizal@herocms.id',
     priority: 'p3_normal',
-    status: 'resolved',
-    createdAt: '16 Agu 2026, 13:00',
-    lastUpdated: '17 Agu 2026, 10:15',
-    assignedEngineer: 'Hendra Wijaya (Finance Compliance)',
+    status: 'open',
+    createdAt: 'Hari ini, 11:10',
+    lastUpdated: 'Baru saja',
+    assignedEngineer: 'Nadia Putri',
+    assignedRole: 'Customer Care Specialist',
     messages: [
       {
         id: 'msg_5',
         sender: 'tenant',
         authorName: 'Rizal Pratama',
         authorRole: 'Tenant Administrator',
-        timestamp: '16 Agu 2026, 13:00',
-        message: 'Mohon konfirmasi e-faktur PPN 11% untuk invoice INV-2026-08-0412 apakah sudah terunggah ke DJP online?'
-      },
-      {
-        id: 'msg_6',
-        sender: 'support',
-        authorName: 'Hendra Wijaya',
-        authorRole: 'Finance Compliance',
-        timestamp: '17 Agu 2026, 10:15',
-        message: 'Faktur pajak elektronik dengan NSFP 010.021-26.9942001 telah berhasil divalidasi oleh sistem DJP. File faktur resmi dapat langsung diunduh pada menu Faktur & Invoice.'
+        authorEmail: 'rizal@herocms.id',
+        timestamp: '11:10 WIB',
+        deliveryStatus: 'delivered',
+        message: 'Selamat siang Customer Support, saya ingin menyesuaikan urutan blok galeri dan tombol CTA di halaman utama menggunakan Visual Editor agar tampil rapi di layar mobile. Mohon panduannya 😊'
       }
     ]
   },
   {
-    id: 'TKT-9042',
-    subject: 'Integrasi Webhook Discord Payload dengan Traefik TLS Alerts',
-    category: 'API & Webhooks',
-    priority: 'p2_high',
-    status: 'open',
-    createdAt: 'Hari ini, 09:45',
-    lastUpdated: 'Baru saja',
+    id: 'TKT-8102',
+    subject: 'Konfirmasi Faktur Pembayaran & Dokumen E-Faktur PPN',
+    department: 'Billing, Paket & Faktur',
+    category: 'Permintaan & Revisi Dokumen E-Faktur Pajak',
+    containerName: 'Semua Layanan / Akun Tenant',
+    reporterName: 'Rizal Pratama',
+    reporterEmail: 'rizal@herocms.id',
+    priority: 'p3_normal',
+    status: 'resolved',
+    createdAt: '15 Oktober 2026, 13:00',
+    lastUpdated: '15 Oktober 2026, 14:15',
+    assignedEngineer: 'Hendra Wijaya',
+    assignedRole: 'Billing & Finance Specialist',
     messages: [
       {
-        id: 'msg_7',
+        id: 'msg_6',
         sender: 'tenant',
         authorName: 'Rizal Pratama',
         authorRole: 'Tenant Administrator',
-        timestamp: 'Hari ini, 09:45',
-        message: 'Kami ingin menambahkan custom bot alert saat SSL mendekati 7 hari sebelum expiry. Apakah signature HMAC-SHA256 mendukung header webhook Discord kustom?'
+        authorEmail: 'rizal@herocms.id',
+        timestamp: '15 Oktober 2026, 13:00 WIB',
+        deliveryStatus: 'read',
+        readAt: '15 Oktober 2026, 13:04 WIB',
+        message: 'Mohon konfirmasi dokumen faktur untuk invoice INV-2026-08-0412 apakah sudah siap diunduh untuk keperluan laporan keuangan perusahaan kami?'
+      },
+      {
+        id: 'msg_7',
+        sender: 'support',
+        authorName: 'Hendra Wijaya',
+        authorRole: 'Billing & Finance Specialist',
+        timestamp: '15 Oktober 2026, 14:15 WIB',
+        message: 'Halo Pak Rizal, dokumen faktur resmi untuk invoice INV-2026-08-0412 sudah terverifikasi lunas dan siap diunduh langsung pada menu Faktur & Invoice. Terima kasih telah menggunakan layanan kami 🙏'
       }
     ]
   }

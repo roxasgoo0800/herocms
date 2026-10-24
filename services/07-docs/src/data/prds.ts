@@ -137,7 +137,7 @@ export const microservicePrds: MicroservicePrd[] = [
     title: 'Dashboard CMS (Stack Studio - Portal Pelanggan by Aether Core)',
     serviceName: '02-dashboard-cms',
     badge: 'Customer Studio & PWA',
-    version: 'v1.23.0-PROD',
+    version: 'v1.25.0-PROD',
     targetAudience: [
       'Software Engineer & Developer Portofolio',
       'Penulis Independen & Tim Media Editorial',
@@ -147,7 +147,7 @@ export const microservicePrds: MicroservicePrd[] = [
     techStack: {
       framework: 'Vue 3 (Composition API) + Pinia + Vite',
       language: 'TypeScript 5.5+',
-      runtime: 'Node 20 LTS (Dev) / Static SPA Nginx Alpine (Prod)',
+      runtime: 'Node 26 LTS (CVE-2026-48930 Mitigated) / Static SPA Go Gin BFF (Prod)',
       databases: ['PostgreSQL 16 via Go API (RLS Enforced)', 'IndexedDB (Offline Cache)'],
       keyLibraries: [
         'Apache ECharts v6.1+ (High-Res Spline Canvas)',
@@ -157,16 +157,34 @@ export const microservicePrds: MicroservicePrd[] = [
         'DOMPurify'
       ]
     },
-    summary: 'Studio manajemen situs web berbasis no-code / low-code berkinerja tinggi dengan visual editor live, publishing engine artikel & studi kasus, manajemen media terintegrasi S3, kontrol siklus hidup kontainer Docker mandiri, modul penagihan faktur pajak resmi DJP 3.0 dengan visualisasi kurva spline ECharts, serta dukungan mandatori Progressive Web App (PWA) untuk akses offline instan.',
+    summary: 'Studio manajemen situs web berbasis no-code / low-code berkinerja tinggi dengan visual editor live, publishing engine artikel & studi kasus, manajemen media terintegrasi S3, kontrol siklus hidup kontainer Docker mandiri, modul penagihan faktur pajak resmi DJP 3.0 dengan visualisasi kurva spline ECharts, pusat bantuan & live chat interaktif 1140px, navigasi ikon berwarna semantik dengan animasi cascade konten, serta dukungan mandatori Progressive Web App (PWA) untuk akses offline instan.',
     coreModules: [
       {
         name: 'Situs & Kontainer (Multi-Site Hub & CaaS Lifecycle)',
         desc: 'Pusat kendali armada kontainer Docker terisolasi milik pelanggan.',
         capabilities: [
-          'Visual meter kuota kontainer paket (misal: 1/3 Kontainer Terpakai, 2 Slot Bebas).',
-          'CRUD Runtime Kontainer: Start, Stop, Restart, dan Destroy dengan cgroups resource limits.',
+          'Visual meter kuota kontainer paket (misal: 1/3 Kontainer Terpakai, 2 Slot Bebas) dan kartu kontainer responsif di resolusi 1680x1050 tanpa pemotongan baris CPU/RAM.',
+          'CRUD Runtime Kontainer: Start, Stop, Restart, dan Destroy dengan cgroups resource limits serta switcher Grid/Table yang proporsional.',
           'Live streaming logs kontainer Docker langsung di antarmuka web via WebSocket.',
           'Indikator status kesehatan kontainer (Running, Stopped, Provisioning, Degraded).'
+        ]
+      },
+      {
+        name: 'Pusat Bantuan & Tiket Support (4-Division Routing & Live Chat 1140px)',
+        desc: 'Studio pengaduan layanan multi-divisi terintegrasi dengan diskusi live chat real-time bertema HeroCMS Studio.',
+        capabilities: [
+          'Pemilihan 4 Divisi Tujuan Pengaduan (Technical & Container DevOps, Customer Support CMS, Billing & Faktur Pajak, Domain & SSL Edge) dengan deteksi otomatis identitas akun tanpa input nama manual atau field urgensi.',
+          'Bespoke Studio Custom Dropdown Popover untuk pemilihan Kategori Kendala, Situs/Kontainer Terdampak, dan Filter Divisi.',
+          'Tabel Riwayat & Antrean Tiket Pengaduan terstruktur di bagian bawah formulir.',
+          'Modal Live Chat 2 Kolom 1140px dengan model struktural WhatsApp berbalut tema HeroCMS Studio (#f8fafc dot-grid & Royal Blue #eff6ff/#e0f2fe), indikator mengetik di sisi lawan bicara, status Centang 1 (Terkirim), Centang 2 (Tersampaikan), dan Centang 2 Biru (Dibaca + jam atau tanggal-bulan-tahun), fitur upload gambar/screenshot, pemilih emotikon, serta Unified Chat Input Capsule yang menyatu langsung dengan kanvas chat.'
+        ]
+      },
+      {
+        name: 'Navigasi Ikon Berwarna Semantik & Animasi Staggered Content Cascade',
+        desc: 'Sistem interaksi visual dan koreografi animasi perpindahan modul di seluruh area kerja Dashboard Studio.',
+        capabilities: [
+          '12 Badge Ikon Navigasi Berwarna Semantik (.nav-icon-box) dengan animasi klik pegas (navSelectSpring & navIconPop) serta indikator aksen aktif di sidebar kiri.',
+          'Transisi panggung area kerja (studio-workspace-stage) dan animasi masuk berjenjang (studioSectionReveal & studioCardCascadeIn) pada seluruh kartu, formulir, telemetri, dan tabel saat berpindah menu.'
         ]
       },
       {

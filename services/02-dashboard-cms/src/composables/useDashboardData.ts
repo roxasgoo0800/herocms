@@ -14,7 +14,9 @@ import type {
   InvoiceItem,
   ToastMessage,
   SupportTicketItem,
+  SupportDepartment,
   TicketMessage,
+  TicketAttachment,
   VisualBlock,
   CmsPage
 } from '../types/dashboard';
@@ -1212,36 +1214,117 @@ const redeliverWebhookEvent = (log: WebhookDeliveryLog) => {
 
 // Helper to get current tenant author details dynamically
 const getTenantAuthor = () => {
-  const email = userEmail.value || 'admin@herocms.id';
+  const email = userEmail.value || 'rizal@herocms.id';
   let name = email.split('@')[0];
-  name = name.split('.').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+  name = name.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+  if (name.toLowerCase() === 'rizal' || name.toLowerCase() === 'admin') {
+    name = 'Rizal Pratama';
+  }
   return {
-    authorName: name || 'Tenant Administrator',
-    authorRole: 'Tenant Administrator'
+    authorName: name || 'Rizal Pratama',
+    authorRole: 'Tenant Administrator',
+    authorEmail: email
   };
+};
+
+// Map department to specialist agent
+const getDepartmentSpecialist = (department?: string, category?: string) => {
+  const combined = `${department || ''} ${category || ''}`.toLowerCase();
+  if (combined.includes('billing') || combined.includes('faktur') || combined.includes('pajak') || combined.includes('paket') || combined.includes('tagihan')) {
+    return {
+      department: 'Billing, Paket & Faktur' as SupportDepartment,
+      assignedEngineer: 'Hendra Wijaya',
+      assignedRole: 'Billing & Finance Specialist'
+    };
+  }
+  if (combined.includes('domain') || combined.includes('dns') || combined.includes('ssl') || combined.includes('edge') || combined.includes('https')) {
+    return {
+      department: 'Domain, DNS & Keamanan SSL' as SupportDepartment,
+      assignedEngineer: 'Raka Pratama',
+      assignedRole: 'Network & Edge Security'
+    };
+  }
+  if (combined.includes('customer') || combined.includes('editor') || combined.includes('template') || combined.includes('artikel') || combined.includes('cms') || combined.includes('umum') || combined.includes('general')) {
+    return {
+      department: 'Customer Support & Layanan CMS' as SupportDepartment,
+      assignedEngineer: 'Nadia Putri',
+      assignedRole: 'Customer Care Specialist'
+    };
+  }
+  return {
+    department: 'Technical & Container (DevOps)' as SupportDepartment,
+    assignedEngineer: 'Budi Hartono',
+    assignedRole: 'L2 Cloud DevOps Engineer'
+  };
+};
+
+// Format current local time as HH:mm WIB
+const getCurrentTimeWIB = (): string => {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm} WIB`;
+};
+
+// Infer readAt timestamp (retains full Tanggal Bulan Tahun if message was sent on previous days)
+const inferReadTimestamp = (msgTimestamp?: string): string => {
+  if (!msgTimestamp || msgTimestamp === 'Baru saja') {
+    return getCurrentTimeWIB();
+  }
+  const clean = msgTimestamp.replace(/^Hari ini,\s*/i, '').trim();
+  // Check if it contains a date (e.g. "18 Oktober 2026, 14:20 WIB" or "15 Okt 2026, 13:00")
+  if (/\d{1,2}\s+[A-Za-z]+\s+\d{4}/.test(clean)) {
+    return clean.endsWith('WIB') ? clean : `${clean} WIB`;
+  }
+  return clean.endsWith('WIB') ? clean : `${clean} WIB`;
+};
+
+// Persist and retrieve client-side ticket attachments & routing metadata so backend sync never strips images
+const getTicketMetaStorageKey = () => {
+  const email = (userEmail.value || 'default').toLowerCase().trim();
+  return `herocms_ticket_meta_${email}`;
+};
+
+const readSavedTicketMeta = (): Record<string, any> => {
+  if (typeof localStorage === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(getTicketMetaStorageKey());
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveTicketRichMeta = (ticket: SupportTicketItem) => {
+  if (typeof localStorage === 'undefined' || !ticket?.id) return;
+  try {
+    const map = readSavedTicketMeta();
+    const msgAttachments: Record<number, TicketAttachment[]> = {};
+    (ticket.messages || []).forEach((m, idx) => {
+      if (Array.isArray(m.attachments) && m.attachments.length > 0) {
+        msgAttachments[idx] = m.attachments;
+      }
+    });
+    map[ticket.id] = {
+      department: ticket.department,
+      containerName: ticket.containerName,
+      reporterName: ticket.reporterName,
+      reporterEmail: ticket.reporterEmail,
+      msgAttachments
+    };
+    localStorage.setItem(getTicketMetaStorageKey(), JSON.stringify(map));
+  } catch {
+    // Ignore storage quota warnings
+  }
 };
 
 // Normalize ticket data from any source (Redis, DB, localStorage, seeds)
 const normalizeTicket = (t: any): SupportTicketItem => {
-  let msgs: TicketMessage[] = [];
-  if (Array.isArray(t.messages)) {
-    msgs = t.messages.map((m: any) => ({
-      id: m.id || `msg_${Date.now()}`,
-      sender: m.sender || (m.senderRole === 'staff' || m.senderRole === 'support' ? 'support' : 'tenant'),
-      authorName: m.authorName || m.senderName || 'Staff',
-      authorRole: m.authorRole || m.senderRole || 'Support',
-      timestamp: m.timestamp || m.createdAt || 'Baru saja',
-      message: m.message || ''
-    }));
-  }
-
-  let priority: SupportTicketItem['priority'] = 'p3_normal';
-  const pLow = (t.priority || '').toLowerCase();
-  if (pLow === 'p1_urgent' || pLow === 'urgent' || pLow === 'critical' || pLow === 'p1') {
-    priority = 'p1_urgent';
-  } else if (pLow === 'p2_high' || pLow === 'high' || pLow === 'p2') {
-    priority = 'p2_high';
-  }
+  const { authorName, authorEmail } = getTenantAuthor();
+  const ticketId = t.id || t.ticket_number || `TKT-${Math.floor(1000 + Math.random() * 9000)}`;
+  const savedMeta = readSavedTicketMeta()[ticketId] || {};
+  const effectiveDept = t.department || savedMeta.department;
+  const spec = getDepartmentSpecialist(effectiveDept, t.category);
 
   let status: SupportTicketItem['status'] = 'open';
   const sLow = (t.status || '').toLowerCase();
@@ -1251,15 +1334,61 @@ const normalizeTicket = (t: any): SupportTicketItem => {
     status = 'in_progress';
   }
 
+  let msgs: TicketMessage[] = [];
+  if (Array.isArray(t.messages)) {
+    const rawArr = t.messages;
+    msgs = rawArr.map((m: any, idx: number) => {
+      const sender: 'tenant' | 'support' =
+        m.sender || (m.senderRole === 'staff' || m.senderRole === 'support' ? 'support' : 'tenant');
+      const hasSubsequentSupportMsg = rawArr.slice(idx + 1).some((nextM: any) =>
+        (nextM.sender || nextM.senderRole) === 'support' || nextM.senderRole === 'staff'
+      );
+      const ts = m.timestamp || m.createdAt || 'Baru saja';
+      let deliveryStatus: TicketMessage['deliveryStatus'] = m.deliveryStatus;
+      let readAt: string | undefined = m.readAt;
+
+      if (sender === 'tenant') {
+        if (!deliveryStatus) {
+          deliveryStatus = (hasSubsequentSupportMsg || status !== 'open') ? 'read' : 'delivered';
+        }
+        if (deliveryStatus === 'read' && !readAt) {
+          readAt = inferReadTimestamp(ts);
+        }
+      }
+
+      const preservedAtts = Array.isArray(m.attachments) && m.attachments.length > 0
+        ? m.attachments
+        : savedMeta.msgAttachments?.[idx];
+
+      return {
+        id: m.id || `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        sender,
+        authorName: m.authorName || m.senderName || (sender === 'support' ? spec.assignedEngineer : authorName),
+        authorRole: m.authorRole || m.senderRole || (sender === 'support' ? spec.assignedRole : 'Tenant Administrator'),
+        authorEmail: m.authorEmail || (sender === 'tenant' ? (t.reporterEmail || savedMeta.reporterEmail || authorEmail) : undefined),
+        timestamp: ts,
+        message: m.message || '',
+        attachments: preservedAtts,
+        deliveryStatus,
+        readAt
+      };
+    });
+  }
+
   return {
-    id: t.id || t.ticket_number || `TKT-${Math.floor(1000 + Math.random() * 9000)}`,
-    subject: t.subject || 'Tiket Bantuan',
-    category: t.category || 'Infrastructure & Container',
-    priority,
+    id: ticketId,
+    subject: t.subject || 'Pengaduan Layanan',
+    department: effectiveDept || spec.department,
+    category: t.category || 'Kontainer Mati / Situs Tidak Bisa Diakses (Down)',
+    containerName: t.containerName || savedMeta.containerName || 'Semua Layanan / Akun Tenant',
+    reporterName: t.reporterName || savedMeta.reporterName || authorName,
+    reporterEmail: t.reporterEmail || savedMeta.reporterEmail || authorEmail,
+    priority: 'p3_normal',
     status,
     createdAt: t.createdAt || 'Baru saja',
     lastUpdated: t.lastUpdated || t.lastReply || 'Baru saja',
-    assignedEngineer: t.assignedEngineer || (status !== 'open' ? 'Budi Hartono (L2 Cloud DevOps)' : undefined),
+    assignedEngineer: t.assignedEngineer || spec.assignedEngineer,
+    assignedRole: t.assignedRole || spec.assignedRole,
     messages: msgs
   };
 };
@@ -1271,68 +1400,118 @@ const selectedTicket = ref<SupportTicketItem | null>(null);
 const isCreateTicketModalOpen = ref(false);
 const isTicketDetailModalOpen = ref(false);
 const ticketReplyText = ref('');
+const isSupportTyping = ref(false);
 
 const newTicketForm = ref({
+  department: 'Technical & Container (DevOps)' as SupportDepartment,
+  category: 'Kontainer Mati / Situs Tidak Bisa Diakses (Down)',
+  containerName: 'Semua Layanan / Akun Tenant',
   subject: '',
-  category: 'Infrastructure & Container' as SupportTicketItem['category'],
-  priority: 'p2_high' as SupportTicketItem['priority'],
-  message: ''
+  message: '',
+  attachments: [] as TicketAttachment[]
 });
 
-const openCreateTicketModal = () => {
+const openCreateTicketModal = (defaultDept?: SupportDepartment) => {
+  const dept = defaultDept || 'Technical & Container (DevOps)';
+  let defaultCat = 'Kontainer Mati / Situs Tidak Bisa Diakses (Down)';
+  if (dept === 'Customer Support & Layanan CMS') defaultCat = 'Kendala Visual Editor & Publikasi Halaman';
+  else if (dept === 'Billing, Paket & Faktur') defaultCat = 'Konfirmasi Pembayaran & Aktivasi Paket';
+  else if (dept === 'Domain, DNS & Keamanan SSL') defaultCat = 'Custom Domain Belum Terhubung (Propagasi DNS)';
+
   newTicketForm.value = {
+    department: dept,
+    category: defaultCat,
+    containerName: activeContainer.value
+      ? `${activeContainer.value.name} (${activeContainer.value.subdomain})`
+      : 'Semua Layanan / Akun Tenant',
     subject: '',
-    category: 'Infrastructure & Container',
-    priority: 'p2_high',
-    message: ''
+    message: '',
+    attachments: []
   };
   isCreateTicketModalOpen.value = true;
 };
 
 const handleCreateTicket = async () => {
-  if (!newTicketForm.value.subject || !newTicketForm.value.message) {
-    showToast('Harap isi judul dan deskripsi tiket bantuan.', 'error');
+  if (!newTicketForm.value.subject.trim() || !newTicketForm.value.message.trim()) {
+    showToast('Harap isi subjek masalah dan rincian kendala Anda.', 'error');
     return;
   }
 
-  const { authorName, authorRole } = getTenantAuthor();
+  const { authorName, authorRole, authorEmail } = getTenantAuthor();
+  const spec = getDepartmentSpecialist(newTicketForm.value.department, newTicketForm.value.category);
   const tempId = `TKT-${Math.floor(1000 + Math.random() * 9000)}`;
+  const initialAttachments = newTicketForm.value.attachments.length > 0
+    ? [...newTicketForm.value.attachments]
+    : undefined;
+  const nowTime = getCurrentTimeWIB();
+
+  const initialMsg: TicketMessage = {
+    id: `msg_${Date.now()}`,
+    sender: 'tenant',
+    authorName,
+    authorRole,
+    authorEmail,
+    timestamp: nowTime,
+    message: newTicketForm.value.message.trim(),
+    attachments: initialAttachments,
+    deliveryStatus: 'sent'
+  };
+
   const optimisticTicket: SupportTicketItem = {
     id: tempId,
-    subject: newTicketForm.value.subject,
+    subject: newTicketForm.value.subject.trim(),
+    department: newTicketForm.value.department,
     category: newTicketForm.value.category,
-    priority: newTicketForm.value.priority,
+    containerName: newTicketForm.value.containerName || 'Semua Layanan / Akun Tenant',
+    reporterName: authorName,
+    reporterEmail: authorEmail,
+    priority: 'p3_normal',
     status: 'open',
-    createdAt: 'Baru saja',
+    createdAt: `Hari ini, ${nowTime}`,
     lastUpdated: 'Baru saja',
-    messages: [
-      {
-        id: `msg_${Date.now()}`,
-        sender: 'tenant',
-        authorName,
-        authorRole,
-        timestamp: 'Baru saja',
-        message: newTicketForm.value.message
-      }
-    ]
+    assignedEngineer: spec.assignedEngineer,
+    assignedRole: spec.assignedRole,
+    messages: [initialMsg]
   };
 
   supportTickets.value.unshift(optimisticTicket);
+  const createdRef = supportTickets.value[0];
+  saveTicketRichMeta(createdRef);
   isCreateTicketModalOpen.value = false;
-  showToast(`Tiket ${tempId} berhasil dibuat! Tim DevOps akan merespons dalam < 15 menit.`, 'success');
+  showToast(`Pengaduan ${tempId} berhasil dikirim ke divisi ${newTicketForm.value.department}!`, 'success');
+
+  // Simulate WhatsApp-style Centang 1 -> Centang 2 Abu-abu -> Centang 2 Biru (Read)
+  setTimeout(() => {
+    if (createdRef?.messages?.[0] && createdRef.messages[0].deliveryStatus === 'sent') {
+      createdRef.messages[0].deliveryStatus = 'delivered';
+    }
+  }, 550);
+
+  setTimeout(() => {
+    if (createdRef?.messages?.[0]) {
+      createdRef.messages[0].deliveryStatus = 'read';
+      createdRef.messages[0].readAt = getCurrentTimeWIB();
+    }
+  }, 1250);
+
+  // Reset form fields after creation
+  newTicketForm.value.subject = '';
+  newTicketForm.value.message = '';
+  newTicketForm.value.attachments = [];
 
   try {
     const res = await studioApi.createTicket({
       subject: optimisticTicket.subject,
       category: optimisticTicket.category,
-      priority: optimisticTicket.priority,
-      message: newTicketForm.value.message,
+      priority: 'p3_normal',
+      message: optimisticTicket.messages[0].message,
       authorName,
       authorRole
     });
     if (res && res.id) {
-      optimisticTicket.id = res.id;
-      if (res.createdAt) optimisticTicket.createdAt = res.createdAt;
+      createdRef.id = res.id;
+      if (res.createdAt) createdRef.createdAt = res.createdAt;
+      saveTicketRichMeta(createdRef);
     }
   } catch (err) {
     console.warn('[TICKET SYNC] Offline fallback retained for created ticket');
@@ -1342,6 +1521,7 @@ const handleCreateTicket = async () => {
 const openTicketDetail = async (ticket: SupportTicketItem) => {
   selectedTicket.value = ticket;
   ticketReplyText.value = '';
+  isSupportTyping.value = false;
   isTicketDetailModalOpen.value = true;
 
   if (!ticket.messages) {
@@ -1352,45 +1532,95 @@ const openTicketDetail = async (ticket: SupportTicketItem) => {
     try {
       const res = await studioApi.getTicketMessages(ticket.id);
       if (res?.messages && Array.isArray(res.messages)) {
-        ticket.messages = res.messages.map((m: any) => ({
+        const spec = getDepartmentSpecialist(ticket.department, ticket.category);
+        const savedMeta = readSavedTicketMeta()[ticket.id] || {};
+        ticket.messages = res.messages.map((m: any, idx: number) => ({
           id: m.id || `msg_${Date.now()}`,
           sender: m.sender || (m.senderRole === 'staff' || m.senderRole === 'support' ? 'support' : 'tenant'),
-          authorName: m.authorName || m.senderName || 'Staff',
-          authorRole: m.authorRole || m.senderRole || 'Support',
+          authorName: m.authorName || m.senderName || spec.assignedEngineer,
+          authorRole: m.authorRole || m.senderRole || spec.assignedRole,
           timestamp: m.timestamp || m.createdAt || 'Baru saja',
-          message: m.message || ''
+          message: m.message || '',
+          attachments: savedMeta.msgAttachments?.[idx],
+          deliveryStatus: 'read',
+          readAt: inferReadTimestamp(m.timestamp || m.createdAt)
         }));
       }
     } catch (e) {
       // Retain existing
     }
   }
+
+  // If there are any unread tenant messages in this thread, transition them to Read (Centang 2 Biru)
+  // and if the last message is from tenant on an open ticket, let the specialist type a live greeting!
+  setTimeout(() => {
+    if (!selectedTicket.value || selectedTicket.value.id !== ticket.id) return;
+    let markedNewRead = false;
+    for (const msg of ticket.messages) {
+      if (msg.sender === 'tenant' && msg.deliveryStatus !== 'read') {
+        msg.deliveryStatus = 'read';
+        msg.readAt = getCurrentTimeWIB();
+        markedNewRead = true;
+      }
+    }
+    const lastMsg = ticket.messages[ticket.messages.length - 1];
+    if (markedNewRead && lastMsg && lastMsg.sender === 'tenant' && ticket.status === 'open') {
+      isSupportTyping.value = true;
+      const spec = getDepartmentSpecialist(ticket.department, ticket.category);
+      const { authorName } = getTenantAuthor();
+      setTimeout(() => {
+        if (!selectedTicket.value || selectedTicket.value.id !== ticket.id) return;
+        isSupportTyping.value = false;
+        ticket.status = 'in_progress';
+        const agentName = ticket.assignedEngineer || spec.assignedEngineer;
+        const agentRole = ticket.assignedRole || spec.assignedRole;
+        ticket.messages.push({
+          id: `msg_${Date.now()}`,
+          sender: 'support',
+          authorName: agentName,
+          authorRole: agentRole,
+          timestamp: getCurrentTimeWIB(),
+          message: `Halo ${authorName} 👋, laporan Anda mengenai "${ticket.subject}" baru saja saya baca. Saya sedang mengecek konfigurasi pada ${ticket.containerName || 'layanan Anda'} sekarang. Silakan kirimkan tangkapan layar tambahan jika ada ya!`
+        });
+        ticket.lastUpdated = 'Baru saja';
+        saveTicketRichMeta(ticket);
+      }, 1900);
+    }
+  }, 750);
 };
 
-const sendTicketReply = async () => {
-  if (!ticketReplyText.value.trim() || !selectedTicket.value) return;
+const sendTicketReply = async (attachments?: TicketAttachment[]) => {
+  const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
+  if ((!ticketReplyText.value.trim() && !hasAttachments) || !selectedTicket.value) return;
 
   const currentTicket = selectedTicket.value;
-  const replyContent = ticketReplyText.value.trim();
-  const { authorName, authorRole } = getTenantAuthor();
+  const replyContent = ticketReplyText.value.trim() || (hasAttachments ? `Melampirkan ${attachments!.length} gambar tangkapan layar.` : '');
+  const { authorName, authorRole, authorEmail } = getTenantAuthor();
+  const spec = getDepartmentSpecialist(currentTicket.department, currentTicket.category);
+  const sentTime = getCurrentTimeWIB();
 
   if (!currentTicket.messages) {
     currentTicket.messages = [];
   }
 
+  // 1. Push with Centang 1 (Sent)
   const newMsg: TicketMessage = {
     id: `msg_${Date.now()}`,
     sender: 'tenant',
     authorName,
     authorRole,
-    timestamp: 'Baru saja',
-    message: replyContent
+    authorEmail,
+    timestamp: sentTime,
+    message: replyContent,
+    attachments: hasAttachments ? [...attachments!] : undefined,
+    deliveryStatus: 'sent'
   };
 
   currentTicket.messages.push(newMsg);
+  const reactiveMsgRef = currentTicket.messages[currentTicket.messages.length - 1];
   currentTicket.lastUpdated = 'Baru saja';
   ticketReplyText.value = '';
-  showToast('Balasan terkirim ke tiket support.', 'success');
+  saveTicketRichMeta(currentTicket);
 
   try {
     await studioApi.sendTicketReply(currentTicket.id, {
@@ -1403,37 +1633,72 @@ const sendTicketReply = async () => {
     console.warn('[TICKET REPLY] Backend sync failed, retained in client state');
   }
 
-  if (currentTicket.status === 'open') {
-    setTimeout(() => {
-      if (currentTicket) {
-        currentTicket.status = 'in_progress';
-        currentTicket.assignedEngineer = 'Budi Hartono (L2 Cloud DevOps)';
-        const autoReply: TicketMessage = {
-          id: `msg_${Date.now() + 1}`,
-          sender: 'support',
-          authorName: 'Budi Hartono',
-          authorRole: 'L2 Cloud DevOps Engineer',
-          timestamp: 'Baru saja',
-          message: 'Pesan Anda sudah diterima. Kami sedang menguji replikasi isu pada staging environment.'
-        };
-        currentTicket.messages.push(autoReply);
-        showToast('Tim Support merespons tiket Anda!', 'info');
+  // 2. Transition to Centang 2 Abu-abu (Delivered) after 500ms
+  setTimeout(() => {
+    if (reactiveMsgRef && reactiveMsgRef.deliveryStatus === 'sent') {
+      reactiveMsgRef.deliveryStatus = 'delivered';
+    }
+  }, 500);
 
-        studioApi.sendTicketReply(currentTicket.id, {
-          message: autoReply.message,
-          authorName: autoReply.authorName,
-          authorRole: autoReply.authorRole,
-          sender: 'support'
-        }).catch(() => {});
+  // 3. Transition to Centang 2 Biru (Read) + Read Timestamp after 1100ms, then start Counterpart Typing
+  setTimeout(() => {
+    if (reactiveMsgRef) {
+      reactiveMsgRef.deliveryStatus = 'read';
+      reactiveMsgRef.readAt = getCurrentTimeWIB();
+    }
+    if (currentTicket && currentTicket.status !== 'resolved') {
+      isSupportTyping.value = true;
+    }
+  }, 1100);
+
+  // 4. Counterpart finishes typing and message pops in on the left side
+  setTimeout(() => {
+    isSupportTyping.value = false;
+    if (currentTicket && currentTicket.status !== 'resolved') {
+      currentTicket.status = 'in_progress';
+      const agentName = currentTicket.assignedEngineer || spec.assignedEngineer;
+      const agentRole = currentTicket.assignedRole || spec.assignedRole;
+      currentTicket.assignedEngineer = agentName;
+      currentTicket.assignedRole = agentRole;
+
+      let contextualReply = `Halo ${authorName}, pesan Anda terkait "${currentTicket.subject}" pada kategori ${currentTicket.category} sudah kami baca dan sedang kami tindak lanjuti.`;
+      if (hasAttachments) {
+        contextualReply = `Terima kasih ${authorName}, lampiran gambar (${attachments!.map(a => a.name).join(', ')}) sudah kami terima dengan jelas 👍. Tim ${currentTicket.department || 'Support'} sedang memeriksa detail visual tersebut untuk mempercepat penanganan.`;
+      } else if ((currentTicket.department || '').includes('Billing')) {
+        contextualReply = `Baik ${authorName}, tim Billing & Finance sedang memverifikasi data pembayaran dan dokumen faktur pada akun ${authorEmail}. Kami akan segera memperbarui statusnya di sini ✅`;
+      } else if ((currentTicket.department || '').includes('Domain')) {
+        contextualReply = `Terima kasih informasinya ${authorName}. Kami sedang memvalidasi record DNS dan status sertifikat TLS pada node edge untuk ${currentTicket.containerName || 'domain Anda'} 🌐`;
+      } else if ((currentTicket.department || '').includes('Customer')) {
+        contextualReply = `Halo ${authorName} 😊, tim Customer Support siap membantu. Kami sudah memeriksa konfigurasi pada ${currentTicket.containerName || 'workspace Anda'} dan segera memandu langkah penyelesaiannya.`;
+      } else {
+        contextualReply = `Halo ${authorName}, tim DevOps L2 sedang memeriksa status layanan pada ${currentTicket.containerName || 'kontainer Anda'}. Kami akan segera mengabarkan hasil pengecekan healthcheck kontainer di thread ini ⚡`;
       }
-    }, 2000);
-  }
+
+      const autoReply: TicketMessage = {
+        id: `msg_${Date.now() + 1}`,
+        sender: 'support',
+        authorName: agentName,
+        authorRole: agentRole,
+        timestamp: getCurrentTimeWIB(),
+        message: contextualReply
+      };
+      currentTicket.messages.push(autoReply);
+      currentTicket.lastUpdated = 'Baru saja';
+
+      studioApi.sendTicketReply(currentTicket.id, {
+        message: autoReply.message,
+        authorName: autoReply.authorName,
+        authorRole: autoReply.authorRole,
+        sender: 'support'
+      }).catch(() => {});
+    }
+  }, 3000);
 };
 
 const resolveTicket = async (ticket: SupportTicketItem) => {
   ticket.status = 'resolved';
   ticket.lastUpdated = 'Baru saja';
-  showToast(`Tiket ${ticket.id} ditandai sebagai Selesai / Resolved.`, 'success');
+  showToast(`Pengaduan ${ticket.id} ditandai sebagai Selesai / Teratasi.`, 'success');
 
   try {
     await studioApi.resolveTicket(ticket.id);
@@ -1589,7 +1854,21 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
       customDomains.value = dRes.value.domains.map(normalizeCustomDomain);
     }
     if (tRes.status === 'fulfilled' && Array.isArray(tRes.value?.tickets)) {
-      supportTickets.value = tRes.value.tickets.map((t: any) => normalizeTicket(t));
+      const existingMap = new Map(supportTickets.value.map(item => [item.id, item]));
+      supportTickets.value = tRes.value.tickets.map((t: any) => {
+        const normalized = normalizeTicket(t);
+        const existing = existingMap.get(normalized.id);
+        if (existing) {
+          normalized.department = existing.department || normalized.department;
+          normalized.containerName = existing.containerName || normalized.containerName;
+          normalized.reporterName = existing.reporterName || normalized.reporterName;
+          normalized.reporterEmail = existing.reporterEmail || normalized.reporterEmail;
+          if (existing.messages?.some(m => m.attachments?.length)) {
+            normalized.messages = existing.messages;
+          }
+        }
+        return normalized;
+      });
     }
     if (iRes.status === 'fulfilled' && Array.isArray(iRes.value?.invoices)) {
       invoices.value = iRes.value.invoices;
@@ -1848,7 +2127,9 @@ export function useDashboardData() {
     isCreateTicketModalOpen,
     isTicketDetailModalOpen,
     ticketReplyText,
+    isSupportTyping,
     newTicketForm,
+    getTenantAuthor,
     openCreateTicketModal,
     handleCreateTicket,
     openTicketDetail,
