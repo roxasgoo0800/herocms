@@ -737,7 +737,7 @@ const handleLogout = async () => {
               <div>
                 <div class="create-site-title-row">
                   <h3 class="modal-heading">Buat Website & Deploy Kontainer Baru</h3>
-                  <span class="badge-status running" style="font-size: 0.68rem; font-weight: 700;">
+                  <span class="create-ready-pill">
                     <Zap :size="10" /> Ready to Provision
                   </span>
                 </div>
@@ -821,7 +821,7 @@ const handleLogout = async () => {
                             <span>Nama Website</span>
                             <span class="field-req-dot">*</span>
                           </label>
-                          <span class="create-field-tag">Wajib</span>
+                          <span class="create-field-tag required">Wajib</span>
                         </div>
                         <div class="create-input-shell">
                           <span class="create-input-icon">
@@ -846,7 +846,7 @@ const handleLogout = async () => {
                           <label class="create-field-label" for="modal-role">
                             <span>Headline / Slogan Situs</span>
                           </label>
-                          <span class="field-optional-badge">Opsional</span>
+                          <span class="create-field-tag optional">Opsional</span>
                         </div>
                         <div class="create-input-shell">
                           <span class="create-input-icon">
@@ -856,7 +856,7 @@ const handleLogout = async () => {
                             id="modal-role"
                             v-model="newSiteForm.role"
                             type="text"
-                            placeholder="Contoh: Solusi Retail & Grosir Terlengkap"
+                            placeholder="Contoh: Solusi Retail & Grosir"
                             class="create-text-input-clean"
                           />
                         </div>
