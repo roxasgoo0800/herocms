@@ -428,7 +428,7 @@ const handleConfirmDeploy = async () => {
         :key="tpl.id"
         class="tpl-market-card-pro"
       >
-        <div class="tpl-mockup-stage" :class="'stage-' + tpl.category">
+        <div class="tpl-mockup-stage" :class="'stage-' + tpl.category" :style="{ borderBottomColor: tpl.accentColor }">
           <div class="mockup-browser-shell">
             <div class="mockup-dots">
               <span></span><span></span><span></span>
@@ -438,16 +438,16 @@ const handleConfirmDeploy = async () => {
 
           <div v-if="tpl.category === 'portfolio'" class="mock-canvas-portfolio">
             <div class="portfolio-hero-mini">
-              <div class="avatar-badge-mini">RP</div>
+              <div class="avatar-badge-mini" :style="{ background: tpl.accentColor }">RP</div>
               <div class="headline-lines">
                 <span class="hl-bold">{{ tpl.defaultRole || 'Senior Engineer' }}</span>
                 <span class="hl-sub">Docker • Microservices • Traefik</span>
               </div>
             </div>
             <div class="mini-tag-strip">
-              <span class="m-pill">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
-              <span class="m-pill">{{ tpl.stats?.seo || '100%' }} SEO</span>
-              <span class="m-pill">{{ tpl.stats?.pwa || 'PWA' }}</span>
+              <span class="m-pill blue">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
+              <span class="m-pill emerald">{{ tpl.stats?.seo || '100%' }} SEO</span>
+              <span class="m-pill purple">{{ tpl.stats?.pwa || 'PWA' }}</span>
             </div>
           </div>
 
@@ -464,14 +464,14 @@ const handleConfirmDeploy = async () => {
 
           <div v-else-if="tpl.category === 'education'" class="mock-canvas-education">
             <div class="edu-hero-mini">
-              <div class="edu-icon-circ"><GraduationCap :size="16" /></div>
+              <div class="edu-icon-circ" :style="{ color: tpl.accentColor, background: '#ffffff' }"><GraduationCap :size="16" /></div>
               <div>
                 <strong>Masterclass Docker & Go SDK</strong>
                 <span>12 Modul • 48 Video Pembelajaran</span>
               </div>
             </div>
             <div class="edu-progress-bar">
-              <div class="edu-fill" style="width: 70%;"></div>
+              <div class="edu-fill" :style="{ width: '70%', background: tpl.accentColor }"></div>
             </div>
           </div>
 
@@ -484,12 +484,12 @@ const handleConfirmDeploy = async () => {
                   <span class="biz-price">Rp 4.500.000</span>
                 </div>
               </div>
-              <div class="biz-wa-cta">Order Direct WhatsApp</div>
+              <div class="biz-wa-cta" :style="{ background: tpl.accentColor }">Order Direct WhatsApp</div>
             </div>
           </div>
 
           <div class="tpl-float-badges">
-            <span class="tpl-type-pill">{{ tpl.category.toUpperCase() }}</span>
+            <span class="tpl-type-pill" :class="'pill-' + tpl.category">{{ tpl.category.toUpperCase() }}</span>
             <span class="tpl-tier-pill" :class="{ 'tier-pro': tpl.isPro }">
               <Sparkles v-if="tpl.isPro" :size="10" />
               {{ tpl.tier }}
@@ -501,7 +501,7 @@ const handleConfirmDeploy = async () => {
           <div class="tpl-title-row">
             <h3 class="tpl-card-title">{{ tpl.title }}</h3>
             <span class="lighthouse-score">
-              <Zap :size="11" /> {{ tpl.lighthouseScore || 100 }}/100
+              <Zap :size="11" fill="#f59e0b" stroke="#d97706" /> {{ tpl.lighthouseScore || 100 }}/100
             </span>
           </div>
 
@@ -509,7 +509,7 @@ const handleConfirmDeploy = async () => {
 
           <div class="tpl-feature-list-wrap">
             <div v-for="(feat, fIdx) in tpl.features" :key="fIdx" class="tpl-feat-item">
-              <CheckCircle2 :size="13" class="feat-check-icon" />
+              <CheckCircle2 :size="13" class="feat-check-icon" :style="{ color: tpl.accentColor || '#059669' }" />
               <span>{{ feat }}</span>
             </div>
           </div>
@@ -518,7 +518,7 @@ const handleConfirmDeploy = async () => {
         <div class="tpl-card-footer-pro">
           <div class="tpl-price-info">
             <span class="price-lbl">Status Lisensi:</span>
-            <strong class="price-val">{{ tpl.priceText }}</strong>
+            <strong class="price-val" :style="{ color: tpl.isPro ? '#6d28d9' : '#059669' }">{{ tpl.priceText }}</strong>
           </div>
           <div class="tpl-card-actions-row">
             <button class="btn-card-preview" @click="openPreviewModal(tpl)">
@@ -547,7 +547,7 @@ const handleConfirmDeploy = async () => {
           :class="{ active: selectedSplitTemplate?.id === tpl.id }"
           @click="selectedSplitTemplate = tpl"
         >
-          <div class="split-card-thumb">
+          <div class="split-card-thumb" :class="'thumb-' + tpl.category" :style="{ borderLeft: `3px solid ${tpl.accentColor}` }">
             <span>{{ tpl.category.slice(0, 2).toUpperCase() }}</span>
           </div>
           <div class="split-card-content">
@@ -561,7 +561,7 @@ const handleConfirmDeploy = async () => {
             <div class="split-card-meta-row">
               <span>{{ tpl.author || 'Hero Core' }}</span>
               <span>•</span>
-              <span style="color: #09090b; font-weight: 700;">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
+              <span style="font-weight: 700;" :style="{ color: tpl.accentColor || '#2563eb' }">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
             </div>
           </div>
         </div>
