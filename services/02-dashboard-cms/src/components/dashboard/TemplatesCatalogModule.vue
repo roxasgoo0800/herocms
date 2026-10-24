@@ -258,7 +258,7 @@ const handleConfirmDeploy = async () => {
       </div>
       <div class="quota-quick-pills">
         <span class="pill-metric">Engine: <strong>Vue 3 + Visual Blocks</strong></span>
-        <span class="pill-metric-highlight">Lisensi: <strong>Commercial & Client Ready</strong></span>
+        <span class="pill-metric">Lisensi: <strong>Commercial & Client Ready</strong></span>
       </div>
     </div>
 
@@ -270,9 +270,9 @@ const handleConfirmDeploy = async () => {
             <Sparkles :size="12" /> Blueprint Pilihan Editor
           </span>
           <span class="spotlight-badge-rating">
-            <Star :size="11" fill="#fbbf24" stroke="none" /> {{ featuredSpotlight.rating || 4.98 }} ({{ featuredSpotlight.downloadsCount || 1420 }} deploy)
+            <Star :size="11" fill="#ffffff" stroke="none" /> {{ featuredSpotlight.rating || 4.98 }} ({{ featuredSpotlight.downloadsCount || 1420 }} deploy)
           </span>
-          <span class="badge-status running" style="font-size: 0.7rem; padding: 2px 8px;">
+          <span class="spotlight-badge-lighthouse">
             <Zap :size="11" /> {{ featuredSpotlight.lighthouseScore }}/100 Lighthouse
           </span>
         </div>
@@ -306,21 +306,21 @@ const handleConfirmDeploy = async () => {
             <div class="preview-chrome-dots">
               <span></span><span></span><span></span>
             </div>
-            <span style="font-family: monospace; font-size: 0.68rem; color: #94a3b8;">
+            <span style="font-family: monospace; font-size: 0.68rem; color: #a1a1aa;">
               {{ featuredSpotlight.category }}.cloudcms.app
             </span>
           </div>
           <div class="spotlight-mockup-body">
             <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
               <strong style="color: #ffffff; font-size: 0.82rem;">{{ featuredSpotlight.title.split('&')[0] }}</strong>
-              <span class="badge-status running" style="font-size: 0.62rem;">Edge Ready</span>
+              <span class="spotlight-edge-pill">Edge Ready</span>
             </div>
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <span style="font-size: 0.72rem; color: #94a3b8;">Headline:</span>
-              <p style="font-size: 0.78rem; color: #e2e8f0; margin: 0; line-height: 1.35;">{{ featuredSpotlight.defaultRole }}</p>
+              <span style="font-size: 0.72rem; color: #a1a1aa;">Headline:</span>
+              <p style="font-size: 0.78rem; color: #f4f4f5; margin: 0; line-height: 1.35;">{{ featuredSpotlight.defaultRole }}</p>
             </div>
             <div style="display: flex; gap: 6px; margin-top: 4px;">
-              <span v-for="(t, tIdx) in (featuredSpotlight.tags || []).slice(0, 3)" :key="tIdx" class="m-pill blue" style="font-size: 0.62rem;">
+              <span v-for="(t, tIdx) in (featuredSpotlight.tags || []).slice(0, 3)" :key="tIdx" class="m-pill" style="font-size: 0.62rem;">
                 {{ t }}
               </span>
             </div>
@@ -428,7 +428,7 @@ const handleConfirmDeploy = async () => {
         :key="tpl.id"
         class="tpl-market-card-pro"
       >
-        <div class="tpl-mockup-stage" :class="'stage-' + tpl.category" :style="{ borderBottom: `2px solid ${tpl.accentColor}` }">
+        <div class="tpl-mockup-stage" :class="'stage-' + tpl.category">
           <div class="mockup-browser-shell">
             <div class="mockup-dots">
               <span></span><span></span><span></span>
@@ -438,16 +438,16 @@ const handleConfirmDeploy = async () => {
 
           <div v-if="tpl.category === 'portfolio'" class="mock-canvas-portfolio">
             <div class="portfolio-hero-mini">
-              <div class="avatar-badge-mini" :style="{ background: tpl.accentColor }">RP</div>
+              <div class="avatar-badge-mini">RP</div>
               <div class="headline-lines">
                 <span class="hl-bold">{{ tpl.defaultRole || 'Senior Engineer' }}</span>
                 <span class="hl-sub">Docker • Microservices • Traefik</span>
               </div>
             </div>
             <div class="mini-tag-strip">
-              <span class="m-pill blue">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
-              <span class="m-pill emerald">{{ tpl.stats?.seo || '100%' }} SEO</span>
-              <span class="m-pill purple">{{ tpl.stats?.pwa || 'PWA' }}</span>
+              <span class="m-pill">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
+              <span class="m-pill">{{ tpl.stats?.seo || '100%' }} SEO</span>
+              <span class="m-pill">{{ tpl.stats?.pwa || 'PWA' }}</span>
             </div>
           </div>
 
@@ -464,14 +464,14 @@ const handleConfirmDeploy = async () => {
 
           <div v-else-if="tpl.category === 'education'" class="mock-canvas-education">
             <div class="edu-hero-mini">
-              <div class="edu-icon-circ" :style="{ color: tpl.accentColor }"><GraduationCap :size="16" /></div>
+              <div class="edu-icon-circ"><GraduationCap :size="16" /></div>
               <div>
                 <strong>Masterclass Docker & Go SDK</strong>
                 <span>12 Modul • 48 Video Pembelajaran</span>
               </div>
             </div>
             <div class="edu-progress-bar">
-              <div class="edu-fill" :style="{ width: '70%', background: tpl.accentColor }"></div>
+              <div class="edu-fill" style="width: 70%;"></div>
             </div>
           </div>
 
@@ -484,7 +484,7 @@ const handleConfirmDeploy = async () => {
                   <span class="biz-price">Rp 4.500.000</span>
                 </div>
               </div>
-              <div class="biz-wa-cta" :style="{ background: tpl.accentColor }">Order Direct WhatsApp</div>
+              <div class="biz-wa-cta">Order Direct WhatsApp</div>
             </div>
           </div>
 
@@ -509,7 +509,7 @@ const handleConfirmDeploy = async () => {
 
           <div class="tpl-feature-list-wrap">
             <div v-for="(feat, fIdx) in tpl.features" :key="fIdx" class="tpl-feat-item">
-              <CheckCircle2 :size="13" class="feat-check-icon" :style="{ color: tpl.accentColor }" />
+              <CheckCircle2 :size="13" class="feat-check-icon" />
               <span>{{ feat }}</span>
             </div>
           </div>
@@ -547,13 +547,13 @@ const handleConfirmDeploy = async () => {
           :class="{ active: selectedSplitTemplate?.id === tpl.id }"
           @click="selectedSplitTemplate = tpl"
         >
-          <div class="split-card-thumb" :style="{ background: `linear-gradient(135deg, #0f172a 0%, ${tpl.accentColor} 100%)` }">
+          <div class="split-card-thumb">
             <span>{{ tpl.category.slice(0, 2).toUpperCase() }}</span>
           </div>
           <div class="split-card-content">
             <div class="split-card-title-row">
               <h4 class="split-card-title">{{ tpl.title }}</h4>
-              <span class="spotlight-badge-rating" style="font-size: 0.65rem;">
+              <span class="split-rating-pill">
                 ★ {{ tpl.rating || 4.95 }}
               </span>
             </div>
@@ -561,7 +561,7 @@ const handleConfirmDeploy = async () => {
             <div class="split-card-meta-row">
               <span>{{ tpl.author || 'Hero Core' }}</span>
               <span>•</span>
-              <span style="color: #2563eb; font-weight: 700;">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
+              <span style="color: #09090b; font-weight: 700;">{{ tpl.stats?.ttfb || '1.4ms' }} TTFB</span>
             </div>
           </div>
         </div>
