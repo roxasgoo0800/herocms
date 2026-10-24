@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  User,
   LogOut,
   ChevronRight,
   Palette,
@@ -45,7 +44,9 @@ import {
   Menu,
   Rocket,
   Zap,
-  Check
+  Check,
+  Cpu,
+  ArrowUpRight
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 import { generateContainerLogs, type ContainerLogEntry } from '../data/container-logs';
@@ -344,6 +345,10 @@ onMounted(async () => {
 
 // Smooth scroll ke atas saat berganti menu antarmuka
 watch(activeMenu, () => {
+  const pane = document.querySelector('.content-scroll-pane');
+  if (pane) {
+    pane.scrollTo({ top: 0, behavior: 'smooth' });
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
@@ -373,20 +378,25 @@ const handleLogout = async () => {
 
       <!-- 1. LEFT SIDEBAR: Professional Cloud Console Navigation -->
       <aside class="app-sidebar">
-      <!-- Workspace Brand Switcher -->
+      <!-- Workspace Brand Switcher (Eye-Catching Executive Console Header) -->
       <div class="sidebar-header">
-        <div class="workspace-brand-header">
-          <div class="brand-glyph">
-            <Layers :size="18" color="#ffffff" />
+        <div class="workspace-brand-card" @click="selectMenu('containers')" title="Stack Studio by Aether Core">
+          <div class="brand-glyph-pro">
+            <Layers :size="19" color="#ffffff" />
+            <span class="brand-glyph-orb"></span>
           </div>
           <div class="brand-meta">
-            <div class="brand-title">
-              Stack <span class="brand-gradient">Studio</span>
+            <div class="brand-title-row">
+              <div class="brand-title">
+                Stack <span class="brand-gradient">Studio</span>
+              </div>
+              <span class="brand-entity-pill">Aether Core</span>
             </div>
             <div class="brand-plan-row">
               <span class="pulse-green"></span>
               <span class="plan-name">{{ userPlan.name }}</span>
-              <span class="badge-company-chip" style="font-size: 0.68rem; font-weight: 700; color: #475569; background: #f1f5f9; padding: 1px 5px; border-radius: 4px; border: 1px solid #e2e8f0; margin-left: 3px;">Aether Core</span>
+              <span class="brand-plan-sep">•</span>
+              <span class="brand-edge-ready">Edge Ready</span>
             </div>
           </div>
         </div>
@@ -552,12 +562,20 @@ const handleLogout = async () => {
 
       <!-- Bottom Sidebar: Quota Gauge & User Profile -->
       <div class="sidebar-footer">
-        <!-- Compact Quota Card -->
+        <!-- Eye-Catching Cloud Pod Quota Card -->
         <div class="quota-gauge-widget">
           <div class="gauge-header">
-            <span>Kapasitas Kontainer</span>
-            <strong>{{ usedContainersCount }} / {{ userPlan.maxContainers }}</strong>
+            <div class="gauge-title-cluster">
+              <span class="quota-icon-badge">
+                <Server :size="12" />
+              </span>
+              <span class="gauge-title-label">Kapasitas Kontainer</span>
+            </div>
+            <span class="quota-count-pill">
+              <strong>{{ usedContainersCount }}</strong> / {{ userPlan.maxContainers }} Pod
+            </span>
           </div>
+
           <div class="gauge-segments">
             <span
               v-for="idx in userPlan.maxContainers"
@@ -566,22 +584,41 @@ const handleLogout = async () => {
               :class="{ filled: idx <= usedContainersCount }"
             ></span>
           </div>
-          <div class="gauge-footer">
-            <span>{{ userPlan.cpuPerContainer }} • {{ userPlan.ramPerContainer }}</span>
-            <button class="link-upgrade" @click="selectMenu('billing')">Upgrade</button>
+
+          <div class="quota-specs-strip">
+            <span class="quota-spec-chip">
+              <Cpu :size="11" />
+              <span>{{ userPlan.cpuPerContainer }}</span>
+            </span>
+            <span class="quota-spec-chip">
+              <HardDrive :size="11" />
+              <span>{{ userPlan.ramPerContainer }}</span>
+            </span>
           </div>
+
+          <button type="button" class="btn-quota-upgrade-cta" @click="selectMenu('billing')">
+            <span class="upgrade-cta-left">
+              <Zap :size="12" />
+              <span>Upgrade Kapasitas</span>
+            </span>
+            <ArrowUpRight :size="13" />
+          </button>
         </div>
 
-        <!-- User Dropdown Strip -->
+        <!-- Eye-Catching Executive User Profile Pod -->
         <div class="sidebar-user-strip">
-          <div class="user-avatar-small">
-            <User :size="14" color="#2563eb" />
+          <div class="user-avatar-pro">
+            <span class="user-avatar-initials">RP</span>
+            <span class="user-online-dot" title="Sesi Aktif & Terenkripsi"></span>
           </div>
           <div class="user-info-text">
-            <div class="user-name">Rizal Pratama</div>
+            <div class="user-name-row">
+              <span class="user-name">Rizal Pratama</span>
+              <span class="user-role-pill">PRO</span>
+            </div>
             <div class="user-email-sub">{{ userEmail }}</div>
           </div>
-          <button class="btn-sidebar-logout" @click="handleLogout" title="Keluar">
+          <button type="button" class="btn-sidebar-logout" @click="handleLogout" title="Keluar dari Sesi Studio">
             <LogOut :size="14" />
           </button>
         </div>

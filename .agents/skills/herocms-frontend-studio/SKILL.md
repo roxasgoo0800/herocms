@@ -94,9 +94,27 @@ const MediaAssetsModule = defineAsyncComponent(() =>
 Ketika merancang atau memperbaiki halaman manajemen di Dashboard:
 * **Baris 1 (Aksi & Filter)**:
   * Judul modul / breadcrumbs ringkas
-  * Input pencarian terpadu (`.search-box`)
-  * Filter tab kategori / tahun (`.year-toggle-group`)
+  * Input pencarian terpadu (`.search-command-shell` / `.search-box`)
+  * Custom Dropdown Filter (`.studio-custom-dropdown-wrap` -> `.studio-custom-select-btn` + `.studio-custom-select-menu`)
+  * Filter tab kategori / status (`.segmented-filter-bar` > `.segment-pill`)
   * Tombol CTA utama di pojok kanan (`.btn-top-create`)
 * **Baris 2 (Data Display)**:
   * Grid telemetri metrik (3-4 kartu `.telemetry-card`)
-  * Tabel data interaktif (`.ledger-table`) dengan pagination & batch action
+  * Tabel data interaktif (`.ledger-table`) atau Grid kartu layanan (`.site-cards-grid`)
+
+---
+
+## 6. Mandat Wajib: Larangan Tombol Tanpa CSS & Standar Custom Dropdown Popover
+
+Setiap kali membuat atau memodifikasi modul UI di `services/02-dashboard-cms`:
+1. **DILARANG KERAS Membiarkan `<button>` Tanpa Definisi CSS di `studio-master.css`**:
+   - Setiap class tombol yang ditulis di template `.vue` (seperti `.btn-reset-filter`, `.segment-pill`, `.view-mode-btn`, `.btn-top-create`, `.btn-modal-confirm`, `.btn-modal-ghost`) **WAJIB** diverifikasi keberadaannya di `src/assets/studio-master.css` dan memiliki bentuk fisik tombol yang jelas (`display: inline-flex; align-items: center; border-radius; border; padding; background; transition`).
+   - Dilarang membuat aturan CSS duplikat di bagian bawah `studio-master.css` yang menimpa (`override`) properti `display: inline-flex`, `gap`, atau `border` dari tombol filter yang sudah ada.
+2. **Wajib Menggunakan Bespoke Studio Custom Dropdown Popover**:
+   - Hindari penggunaan elemen `<select>` bawaan browser yang kaku. Gunakan komponen dropdown kustom standar HeroCMS Studio:
+     - Wrapper: `.studio-custom-dropdown-wrap`
+     - Trigger Button: `.studio-custom-select-btn` (atau `.studio-custom-select-btn-compact` pada bar filter)
+     - Menu Popover: `.studio-custom-select-menu` > `.studio-custom-select-item`
+3. **Standar Navigasi Sidebar & Scroll Containment**:
+   - Item menu sidebar aktif (`.nav-link.active`) wajib langsung mengunci warna Deep Slate/Hitam (`#0f172a`, teks `#ffffff`) saat diklik dan tidak boleh berubah warna saat di-*hover* (`.nav-link:not(.active):hover:not(:disabled)`).
+   - Kontainer utama wajib menggunakan `overscroll-behavior: none` pada `html, body, #app` serta `overscroll-behavior: contain` pada `.content-scroll-pane` dan `.sidebar-nav-sections` agar halaman tidak tertarik (*rubber-band bounce*) saat scroll mentok di atas maupun di bawah.

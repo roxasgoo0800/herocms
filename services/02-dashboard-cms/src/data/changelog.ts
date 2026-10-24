@@ -106,7 +106,13 @@ export const changelogReleases: ChangelogRelease[] = [
         id: 'c-02dash-12500-4',
         type: 'feature',
         scope: 'Ikon Sidebar Berwarna Semantik & Animasi Cascade Konten Workspace',
-        description: 'Menambahkan 12 badge ikon berwarna semantik (.nav-icon-box) pada navigasi sidebar kiri lengkap dengan animasi pegas saat menu dipilih (navSelectSpring & navIconPop) serta animasi masuk berjenjang (studio-workspace-stage & studioCardCascadeIn) untuk seluruh kartu, tabel, dan formulir di panel kanan.'
+        description: 'Menambahkan 12 badge ikon berwarna semantik (.nav-icon-box) pada navigasi sidebar kiri lengkap dengan animasi pegas saat menu dipilih (navSelectSpring & navIconPop), penguncian warna hitam aktif tanpa flicker hover, serta animasi masuk berjenjang (studio-workspace-stage & studioCardCascadeIn) untuk seluruh kartu, tabel, dan formulir di panel kanan.'
+      },
+      {
+        id: 'c-02dash-12500-5',
+        type: 'improvement',
+        scope: 'Refaktor Brand Header, Kartu Kapasitas Kontainer, Profil User, Filter Kontainer & Anti-Bounce Scroll',
+        description: 'Merombak tampilan kartu judul Stack Studio di kiri atas, kartu telemetri Kapasitas Kontainer beserta tombol Upgrade Kapasitas, kartu profil user PRO di kiri bawah, penambahan Custom Category Dropdown & tombol filter terstruktur di Situs & Kontainer, serta penguncian overscroll-behavior agar halaman tidak tertarik saat scroll mentok atas/bawah.'
       }
     ]
   },
