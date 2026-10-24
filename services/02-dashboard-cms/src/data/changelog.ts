@@ -119,6 +119,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Grid 2 Kartu per Baris, Empty State Kontainer & Modal Buat Website 1160px',
         description: 'Menata ulang grid Situs & Kontainer menjadi 2 kartu per baris, menyempurnakan kartu Empty State ("Tidak ada kontainer ditemukan") beserta tombol Reset Pencarian & Filter, serta memperlebar modal Buat Website & Deploy Kontainer Baru ke 1160px dengan refaktor kartu form input Konfigurasi Identitas & Rute Subdomain.'
+      },
+      {
+        id: 'c-02dash-12500-7',
+        type: 'improvement',
+        scope: 'Background Ikon Menu Aktif & Anti-Neon Monokrom Katalog Template',
+        description: 'Menambahkan background semantik pastel pada ikon sidebar saat status aktif (.nav-link.active .nav-icon-box), serta membersihkan seluruh gradien neon warna-warni (AI Slop) pada Katalog Template & Blueprint Store beralih ke estetika arsitektural monokrom Hitam & Putih (#09090b & #ffffff).'
       }
     ]
   },
