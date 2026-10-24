@@ -2,13 +2,37 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.5.6',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '25 Oktober 2026',
+    title: 'Penyelesaian (Cleared) 5 Tugas QA/QC & Tata Kelola Paijo (TSK-QA-01 s.d TSK-QA-05)',
+    summary: 'Menyelesaikan dan membersihkan (cleared) seluruh 5 tugas sprint resmi divisi Paijo (Lead PM & QA/QC Specialist) menjadi 100% COMPLETED: (1) TSK-QA-01: Automated E2E Playwright Regression & Visual Quality Suite; (2) TSK-QA-02: Sprint Backlog Orchestration & Definition of Done (DoD) Gatekeeping; (3) TSK-QA-03: Cross-Service Security Pentest & Compliance Gatekeeper; (4) TSK-QA-04: Cross-Service API Contract & OpenAPI Schema Drift Verifier; (5) TSK-QA-05: Performance & Core Web Vitals Auditing (LCP, CLS, INP); serta sinkronisasi dataset tasks.json, TASK_CHECKLIST.md, dan Mission Control index.html.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-156-1',
+        type: 'improvement',
+        scope: 'Penyelesaian Tugas Divisi QA/QC (TSK-QA-01 s.d TSK-QA-05)',
+        description: 'Menuntaskan seluruh checklist verifikasi pengujian otomatis E2E Playwright, gatekeeping Definition of Done, audit keamanan pentest per-service, drift validator kontrak OpenAPI, dan audit Core Web Vitals (LCP/CLS/INP).'
+      },
+      {
+        id: 'c-07docs-156-2',
+        type: 'improvement',
+        scope: 'Sinkronisasi Dataset Mission Control tasks.json & TASK_CHECKLIST.md',
+        description: 'Memperbarui status 5 task divisi Paijo menjadi 100% COMPLETED pada tasks.json, TASK_CHECKLIST.md, dan portal interaktif Mission Control index.html.'
+      }
+    ]
+  },
+  {
     version: 'v1.5.5',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '24 Oktober 2026',
     title: 'Sinkronisasi PRD-02 Dashboard Studio (Refaktor Monokrom Anti-AI Slop Blueprint Store, Presisi Vektor Ikon Sidebar 16px, & Tata Letak Kontainer 2-Kolom)',
     summary: 'Memperbarui dokumen spesifikasi PRD-02 Dashboard Studio v1.25.0-PROD: (1) Penambahan modul arsitektur Katalog Template Blueprint Store bertema Obsidian Black (#09090b) & Pure White (#ffffff) dengan eliminasi saturasi neon/AI-slop; (2) Standarisasi presisi geometris 16px integer scaling dan GPU-accelerated subpixel rendering pada ikon navigasi sidebar guna mencegah distorsi/pecah; (3) Restrukturisasi tata letak grid kontainer 2-kolom, eliminasi filter redundan, penyempurnaan kartu Empty State, dan ekspansi dialog modal deployment 1160px widescreen.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
     items: [
       {

@@ -1856,7 +1856,7 @@
     "serviceGroup": "02-dashboard-cms",
     "codeFile": "docs/project-management/qa-e2e/playwright.config.ts",
     "codeLang": "typescript",
-    "status": "ONGOING",
+    "status": "completed",
     "priority": "Critical",
     "phase": "Phase 2",
     "lead": "Pengujian otomatis antarmuka browser menyeluruh (End-to-End) menggunakan Playwright untuk memvalidasi alur registrasi, pembuatan kontainer, interaksi editor blok, dan responsivitas mobile tanpa regresi visual.",
@@ -1873,15 +1873,15 @@
       },
       {
         "text": "Integrasi Real QA: Eksekusi otomatis Playwright test run di headless Chromium",
-        "done": false
+        "done": true
       },
       {
         "text": "Integrasi Real QA: Screenshot visual diff comparison untuk mendeteksi pergeseran layout CSS",
-        "done": false
+        "done": true
       },
       {
         "text": "Integrasi Real QA: Pengujian auto-recovery saat koneksi internet offline",
-        "done": false
+        "done": true
       }
     ],
     "codeSnippet": "import { defineConfig, devices } from '@playwright/test';\nexport default defineConfig({\n  testDir: './e2e',\n  timeout: 30000,\n  retries: 2,\n  projects: [\n    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },\n    { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },\n  ],\n});",
@@ -1899,7 +1899,7 @@
     "serviceGroup": "02-dashboard-cms",
     "codeFile": "docs/project-management/index.html",
     "codeLang": "javascript",
-    "status": "ONGOING",
+    "status": "completed",
     "priority": "High",
     "phase": "Phase 1",
     "lead": "Manajemen backlog sprint interaktif, validasi ketat setiap PR terhadap kriteria Definition of Done (DoD), serta pendistribusian tugas baru ke 5 rekan tim secara aktif tanpa henti.",
@@ -1916,15 +1916,15 @@
       },
       {
         "text": "Integrasi Real PM: Verifikasi harian DoD (Zero-CSS duplication, test passed, SemVer bump) per commit",
-        "done": false
+        "done": true
       },
       {
         "text": "Integrasi Real PM: Otomasi notifikasi sprint blockers ke channel Telegram / Slack tim",
-        "done": false
+        "done": true
       },
       {
         "text": "Integrasi Real PM: Evaluasi beban kerja sprint (workload balancing) antar anggota tim",
-        "done": false
+        "done": true
       }
     ],
     "codeSnippet": "export interface DoDChecklist {\n  zeroCssDuplication: boolean;\n  pentestSuitePassed: boolean;\n  semVerChangelogLogged: boolean;\n  responsiveMobileVerified: boolean;\n  noHeavyArrayInVue: boolean;\n}",
@@ -1942,7 +1942,7 @@
     "serviceGroup": "03-provision-orchestrator",
     "codeFile": ".agents/skills/herocms-pentest-runner/SKILL.md",
     "codeLang": "bash",
-    "status": "ONGOING",
+    "status": "completed",
     "priority": "Critical",
     "phase": "Phase 1",
     "lead": "Audit kualitas keamanan berkala pada seluruh rute API, proteksi Traefik injection, cgroups resource abuse, JWT forgery, serta mitigasi OWASP Top 10 sebelum rilis produksi.",
@@ -1963,11 +1963,11 @@
       },
       {
         "text": "Integrasi Real QC: Fuzz testing pada router Traefik dynamic labels untuk deteksi bypass karakter unik",
-        "done": false
+        "done": true
       },
       {
         "text": "Integrasi Real QC: Verifikasi isolasi RLS PostgreSQL menggunakan kueri SQL injection acak",
-        "done": false
+        "done": true
       }
     ],
     "codeSnippet": "#!/usr/bin/env bash\n# Paijo QC Pentest Gatekeeper\nSERVICES=('02-dashboard-cms' '03-provision-orchestrator' '04-marketing-site')\nfor svc in \"${SERVICES[@]}\"; do\n  (cd \"services/$svc\" && go test -v ./pentest/...) || exit 1\ndone\necho 'All Security Gates Passed!'",
@@ -1985,7 +1985,7 @@
     "serviceGroup": "01-admin-console",
     "codeFile": "services/01-admin-console/docs/api-contracts.json",
     "codeLang": "json",
-    "status": "ONGOING",
+    "status": "completed",
     "priority": "High",
     "phase": "Phase 2",
     "lead": "Pengujian integritas kontrak API antar microservices (BFF Go, Orchestrator Docker, Laravel Filament, dan Mobile App) untuk mencegah kegagalan komunikasi data.",
@@ -2002,15 +2002,15 @@
       },
       {
         "text": "Integrasi Real QC: Automated contract testing (Pact / Prism mock server) antar service",
-        "done": false
+        "done": true
       },
       {
         "text": "Integrasi Real QC: Schema drift detection validator untuk mencegah breaking change tipe data",
-        "done": false
+        "done": true
       },
       {
         "text": "Integrasi Real QC: Sinkronisasi otomatis OpenAPI spec ke mock server tim frontend Irgi & Tyno",
-        "done": false
+        "done": true
       }
     ],
     "codeSnippet": "{\n  \"swagger\": \"2.0\",\n  \"info\": { \"title\": \"HeroCMS Unified Contracts\", \"version\": \"1.14.0\" },\n  \"paths\": {\n    \"/api/v1/containers/provision\": { \"post\": { \"responses\": { \"200\": { \"description\": \"Container Spawning OK\" } } } }\n  }\n}",
@@ -2028,7 +2028,7 @@
     "serviceGroup": "04-marketing-site",
     "codeFile": "services/04-marketing-site/lighthouserc.json",
     "codeLang": "json",
-    "status": "ONGOING",
+    "status": "completed",
     "priority": "High",
     "phase": "Phase 2",
     "lead": "Pengujian benchmark performa web berkala pada Marketing Site dan Studio Dashboard: memastikan LCP < 1.2 detik, CLS = 0, bundle code-splitting terpisah, dan HTTP cache aktif.",
@@ -2045,15 +2045,15 @@
       },
       {
         "text": "Integrasi Real QA: Automated Lighthouse CI audit pada build artifact marketing site & studio",
-        "done": false
+        "done": true
       },
       {
         "text": "Integrasi Real QA: Stress test simulasi 500 koneksi bersamaan (load test via k6 / autocannon)",
-        "done": false
+        "done": true
       },
       {
         "text": "Integrasi Real QA: Audit HTTP cache headers (Cache-Control: immutable) pada aset statis Traefik",
-        "done": false
+        "done": true
       }
     ],
     "codeSnippet": "{\n  \"ci\": {\n    \"assert\": {\n      \"assertions\": {\n        \"categories:performance\": [\"error\", { \"minScore\": 0.9 }],\n        \"largest-contentful-paint\": [\"error\", { \"maxNumericValue\": 1200 }],\n        \"cumulative-layout-shift\": [\"error\", { \"maxNumericValue\": 0.05 }]\n      }\n    }\n  }\n}",
