@@ -177,7 +177,7 @@ export const microservicePrds: MicroservicePrd[] = [
         capabilities: [
           'Estetika arsitektural Obsidian Black (#09090b) dan Pure White (#ffffff) tanpa saturasi neon atau gradasi artificial (Anti-AI Slop) demi kenyamanan visual profesional.',
           'Hero spotlight banner monokrom (.blueprint-spotlight-hero) dan panggung mockup wireframe arsitektur (.tpl-mockup-stage).',
-          'Sistem lencana fitur hitam-putih (.pulse-badge) dan tanda centang arsitektur monokrom yang konsisten di setiap kartu template.',
+          'Aksen warna halus non-neon per produk (stage bottom accent, soft pastel category pill .pill-portfolio/.pill-blog/.pill-education/.pill-business, checkmark fitur selaras, dan warm amber rating) memadukan keterbacaan tinggi dengan identitas domain produk.',
           'Filter segmen blueprint (Dev Portofolio, SaaS Studio, Editorial News, Documentation Hub, E-Commerce).'
         ]
       },

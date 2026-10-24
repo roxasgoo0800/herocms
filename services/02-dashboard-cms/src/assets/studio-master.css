@@ -7250,12 +7250,12 @@ a[class*="btn-"] svg,
   box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.09);
 }
 
-/* Mockup Canvas Header (Monochrome Black & White Architectural Stage) */
+/* Mockup Canvas Header (Monochrome Studio with Subtle Product Accent) */
 .tpl-mockup-stage {
   height: 180px;
   position: relative;
   background: #09090b;
-  border-bottom: 1px solid #27272a;
+  border-bottom: 2px solid #27272a;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -7263,11 +7263,20 @@ a[class*="btn-"] svg,
   overflow: hidden;
 }
 
-.stage-portfolio,
-.stage-blog,
-.stage-education,
+.stage-portfolio {
+  background: linear-gradient(180deg, #0d1527 0%, #09090b 100%);
+}
+
+.stage-blog {
+  background: linear-gradient(180deg, #071f16 0%, #09090b 100%);
+}
+
+.stage-education {
+  background: linear-gradient(180deg, #18102d 0%, #09090b 100%);
+}
+
 .stage-business {
-  background: linear-gradient(180deg, #09090b 0%, #18181b 100%);
+  background: linear-gradient(180deg, #211307 0%, #09090b 100%);
 }
 
 .mockup-browser-shell {
@@ -7317,14 +7326,13 @@ a[class*="btn-"] svg,
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #ffffff;
-  color: #09090b;
+  color: #ffffff;
   font-weight: 800;
   font-size: 0.68rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e4e4e7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .headline-lines {
@@ -7348,10 +7356,7 @@ a[class*="btn-"] svg,
   gap: 5px;
 }
 
-.m-pill,
-.m-pill.blue,
-.m-pill.emerald,
-.m-pill.purple {
+.m-pill {
   font-size: 0.6rem;
   font-weight: 700;
   padding: 2px 7px;
@@ -7359,6 +7364,24 @@ a[class*="btn-"] svg,
   background: #18181b;
   color: #e4e4e7;
   border: 1px solid #3f3f46;
+}
+
+.m-pill.blue {
+  background: rgba(37, 99, 235, 0.16);
+  color: #93c5fd;
+  border: 1px solid rgba(147, 197, 253, 0.28);
+}
+
+.m-pill.emerald {
+  background: rgba(5, 150, 105, 0.16);
+  color: #6ee7b7;
+  border: 1px solid rgba(110, 231, 183, 0.28);
+}
+
+.m-pill.purple {
+  background: rgba(124, 58, 237, 0.16);
+  color: #c4b5fd;
+  border: 1px solid rgba(196, 181, 253, 0.28);
 }
 
 /* Blog Mini */
@@ -7369,7 +7392,7 @@ a[class*="btn-"] svg,
 .b-cat-badge {
   font-size: 0.58rem;
   font-weight: 800;
-  color: #a1a1aa;
+  color: #34d399;
   letter-spacing: 0.06em;
 }
 
@@ -7501,12 +7524,36 @@ a[class*="btn-"] svg,
   letter-spacing: 0.06em;
 }
 
+.tpl-type-pill.pill-portfolio {
+  background: rgba(37, 99, 235, 0.16);
+  color: #93c5fd;
+  border: 1px solid rgba(147, 197, 253, 0.28);
+}
+
+.tpl-type-pill.pill-blog {
+  background: rgba(5, 150, 105, 0.16);
+  color: #6ee7b7;
+  border: 1px solid rgba(110, 231, 183, 0.28);
+}
+
+.tpl-type-pill.pill-education {
+  background: rgba(124, 58, 237, 0.16);
+  color: #c4b5fd;
+  border: 1px solid rgba(196, 181, 253, 0.28);
+}
+
+.tpl-type-pill.pill-business {
+  background: rgba(234, 88, 12, 0.16);
+  color: #fdba74;
+  border: 1px solid rgba(253, 186, 116, 0.28);
+}
+
 .tpl-tier-pill {
   font-size: 0.62rem;
   font-weight: 700;
-  color: #09090b;
-  background: #ffffff;
-  border: 1px solid #ffffff;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
   padding: 2px 8px;
   border-radius: 999px;
   display: inline-flex;
@@ -7515,9 +7562,9 @@ a[class*="btn-"] svg,
 }
 
 .tpl-tier-pill.tier-pro {
-  color: #ffffff;
-  background: #27272a;
-  border-color: #52525b;
+  color: #6d28d9;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
 }
 
 /* Card Body */
@@ -7546,9 +7593,9 @@ a[class*="btn-"] svg,
 .lighthouse-score {
   font-size: 0.66rem;
   font-weight: 800;
-  color: #09090b;
-  background: #f4f4f5;
-  border: 1px solid #e4e4e7;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
   padding: 2px 7px;
   border-radius: 4px;
   display: inline-flex;
@@ -21648,14 +21695,39 @@ a[class*="btn-"] svg,
   color: #ffffff;
   font-weight: 800;
   font-size: 1.1rem;
+  transition: all 0.2s ease;
+}
+
+.split-card-thumb.thumb-portfolio {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.split-card-thumb.thumb-blog {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.split-card-thumb.thumb-education {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+
+.split-card-thumb.thumb-business {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
 }
 
 .split-rating-pill {
   font-size: 0.65rem;
   font-weight: 700;
-  color: #09090b;
-  background: #f4f4f5;
-  border: 1px solid #e4e4e7;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
   padding: 2px 7px;
   border-radius: 999px;
 }

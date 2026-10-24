@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.25.0',
+    version: 'v1.25.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '24 Oktober 2026',
+    lastUpdated: '25 Oktober 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.25.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Aksen Warna Halus Non-Neon per Produk Blueprint Template & Penyempurnaan Visual Card',
+    summary: 'Menyematkan aksen warna halus non-neon (muted semantic palette) pada setiap kartu produk blueprint template dalam balutan tema monokrom studio: (1) Border aksen bawah panggung mockup selaras dengan warna khas blueprint; (2) Lencana domain kategori pastel lembut (.pill-portfolio, .pill-blog, .pill-education, .pill-business); (3) Mini canvas wireframe responsif (tag TTFB, SEO, PWA, badge kategori blog, meter progres edukasi, dan badge harga produk); (4) Lencana skor Lighthouse bernuansa warm amber dan tanda centang fitur selaras; (5) Thumbnail split-studio dengan border aksen dan rating terpadu.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12501-1',
+        type: 'improvement',
+        scope: 'Aksen Warna Non-Neon Kartu Produk Template (.tpl-market-card-pro)',
+        description: 'Menyematkan aksen warna halus non-neon pada kartu produk blueprint template (border stage sesuai accentColor produk, badge kategori pastel lembut, dan tanda centang fitur selaras) untuk mempermudah identifikasi tanpa merusak tema arsitektural hitam-putih studio.'
+      },
+      {
+        id: 'c-02dash-12501-2',
+        type: 'improvement',
+        scope: 'Penyempurnaan Visual Mini Canvas & Split Studio Thumbnails',
+        description: 'Menyelaraskan elemen mini canvas pada tiap produk (avatar badge, pills metrik TTFB/SEO/PWA, progress bar edukasi, dan CTA belanja UMKM) serta thumbnail split studio (.split-card-thumb) dengan aksen domain terpadu.'
+      }
+    ]
+  },
+  {
     version: 'v1.25.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '24 Oktober 2026',
     title: 'Refaktor Pusat Bantuan & Live Chat 1140px, Ikon Sidebar Berwarna & Animasi Cascade Konten Studio',
     summary: 'Merombak total modul Pusat Bantuan & Tiket Support serta menyempurnakan animasi antarmuka Dashboard Studio: (1) Pemilihan 4 Divisi Tujuan Pengaduan dengan deteksi otomatis identitas akun tanpa field urgensi; (2) Modal Live Chat 1140px berdesain model WhatsApp dalam tema HeroCMS Studio (bubble speech tail, indikator mengetik lawan bicara, Centang 1/2/Biru + jam/tanggal dibaca, upload gambar, emotikon, serta Unified Chat Input Capsule menyatu dengan kanvas); (3) Bespoke Custom Dropdown Popover & tabel riwayat tiket di bawah formulir; (4) Ikon menu sidebar berwarna semantik (.nav-icon-box) dengan animasi klik pegas (navSelectSpring) serta animasi transisi berjenjang (staggered card cascade) pada seluruh konten dan kartu di area kerja kanan.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
