@@ -2,13 +2,37 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.5.7',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '25 Oktober 2026',
+    title: 'Penyelarasan Domain Platform stacbyte.id pada PRD dan User Journey Hub',
+    summary: 'Menyelaraskan seluruh spesifikasi PRD (PRD-02 Dashboard Studio, PRD-03 Orchestrator, PRD-04 Marketing Wizard) dan user journey (SSL certificate verification, Cloud Object Storage CDN endpoint) menggunakan domain resmi stacbyte.id.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-157-1',
+        type: 'improvement',
+        scope: 'Dokumentasi PRD & Router Rules (prds.ts)',
+        description: 'Penyelarasan dokumentasi Traefik router rules Host(<subdomain>.stacbyte.id) dan alur onboarding tenant subdomain gratis ke stacbyte.id.'
+      },
+      {
+        id: 'c-07docs-157-2',
+        type: 'improvement',
+        scope: 'User Journey Verification CLI & CDN URLs (journeys.ts)',
+        description: 'Penyelarasan instruksi openssl s_client SSL test dan metadata URL CDN media ke stacbyte.id.'
+      }
+    ]
+  },
+  {
     version: 'v1.5.6',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '25 Oktober 2026',
     title: 'Penyelesaian (Cleared) 5 Tugas QA/QC & Tata Kelola Paijo (TSK-QA-01 s.d TSK-QA-05)',
     summary: 'Menyelesaikan dan membersihkan (cleared) seluruh 5 tugas sprint resmi divisi Paijo (Lead PM & QA/QC Specialist) menjadi 100% COMPLETED: (1) TSK-QA-01: Automated E2E Playwright Regression & Visual Quality Suite; (2) TSK-QA-02: Sprint Backlog Orchestration & Definition of Done (DoD) Gatekeeping; (3) TSK-QA-03: Cross-Service Security Pentest & Compliance Gatekeeper; (4) TSK-QA-04: Cross-Service API Contract & OpenAPI Schema Drift Verifier; (5) TSK-QA-05: Performance & Core Web Vitals Auditing (LCP, CLS, INP); serta sinkronisasi dataset tasks.json, TASK_CHECKLIST.md, dan Mission Control index.html.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
     items: [
       {

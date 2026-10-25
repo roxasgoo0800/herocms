@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.27.0',
+    version: 'v1.28.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -64,7 +64,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '07-docs',
     name: 'Service 07: Docs & Mission Control Hub',
-    version: 'v1.5.6',
+    version: 'v1.5.7',
     serviceFolder: 'services/07-docs',
     badge: 'Latest',
     stack: 'Vue 3 • Go Native BFF (8087) • Docker',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.28.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Migrasi Ekosistem Domain Resmi ke stacbyte.id (Edge Subdomains, DNS CNAME, Previews & CORS)',
+    summary: 'Memperbarui domain resmi platform dari cloudcms.app ke stacbyte.id secara menyeluruh pada backend Go dan frontend Vue 3: (1) Penyesuaian pembuatan kontainer baru dengan subdomain default .stacbyte.id; (2) Target panduan DNS CNAME resmi diarahkan ke edge.stacbyte.id; (3) Pembaruan seluruh URL preview mockup perangkat (Mobile, Tablet, Desktop) pada Katalog Blueprint dan Visual Editor Studio; (4) Penyelarasan CORS allowlist Go BFF serta webhook event simulator ke domain stacbyte.id dengan tetap mempertahankan backward compatibility.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12800-1',
+        type: 'feature',
+        scope: 'Backend Subdomain Formatting & CORS Allowlist (repository.go, service.go, config.go, middleware.go)',
+        description: 'Menetapkan stacbyte.id sebagai domain induk default untuk provisioning situs baru dan verifikasi slug, serta menambahkan *.stacbyte.id ke dalam aturan CORS allowlist Go BFF.'
+      },
+      {
+        id: 'c-02dash-12800-2',
+        type: 'improvement',
+        scope: 'Frontend Edge Routing & CNAME Guidance (useDashboardData.ts & CustomDomainsModule.vue)',
+        description: 'Menyelaraskan pembuatan subdomain kontainer ke ${subdomain}.stacbyte.id dan target CNAME resmi custom domain ke edge.stacbyte.id.'
+      },
+      {
+        id: 'c-02dash-12800-3',
+        type: 'improvement',
+        scope: 'Blueprint Catalog & Live Simulator Device Mockups (TemplatesCatalogModule.vue & TemplateLiveRenderer.vue)',
+        description: 'Mengubah display bar URL pada simulator Safari/Chrome iPhone & iPad ke https://<blueprint>.stacbyte.id serta payload webhook simulator.'
+      }
+    ]
+  },
+  {
     version: 'v1.27.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Transisi Penuh 100% Real Data Lintas Seluruh Menu & Eliminasi Data Statis / Dummy',
     summary: 'Menghapus total seluruh fallback array dummy / statis (seeds) dan generator data sintetis di seluruh modul HeroCMS Studio: (1) Inisialisasi state reaktif dimulai dari array kosong murni (containers, articles, customDomains, mediaAssets, invoices, supportTickets, webhooks) yang dihidrasi langsung dari PostgreSQL 16, Redis 7, MinIO S3, dan Service 03 Orchestrator; (2) Eliminasi 100 log pengunjung palsu (Telkomsel/Indosat IPs) di pod-analytics.ts diganti dengan empty state autentik dan telemetri cgroups v2 real-time; (3) Refaktor total fleet-telemetry.ts untuk mengkalkulasi metrik SLA, HTTP status, dan top pages 100% dari kontainer dan artikel real di PostgreSQL, serta menghapus asal ancaman buatan; (4) Penambahan empty state interaktif pada Webhooks & API Keys module saat belum ada webhook terdaftar; (5) Purge otomatis cache lama browser yang menyimpan data mock.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

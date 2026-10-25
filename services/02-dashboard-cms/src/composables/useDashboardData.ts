@@ -141,11 +141,11 @@ const getArticleLiveUrl = (art: ContentArticle | null): string => {
   if (!art) return '#';
   const container = containers.value.find(c => c.id === art.containerId);
   if (container) {
-    const domain = container.customDomain || `${container.subdomain}.cloudcms.app`;
+    const domain = container.customDomain || (container.subdomain.includes('.') ? container.subdomain : `${container.subdomain}.stacbyte.id`);
     return `https://${domain}/${art.slug}`;
   }
   const slugified = (art.siteName || 'portal').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  return `https://${slugified}.cloudcms.app/${art.slug}`;
+  return `https://${slugified}.stacbyte.id/${art.slug}`;
 };
 
 // Watch activeMenu and persist across refresh (Cookies, LocalStorage, URL Hash, & Redis)
@@ -426,7 +426,7 @@ const handleCreateContainer = () => {
     name: newSiteForm.value.name,
     category: newSiteForm.value.category,
     templateName: tplName,
-    subdomain: `${cleanSubdomain}.cloudcms.app`,
+    subdomain: `${cleanSubdomain}.stacbyte.id`,
     status: 'provisioning',
     cpuUsage: 4,
     ramUsage: 36,
@@ -606,7 +606,7 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     name: payload.name.trim(),
     category: tpl ? tpl.category : 'portfolio',
     templateName: tpl ? tpl.title : 'Portofolio Teknis Engineer',
-    subdomain: `${cleanSubdomain}.cloudcms.app`,
+    subdomain: `${cleanSubdomain}.stacbyte.id`,
     status: 'provisioning',
     cpuUsage: 4,
     ramUsage: 36,
@@ -807,7 +807,7 @@ const normalizeCustomDomain = (dom: any): CustomDomainItem => {
     containerId: dom.containerId || 'hero_tenant_9942',
     status: dom.status === 'verified' ? 'active' : (dom.status || dom.dnsStatus || 'active'),
     sslStatus: dom.sslStatus === 'active' ? 'issued' : (dom.sslStatus || 'issued'),
-    cnameRecord: dom.cnameRecord || dom.targetCname || 'edge.cloudcms.app',
+    cnameRecord: dom.cnameRecord || dom.targetCname || 'edge.stacbyte.id',
     aRecord: dom.aRecord || dom.targetIp || '103.144.20.1',
     addedDate: dom.addedDate || dom.createdAt || '12 Sep 2026'
   };
@@ -833,7 +833,7 @@ const handleAddDomain = () => {
     containerId: targetContainerForDomain.value,
     status: 'verifying',
     sslStatus: 'pending',
-    cnameRecord: 'edge.cloudcms.app',
+    cnameRecord: 'edge.stacbyte.id',
     aRecord: '103.144.20.1',
     addedDate: 'Baru saja'
   };

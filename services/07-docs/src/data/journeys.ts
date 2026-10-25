@@ -124,7 +124,7 @@ export const systemJourneys: SystemJourney[] = [
         autoRecovery: 'Traefik mengembalikan fallback halaman panduan perbaikan DNS ("Periksa CNAME record Anda") dan retry challenge setiap 15 menit.'
       }
     ],
-    verificationCli: 'openssl s_client -connect localhost:443 -servername demo.cloudcms.app -tls1_3'
+    verificationCli: 'openssl s_client -connect localhost:443 -servername demo.stacbyte.id -tls1_3'
   },
   {
     id: 'JRN-03',
@@ -352,7 +352,7 @@ export const systemJourneys: SystemJourney[] = [
         stepNum: 5,
         actor: 'Visual Page Builder',
         action: 'Penyediaan URL CDN Publik Terenkripsi',
-        technicalDetail: 'Backend mengembalikan metadata: {"url":"https://storage.cloudcms.app/tenant-c56a/header-banner.webp","size":420000}.',
+        technicalDetail: 'Backend mengembalikan metadata: {"url":"https://storage.stacbyte.id/tenant-c56a/header-banner.webp","size":420000}.',
         outcome: 'Gambar seketika muncul di galeri media dan siap disematkan ke editor visual sekali klik.'
       }
     ],

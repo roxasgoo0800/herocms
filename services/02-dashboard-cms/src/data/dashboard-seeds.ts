@@ -102,7 +102,7 @@ export const initialContainers: ContainerSite[] = [
     name: 'Portofolio Rizal Pratama',
     category: 'portfolio',
     templateName: 'Portofolio Teknis Engineer',
-    subdomain: 'rizal.cloudcms.app',
+    subdomain: 'rizal.stacbyte.id',
     customDomain: 'rizalpratama.cloud',
     status: 'running',
     cpuUsage: 14,
@@ -184,7 +184,7 @@ export const initialCustomDomains: CustomDomainItem[] = [
     containerId: 'hero_tenant_9942',
     status: 'active',
     sslStatus: 'issued',
-    cnameRecord: 'edge.cloudcms.app',
+    cnameRecord: 'edge.stacbyte.id',
     aRecord: '103.144.20.1',
     addedDate: '12 Sep 2026'
   }
@@ -557,7 +557,7 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
         slug: 'membangun-arsitektur-cloud-mandiri',
         author: 'Rizal Pratama',
         published_at: '2026-10-20T07:00:00Z',
-        url: 'https://rizalpratama.cloudcms.app/artikel/membangun-arsitektur-cloud-mandiri'
+        url: 'https://rizalpratama.stacbyte.id/artikel/membangun-arsitektur-cloud-mandiri'
       }
     },
     responseBody: '{"id": "1290349812903", "type": 0, "content": "Artikel Baru Terbit: Membangun Arsitektur Cloud Mandiri", "channel_id": "128940029"}'
@@ -588,7 +588,7 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
         email: 'budi@enterprise.co.id',
         company: 'PT Solusi Bangsa Digital',
         message: 'Tertarik dengan implementasi Stack untuk 50 kontainer website.',
-        source_site: 'rizalpratama.cloudcms.app'
+        source_site: 'rizalpratama.stacbyte.id'
       }
     },
     responseBody: 'ok'
@@ -614,7 +614,7 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
       timestamp: '2026-10-20T02:00:00Z',
       tenant_id: 'tenant-9942',
       data: {
-        domain: 'rizalpratama.cloudcms.app',
+        domain: 'rizalpratama.stacbyte.id',
         issuer: "Let's Encrypt Authority X3",
         tls_version: 'TLS 1.3',
         valid_until: '2027-01-18T00:00:00Z',
@@ -645,7 +645,7 @@ export const initialWebhookDeliveryLogs: WebhookDeliveryLog[] = [
       tenant_id: 'tenant-9942',
       data: {
         container_id: 'cnt_9942_01',
-        subdomain: 'rizalpratama.cloudcms.app',
+        subdomain: 'rizalpratama.stacbyte.id',
         requests_per_minute: 4820,
         normal_baseline: 450,
         ratio: '10.7x spike',
@@ -662,7 +662,7 @@ export const initialSupportTickets: SupportTicketItem[] = [
     subject: 'Kontainer Toko Kopi Nusantara Tiba-tiba Standby / Tidak Bisa Diakses',
     department: 'Technical & Container (DevOps)',
     category: 'Kontainer Mati / Situs Tidak Bisa Diakses (Down)',
-    containerName: 'Toko Kopi Nusantara (kopinusantara.cloudcms.app)',
+    containerName: 'Toko Kopi Nusantara (kopinusantara.stacbyte.id)',
     reporterName: 'Rizal Pratama',
     reporterEmail: 'rizal@herocms.id',
     priority: 'p3_normal',
@@ -681,7 +681,7 @@ export const initialSupportTickets: SupportTicketItem[] = [
         timestamp: '09:45 WIB',
         deliveryStatus: 'read',
         readAt: '09:46 WIB',
-        message: 'Halo tim Technical Support 👋, kontainer situs Toko Kopi Nusantara (kopinusantara.cloudcms.app) tiba-tiba berstatus Standby dan tidak merespons saat diakses publik. Mohon bantuannya untuk pengecekan service kontainer kami 🙏'
+        message: 'Halo tim Technical Support 👋, kontainer situs Toko Kopi Nusantara (kopinusantara.stacbyte.id) tiba-tiba berstatus Standby dan tidak merespons saat diakses publik. Mohon bantuannya untuk pengecekan service kontainer kami 🙏'
       },
       {
         id: 'msg_2',
@@ -689,7 +689,7 @@ export const initialSupportTickets: SupportTicketItem[] = [
         authorName: 'Budi Hartono',
         authorRole: 'L2 Cloud DevOps Engineer',
         timestamp: '09:48 WIB',
-        message: 'Halo Pak Rizal, laporan Anda sudah kami terima. Kami sedang memeriksa healthcheck pod kontainer kopinusantara.cloudcms.app dan log memory cgroups v2. Apabila ada tangkapan layar (screenshot) pesan error di browser, silakan dilampirkan di chat ini ya 👍'
+        message: 'Halo Pak Rizal, laporan Anda sudah kami terima. Kami sedang memeriksa healthcheck pod kontainer kopinusantara.stacbyte.id dan log memory cgroups v2. Apabila ada tangkapan layar (screenshot) pesan error di browser, silakan dilampirkan di chat ini ya 👍'
       },
       {
         id: 'msg_2b',
@@ -709,7 +709,7 @@ export const initialSupportTickets: SupportTicketItem[] = [
     subject: 'Bantuan Penyetelan Custom Domain & Verifikasi SSL Wildcard',
     department: 'Domain, DNS & Keamanan SSL',
     category: 'Custom Domain Belum Terhubung (Propagasi DNS)',
-    containerName: 'Portofolio Rizal Pratama (rizalpratama.cloudcms.app)',
+    containerName: 'Portofolio Rizal Pratama (rizalpratama.stacbyte.id)',
     reporterName: 'Rizal Pratama',
     reporterEmail: 'rizal@herocms.id',
     priority: 'p3_normal',
@@ -756,7 +756,7 @@ export const initialSupportTickets: SupportTicketItem[] = [
     subject: 'Konsultasi Pengaturan Layout Seksi Hero pada Visual Editor',
     department: 'Customer Support & Layanan CMS',
     category: 'Kendala Visual Editor & Publikasi Halaman',
-    containerName: 'Portofolio Rizal Pratama (rizalpratama.cloudcms.app)',
+    containerName: 'Portofolio Rizal Pratama (rizalpratama.stacbyte.id)',
     reporterName: 'Rizal Pratama',
     reporterEmail: 'rizal@herocms.id',
     priority: 'p3_normal',

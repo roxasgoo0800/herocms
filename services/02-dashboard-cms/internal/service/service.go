@@ -105,7 +105,7 @@ func (s *Services) AuthenticateUser(identifier, password string) (*LoginResult, 
 
 	// 2. Built-in development fallback credentials (when DB is offline or for quick bootstrap)
 	if !authenticated {
-		if (identifier == "admin" || identifier == "admin@herocms.local" || identifier == "admin@aethercore.local" || identifier == "admin@aether.local" || identifier == "admin@cloudcms.app") && password == "admin" {
+		if (identifier == "admin" || identifier == "admin@herocms.local" || identifier == "admin@aethercore.local" || identifier == "admin@aether.local" || identifier == "admin@cloudcms.app" || identifier == "admin@stacbyte.id") && password == "admin" {
 			authenticated = true
 			email = "admin@aethercore.local"
 		} else if identifier == "admin@rizalpratama.cloud" && (password == "admin" || password == "Password123!" || password == "heroCMS2026!" || password == "aetherStack2026!") {
@@ -298,7 +298,7 @@ func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, e
 			for i, site := range sites {
 				siteID := fmt.Sprintf("%v", site["id"])
 				subdomain := fmt.Sprintf("%v", site["subdomain"])
-				cleanSub := strings.TrimSuffix(subdomain, ".cloudcms.app")
+				cleanSub := strings.TrimSuffix(strings.TrimSuffix(subdomain, ".stacbyte.id"), ".cloudcms.app")
 
 				var matched *orchestrator.ContainerInfo
 				if oc, ok := orchMap[siteID]; ok {
@@ -434,7 +434,7 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 		"name":           input.Name,
 		"category":       input.Category,
 		"templateName":   tplName,
-		"subdomain":      fmt.Sprintf("%s.cloudcms.app", input.Subdomain),
+		"subdomain":      fmt.Sprintf("%s.stacbyte.id", input.Subdomain),
 		"status":         "running",
 		"cpuUsage":       12,
 		"ramUsage":       76,

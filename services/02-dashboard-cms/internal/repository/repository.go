@@ -356,7 +356,7 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		'99420000-0000-0000-0000-000000000301',
 		'99420000-0000-0000-0000-000000009942',
 		'rizalpratama.cloud',
-		'rizal.cloudcms.app',
+		'rizal.stacbyte.id',
 		'103.144.20.12',
 		'verified',
 		'active'
@@ -491,8 +491,8 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 					&accentColor, &roleHeadline, &bioIntro, &themeConfigBytes, &lastDeployed); err == nil {
 
 					subDomainFull := subdomain
-					if len(subdomain) < 14 || subdomain[len(subdomain)-13:] != ".cloudcms.app" {
-						subDomainFull = fmt.Sprintf("%s.cloudcms.app", subdomain)
+					if !strings.HasSuffix(subdomain, ".stacbyte.id") && !strings.HasSuffix(subdomain, ".cloudcms.app") {
+						subDomainFull = fmt.Sprintf("%s.stacbyte.id", subdomain)
 					}
 
 					var parsedTheme gin.H
@@ -558,6 +558,7 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 			status = s
 		}
 		cleanSubdomain := fmt.Sprintf("%v", site["subdomain"])
+		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".stacbyte.id")
 		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".cloudcms.app")
 
 		_, err := r.DB.ExecContext(ctx, `
@@ -1539,7 +1540,7 @@ func (r *Repository) seedInitialData() {
 			"name":           "Portofolio Rizal Pratama",
 			"category":       "portfolio",
 			"templateName":   "Portofolio Teknis Engineer",
-			"subdomain":      "rizal.cloudcms.app",
+			"subdomain":      "rizal.stacbyte.id",
 			"status":         "running",
 			"cpuUsage":       14,
 			"ramUsage":       88,
@@ -1557,7 +1558,7 @@ func (r *Repository) seedInitialData() {
 			"name":           "Portal Informasi Utama",
 			"category":       "business",
 			"templateName":   "Portofolio Teknis Engineer",
-			"subdomain":      "wedak.cloudcms.app",
+			"subdomain":      "wedak.stacbyte.id",
 			"status":         "running",
 			"cpuUsage":       12,
 			"ramUsage":       76,
@@ -1592,7 +1593,7 @@ func (r *Repository) seedInitialData() {
 		{
 			"id":          "dom_9942",
 			"domain":      "rizalpratama.cloud",
-			"targetCname": "rizal.cloudcms.app",
+			"targetCname": "rizal.stacbyte.id",
 			"targetIp":    "103.144.20.12",
 			"dnsStatus":   "verified",
 			"sslStatus":   "active",

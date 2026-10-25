@@ -307,7 +307,7 @@ const handleConfirmDeploy = async () => {
               <span></span><span></span><span></span>
             </div>
             <span style="font-family: monospace; font-size: 0.68rem; color: #a1a1aa;">
-              {{ featuredSpotlight.category }}.cloudcms.app
+              {{ featuredSpotlight.category }}.stacbyte.id
             </span>
           </div>
           <div class="spotlight-mockup-body">
@@ -433,7 +433,7 @@ const handleConfirmDeploy = async () => {
             <div class="mockup-dots">
               <span></span><span></span><span></span>
             </div>
-            <div class="mockup-url-pill">{{ tpl.category }}.cloudcms.app</div>
+            <div class="mockup-url-pill">{{ tpl.category }}.stacbyte.id</div>
           </div>
 
           <div v-if="tpl.category === 'portfolio'" class="mock-canvas-portfolio">
@@ -693,7 +693,7 @@ const handleConfirmDeploy = async () => {
             <!-- Landscape Status Bar (Sleek edge-to-edge status) -->
             <div v-if="splitMobileOrientation === 'landscape'" class="mobile-landscape-status-bar">
               <span>09:41</span>
-              <span style="font-size: 0.65rem; color: #94a3b8; font-family: monospace;">https://{{ selectedSplitTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              <span style="font-size: 0.65rem; color: #94a3b8; font-family: monospace;">https://{{ selectedSplitTemplate.id.replace('tpl_', '') }}.stacbyte.id</span>
               <div style="display: flex; align-items: center; gap: 6px;">
                 <Wifi :size="11" />
                 <span>100%</span>
@@ -712,7 +712,7 @@ const handleConfirmDeploy = async () => {
             <div v-if="splitMobileOrientation === 'portrait'" class="mobile-safari-bar">
               <div class="mobile-safari-pill">
                 <Lock :size="10" style="color: #10b981;" />
-                <span>{{ selectedSplitTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+                <span>{{ selectedSplitTemplate.id.replace('tpl_', '') }}.stacbyte.id</span>
               </div>
             </div>
 
@@ -747,7 +747,7 @@ const handleConfirmDeploy = async () => {
               </div>
               <div class="tablet-safari-address-box">
                 <Lock :size="11" style="color: #10b981;" />
-                <span>https://{{ selectedSplitTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+                <span>https://{{ selectedSplitTemplate.id.replace('tpl_', '') }}.stacbyte.id</span>
               </div>
             </div>
 
@@ -1084,7 +1084,7 @@ const handleConfirmDeploy = async () => {
 
             <div class="preview-chrome-address-bar">
               <Lock :size="11" style="color: #10b981;" />
-              <span style="color: #0f172a; font-weight: 600;">https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              <span style="color: #0f172a; font-weight: 600;">https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.stacbyte.id</span>
               <span style="margin-left: auto; font-size: 0.65rem; color: #10b981; font-weight: 700; background: #ecfdf5; padding: 1px 6px; border-radius: 4px;">
                 ● 1.2ms TTFB
               </span>
@@ -1112,7 +1112,7 @@ const handleConfirmDeploy = async () => {
             </div>
             <div class="tablet-safari-address-box">
               <Lock :size="11" style="color: #10b981;" />
-              <span>https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              <span>https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.stacbyte.id</span>
             </div>
             <button
               style="background: transparent; border: none; color: #64748b; cursor: pointer; display: flex; align-items: center; padding: 2px;"
@@ -1149,7 +1149,7 @@ const handleConfirmDeploy = async () => {
           <!-- Landscape Status Bar (Sleek edge-to-edge status) -->
           <div v-if="previewDevice === 'mobile' && mobileOrientation === 'landscape'" class="mobile-landscape-status-bar">
             <span>09:41</span>
-            <span style="font-size: 0.65rem; color: #94a3b8; font-family: monospace;">https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+            <span style="font-size: 0.65rem; color: #94a3b8; font-family: monospace;">https://{{ activePreviewTemplate.id.replace('tpl_', '') }}.stacbyte.id</span>
             <div style="display: flex; align-items: center; gap: 6px;">
               <Wifi :size="11" />
               <span>100%</span>
@@ -1173,7 +1173,7 @@ const handleConfirmDeploy = async () => {
           <div v-if="previewDevice === 'mobile' && mobileOrientation === 'portrait'" class="mobile-safari-bar">
             <div class="mobile-safari-pill">
               <Lock :size="10" style="color: #10b981;" />
-              <span>{{ activePreviewTemplate.id.replace('tpl_', '') }}.cloudcms.app</span>
+              <span>{{ activePreviewTemplate.id.replace('tpl_', '') }}.stacbyte.id</span>
             </div>
           </div>
 
@@ -1264,7 +1264,7 @@ const handleConfirmDeploy = async () => {
                 </div>
                 <h4 class="target-container-name">{{ activeContainer.name }}</h4>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <span class="target-subdomain-pill">https://{{ activeContainer.subdomain }}.cloudcms.app</span>
+                  <span class="target-subdomain-pill">https://{{ activeContainer.subdomain.includes('.') ? activeContainer.subdomain : activeContainer.subdomain + '.stacbyte.id' }}</span>
                   <span style="font-size: 0.72rem; color: #64748b;">(Port 80/443 Traefik)</span>
                 </div>
               </div>
@@ -1410,7 +1410,7 @@ const handleConfirmDeploy = async () => {
                   style="font-family: monospace; font-size: 0.85rem;"
                 />
                 <span style="font-size: 0.82rem; color: #64748b; font-family: monospace; white-space: nowrap; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                  .cloudcms.app
+                  .stacbyte.id
                 </span>
               </div>
             </div>

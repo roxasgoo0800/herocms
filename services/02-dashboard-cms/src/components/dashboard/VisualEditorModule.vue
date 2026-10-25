@@ -1284,7 +1284,7 @@ watch(schemaJsonText, (newVal) => {
 
 const generatedHtmlCode = computed(() => {
   const containerName = activeContainer.value?.name || 'Website Tenant';
-  const domain = activeContainer.value?.subdomain || 'tenant.cloudcms.app';
+  const domain = activeContainer.value?.subdomain || 'tenant.stacbyte.id';
   const blocks = pageBlocks.value;
 
   const blocksHtml = blocks
@@ -1317,7 +1317,7 @@ const generatedCssCode = computed(() => {
   const accent = activeContainer.value?.accentColor || '#0f172a';
   return `/**
  * Stack Design System Tokens & Generated Styles (Aether Core)
- * Tenant Subdomain: ${activeContainer.value?.subdomain || 'tenant.cloudcms.app'}
+ * Tenant Subdomain: ${activeContainer.value?.subdomain || 'tenant.stacbyte.id'}
  */
 
 :root {
@@ -1358,7 +1358,7 @@ body {
 });
 
 const generatedDockerCode = computed(() => {
-  const sub = activeContainer.value?.subdomain || 'tenant.cloudcms.app';
+  const sub = activeContainer.value?.subdomain || 'tenant.stacbyte.id';
   const name = activeContainer.value?.name || 'Tenant App';
   const safeName = sub.replace(/[^a-zA-Z0-9_-]/g, '_');
 
