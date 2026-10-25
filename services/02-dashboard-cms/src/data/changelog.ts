@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.10',
+    version: 'v1.30.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -24,7 +24,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '03-provision-orchestrator',
     name: 'Service 03: Container Provision Orchestrator',
-    version: 'v1.1.1',
+    version: 'v1.2.0',
     serviceFolder: 'services/03-provision-orchestrator',
     badge: 'Stable',
     stack: 'Golang • Docker Engine SDK • cgroups v2',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.30.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Autonomous Multi-Theme Template Seeding & Instant Container Web Generation',
+    summary: 'Pembaruan fungsional utama pembuatan situs dan provisioning kontainer mandiri: (1) Dynamic Multi-Theme Template Seeding: Setiap website baru yang dibuat—baik melalui modal \'+ Buat Website Baru\' maupun melalui \'Katalog Blueprint Template\'—secara otomatis menyemai dan menyajikan website lengkap sesuai kategori dan tema yang dipilih (Toko Online/Retail dengan keranjang WhatsApp & harga rupiah, Portofolio Teknis Engineer dengan avatar monogram & kartu proyek terdistribusi, Media Editorial & Blog dengan artikel mingguan & newsletter, atau Pusat Edukasi LMS dengan silabus kursus & review siswa); (2) Identitas & Aksen Brand Dinamis: Menyuntikkan nama website, slogan/headline kustom, bio intro, alamat subdomain, dan kode warna aksen brand (--primary) ke dalam template yang langsung dirender oleh Nginx di dalam kontainer Docker terisolasi; (3) Sinkronisasi End-to-End BFF ke Orchestrator: Menghubungkan parameter templateName, accentColor, dan bioIntro dari Vue 3 apiClient -> Go BFF handler -> Service 03 Provision Orchestrator -> persistent storage index.html; (4) Endpoint Pembaruan HTML Langsung: Menghadirkan endpoint PUT /containers/:id/html untuk sinkronisasi kode HTML langsung ke media publik kontainer runtime tanpa downtime.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13000-1',
+        type: 'feature',
+        scope: 'Container Provisioning Pipeline (apiClient.ts & useDashboardData.ts)',
+        description: 'Menyertakan atribut templateName, category, accentColor, role, dan bioIntro pada pembuatan kontainer dari dialog modal maupun katalog blueprint.'
+      },
+      {
+        id: 'c-02dash-13000-2',
+        type: 'feature',
+        scope: 'Go BFF Handler & Orchestrator Client (handler.go & service.go)',
+        description: 'Menerima payload template kustom di backend Go dan menyalurkannya secara aman ke Service 03 Provision Orchestrator dengan token autentikasi internal.'
+      },
+      {
+        id: 'c-02dash-13000-3',
+        type: 'feature',
+        scope: 'Multi-Theme Web Generator (Service 03 generator.go & manager.go)',
+        description: 'Menyediakan engine generator HTML untuk 4 ekosistem blueprint (Business, Portfolio, Blog, Education) dengan UI modern, responsif, dan zero-dependency.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.10',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Dynamic Traffic Momentum & Zero-Hit Baseline Sparkline Calculation',
     summary: 'Perbaikan bug anomali indikator pertumbuhan trafik pada kartu kontainer: (1) Dynamic Growth Calculation: Menggantikan persentase pertumbuhan statis (+24%) dengan komputasi momentum dinamis yang mengevaluasi hits riil (c.visitsThisWeek). Saat trafik bernilai 0 hits, sistem secara akurat menampilkan badge netral \'0%\' dengan icon minus, mencegah anomali visual \'0 hits tapi naik +24%\'; (2) Zero-Hit Baseline Sparkline: Saat kontainer belum memiliki kunjungan, grafik mini sparkline menyajikan garis baseline putus-putus netral (#cbd5e1) tanpa kurva naik palsu; (3) Sinkronisasi Modul Artikel & Analitik Pod: Penyelarasan badge pertumbuhan di modul Artikel dan Analitik Pod agar konsisten menampilkan 0% saat belum ada interaksi pembaca.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

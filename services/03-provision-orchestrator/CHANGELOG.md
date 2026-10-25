@@ -6,6 +6,28 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.2.0] - 25 Oktober 2026
+**Tipe Rilis**: Minor / Feature Release (Dynamic Multi-Theme Template Seeding & Live Storage HTML Sync)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Andalusia (Full Stack Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Dynamic Website Generator (`GenerateWebsiteHTML`)**:
+   - Menghadirkan engine generator HTML (`internal/storage/generator.go`) yang mampu menghasilkan struktur web lengkap, interaktif, dan responsif sesuai kategori tema yang dipilih pengguna:
+     - **Toko Online / Retail / E-Commerce**: Navigasi store, banner hero, statistik pesanan & respon CS, katalog produk dengan harga rupiah & diskon, jaminan garansi/COD/QRIS, serta tombol order WhatsApp instan.
+     - **Portofolio Teknis & Insinyur**: Monogram avatar, status ketersediaan kerja, headline spesialisasi, chips tech-stack (Go, Docker, Traefik, dsb.), dan kartu showcase proyek dengan metrik performa.
+     - **Media Editorial & Blog**: Masthead berita, artikel unggulan mingguan dengan estimasi waktu baca, grid tulisan teknis, dan formulir pendaftaran buletin (newsletter).
+     - **Pusat Edukasi & LMS**: Header akademi, kurikulum bertingkat (pemula, menengah, lanjutan), statistik modul/alumni, dan kartu kursus dengan review bintang serta silabus.
+2. **Template Seeding Otomatis pada Deploy Kontainer**:
+   - Menambahkan field `site_name`, `template_name`, `category`, `role_headline`, `bio_intro`, `accent_color`, dan `custom_html` pada `DeployRequest` (`internal/api/router.go`) dan `TenantDeployParams` (`internal/docker/provisioner.go`).
+   - Secara otomatis menyemai file `public/index.html` dan `public/index.html.live` di direktori storage kontainer tenant saat pembuatan awal pod baru.
+3. **Endpoint Sinkronisasi HTML Kontainer (`PUT /api/v1/containers/:id/html`)**:
+   - Menyediakan endpoint langsung untuk memperbarui konten HTML situs tenant di storage persistensinya secara instan tanpa perlu mematikan atau me-restart kontainer.
+4. **Verifikasi Keamanan & Black-Box Pentest**:
+   - 100% lulus suite pengujian penetrasi keamanan (`go test -v ./pentest/...`), memastikan isolasi traversal direktori (`SanitizeTenantID`), sanitasi injeksi router Traefik, dan penjagaan token secret internal (`InternalSecretGuard`).
+
+---
+
 ### [03-orchestrator-v1.1.1] - 25 Oktober 2026
 **Tipe Rilis**: Patch / Feature Hardening (Container Public Storage Web Mounting & Instant Maintenance Page Ingress)  
 **Status**: Production Ready & Stable  

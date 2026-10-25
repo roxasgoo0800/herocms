@@ -91,28 +91,12 @@ func (m *Manager) ProvisionTenantStorage(tenantID string) (*TenantStorageInfo, e
 	// Seed public/index.html with default tenant runtime template if not yet existing
 	publicIndex := filepath.Join(publicPath, "index.html")
 	if _, err := os.Stat(publicIndex); os.IsNotExist(err) {
-		defaultHTML := `<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Situs Tenant CloudCMS</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #080b12; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .card { background: #0f1523; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 40px; text-align: center; max-width: 480px; }
-        h1 { color: #00e5ff; margin-bottom: 8px; font-size: 1.8rem; }
-        p { color: #94a3b8; font-size: 0.95rem; }
-        .badge { display: inline-block; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; margin-top: 16px; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>Website Tenant Aktif</h1>
-        <p>Website ini berjalan di dalam kontainer Docker terisolasi mandiri (Vue 3 Alpine Runtime) dengan batas memori 256MB dan Traefik Auto-SSL.</p>
-        <span class="badge">● Kontainer Sehat & Terproteksi</span>
-    </div>
-</body>
-</html>`
+		defaultHTML := GenerateWebsiteHTML(TemplateSeedParams{
+			SiteName:     "Situs Tenant CloudCMS",
+			Subdomain:    cleanID,
+			TemplateName: "business",
+			Category:     "business",
+		})
 		_ = os.WriteFile(publicIndex, []byte(defaultHTML), 0644)
 		_ = os.WriteFile(filepath.Join(publicPath, "index.html.live"), []byte(defaultHTML), 0644)
 	}
@@ -366,27 +350,61 @@ func (m *Manager) SetMaintenanceHTML(tenantID, subdomain, message, eta string, e
 	}
 
 	// Default template fallback if no backup exists
-	defaultHTML := `<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Situs Tenant CloudCMS</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #080b12; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .card { background: #0f1523; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 40px; text-align: center; max-width: 480px; }
-        h1 { color: #00e5ff; margin-bottom: 8px; font-size: 1.8rem; }
-        p { color: #94a3b8; font-size: 0.95rem; }
-        .badge { display: inline-block; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; margin-top: 16px; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>Website Tenant Aktif</h1>
-        <p>Website ini berjalan di dalam kontainer Docker terisolasi mandiri (Vue 3 Alpine Runtime) dengan batas memori 256MB dan Traefik Auto-SSL.</p>
-        <span class="badge">● Kontainer Sehat & Terproteksi</span>
-    </div>
-</body>
-</html>`
+	defaultHTML := GenerateWebsiteHTML(TemplateSeedParams{
+		SiteName:     "Situs Tenant CloudCMS",
+		Subdomain:    subdomain,
+		TemplateName: "business",
+		Category:     "business",
+	})
 	return os.WriteFile(indexPath, []byte(defaultHTML), 0644)
+}
+
+// SeedTenantWebsite generates and writes the initial HTML for a tenant website based on chosen template
+func (m *Manager) SeedTenantWebsite(tenantID string, p TemplateSeedParams) error {
+	cleanID, err := SanitizeTenantID(tenantID)
+	if err != nil {
+		return err
+	}
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	publicPath := filepath.Join(m.baseDir, cleanID, "public")
+	if err := os.MkdirAll(publicPath, 0775); err != nil {
+		return fmt.Errorf("failed to ensure public dir: %w", err)
+	}
+
+	htmlContent := GenerateWebsiteHTML(p)
+	indexPath := filepath.Join(publicPath, "index.html")
+	backupPath := filepath.Join(publicPath, "index.html.live")
+
+	if err := os.WriteFile(indexPath, []byte(htmlContent), 0644); err != nil {
+		return fmt.Errorf("failed to write tenant index.html: %w", err)
+	}
+	_ = os.WriteFile(backupPath, []byte(htmlContent), 0644)
+
+	log.Printf("[STORAGE SEEDED] Website template '%s' (category: %s, site: %s) seeded for tenant %s", p.TemplateName, p.Category, p.SiteName, cleanID)
+	return nil
+}
+
+// SetSiteHTML updates index.html directly for a tenant
+func (m *Manager) SetSiteHTML(tenantID, htmlContent string) error {
+	cleanID, err := SanitizeTenantID(tenantID)
+	if err != nil {
+		return err
+	}
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	publicPath := filepath.Join(m.baseDir, cleanID, "public")
+	_ = os.MkdirAll(publicPath, 0775)
+	indexPath := filepath.Join(publicPath, "index.html")
+	backupPath := filepath.Join(publicPath, "index.html.live")
+
+	if err := os.WriteFile(indexPath, []byte(htmlContent), 0644); err != nil {
+		return fmt.Errorf("failed to write site HTML: %w", err)
+	}
+	_ = os.WriteFile(backupPath, []byte(htmlContent), 0644)
+	return nil
 }

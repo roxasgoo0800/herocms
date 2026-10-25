@@ -491,7 +491,10 @@ const handleCreateContainer = async () => {
     name: newSiteForm.value.name,
     subdomain: cleanSubdomain,
     category: newSiteForm.value.category,
-    role: newSiteForm.value.role
+    role: newSiteForm.value.role,
+    templateName: tplName,
+    accentColor: newSiteForm.value.accentColor || '#2563eb',
+    bioIntro: newContainerObj.bioIntro
   });
 
   try {
@@ -760,7 +763,10 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
       name: payload.name.trim(),
       subdomain: cleanSubdomain,
       category: newContainerObj.category,
-      role: newContainerObj.roleOrHeadline
+      role: newContainerObj.roleOrHeadline,
+      templateName: newContainerObj.templateName,
+      accentColor: newContainerObj.accentColor,
+      bioIntro: newContainerObj.bioIntro
     });
 
     await studioApi.saveSiteDesign(newId, {

@@ -282,10 +282,13 @@ func (h *Handler) ListContainers(c *gin.Context) {
 }
 
 type CreateContainerPayload struct {
-	Name      string `json:"name" binding:"required"`
-	Subdomain string `json:"subdomain" binding:"required"`
-	Category  string `json:"category"`
-	Role      string `json:"role"`
+	Name         string `json:"name" binding:"required"`
+	Subdomain    string `json:"subdomain" binding:"required"`
+	Category     string `json:"category"`
+	Role         string `json:"role"`
+	TemplateName string `json:"templateName"`
+	AccentColor  string `json:"accentColor"`
+	BioIntro     string `json:"bioIntro"`
 }
 
 func (h *Handler) CreateContainer(c *gin.Context) {
@@ -296,10 +299,13 @@ func (h *Handler) CreateContainer(c *gin.Context) {
 	}
 
 	created, err := h.Services.CreateContainer(c.Request.Context(), getTenantID(c), service.CreateContainerInput{
-		Name:      req.Name,
-		Subdomain: req.Subdomain,
-		Category:  req.Category,
-		Role:      req.Role,
+		Name:         req.Name,
+		Subdomain:    req.Subdomain,
+		Category:     req.Category,
+		Role:         req.Role,
+		TemplateName: req.TemplateName,
+		AccentColor:  req.AccentColor,
+		BioIntro:     req.BioIntro,
 	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

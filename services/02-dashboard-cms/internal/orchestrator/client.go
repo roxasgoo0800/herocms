@@ -22,6 +22,13 @@ type DeployPayload struct {
 	Subdomain    string `json:"subdomain"`
 	CustomDomain string `json:"custom_domain,omitempty"`
 	VersionHash  string `json:"version_hash"`
+	SiteName     string `json:"site_name,omitempty"`
+	TemplateName string `json:"template_name,omitempty"`
+	Category     string `json:"category,omitempty"`
+	RoleHeadline string `json:"role_headline,omitempty"`
+	BioIntro     string `json:"bio_intro,omitempty"`
+	AccentColor  string `json:"accent_color,omitempty"`
+	CustomHTML   string `json:"custom_html,omitempty"`
 }
 
 // DeployResponse represents the response from Service 03 deploy endpoint
@@ -415,4 +422,35 @@ func (c *Client) GetLogs(ctx context.Context, id string, tail int) (string, erro
 	}
 
 	return string(body), nil
+}
+
+// UpdateContainerHTML syncs static HTML content directly to the tenant container's public storage
+func (c *Client) UpdateContainerHTML(ctx context.Context, id, tenantID, html string) error {
+	path := "/api/v1/containers/" + url.PathEscape(id) + "/html"
+	payload := map[string]string{
+		"tenant_id": tenantID,
+		"html":      html,
+	}
+
+	pBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal html payload: %w", err)
+	}
+
+	req, err := c.newRequest(ctx, http.MethodPut, path, bytes.NewReader(pBytes))
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to update HTML for container %s: %w", id, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("orchestrator update HTML failed (HTTP %d): %s", resp.StatusCode, string(body))
+	}
+	return nil
 }

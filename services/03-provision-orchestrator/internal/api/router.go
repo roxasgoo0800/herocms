@@ -24,6 +24,13 @@ type DeployRequest struct {
 	Subdomain    string `json:"subdomain" binding:"required"`
 	CustomDomain string `json:"custom_domain,omitempty"`
 	VersionHash  string `json:"version_hash" binding:"required"`
+	SiteName     string `json:"site_name,omitempty"`
+	TemplateName string `json:"template_name,omitempty"`
+	Category     string `json:"category,omitempty"`
+	RoleHeadline string `json:"role_headline,omitempty"`
+	BioIntro     string `json:"bio_intro,omitempty"`
+	AccentColor  string `json:"accent_color,omitempty"`
+	CustomHTML   string `json:"custom_html,omitempty"`
 }
 
 // StorageProvisionRequest defines payload for storage creation
@@ -119,6 +126,13 @@ func SetupRouter(
 				Subdomain:    req.Subdomain,
 				CustomDomain: req.CustomDomain,
 				VersionHash:  req.VersionHash,
+				SiteName:     req.SiteName,
+				TemplateName: req.TemplateName,
+				Category:     req.Category,
+				RoleHeadline: req.RoleHeadline,
+				BioIntro:     req.BioIntro,
+				AccentColor:  req.AccentColor,
+				CustomHTML:   req.CustomHTML,
 			})
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -237,6 +251,28 @@ func SetupRouter(
 				"message":            req.Message,
 				"estimated_end_time": req.EstimatedEndTime,
 			})
+		})
+
+		// Update Tenant HTML Content (Live Static Site Sync)
+		api.PUT("/containers/:id/html", func(c *gin.Context) {
+			id := c.Param("id")
+			var req struct {
+				TenantID string `json:"tenant_id"`
+				HTML     string `json:"html" binding:"required"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "code": "ERR_INVALID_PAYLOAD"})
+				return
+			}
+			tenantID := req.TenantID
+			if tenantID == "" {
+				tenantID = id
+			}
+			if err := prov.SetTenantSiteHTML(tenantID, req.HTML); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "code": "ERR_UPDATE_HTML_FAILED"})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "updated", "tenant_id": tenantID})
 		})
 
 		// Destroy Container

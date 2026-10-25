@@ -488,10 +488,16 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 	// 3. Trigger Go Provision Orchestrator (Service 03) with the real UUID
 	if s != nil && s.Orchestrator != nil {
 		deployRes, err := s.Orchestrator.DeployContainer(ctx, orchestrator.DeployPayload{
-			TenantID:    tenantID,
-			SiteID:      siteUUID,
-			Subdomain:   input.Subdomain,
-			VersionHash: "v100prod01",
+			TenantID:     tenantID,
+			SiteID:       siteUUID,
+			Subdomain:    input.Subdomain,
+			VersionHash:  "v100prod01",
+			SiteName:     input.Name,
+			TemplateName: tplName,
+			Category:     input.Category,
+			RoleHeadline: input.Role,
+			BioIntro:     bioIntro,
+			AccentColor:  accentColor,
 		})
 		if err != nil {
 			log.Printf("[ORCHESTRATOR NOTICE] Provision warning for %s (%s): %v", siteUUID, input.Subdomain, err)

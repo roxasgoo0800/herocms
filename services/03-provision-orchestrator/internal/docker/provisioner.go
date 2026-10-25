@@ -31,6 +31,13 @@ type TenantDeployParams struct {
 	Subdomain    string `json:"subdomain"`
 	CustomDomain string `json:"custom_domain,omitempty"`
 	VersionHash  string `json:"version_hash"`
+	SiteName     string `json:"site_name,omitempty"`
+	TemplateName string `json:"template_name,omitempty"`
+	Category     string `json:"category,omitempty"`
+	RoleHeadline string `json:"role_headline,omitempty"`
+	BioIntro     string `json:"bio_intro,omitempty"`
+	AccentColor  string `json:"accent_color,omitempty"`
+	CustomHTML   string `json:"custom_html,omitempty"`
 }
 
 // ContainerSummary holds tenant container overview
@@ -195,6 +202,18 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 			p.emitFailedEvent(ctx, params, fmt.Sprintf("Gagal provisioning storage: %v", err))
 			return "", fmt.Errorf("failed to provision tenant storage: %w", err)
 		}
+
+		// Seed tenant website matching selected template, role, bio, and accent color
+		_ = p.storageManager.SeedTenantWebsite(params.TenantID, storage.TemplateSeedParams{
+			SiteName:     params.SiteName,
+			Subdomain:    params.Subdomain,
+			TemplateName: params.TemplateName,
+			Category:     params.Category,
+			RoleHeadline: params.RoleHeadline,
+			BioIntro:     params.BioIntro,
+			AccentColor:  params.AccentColor,
+			CustomHTML:   params.CustomHTML,
+		})
 	}
 
 	// 4. Sanitize container & router naming (unique per site)
@@ -949,4 +968,12 @@ func (p *Provisioner) SetContainerMaintenance(ctx context.Context, id, reqTenant
 
 	log.Printf("[MAINTENANCE] Container '%s' maintenance mode set to %v (subdomain: %s)", id, enabled, subdomain)
 	return nil
+}
+
+// SetTenantSiteHTML updates the index.html for a tenant container's storage
+func (p *Provisioner) SetTenantSiteHTML(tenantID, htmlContent string) error {
+	if p.storageManager == nil {
+		return fmt.Errorf("storage manager not initialized")
+	}
+	return p.storageManager.SetSiteHTML(tenantID, htmlContent)
 }
