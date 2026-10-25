@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.30.0',
+    version: 'v1.30.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -24,7 +24,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '03-provision-orchestrator',
     name: 'Service 03: Container Provision Orchestrator',
-    version: 'v1.2.0',
+    version: 'v1.2.1',
     serviceFolder: 'services/03-provision-orchestrator',
     badge: 'Stable',
     stack: 'Golang • Docker Engine SDK • cgroups v2',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.30.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Instant Template Re-deploy Animation & Live Multi-Theme Container Web Re-seeding',
+    summary: 'Penyempurnaan alur kerja katalog template saat memilih opsi \'Gunakan\' / \'Terapkan ke Situs Ini\': (1) Alur Re-deploy Kontainer Otomatis: Saat pengguna menerapkan blueprint dari katalog ke kontainer situs aktif, sistem langsung memicu re-deployment terstruktur dengan 4 fase animasi reaktif (1/4 Build & Blueprint Compilation -> 2/4 Docker Engine & Storage Update -> 3/4 Traefik Ingress Routing -> 4/4 Go Live Running) alih-alih hanya menyimpan draft lokal; (2) Re-seeding Web Storage Langsung ke Container: Menghubungkan SaveSiteDesign ke endpoint orchestrator POST /api/v1/containers/:id/template, sehingga file public/index.html kontainer Nginx langsung diperbarui seketika dengan konten tema baru (Toko Online, Portofolio, Blog, atau LMS Edukasi); (3) Sinkronisasi Visual Editor & Penerbitan Desain: Perubahan pada Visual Editor kini menyertakan metadata templateName dan category saat dipublikasikan, memastikan situs web live selalu identik dengan blueprint desain.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13001-1',
+        type: 'feature',
+        scope: 'Template Application Flow (useDashboardData.ts)',
+        description: 'Menerapkan siklus deployment 4 tahap saat menerapkan template ke kontainer aktif, lengkap dengan pembaruan status dan pesan progress.'
+      },
+      {
+        id: 'c-02dash-13001-2',
+        type: 'feature',
+        scope: 'Orchestrator Template Application (service.go & client.go)',
+        description: 'Menambahkan ApplyTemplate pada orchestrator client dan menghubungkan SaveSiteDesign agar menyemai ulang website kontainer runtime di Service 03.'
+      }
+    ]
+  },
+  {
     version: 'v1.30.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Autonomous Multi-Theme Template Seeding & Instant Container Web Generation',
     summary: 'Pembaruan fungsional utama pembuatan situs dan provisioning kontainer mandiri: (1) Dynamic Multi-Theme Template Seeding: Setiap website baru yang dibuat—baik melalui modal \'+ Buat Website Baru\' maupun melalui \'Katalog Blueprint Template\'—secara otomatis menyemai dan menyajikan website lengkap sesuai kategori dan tema yang dipilih (Toko Online/Retail dengan keranjang WhatsApp & harga rupiah, Portofolio Teknis Engineer dengan avatar monogram & kartu proyek terdistribusi, Media Editorial & Blog dengan artikel mingguan & newsletter, atau Pusat Edukasi LMS dengan silabus kursus & review siswa); (2) Identitas & Aksen Brand Dinamis: Menyuntikkan nama website, slogan/headline kustom, bio intro, alamat subdomain, dan kode warna aksen brand (--primary) ke dalam template yang langsung dirender oleh Nginx di dalam kontainer Docker terisolasi; (3) Sinkronisasi End-to-End BFF ke Orchestrator: Menghubungkan parameter templateName, accentColor, dan bioIntro dari Vue 3 apiClient -> Go BFF handler -> Service 03 Provision Orchestrator -> persistent storage index.html; (4) Endpoint Pembaruan HTML Langsung: Menghadirkan endpoint PUT /containers/:id/html untuk sinkronisasi kode HTML langsung ke media publik kontainer runtime tanpa downtime.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

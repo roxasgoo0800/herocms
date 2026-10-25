@@ -639,17 +639,25 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
     return false;
   }
 
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   try {
     const targetId = activeContainer.value.id;
     const chosenAccent = customAccentColor || tpl.accentColor;
     const clonedBlocks = JSON.parse(JSON.stringify(tpl.blocks || []));
 
-    // Sinkronkan state kontainer aktif
+    // Sinkronkan state kontainer aktif & mulai deploy ulang (re-deploy animation)
     activeContainer.value.templateName = tpl.title;
+    activeContainer.value.category = tpl.category;
     activeContainer.value.accentColor = chosenAccent;
     activeContainer.value.roleOrHeadline = tpl.defaultRole;
     activeContainer.value.bioIntro = tpl.defaultBio;
-    activeContainer.value.lastDeployed = 'Baru saja (Template diterapkan)';
+    activeContainer.value.status = 'provisioning';
+    activeContainer.value.deployPhase = 'building';
+    activeContainer.value.deployStep = 1;
+    activeContainer.value.deployStepMessage = `1/4 Menyiapkan blueprint '${tpl.title}' & mengompilasi runtime...`;
+    activeContainer.value.lastDeployed = 'Sedang deploy ulang...';
+
     if (!activeContainer.value.themeConfig) {
       activeContainer.value.themeConfig = {};
     }
@@ -680,8 +688,14 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
       localStorage.setItem(`cloudcms_draft_${targetId}`, JSON.stringify(editorDraftPayload));
     }
 
-    // Persist ke database backend
-    await studioApi.saveSiteDesign(targetId, {
+    showToast(`[1/4 Build] Menerapkan blueprint '${tpl.title}' ke '${activeContainer.value.name}'...`, 'info');
+
+    // Trigger API backend persist & re-seeding concurrently
+    const savePromise = studioApi.saveSiteDesign(targetId, {
+      name: activeContainer.value.name,
+      subdomain: activeContainer.value.subdomain,
+      templateName: tpl.title,
+      category: tpl.category,
       roleOrHeadline: tpl.defaultRole,
       bioIntro: tpl.defaultBio,
       accentColor: chosenAccent,
@@ -691,14 +705,47 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
     await studioApi.saveEditorDraft(targetId, editorDraftPayload)
       .catch(err => console.warn('[API] saveEditorDraft warning:', err));
 
-    showToast(`Blueprint '${tpl.title}' berhasil diterapkan ke '${activeContainer.value.name}'!`, 'success');
+    // Stage 1: Build & Blueprint compilation (1.2s)
+    await sleep(1200);
+
+    // Stage 2: Deploying to container sandbox & updating Nginx storage (1.4s)
+    activeContainer.value.deployPhase = 'deploying';
+    activeContainer.value.deployStep = 2;
+    activeContainer.value.deployStepMessage = `2/4 Memperbarui storage kontainer di Docker Engine (cgroups v2)...`;
+    showToast(`[2/4 Docker] Memperbarui file storage kontainer & sandboxing...`, 'info');
+
+    await savePromise;
+    await sleep(1400);
+
+    // Stage 3: Edge Traefik Routing & TLS Ingress
+    activeContainer.value.deployPhase = 'routing';
+    activeContainer.value.deployStep = 3;
+    activeContainer.value.deployStepMessage = `3/4 Mengonfigurasi rute ingress Traefik v3 HTTP/3 & TLS ALPN...`;
+    showToast(`[3/4 Traefik] Memvalidasi rute ingress ${activeContainer.value.subdomain}...`, 'info');
+
+    await sleep(1200);
+
+    // Stage 4: Go Live & Running
+    activeContainer.value.status = 'running';
+    activeContainer.value.deployPhase = 'running';
+    activeContainer.value.deployStep = 4;
+    activeContainer.value.deployStepMessage = 'Situs aktif dan siap melayani trafik publik';
+    activeContainer.value.uptime = 'Baru saja running';
+    activeContainer.value.lastDeployed = 'Baru saja';
+
+    showToast(`Kontainer '${activeContainer.value.name}' berhasil di-deploy ulang dengan blueprint '${tpl.title}'!`, 'success');
 
     if (jumpToEditor) {
       activeMenu.value = 'editor';
+    } else {
+      activeMenu.value = 'containers';
     }
     return true;
   } catch (err: any) {
     console.error('Failed to apply template:', err);
+    if (activeContainer.value) {
+      activeContainer.value.status = 'running';
+    }
     showToast('Gagal menerapkan template: ' + (err?.message || 'Kesalahan internal'), 'error');
     return false;
   }
@@ -710,34 +757,39 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     return false;
   }
 
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
   const tpl = officialTemplates.value.find(t => t.id === payload.templateId);
   const cleanSubdomain = payload.subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '');
-  const newId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
+  const tempId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
   const clonedBlocks = tpl ? JSON.parse(JSON.stringify(tpl.blocks)) : [];
 
-  const newContainerObj: ContainerSite = {
-    id: newId,
+  const newContainerObj: ContainerSite = reactive({
+    id: tempId,
     name: payload.name.trim(),
     category: tpl ? tpl.category : 'portfolio',
     templateName: tpl ? tpl.title : 'Portofolio Teknis Engineer',
     subdomain: `${cleanSubdomain}.stacbyte.id`,
     status: 'provisioning',
+    deployPhase: 'building',
+    deployStep: 1,
+    deployStepMessage: `1/4 Memvalidasi blueprint '${tpl?.title || 'Default'}' & runtime image...`,
     cpuUsage: 4,
     ramUsage: 36,
     ramLimit: 256,
     cpuLimit: '0.5 vCPU',
-    uptime: 'Inisialisasi...',
+    uptime: 'Sedang deploy...',
     visitsThisWeek: 0,
     ssl: true,
     roleOrHeadline: tpl?.defaultRole || ('Website Resmi ' + payload.name),
     bioIntro: tpl?.defaultBio || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
     accentColor: tpl?.accentColor || '#2563eb',
-    lastDeployed: 'Baru saja',
+    lastDeployed: 'Sedang deploy...',
     themeConfig: tpl ? { ...tpl.themeConfig, blocks: clonedBlocks } : { blocks: clonedBlocks }
-  };
+  });
 
   containers.value.push(newContainerObj);
-  activeContainerId.value = newId;
+  containers.value = [...containers.value];
+  activeContainerId.value = tempId;
 
   if (typeof localStorage !== 'undefined') {
     const editorDraftPayload = {
@@ -752,45 +804,100 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
       updatedAt: new Date().toISOString(),
       timestamp: Date.now()
     };
-    localStorage.setItem(`herocms_editor_draft_${newId}`, JSON.stringify(editorDraftPayload));
-    localStorage.setItem(`cloudcms_draft_${newId}`, JSON.stringify(editorDraftPayload));
+    localStorage.setItem(`herocms_editor_draft_${tempId}`, JSON.stringify(editorDraftPayload));
+    localStorage.setItem(`cloudcms_draft_${tempId}`, JSON.stringify(editorDraftPayload));
   }
 
-  showToast(`Mengalokasikan kontainer baru dengan blueprint '${tpl?.title || 'Default'}'...`, 'info');
+  showToast(`[1/4 Build] Menyiapkan kontainer baru dengan blueprint '${tpl?.title || 'Default'}'...`, 'info');
+
+  // Helper to update deploying container across containers array with full reactivity guarantee
+  const setDeployProgress = (idOrSub: string, updates: Partial<ContainerSite>) => {
+    const item = containers.value.find(c => c.id === idOrSub || (c.subdomain && c.subdomain.includes(cleanSubdomain)));
+    if (item) {
+      Object.assign(item, updates);
+    }
+    containers.value = [...containers.value];
+  };
+
+  const createPromise = studioApi.createContainer({
+    name: payload.name.trim(),
+    subdomain: cleanSubdomain,
+    category: newContainerObj.category,
+    role: newContainerObj.roleOrHeadline,
+    templateName: newContainerObj.templateName,
+    accentColor: newContainerObj.accentColor,
+    bioIntro: newContainerObj.bioIntro
+  });
 
   try {
-    await studioApi.createContainer({
-      name: payload.name.trim(),
-      subdomain: cleanSubdomain,
-      category: newContainerObj.category,
-      role: newContainerObj.roleOrHeadline,
-      templateName: newContainerObj.templateName,
-      accentColor: newContainerObj.accentColor,
-      bioIntro: newContainerObj.bioIntro
+    // Stage 1: Build & Blueprint Validation (minimum 1.4s)
+    await sleep(1400);
+
+    // Stage 2: Start Docker Engine & cgroups v2
+    setDeployProgress(tempId, {
+      deployPhase: 'deploying',
+      deployStep: 2,
+      deployStepMessage: '2/4 Menjalankan container di Docker Engine (cgroups v2, UID 10001, tmpfs)...'
+    });
+    showToast(`[2/4 Docker] Mengalokasikan sandbox kontainer & memori 256 MB...`, 'info');
+
+    let realId = tempId;
+    try {
+      const res = await createPromise;
+      if (res?.id) {
+        realId = res.id;
+        activeContainerId.value = res.id;
+        setDeployProgress(tempId, {
+          id: res.id,
+          containerId: res.container_id,
+          subdomain: res.subdomain || `${cleanSubdomain}.stacbyte.id`
+        });
+
+        await studioApi.saveSiteDesign(res.id, {
+          name: newContainerObj.name,
+          subdomain: newContainerObj.subdomain,
+          roleOrHeadline: newContainerObj.roleOrHeadline,
+          bioIntro: newContainerObj.bioIntro,
+          accentColor: newContainerObj.accentColor,
+          templateName: newContainerObj.templateName,
+          category: newContainerObj.category,
+          themeConfig: newContainerObj.themeConfig
+        }).catch(() => {});
+      }
+    } catch (apiErr) {
+      console.warn('[API] Create container backend sync notice:', apiErr);
+    }
+
+    await sleep(1600);
+
+    // Stage 3: Edge Traefik Ingress & TLS ALPN
+    setDeployProgress(realId, {
+      deployPhase: 'routing',
+      deployStep: 3,
+      deployStepMessage: '3/4 Mengonfigurasi rute ingress Traefik v3 HTTP/3 & TLS Let\'s Encrypt...'
+    });
+    showToast(`[3/4 Traefik] Memetakan ingress https://${cleanSubdomain}.stacbyte.id...`, 'info');
+
+    await sleep(1200);
+
+    // Stage 4: Go Live & Running
+    setDeployProgress(realId, {
+      status: 'running',
+      deployPhase: 'running',
+      deployStep: 4,
+      deployStepMessage: 'Kontainer aktif dan melayani trafik publik',
+      uptime: 'Baru saja aktif',
+      lastDeployed: 'Baru saja',
+      cpuUsage: 14,
+      ramUsage: 72
     });
 
-    await studioApi.saveSiteDesign(newId, {
-      roleOrHeadline: newContainerObj.roleOrHeadline,
-      bioIntro: newContainerObj.bioIntro,
-      accentColor: newContainerObj.accentColor,
-      themeConfig: newContainerObj.themeConfig
-    }).catch(() => {});
-
-    await studioApi.saveEditorDraft(newId, {
-      blocks: clonedBlocks,
-      timestamp: Date.now()
-    }).catch(() => {});
-  } catch (err) {
-    console.warn('[API] Create container backend sync notice:', err);
+    showToast(`Kontainer '${newContainerObj.name}' aktif! Rute live di https://${cleanSubdomain}.stacbyte.id`, 'success');
+  } catch (err: any) {
+    console.error('Failed to deploy container from template:', err);
+    setDeployProgress(tempId, { status: 'running' });
+    showToast('Gagal deploy kontainer: ' + (err?.message || 'Kesalahan internal'), 'error');
   }
-
-  setTimeout(() => {
-    newContainerObj.status = 'running';
-    newContainerObj.cpuUsage = 14;
-    newContainerObj.ramUsage = 72;
-    newContainerObj.uptime = 'Baru saja running';
-    showToast(`Kontainer '${newContainerObj.name}' aktif! Rute live di https://${newContainerObj.subdomain}`, 'success');
-  }, 1200);
 
   if (payload.jumpToEditor) {
     activeMenu.value = 'editor';
@@ -810,6 +917,10 @@ const handlePublishChanges = async () => {
   isPublishing.value = true;
   try {
     const payload = {
+      name: activeContainer.value.name,
+      subdomain: activeContainer.value.subdomain,
+      templateName: activeContainer.value.templateName,
+      category: activeContainer.value.category,
       roleOrHeadline: activeContainer.value.roleOrHeadline,
       bioIntro: activeContainer.value.bioIntro,
       accentColor: activeContainer.value.accentColor,

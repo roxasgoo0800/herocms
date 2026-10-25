@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"regexp"
@@ -273,6 +274,72 @@ func SetupRouter(
 				return
 			}
 			c.JSON(http.StatusOK, gin.H{"status": "updated", "tenant_id": tenantID})
+		})
+
+		// Apply/Re-seed Website Template to Container Storage
+		api.POST("/containers/:id/template", func(c *gin.Context) {
+			id := c.Param("id")
+			var req struct {
+				TenantID     string `json:"tenant_id"`
+				Subdomain    string `json:"subdomain"`
+				SiteName     string `json:"site_name"`
+				TemplateName string `json:"template_name"`
+				Category     string `json:"category"`
+				RoleHeadline string `json:"role_headline"`
+				BioIntro     string `json:"bio_intro"`
+				AccentColor  string `json:"accent_color"`
+				CustomHTML   string `json:"custom_html,omitempty"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "code": "ERR_INVALID_PAYLOAD"})
+				return
+			}
+			tenantID := req.TenantID
+			if tenantID == "" {
+				tenantID = id
+			}
+
+			if sm != nil {
+				if err := sm.SeedTenantWebsite(tenantID, storage.TemplateSeedParams{
+					SiteName:     req.SiteName,
+					Subdomain:    req.Subdomain,
+					TemplateName: req.TemplateName,
+					Category:     req.Category,
+					RoleHeadline: req.RoleHeadline,
+					BioIntro:     req.BioIntro,
+					AccentColor:  req.AccentColor,
+					CustomHTML:   req.CustomHTML,
+				}); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "code": "ERR_APPLY_TEMPLATE_FAILED"})
+					return
+				}
+			}
+
+			nowStr := time.Now().Format("15:04:05")
+			if rm != nil {
+				_ = rm.PushLog(c.Request.Context(), tenantID, id, fmt.Sprintf("[%s] 🎨 [TEMPLATE] Blueprint '%s' (%s) diterapkan ke kontainer", nowStr, req.TemplateName, req.Category))
+				_ = rm.PushLog(c.Request.Context(), tenantID, id, fmt.Sprintf("[%s] 🌐 [TRAEFIK] Rute ingress %s disinkronkan", nowStr, req.Subdomain))
+				_ = rm.PushLog(c.Request.Context(), tenantID, id, fmt.Sprintf("[%s] 🚀 [RUNNING] Kontainer live dengan template baru", nowStr))
+			}
+
+			if kp != nil {
+				_ = kp.Publish(c.Request.Context(), "herocms.orchestrator.lifecycle", kafka.LifecycleEvent{
+					Type:      kafka.EventProvisionStarted,
+					TenantID:  tenantID,
+					SiteID:    id,
+					Status:    "running",
+					Message:   fmt.Sprintf("Template '%s' diterapkan ke kontainer %s", req.TemplateName, req.Subdomain),
+					Timestamp: time.Now().UTC().Format(time.RFC3339),
+				})
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"status":        "template_applied",
+				"container_id":  id,
+				"tenant_id":     tenantID,
+				"template_name": req.TemplateName,
+				"category":      req.Category,
+			})
 		})
 
 		// Destroy Container

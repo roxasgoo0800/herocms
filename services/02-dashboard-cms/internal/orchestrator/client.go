@@ -454,3 +454,43 @@ func (c *Client) UpdateContainerHTML(ctx context.Context, id, tenantID, html str
 	}
 	return nil
 }
+
+// ApplyTemplatePayload defines the parameters for applying/re-seeding a template onto an existing container
+type ApplyTemplatePayload struct {
+	TenantID     string `json:"tenant_id"`
+	SiteID       string `json:"site_id"`
+	Subdomain    string `json:"subdomain"`
+	SiteName     string `json:"site_name"`
+	TemplateName string `json:"template_name"`
+	Category     string `json:"category"`
+	RoleHeadline string `json:"role_headline"`
+	BioIntro     string `json:"bio_intro"`
+	AccentColor  string `json:"accent_color"`
+	CustomHTML   string `json:"custom_html,omitempty"`
+}
+
+// ApplyTemplate re-seeds and redeploys website template HTML to container storage
+func (c *Client) ApplyTemplate(ctx context.Context, payload ApplyTemplatePayload) error {
+	path := "/api/v1/containers/" + url.PathEscape(payload.SiteID) + "/template"
+	pBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal apply template payload: %w", err)
+	}
+
+	req, err := c.newRequest(ctx, http.MethodPost, path, bytes.NewReader(pBytes))
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to apply template on orchestrator: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("orchestrator apply template failed (HTTP %d): %s", resp.StatusCode, string(body))
+	}
+	return nil
+}

@@ -6,6 +6,24 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.2.1] - 25 Oktober 2026
+**Tipe Rilis**: Patch / Feature Hardening (Live Container Template Re-seeding Endpoint `/containers/:id/template`)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Andalusia (Full Stack Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Endpoint Re-seeding Template Kontainer (`POST /api/v1/containers/:id/template`)**:
+   - Menghadirkan endpoint khusus untuk menyemai ulang website kontainer yang sedang berjalan saat pengguna berganti tema dari katalog template.
+   - Menerima `tenant_id`, `subdomain`, `site_name`, `template_name`, `category`, `role_headline`, `bio_intro`, dan `accent_color`.
+   - Mengenerasi kode HTML lengkap dan memperbarui file `public/index.html` serta `public/index.html.live` di direktori persistent storage kontainer.
+2. **Penerbitan Event & Logging Audit**:
+   - Menerbitkan event siklus hidup Kafka (`herocms.orchestrator.lifecycle`) bertipe `EventProvisionStarted`.
+   - Menyimpan jejak log deployment ke Redis secara real-time (`[TEMPLATE] Blueprint ... diterapkan ke kontainer`).
+3. **Verifikasi Kontainer Live**:
+   - Teruji memutakhirkan situs kontainer Nginx aktif (`tenant_testapp_v100prod`) dari template portofolio ke editorial media secara instan tanpa downtime.
+
+---
+
 ### [03-orchestrator-v1.2.0] - 25 Oktober 2026
 **Tipe Rilis**: Minor / Feature Release (Dynamic Multi-Theme Template Seeding & Live Storage HTML Sync)  
 **Status**: Production Ready & Stable  

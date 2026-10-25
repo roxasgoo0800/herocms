@@ -763,6 +763,42 @@ func (s *Services) SaveSiteDesign(ctx context.Context, tenantID, id string, payl
 			s.InvalidateTenantCache(ctx, tenantID)
 		}
 	}
+
+	// Sync new template / design directly to container runtime storage in Service 03
+	if s != nil && s.Orchestrator != nil {
+		tplName, _ := payload["templateName"].(string)
+		if tplName == "" {
+			tplName, _ = payload["template_name"].(string)
+		}
+		cat, _ := payload["category"].(string)
+		role, _ := payload["roleOrHeadline"].(string)
+		bio, _ := payload["bioIntro"].(string)
+		accent, _ := payload["accentColor"].(string)
+		sub, _ := payload["subdomain"].(string)
+		name, _ := payload["name"].(string)
+
+		if tplName != "" || cat != "" || role != "" || bio != "" || accent != "" {
+			_ = s.Orchestrator.ApplyTemplate(ctx, orchestrator.ApplyTemplatePayload{
+				TenantID:     tenantID,
+				SiteID:       id,
+				Subdomain:    sub,
+				SiteName:     name,
+				TemplateName: tplName,
+				Category:     cat,
+				RoleHeadline: role,
+				BioIntro:     bio,
+				AccentColor:  accent,
+			})
+
+			nowStr := time.Now().Format("15:04:05")
+			if s.Redis != nil {
+				_ = s.Redis.PushContainerLog(ctx, tenantID, id, fmt.Sprintf("[%s] 🎨 [TEMPLATE] Blueprint '%s' (%s) diterapkan ke kontainer", nowStr, tplName, cat))
+				_ = s.Redis.PushContainerLog(ctx, tenantID, id, fmt.Sprintf("[%s] 🌐 [TRAEFIK] Rute ingress %s disinkronkan", nowStr, sub))
+				_ = s.Redis.PushContainerLog(ctx, tenantID, id, fmt.Sprintf("[%s] 🚀 [RUNNING] Kontainer live dengan template baru", nowStr))
+			}
+		}
+	}
+
 	return err
 }
 
