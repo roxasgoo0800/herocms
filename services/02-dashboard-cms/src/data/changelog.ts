@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.4',
+    version: 'v1.29.5',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.5',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Create Website Modal Responsive Architecture, Sticky Pinned Footer, 4-Stage Progressive Deployment Pipeline Stepper, & In-Flight State Preservation',
+    summary: 'Peningkatan responsivitas modal pembuatan website dan visualisasi pipeline deployment kontainer otonom: (1) Modal Responsive Architecture & Pinned Sticky Footer: Mengubah layout modal dialog pembuatan website dari scroll monolitik menjadi flex-column dengan header dan footer pinned (sticky). Tombol "Deploy & Luncurkan Kontainer" selalu terlihat di layar laptop standar tanpa perlu scroll; body modal dipadatkan dan memiliki internal sleek scrollbar; (2) 4-Stage Progressive Deployment Pipeline Stepper: Menyempurnakan alur peluncuran kontainer di kartu antarmuka dengan stepper visual 4 tahap penuh: 1/4 Build App -> 2/4 Start Docker -> 3/4 Edge Traefik -> 4/4 Running dengan durasi animasi progresif dan deskripsi status cgroups v2/TLS ALPN; (3) In-Flight Provisioning State Preservation: Memastikan sinkronisasi latar belakang Redis/backend tidak menimpa atau menghilangkan kontainer yang sedang dalam status deployment aktif; (4) Pembersihan Filter Dummy: Menghapus pengecekan nama subdomain/nama user agar tidak menyaring atau menghapus kontainer riil yang dibuat oleh pengguna.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12905-1',
+        type: 'improvement',
+        scope: 'Modal Layout & CSS Responsiveness (studio-master.css)',
+        description: 'Merestrukturisasi .modal-dialog-create-site menjadi flex container dengan fixed header, internal scrollable body, dan sticky pinned footer untuk memastikan tombol deploy selalu terlihat di resolusi laptop tanpa scrolling.'
+      },
+      {
+        id: 'c-02dash-12905-2',
+        type: 'feature',
+        scope: '4-Stage Sequential Deployment Pipeline Stepper (useDashboardData.ts & ContainersModule.vue)',
+        description: 'Menerapkan transisi visual sekuensial 4 tahap (Build App -> Start Docker Engine -> Edge Traefik Ingress -> Running) dengan durasi transisi realistis dan pesan status teknis yang informatif.'
+      },
+      {
+        id: 'c-02dash-12905-3',
+        type: 'bugfix',
+        scope: 'In-Flight Provisioning State Retention (useDashboardData.ts)',
+        description: 'Memodifikasi syncWithBackend() agar mempertahankan kontainer yang sedang dalam fase deployment (deployPhase/deployStep) sehingga animasi progres tidak ter-reset prematurely saat sinkronisasi API selesai.'
+      },
+      {
+        id: 'c-02dash-12905-4',
+        type: 'improvement',
+        scope: 'User Subdomain Whitelist Sanity (useDashboardData.ts)',
+        description: 'Menghilangkan filter substring yang sebelumnya menyaring situs bernama rizal atau wedak sehingga seluruh website nyata yang dideploy pengguna tersimpan dan tertampil dengan sempurna.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.4',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Multi-Stage Progressive Reboot Lifecycle Logging, Live Terminal Stream Synchronization, & Container Restart Stepper',
     summary: 'Peningkatan menyeluruh transparansi dan feedback visual saat proses reboot / restart kontainer berlangsung: (1) Logging Siklus Reboot Multi-Tahap di Redis: Menambahkan pencatatan kronologis lengkap ke Redis (SIGTERM drainage, stop exit code, Docker process respawn, validasi sintaks Nginx, probe healthcheck, dan ingress Traefik verification) sehingga terminal tidak lagi hanya menampilkan 1 baris statis; (2) Progressive Terminal Stream & Auto-Scroll: Menampilkan umpan balik progresif 8-tahap secara visual di modal terminal dengan auto-scroll otomatis dan sinkronisasi log real-time dari Docker engine; (3) Stepper Animasi pada Kartu Kontainer: Tombol reboot di kartu kontainer kini mengaktifkan stepper fase transisi 2/3 dan 3/3 sebelum kembali ke status Running; (4) Emisi Lifecycle Event Kafka: Service 03 kini mempublikasikan event tenant.container.restarted ke broker Kafka/Redpanda saat kontainer di-reboot.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

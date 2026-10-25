@@ -424,14 +424,14 @@ const openCreateModal = (category?: 'portfolio' | 'blog' | 'education' | 'busine
   isCreateModalOpen.value = true;
 };
 
-const handleCreateContainer = () => {
+const handleCreateContainer = async () => {
   if (!newSiteForm.value.name.trim() || !newSiteForm.value.subdomain.trim()) {
     showToast('Nama situs dan subdomain wajib diisi.', 'error');
     return;
   }
 
   const cleanSubdomain = newSiteForm.value.subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '');
-  const newId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
+  const tempId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
 
   let tplName = 'Portofolio Teknis Engineer';
   if (newSiteForm.value.category === 'business') tplName = 'Toko Online & Penjualan Retail';
@@ -439,7 +439,7 @@ const handleCreateContainer = () => {
   if (newSiteForm.value.category === 'education') tplName = 'Pusat Edukasi LMS';
 
   const newContainerObj: ContainerSite = {
-    id: newId,
+    id: tempId,
     name: newSiteForm.value.name,
     category: newSiteForm.value.category,
     templateName: tplName,
@@ -447,7 +447,7 @@ const handleCreateContainer = () => {
     status: 'provisioning',
     deployPhase: 'building',
     deployStep: 1,
-    deployStepMessage: '1/3 Memvalidasi blueprint & runtime image (roxas0800/tenant-runtime:alpine-v1)...',
+    deployStepMessage: '1/4 Memvalidasi blueprint & runtime image (roxas0800/tenant-runtime:alpine-v1)...',
     cpuUsage: 4,
     ramUsage: 36,
     ramLimit: 256,
@@ -462,28 +462,33 @@ const handleCreateContainer = () => {
   };
 
   containers.value.push(newContainerObj);
-  activeContainerId.value = newId;
+  activeContainerId.value = tempId;
   isCreateModalOpen.value = false;
   activeMenu.value = 'containers';
-  showToast(`[1/3 Build] Menyiapkan kontainer '${newContainerObj.name}'...`, 'info');
+  showToast(`[1/4 Build] Menyiapkan kontainer '${newContainerObj.name}'...`, 'info');
 
-  // Step 2 progression timer
-  const step2Timer = setTimeout(() => {
-    if (newContainerObj.status === 'provisioning') {
-      newContainerObj.deployPhase = 'deploying';
-      newContainerObj.deployStep = 2;
-      newContainerObj.deployStepMessage = '2/3 Menjalankan container di Docker Engine (cgroups v2, UID 10001, tmpfs)...';
-      showToast(`[2/3 Docker] Mengalokasikan sandbox kontainer & memori 256 MB...`, 'info');
-    }
-  }, 1200);
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  studioApi.createContainer({
+  // Trigger backend API creation concurrently
+  const createPromise = studioApi.createContainer({
     name: newSiteForm.value.name,
     subdomain: cleanSubdomain,
     category: newSiteForm.value.category,
     role: newSiteForm.value.role
-  }).then(async (res: any) => {
-    clearTimeout(step2Timer);
+  });
+
+  try {
+    // Stage 1: Build App & Blueprint Validation (minimum 1.4s)
+    await sleep(1400);
+
+    // Stage 2: Start Docker Engine & cgroups v2
+    newContainerObj.deployPhase = 'deploying';
+    newContainerObj.deployStep = 2;
+    newContainerObj.deployStepMessage = '2/4 Menjalankan container di Docker Engine (cgroups v2, UID 10001, tmpfs)...';
+    showToast(`[2/4 Docker] Mengalokasikan sandbox kontainer & memori 256 MB...`, 'info');
+
+    // Await API creation response while step 2 progresses
+    const res = await createPromise;
     if (res?.id) {
       newContainerObj.id = res.id;
       activeContainerId.value = res.id;
@@ -494,44 +499,50 @@ const handleCreateContainer = () => {
     if (res?.subdomain) {
       newContainerObj.subdomain = res.subdomain;
     }
-    
-    // Step 3: Traefik route verification
+
+    await sleep(1500);
+
+    // Stage 3: Edge Traefik Ingress & TLS ALPN
     newContainerObj.deployPhase = 'routing';
     newContainerObj.deployStep = 3;
-    newContainerObj.deployStepMessage = '3/3 Mendaftarkan rute Traefik v3.7 & validasi TLS ALPN...';
-    showToast(`[3/3 Traefik] Sinkronisasi rute https://${newContainerObj.subdomain}...`, 'info');
+    newContainerObj.deployStepMessage = '3/4 Mendaftarkan rute Traefik v3 & validasi TLS ALPN (stacbyte.id)...';
+    showToast(`[3/4 Traefik] Sinkronisasi rute https://${newContainerObj.subdomain}...`, 'info');
 
-    // Smooth transition to Running
-    setTimeout(async () => {
-      newContainerObj.status = 'running';
-      newContainerObj.deployPhase = 'running';
-      newContainerObj.deployStep = 4;
-      newContainerObj.deployStepMessage = 'Live Runtime Aktif & Sehat (HTTP 200 OK)';
-      newContainerObj.uptime = 'Baru saja running';
+    await sleep(1400);
 
-      const stats = await studioApi.getContainerStats(newContainerObj.id).catch(() => null);
-      if (stats) {
-        const cpu = typeof stats.cpu_percentage === 'number' ? stats.cpu_percentage : stats.cpu_percent;
-        const ram = typeof stats.memory_usage_mb === 'number' ? stats.memory_usage_mb : stats.memory_mb;
-        if (typeof cpu === 'number') {
-          newContainerObj.cpuUsage = Math.max(1, Math.round(cpu * 10) / 10);
-        }
-        if (typeof ram === 'number') {
-          newContainerObj.ramUsage = Math.round(ram);
-        }
+    // Stage 4: Running Celebration
+    newContainerObj.deployPhase = 'running';
+    newContainerObj.deployStep = 4;
+    newContainerObj.deployStepMessage = '4/4 Live Runtime Aktif & Sehat (HTTP 200 OK)';
+    showToast(`[4/4 Go-Live] Kontainer '${newContainerObj.name}' sukses running! Rute aktif di https://${newContainerObj.subdomain}`, 'success');
+
+    await sleep(1200);
+
+    // Transition to normal running state
+    newContainerObj.status = 'running';
+    newContainerObj.deployPhase = undefined;
+    newContainerObj.deployStep = undefined;
+    newContainerObj.uptime = 'Baru saja running';
+
+    const stats = await studioApi.getContainerStats(newContainerObj.id).catch(() => null);
+    if (stats) {
+      const cpu = typeof stats.cpu_percentage === 'number' ? stats.cpu_percentage : stats.cpu_percent;
+      const ram = typeof stats.memory_usage_mb === 'number' ? stats.memory_usage_mb : stats.memory_mb;
+      if (typeof cpu === 'number') {
+        newContainerObj.cpuUsage = Math.max(1, Math.round(cpu * 10) / 10);
       }
-      showToast(`Kontainer '${newContainerObj.name}' sukses running! Rute aktif di https://${newContainerObj.subdomain}`, 'success');
-      await syncWithBackend().catch(() => {});
-    }, 1500);
-  }).catch(err => {
-    clearTimeout(step2Timer);
+      if (typeof ram === 'number') {
+        newContainerObj.ramUsage = Math.round(ram);
+      }
+    }
+  } catch (err: any) {
     console.error('[API] Create container backend error:', err);
-    const idx = containers.value.findIndex(c => c.id === newId || c.id === newContainerObj.id);
+    const idx = containers.value.findIndex(c => c.id === tempId || c.id === newContainerObj.id);
     if (idx !== -1) {
       containers.value.splice(idx, 1);
     }
     showToast(`Gagal membuat website: ${err?.message || 'Error deploy kontainer'}`, 'error');
-  });
+  }
 };
 
 // Runtime Logs Modal
@@ -1807,16 +1818,37 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
       if (warmRes?.bundle) {
         const b = warmRes.bundle;
         if (Array.isArray(b.containers?.containers)) {
-          containers.value = b.containers.containers.filter((c: any) => 
-            !c.subdomain?.includes('rizal') && 
-            !c.subdomain?.includes('wedak') && 
-            !c.name?.includes('Rizal') && 
-            !c.name?.includes('Portal Informasi') && 
+          const freshList = b.containers.containers.filter((c: any) => 
             c.id !== 'hero_tenant_9942' && 
             c.id !== 'hero_tenant_2002' && 
             c.id !== '99420000-0000-0000-0000-000000000001' && 
-            c.id !== '99420000-0000-0000-0000-000000000002'
+            c.id !== '99420000-0000-0000-0000-000000000002' &&
+            c.name !== 'Portal Informasi'
           );
+
+          // Preserve any in-flight provisioning / deployPhase on existing items
+          const mergedList = freshList.map((freshItem: any) => {
+            const existing = containers.value.find(c => c.id === freshItem.id || (freshItem.subdomain && c.subdomain === freshItem.subdomain));
+            if (existing && (existing.status === 'provisioning' || existing.deployPhase)) {
+              return {
+                ...freshItem,
+                status: 'provisioning',
+                deployPhase: existing.deployPhase,
+                deployStep: existing.deployStep,
+                deployStepMessage: existing.deployStepMessage
+              };
+            }
+            return freshItem;
+          });
+
+          // Also keep any local temporary container that hasn't received backend ID yet
+          for (const localC of containers.value) {
+            if ((localC.status === 'provisioning' || localC.deployPhase) && !mergedList.some((m: any) => m.id === localC.id || m.subdomain === localC.subdomain)) {
+              mergedList.unshift(localC);
+            }
+          }
+
+          containers.value = mergedList;
           if (b.containers.quota?.max) {
             userPlan.value.maxContainers = b.containers.quota.max;
           }
@@ -1910,16 +1942,37 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
     ]);
 
     if (cRes.status === 'fulfilled' && Array.isArray(cRes.value?.containers)) {
-      containers.value = cRes.value.containers.filter((c: any) => 
-        !c.subdomain?.includes('rizal') && 
-        !c.subdomain?.includes('wedak') && 
-        !c.name?.includes('Rizal') && 
-        !c.name?.includes('Portal Informasi') && 
+      const freshList = cRes.value.containers.filter((c: any) => 
         c.id !== 'hero_tenant_9942' && 
         c.id !== 'hero_tenant_2002' && 
         c.id !== '99420000-0000-0000-0000-000000000001' && 
-        c.id !== '99420000-0000-0000-0000-000000000002'
+        c.id !== '99420000-0000-0000-0000-000000000002' &&
+        c.name !== 'Portal Informasi'
       );
+
+      // Preserve any in-flight provisioning / deployPhase on existing items
+      const mergedList = freshList.map((freshItem: any) => {
+        const existing = containers.value.find(c => c.id === freshItem.id || (freshItem.subdomain && c.subdomain === freshItem.subdomain));
+        if (existing && (existing.status === 'provisioning' || existing.deployPhase)) {
+          return {
+            ...freshItem,
+            status: 'provisioning',
+            deployPhase: existing.deployPhase,
+            deployStep: existing.deployStep,
+            deployStepMessage: existing.deployStepMessage
+          };
+        }
+        return freshItem;
+      });
+
+      // Also keep any local temporary container that hasn't received backend ID yet
+      for (const localC of containers.value) {
+        if ((localC.status === 'provisioning' || localC.deployPhase) && !mergedList.some((m: any) => m.id === localC.id || m.subdomain === localC.subdomain)) {
+          mergedList.unshift(localC);
+        }
+      }
+
+      containers.value = mergedList;
       if (cRes.value.quota?.max) {
         userPlan.value.maxContainers = cRes.value.quota.max;
       }
@@ -2016,28 +2069,22 @@ const hydrateFromCache = (overrideEmail?: string) => {
       // Purge legacy mock seeds cache if found
       const hasLegacySeeds = (Array.isArray(data.invoices) && data.invoices.some((i: any) => i.id === 'INV-2026-10-0994')) ||
         (Array.isArray(data.containers) && data.containers.some((c: any) => 
-          c.subdomain?.includes('rizal') || 
-          c.subdomain?.includes('wedak') || 
-          c.name?.includes('Rizal') || 
-          c.name?.includes('Portal Informasi') || 
           c.id === 'hero_tenant_9942' || 
           c.id === 'hero_tenant_2002' || 
           c.id === '99420000-0000-0000-0000-000000000001' || 
-          c.id === '99420000-0000-0000-0000-000000000002'
+          c.id === '99420000-0000-0000-0000-000000000002' ||
+          c.name === 'Portal Informasi'
         ));
       if (hasLegacySeeds) {
         localStorage.removeItem(getCacheKey(targetEmail));
         localStorage.removeItem('herocms_dashboard_cache');
       } else if (Array.isArray(data.containers)) {
         containers.value = data.containers.filter((c: any) => 
-          !c.subdomain?.includes('rizal') && 
-          !c.subdomain?.includes('wedak') && 
-          !c.name?.includes('Rizal') && 
-          !c.name?.includes('Portal Informasi') && 
           c.id !== 'hero_tenant_9942' && 
           c.id !== 'hero_tenant_2002' && 
           c.id !== '99420000-0000-0000-0000-000000000001' && 
-          c.id !== '99420000-0000-0000-0000-000000000002'
+          c.id !== '99420000-0000-0000-0000-000000000002' &&
+          c.name !== 'Portal Informasi'
         );
         if (containers.value.length > 0 && !containers.value.some(c => c.id === activeContainerId.value)) {
           activeContainerId.value = containers.value[0].id;
