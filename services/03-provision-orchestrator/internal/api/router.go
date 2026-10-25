@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cloudcms/provision-orchestrator/config"
@@ -12,6 +13,7 @@ import (
 	"github.com/cloudcms/provision-orchestrator/internal/messaging/kafka"
 	"github.com/cloudcms/provision-orchestrator/internal/messaging/redis"
 	"github.com/cloudcms/provision-orchestrator/internal/storage"
+	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 )
 
@@ -167,6 +169,10 @@ func SetupRouter(
 		api.POST("/containers/:id/start", func(c *gin.Context) {
 			id := c.Param("id")
 			if err := prov.StartContainer(c.Request.Context(), id); err != nil {
+				if client.IsErrNotFound(err) || strings.Contains(err.Error(), "No such container") {
+					c.JSON(http.StatusNotFound, gin.H{"error": "Container not found", "code": "ERR_CONTAINER_NOT_FOUND"})
+					return
+				}
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
@@ -177,6 +183,10 @@ func SetupRouter(
 		api.POST("/containers/:id/stop", func(c *gin.Context) {
 			id := c.Param("id")
 			if err := prov.StopContainer(c.Request.Context(), id); err != nil {
+				if client.IsErrNotFound(err) || strings.Contains(err.Error(), "No such container") {
+					c.JSON(http.StatusNotFound, gin.H{"error": "Container not found", "code": "ERR_CONTAINER_NOT_FOUND"})
+					return
+				}
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
