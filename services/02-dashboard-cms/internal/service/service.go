@@ -386,6 +386,12 @@ type CreateContainerInput struct {
 }
 
 func (s *Services) CreateContainer(ctx context.Context, tenantID string, input CreateContainerInput) (gin.H, error) {
+	cleanSub := strings.TrimSpace(strings.ToLower(input.Subdomain))
+	cleanSub = strings.TrimSuffix(cleanSub, ".stacbyte.id")
+	cleanSub = strings.TrimSuffix(cleanSub, ".cloudcms.app")
+	cleanSub = strings.TrimSuffix(cleanSub, ".herocms.id")
+	input.Subdomain = cleanSub
+
 	subdomainRegex := regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 	if !subdomainRegex.MatchString(input.Subdomain) {
 		return nil, fmt.Errorf("format subdomain tidak valid (hanya huruf kecil, angka, dan tanda hubung)")
@@ -575,6 +581,10 @@ func (s *Services) DeleteContainer(ctx context.Context, tenantID, id string) (bo
 			log.Printf("[ORCHESTRATOR NOTICE] Destroy container %s: %v", id, err)
 		}
 	}
+	if s != nil && s.Redis != nil {
+		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:container:%s:telemetry", tenantID, id))
+		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:container:%s:logs", tenantID, id))
+	}
 	if s != nil && s.Repo != nil {
 		err := s.Repo.DeleteSite(ctx, tenantID, id)
 		if err != nil {
@@ -589,6 +599,10 @@ func (s *Services) GetContainerStats(ctx context.Context, tenantID, id string) (
 	if s != nil && s.Orchestrator != nil {
 		stats, err := s.Orchestrator.GetStats(ctx, id)
 		if err == nil && stats != nil {
+			ts := stats.Timestamp
+			if ts == "" {
+				ts = time.Now().UTC().Format(time.RFC3339)
+			}
 			telemetry := gin.H{
 				"container_id":    id,
 				"cpu_percentage":  stats.CPUPercent,
@@ -601,7 +615,7 @@ func (s *Services) GetContainerStats(ctx context.Context, tenantID, id string) (
 				"network_rx_mb":   stats.NetworkRxMB,
 				"network_tx_mb":   stats.NetworkTxMB,
 				"pids_current":    stats.PidsCurrent,
-				"timestamp":       stats.Timestamp,
+				"timestamp":       ts,
 				"source":          "orchestrator_cgroups_v2",
 			}
 			if s.Redis != nil {

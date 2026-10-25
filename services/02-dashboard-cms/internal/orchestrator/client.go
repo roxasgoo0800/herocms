@@ -47,8 +47,11 @@ type ContainerInfo struct {
 // ContainerStats represents cgroups v2 resource usage stats from Service 03
 type ContainerStats struct {
 	CPUPercent    float64 `json:"cpu_percent"`
+	CPUPercentage float64 `json:"cpu_percentage"`
 	MemoryMB      float64 `json:"memory_mb"`
+	MemoryUsageMB float64 `json:"memory_usage_mb"`
 	MemoryLimitMB float64 `json:"memory_limit_mb"`
+	MemoryLimit   float64 `json:"memory_limit"`
 	MemoryPercent float64 `json:"memory_percent"`
 	NetworkRxMB   float64 `json:"network_rx_mb"`
 	NetworkTxMB   float64 `json:"network_tx_mb"`
@@ -328,6 +331,24 @@ func (c *Client) GetStats(ctx context.Context, id string) (*ContainerStats, erro
 	var stats ContainerStats
 	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
 		return nil, fmt.Errorf("failed to decode stats: %w", err)
+	}
+
+	if stats.CPUPercent == 0 && stats.CPUPercentage > 0 {
+		stats.CPUPercent = stats.CPUPercentage
+	} else if stats.CPUPercentage == 0 && stats.CPUPercent > 0 {
+		stats.CPUPercentage = stats.CPUPercent
+	}
+
+	if stats.MemoryMB == 0 && stats.MemoryUsageMB > 0 {
+		stats.MemoryMB = stats.MemoryUsageMB
+	} else if stats.MemoryUsageMB == 0 && stats.MemoryMB > 0 {
+		stats.MemoryUsageMB = stats.MemoryMB
+	}
+
+	if stats.MemoryLimitMB == 0 && stats.MemoryLimit > 0 {
+		stats.MemoryLimitMB = stats.MemoryLimit
+	} else if stats.MemoryLimit == 0 && stats.MemoryLimitMB > 0 {
+		stats.MemoryLimit = stats.MemoryLimitMB
 	}
 
 	return &stats, nil

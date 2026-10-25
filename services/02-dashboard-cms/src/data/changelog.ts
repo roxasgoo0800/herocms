@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.2',
+    version: 'v1.29.3',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.3',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'End-to-End API Interoperability, Dual Cgroups v2 Field Normalization, Subdomain Suffix Stripping, & Redis Container Cascade Purge',
+    summary: 'Peningkatan menyeluruh kehandalan dan integrasi API antar-service: (1) Normalisasi Dual Cgroups v2 JSON Fields: Sinkronisasi field name telemetri antara Service 03 (cpu_percentage/memory_usage_mb) dan Service 02 (cpu_percent/memory_mb) sehingga telemetri CPU & RAM dari Docker cgroups selalu ter-decode akurat dan tersimpan di Redis tanpa nilai 0; (2) Sanitasi Subdomain Fleksibel: Menangani input subdomain dengan atau tanpa domain suffix (.stacbyte.id, .cloudcms.app, .herocms.id) agar tidak memicu regex mismatch; (3) Redis Cascade Key Purge: Menghapus seluruh data telemetri dan stream log dari Redis secara otomatis saat kontainer dihancurkan (DeleteContainer); (4) Verifikasi Pentest Pass: Seluruh suite pengujian penetrasi keamanan (Service 02 & Service 03) terverifikasi 100% PASS.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12903-1',
+        type: 'improvement',
+        scope: 'Cgroups Telemetry Field Normalization (client.go & provisioner.go)',
+        description: 'Mendukung field ganda cpu_percent/cpu_percentage dan memory_mb/memory_usage_mb pada response Service 03 dan client Service 02 untuk memastikan nilai CPU & RAM real-time selalu sinkron dan akurat.'
+      },
+      {
+        id: 'c-02dash-12903-2',
+        type: 'improvement',
+        scope: 'Flexible Subdomain Suffix Trimming (service.go)',
+        description: 'Menambahkan sanitasi otomatis untuk memotong suffix domain seperti .stacbyte.id dari payload subdomain sebelum validasi regex, mencegah error format subdomain.'
+      },
+      {
+        id: 'c-02dash-12903-3',
+        type: 'feature',
+        scope: 'Redis Cascade Purge on Container Destroy (service.go)',
+        description: 'Membersihkan kunci Redis tenant:<id>:container:<site_id>:telemetry dan :logs secara instan saat kontainer dihapus agar tidak meninggalkan orphaned cache.'
+      },
+      {
+        id: 'c-02dash-12903-4',
+        type: 'security',
+        scope: 'Automated Pentest Suite Verification (pentest/)',
+        description: 'Menjalankan kembali suite pentest Service 02 dan Service 03 untuk memverifikasi proteksi RLS, Traefik injection prevention, dan auth rate limiting dengan status PASS.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.2',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Strict Redis Integration for Telemetry & Logs, Laser-Animated Deployment Stepper, & Persistent UUID Synchronization',
     summary: 'Peningkatan menyeluruh integritas data dan visualisasi interaktif: (1) Integrasi Penuh Redis & Zero Database Polling: Metrik CPU & RAM dan seluruh stream log kontainer kini disimpan dan dibaca secara eksklusif dari Redis (LRange/RPush capped 500 baris) tanpa membebani database PostgreSQL; (2) Sinkronisasi Persistent UUID: InsertSite kini mengembalikan real UUID dari PostgreSQL RETURNING id sehingga kontainer yang baru dibuat tidak pernah hilang saat halaman di-refresh; (3) Animasi Stepper Build & Deploy Spektakuler: Efek sinar laser dinamis (stepper-laser-beam), denyut pulsasi lingkaran fase aktif (step-circle-pulse), putaran spinner RotateCw pada langkah yang sedang berjalan, dan aliran gradasi garis antar-tahap (stepper-line-flow); (4) Penyesuaian Guard CSRF: Membebaskan rute mutasi API development dan Bearer token agar deploy lokal tidak pernah terblokir 403.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

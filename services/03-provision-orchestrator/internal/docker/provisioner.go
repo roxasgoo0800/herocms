@@ -52,8 +52,11 @@ type ContainerSummary struct {
 type ContainerStatsSnapshot struct {
 	ContainerID   string    `json:"container_id"`
 	CPUPercentage float64   `json:"cpu_percentage"`
+	CPUPercent    float64   `json:"cpu_percent"`
 	MemoryUsageMB float64   `json:"memory_usage_mb"`
+	MemoryMB      float64   `json:"memory_mb"`
 	MemoryLimitMB float64   `json:"memory_limit_mb"`
+	MemoryLimit   float64   `json:"memory_limit"`
 	MemoryPercent float64   `json:"memory_percent"`
 	NetworkRxMB   float64   `json:"network_rx_mb"`
 	NetworkTxMB   float64   `json:"network_tx_mb"`
@@ -682,8 +685,11 @@ func (p *Provisioner) GetContainerStats(ctx context.Context, id string) (*Contai
 	return &ContainerStatsSnapshot{
 		ContainerID:   realID,
 		CPUPercentage: math.Round(cpuPercent*10) / 10,
+		CPUPercent:    math.Round(cpuPercent*10) / 10,
 		MemoryUsageMB: math.Round(memUsageMB*10) / 10,
+		MemoryMB:      math.Round(memUsageMB*10) / 10,
 		MemoryLimitMB: math.Round(memLimitMB*10) / 10,
+		MemoryLimit:   math.Round(memLimitMB*10) / 10,
 		MemoryPercent: math.Round(memPercent*10) / 10,
 		NetworkRxMB:   math.Round(rxMB*10) / 10,
 		NetworkTxMB:   math.Round(txMB*10) / 10,
