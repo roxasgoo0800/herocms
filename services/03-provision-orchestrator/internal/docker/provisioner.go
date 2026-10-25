@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	"github.com/cloudcms/provision-orchestrator/internal/messaging/kafka"
 	"github.com/cloudcms/provision-orchestrator/internal/messaging/redis"
 	"github.com/cloudcms/provision-orchestrator/internal/storage"
+	"github.com/cloudcms/provision-orchestrator/internal/traefik"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -62,9 +64,11 @@ type Provisioner struct {
 	cli            *client.Client
 	edgeNetwork    string
 	runtimeImage   string
+	templatesDir   string
 	storageManager *storage.Manager
 	redisManager   *redis.Manager
 	kafkaProducer  *kafka.Producer
+	traefikManager *traefik.Manager
 	simulated      map[string]*ContainerSummary // in-memory registry when docker socket is offline
 	mu             sync.RWMutex
 }
@@ -81,7 +85,7 @@ func NewProvisioner(
 		edgeNetwork = "herocms_edge_net"
 	}
 	if runtimeImage == "" {
-		runtimeImage = "cloudcms-tenant-runtime:alpine-v1"
+		runtimeImage = "roxas0800/tenant-runtime:alpine-v1"
 	}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -111,6 +115,20 @@ func NewProvisioner(
 	}
 
 	return p, nil
+}
+
+// SetTraefikManager injects the dynamic Traefik file manager
+func (p *Provisioner) SetTraefikManager(tm *traefik.Manager) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.traefikManager = tm
+}
+
+// SetTemplatesDir injects the templates directory containing the runtime Dockerfile
+func (p *Provisioner) SetTemplatesDir(dir string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.templatesDir = dir
 }
 
 // Close closes the underlying Docker client
@@ -240,6 +258,7 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 
 	// 8. Real Docker Engine execution: Idempotent clean of stale container with same name
 	p.ensureEdgeNetwork(ctx)
+	_ = p.ensureRuntimeImage(ctx)
 	_ = p.cli.ContainerStop(ctx, containerName, container.StopOptions{})
 	_ = p.cli.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true})
 
@@ -281,6 +300,13 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 
 	p.emitCompletedEvent(ctx, params, resp.ID)
 	p.saveStateToRedis(ctx, params, resp.ID, "running")
+
+	if p.traefikManager != nil {
+		if err := p.traefikManager.SyncTenantRoute(routerName, params.Subdomain, params.CustomDomain, containerName); err != nil {
+			log.Printf("[TRAEFIK SYNC WARNING] Failed to sync dynamic route for %s: %v", routerName, err)
+		}
+	}
+
 	log.Printf("[PROVISIONER LIVE] Container %s (%s) spawned and running with cgroups limits", containerName, resp.ID[:12])
 	return resp.ID, nil
 }
@@ -452,6 +478,12 @@ func (p *Provisioner) DestroyContainer(ctx context.Context, id string, purgeStor
 		})
 	}
 
+	if p.traefikManager != nil && tenantID != "" {
+		sanitizedTenant := regexp.MustCompile(`[^a-zA-Z0-9_-]`).ReplaceAllString(tenantID, "")
+		routerName := fmt.Sprintf("tenant-%s", sanitizedTenant)
+		_ = p.traefikManager.RemoveTenantRoute(routerName)
+	}
+
 	if purgeStorage && tenantID != "" && p.storageManager != nil {
 		_ = p.storageManager.PurgeTenantStorage(tenantID)
 	}
@@ -586,4 +618,50 @@ func (p *Provisioner) ensureEdgeNetwork(ctx context.Context) {
 			Labels: map[string]string{"herocms.managed": "true"},
 		})
 	}
+}
+
+func (p *Provisioner) ensureRuntimeImage(ctx context.Context) error {
+	if p.cli == nil {
+		return nil
+	}
+
+	// 1. Check if image exists locally in Docker cache
+	_, _, err := p.cli.ImageInspectWithRaw(ctx, p.runtimeImage)
+	if err == nil {
+		return nil // Already present locally!
+	}
+
+	log.Printf("[IMAGE BUILDER] Image '%s' not present in local Docker cache. Initiating autonomous local build...", p.runtimeImage)
+
+	// 2. Locate templates directory containing Dockerfile
+	dir := p.templatesDir
+	if dir == "" {
+		candidates := []string{
+			"./templates/vue-alpine-runtime",
+			"../../templates/vue-alpine-runtime",
+			"/templates/vue-alpine-runtime",
+		}
+		for _, c := range candidates {
+			if info, err := os.Stat(c); err == nil && info.IsDir() {
+				dir = c
+				break
+			}
+		}
+	}
+
+	if dir == "" {
+		log.Printf("[IMAGE BUILDER NOTICE] Templates runtime directory not found on host, proceeding with fallback")
+		return fmt.Errorf("templates runtime directory not found")
+	}
+
+	// 3. Build image locally (no push to Docker Hub needed)
+	buildCmd := exec.CommandContext(ctx, "docker", "build", "-t", p.runtimeImage, dir)
+	out, err := buildCmd.CombinedOutput()
+	if err != nil {
+		log.Printf("[IMAGE BUILDER ERROR] Local build for %s failed: %v. Output: %s", p.runtimeImage, err, string(out))
+		return fmt.Errorf("failed to build image: %w", err)
+	}
+
+	log.Printf("[IMAGE BUILDER SUCCESS] Successfully built local runtime image '%s' (no registry push needed)", p.runtimeImage)
+	return nil
 }

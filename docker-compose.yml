@@ -78,14 +78,14 @@ services:
     build:
       context: ./services/03-provision-orchestrator
       dockerfile: Dockerfile
-    image: cloudcms/provision-orchestrator:latest
+    image: roxas0800/herocms-orchestrator:latest
     container_name: herocms_provision_orchestrator
     restart: unless-stopped
     environment:
       PORT: 8080
       DOCKER_HOST: unix:///var/run/docker.sock
       DOCKER_EDGE_NETWORK: herocms_edge_net
-      TENANT_RUNTIME_IMAGE: ${TENANT_RUNTIME_IMAGE:-cloudcms-tenant-runtime:alpine-v1}
+      TENANT_RUNTIME_IMAGE: ${TENANT_RUNTIME_IMAGE:-roxas0800/tenant-runtime:alpine-v1}
       TENANT_STORAGE_BASE: /var/lib/herocms/tenants
       INTERNAL_SECRET_TOKEN: ${INTERNAL_SECRET_TOKEN:-herocms_internal_secret_key_v1}
       REDIS_ADDR: redis:6379

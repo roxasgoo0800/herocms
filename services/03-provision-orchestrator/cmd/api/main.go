@@ -15,6 +15,7 @@ import (
 	"github.com/cloudcms/provision-orchestrator/internal/messaging/kafka"
 	"github.com/cloudcms/provision-orchestrator/internal/messaging/redis"
 	"github.com/cloudcms/provision-orchestrator/internal/storage"
+	"github.com/cloudcms/provision-orchestrator/internal/traefik"
 )
 
 func main() {
@@ -39,7 +40,10 @@ func main() {
 	// 4. Initialize Kafka Event Producer
 	kafkaProducer := kafka.NewProducer(cfg.KafkaBrokers)
 
-	// 5. Initialize Docker Engine SDK Provisioner
+	// 5. Initialize Traefik Dynamic Configuration Manager
+	traefikMgr := traefik.NewManager(cfg.TraefikDynamicDir)
+
+	// 6. Initialize Docker Engine SDK Provisioner
 	provisioner, err := docker.NewProvisioner(
 		cfg.DockerEdgeNetwork,
 		cfg.TenantRuntimeImage,
@@ -50,8 +54,10 @@ func main() {
 	if err != nil {
 		log.Printf("[WARNING] Docker daemon client notice: %v", err)
 	}
+	provisioner.SetTraefikManager(traefikMgr)
+	provisioner.SetTemplatesDir(cfg.TemplatesRuntimeDir)
 
-	// 6. Setup Gin Internal Router
+	// 7. Setup Gin Internal Router
 	router := api.SetupRouter(cfg, provisioner, storageMgr, redisMgr, kafkaProducer)
 
 	srv := &http.Server{
