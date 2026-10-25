@@ -394,12 +394,14 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".stacbyte.id")
 		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".cloudcms.app")
 
-		_, err := r.DB.ExecContext(ctx, `
+		var newUUID string
+		err := r.DB.QueryRowContext(ctx, `
 			INSERT INTO sites (
 				tenant_id, name, category, template_name, subdomain, status,
 				cpu_usage, ram_usage, ram_limit, cpu_limit, uptime, visits_this_week,
 				accent_color, role_headline, bio_intro, last_deployed_at
 			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
+			RETURNING id
 		`,
 			tenantID,
 			fmt.Sprintf("%v", site["name"]),
@@ -411,11 +413,12 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 			fmt.Sprintf("%v", site["accentColor"]),
 			fmt.Sprintf("%v", site["roleOrHeadline"]),
 			fmt.Sprintf("%v", site["bioIntro"]),
-		)
+		).Scan(&newUUID)
 		if err != nil {
 			log.Printf("[DB ERROR] InsertSite: %v", err)
 			return err
 		}
+		site["id"] = newUUID
 		return nil
 	}
 

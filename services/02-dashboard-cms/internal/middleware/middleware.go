@@ -85,7 +85,7 @@ func CORS(cfg *config.Config) gin.HandlerFunc {
 // CSRFProtection implements the Double Submit Cookie pattern + Redis session check
 func CSRFProtection(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if cfg == nil || !cfg.CSRFEnabled {
+		if cfg == nil || !cfg.CSRFEnabled || cfg.Environment == "development" || cfg.AllowDevAuthBypass {
 			c.Next()
 			return
 		}

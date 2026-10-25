@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.1',
+    version: 'v1.29.2',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Strict Redis Integration for Telemetry & Logs, Laser-Animated Deployment Stepper, & Persistent UUID Synchronization',
+    summary: 'Peningkatan menyeluruh integritas data dan visualisasi interaktif: (1) Integrasi Penuh Redis & Zero Database Polling: Metrik CPU & RAM dan seluruh stream log kontainer kini disimpan dan dibaca secara eksklusif dari Redis (LRange/RPush capped 500 baris) tanpa membebani database PostgreSQL; (2) Sinkronisasi Persistent UUID: InsertSite kini mengembalikan real UUID dari PostgreSQL RETURNING id sehingga kontainer yang baru dibuat tidak pernah hilang saat halaman di-refresh; (3) Animasi Stepper Build & Deploy Spektakuler: Efek sinar laser dinamis (stepper-laser-beam), denyut pulsasi lingkaran fase aktif (step-circle-pulse), putaran spinner RotateCw pada langkah yang sedang berjalan, dan aliran gradasi garis antar-tahap (stepper-line-flow); (4) Penyesuaian Guard CSRF: Membebaskan rute mutasi API development dan Bearer token agar deploy lokal tidak pernah terblokir 403.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12902-1',
+        type: 'bugfix',
+        scope: 'Persistent UUID & Refresh Retention (repository.go & service.go & useDashboardData.ts)',
+        description: 'Menyelesaikan masalah kontainer hilang saat refresh dengan memastikan InsertSite mengembalikan UUID asli dari PostgreSQL RETURNING id dan memperbarui state client secara sinkron.'
+      },
+      {
+        id: 'c-02dash-12902-2',
+        type: 'feature',
+        scope: 'Redis Log List & Telemetry Architecture (redis.go & service.go)',
+        description: 'Menerapkan arsitektur Redis terpusat untuk logging container (PushContainerLog / GetContainerLogs) dan telemetri runtime tanpa pernah menulis metrik sementara ke tabel PostgreSQL.'
+      },
+      {
+        id: 'c-02dash-12902-3',
+        type: 'improvement',
+        scope: 'Visual Stepper Laser Animations (studio-master.css & ContainersModule.vue)',
+        description: 'Menambahkan efek animasi laser scanner, denyut pulsasi pada lingkaran step aktif, putaran spinner progress, dan aliran gradasi garis antar-tahap dari Build App hingga Running.'
+      },
+      {
+        id: 'c-02dash-12902-4',
+        type: 'bugfix',
+        scope: 'Development CSRF Guard Bypass (middleware.go)',
+        description: 'Membebaskan pemeriksaan CSRF double-cookie pada environment development dan request dengan token Bearer sehingga mutasi data kontainer tidak tertolak status 403.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Real-Time Container Telemetry Polling, Robust Subdomain Isolation, & Guaranteed Delete Lifecycle',
     summary: 'Penyempurnaan arsitektur container lifecycle dan telemetri sumber daya runtime: (1) Telemetri CPU & RAM Real-Time: Implementasi polling background 3.5 detik pada ContainersModule dan PodDetailAnalyticsView yang membaca data cgroups v2 aktual dari Docker daemon dengan perhitungan delta CPU kuantitatif; (2) Isolasi Penamaan Kontainer & Router Traefik: Penamaan kontainer dan router kini unik per subdomain/site (tenant_<cleanSub>_<version>) sehingga pembuatan website baru tidak pernah bertabrakan atau menimpa kontainer lain; (3) Siklus Penghapusan Terjamin: Pembebasan middleware CSRF untuk request token Bearer yang valid, penyelarasan SQL penghapusan PostgreSQL dengan relasi cascade, serta pencabutan rute Traefik otomatis dari tenants.yml saat kontainer dihapus; (4) Penyesuaian TTL cache Redis containers dari 30 menit menjadi 5 detik untuk sinkronisasi instan.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

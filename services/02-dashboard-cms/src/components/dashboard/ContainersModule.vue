@@ -485,6 +485,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <div class="stepper-step" :class="{ done: (c.deployStep || 1) > 1, active: (c.deployStep || 1) === 1 }">
               <div class="step-circle">
                 <Check v-if="(c.deployStep || 1) > 1" :size="10" stroke-width="3" />
+                <RotateCw v-else-if="(c.deployStep || 1) === 1" :size="10" class="spinner-spin-icon" style="color: #ffffff;" />
                 <span v-else>1</span>
               </div>
               <span class="step-name">Build App</span>
@@ -493,6 +494,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <div class="stepper-step" :class="{ done: (c.deployStep || 1) > 2, active: (c.deployStep || 1) === 2 }">
               <div class="step-circle">
                 <Check v-if="(c.deployStep || 1) > 2" :size="10" stroke-width="3" />
+                <RotateCw v-else-if="(c.deployStep || 1) === 2" :size="10" class="spinner-spin-icon" style="color: #ffffff;" />
                 <span v-else>2</span>
               </div>
               <span class="step-name">Start Docker</span>
@@ -501,6 +503,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <div class="stepper-step" :class="{ done: (c.deployStep || 1) > 3, active: (c.deployStep || 1) === 3 }">
               <div class="step-circle">
                 <Check v-if="(c.deployStep || 1) > 3" :size="10" stroke-width="3" />
+                <RotateCw v-else-if="(c.deployStep || 1) === 3" :size="10" class="spinner-spin-icon" style="color: #ffffff;" />
                 <span v-else>3</span>
               </div>
               <span class="step-name">Edge Traefik</span>
@@ -509,6 +512,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <div class="stepper-step" :class="{ done: (c.deployStep || 1) >= 4, active: (c.deployStep || 1) === 4 }">
               <div class="step-circle">
                 <Check v-if="(c.deployStep || 1) >= 4" :size="10" stroke-width="3" />
+                <RotateCw v-else-if="(c.deployStep || 1) === 4" :size="10" class="spinner-spin-icon" style="color: #ffffff;" />
                 <span v-else>4</span>
               </div>
               <span class="step-name">Running</span>

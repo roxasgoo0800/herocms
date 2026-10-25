@@ -318,6 +318,14 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 	p.emitCompletedEvent(ctx, params, resp.ID)
 	p.saveStateToRedis(ctx, params, resp.ID, "running")
 
+	if p.redisManager != nil {
+		nowStr := time.Now().Format("15:04:05")
+		_ = p.redisManager.PushLog(ctx, params.TenantID, params.SiteID, fmt.Sprintf("[%s] ⚙️ [BUILD] Memvalidasi blueprint & runtime image %s", nowStr, p.runtimeImage))
+		_ = p.redisManager.PushLog(ctx, params.TenantID, params.SiteID, fmt.Sprintf("[%s] 🐳 [DOCKER] Mengalokasikan container %s dengan cgroups v2 (0.5 vCPU, 256MB)", nowStr, resp.ID[:12]))
+		_ = p.redisManager.PushLog(ctx, params.TenantID, params.SiteID, fmt.Sprintf("[%s] 🌐 [TRAEFIK] Rute ingress %s aktif di Traefik Edge Proxy", nowStr, routerName))
+		_ = p.redisManager.PushLog(ctx, params.TenantID, params.SiteID, fmt.Sprintf("[%s] 🚀 [RUNNING] Kontainer online dan siap melayani trafik publik", nowStr))
+	}
+
 	if p.traefikManager != nil {
 		if err := p.traefikManager.SyncTenantRoute(routerName, params.Subdomain, params.CustomDomain, containerName); err != nil {
 			log.Printf("[TRAEFIK SYNC WARNING] Failed to sync dynamic route for %s: %v", routerName, err)

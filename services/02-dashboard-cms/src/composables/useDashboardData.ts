@@ -471,8 +471,12 @@ const handleCreateContainer = () => {
     role: newSiteForm.value.role
   }).then(async (res: any) => {
     clearTimeout(step2Timer);
+    if (res?.id) {
+      newContainerObj.id = res.id;
+      activeContainerId.value = res.id;
+    }
     if (res?.container_id) {
-      newContainerObj.id = res.container_id;
+      newContainerObj.containerId = res.container_id;
     }
     if (res?.subdomain) {
       newContainerObj.subdomain = res.subdomain;
@@ -509,7 +513,7 @@ const handleCreateContainer = () => {
   }).catch(err => {
     clearTimeout(step2Timer);
     console.error('[API] Create container backend error:', err);
-    const idx = containers.value.findIndex(c => c.id === newContainerObj.id);
+    const idx = containers.value.findIndex(c => c.id === newId || c.id === newContainerObj.id);
     if (idx !== -1) {
       containers.value.splice(idx, 1);
     }

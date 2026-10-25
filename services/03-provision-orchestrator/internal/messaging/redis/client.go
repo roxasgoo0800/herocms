@@ -163,6 +163,32 @@ func (m *Manager) GetContainerState(ctx context.Context, tenantID string) (*Cont
 	return nil, nil
 }
 
+// PushLog pushes a lifecycle log entry to Redis list (capped at 500 lines)
+func (m *Manager) PushLog(ctx context.Context, tenantID, siteID, logLine string) error {
+	if !m.isLive || m.client == nil {
+		return nil
+	}
+	key := fmt.Sprintf("tenant:%s:container:%s:logs", tenantID, siteID)
+	pipe := m.client.Pipeline()
+	pipe.RPush(ctx, key, logLine)
+	pipe.LTrim(ctx, key, -500, -1)
+	pipe.Expire(ctx, key, 7*24*time.Hour)
+	_, err := pipe.Exec(ctx)
+	return err
+}
+
+// GetLogs returns up to limit log lines from Redis
+func (m *Manager) GetLogs(ctx context.Context, tenantID, siteID string, limit int64) ([]string, error) {
+	if !m.isLive || m.client == nil {
+		return []string{}, nil
+	}
+	key := fmt.Sprintf("tenant:%s:container:%s:logs", tenantID, siteID)
+	if limit <= 0 {
+		limit = 100
+	}
+	return m.client.LRange(ctx, key, -limit, -1).Result()
+}
+
 // Close closes the underlying Redis client
 func (m *Manager) Close() error {
 	if m.client != nil {

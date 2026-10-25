@@ -355,3 +355,53 @@ func (c *Client) DeleteKeysByPrefix(ctx context.Context, prefix string) error {
 	}
 	return nil
 }
+
+// PushContainerLog pushes a lifecycle log line to Redis list (capped at 500 lines)
+func (c *Client) PushContainerLog(ctx context.Context, tenantID, siteID, logLine string) error {
+	if c == nil {
+		return nil
+	}
+	key := fmt.Sprintf("tenant:%s:container:%s:logs", tenantID, siteID)
+	if c.Rdb != nil {
+		pipe := c.Rdb.Pipeline()
+		pipe.RPush(ctx, key, logLine)
+		pipe.LTrim(ctx, key, -500, -1)
+		pipe.Expire(ctx, key, 7*24*time.Hour)
+		_, err := pipe.Exec(ctx)
+		return err
+	}
+	return nil
+}
+
+// GetContainerLogs returns up to limit log lines from Redis
+func (c *Client) GetContainerLogs(ctx context.Context, tenantID, siteID string, limit int64) ([]string, error) {
+	if c == nil {
+		return []string{}, nil
+	}
+	key := fmt.Sprintf("tenant:%s:container:%s:logs", tenantID, siteID)
+	if c.Rdb != nil {
+		if limit <= 0 {
+			limit = 100
+		}
+		return c.Rdb.LRange(ctx, key, -limit, -1).Result()
+	}
+	return []string{}, nil
+}
+
+// SetContainerTelemetry stores dynamic telemetry (CPU, RAM, Status, Uptime) in Redis (no DB writes)
+func (c *Client) SetContainerTelemetry(ctx context.Context, tenantID, siteID string, telemetry any) error {
+	if c == nil {
+		return nil
+	}
+	key := fmt.Sprintf("tenant:%s:container:%s:telemetry", tenantID, siteID)
+	return c.SetJSON(ctx, key, telemetry, 24*time.Hour)
+}
+
+// GetContainerTelemetry retrieves dynamic telemetry from Redis
+func (c *Client) GetContainerTelemetry(ctx context.Context, tenantID, siteID string, target any) (bool, error) {
+	if c == nil {
+		return false, nil
+	}
+	key := fmt.Sprintf("tenant:%s:container:%s:telemetry", tenantID, siteID)
+	return c.GetJSON(ctx, key, target)
+}

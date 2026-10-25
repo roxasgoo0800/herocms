@@ -47,6 +47,7 @@ export interface ContainerSite {
   templateName: string;
   subdomain: string;
   customDomain?: string;
+  containerId?: string;
   status: 'running' | 'stopped' | 'provisioning' | 'maintenance' | 'building' | 'deploying';
   deployPhase?: 'building' | 'deploying' | 'routing' | 'running';
   deployStep?: number;
