@@ -1048,7 +1048,8 @@ const exportTelemetry = () => {
         </div>
         <div class="cf-metric-value">
           <span>{{ report.totalRequests.toLocaleString() }}</span>
-          <span class="cf-growth-badge">+18.4%</span>
+          <span v-if="report.totalRequests > 0" class="cf-growth-badge">+18.4%</span>
+          <span v-else class="cf-growth-badge is-zero">0%</span>
         </div>
         <div class="cf-metric-sub">
           <span>{{ report.uniqueCountriesCount }} negara pengakses terdeteksi</span>

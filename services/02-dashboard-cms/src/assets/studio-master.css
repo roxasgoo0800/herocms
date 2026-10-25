@@ -2583,8 +2583,18 @@ a[class*="btn-"] svg,
   font-weight: 700;
   color: #059669;
   background: #ecfdf5;
-  padding: 1px 5px;
+  border: 1px solid #d1fae5;
+  padding: 1px 6px;
   border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.momentum-growth-badge.is-zero {
+  color: #64748b !important;
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
 }
 
 .momentum-sparkline-box {

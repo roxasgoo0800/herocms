@@ -927,7 +927,11 @@ onUnmounted(() => {
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL PEMBACA (VIEWS)</span>
           </div>
-          <div class="telemetry-val">{{ articles.reduce((acc, a) => acc + a.views, 0).toLocaleString('id-ID') }} <span class="badge-online">+24%</span></div>
+          <div class="telemetry-val">
+            {{ articles.reduce((acc, a) => acc + a.views, 0).toLocaleString('id-ID') }}
+            <span v-if="articles.reduce((acc, a) => acc + a.views, 0) > 0" class="badge-online">+24%</span>
+            <span v-else class="badge-standby">0%</span>
+          </div>
           <div class="telemetry-sub"><span>Dihitung non-blocking via Redis ZSET</span></div>
         </div>
       </div>

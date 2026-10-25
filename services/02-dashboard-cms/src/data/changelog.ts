@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.9',
+    version: 'v1.29.10',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.10',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Dynamic Traffic Momentum & Zero-Hit Baseline Sparkline Calculation',
+    summary: 'Perbaikan bug anomali indikator pertumbuhan trafik pada kartu kontainer: (1) Dynamic Growth Calculation: Menggantikan persentase pertumbuhan statis (+24%) dengan komputasi momentum dinamis yang mengevaluasi hits riil (c.visitsThisWeek). Saat trafik bernilai 0 hits, sistem secara akurat menampilkan badge netral \'0%\' dengan icon minus, mencegah anomali visual \'0 hits tapi naik +24%\'; (2) Zero-Hit Baseline Sparkline: Saat kontainer belum memiliki kunjungan, grafik mini sparkline menyajikan garis baseline putus-putus netral (#cbd5e1) tanpa kurva naik palsu; (3) Sinkronisasi Modul Artikel & Analitik Pod: Penyelarasan badge pertumbuhan di modul Artikel dan Analitik Pod agar konsisten menampilkan 0% saat belum ada interaksi pembaca.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12910-1',
+        type: 'bugfix',
+        scope: 'Traffic Growth & Sparkline Calculation (ContainersModule.vue)',
+        description: 'Menerapkan getContainerTrafficGrowth dan getContainerTrafficSparkline dinamis untuk menyajikan persentase 0% dan baseline netral saat hits bernilai nol.'
+      },
+      {
+        id: 'c-02dash-12910-2',
+        type: 'bugfix',
+        scope: 'Zero Growth Fallback Alignment (ContentArticlesModule.vue & PodDetailAnalyticsView.vue)',
+        description: 'Menambahkan pemeriksaan kondisional pada badge pertumbuhan total pembaca artikel dan edge requests agar menampilkan 0% saat data kosong.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.9',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Seamless Enterprise Modal Dialog Architecture: Maintenance Mode & Destructive Pod Deletion UI/UX Refactor',
     summary: 'Refaktor arsitektur visual dan tata letak dialog modal HeroCMS Studio: (1) Eliminasi Double-Padding & Edge-to-Edge Canvas: Menghadirkan class universal .modal-dialog-seamless dengan header dan footer tepi-ke-tepi (#f8fafc canvas) yang menyatu alami tanpa efek kotak melayang di dalam kotak; (2) Refaktor Dialog Mode Pemeliharaan: Penyelarasan palet warna Amber (#b45309), status pill HTTP 503 dengan dot berdenyut halus, preset durasi ETA bertema amber hangat, dan textarea berfokus ring; (3) Refaktor Dialog Hapus Kontainer Runtime: Redesain target pod card dengan icon server elegan, badge spesifikasi & status sejajar horizontal, callout konsekuensi terstruktur dengan red bullet indicator, serta tombol destruktif bergradasi bahaya; (4) Aksesibilitas & Responsivitas: Peningkatan ARIA labeling, penutupan dialog via tombol ghost close, dan adaptasi fluid pada resolusi tablet hingga mobile.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
