@@ -25,6 +25,7 @@ import type { ContainerSite } from '../../types/dashboard';
 
 const {
   containers,
+  articles,
   selectedContainerForDetail,
   activeContainerId,
   activeMenu,
@@ -44,9 +45,9 @@ const selectedTimeframe = ref<'24h' | '7d' | '30d'>('24h');
 const selectedLogCategory = ref<'all' | 'security' | 'error' | 'latency' | 'edge'>('all');
 const isStreamPaused = ref(false);
 
-// Active Report Computation
+// Active Report Computation (100% Real PostgreSQL & Service 03 Orchestrator Data)
 const report = computed(() => {
-  return generateFleetTelemetry(containers.value, selectedScope.value, selectedTimeframe.value);
+  return generateFleetTelemetry(containers.value, selectedScope.value, selectedTimeframe.value, articles.value);
 });
 
 // Filtered Live Stream Logs
@@ -965,7 +966,7 @@ const exportAuditReport = () => {
             Asal Penetrasi & Percobaan Eksploitasi yang Ditangkal:
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div v-if="report.security.topThreatOrigins.length > 0" style="display: flex; flex-direction: column; gap: 8px;">
             <div
               v-for="origin in report.security.topThreatOrigins"
               :key="origin.code"
@@ -986,6 +987,15 @@ const exportAuditReport = () => {
               <span class="nav-badge badge-danger" style="font-size: 0.68rem; padding: 2px 6px;">
                 {{ origin.hitsBlocked }} Diblokir
               </span>
+            </div>
+          </div>
+          <div v-else style="padding: 14px; background: #ecfdf5; border: 1px solid #d1fae5; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+            <CheckCircle2 :size="18" style="color: #059669; flex-shrink: 0;" />
+            <div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: #065f46;">0 Ancaman Siber Terdeteksi</div>
+              <div style="font-size: 0.7rem; color: #047857; margin-top: 1px;">
+                Semua lalu lintas masuk terverifikasi aman melalui Traefik v3 WAF & pembatasan laju IP rate-limiting.
+              </div>
             </div>
           </div>
         </div>

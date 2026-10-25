@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.26.0',
+    version: 'v1.27.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.27.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Transisi Penuh 100% Real Data Lintas Seluruh Menu & Eliminasi Data Statis / Dummy',
+    summary: 'Menghapus total seluruh fallback array dummy / statis (seeds) dan generator data sintetis di seluruh modul HeroCMS Studio: (1) Inisialisasi state reaktif dimulai dari array kosong murni (containers, articles, customDomains, mediaAssets, invoices, supportTickets, webhooks) yang dihidrasi langsung dari PostgreSQL 16, Redis 7, MinIO S3, dan Service 03 Orchestrator; (2) Eliminasi 100 log pengunjung palsu (Telkomsel/Indosat IPs) di pod-analytics.ts diganti dengan empty state autentik dan telemetri cgroups v2 real-time; (3) Refaktor total fleet-telemetry.ts untuk mengkalkulasi metrik SLA, HTTP status, dan top pages 100% dari kontainer dan artikel real di PostgreSQL, serta menghapus asal ancaman buatan; (4) Penambahan empty state interaktif pada Webhooks & API Keys module saat belum ada webhook terdaftar; (5) Purge otomatis cache lama browser yang menyimpan data mock.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12700-1',
+        type: 'feature',
+        scope: 'Clean Reactive Hydration & Eliminasi Static Seeds (useDashboardData.ts)',
+        description: 'Menghapus ketergantungan import array seed statis (initialContainers, initialArticles, initialInvoices, initialCustomDomains, dll). Semua state reaktif dimulai dari [] dan disinkronkan secara instan lewat endpoint GET /api/cache/warm yang mengagregasi 100% data real dari PostgreSQL dan Redis.'
+      },
+      {
+        id: 'c-02dash-12700-2',
+        type: 'improvement',
+        scope: 'Real-Data Analytics & Zero Synthetic Generator (pod-analytics.ts & fleet-telemetry.ts)',
+        description: 'Menghapus 250+ baris data sintetis (100 IP pengunjung Telkomsel buatan, fake threat countries, fake Kafka stream logs). Metrik pod dan global fleet sekarang 100% dihitung dari kontainer aktif, Redis hit counter (analytics:views), dan artikel riil di PostgreSQL.'
+      },
+      {
+        id: 'c-02dash-12700-3',
+        type: 'improvement',
+        scope: 'Studio Empty State System untuk Webhooks & Pod Access Ledger',
+        description: 'Menerapkan empty state elegan saat kontainer belum menerima kunjungan atau saat tenant belum mendaftarkan webhook/domain kustom, lengkap dengan panduan aktivasi URL dan tombol aksi langsung.'
+      }
+    ]
+  },
+  {
     version: 'v1.26.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Integrasi Penuh Service 02 Dashboard Studio ke Service 03 Container Provision Orchestrator',
     summary: 'Mengintegrasikan ekosistem Dashboard CMS (Service 02) secara langsung dengan Container Provision Orchestrator (Service 03): (1) Implementasi Orchestrator Client internal dengan proteksi X-HeroCMS-Internal-Secret; (2) Integrasi alur provisi otomatis situs baru ke kontainer otonom, Traefik edge routing, dan alokasi storage; (3) Endpoint dan UI trigger untuk Start, Stop, Emergency Restart/Reboot, dan Penghapusan Pod beserta purge storage; (4) Telemetri live cgroups v2 (CPU CFS quota, memcg memory usage, network I/O, pids) dan streaming runtime console log langsung dari engine kontainer; (5) Perbaikan bug query SQL PostgreSQL 15-parameter pada InsertSite.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

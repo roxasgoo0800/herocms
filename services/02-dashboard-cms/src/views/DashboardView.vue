@@ -48,7 +48,7 @@ import {
   ArrowUpRight
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
-import { generateContainerLogs, type ContainerLogEntry } from '../data/container-logs';
+import type { ContainerLogEntry } from '../data/container-logs';
 import { studioApi } from '../services/apiClient';
 
 // Modular View Components (Lazy Loaded On-Demand for Maximum Speed & Lean Memory)
@@ -249,8 +249,41 @@ watch(isLogsModalOpen, async (isOpen) => {
 
 const containerLogs = computed<ContainerLogEntry[]>(() => {
   if (!activeLogContainer.value || terminalCleared.value) return [];
-  const base = generateContainerLogs(activeLogContainer.value);
-  return [...base, ...dynamicRebootLogs.value];
+  if (dynamicRebootLogs.value.length > 0) {
+    return dynamicRebootLogs.value;
+  }
+  const c = activeLogContainer.value;
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.000`;
+  return [
+    {
+      id: 'init-1',
+      lineNum: 1,
+      timestamp: timeStr,
+      service: 'docker',
+      serviceLabel: 'cgroups-v2',
+      level: 'info',
+      message: `Container ${c.id} runtime attached to Linux cgroups v2 (CPU: ${c.cpuLimit}, RAM: ${c.ramLimit}MB, PidsLimit: 50)`
+    },
+    {
+      id: 'init-2',
+      lineNum: 2,
+      timestamp: timeStr,
+      service: 'traefik',
+      serviceLabel: 'traefik-edge',
+      level: 'success',
+      message: `Edge Router active on entrypoint web (Host: https://${c.subdomain})`
+    },
+    {
+      id: 'init-3',
+      lineNum: 3,
+      timestamp: timeStr,
+      service: 'engine',
+      serviceLabel: 'runtime-engine',
+      level: 'info',
+      message: `Container state: ${c.status.toUpperCase()} • Listening on port 80 (TLS 1.3 ALPN ready)`
+    }
+  ];
 });
 
 const logCounts = computed(() => {

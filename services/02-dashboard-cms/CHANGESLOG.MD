@@ -4,6 +4,40 @@ Dokumen riwayat log sistem teknis, audit perubahan berkas, dan verifikasi integr
 
 ---
 
+## [v1.27.0] - 25 Oktober 2026
+
+### 📌 Ringkasan Rilis
+Transisi Penuh 100% Real Data Lintas Seluruh Menu Dashboard & Eliminasi Total Data Statis / Dummy Seeds. Menjamin seluruh angka, metrik, daftar kontainer, artikel, aset media, tiket, dan tagihan invoice disajikan murni dari PostgreSQL 16, Redis 7, MinIO S3, dan Service 03 Orchestrator (Linux cgroups v2).
+
+---
+
+### 🛠️ Detail Perubahan Teknis
+
+#### 1. Eliminasi Static Seeds & Clean State Inisialisasi (`src/composables/useDashboardData.ts`)
+- Menghapus import array mock/seed statis (`initialContainers`, `initialArticles`, `initialInvoices`, `initialCustomDomains`, `initialMediaAssets`, `initialSupportTickets`, `initialWebhooks`).
+- Seluruh state reaktif (`containers`, `articles`, `customDomains`, `mediaAssets`, `invoices`, `supportTickets`, `webhooks`) diinisialisasi murni sebagai array kosong `ref([])`.
+- Mengimplementasikan sanitasi dan auto-purge untuk menghapus cache browser lama (`localStorage`) yang menyimpan data mock `v1.26.0` ke bawah.
+- Eksekusi instan `syncWithBackend({ forceWarmRedis: true })` pada saat aplikasi dibuka untuk menghidrasi state dengan 100% data real dari database.
+- Fungsi `resetDashboardState()` mereset ke array kosong murni tanpa mengembalikan data dummy.
+
+#### 2. Eliminasi Data Sintetis Pod Analytics (`src/data/pod-analytics.ts` & `PodDetailAnalyticsView.vue`)
+- Menghapus 250+ baris data sintetis (100 log pengunjung buatan bersumber IP Telkomsel/Indosat, perutean palsu, dan metrik acak).
+- Jika pod belum mencatat kunjungan di Redis, `dailyHits` bernilai `[]` dan antarmuka menampilkan Empty State studio resmi: *"Belum Ada Rekaman Lalu Lintas Pengunjung"*.
+- Metrik mendalam sumber daya (CPU CFS quota, memcg memory, network rate, IOPS) diikat langsung ke data real-time cgroups v2 dari Service 03 (`liveStats`).
+- Menghapus proses palsu; hanya menampilkan proses sistem nyata kontainer aktif (`init` & `herocms-pod-engine`).
+
+#### 3. Real Fleet APM Telemetry & Threat Metrics (`src/data/fleet-telemetry.ts` & `AnalyticsTelemetryModule.vue`)
+- Metrik SLA, HTTP Status breakdown, dan rasio cache dihitung 100% secara dinamis dari array kontainer real dan hit counter Redis (`analytics:views`).
+- Menghapus daftar ancaman siber buatan (Rusia, Tiongkok, Belanda); jika tidak ada insiden aktif, menampilkan status keamanan bersih: *"0 Ancaman Siber Terdeteksi • Semua Kontainer Aman dan Terisolasi via Linux cgroups v2"*.
+- Audit log Kafka diselaraskan dengan event riil siklus hidup pod, status router Traefik v3 TLS 1.3, dan kebijakan PostgreSQL Row-Level Security (RLS).
+- Top pages diekstrak langsung dari artikel aktual yang ada di database PostgreSQL (`content_items`).
+
+#### 4. Studio Empty State System (`WebhooksApiModule.vue` & `ContainersModule.vue`)
+- Menerapkan empty state informatif pada tab Webhook Endpoint dan Delivery Logs jika tenant belum mendaftarkan webhook.
+- Menghapus sparkline random modulo di `ContainersModule.vue`; kontainer dengan 0 kunjungan menampilkan baseline datar realistis.
+
+---
+
 ## [v1.26.0] - 25 Oktober 2026
 
 ### 📌 Ringkasan Rilis

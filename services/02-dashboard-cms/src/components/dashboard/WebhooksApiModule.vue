@@ -1070,7 +1070,7 @@ const copyActiveSnippet = () => {
           </div>
         </div>
 
-        <div class="endpoints-list">
+        <div v-if="webhooks.length > 0" class="endpoints-list">
           <div
             v-for="wh in webhooks"
             :key="wh.id"
@@ -1136,6 +1136,17 @@ const copyActiveSnippet = () => {
             </div>
           </div>
         </div>
+        <div v-else style="padding: 36px 20px; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; margin-top: 12px;">
+          <Webhook :size="28" style="color: #94a3b8; margin: 0 auto 8px auto;" />
+          <h4 style="font-size: 0.88rem; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">Belum Ada Webhook Terdaftar</h4>
+          <p style="font-size: 0.74rem; color: #64748b; margin: 0 0 14px 0;">
+            Tambahkan URL endpoint server atau Discord/Slack Anda untuk menerima notifikasi otomatis saat event terjadi.
+          </p>
+          <button type="button" class="btn-top-create" style="margin: 0 auto;" @click="openAddWebhookModal">
+            <Plus :size="13" />
+            <span>Tambah Webhook Baru</span>
+          </button>
+        </div>
       </div>
 
       <!-- Recent Webhook Delivery Logs Table -->
@@ -1160,7 +1171,7 @@ const copyActiveSnippet = () => {
                 <th>Aksi</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody v-if="webhookDeliveryLogs.length > 0">
               <tr
                 v-for="log in webhookDeliveryLogs"
                 :key="log.id"
@@ -1191,6 +1202,13 @@ const copyActiveSnippet = () => {
                     <Eye :size="11" />
                     <span>Inspeksi</span>
                   </button>
+                </td>
+              </tr>
+            </tbody>
+            <tbody v-else>
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 36px 16px; color: #64748b; font-size: 0.76rem;">
+                  Belum ada log pengiriman webhook. Riwayat dispatch HTTP akan muncul otomatis di sini saat ada event terpanggil.
                 </td>
               </tr>
             </tbody>

@@ -22,18 +22,8 @@ import type {
 } from '../types/dashboard';
 import {
   initialUserPlan,
-  initialContainers,
   officialTemplates as defaultOfficialTemplates,
-  initialInvoices,
-  initialCustomDomains,
-  initialArticles,
-  initialCmsPages,
-  initialMediaAssets,
   availablePatScopes,
-  initialPersonalAccessTokens,
-  initialWebhooks,
-  initialWebhookDeliveryLogs,
-  initialSupportTickets,
   subscriptionPlansCatalog
 } from '../data/dashboard-seeds';
 import type { OfficialTemplateItem } from '../data/templates-data';
@@ -95,7 +85,7 @@ const resolveInitialContainerId = (): string => {
     const localId = localStorage.getItem('herocms_active_container_id');
     if (localId) return localId;
   }
-  return 'hero_tenant_9942';
+  return '';
 };
 
 // Active Menu Navigation (Persisted via Cookies, LocalStorage, URL Hash, & Redis)
@@ -129,8 +119,8 @@ const changeUserPlan = (planId: 'starter' | 'pro' | 'agency') => {
   showToast(`Paket langganan berhasil dialihkan ke ${target.name}! Kuota runtime kini ${target.containers} slot kontainer.`, 'success');
 };
 
-// Containers State
-const containers = ref<ContainerSite[]>([...initialContainers]);
+// Containers State (100% Real PostgreSQL & Service 03 Orchestrator State)
+const containers = ref<ContainerSite[]>([]);
 
 const activeContainerId = ref<string>(resolveInitialContainerId());
 const activeContainer = computed(() => {
@@ -734,8 +724,8 @@ const handleAiGenerateContent = () => {
   }, 900);
 };
 
-// Invoices State
-const invoices = ref<InvoiceItem[]>([...initialInvoices]);
+// Invoices State (100% Real PostgreSQL Invoices)
+const invoices = ref<InvoiceItem[]>([]);
 
 const selectedInvoice = ref<InvoiceItem | null>(null);
 const isInvoiceDetailModalOpen = ref(false);
@@ -823,7 +813,8 @@ const normalizeCustomDomain = (dom: any): CustomDomainItem => {
   };
 };
 
-const customDomains = ref<CustomDomainItem[]>([...initialCustomDomains].map(normalizeCustomDomain));
+// Custom Domains State (100% Real PostgreSQL Custom Domains)
+const customDomains = ref<CustomDomainItem[]>([]);
 
 const newDomainInput = ref('');
 const targetContainerForDomain = ref('hero_tenant_9942');
@@ -866,9 +857,9 @@ const deleteDomain = (dom: CustomDomainItem) => {
   }
 };
 
-// Content Articles & CMS Pages State
-const articles = ref<ContentArticle[]>([...initialArticles]);
-const cmsPages = ref<CmsPage[]>([...initialCmsPages]);
+// Content Articles & CMS Pages State (100% Real PostgreSQL Articles)
+const articles = ref<ContentArticle[]>([]);
+const cmsPages = ref<CmsPage[]>([]);
 
 const isCreateArticleModalOpen = ref(false);
 const newArticleForm = ref({
@@ -945,7 +936,7 @@ const deleteCmsPage = (page: CmsPage) => {
   }
 };
 
-// Media Assets State
+// Media Assets State (100% Real PostgreSQL & MinIO S3 Assets)
 const mediaBucketName = ref<string>('tenant-994200000000-media');
 const mediaStorage = ref({
   usedStorage: '0 MB',
@@ -955,7 +946,7 @@ const mediaStorage = ref({
   freeStorage: '2.00 GB',
   usagePercentage: '0.0%'
 });
-const mediaAssets = ref<MediaAssetItem[]>([...initialMediaAssets]);
+const mediaAssets = ref<MediaAssetItem[]>([]);
 const isUploadingMedia = ref(false);
 
 const formatBytesToReadable = (bytes: number): string => {
@@ -1076,8 +1067,8 @@ const deleteMedia = async (med: MediaAssetItem) => {
 
 // Personal Access Tokens (PAT) & Scoped API Keys State
 const patScopes = ref<PatScopeDefinition[]>([...availablePatScopes]);
-const personalAccessTokens = ref<PersonalAccessToken[]>([...initialPersonalAccessTokens]);
-const webhookDeliveryLogs = ref<WebhookDeliveryLog[]>([...initialWebhookDeliveryLogs]);
+const personalAccessTokens = ref<PersonalAccessToken[]>([]);
+const webhookDeliveryLogs = ref<WebhookDeliveryLog[]>([]);
 
 const createPersonalAccessToken = (
   name: string,
@@ -1129,8 +1120,8 @@ const deletePersonalAccessToken = (id: string) => {
   }
 };
 
-// Webhooks State & Event Notification Dispatcher
-const webhooks = ref<WebhookItem[]>([...initialWebhooks]);
+// Webhooks State & Event Notification Dispatcher (100% Real PostgreSQL Webhooks)
+const webhooks = ref<WebhookItem[]>([]);
 
 const addWebhook = (name: string, url: string, events: string[], secretKey?: string) => {
   const generatedSecret = secretKey || `whsec_9942_${Math.random().toString(36).substring(2, 10)}`;
@@ -1422,8 +1413,8 @@ const normalizeTicket = (t: any): SupportTicketItem => {
   };
 };
 
-// Support Ticketing State
-const supportTickets = ref<SupportTicketItem[]>(initialSupportTickets.map(t => normalizeTicket(t)));
+// Support Ticketing State (100% Real PostgreSQL Support Tickets)
+const supportTickets = ref<SupportTicketItem[]>([]);
 
 const selectedTicket = ref<SupportTicketItem | null>(null);
 const isCreateTicketModalOpen = ref(false);
@@ -1942,6 +1933,12 @@ const hydrateFromCache = (overrideEmail?: string) => {
       if (data.user && targetEmail && data.user.toLowerCase().trim() !== targetEmail) {
         return;
       }
+      // Purge legacy mock seeds cache if found
+      const hasLegacySeeds = Array.isArray(data.invoices) && data.invoices.some((i: any) => i.id === 'INV-2026-10-0994');
+      if (hasLegacySeeds) {
+        localStorage.removeItem(getCacheKey(targetEmail));
+        return;
+      }
       if (Array.isArray(data.containers)) {
         containers.value = data.containers;
         if (containers.value.length > 0 && !containers.value.some(c => c.id === activeContainerId.value)) {
@@ -1974,25 +1971,35 @@ const hydrateFromCache = (overrideEmail?: string) => {
 
 if (typeof localStorage !== 'undefined' && localStorage.getItem('cloudcms_auth_token')) {
   hydrateFromCache();
+  syncWithBackend({ forceWarmRedis: true }).catch(() => {});
 }
 
-// Reset entire dashboard reactive state and client storage
+// Reset entire dashboard reactive state and client storage (Clean Empty State)
 const resetDashboardState = () => {
   // 1. Reset all in-memory reactive state
   const prevEmail = userEmail.value;
   userEmail.value = '';
   userPlan.value = { ...initialUserPlan };
-  containers.value = [...initialContainers];
-  activeContainerId.value = 'hero_tenant_9942';
-  articles.value = [...initialArticles];
-  cmsPages.value = [...initialCmsPages];
+  containers.value = [];
+  activeContainerId.value = '';
+  articles.value = [];
+  cmsPages.value = [];
   activeArticleForReader.value = null;
-  mediaAssets.value = [...initialMediaAssets];
-  recalculateStorage();
-  customDomains.value = [...initialCustomDomains];
-  supportTickets.value = initialSupportTickets.map(t => normalizeTicket(t));
-  invoices.value = [...initialInvoices];
-  webhooks.value = [...initialWebhooks];
+  mediaAssets.value = [];
+  mediaStorage.value = {
+    usedStorage: '0 MB',
+    usedBytes: 0,
+    maxStorage: '2048 MB',
+    maxBytes: 2147483648,
+    freeStorage: '2.00 GB',
+    usagePercentage: '0.0%'
+  };
+  customDomains.value = [];
+  supportTickets.value = [];
+  invoices.value = [];
+  webhooks.value = [];
+  personalAccessTokens.value = [];
+  webhookDeliveryLogs.value = [];
   activeMenu.value = 'containers';
   searchQuery.value = '';
   statusFilter.value = 'all';

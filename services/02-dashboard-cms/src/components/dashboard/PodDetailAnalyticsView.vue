@@ -1674,8 +1674,15 @@ const exportTelemetry = () => {
             </tr>
 
             <tr v-if="filteredDailyHits.length === 0">
-              <td colspan="8" style="text-align: center; padding: 40px 20px; color: #64748b;">
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <td colspan="8" style="text-align: center; padding: 48px 20px; color: #64748b;">
+                <div v-if="report.dailyHits.length === 0" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <Globe :size="28" style="color: #94a3b8;" />
+                  <span style="font-weight: 700; color: #0f172a; font-size: 0.9rem;">Belum Ada Rekaman Lalu Lintas Pengunjung</span>
+                  <span style="font-size: 0.76rem; color: #64748b; max-width: 480px; line-height: 1.5;">
+                    Data akses, alamat IP pengunjung, dan saluran rujukan akan dicatat secara real-time saat pengunjung mengakses rute publik kontainer di <strong>https://{{ container.subdomain }}</strong>.
+                  </span>
+                </div>
+                <div v-else style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
                   <Search :size="24" style="color: #94a3b8;" />
                   <span style="font-weight: 600; color: #1e293b; font-size: 0.85rem;">Tidak ada log akses yang cocok</span>
                   <span style="font-size: 0.74rem; color: #94a3b8; max-width: 420px;">
