@@ -6,197 +6,91 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"syscall"
 	"time"
 
+	"github.com/cloudcms/provision-orchestrator/config"
+	"github.com/cloudcms/provision-orchestrator/internal/api"
 	"github.com/cloudcms/provision-orchestrator/internal/docker"
-	"github.com/gin-gonic/gin"
+	"github.com/cloudcms/provision-orchestrator/internal/messaging/kafka"
+	"github.com/cloudcms/provision-orchestrator/internal/messaging/redis"
+	"github.com/cloudcms/provision-orchestrator/internal/storage"
 )
 
-type DeployRequest struct {
-	TenantID    string `json:"tenant_id" binding:"required"`
-	SiteID      string `json:"site_id" binding:"required"`
-	Subdomain   string `json:"subdomain" binding:"required"`
-	CustomDomain string `json:"custom_domain"`
-	VersionHash string `json:"version_hash" binding:"required"`
-}
-
-func setupRouter(provisioner *docker.Provisioner) *gin.Engine {
-	gin.SetMode(gin.ReleaseMode)
-	router := gin.New()
-	router.Use(gin.Recovery())
-
-	// CORS & Health check
-	router.GET("/healthz", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "healthy",
-			"service": "provision-orchestrator",
-			"time":    time.Now().UTC().Format(time.RFC3339),
-		})
-	})
-
-	api := router.Group("/api/v1")
-	{
-		// Deploy Tenant Container
-		api.POST("/deploy", func(c *gin.Context) {
-			var req DeployRequest
-			if err := c.ShouldBindJSON(&req); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-
-			// Pentest Fix: Validate Subdomain and TenantID to prevent Traefik router rule injection & path traversal
-			subdomainRegex := regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
-			if !subdomainRegex.MatchString(req.Subdomain) {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Format subdomain tidak valid. Hanya huruf kecil, angka, dan tanda hubung (-)."})
-				return
-			}
-
-			tenantRegex := regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
-			if !tenantRegex.MatchString(req.TenantID) {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Format tenant_id tidak valid."})
-				return
-			}
-
-			if req.CustomDomain != "" {
-				domainRegex := regexp.MustCompile(`^([a-zA-Z0-9]+(-[a-zA-Z0-9]+)*\.)+[a-zA-Z]{2,}$`)
-				if !domainRegex.MatchString(req.CustomDomain) {
-					c.JSON(http.StatusBadRequest, gin.H{"error": "Format custom_domain tidak valid."})
-					return
-				}
-			}
-
-			log.Printf("[ORCHESTRATOR] Received deploy trigger for Tenant: %s, Subdomain: %s", req.TenantID, req.Subdomain)
-
-			if provisioner != nil {
-				containerID, err := provisioner.DeployTenantContainer(c.Request.Context(), docker.TenantDeployParams{
-					TenantID:     req.TenantID,
-					SiteID:       req.SiteID,
-					Subdomain:    req.Subdomain,
-					CustomDomain: req.CustomDomain,
-					VersionHash:  req.VersionHash,
-				})
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-					return
-				}
-
-				c.JSON(http.StatusOK, gin.H{
-					"status":       "deployed",
-					"container_id": containerID,
-					"subdomain":    req.Subdomain + ".cloudcms.app",
-					"custom_domain": req.CustomDomain,
-					"deployed_at":  time.Now().UTC().Format(time.RFC3339),
-				})
-				return
-			}
-
-			// Simulated fallback if running in dev without live docker.sock mounted
-			c.JSON(http.StatusOK, gin.H{
-				"status":       "simulated_deployed",
-				"container_id": "sim_c78a991f2",
-				"subdomain":    req.Subdomain + ".cloudcms.app",
-				"notice":       "Running in simulation mode (Docker socket offline)",
-			})
-		})
-
-		// List active tenant containers
-		api.GET("/containers", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
-				"active_count": 1,
-				"containers": []gin.H{
-					{
-						"tenant_id": "t_sample_101",
-						"subdomain": "demo.herocms.stackbyte.id",
-						"status":    "running",
-						"cpu_limit": "0.5 vCPU",
-						"memory":    "256 MB",
-					},
-				},
-			})
-		})
-
-		// Stop container
-		api.POST("/containers/:id/stop", func(c *gin.Context) {
-			id := c.Param("id")
-			if provisioner != nil {
-				if err := provisioner.StopContainer(c.Request.Context(), id); err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-					return
-				}
-			}
-			c.JSON(http.StatusOK, gin.H{"status": "stopped", "container_id": id})
-		})
-
-		// Start container
-		api.POST("/containers/:id/start", func(c *gin.Context) {
-			id := c.Param("id")
-			if provisioner != nil {
-				if err := provisioner.StartContainer(c.Request.Context(), id); err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-					return
-				}
-			}
-			c.JSON(http.StatusOK, gin.H{"status": "running", "container_id": id})
-		})
-
-		// Destroy container (Danger Zone Action)
-		api.DELETE("/containers/:id", func(c *gin.Context) {
-			id := c.Param("id")
-			if provisioner != nil {
-				if err := provisioner.DestroyContainer(c.Request.Context(), id); err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-					return
-				}
-			}
-			c.JSON(http.StatusOK, gin.H{"status": "destroyed", "container_id": id})
-		})
-	}
-
-	return router
-}
-
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	log.Println("================================================================")
+	log.Println("   HeroCMS Headless Provision Orchestrator Daemon (Service 03)  ")
+	log.Println("   Autonomous Docker • cgroups v2 • Traefik • Redis • Kafka     ")
+	log.Println("================================================================")
 
-	// Initialize Docker Provisioner Client
-	provisioner, err := docker.NewProvisioner()
+	// 1. Load Configurations
+	cfg := config.LoadConfig()
+
+	// 2. Initialize Persistent Storage Manager
+	storageMgr, err := storage.NewManager(cfg.TenantStorageBase)
 	if err != nil {
-		log.Printf("[WARNING] Docker daemon client initialization notice: %v", err)
+		log.Fatalf("[FATAL] Failed to initialize storage manager: %v", err)
+	}
+	log.Printf("[INIT] Storage manager active at base path: %s", storageMgr.GetBaseDir())
+
+	// 3. Initialize Redis State & Mutex Manager
+	redisMgr := redis.NewManager(cfg.RedisAddr, cfg.RedisPassword, cfg.RedisDB)
+
+	// 4. Initialize Kafka Event Producer
+	kafkaProducer := kafka.NewProducer(cfg.KafkaBrokers)
+
+	// 5. Initialize Docker Engine SDK Provisioner
+	provisioner, err := docker.NewProvisioner(
+		cfg.DockerEdgeNetwork,
+		cfg.TenantRuntimeImage,
+		storageMgr,
+		redisMgr,
+		kafkaProducer,
+	)
+	if err != nil {
+		log.Printf("[WARNING] Docker daemon client notice: %v", err)
 	}
 
-	router := setupRouter(provisioner)
+	// 6. Setup Gin Internal Router
+	router := api.SetupRouter(cfg, provisioner, storageMgr, redisMgr, kafkaProducer)
 
 	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: router,
+		Addr:         ":" + cfg.Port,
+		Handler:      router,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 
+	// 7. Start HTTP Daemon in Background Goroutine
 	go func() {
-		log.Printf("[ORCHESTRATOR] Engine running on :%s", port)
+		log.Printf("[ORCHESTRATOR DAEMON] Engine running on :%s (Internal Local-Only)", cfg.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			log.Fatalf("[FATAL] Server listen error: %v", err)
 		}
 	}()
 
-	// Graceful Shutdown
+	// 8. Graceful Shutdown Listener
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down orchestrator server gracefully...")
 
+	log.Println("\n[SHUTDOWN] Intercepted termination signal. Shutting down gracefully...")
+
+	// Clean resources
 	if provisioner != nil {
 		_ = provisioner.Close()
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown:", err)
+	if redisMgr != nil {
+		_ = redisMgr.Close()
 	}
-	log.Println("Server exiting")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("[FATAL] Forced shutdown failed: %v", err)
+	}
+
+	log.Println("[SHUTDOWN] Orchestrator daemon exited cleanly.")
 }
