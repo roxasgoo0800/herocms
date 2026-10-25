@@ -27,6 +27,7 @@ import {
   subscriptionPlansCatalog
 } from '../data/dashboard-seeds';
 import type { OfficialTemplateItem } from '../data/templates-data';
+import { compileTemplateToHTML } from '../utils/templateHtmlCompiler';
 
 const VALID_MENUS: ActiveMenu[] = [
   'containers',
@@ -441,9 +442,28 @@ const handleCreateContainer = async () => {
   const tempId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
 
   let tplName = 'Portofolio Teknis Engineer';
-  if (newSiteForm.value.category === 'business') tplName = 'Toko Online & Penjualan Retail';
-  if (newSiteForm.value.category === 'blog') tplName = 'Editorial Media & Blog';
-  if (newSiteForm.value.category === 'education') tplName = 'Pusat Edukasi LMS';
+  let matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_portfolio_pro') || officialTemplates.value[0];
+  if (newSiteForm.value.category === 'business') {
+    tplName = 'Toko Online & Penjualan Retail';
+    matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_ecommerce_store') || matchedTpl;
+  } else if (newSiteForm.value.category === 'blog') {
+    tplName = 'Editorial Media & Blog';
+    matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_blog_editorial') || matchedTpl;
+  } else if (newSiteForm.value.category === 'education') {
+    tplName = 'Pusat Edukasi LMS';
+    matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_edu_lms') || matchedTpl;
+  }
+
+  const chosenAccent = newSiteForm.value.accentColor || matchedTpl?.accentColor || '#2563eb';
+  const clonedBlocks = matchedTpl ? JSON.parse(JSON.stringify(matchedTpl.blocks)) : [];
+  const fullHTML = matchedTpl ? compileTemplateToHTML(matchedTpl, {
+    siteName: newSiteForm.value.name,
+    subdomain: `${cleanSubdomain}.stacbyte.id`,
+    accentColor: chosenAccent,
+    roleOrHeadline: newSiteForm.value.role || matchedTpl.defaultRole,
+    bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
+    blocksOverride: clonedBlocks
+  }) : '';
 
   const newContainerObj: ContainerSite = reactive({
     id: tempId,
@@ -464,9 +484,27 @@ const handleCreateContainer = async () => {
     ssl: true,
     roleOrHeadline: newSiteForm.value.role || 'Website Resmi ' + newSiteForm.value.name,
     bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
-    accentColor: newSiteForm.value.accentColor || '#2563eb',
-    lastDeployed: 'Baru saja'
+    accentColor: chosenAccent,
+    lastDeployed: 'Baru saja',
+    themeConfig: matchedTpl ? { ...matchedTpl.themeConfig, accentColor: chosenAccent, blocks: clonedBlocks } : { blocks: clonedBlocks }
   });
+
+  if (typeof localStorage !== 'undefined') {
+    const editorDraftPayload = {
+      blocks: clonedBlocks,
+      roleOrHeadline: newContainerObj.roleOrHeadline,
+      bioIntro: newContainerObj.bioIntro,
+      accentColor: newContainerObj.accentColor,
+      fontFamily: matchedTpl?.fontFamily || 'Inter',
+      selectedBlockId: clonedBlocks[1]?.id || clonedBlocks[0]?.id || null,
+      zoom: 100,
+      currentDevice: 'desktop',
+      updatedAt: new Date().toISOString(),
+      timestamp: Date.now()
+    };
+    localStorage.setItem(`herocms_editor_draft_${tempId}`, JSON.stringify(editorDraftPayload));
+    localStorage.setItem(`cloudcms_draft_${tempId}`, JSON.stringify(editorDraftPayload));
+  }
 
   containers.value.push(newContainerObj);
   containers.value = [...containers.value];
@@ -493,8 +531,9 @@ const handleCreateContainer = async () => {
     category: newSiteForm.value.category,
     role: newSiteForm.value.role,
     templateName: tplName,
-    accentColor: newSiteForm.value.accentColor || '#2563eb',
-    bioIntro: newContainerObj.bioIntro
+    accentColor: chosenAccent,
+    bioIntro: newContainerObj.bioIntro,
+    customHTML: fullHTML
   });
 
   try {
@@ -521,6 +560,26 @@ const handleCreateContainer = async () => {
           containerId: res.container_id,
           subdomain: res.subdomain || `${cleanSubdomain}.stacbyte.id`
         });
+
+        if (typeof localStorage !== 'undefined') {
+          const draftStr = localStorage.getItem(`herocms_editor_draft_${tempId}`);
+          if (draftStr) {
+            localStorage.setItem(`herocms_editor_draft_${res.id}`, draftStr);
+            localStorage.setItem(`cloudcms_draft_${res.id}`, draftStr);
+          }
+        }
+
+        studioApi.saveSiteDesign(res.id, {
+          name: newContainerObj.name,
+          subdomain: res.subdomain || `${cleanSubdomain}.stacbyte.id`,
+          roleOrHeadline: newContainerObj.roleOrHeadline,
+          bioIntro: newContainerObj.bioIntro,
+          accentColor: newContainerObj.accentColor,
+          templateName: newContainerObj.templateName,
+          category: newContainerObj.category,
+          customHTML: fullHTML,
+          themeConfig: newContainerObj.themeConfig
+        }).catch(() => {});
       }
     } catch (apiErr) {
       console.warn('[API] Deploy API warning (retaining resilient client flow):', apiErr);
@@ -690,6 +749,16 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
 
     showToast(`[1/4 Build] Menerapkan blueprint '${tpl.title}' ke '${activeContainer.value.name}'...`, 'info');
 
+    // Compile standalone pixel-for-pixel HTML identical to catalog demo
+    const fullHTML = compileTemplateToHTML(tpl, {
+      siteName: activeContainer.value.name,
+      subdomain: activeContainer.value.subdomain,
+      accentColor: chosenAccent,
+      roleOrHeadline: tpl.defaultRole,
+      bioIntro: tpl.defaultBio,
+      blocksOverride: clonedBlocks
+    });
+
     // Trigger API backend persist & re-seeding concurrently
     const savePromise = studioApi.saveSiteDesign(targetId, {
       name: activeContainer.value.name,
@@ -699,6 +768,7 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
       roleOrHeadline: tpl.defaultRole,
       bioIntro: tpl.defaultBio,
       accentColor: chosenAccent,
+      customHTML: fullHTML,
       themeConfig: activeContainer.value.themeConfig
     }).catch(err => console.warn('[API] saveSiteDesign warning:', err));
 
@@ -819,6 +889,15 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     containers.value = [...containers.value];
   };
 
+  const fullHTML = tpl ? compileTemplateToHTML(tpl, {
+    siteName: payload.name.trim(),
+    subdomain: `${cleanSubdomain}.stacbyte.id`,
+    accentColor: newContainerObj.accentColor,
+    roleOrHeadline: newContainerObj.roleOrHeadline,
+    bioIntro: newContainerObj.bioIntro,
+    blocksOverride: clonedBlocks
+  }) : '';
+
   const createPromise = studioApi.createContainer({
     name: payload.name.trim(),
     subdomain: cleanSubdomain,
@@ -826,7 +905,8 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     role: newContainerObj.roleOrHeadline,
     templateName: newContainerObj.templateName,
     accentColor: newContainerObj.accentColor,
-    bioIntro: newContainerObj.bioIntro
+    bioIntro: newContainerObj.bioIntro,
+    customHTML: fullHTML
   });
 
   try {
@@ -853,6 +933,14 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
           subdomain: res.subdomain || `${cleanSubdomain}.stacbyte.id`
         });
 
+        if (typeof localStorage !== 'undefined') {
+          const draftStr = localStorage.getItem(`herocms_editor_draft_${tempId}`);
+          if (draftStr) {
+            localStorage.setItem(`herocms_editor_draft_${res.id}`, draftStr);
+            localStorage.setItem(`cloudcms_draft_${res.id}`, draftStr);
+          }
+        }
+
         await studioApi.saveSiteDesign(res.id, {
           name: newContainerObj.name,
           subdomain: newContainerObj.subdomain,
@@ -861,6 +949,7 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
           accentColor: newContainerObj.accentColor,
           templateName: newContainerObj.templateName,
           category: newContainerObj.category,
+          customHTML: fullHTML,
           themeConfig: newContainerObj.themeConfig
         }).catch(() => {});
       }
@@ -916,6 +1005,21 @@ const handlePublishChanges = async () => {
   if (!activeContainer.value) return;
   isPublishing.value = true;
   try {
+    const matchedTpl = officialTemplates.value.find(t =>
+      t.title === activeContainer.value?.templateName ||
+      t.category === activeContainer.value?.category
+    ) || officialTemplates.value[0];
+
+    const currentBlocks = activeContainer.value.themeConfig?.blocks || matchedTpl?.blocks || [];
+    const fullHTML = matchedTpl ? compileTemplateToHTML(matchedTpl, {
+      siteName: activeContainer.value.name,
+      subdomain: activeContainer.value.subdomain,
+      accentColor: activeContainer.value.accentColor,
+      roleOrHeadline: activeContainer.value.roleOrHeadline,
+      bioIntro: activeContainer.value.bioIntro,
+      blocksOverride: currentBlocks
+    }) : '';
+
     const payload = {
       name: activeContainer.value.name,
       subdomain: activeContainer.value.subdomain,
@@ -924,6 +1028,7 @@ const handlePublishChanges = async () => {
       roleOrHeadline: activeContainer.value.roleOrHeadline,
       bioIntro: activeContainer.value.bioIntro,
       accentColor: activeContainer.value.accentColor,
+      customHTML: fullHTML,
       themeConfig: activeContainer.value.themeConfig || {}
     };
     await studioApi.saveSiteDesign(activeContainer.value.id, payload);

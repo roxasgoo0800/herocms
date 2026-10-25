@@ -383,6 +383,7 @@ type CreateContainerInput struct {
 	TemplateName string `json:"templateName"`
 	AccentColor  string `json:"accentColor"`
 	BioIntro     string `json:"bioIntro"`
+	CustomHTML   string `json:"customHTML"`
 }
 
 func (s *Services) CreateContainer(ctx context.Context, tenantID string, input CreateContainerInput) (gin.H, error) {
@@ -498,6 +499,7 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 			RoleHeadline: input.Role,
 			BioIntro:     bioIntro,
 			AccentColor:  accentColor,
+			CustomHTML:   input.CustomHTML,
 		})
 		if err != nil {
 			log.Printf("[ORCHESTRATOR NOTICE] Provision warning for %s (%s): %v", siteUUID, input.Subdomain, err)
@@ -776,8 +778,12 @@ func (s *Services) SaveSiteDesign(ctx context.Context, tenantID, id string, payl
 		accent, _ := payload["accentColor"].(string)
 		sub, _ := payload["subdomain"].(string)
 		name, _ := payload["name"].(string)
+		customHTML, _ := payload["customHTML"].(string)
+		if customHTML == "" {
+			customHTML, _ = payload["custom_html"].(string)
+		}
 
-		if tplName != "" || cat != "" || role != "" || bio != "" || accent != "" {
+		if tplName != "" || cat != "" || role != "" || bio != "" || accent != "" || customHTML != "" {
 			_ = s.Orchestrator.ApplyTemplate(ctx, orchestrator.ApplyTemplatePayload{
 				TenantID:     tenantID,
 				SiteID:       id,
@@ -788,6 +794,7 @@ func (s *Services) SaveSiteDesign(ctx context.Context, tenantID, id string, payl
 				RoleHeadline: role,
 				BioIntro:     bio,
 				AccentColor:  accent,
+				CustomHTML:   customHTML,
 			})
 
 			nowStr := time.Now().Format("15:04:05")

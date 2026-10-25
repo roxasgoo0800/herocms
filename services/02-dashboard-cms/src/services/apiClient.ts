@@ -89,6 +89,7 @@ export const studioApi = {
     templateName?: string;
     accentColor?: string;
     bioIntro?: string;
+    customHTML?: string;
   }) => apiFetch('/containers', { method: 'POST', body: JSON.stringify(payload) }),
   saveSiteDesign: (id: string, payload: any) =>
     apiFetch(`/containers/${id}/design`, { method: 'PUT', body: JSON.stringify(payload) }),

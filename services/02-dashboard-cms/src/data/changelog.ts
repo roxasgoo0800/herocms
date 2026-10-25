@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.30.1',
+    version: 'v1.30.2',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '25 Oktober 2026',
+    lastUpdated: '26 Oktober 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.30.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '26 Oktober 2026',
+    title: '100% Visual Parity: Standalone Template HTML Compiler for Container Deployment',
+    summary: 'Penyelarasan visual 100% antara Demo Live Katalog Template dan hasil deployment website di kontainer Nginx: (1) Standalone Template HTML Compiler: Mengembangkan templateHtmlCompiler.ts yang mengompilasi seluruh blok visual (Navbar dengan glyph monogram, Hero dengan terminal mockup Traefik v3, Kartu produk E-Commerce berharga Rupiah & checkout WhatsApp, Galeri showcase karya portofolio, Silabus kursus akordeon interaktif, Tier harga dengan toggle tagihan bulanan/tahunan, Call-to-Action, Footer, dan Floating Pod Badge status runtime) menjadi HTML mandiri beresolusi tinggi tanpa dependensi framework eksternal; (2) Integrasi End-to-End customHTML: Menghubungkan compiler HTML ke seluruh alur pembuatan kontainer (handleCreateContainer), adopsi blueprint dari katalog (applyTemplateToActiveContainer & deployContainerFromTemplate), serta publikasi Visual Editor (handlePublishChanges); (3) Sinkronisasi PostgreSQL & Storage Runtime: Menyimpan customHTML dan konfigurasi tema ke basis data PostgreSQL serta menyemainya langsung ke persistent storage container di Service 03 (public/index.html & public/index.html.live).',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13002-1',
+        type: 'feature',
+        scope: 'Visual Block HTML Compiler (templateHtmlCompiler.ts)',
+        description: 'Menghadirkan compiler template yang menerjemahkan array VisualBlock[] menjadi standalone responsive HTML dengan CSS pixel-perfect identik dengan TemplateLiveRenderer.vue.'
+      },
+      {
+        id: 'c-02dash-13002-2',
+        type: 'fix',
+        scope: 'Catalog & Editor Synchronization (useDashboardData.ts)',
+        description: 'Menghubungkan compileTemplateToHTML pada createContainer, saveSiteDesign, dan handlePublishChanges agar container Nginx melayani konten yang 100% sama dengan pratinjau katalog.'
+      },
+      {
+        id: 'c-02dash-13002-3',
+        type: 'improvement',
+        scope: 'BFF & Orchestrator Payload (handler.go, service.go, repository.go)',
+        description: 'Mendukung field customHTML pada CreateContainerPayload dan SaveSiteDesign serta memperbarui kolom template_name dan category di PostgreSQL.'
+      }
+    ]
+  },
+  {
     version: 'v1.30.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Instant Template Re-deploy Animation & Live Multi-Theme Container Web Re-seeding',
     summary: 'Penyempurnaan alur kerja katalog template saat memilih opsi \'Gunakan\' / \'Terapkan ke Situs Ini\': (1) Alur Re-deploy Kontainer Otomatis: Saat pengguna menerapkan blueprint dari katalog ke kontainer situs aktif, sistem langsung memicu re-deployment terstruktur dengan 4 fase animasi reaktif (1/4 Build & Blueprint Compilation -> 2/4 Docker Engine & Storage Update -> 3/4 Traefik Ingress Routing -> 4/4 Go Live Running) alih-alih hanya menyimpan draft lokal; (2) Re-seeding Web Storage Langsung ke Container: Menghubungkan SaveSiteDesign ke endpoint orchestrator POST /api/v1/containers/:id/template, sehingga file public/index.html kontainer Nginx langsung diperbarui seketika dengan konten tema baru (Toko Online, Portofolio, Blog, atau LMS Edukasi); (3) Sinkronisasi Visual Editor & Penerbitan Desain: Perubahan pada Visual Editor kini menyertakan metadata templateName dan category saat dipublikasikan, memastikan situs web live selalu identik dengan blueprint desain.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

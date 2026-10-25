@@ -289,6 +289,7 @@ type CreateContainerPayload struct {
 	TemplateName string `json:"templateName"`
 	AccentColor  string `json:"accentColor"`
 	BioIntro     string `json:"bioIntro"`
+	CustomHTML   string `json:"customHTML"`
 }
 
 func (h *Handler) CreateContainer(c *gin.Context) {
@@ -306,6 +307,7 @@ func (h *Handler) CreateContainer(c *gin.Context) {
 		TemplateName: req.TemplateName,
 		AccentColor:  req.AccentColor,
 		BioIntro:     req.BioIntro,
+		CustomHTML:   req.CustomHTML,
 	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

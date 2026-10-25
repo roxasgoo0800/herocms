@@ -537,16 +537,30 @@ func (r *Repository) UpdateSiteDesign(ctx context.Context, tenantID, siteID stri
 			themeConfigBytes = []byte("{}")
 		}
 
+		tplName := fmt.Sprintf("%v", payload["templateName"])
+		if tplName == "" || tplName == "<nil>" {
+			tplName = fmt.Sprintf("%v", payload["template_name"])
+		}
+		if tplName == "<nil>" {
+			tplName = ""
+		}
+		category := fmt.Sprintf("%v", payload["category"])
+		if category == "<nil>" {
+			category = ""
+		}
+
 		_, err := r.DB.ExecContext(ctx, `
 			UPDATE sites 
 			SET role_headline = $1, 
 			    bio_intro = $2, 
 			    accent_color = $3, 
 			    theme_config = $4::jsonb, 
+			    template_name = CASE WHEN $8 <> '' THEN $8 ELSE template_name END,
+			    category = CASE WHEN $9 <> '' THEN $9 ELSE category END,
 			    last_deployed_at = NOW(), 
 			    updated_at = NOW()
 			WHERE tenant_id = $5 AND (id::text = $6 OR subdomain LIKE $7)
-		`, roleHeadline, bioIntro, accentColor, string(themeConfigBytes), tenantID, siteID, siteID+"%")
+		`, roleHeadline, bioIntro, accentColor, string(themeConfigBytes), tenantID, siteID, siteID+"%", tplName, category)
 		if err != nil {
 			log.Printf("[DB ERROR] UpdateSiteDesign: %v", err)
 			return err
@@ -566,6 +580,12 @@ func (r *Repository) UpdateSiteDesign(ctx context.Context, tenantID, siteID stri
 			}
 			if v, ok := payload["accentColor"]; ok {
 				c["accentColor"] = v
+			}
+			if v, ok := payload["templateName"]; ok && v != nil && fmt.Sprintf("%v", v) != "" && fmt.Sprintf("%v", v) != "<nil>" {
+				c["templateName"] = v
+			}
+			if v, ok := payload["category"]; ok && v != nil && fmt.Sprintf("%v", v) != "" && fmt.Sprintf("%v", v) != "<nil>" {
+				c["category"] = v
 			}
 			if v, ok := payload["themeConfig"]; ok {
 				c["themeConfig"] = v
