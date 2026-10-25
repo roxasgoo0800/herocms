@@ -275,181 +275,14 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		'active'
 	) ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
-	-- Sites (Containers)
-	INSERT INTO sites (id, tenant_id, name, category, template_name, subdomain, status, cpu_usage, ram_usage, ram_limit, cpu_limit, uptime, visits_this_week, role_headline)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000001',
-		'99420000-0000-0000-0000-000000009942',
-		'Portofolio Rizal Pratama',
-		'portfolio',
-		'Portofolio Teknis Engineer',
-		'rizal',
-		'running',
-		14,
-		88,
-		256,
-		'0.5 vCPU',
-		'4 hari 12 jam',
-		3892,
-		'Portofolio Teknis Engineer'
-	),
-	(
-		'99420000-0000-0000-0000-000000000002',
-		'99420000-0000-0000-0000-000000009942',
-		'Portal Informasi Utama',
-		'business',
-		'Portofolio Teknis Engineer',
-		'wedak',
-		'running',
-		12,
-		76,
-		256,
-		'0.5 vCPU',
-		'2 hari 6 jam',
-		1240,
-		'Portofolio Teknis Engineer'
-	) ON CONFLICT (id) DO NOTHING;
-
-	-- Content Items
-	INSERT INTO content_items (id, tenant_id, title, slug, category, author, status, views, published_at)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000101',
-		'99420000-0000-0000-0000-000000009942',
-		'Arsitektur Multi-Tenant Aether Core Stack dengan PostgreSQL RLS',
-		'arsitektur-multi-tenant-aether-core-stack-rls',
-		'Arsitektur',
-		'Rizal Pratama',
-		'published',
-		1420,
-		NOW() - INTERVAL '3 days'
-	),
-	(
-		'99420000-0000-0000-0000-000000000102',
-		'99420000-0000-0000-0000-000000009942',
-		'Strategi Caching Traefik v3 dan Dynamic TLS Edge Router',
-		'strategi-caching-traefik-v3-tls',
-		'DevOps',
-		'Rizal Pratama',
-		'published',
-		890,
-		NOW() - INTERVAL '5 days'
-	),
-	(
-		'99420000-0000-0000-0000-000000000103',
-		'99420000-0000-0000-0000-000000009942',
-		'Pengamanan Linux Kernel Cgroups v2 & Seccomp Sandbox untuk Container CaaS',
-		'pengamanan-linux-kernel-cgroups-seccomp',
-		'Security',
-		'Rizal Pratama',
-		'draft',
-		0,
-		NOW() - INTERVAL '7 days'
-	) ON CONFLICT (id) DO NOTHING;
-
-
-	-- Custom Domains
-	INSERT INTO custom_domains (id, tenant_id, domain, target_cname, target_ip, dns_status, ssl_status)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000301',
-		'99420000-0000-0000-0000-000000009942',
-		'rizalpratama.cloud',
-		'rizal.stacbyte.id',
-		'103.144.20.12',
-		'verified',
-		'active'
-	) ON CONFLICT (domain) DO NOTHING;
-
-	-- Support Tickets
-	INSERT INTO support_tickets (id, tenant_id, ticket_number, subject, category, priority, status, last_reply)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000401',
-		'99420000-0000-0000-0000-000000009942',
-		'TKT-9942-01',
-		'Permintaan Bantuan Konfigurasi Wildcard SSL Traefik',
-		'Infrastruktur',
-		'high',
-		'answered',
-		'18 Sep 2026, 11:02'
-	),
-	(
-		'99420000-0000-0000-0000-000000000402',
-		'99420000-0000-0000-0000-000000009942',
-		'TKT-9942-02',
-		'Konsultasi Kuota Penyimpanan Aset S3 MinIO',
-		'Storage & CDN',
-		'medium',
-		'open',
-		'17 Sep 2026, 14:30'
-	) ON CONFLICT (ticket_number) DO NOTHING;
-
-	-- Ticket Messages
-	INSERT INTO ticket_messages (id, ticket_id, sender_name, sender_role, message)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000501',
-		'99420000-0000-0000-0000-000000000401',
-		'Rizal Pratama',
-		'customer',
-		'Halo tim Support, saya ingin menanyakan apakah rute subdomain saya sudah aktif verifikasi Let''s Encrypt TLS-ALPN-01?'
-	),
-	(
-		'99420000-0000-0000-0000-000000000502',
-		'99420000-0000-0000-0000-000000000401',
-		'Budi Santoso (Cloud Support Engineer)',
-		'staff',
-		'Halo Pak Rizal! Rute Traefik v3 Anda telah diverifikasi sukses. Sertifikat SSL otomatis diperbarui setiap 60 hari.'
-	) ON CONFLICT (id) DO NOTHING;
-
-	-- Invoices
-	INSERT INTO invoices (id, tenant_id, invoice_number, plan_name, period, amount, tax, total, date, due_date, status, payment_method, container_quota)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000601',
-		'99420000-0000-0000-0000-000000009942',
-		'INV-2026-09-9942',
-		'Stack Pro Plan',
-		'1 Sep 2026 - 30 Sep 2026',
-		149000,
-		16390,
-		165390,
-		'1 Sep 2026',
-		'5 Sep 2026',
-		'paid',
-		'BCA Virtual Account (Otomatis)',
-		3
-	),
-	(
-		'99420000-0000-0000-0000-000000000602',
-		'99420000-0000-0000-0000-000000009942',
-		'INV-2026-08-9942',
-		'Stack Starter Plan',
-		'1 Agu 2026 - 31 Agu 2026',
-		49000,
-		5390,
-		54390,
-		'1 Agu 2026',
-		'5 Agu 2026',
-		'paid',
-		'Kartu Kredit Mandiri Visa',
-		1
-	) ON CONFLICT (invoice_number) DO NOTHING;
-
-	-- Webhooks
-	INSERT INTO webhooks (id, tenant_id, name, url, events, status, last_triggered)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000701',
-		'99420000-0000-0000-0000-000000009942',
-		'Discord Deployment Notifier',
-		'https://discord.com/api/webhooks/1289942001/abc123xyz',
-		'["site.deployed", "container.crashed"]'::jsonb,
-		'active',
-		'10 menit lalu (200 OK)'
-	) ON CONFLICT (id) DO NOTHING;
+	-- Purge legacy dummy seeds so the dashboard strictly displays 100% genuine user resources
+	DELETE FROM sites WHERE subdomain IN ('rizal', 'wedak', 'rizal.stacbyte.id', 'wedak.stacbyte.id', 'rizal.cloudcms.app', 'wedak.cloudcms.app') OR id IN ('99420000-0000-0000-0000-000000000001', '99420000-0000-0000-0000-000000000002');
+	DELETE FROM custom_domains WHERE domain = 'rizalpratama.cloud';
+	DELETE FROM content_items WHERE slug IN ('arsitektur-multi-tenant-aether-core-stack-rls', 'strategi-caching-traefik-v3-tls', 'pengamanan-linux-kernel-cgroups-seccomp');
+	DELETE FROM ticket_messages WHERE ticket_id IN ('99420000-0000-0000-0000-000000000401', '99420000-0000-0000-0000-000000000402');
+	DELETE FROM support_tickets WHERE ticket_number IN ('TKT-9942-01', 'TKT-9942-02');
+	DELETE FROM invoices WHERE invoice_number IN ('INV-2026-09-9942', 'INV-2026-08-9942');
+	DELETE FROM webhooks WHERE id = '99420000-0000-0000-0000-000000000701';
 	`
 
 	if _, err := r.DB.Exec(seedSQL); err != nil {
@@ -733,19 +566,21 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
-			SELECT id, title, slug, category, author, status, views, published_at
-			FROM content_items
-			WHERE tenant_id = $1
-			ORDER BY created_at DESC
+			SELECT c.id, c.title, c.slug, c.category, c.author, c.status, c.views, c.published_at,
+			       COALESCE(s.name, ''), COALESCE(c.site_id::text, '')
+			FROM content_items c
+			LEFT JOIN sites s ON c.site_id = s.id
+			WHERE c.tenant_id = $1
+			ORDER BY c.created_at DESC
 		`, tenantID)
 		if err == nil {
 			defer rows.Close()
 			var list []gin.H
 			for rows.Next() {
-				var id, title, slug, category, author, status string
+				var id, title, slug, category, author, status, siteName, siteID string
 				var views int
 				var publishedAt time.Time
-				if err := rows.Scan(&id, &title, &slug, &category, &author, &status, &views, &publishedAt); err == nil {
+				if err := rows.Scan(&id, &title, &slug, &category, &author, &status, &views, &publishedAt, &siteName, &siteID); err == nil {
 					list = append(list, gin.H{
 						"id":          id,
 						"title":       title,
@@ -755,7 +590,8 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 						"status":      status,
 						"views":       views,
 						"publishedAt": publishedAt.Format("2 Jan 2006"),
-						"siteName":    "Portofolio Rizal Pratama",
+						"siteName":    siteName,
+						"containerId": siteID,
 					})
 				}
 			}
@@ -961,27 +797,30 @@ func (r *Repository) GetDomains(ctx context.Context, tenantID string) ([]gin.H, 
 	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
-			SELECT id, domain, target_cname, target_ip, dns_status, ssl_status, created_at
-			FROM custom_domains
-			WHERE tenant_id = $1
-			ORDER BY created_at DESC
+			SELECT c.id, c.domain, c.target_cname, c.target_ip, c.dns_status, c.ssl_status, 
+			       COALESCE(c.site_id::text, ''), COALESCE(s.name, ''), c.created_at
+			FROM custom_domains c
+			LEFT JOIN sites s ON c.site_id = s.id
+			WHERE c.tenant_id = $1
+			ORDER BY c.created_at DESC
 		`, tenantID)
 		if err == nil {
 			defer rows.Close()
 			var list []gin.H
 			for rows.Next() {
-				var id, domain, targetCname, targetIp, dnsStatus, sslStatus string
+				var id, domain, targetCname, targetIp, dnsStatus, sslStatus, siteID, siteName string
 				var createdAt time.Time
-				if err := rows.Scan(&id, &domain, &targetCname, &targetIp, &dnsStatus, &sslStatus, &createdAt); err == nil {
+				if err := rows.Scan(&id, &domain, &targetCname, &targetIp, &dnsStatus, &sslStatus, &siteID, &siteName, &createdAt); err == nil {
 					list = append(list, gin.H{
-						"id":          id,
-						"domain":      domain,
-						"targetCname": targetCname,
-						"targetIp":    targetIp,
-						"dnsStatus":   dnsStatus,
-						"sslStatus":   sslStatus,
-						"containerId": "hero_tenant_9942",
-						"createdAt":   createdAt.Format("2 Jan 2006"),
+						"id":              id,
+						"domain":          domain,
+						"targetCname":     targetCname,
+						"targetIp":        targetIp,
+						"dnsStatus":       dnsStatus,
+						"sslStatus":       sslStatus,
+						"containerId":     siteID,
+						"targetContainer": siteName,
+						"createdAt":       createdAt.Format("2 Jan 2006"),
 					})
 				}
 			}
@@ -1534,120 +1373,12 @@ func (r *Repository) seedInitialData() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	r.Containers = []gin.H{
-		{
-			"id":             "hero_tenant_9942",
-			"name":           "Portofolio Rizal Pratama",
-			"category":       "portfolio",
-			"templateName":   "Portofolio Teknis Engineer",
-			"subdomain":      "rizal.stacbyte.id",
-			"status":         "running",
-			"cpuUsage":       14,
-			"ramUsage":       88,
-			"ramLimit":       256,
-			"cpuLimit":       "0.5 vCPU",
-			"uptime":         "4 hari 12 jam",
-			"visitsThisWeek": 3892,
-			"ssl":            true,
-			"roleOrHeadline": "Portofolio Teknis Engineer",
-			"accentColor":    "#2563eb",
-			"lastDeployed":   "18 Sep 2026",
-		},
-		{
-			"id":             "hero_tenant_2002",
-			"name":           "Portal Informasi Utama",
-			"category":       "business",
-			"templateName":   "Portofolio Teknis Engineer",
-			"subdomain":      "wedak.stacbyte.id",
-			"status":         "running",
-			"cpuUsage":       12,
-			"ramUsage":       76,
-			"ramLimit":       256,
-			"cpuLimit":       "0.5 vCPU",
-			"uptime":         "2 hari 6 jam",
-			"visitsThisWeek": 1240,
-			"ssl":            true,
-			"roleOrHeadline": "Portofolio Teknis Engineer",
-			"accentColor":    "#2563eb",
-			"lastDeployed":   "17 Sep 2026",
-		},
-	}
-
-	r.Articles = []gin.H{
-		{
-			"id":          "art_01",
-			"title":       "Arsitektur Multi-Tenant Aether Core Stack dengan PostgreSQL RLS",
-			"slug":        "arsitektur-multi-tenant-aether-core-stack-rls",
-			"category":    "Arsitektur",
-			"status":      "published",
-			"publishedAt": "18 Sep 2026",
-			"views":       1420,
-			"author":      "Rizal Pratama",
-			"siteName":    "Portofolio Rizal Pratama",
-		},
-	}
-
+	r.Containers = []gin.H{}
+	r.Articles = []gin.H{}
 	r.Assets = []gin.H{}
-
-	r.Domains = []gin.H{
-		{
-			"id":          "dom_9942",
-			"domain":      "rizalpratama.cloud",
-			"targetCname": "rizal.stacbyte.id",
-			"targetIp":    "103.144.20.12",
-			"dnsStatus":   "verified",
-			"sslStatus":   "active",
-			"containerId": "hero_tenant_9942",
-			"createdAt":   "12 Sep 2026",
-		},
-	}
-
-	r.Tickets = []gin.H{
-		{
-			"id":        "TKT-9942-01",
-			"subject":   "Permintaan Bantuan Konfigurasi Wildcard SSL Traefik",
-			"category":  "Infrastruktur",
-			"priority":  "high",
-			"status":    "answered",
-			"createdAt": "18 Sep 2026, 10:14",
-			"lastReply": "18 Sep 2026, 11:02",
-		},
-	}
-
-	r.Messages["TKT-9942-01"] = []gin.H{
-		{
-			"id":         "msg_01",
-			"senderName": "Rizal Pratama",
-			"senderRole": "customer",
-			"message":    "Halo tim Support, saya ingin menanyakan apakah rute subdomain saya sudah aktif verifikasi Let's Encrypt TLS-ALPN-01?",
-			"createdAt":  "18 Sep 2026, 10:14",
-		},
-	}
-
-	r.Invoices = []gin.H{
-		{
-			"id":             "INV-2026-09-9942",
-			"planName":       "Stack Pro Plan",
-			"period":         "1 Sep 2026 - 30 Sep 2026",
-			"amount":         149000,
-			"tax":            16390,
-			"total":          165390,
-			"date":           "1 Sep 2026",
-			"dueDate":        "5 Sep 2026",
-			"status":         "paid",
-			"paymentMethod":  "BCA Virtual Account (Otomatis)",
-			"containerQuota": 3,
-		},
-	}
-
-	r.Webhooks = []gin.H{
-		{
-			"id":            "wh_01",
-			"name":          "Discord Deployment Notifier",
-			"url":           "https://discord.com/api/webhooks/1289942001/abc123xyz",
-			"events":        []string{"site.deployed", "container.crashed"},
-			"status":        "active",
-			"lastTriggered": "10 menit lalu (200 OK)",
-		},
-	}
+	r.Domains = []gin.H{}
+	r.Tickets = []gin.H{}
+	r.Messages = make(map[string][]gin.H)
+	r.Invoices = []gin.H{}
+	r.Webhooks = []gin.H{}
 }

@@ -387,7 +387,7 @@ const loadBlocksForActiveContainer = () => {
   if (activeContainer.value?.themeConfig?.blocks && Array.isArray(activeContainer.value.themeConfig.blocks)) {
     pageBlocks.value = JSON.parse(JSON.stringify(activeContainer.value.themeConfig.blocks));
   } else {
-    const siteName = activeContainer.value?.name || 'Portofolio Rizal Pratama';
+    const siteName = activeContainer.value?.name || 'Situs Utama';
     const role = activeContainer.value?.roleOrHeadline || 'Portofolio Teknis Engineer';
     const bio = activeContainer.value?.bioIntro || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.';
     pageBlocks.value = createDefaultBlocks(siteName, role, bio);

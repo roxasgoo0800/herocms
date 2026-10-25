@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.28.0',
+    version: 'v1.28.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.28.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Purge Dummy Static Seeds, Relational Query Joins, & Traefik Docker API 1.44 Negotiation',
+    summary: 'Pembersihan total data dummy statis dan perbaikan komunikasi Docker API: (1) Konfigurasi DOCKER_API_VERSION=1.44 dan docker endpoint Traefik v3 untuk menyelesaikan error negosiasi API Docker daemon macOS; (2) Pembersihan seluruh data dummy SQL lama (situs rizal & wedak, domain rizalpratama.cloud, tiket, invoice, dan webhook dummy) dari database PostgreSQL dan in-memory fallback; (3) Refaktor query repository Go dengan LEFT JOIN ke tabel sites sehingga artikel dan custom domain secara dinamis menggunakan nama kontainer dan ID kontainer nyata; (4) Penyelarasan fallback UI frontend Vue 3 agar tidak menampilkan nama atau ID kontainer placeholder.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12801-1',
+        type: 'bugfix',
+        scope: 'Traefik Edge Ingress (docker-compose.yml)',
+        description: 'Menambahkan environment DOCKER_API_VERSION=1.44 dan endpoint docker unix:///var/run/docker.sock pada service traefik untuk mengatasi error client version 1.24 is too old pada Docker engine modern.'
+      },
+      {
+        id: 'c-02dash-12801-2',
+        type: 'bugfix',
+        scope: 'Database & In-Memory Seeding (internal/repository/repository.go)',
+        description: 'Menghapus seluruh query INSERT dummy sites, custom_domains, content_items, support_tickets, invoices, dan webhooks; menambahkan skrip pembersihan otomatis untuk rekaman dummy legacy.'
+      },
+      {
+        id: 'c-02dash-12801-3',
+        type: 'improvement',
+        scope: 'Relational Query Joins (internal/repository/repository.go)',
+        description: 'Memperbarui GetArticles dan GetDomains menggunakan LEFT JOIN sites s ON c.site_id = s.id untuk menyajikan nama situs dan ID kontainer asli dari database secara relasional.'
+      },
+      {
+        id: 'c-02dash-12801-4',
+        type: 'bugfix',
+        scope: 'Frontend Reactive Fallbacks (useDashboardData.ts, VisualEditorModule, CustomDomainsModule, ContentArticlesModule)',
+        description: 'Menghilangkan hardcoded fallback Portofolio Rizal Pratama dan hero_tenant_9942, menggantikannya dengan nilai reaktif nyata dari kontainer aktif.'
+      }
+    ]
+  },
+  {
     version: 'v1.28.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Migrasi Ekosistem Domain Resmi ke stacbyte.id (Edge Subdomains, DNS CNAME, Previews & CORS)',
     summary: 'Memperbarui domain resmi platform dari cloudcms.app ke stacbyte.id secara menyeluruh pada backend Go dan frontend Vue 3: (1) Penyesuaian pembuatan kontainer baru dengan subdomain default .stacbyte.id; (2) Target panduan DNS CNAME resmi diarahkan ke edge.stacbyte.id; (3) Pembaruan seluruh URL preview mockup perangkat (Mobile, Tablet, Desktop) pada Katalog Blueprint dan Visual Editor Studio; (4) Penyelarasan CORS allowlist Go BFF serta webhook event simulator ke domain stacbyte.id dengan tetap mempertahankan backward compatibility.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

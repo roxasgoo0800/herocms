@@ -359,11 +359,11 @@ ${dom.domain}.        3600    IN    A        ${a}`;
                 </span>
                 <span class="domain-target-pill">
                   <ArrowRight :size="11" />
-                  {{ dom.targetContainer || 'Portofolio Rizal Pratama' }}
+                  {{ dom.targetContainer || '-' }}
                 </span>
               </div>
               <span class="domain-created-txt">
-                Ditambahkan pada {{ dom.addedDate || '12 Sep 2026' }} • Ingress Rule: <code>route-{{ dom.id }}</code> • HTTP/2 & HTTP/3 ALPN
+                Ditambahkan pada {{ dom.addedDate || 'Baru saja' }} • Ingress Rule: <code>route-{{ dom.id }}</code> • HTTP/2 & HTTP/3 ALPN
               </span>
             </div>
           </div>

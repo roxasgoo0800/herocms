@@ -760,7 +760,7 @@ onUnmounted(() => {
               </div>
               <div class="spec-row">
                 <span class="spec-k">Container ID</span>
-                <code class="spec-code">{{ activeArticleForReader.containerId || 'hero_tenant_9942' }}</code>
+                <code class="spec-code">{{ activeArticleForReader.containerId || '-' }}</code>
               </div>
               <div class="spec-row">
                 <span class="spec-k">Slug URL</span>

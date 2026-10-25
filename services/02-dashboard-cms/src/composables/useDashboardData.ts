@@ -803,13 +803,13 @@ const normalizeCustomDomain = (dom: any): CustomDomainItem => {
   return {
     id: dom.id || `dom_${Date.now()}`,
     domain: dom.domain || 'domainku.id',
-    targetContainer: dom.targetContainer || (containers.value.find(c => c.id === dom.containerId)?.name) || 'Portofolio Rizal Pratama',
-    containerId: dom.containerId || 'hero_tenant_9942',
+    targetContainer: dom.targetContainer || (containers.value.find(c => c.id === dom.containerId)?.name) || '-',
+    containerId: dom.containerId || containers.value[0]?.id || '',
     status: dom.status === 'verified' ? 'active' : (dom.status || dom.dnsStatus || 'active'),
     sslStatus: dom.sslStatus === 'active' ? 'issued' : (dom.sslStatus || 'issued'),
     cnameRecord: dom.cnameRecord || dom.targetCname || 'edge.stacbyte.id',
     aRecord: dom.aRecord || dom.targetIp || '103.144.20.1',
-    addedDate: dom.addedDate || dom.createdAt || '12 Sep 2026'
+    addedDate: dom.addedDate || dom.createdAt || 'Baru saja'
   };
 };
 
@@ -817,7 +817,7 @@ const normalizeCustomDomain = (dom: any): CustomDomainItem => {
 const customDomains = ref<CustomDomainItem[]>([]);
 
 const newDomainInput = ref('');
-const targetContainerForDomain = ref('hero_tenant_9942');
+const targetContainerForDomain = ref('');
 
 const handleAddDomain = () => {
   if (!newDomainInput.value.trim()) {
@@ -825,12 +825,13 @@ const handleAddDomain = () => {
     return;
   }
   const cleanDom = newDomainInput.value.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-  const matched = containers.value.find(c => c.id === targetContainerForDomain.value);
+  const targetId = targetContainerForDomain.value || containers.value[0]?.id || '';
+  const matched = containers.value.find(c => c.id === targetId);
   const newDomObj: CustomDomainItem = {
     id: `dom_${Date.now()}`,
     domain: cleanDom,
-    targetContainer: matched ? matched.name : 'Portofolio Rizal Pratama',
-    containerId: targetContainerForDomain.value,
+    targetContainer: matched ? matched.name : (containers.value[0]?.name || '-'),
+    containerId: targetId,
     status: 'verifying',
     sslStatus: 'pending',
     cnameRecord: 'edge.stacbyte.id',
@@ -878,8 +879,8 @@ const handleCreateArticle = () => {
     id: `art_${Date.now()}`,
     title: newArticleForm.value.title,
     slug,
-    siteName: activeContainer.value ? activeContainer.value.name : 'Portofolio Rizal Pratama',
-    containerId: activeContainer.value ? activeContainer.value.id : 'hero_tenant_9942',
+    siteName: activeContainer.value ? activeContainer.value.name : (containers.value[0]?.name || 'Situs Utama'),
+    containerId: activeContainer.value ? activeContainer.value.id : (containers.value[0]?.id || ''),
     category: newArticleForm.value.category,
     author: 'Rizal Pratama',
     views: 0,
