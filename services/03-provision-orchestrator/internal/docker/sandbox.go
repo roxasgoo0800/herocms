@@ -82,8 +82,8 @@ func BuildHostConfig(specs SandboxSpecs, dataPath, uploadsPath, publicPath strin
 		CapDrop: []string{"ALL"},
 		CapAdd:  []string{"NET_BIND_SERVICE"},
 		Tmpfs: map[string]string{
-			"/tmp": "size=16m,noexec,nosuid,nodev",
-			"/run": "size=4m,noexec,nosuid,nodev",
+			"/tmp": "size=32m,mode=1777,noexec,nosuid,nodev",
+			"/run": "size=4m,mode=1777,noexec,nosuid,nodev",
 		},
 		RestartPolicy: container.RestartPolicy{
 			Name:              "on-failure",

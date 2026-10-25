@@ -239,6 +239,7 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 	}
 
 	// 8. Real Docker Engine execution: Idempotent clean of stale container with same name
+	p.ensureEdgeNetwork(ctx)
 	_ = p.cli.ContainerStop(ctx, containerName, container.StopOptions{})
 	_ = p.cli.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true})
 
@@ -570,6 +571,19 @@ func (p *Provisioner) saveStateToRedis(ctx context.Context, params TenantDeployP
 			Subdomain:    params.Subdomain,
 			CustomDomain: params.CustomDomain,
 			Status:       status,
+		})
+	}
+}
+
+func (p *Provisioner) ensureEdgeNetwork(ctx context.Context) {
+	if p.cli == nil || p.edgeNetwork == "" {
+		return
+	}
+	_, err := p.cli.NetworkInspect(ctx, p.edgeNetwork, types.NetworkInspectOptions{})
+	if err != nil {
+		_, _ = p.cli.NetworkCreate(ctx, p.edgeNetwork, types.NetworkCreate{
+			Driver: "bridge",
+			Labels: map[string]string{"herocms.managed": "true"},
 		})
 	}
 }
