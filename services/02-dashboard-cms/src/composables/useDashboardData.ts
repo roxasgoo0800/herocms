@@ -1746,7 +1746,16 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
       if (warmRes?.bundle) {
         const b = warmRes.bundle;
         if (Array.isArray(b.containers?.containers)) {
-          containers.value = b.containers.containers;
+          containers.value = b.containers.containers.filter((c: any) => 
+            !c.subdomain?.includes('rizal') && 
+            !c.subdomain?.includes('wedak') && 
+            !c.name?.includes('Rizal') && 
+            !c.name?.includes('Portal Informasi') && 
+            c.id !== 'hero_tenant_9942' && 
+            c.id !== 'hero_tenant_2002' && 
+            c.id !== '99420000-0000-0000-0000-000000000001' && 
+            c.id !== '99420000-0000-0000-0000-000000000002'
+          );
           if (b.containers.quota?.max) {
             userPlan.value.maxContainers = b.containers.quota.max;
           }
@@ -1840,7 +1849,16 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
     ]);
 
     if (cRes.status === 'fulfilled' && Array.isArray(cRes.value?.containers)) {
-      containers.value = cRes.value.containers;
+      containers.value = cRes.value.containers.filter((c: any) => 
+        !c.subdomain?.includes('rizal') && 
+        !c.subdomain?.includes('wedak') && 
+        !c.name?.includes('Rizal') && 
+        !c.name?.includes('Portal Informasi') && 
+        c.id !== 'hero_tenant_9942' && 
+        c.id !== 'hero_tenant_2002' && 
+        c.id !== '99420000-0000-0000-0000-000000000001' && 
+        c.id !== '99420000-0000-0000-0000-000000000002'
+      );
       if (cRes.value.quota?.max) {
         userPlan.value.maxContainers = cRes.value.quota.max;
       }
@@ -1935,13 +1953,31 @@ const hydrateFromCache = (overrideEmail?: string) => {
         return;
       }
       // Purge legacy mock seeds cache if found
-      const hasLegacySeeds = Array.isArray(data.invoices) && data.invoices.some((i: any) => i.id === 'INV-2026-10-0994');
+      const hasLegacySeeds = (Array.isArray(data.invoices) && data.invoices.some((i: any) => i.id === 'INV-2026-10-0994')) ||
+        (Array.isArray(data.containers) && data.containers.some((c: any) => 
+          c.subdomain?.includes('rizal') || 
+          c.subdomain?.includes('wedak') || 
+          c.name?.includes('Rizal') || 
+          c.name?.includes('Portal Informasi') || 
+          c.id === 'hero_tenant_9942' || 
+          c.id === 'hero_tenant_2002' || 
+          c.id === '99420000-0000-0000-0000-000000000001' || 
+          c.id === '99420000-0000-0000-0000-000000000002'
+        ));
       if (hasLegacySeeds) {
         localStorage.removeItem(getCacheKey(targetEmail));
-        return;
-      }
-      if (Array.isArray(data.containers)) {
-        containers.value = data.containers;
+        localStorage.removeItem('herocms_dashboard_cache');
+      } else if (Array.isArray(data.containers)) {
+        containers.value = data.containers.filter((c: any) => 
+          !c.subdomain?.includes('rizal') && 
+          !c.subdomain?.includes('wedak') && 
+          !c.name?.includes('Rizal') && 
+          !c.name?.includes('Portal Informasi') && 
+          c.id !== 'hero_tenant_9942' && 
+          c.id !== 'hero_tenant_2002' && 
+          c.id !== '99420000-0000-0000-0000-000000000001' && 
+          c.id !== '99420000-0000-0000-0000-000000000002'
+        );
         if (containers.value.length > 0 && !containers.value.some(c => c.id === activeContainerId.value)) {
           activeContainerId.value = containers.value[0].id;
         }
