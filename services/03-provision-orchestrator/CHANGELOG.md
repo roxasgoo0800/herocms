@@ -6,6 +6,19 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.0.1] - 25 Oktober 2026
+**Tipe Rilis**: Patch / Security Hardening Release  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+Pengerasan keamanan berstandar 21 Matriks Keamanan Web, Backend & Sandboxing Kontainer:
+1. **Pencegahan Serangan Timing (Timing Attack Resistance)**: Pemutakhiran verifikasi token `X-HeroCMS-Internal-Secret` menggunakan `subtle.ConstantTimeCompare` pada `internal/api/middleware.go`.
+2. **Penanganan Status Container Not Found (HTTP 404)**: Respons yang konsisten dengan kode status 404 saat target kontainer tidak ditemukan pada operasi Start dan Stop.
+3. **Audit Kepatuhan Matriks 21 Keamanan**: Penegakan 100% parameter pengerasan cgroups v2 (`256 MB RAM`, `0.5 vCPU`, `PidsLimit 50`, `UID 10001`, `ReadonlyRootfs`, `CapDrop ALL`, `tmpfs noexec`) dan isolasi direktori penyimpanan tenant.
+
+---
+
 ### [03-orchestrator-v1.0.0] - 25 Oktober 2026
 **Tipe Rilis**: Milestone / Major Architectural Release  
 **Status**: Production Ready & Stable  

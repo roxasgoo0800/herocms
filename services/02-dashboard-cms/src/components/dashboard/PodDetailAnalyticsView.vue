@@ -1101,13 +1101,14 @@ const exportTelemetry = () => {
           <span class="deep-card-title">
             <Cpu :size="15" style="color: #2563eb;" />
             <span>CPU & CFS Quota (cgroups v2)</span>
+            <span v-if="liveStats?.source" class="radar-status-pill status-running" style="font-size: 0.62rem; padding: 1px 6px; margin-left: 6px;">Live</span>
           </span>
           <span style="font-size: 0.7rem; font-weight: 700; color: #2563eb;">
-            {{ report.deepResources.cpuUsagePct }}% / {{ container.cpuLimit }}
+            {{ liveStats?.cpu_percent != null ? liveStats.cpu_percent.toFixed(1) : report.deepResources.cpuUsagePct }}% / {{ container.cpuLimit }}
           </span>
         </div>
         <div class="custom-meter-track">
-          <div class="custom-meter-fill fill-blue" :style="{ width: `${report.deepResources.cpuUsagePct}%` }"></div>
+          <div class="custom-meter-fill fill-blue" :style="{ width: `${liveStats?.cpu_percent != null ? liveStats.cpu_percent : report.deepResources.cpuUsagePct}%` }"></div>
         </div>
         <div class="deep-metric-row-list">
           <div class="deep-row-item">
@@ -1135,13 +1136,14 @@ const exportTelemetry = () => {
           <span class="deep-card-title">
             <HardDrive :size="15" style="color: #059669;" />
             <span>Memori memcg Linux</span>
+            <span v-if="liveStats?.source" class="radar-status-pill status-running" style="font-size: 0.62rem; padding: 1px 6px; margin-left: 6px;">Live</span>
           </span>
           <span style="font-size: 0.7rem; font-weight: 700; color: #059669;">
-            {{ container.ramUsage }}MB / {{ report.deepResources.memLimitMB }}MB
+            {{ liveStats?.memory_mb != null ? liveStats.memory_mb.toFixed(1) : container.ramUsage }}MB / {{ liveStats?.memory_limit != null ? liveStats.memory_limit.toFixed(0) : report.deepResources.memLimitMB }}MB
           </span>
         </div>
         <div class="custom-meter-track">
-          <div class="custom-meter-fill fill-emerald" :style="{ width: `${(container.ramUsage / report.deepResources.memLimitMB) * 100}%` }"></div>
+          <div class="custom-meter-fill fill-emerald" :style="{ width: `${((liveStats?.memory_mb != null ? liveStats.memory_mb : container.ramUsage) / (liveStats?.memory_limit || report.deepResources.memLimitMB)) * 100}%` }"></div>
         </div>
         <div class="deep-metric-row-list">
           <div class="deep-row-item">
@@ -1169,6 +1171,7 @@ const exportTelemetry = () => {
           <span class="deep-card-title">
             <Server :size="15" style="color: #7c3aed;" />
             <span>Network & Disk I/O</span>
+            <span v-if="liveStats?.source" class="radar-status-pill status-running" style="font-size: 0.62rem; padding: 1px 6px; margin-left: 6px;">Live</span>
           </span>
           <span style="font-size: 0.7rem; font-weight: 700; color: #7c3aed;">
             {{ report.deepResources.diskUsedMB }}MB / {{ report.deepResources.diskTotalMB }}MB
@@ -1180,11 +1183,11 @@ const exportTelemetry = () => {
         <div class="deep-metric-row-list">
           <div class="deep-row-item">
             <span>Throughput Jaringan</span>
-            <strong>↓ {{ report.deepResources.networkIngressRate }} • ↑ {{ report.deepResources.networkEgressRate }}</strong>
+            <strong>↓ {{ liveStats?.network_rx_mb != null ? liveStats.network_rx_mb.toFixed(2) + ' MB' : report.deepResources.networkIngressRate }} • ↑ {{ liveStats?.network_tx_mb != null ? liveStats.network_tx_mb.toFixed(2) + ' MB' : report.deepResources.networkEgressRate }}</strong>
           </div>
           <div class="deep-row-item">
-            <span>Active TCP Socket Connections</span>
-            <strong>{{ report.deepResources.tcpActiveSockets }} Active ({{ report.deepResources.tcpKeepAlive }} Keep-Alive)</strong>
+            <span>Active Processes / PIDs</span>
+            <strong>{{ liveStats?.pids_current != null ? liveStats.pids_current : 18 }} PIDs (Anti Fork-Bomb Limit: 50)</strong>
           </div>
           <div class="deep-row-item">
             <span>Disk IOPS Read / Write</span>

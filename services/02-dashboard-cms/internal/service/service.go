@@ -279,6 +279,71 @@ func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, e
 		sites = []gin.H{}
 	}
 
+	// Synchronize & Enrich with Real-Time Data from Service 03 (Orchestrator)
+	if s.Orchestrator != nil {
+		orchContainers, err := s.Orchestrator.ListContainers(ctx)
+		if err == nil {
+			orchMap := make(map[string]orchestrator.ContainerInfo)
+			for _, oc := range orchContainers {
+				if siteID, ok := oc.Labels["herocms.site.id"]; ok && siteID != "" {
+					orchMap[siteID] = oc
+				}
+				for _, n := range oc.Names {
+					cleanName := strings.TrimPrefix(n, "/")
+					orchMap[cleanName] = oc
+				}
+				orchMap[oc.ID] = oc
+			}
+
+			for i, site := range sites {
+				siteID := fmt.Sprintf("%v", site["id"])
+				subdomain := fmt.Sprintf("%v", site["subdomain"])
+				cleanSub := strings.TrimSuffix(subdomain, ".cloudcms.app")
+
+				var matched *orchestrator.ContainerInfo
+				if oc, ok := orchMap[siteID]; ok {
+					matched = &oc
+				} else {
+					for _, oc := range orchContainers {
+						for _, n := range oc.Names {
+							if strings.Contains(n, cleanSub) {
+								matched = &oc
+								break
+							}
+						}
+						if matched != nil {
+							break
+						}
+					}
+				}
+
+				if matched != nil {
+					// Real status from Service 03
+					realState := strings.ToLower(matched.State)
+					if realState == "running" || realState == "up" {
+						sites[i]["status"] = "running"
+					} else if realState == "exited" || realState == "stopped" {
+						sites[i]["status"] = "stopped"
+					}
+					if matched.Status != "" {
+						sites[i]["uptime"] = matched.Status
+					}
+					sites[i]["container_id"] = matched.ID
+
+					// Real cgroups v2 resource stats
+					stats, stErr := s.Orchestrator.GetStats(ctx, matched.ID)
+					if stErr == nil && stats != nil {
+						sites[i]["cpuUsage"] = int(stats.CPUPercent)
+						sites[i]["ramUsage"] = int(stats.MemoryMB)
+						if stats.MemoryLimitMB > 0 {
+							sites[i]["ramLimit"] = int(stats.MemoryLimitMB)
+						}
+					}
+				}
+			}
+		}
+	}
+
 	maxQuota := 3
 	if s.Repo != nil {
 		quota, err := s.Repo.GetBillingQuota(ctx, tenantID)

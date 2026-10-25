@@ -1,6 +1,7 @@
 package api
 
 import (
+	"crypto/subtle"
 	"log"
 	"net/http"
 	"strings"
@@ -34,7 +35,8 @@ func InternalSecretGuard(expectedToken string, enabled bool) gin.HandlerFunc {
 			}
 		}
 
-		if token != expectedToken {
+		// Timing-attack resistant token comparison (Constant-time compare)
+		if len(token) != len(expectedToken) || subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) != 1 {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error":     "Akses ditolak: X-HeroCMS-Internal-Secret tidak valid atau tidak disertakan.",
 				"code":      "ERR_INTERNAL_SECRET_INVALID",

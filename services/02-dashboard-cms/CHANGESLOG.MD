@@ -32,6 +32,7 @@ Integrasi penuh Service 02 (Dashboard Studio & Go BFF) ke Service 03 (Container 
 - Provisi kontainer baru secara sinkron memanggil Service 03 dan mencatat metadata kontainer ke PostgreSQL 16.
 - Menghubungkan mutasi kontainer (Start, Stop, Restart, Delete) langsung ke daemon kontainer otonom.
 - Memperbaiki bug SQL parameter mismatch pada `InsertSite` (sebelumnya 14 parameter dikirim ke statement 15 parameter) dengan menyertakan kolom `status`.
+- **Sinkronisasi Real Data Antar-Menu**: `GetContainers` secara otomatis merekonsiliasi daftar situs dari database dengan kontainer yang aktif di Service 03 (`ListContainers` & `GetStats`), mengisi status kontainer riil, uptime nyata, serta persentase CPU dan RAM live dari kernel cgroups v2.
 
 #### 3. Handler & Routing Endpoints (`internal/handler/handler.go` & `cmd/server/main.go`)
 - Menambahkan rute baru pada grup `/api` (dengan autentikasi sesi/JWT & rate-limiting):
@@ -42,7 +43,8 @@ Integrasi penuh Service 02 (Dashboard Studio & Go BFF) ke Service 03 (Container 
 #### 4. Frontend Studio & Telemetri Real-Time (`src/services/apiClient.ts`, `src/composables/useDashboardData.ts`, `src/components/dashboard/PodDetailAnalyticsView.vue`, `src/views/DashboardView.vue`)
 - Menambahkan `restartContainer`, `getContainerStats`, dan `getContainerLogs` pada `studioApi`.
 - Menghubungkan tombol reboot terminal dan aksi kartu kontainer ke endpoint restart.
-- Polling otomatis live cgroups v2 resource usage (CPU CFS quota, memcg RSS/cache, pids) pada kartu analitik pod detail.
+- **Pembaruan Telemetri Real Data**: Kartu metrik 'Edge Routing Traefik', 'Trafik Pengunjung', dan 'Keamanan TLS/SSL' pada `ContainersModule.vue` kini menghitung agregat riil berdasarkan kontainer aktif yang terdaftar di sistem.
+- **Binding Telemetri cgroups v2 di `PodDetailAnalyticsView.vue`**: Metrik mendalam CPU CFS Quota, memcg Linux memory, dan Throughput Jaringan kini terikat langsung ke data sensor `liveStats` dari Service 03 dengan lencana *Live cgroups v2*.
 - Menghubungkan konsol log terminal macOS pada `DashboardView.vue` ke live logs dari kontainer Docker.
 
 ---

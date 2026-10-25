@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import {
   Server,
   Globe,
@@ -60,6 +60,11 @@ const {
   activeMenu,
   selectedContainerForDetail
 } = useDashboardData();
+
+// Real-Time Telemetry Metrics Computed from Active Containers
+const totalVisitsCount = computed(() => containers.value.reduce((acc, c) => acc + (c.visitsThisWeek || 0), 0));
+const routedSubdomainsCount = computed(() => containers.value.filter(c => c.status === 'running').length);
+const sslActivePct = computed(() => containers.value.length > 0 ? Math.round((containers.value.filter(c => c.ssl !== false).length / containers.value.length) * 100) : 100);
 
 const targetContainerForMaintenance = ref<ContainerSite | null>(null);
 const isMaintenanceModalOpen = ref(false);
@@ -225,10 +230,10 @@ const navigateToAnalytics = (c: ContainerSite) => {
           <span class="telemetry-label">EDGE ROUTING TRAEFIK</span>
         </div>
         <div class="telemetry-val">
-          v3.1 <span class="badge-online">Online</span>
+          {{ routedSubdomainsCount }} <span class="badge-online">Aktif Teroute</span>
         </div>
         <div class="telemetry-sub">
-          <span>Latensi rerata 1.2ms (Zero-Downtime)</span>
+          <span>Traefik v3.1 Ingress (Zero-Downtime)</span>
         </div>
       </div>
 
@@ -238,10 +243,10 @@ const navigateToAnalytics = (c: ContainerSite) => {
           <span class="telemetry-label">TRAFIK PENGUNJUNG</span>
         </div>
         <div class="telemetry-val">
-          3,892 <span class="badge-growth-pill">+28%</span>
+          {{ totalVisitsCount.toLocaleString('id-ID') }} <span class="badge-growth-pill">Hits</span>
         </div>
         <div class="telemetry-sub">
-          <span>Data dicatat via Kafka stream</span>
+          <span>Data dicatat via Redis ZSET & Kafka stream</span>
         </div>
       </div>
 
@@ -251,7 +256,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
           <span class="telemetry-label">KEAMANAN TLS / SSL</span>
         </div>
         <div class="telemetry-val">
-          100% <span class="badge-online">Aktif</span>
+          {{ sslActivePct }}% <span class="badge-online">Tervalidasi</span>
         </div>
         <div class="telemetry-sub">
           <span>Let's Encrypt Wildcard Auto-Renew</span>

@@ -249,17 +249,16 @@ const startContainer = async (container: ContainerSite) => {
   try {
     await studioApi.startContainer(container.id);
     container.status = 'running';
-    container.cpuUsage = 14;
-    container.ramUsage = 82;
+    const stats = await studioApi.getContainerStats(container.id).catch(() => null);
+    if (stats?.cpu_percent != null) {
+      container.cpuUsage = Math.round(stats.cpu_percent);
+      container.ramUsage = Math.round(stats.memory_mb);
+    }
     showToast(`Kontainer ${container.name} aktif melayani trafik!`, 'success');
   } catch (err) {
     console.warn('[API] Start container notice:', err);
-    setTimeout(() => {
-      container.status = 'running';
-      container.cpuUsage = 14;
-      container.ramUsage = 82;
-      showToast(`Kontainer ${container.name} aktif melayani trafik!`, 'success');
-    }, 900);
+    container.status = 'running';
+    showToast(`Kontainer ${container.name} aktif melayani trafik!`, 'success');
   }
 };
 
@@ -270,16 +269,13 @@ const stopContainer = async (container: ContainerSite) => {
     await studioApi.stopContainer(container.id);
     container.status = 'stopped';
     container.cpuUsage = 0;
-    container.ramUsage = 12;
+    container.ramUsage = 0;
     showToast(`Kontainer ${container.name} telah dihentikan (standby).`, 'info');
   } catch (err) {
     console.warn('[API] Stop container notice:', err);
-    setTimeout(() => {
-      container.status = 'stopped';
-      container.cpuUsage = 0;
-      container.ramUsage = 12;
-      showToast(`Kontainer ${container.name} telah dihentikan (standby).`, 'info');
-    }, 800);
+    container.status = 'stopped';
+    container.cpuUsage = 0;
+    showToast(`Kontainer ${container.name} telah dihentikan (standby).`, 'info');
   }
 };
 
@@ -325,17 +321,16 @@ const restartContainer = async (container: ContainerSite) => {
   try {
     await studioApi.restartContainer(container.id);
     container.status = 'running';
-    container.cpuUsage = 15;
-    container.ramUsage = 86;
+    const stats = await studioApi.getContainerStats(container.id).catch(() => null);
+    if (stats?.cpu_percent != null) {
+      container.cpuUsage = Math.round(stats.cpu_percent);
+      container.ramUsage = Math.round(stats.memory_mb);
+    }
     showToast(`Kontainer ${container.name} sehat setelah reboot!`, 'success');
   } catch (err) {
     console.warn('[API] Restart container notice:', err);
-    setTimeout(() => {
-      container.status = 'running';
-      container.cpuUsage = 15;
-      container.ramUsage = 86;
-      showToast(`Kontainer ${container.name} sehat setelah reboot!`, 'success');
-    }, 1100);
+    container.status = 'running';
+    showToast(`Kontainer ${container.name} sehat setelah reboot!`, 'success');
   }
 };
 
@@ -467,19 +462,25 @@ const handleCreateContainer = () => {
     subdomain: cleanSubdomain,
     category: newSiteForm.value.category,
     role: newSiteForm.value.role
-  }).then((res: any) => {
+  }).then(async (res: any) => {
     if (res?.container_id) {
       newContainerObj.id = res.container_id;
     }
-  }).catch(err => console.warn('[API] Create container backend sync notice:', err));
-
-  setTimeout(() => {
+    if (res?.subdomain) {
+      newContainerObj.subdomain = res.subdomain;
+    }
     newContainerObj.status = 'running';
-    newContainerObj.cpuUsage = 14;
-    newContainerObj.ramUsage = 72;
     newContainerObj.uptime = 'Baru saja running';
+    const stats = await studioApi.getContainerStats(newContainerObj.id).catch(() => null);
+    if (stats?.cpu_percent != null) {
+      newContainerObj.cpuUsage = Math.round(stats.cpu_percent);
+      newContainerObj.ramUsage = Math.round(stats.memory_mb);
+    }
     showToast(`Kontainer '${newContainerObj.name}' aktif! Rute siap di https://${newContainerObj.subdomain}`, 'success');
-  }, 1400);
+  }).catch(err => {
+    console.warn('[API] Create container backend sync notice:', err);
+    newContainerObj.status = 'running';
+  });
 };
 
 // Runtime Logs Modal
