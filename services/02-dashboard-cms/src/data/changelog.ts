@@ -92,7 +92,7 @@ export const changelogReleases: ChangelogRelease[] = [
       },
       {
         id: 'c-02dash-13002-2',
-        type: 'fix',
+        type: 'bugfix',
         scope: 'Catalog & Editor Synchronization (useDashboardData.ts)',
         description: 'Menghubungkan compileTemplateToHTML pada createContainer, saveSiteDesign, dan handlePublishChanges agar container Nginx melayani konten yang 100% sama dengan pratinjau katalog.'
       },
@@ -101,6 +101,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'BFF & Orchestrator Payload (handler.go, service.go, repository.go)',
         description: 'Mendukung field customHTML pada CreateContainerPayload dan SaveSiteDesign serta memperbarui kolom template_name dan category di PostgreSQL.'
+      },
+      {
+        id: 'c-02dash-13002-4',
+        type: 'bugfix',
+        scope: 'Deployment Stepper Lifecycle (useDashboardData.ts & ContainersModule.vue)',
+        description: 'Memperbaiki siklus animasi stepper provisioning otomatis agar tidak stuck di fase 4/4 Running: menambahkan penanda deployStep 5 (seluruh 4 centang hijau), transisi otomatis ke tampilan kartu normal setelah 2.2 detik, pembersihan deployPhase residu pada sinkronisasi Redis/cache, serta tombol Selesai untuk menutup banner stepper.'
       }
     ]
   },

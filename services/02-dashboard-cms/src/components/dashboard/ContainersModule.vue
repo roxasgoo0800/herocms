@@ -464,23 +464,24 @@ const navigateToAnalytics = (c: ContainerSite) => {
           <div
             class="radar-status-pill"
             :class="{
-              'status-running': c.status === 'running' && !c.deployPhase,
+              'status-running': c.status === 'running' && (!c.deployPhase || (c.deployStep || 1) >= 5),
               'status-maintenance': c.status === 'maintenance',
               'status-stopped': c.status === 'stopped',
               'status-building': c.deployPhase === 'building',
               'status-deploying': c.deployPhase === 'deploying',
               'status-routing': c.deployPhase === 'routing',
-              'status-provisioning': (c.status === 'provisioning' || c.deployPhase) && !['building', 'deploying', 'routing'].includes(c.deployPhase || '')
+              'status-provisioning': (c.status === 'provisioning' || (c.deployPhase && (c.deployStep || 1) < 5)) && !['building', 'deploying', 'routing'].includes(c.deployPhase || '')
             }"
           >
-            <span class="radar-ping-ring" v-if="c.status === 'running' && !c.deployPhase"></span>
+            <span class="radar-ping-ring" v-if="c.status === 'running' && (!c.deployPhase || (c.deployStep || 1) >= 5)"></span>
             <span class="radar-ping-ring amber" v-if="c.status === 'maintenance'"></span>
-            <span class="radar-ping-ring blue" v-if="c.status === 'provisioning' || c.deployPhase"></span>
+            <span class="radar-ping-ring blue" v-if="(c.status === 'provisioning' || c.deployPhase) && (c.deployStep || 1) < 5"></span>
             <span class="radar-dot"></span>
             <span v-if="c.deployPhase === 'building'">1/4 Build App...</span>
             <span v-else-if="c.deployPhase === 'deploying'">2/4 Start Docker...</span>
             <span v-else-if="c.deployPhase === 'routing'">3/4 Edge Traefik...</span>
-            <span v-else-if="c.deployPhase === 'running'">4/4 Running!</span>
+            <span v-else-if="c.deployPhase === 'running' && (c.deployStep || 1) >= 5">4/4 Running!</span>
+            <span v-else-if="c.deployPhase === 'running'">4/4 Running...</span>
             <span v-else-if="c.status === 'running'">Running</span>
             <span v-else-if="c.status === 'maintenance'">Maintenance</span>
             <span v-else-if="c.status === 'stopped'">Standby</span>
@@ -495,10 +496,23 @@ const navigateToAnalytics = (c: ContainerSite) => {
               <span class="pulse-mini-dot" style="background-color: #2563eb;"></span>
               <span class="stepper-title">PROSES PROVISIONING OTOMATIS</span>
             </div>
-            <button type="button" class="btn-stepper-terminal" @click="openLogsModal(c)" title="Buka Terminal Live Logs">
-              <Terminal :size="12" />
-              <span>Lihat Logs</span>
-            </button>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" class="btn-stepper-terminal" @click="openLogsModal(c)" title="Buka Terminal Live Logs">
+                <Terminal :size="12" />
+                <span>Lihat Logs</span>
+              </button>
+              <button
+                v-if="(c.deployStep || 1) >= 5 || (c.status === 'running' && c.deployPhase === 'running')"
+                type="button"
+                class="btn-stepper-terminal"
+                style="background: #10b98118; color: #059669; border-color: #10b98140;"
+                @click="c.deployPhase = undefined; c.deployStep = undefined; c.deployStepMessage = undefined"
+                title="Tutup Banner Selesai"
+              >
+                <Check :size="12" />
+                <span>Selesai</span>
+              </button>
+            </div>
           </div>
 
           <!-- Step Progression Pills -->
@@ -542,7 +556,8 @@ const navigateToAnalytics = (c: ContainerSite) => {
 
           <!-- Real-Time Progress Message -->
           <div class="stepper-status-msg">
-            <RotateCw :size="11" class="spinner-spin-icon" />
+            <Check v-if="(c.deployStep || 1) >= 5" :size="11" style="color: #10b981;" />
+            <RotateCw v-else :size="11" class="spinner-spin-icon" />
             <span>{{ c.deployStepMessage || 'Sedang mengalokasikan container Docker & routing...' }}</span>
           </div>
         </div>
@@ -863,23 +878,24 @@ const navigateToAnalytics = (c: ContainerSite) => {
                     class="radar-status-pill"
                     style="align-self: flex-start;"
                     :class="{
-                      'status-running': c.status === 'running' && !c.deployPhase,
+                      'status-running': c.status === 'running' && (!c.deployPhase || (c.deployStep || 1) >= 5),
                       'status-maintenance': c.status === 'maintenance',
                       'status-stopped': c.status === 'stopped',
                       'status-building': c.deployPhase === 'building',
                       'status-deploying': c.deployPhase === 'deploying',
                       'status-routing': c.deployPhase === 'routing',
-                      'status-provisioning': (c.status === 'provisioning' || c.deployPhase) && !['building', 'deploying', 'routing'].includes(c.deployPhase || '')
+                      'status-provisioning': (c.status === 'provisioning' || (c.deployPhase && (c.deployStep || 1) < 5)) && !['building', 'deploying', 'routing'].includes(c.deployPhase || '')
                     }"
                   >
-                    <span class="radar-ping-ring" v-if="c.status === 'running' && !c.deployPhase"></span>
+                    <span class="radar-ping-ring" v-if="c.status === 'running' && (!c.deployPhase || (c.deployStep || 1) >= 5)"></span>
                     <span class="radar-ping-ring amber" v-if="c.status === 'maintenance'"></span>
-                    <span class="radar-ping-ring blue" v-if="c.status === 'provisioning' || c.deployPhase"></span>
+                    <span class="radar-ping-ring blue" v-if="(c.status === 'provisioning' || c.deployPhase) && (c.deployStep || 1) < 5"></span>
                     <span class="radar-dot"></span>
                     <span v-if="c.deployPhase === 'building'">1/4 Build App...</span>
                     <span v-else-if="c.deployPhase === 'deploying'">2/4 Start Docker...</span>
                     <span v-else-if="c.deployPhase === 'routing'">3/4 Edge Traefik...</span>
-                    <span v-else-if="c.deployPhase === 'running'">4/4 Running!</span>
+                    <span v-else-if="c.deployPhase === 'running' && (c.deployStep || 1) >= 5">4/4 Running!</span>
+                    <span v-else-if="c.deployPhase === 'running'">4/4 Running...</span>
                     <span v-else-if="c.status === 'running'">Running</span>
                     <span v-else-if="c.status === 'maintenance'">Maintenance</span>
                     <span v-else-if="c.status === 'stopped'">Standby</span>

@@ -795,11 +795,11 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
 
     await sleep(1200);
 
-    // Stage 4: Go Live & Running
+    // Stage 4: Go Live & Running (All 4 green checkmarks)
     activeContainer.value.status = 'running';
     activeContainer.value.deployPhase = 'running';
-    activeContainer.value.deployStep = 4;
-    activeContainer.value.deployStepMessage = 'Situs aktif dan siap melayani trafik publik';
+    activeContainer.value.deployStep = 5;
+    activeContainer.value.deployStepMessage = '4/4 Live Runtime Aktif & Sehat (HTTP 200 OK)';
     activeContainer.value.uptime = 'Baru saja running';
     activeContainer.value.lastDeployed = 'Baru saja';
 
@@ -810,6 +810,17 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
     } else {
       activeMenu.value = 'containers';
     }
+
+    // Keep celebration visible for 2.2 seconds then transition to clean normal view
+    setTimeout(() => {
+      if (activeContainer.value) {
+        activeContainer.value.deployPhase = undefined;
+        activeContainer.value.deployStep = undefined;
+        activeContainer.value.deployStepMessage = undefined;
+      }
+      containers.value = [...containers.value];
+    }, 2200);
+
     return true;
   } catch (err: any) {
     console.error('Failed to apply template:', err);
@@ -969,12 +980,12 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
 
     await sleep(1200);
 
-    // Stage 4: Go Live & Running
+    // Stage 4: Go Live & Running (All 4 green checkmarks)
     setDeployProgress(realId, {
       status: 'running',
       deployPhase: 'running',
-      deployStep: 4,
-      deployStepMessage: 'Kontainer aktif dan melayani trafik publik',
+      deployStep: 5,
+      deployStepMessage: '4/4 Live Runtime Aktif & Sehat (HTTP 200 OK)',
       uptime: 'Baru saja aktif',
       lastDeployed: 'Baru saja',
       cpuUsage: 14,
@@ -982,6 +993,16 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     });
 
     showToast(`Kontainer '${newContainerObj.name}' aktif! Rute live di https://${cleanSubdomain}.stacbyte.id`, 'success');
+
+    // Keep celebration visible for 2.2 seconds then transition to clean normal view
+    setTimeout(() => {
+      setDeployProgress(realId, {
+        status: 'running',
+        deployPhase: undefined,
+        deployStep: undefined,
+        deployStepMessage: undefined
+      });
+    }, 2200);
   } catch (err: any) {
     console.error('Failed to deploy container from template:', err);
     setDeployProgress(tempId, { status: 'running' });
@@ -2090,13 +2111,21 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
           // Preserve any in-flight provisioning / deployPhase on existing items
           const mergedList = freshList.map((freshItem: any) => {
             const existing = containers.value.find(c => c.id === freshItem.id || (freshItem.subdomain && c.subdomain === freshItem.subdomain));
-            if (existing && (existing.status === 'provisioning' || existing.deployPhase)) {
-              Object.assign(existing, {
-                containerId: freshItem.containerId || existing.containerId,
-                id: freshItem.id || existing.id,
-                subdomain: freshItem.subdomain || existing.subdomain
-              });
-              return existing;
+            if (existing) {
+              if (existing.status === 'running' && existing.deployPhase === 'running') {
+                existing.deployPhase = undefined;
+                existing.deployStep = undefined;
+                existing.deployStepMessage = undefined;
+                return { ...freshItem, ...existing, deployPhase: undefined, deployStep: undefined, deployStepMessage: undefined };
+              }
+              if (existing.status === 'provisioning' || existing.deployPhase) {
+                Object.assign(existing, {
+                  containerId: freshItem.containerId || existing.containerId,
+                  id: freshItem.id || existing.id,
+                  subdomain: freshItem.subdomain || existing.subdomain
+                });
+                return existing;
+              }
             }
             return freshItem;
           });
@@ -2213,13 +2242,21 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
       // Preserve any in-flight provisioning / deployPhase on existing items
       const mergedList = freshList.map((freshItem: any) => {
         const existing = containers.value.find(c => c.id === freshItem.id || (freshItem.subdomain && c.subdomain === freshItem.subdomain));
-        if (existing && (existing.status === 'provisioning' || existing.deployPhase)) {
-          Object.assign(existing, {
-            containerId: freshItem.containerId || existing.containerId,
-            id: freshItem.id || existing.id,
-            subdomain: freshItem.subdomain || existing.subdomain
-          });
-          return existing;
+        if (existing) {
+          if (existing.status === 'running' && existing.deployPhase === 'running') {
+            existing.deployPhase = undefined;
+            existing.deployStep = undefined;
+            existing.deployStepMessage = undefined;
+            return { ...freshItem, ...existing, deployPhase: undefined, deployStep: undefined, deployStepMessage: undefined };
+          }
+          if (existing.status === 'provisioning' || existing.deployPhase) {
+            Object.assign(existing, {
+              containerId: freshItem.containerId || existing.containerId,
+              id: freshItem.id || existing.id,
+              subdomain: freshItem.subdomain || existing.subdomain
+            });
+            return existing;
+          }
         }
         return freshItem;
       });
@@ -2344,7 +2381,12 @@ const hydrateFromCache = (overrideEmail?: string) => {
           c.id !== '99420000-0000-0000-0000-000000000001' && 
           c.id !== '99420000-0000-0000-0000-000000000002' &&
           c.name !== 'Portal Informasi'
-        );
+        ).map((c: any) => {
+          if (c.status === 'running' && c.deployPhase === 'running') {
+            return { ...c, deployPhase: undefined, deployStep: undefined, deployStepMessage: undefined };
+          }
+          return c;
+        });
         if (containers.value.length > 0 && !containers.value.some(c => c.id === activeContainerId.value)) {
           activeContainerId.value = containers.value[0].id;
         }
