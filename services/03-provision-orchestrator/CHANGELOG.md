@@ -6,6 +6,24 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.1.1] - 25 Oktober 2026
+**Tipe Rilis**: Patch / Feature Hardening (Container Public Storage Web Mounting & Instant Maintenance Page Ingress)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Andalusia (Full Stack Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Dynamic Public Storage Web Mounting (`/usr/share/nginx/html:ro`)**:
+   - Memetakan mount bind direktori publik tenant (`publicPath`) langsung ke root document Nginx kontainer (`/usr/share/nginx/html:ro`) di `internal/docker/sandbox.go`.
+   - Mengizinkan pembaruan konten web langsung dari sisi host tanpa perlu me-reload Nginx, me-restart kontainer, ataupun membatalkan batasan `ReadonlyRootfs: true`.
+2. **Bespoke HTTP 503 Maintenance Page Generator**:
+   - Mengimplementasikan `SetMaintenanceHTML` di `internal/storage/manager.go` yang menghasilkan halaman pemeliharaan visual berstandar HeroCMS Enterprise (`<meta name="robots" content="noindex, nofollow">`, auto-refresh setiap 60 detik, estimasi durasi ETA kustom, dan badge radar Amber 503).
+   - Menghadirkan backup otomatis `index.html.live` untuk pemulihan instan ke halaman live website seketika saat mode pemeliharaan dinonaktifkan tanpa downtime.
+3. **Endpoint API `/api/v1/containers/:id/maintenance`**:
+   - Menghadirkan endpoint API yang menerima `tenant_id`, `subdomain`, `enabled`, `message`, dan `estimated_end_time`.
+   - Menghubungkan resolusi kontainer berbasis label `herocms.site.id` dan `herocms.subdomain`, menerbitkan event siklus hidup Kafka (`herocms.orchestrator.lifecycle`), serta mencatat log audit ke Redis secara real-time.
+
+---
+
 ### [03-orchestrator-v1.1.0] - 25 Oktober 2026
 **Tipe Rilis**: Minor / Feature Release (Autonomous Local Image Builder & Traefik Dynamic File Sync)  
 **Status**: Production Ready & Stable  

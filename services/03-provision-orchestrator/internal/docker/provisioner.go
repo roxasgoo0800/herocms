@@ -831,3 +831,122 @@ func (p *Provisioner) ensureRuntimeImage(ctx context.Context) error {
 	log.Printf("[IMAGE BUILDER SUCCESS] Successfully built local runtime image '%s' (no registry push needed)", p.runtimeImage)
 	return nil
 }
+
+// SetContainerMaintenance toggles maintenance mode on the tenant container and public web storage
+func (p *Provisioner) SetContainerMaintenance(ctx context.Context, id, reqTenantID, reqSubdomain string, enabled bool, message, eta string) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	tenantID := reqTenantID
+	subdomain := reqSubdomain
+
+	if strings.Contains(subdomain, ".stacbyte.id") {
+		subdomain = strings.TrimSuffix(subdomain, ".stacbyte.id")
+	}
+	if strings.Contains(subdomain, ".") {
+		subdomain = strings.Split(subdomain, ".")[0]
+	}
+
+	// 1. Locate container in Docker Engine if tenantID or subdomain is missing
+	if (tenantID == "" || subdomain == "") && p.cli != nil {
+		containers, err := p.cli.ContainerList(ctx, container.ListOptions{All: true})
+		if err == nil {
+			for _, c := range containers {
+				cleanID := strings.TrimPrefix(c.ID, "")
+				matchID := strings.HasPrefix(cleanID, id) || cleanID == id
+				matchName := false
+				for _, n := range c.Names {
+					if strings.Contains(n, id) {
+						matchName = true
+						break
+					}
+				}
+				matchLabel := c.Labels["herocms.site.id"] == id || c.Labels["herocms.subdomain"] == id || strings.Contains(c.Labels["herocms.subdomain"], id)
+
+				if matchID || matchName || matchLabel {
+					if tenantID == "" {
+						tenantID = c.Labels["herocms.tenant.id"]
+					}
+					if subdomain == "" {
+						subdomain = c.Labels["herocms.subdomain"]
+					}
+					break
+				}
+			}
+		}
+	}
+
+	// 2. Also try matching Docker container by subdomain or name if available
+	if p.cli != nil {
+		containers, err := p.cli.ContainerList(ctx, container.ListOptions{All: true})
+		if err == nil {
+			for _, c := range containers {
+				for _, n := range c.Names {
+					if (subdomain != "" && strings.Contains(n, subdomain)) || (id != "" && strings.Contains(n, id)) {
+						if t, ok := c.Labels["herocms.tenant.id"]; ok && t != "" && tenantID == "" {
+							tenantID = t
+						}
+						break
+					}
+				}
+			}
+		}
+	}
+
+	// 3. Locate in simulated containers if still empty
+	if tenantID == "" || subdomain == "" {
+		for _, sim := range p.simulated {
+			if sim.ContainerID == id || sim.SiteID == id || strings.Contains(sim.Subdomain, id) || (subdomain != "" && strings.Contains(sim.Subdomain, subdomain)) {
+				if tenantID == "" {
+					tenantID = sim.TenantID
+				}
+				if subdomain == "" {
+					subdomain = sim.Subdomain
+				}
+				break
+			}
+		}
+	}
+
+	if tenantID == "" {
+		tenantID = id
+	}
+	if subdomain == "" {
+		subdomain = id
+	}
+
+	// 3. Update public HTML in persistent tenant storage
+	if p.storageManager != nil {
+		if err := p.storageManager.SetMaintenanceHTML(tenantID, subdomain, message, eta, enabled); err != nil {
+			log.Printf("[MAINTENANCE WARNING] Failed to update storage HTML for %s: %v", tenantID, err)
+		}
+	}
+
+	// 4. Emit Kafka lifecycle event
+	if p.kafkaProducer != nil {
+		status := "maintenance"
+		if !enabled {
+			status = "running"
+		}
+		_ = p.kafkaProducer.Publish(ctx, "herocms.orchestrator.lifecycle", kafka.LifecycleEvent{
+			Type:      kafka.EventProvisionStarted,
+			TenantID:  tenantID,
+			SiteID:    id,
+			Status:    status,
+			Message:   fmt.Sprintf("Maintenance mode updated for %s: enabled=%v", subdomain, enabled),
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
+		})
+	}
+
+	// 5. Push step to Redis logs
+	if p.redisManager != nil {
+		logMsg := fmt.Sprintf("[%s] 🔧 [MAINTENANCE] Mode Pemeliharaan aktif (ETA: %s): %s", time.Now().Format("15:04:05"), eta, message)
+		if !enabled {
+			logMsg = fmt.Sprintf("[%s] 🚀 [RUNNING] Mode Pemeliharaan dinonaktifkan, situs kembali Go-Live melayani trafik normal", time.Now().Format("15:04:05"))
+		}
+		_ = p.redisManager.PushLog(ctx, tenantID, id, logMsg)
+	}
+
+	log.Printf("[MAINTENANCE] Container '%s' maintenance mode set to %v (subdomain: %s)", id, enabled, subdomain)
+	return nil
+}

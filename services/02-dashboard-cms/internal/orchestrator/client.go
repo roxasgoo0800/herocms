@@ -310,6 +310,38 @@ func (c *Client) DestroyContainer(ctx context.Context, id string, purgeStorage b
 	return nil
 }
 
+// SetMaintenance toggles container maintenance mode in Service 03
+func (c *Client) SetMaintenance(ctx context.Context, id, tenantID, subdomain string, enabled bool, message, eta string) error {
+	payload := map[string]interface{}{
+		"enabled":            enabled,
+		"message":            message,
+		"estimated_end_time": eta,
+		"tenant_id":          tenantID,
+		"subdomain":          subdomain,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	req, err := c.newRequest(ctx, http.MethodPost, "/api/v1/containers/"+url.PathEscape(id)+"/maintenance", bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to toggle maintenance for %s: %w", id, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("orchestrator maintenance failed (HTTP %d): %s", resp.StatusCode, string(body))
+	}
+	return nil
+}
+
 // GetStats retrieves real-time cgroups v2 resource usage stats for a container
 func (c *Client) GetStats(ctx context.Context, id string) (*ContainerStats, error) {
 	req, err := c.newRequest(ctx, http.MethodGet, "/api/v1/containers/"+url.PathEscape(id)+"/stats", nil)

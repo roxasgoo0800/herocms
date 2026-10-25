@@ -608,6 +608,16 @@ func (s *Services) RestartContainer(ctx context.Context, tenantID, id string) (b
 }
 
 func (s *Services) ToggleSiteMaintenance(ctx context.Context, tenantID, id string, enabled bool, message, estimatedEndTime string) (bool, error) {
+	subdomain := ""
+	if s != nil && s.Repo != nil {
+		subdomain = s.Repo.GetSiteSubdomain(ctx, tenantID, id)
+	}
+
+	if s != nil && s.Orchestrator != nil {
+		if err := s.Orchestrator.SetMaintenance(ctx, id, tenantID, subdomain, enabled, message, estimatedEndTime); err != nil {
+			log.Printf("[ORCHESTRATOR NOTICE] Toggle maintenance for %s: %v", id, err)
+		}
+	}
 	if s != nil && s.Repo != nil {
 		err := s.Repo.UpdateSiteMaintenance(ctx, tenantID, id, enabled, message, estimatedEndTime)
 		if err != nil {

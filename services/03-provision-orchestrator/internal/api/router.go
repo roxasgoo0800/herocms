@@ -207,6 +207,38 @@ func SetupRouter(
 			c.JSON(http.StatusOK, gin.H{"status": "restarted", "container_id": id})
 		})
 
+		// Toggle Maintenance Mode on Container & Storage
+		api.POST("/containers/:id/maintenance", func(c *gin.Context) {
+			id := c.Param("id")
+			var req struct {
+				Enabled          bool   `json:"enabled"`
+				Message          string `json:"message"`
+				EstimatedEndTime string `json:"estimated_end_time"`
+				TenantID         string `json:"tenant_id"`
+				Subdomain        string `json:"subdomain"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				req.Enabled = true
+			}
+
+			if err := prov.SetContainerMaintenance(c.Request.Context(), id, req.TenantID, req.Subdomain, req.Enabled, req.Message, req.EstimatedEndTime); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			status := "running"
+			if req.Enabled {
+				status = "maintenance"
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"status":             status,
+				"container_id":       id,
+				"enabled":            req.Enabled,
+				"message":            req.Message,
+				"estimated_end_time": req.EstimatedEndTime,
+			})
+		})
+
 		// Destroy Container
 		api.DELETE("/containers/:id", func(c *gin.Context) {
 			id := c.Param("id")

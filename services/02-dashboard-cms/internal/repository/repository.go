@@ -459,6 +459,34 @@ func (r *Repository) UpdateSiteStatus(ctx context.Context, tenantID, siteID, sta
 	return nil
 }
 
+// GetSiteSubdomain retrieves the subdomain or name for a site
+func (r *Repository) GetSiteSubdomain(ctx context.Context, tenantID, siteID string) string {
+	if r == nil {
+		return ""
+	}
+	if r.DB != nil {
+		var sub string
+		err := r.DB.QueryRowContext(ctx, `
+			SELECT subdomain FROM sites 
+			WHERE tenant_id = $1 AND (id::text = $2 OR subdomain LIKE $3) 
+			LIMIT 1
+		`, tenantID, siteID, siteID+"%").Scan(&sub)
+		if err == nil {
+			return sub
+		}
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, c := range r.Containers {
+		if c["id"] == siteID {
+			if sub, ok := c["subdomain"].(string); ok {
+				return sub
+			}
+		}
+	}
+	return ""
+}
+
 func (r *Repository) UpdateSiteMaintenance(ctx context.Context, tenantID, siteID string, enabled bool, message, estimatedEndTime string) error {
 	if r == nil {
 		return nil

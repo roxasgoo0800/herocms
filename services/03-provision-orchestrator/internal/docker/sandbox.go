@@ -63,6 +63,7 @@ func BuildHostConfig(specs SandboxSpecs, dataPath, uploadsPath, publicPath strin
 	}
 	if publicPath != "" {
 		binds = append(binds, fmt.Sprintf("%s:/app/public:ro", publicPath))
+		binds = append(binds, fmt.Sprintf("%s:/usr/share/nginx/html:ro", publicPath))
 	}
 
 	pids := specs.PidsLimit

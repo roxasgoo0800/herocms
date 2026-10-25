@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.7',
+    version: 'v1.29.8',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -24,11 +24,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '03-provision-orchestrator',
     name: 'Service 03: Container Provision Orchestrator',
-    version: 'v1.8.0',
+    version: 'v1.1.1',
     serviceFolder: 'services/03-provision-orchestrator',
     badge: 'Stable',
     stack: 'Golang • Docker Engine SDK • cgroups v2',
-    lastUpdated: '18 Oktober 2026',
+    lastUpdated: '25 Oktober 2026',
     leadPic: 'Andalusia & Rizal'
   },
   {
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.8',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Container Web Storage Bind Mounting, Bespoke HTTP 503 Maintenance Page & Seamless Zero-Downtime Go-Live Reversion',
+    summary: 'Integrasi penuh Mode Pemeliharaan dengan Engine Kontainer Docker Service 03: (1) Dynamic Public Storage Web Mounting: Menghubungkan direktori public host kontainer langsung ke root web Nginx (/usr/share/nginx/html:ro), memungkinkan pergantian tampilan situs seketika tanpa downtime atau rebuild kontainer; (2) Bespoke HTTP 503 Maintenance Page: Menampilkan halaman pemeliharaan visual elegan bertema HeroCMS Enterprise lengkap dengan noindex meta tag, auto-refresh 60 detik, estimasi waktu penyelesaian (ETA), dan badge status Amber; (3) Sinkronisasi Service 02 ke Service 03: Menghubungkan API PUT /api/containers/:id/maintenance ke Service 03 dengan passing tenant_id dan subdomain akurat; (4) Pemulihan Instan Go-Live: Backup otomatis index.html.live yang dipulihkan seketika saat mode pemeliharaan dinonaktifkan.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12908-1',
+        type: 'feature',
+        scope: 'Orchestrator Maintenance Mode RPC Client (orchestrator/client.go)',
+        description: 'Menambahkan method SetMaintenance pada Service 02 Orchestrator Client dengan propagasi tenant_id dan subdomain terisolasi ke endpoint Service 03.'
+      },
+      {
+        id: 'c-02dash-12908-2',
+        type: 'improvement',
+        scope: 'Subdomain Lookup & Metadata Propagation (service.go & repository.go)',
+        description: 'Menerapkan GetSiteSubdomain untuk memetakan ID situs ke subdomain kontainer Docker secara presisi saat eksekusi toggle maintenance.'
+      },
+      {
+        id: 'c-02dash-12908-3',
+        type: 'feature',
+        scope: 'Live Website Instant Restoration (storage/manager.go)',
+        description: 'Mekanisme backup index.html.live dan atomic write untuk beralih antara live tenant website dan 503 maintenance page secara instan.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.7',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Maintenance Mode End-to-End Execution, PostgreSQL Persistence, Reactive State Refresh, & Instant Status Switch',
     summary: 'Penyempurnaan kapabilitas Mode Pemeliharaan (Maintenance Mode) end-to-end: (1) Eksekusi & Reaktivitas Instan: Menghubungkan toggleMaintenance secara asinkron dengan studioApi.toggleMaintenance, memperbarui status kontainer menjadi \'maintenance\' seketika serta memicu re-render reaktif instan di kartu grid, dense table, dan tab filter segmented; (2) Persistensi Basis Data PostgreSQL & Cache Invalidation: Memperbarui endpoint PUT /api/containers/:id/maintenance dan query GetSites untuk mengembalikan status maintenance beserta konfigurasi pesan dan estimasi waktu downtime (ETA); (3) Banner & Badge Indikator Amber: Kartu kontainer menampilkan strip peringatan interaktif dan badge status \'Maintenance\' dengan efek radar Amber saat mode pemeliharaan aktif, serta tombol toggle cepat untuk kembali Go-Live.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
