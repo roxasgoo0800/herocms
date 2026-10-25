@@ -1,33 +1,126 @@
-# Changelog - Service 03: Provision Orchestrator
+# HeroCMS Provision Orchestrator (Service 03) - Changelog & System Log
 
-All notable changes to the HeroCMS Headless Provision Orchestrator daemon will be documented in this file.
-This project adheres to [Semantic Versioning](https://semver.org/) and follows the independent release policy specified in `AGENTS.md`.
+Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catatan audit operasional sistem (*System Log & Operational Audit Trail*) untuk **Service 03: Provision Orchestrator**.
 
 ---
 
-## [v1.0.0] - 2026-10-25
+## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
-### Milestone Release: Autonomous Headless Control Plane
+### [03-orchestrator-v1.0.0] - 25 Oktober 2026
+**Tipe Rilis**: Milestone / Major Architectural Release  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Andalusia (Full Stack Lead), Rizal (Security & DevOps Lead), Paijo (QA/QC Lead)
 
-Initial enterprise release of the headless Golang daemon for autonomous container lifecycle orchestration, storage sandboxing, Traefik v3 ingress routing, Redis state synchronization, and Kafka event publishing.
+#### 🌟 Ringkasan Rilis
+Rilis perdana Master Control Plane otonom berbasis **Golang murni (headless daemon)** tanpa antarmuka grafis (dashboard) yang bertugas penuh mengendalikan siklus hidup kontainer Docker, isolasi direktori penyimpanan persisten, label routing dinamis Traefik v3, sinkronisasi state via Redis distributed mutex, dan penyiaran event via Kafka.
 
-#### ✨ Features & Architecture
-- **Headless Daemon Control Plane (`cmd/api/main.go`)**: Pure Golang background daemon with zero dashboard UI, fast Gin REST API, and graceful signal shutdown (`SIGINT`, `SIGTERM`).
-- **Strict Local-Only Perimeter**: Isolated within `herocms_internal_net` without public port exposure; protected by `X-HeroCMS-Internal-Secret` middleware guard (`internal/api/middleware.go`).
-- **Autonomous Docker Provisioning (`internal/docker/`)**: Spawns isolated tenant containers with Linux cgroups v2 hard limits:
-  - 256 MB RAM limit (`MemorySwap == Memory`, swap disabled)
-  - 0.5 vCPU (`NanoCPUs: 500_000_000`)
-  - Anti-fork bomb protection (`PidsLimit: 50`)
-  - Non-root user execution (`UID/GID 10001:10001`, `cmsrunner`)
-  - Read-only root filesystem with noexec/nosuid/nodev tmpfs mounts on `/tmp` and `/run`
-  - Drop all kernel capabilities (`CapDrop: ALL`) except `NET_BIND_SERVICE`
-  - `no-new-privileges: true`
-- **Dynamic Ingress Ingestion (`internal/docker/sandbox.go`)**: Automatic Traefik v3 router and service label injection supporting instant subdomain and custom domain mapping without proxy reloads.
-- **Persistent Storage Sandboxing (`internal/storage/manager.go`)**: Dedicated per-tenant isolated storage directories (`/data`, `/uploads`, `/public`) with auto-initialization, non-root permission enforcement, and directory purge on deletion.
-- **Distributed Mutex & State Caching (`internal/messaging/redis/client.go`)**: Redis-backed deployment locks (`herocms:lock:deploy:{tenant_id}`) to prevent race conditions during concurrent deploys, with high-performance in-memory fallback.
-- **Kafka Event Streaming Bus (`internal/messaging/kafka/producer.go`)**: Broadcasts standard lifecycle events (`tenant.provision.started`, `tenant.provision.completed`, `tenant.provision.failed`, `tenant.container.stopped`, etc.) with in-memory audit ring buffer.
+#### 📦 Rincian Fitur & Modul:
+1. **Pure Headless Daemon (`cmd/api/main.go`, `config/config.go`)**:
+   - Engine Golang berkecepatan tinggi dengan footprint RAM idle < 30 MB.
+   - Penanganan sinyal OS (`SIGINT`, `SIGTERM`) untuk graceful shutdown dan pembersihan socket.
+2. **Strict Local-Only Perimeter**:
+   - Terisolasi di dalam `herocms_internal_net` tanpa rute Traefik publik luar dan tanpa port forwarding publik.
+   - Dilindungi middleware `InternalSecretGuard` (`X-HeroCMS-Internal-Secret: <TOKEN>`) yang menolak panggilan tanpa otorisasi dengan HTTP 403 Forbidden.
+3. **Autonomous Docker Engine SDK & Linux cgroups v2 (`internal/docker/`)**:
+   - Sandboxing ketat per-tenant: Hard limit RAM **256 MB** (swap disabled), CPU quota **0.5 vCPU**, **PidsLimit: 50** (anti-fork bomb).
+   - Eksekusi non-root UID/GID `10001:10001` (`cmsrunner`).
+   - `ReadonlyRootfs: true` dengan `/tmp` dan `/run` bertipe `tmpfs` (`noexec,nosuid,nodev`).
+   - Drop all kernel capabilities (`CapDrop: ALL`) dan pembatasan `no-new-privileges: true`.
+   - Injeksi label dinamis Traefik v3 untuk pemetaan instan subdomain (`*.herocms.stackbyte.id`) dan custom domain tanpa reload.
+   - Manajemen siklus hidup: `Deploy`, `Start`, `Stop`, `Restart`, `Destroy`, `Logs`, dan `Stats`.
+4. **Persistent Storage Sandboxing (`internal/storage/manager.go`)**:
+   - Alokasi otomatis direktori penyimpanan terisolasi per-tenant (`/data`, `/uploads`, `/public`).
+   - Penegakan izin akses non-root dan inspeksi kuota ukuran disk.
+   - Pembersihan direktori total (`PurgeTenantStorage`) saat kontainer dihancurkan.
+5. **Sinkronisasi Event & Mutex (Redis & Kafka)**:
+   - **Redis (`internal/messaging/redis/client.go`)**: Distributed mutex lock (`herocms:lock:deploy:{tenant_id}`) untuk mencegah *race condition* deploy bersamaan, serta cache status kontainer berkecepatan tinggi dengan fallback in-memory aman.
+   - **Kafka (`internal/messaging/kafka/producer.go`)**: Penyiaran lifecycle event (`tenant.provision.started`, `tenant.provision.completed`, `tenant.provision.failed`, `tenant.container.stopped`, dll) dengan in-memory audit ring buffer.
 
-#### 🛡️ Security & Pentesting
-- **Router Rule Injection Protection (CWE-20/CWE-93)**: Strict regex sanitization on subdomains, custom domains, and tenant IDs.
-- **Directory Traversal Mitigation**: File path validation preventing path traversal in storage provisioning.
-- **Pentest Suite Passing**: Full test suite in `pentest/` and `internal/api/api_test.go` verified with 100% PASS.
+---
+
+## 📜 2. Buku Catatan Operasional Sistem (System Log & Audit Trail)
+
+Berikut adalah standarisasi dan format rekaman log sistem (*System Log Specification*) yang dihasilkan oleh daemon orkestrator saat beroperasi:
+
+### A. System Boot & Initialization Sequence (Log Awal Boot)
+```text
+[INIT / BOOT] ================================================================
+[INIT / BOOT]    HeroCMS Headless Provision Orchestrator Daemon (Service 03)  
+[INIT / BOOT]    Autonomous Docker • cgroups v2 • Traefik • Redis • Kafka     
+[INIT / BOOT] ================================================================
+[INIT / CONFIG] Port: 8080 | EdgeNet: herocms_edge_net | Mode: headless-daemon
+[INIT / STORAGE] Storage manager active at base path: /var/lib/herocms/tenants
+[INIT / REDIS] Connected to Redis cluster at localhost:6379 (Mutex Locking Enabled)
+[INIT / KAFKA] Kafka Event Producer initialized with brokers: localhost:9092
+[INIT / DOCKER] Docker Engine API v1.45 connected via /var/run/docker.sock
+[INIT / SERVER] Orchestrator daemon listening on :8080 (Strict Local-Only)
+```
+
+### B. Security & Access Control Log (Log Pengamanan Jaringan)
+```text
+[SECURITY / GUARD] PASS | Client: 172.20.0.12 | Method: POST /api/v1/containers/provision | Secret Validated
+[SECURITY / GUARD] REJECT | 403 Forbidden | Client: 172.20.0.45 | Missing X-HeroCMS-Internal-Secret | Path: /api/v1/containers
+[SECURITY / WAF] REJECT | 400 Bad Request | Tenant: t-hacker | Subdomain: hacker.com`) || Host(`admin | Code: ERR_INVALID_SUBDOMAIN
+```
+
+### C. Container Spawning & Storage Provisioning Log (Log Pembuatan Kontainer)
+```text
+[MUTEX / REDIS] Lock acquired for tenant: tenant_alpha_882 (TTL: 30s)
+[KAFKA / EVENT] Topic: herocms.orchestrator.lifecycle | Type: tenant.provision.started | Tenant: tenant_alpha_882
+[STORAGE / PROVISION] Allocated isolated directories:
+  ├── /var/lib/herocms/tenants/tenant_alpha_882/data (rw)
+  ├── /var/lib/herocms/tenants/tenant_alpha_882/uploads (rw)
+  └── /var/lib/herocms/tenants/tenant_alpha_882/public (ro)
+  └── Permissions enforced: UID 10001:10001 (cmsrunner)
+[CGROUPS / ENFORCE] Memory Limit: 256MB | MemorySwap: 256MB | CPU: 0.5 vCPU | PIDs: 50 | ReadonlyRootfs: true
+[TRAEFIK / LABELS] Injected Dynamic Labels:
+  ├── traefik.enable: true
+  ├── traefik.docker.network: herocms_edge_net
+  ├── traefik.http.routers.tenant-alpha.rule: Host(`alpha.herocms.stackbyte.id`)
+  └── traefik.http.services.tenant-alpha.loadbalancer.server.port: 80
+[DOCKER / LIVE] Spawning container: tenant_alpha_882_commit77 (Image: cloudcms-tenant-runtime:alpine-v1)
+[DOCKER / LIVE] Container successfully started with ID: 48f9a12c8b7e
+[REDIS / STATE] Saved container state: tenant_alpha_882 -> status: running, IP: 172.20.0.88
+[MUTEX / REDIS] Lock released for tenant: tenant_alpha_882
+[KAFKA / EVENT] Topic: herocms.orchestrator.lifecycle | Type: tenant.provision.completed | Duration: 182ms
+```
+
+### D. Health Monitoring, Stats & Telemetry Log (Log Kesehatan & Metrik)
+```text
+[TELEMETRY / STATS] Container: 48f9a12c8b7e | CPU: 1.8% | RAM: 48.2 MB / 256 MB (18.8%) | NetRx: 1.2 MB | NetTx: 4.8 MB
+[TELEMETRY / OOM] Memory compliance: NORMAL (Risk: Safe, Headroom: 207.8 MB)
+[API / ROUTE] 200 OK | Latency: 1.2ms | GET /api/v1/containers/48f9a12c8b7e/stats
+```
+
+### E. Emergency Drainage, Restart & Destroy Log (Log Pemulihan & Penghancuran)
+```text
+[LIFECYCLE / RESTART] Intercepted emergency restart signal for container: 48f9a12c8b7e
+[DOCKER / RESTART] Sending SIGTERM (Drainage timeout: 10s)... Stopped cleanly -> Starting new instance
+[LIFECYCLE / RESTART] Container 48f9a12c8b7e is healthy and online (Uptime reset: 0s)
+[LIFECYCLE / DESTROY] Termination request with purge_storage=true for container: 48f9a12c8b7e
+[DOCKER / REMOVE] Container removed and network disassociated: 48f9a12c8b7e
+[STORAGE / PURGE] Directory /var/lib/herocms/tenants/tenant_alpha_882 purged cleanly (0 bytes remaining)
+[KAFKA / EVENT] Topic: herocms.orchestrator.lifecycle | Type: tenant.container.destroyed | Tenant: tenant_alpha_882
+```
+
+### F. Graceful Termination Log (Log Penutupan Daemon)
+```text
+[SHUTDOWN] Intercepted termination signal: SIGTERM. Shutting down orchestrator gracefully...
+[SHUTDOWN] Active worker routines drained (0 pending operations)
+[SHUTDOWN] Disconnected Docker socket client connection
+[SHUTDOWN] Flushed Redis mutex connection pool
+[SHUTDOWN] HTTP server closed cleanly. Daemon exited with code 0.
+```
+
+---
+
+## 🛡️ 3. Matriks Kepatuhan Keamanan & Pentest Gate
+
+| Standar Keamanan | Implementasi di Service 03 | Status Verifikasi |
+| :--- | :--- | :--- |
+| **CWE-20 / CWE-93** | Sanitasi regex ketat pada parameter `subdomain`, `tenant_id`, dan `custom_domain` mencegah injeksi router Traefik | **PASS (100% Ditangkal)** |
+| **CWE-22** | Sanitasi `SanitizeTenantID` mencegah *Directory Traversal* (`../../etc/passwd`) pada pembuatan volume storage | **PASS (100% Ditangkal)** |
+| **CWE-400 / CWE-770** | Hard limit Linux cgroups v2: RAM 256MB, CPU 0.5 vCPU, PidsLimit 50 mematikan risiko *DoS* dan *fork bomb* | **PASS (Enforced di Kernel)** |
+| **CWE-250** | Eksekusi strictly non-root UID `10001:10001`, `ReadonlyRootfs`, `CapDrop: ALL`, dan `no-new-privileges: true` | **PASS (Enforced di Sandbox)** |
+| **CWE-306** | Pengamanan perimeter internal dengan middleware `InternalSecretGuard` (`X-HeroCMS-Internal-Secret`) | **PASS (HTTP 403 Forbidden)** |
+| **CWE-362** | Pencegahan *Race Condition* deploy serentak dengan Redis Distributed Mutex Locking | **PASS (Atomic SetNX)** |
