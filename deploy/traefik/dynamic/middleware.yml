@@ -1,0 +1,30 @@
+http:
+  middlewares:
+    security-headers:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - OPTIONS
+          - PUT
+          - POST
+          - DELETE
+        accessControlMaxAge: 100
+        addVaryHeader: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        frameDeny: false
+        customFrameOptionsValue: "SAMEORIGIN"
+        sslRedirect: false
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customResponseHeaders:
+          X-Powered-By: "HeroCMS Edge Gateway"
+          Server: "HeroCMS"
+
+    gzip-compress:
+      compress:
+        minResponseBodyBytes: 1024
+        encodings:
+          - gzip
+          - br
