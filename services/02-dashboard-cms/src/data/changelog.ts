@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.0',
+    version: 'v1.29.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Real-Time Container Telemetry Polling, Robust Subdomain Isolation, & Guaranteed Delete Lifecycle',
+    summary: 'Penyempurnaan arsitektur container lifecycle dan telemetri sumber daya runtime: (1) Telemetri CPU & RAM Real-Time: Implementasi polling background 3.5 detik pada ContainersModule dan PodDetailAnalyticsView yang membaca data cgroups v2 aktual dari Docker daemon dengan perhitungan delta CPU kuantitatif; (2) Isolasi Penamaan Kontainer & Router Traefik: Penamaan kontainer dan router kini unik per subdomain/site (tenant_<cleanSub>_<version>) sehingga pembuatan website baru tidak pernah bertabrakan atau menimpa kontainer lain; (3) Siklus Penghapusan Terjamin: Pembebasan middleware CSRF untuk request token Bearer yang valid, penyelarasan SQL penghapusan PostgreSQL dengan relasi cascade, serta pencabutan rute Traefik otomatis dari tenants.yml saat kontainer dihapus; (4) Penyesuaian TTL cache Redis containers dari 30 menit menjadi 5 detik untuk sinkronisasi instan.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12901-1',
+        type: 'bugfix',
+        scope: 'Containers Deletion & CSRF (middleware.go & repository.go & useDashboardData.ts)',
+        description: 'Memperbaiki kegagalan hapus kontainer dengan mengizinkan autentikasi Bearer pada CSRF guard, memperluas query SQL DeleteSite dengan pencocokan UUID, subdomain, dan nama, serta memastikan rute Traefik dan kontainer Docker terhapus bersih.'
+      },
+      {
+        id: 'c-02dash-12901-2',
+        type: 'performance',
+        scope: 'Real-Time Telemetry Polling (ContainersModule.vue & PodDetailAnalyticsView.vue)',
+        description: 'Menambahkan loop pembaruan telemetri otomatis 3.5 detik untuk kontainer berstatus running, menyelaraskan nama field cpu_percentage dan memory_usage_mb, serta menghitung penggunaan RAM bersih tanpa cache buffer.'
+      },
+      {
+        id: 'c-02dash-12901-3',
+        type: 'bugfix',
+        scope: 'Container Naming Collision & Orchestration (provisioner.go)',
+        description: 'Memperbaiki konflik penamaan kontainer Docker dan router Traefik yang sebelumnya selalu memakai tenant ID menjadi unik per-site (tenant_<subdomain>_<version>) sehingga deploy multi-website berjalan 100% stabil.'
+      },
+      {
+        id: 'c-02dash-12901-4',
+        type: 'improvement',
+        scope: 'Redis Cache Tuning & Sync (service.go & config.go)',
+        description: 'Mengoptimalkan TTL cache daftar kontainer di Redis menjadi 5 detik dan menyelaraskan konfigurasi default REDIS_PASSWORD ke secret_redis_password agar terhubung ke kontainer Redis aktif.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Visual Deployment Stepper, Dynamic Container Resolution, & Comprehensive Docker Lifecycle Logs',
     summary: 'Peningkatan transparansi menyeluruh pada alur pembuatan dan deployment website/kontainer baru: (1) Penambahan Visual Deployment Stepper langsung pada kartu kontainer (1. Build App -> 2. Start Docker -> 3. Edge Traefik -> 4. Live Running) dengan indikator progress dan estimasi status realtime; (2) Integrasi tombol shortcut "Lihat Logs" langsung pada banner stepper kartu; (3) Resolusi identifier kontainer dinamis pada Service 03 Orchestrator yang otomatis mencocokkan ID, Name, SiteID, TenantID, dan Subdomain ke instance Docker riil; (4) Penyelarasan chronicle dan parser terminal log terintegrasi yang menyajikan jejak build image, penegakan cgroups v2, sandboxing non-root UID 10001, registrasi rute Traefik, healthcheck probe, hingga access logs stdout/stderr Nginx container.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

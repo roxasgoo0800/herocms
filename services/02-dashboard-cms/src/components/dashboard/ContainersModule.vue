@@ -33,6 +33,7 @@ import {
   Wrench
 } from 'lucide-vue-next';
 import { useDashboardData } from '../../composables/useDashboardData';
+import { studioApi } from '../../services/apiClient';
 import type { ContainerSite } from '../../types/dashboard';
 
 const {
@@ -162,12 +163,48 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
   }
 };
 
+let liveTelemetryTimer: any = null;
+
+const pollRunningContainersTelemetry = async () => {
+  const activeList = containers.value.filter(c => c.status === 'running');
+  if (activeList.length === 0) return;
+
+  for (const c of activeList) {
+    try {
+      const stats = await studioApi.getContainerStats(c.id);
+      if (stats) {
+        const cpu = typeof stats.cpu_percentage === 'number' ? stats.cpu_percentage : stats.cpu_percent;
+        const ram = typeof stats.memory_usage_mb === 'number' ? stats.memory_usage_mb : stats.memory_mb;
+        const ramLimit = typeof stats.memory_limit_mb === 'number' ? stats.memory_limit_mb : stats.memory_limit;
+
+        if (typeof cpu === 'number') {
+          c.cpuUsage = Math.max(1, Math.round(cpu * 10) / 10);
+        }
+        if (typeof ram === 'number') {
+          c.ramUsage = Math.round(ram);
+        }
+        if (typeof ramLimit === 'number' && ramLimit > 0) {
+          c.ramLimit = Math.round(ramLimit);
+        }
+      }
+    } catch {
+      // Keep existing stats on poll hiccup
+    }
+  }
+};
+
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown);
+  pollRunningContainersTelemetry();
+  liveTelemetryTimer = setInterval(pollRunningContainersTelemetry, 3500);
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown);
+  if (liveTelemetryTimer) {
+    clearInterval(liveTelemetryTimer);
+    liveTelemetryTimer = null;
+  }
 });
 
 const selectForEditor = (containerId: string) => {

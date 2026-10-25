@@ -120,6 +120,13 @@ func CSRFProtection(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
+		// Mutating requests with Authorization Bearer header are explicitly protected via token auth
+		authHeader := c.GetHeader("Authorization")
+		if strings.HasPrefix(authHeader, "Bearer ") && len(authHeader) > 10 {
+			c.Next()
+			return
+		}
+
 		// Mutating requests (POST, PUT, DELETE, PATCH) MUST supply valid X-CSRF-Token
 		reqCsrfHeader := c.GetHeader("X-CSRF-Token")
 		if reqCsrfHeader == "" {

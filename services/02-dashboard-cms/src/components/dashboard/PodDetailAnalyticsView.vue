@@ -61,11 +61,13 @@ const fetchLiveStats = async () => {
     const data = await studioApi.getContainerStats(props.container.id);
     if (data) {
       liveStats.value = data;
-      if (typeof data.cpu_percent === 'number') {
-        props.container.cpuUsage = Math.round(data.cpu_percent);
+      const cpu = typeof data.cpu_percentage === 'number' ? data.cpu_percentage : data.cpu_percent;
+      const ram = typeof data.memory_usage_mb === 'number' ? data.memory_usage_mb : data.memory_mb;
+      if (typeof cpu === 'number') {
+        props.container.cpuUsage = Math.max(1, Math.round(cpu * 10) / 10);
       }
-      if (typeof data.memory_mb === 'number') {
-        props.container.ramUsage = Math.round(data.memory_mb);
+      if (typeof ram === 'number') {
+        props.container.ramUsage = Math.round(ram);
       }
     }
   } catch {

@@ -542,17 +542,20 @@ func (r *Repository) DeleteSite(ctx context.Context, tenantID, siteID string) er
 	if r == nil {
 		return nil
 	}
+	cleanSub := strings.TrimSuffix(strings.TrimSuffix(siteID, ".stacbyte.id"), ".cloudcms.app")
 	if r.DB != nil {
 		_, err := r.DB.ExecContext(ctx, `
-			DELETE FROM sites WHERE tenant_id = $1 AND (id::text = $2 OR subdomain LIKE $3)
-		`, tenantID, siteID, siteID+"%")
+			DELETE FROM sites 
+			WHERE tenant_id = $1 
+			  AND (id::text = $2 OR subdomain = $2 OR subdomain LIKE $3 OR subdomain = $4 OR name = $2)
+		`, tenantID, siteID, cleanSub+"%", cleanSub)
 		return err
 	}
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	for i, c := range r.Containers {
-		if c["id"] == siteID {
+		if c["id"] == siteID || c["subdomain"] == siteID || c["name"] == siteID {
 			r.Containers = append(r.Containers[:i], r.Containers[i+1:]...)
 			return nil
 		}

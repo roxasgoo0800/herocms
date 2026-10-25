@@ -371,7 +371,7 @@ func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, e
 		},
 	}
 
-	_ = s.Redis.SetJSON(ctx, cacheKey, result, 30*time.Minute)
+	_ = s.Redis.SetJSON(ctx, cacheKey, result, 5*time.Second)
 	return result, nil
 }
 

@@ -35,6 +35,7 @@ redis_data/
 redpanda_data/
 minio_data/
 n8n_data/
+deploy/traefik/dynamic/tenants.yml
 
 # IDE / OS
 .DS_Store

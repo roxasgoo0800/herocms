@@ -346,20 +346,24 @@ const confirmDeleteContainer = async () => {
   isDeletingContainer.value = true;
 
   try {
-    const idx = containers.value.findIndex(c => c.id === container.id);
+    const deletedId = container.id;
+    const deletedName = container.name;
+
+    // Call backend API to destroy Docker container, purge Traefik route, and delete from Postgres
+    await studioApi.deleteContainer(deletedId);
+
+    const idx = containers.value.findIndex(c => c.id === deletedId);
     if (idx !== -1) {
-      const deletedId = container.id;
-      const deletedName = container.name;
       containers.value.splice(idx, 1);
-      showToast(`Kontainer '${deletedName}' (${deletedId}) berhasil dihapus. Slot kuota kini ${containers.value.length}/${userPlan.value.maxContainers}.`, 'info');
-      if (containers.value.length > 0) {
-        activeContainerId.value = containers.value[0].id;
-      }
-      await studioApi.deleteContainer(deletedId).catch(err => console.warn('[API] Delete container notice:', err));
     }
-  } catch (err) {
+    showToast(`Kontainer '${deletedName}' (${deletedId}) berhasil dihapus. Slot kuota kini ${containers.value.length}/${userPlan.value.maxContainers}.`, 'info');
+    if (containers.value.length > 0) {
+      activeContainerId.value = containers.value[0].id;
+    }
+    await syncWithBackend().catch(() => {});
+  } catch (err: any) {
     console.error('[Container] Delete failed:', err);
-    showToast('Gagal menghapus kontainer dari sistem Docker.', 'info');
+    showToast(`Gagal menghapus kontainer: ${err?.message || 'Koneksi ke backend gagal'}`, 'error');
   } finally {
     isDeletingContainer.value = false;
     isDeleteContainerModalOpen.value = false;
@@ -489,19 +493,27 @@ const handleCreateContainer = () => {
       newContainerObj.uptime = 'Baru saja running';
 
       const stats = await studioApi.getContainerStats(newContainerObj.id).catch(() => null);
-      if (stats?.cpu_percent != null) {
-        newContainerObj.cpuUsage = Math.round(stats.cpu_percent);
-        newContainerObj.ramUsage = Math.round(stats.memory_mb);
+      if (stats) {
+        const cpu = typeof stats.cpu_percentage === 'number' ? stats.cpu_percentage : stats.cpu_percent;
+        const ram = typeof stats.memory_usage_mb === 'number' ? stats.memory_usage_mb : stats.memory_mb;
+        if (typeof cpu === 'number') {
+          newContainerObj.cpuUsage = Math.max(1, Math.round(cpu * 10) / 10);
+        }
+        if (typeof ram === 'number') {
+          newContainerObj.ramUsage = Math.round(ram);
+        }
       }
       showToast(`Kontainer '${newContainerObj.name}' sukses running! Rute aktif di https://${newContainerObj.subdomain}`, 'success');
+      await syncWithBackend().catch(() => {});
     }, 1500);
   }).catch(err => {
     clearTimeout(step2Timer);
-    console.warn('[API] Create container backend sync notice:', err);
-    newContainerObj.status = 'running';
-    newContainerObj.deployPhase = 'running';
-    newContainerObj.deployStep = 4;
-    newContainerObj.deployStepMessage = 'Live Runtime Aktif';
+    console.error('[API] Create container backend error:', err);
+    const idx = containers.value.findIndex(c => c.id === newContainerObj.id);
+    if (idx !== -1) {
+      containers.value.splice(idx, 1);
+    }
+    showToast(`Gagal membuat website: ${err?.message || 'Error deploy kontainer'}`, 'error');
   });
 };
 
