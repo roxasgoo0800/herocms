@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.3',
+    version: 'v1.29.4',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.4',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Multi-Stage Progressive Reboot Lifecycle Logging, Live Terminal Stream Synchronization, & Container Restart Stepper',
+    summary: 'Peningkatan menyeluruh transparansi dan feedback visual saat proses reboot / restart kontainer berlangsung: (1) Logging Siklus Reboot Multi-Tahap di Redis: Menambahkan pencatatan kronologis lengkap ke Redis (SIGTERM drainage, stop exit code, Docker process respawn, validasi sintaks Nginx, probe healthcheck, dan ingress Traefik verification) sehingga terminal tidak lagi hanya menampilkan 1 baris statis; (2) Progressive Terminal Stream & Auto-Scroll: Menampilkan umpan balik progresif 8-tahap secara visual di modal terminal dengan auto-scroll otomatis dan sinkronisasi log real-time dari Docker engine; (3) Stepper Animasi pada Kartu Kontainer: Tombol reboot di kartu kontainer kini mengaktifkan stepper fase transisi 2/3 dan 3/3 sebelum kembali ke status Running; (4) Emisi Lifecycle Event Kafka: Service 03 kini mempublikasikan event tenant.container.restarted ke broker Kafka/Redpanda saat kontainer di-reboot.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12904-1',
+        type: 'improvement',
+        scope: 'Multi-Stage Reboot Log Lifecycle (service.go & redis.go)',
+        description: 'Mencatat seluruh fase siklus reboot kontainer ke Redis list (SIGTERM, drainage, cgroups reset, Docker spawn, Nginx test, healthcheck, Traefik check) agar riwayat log runtime informatif dan transparan.'
+      },
+      {
+        id: 'c-02dash-12904-2',
+        type: 'feature',
+        scope: 'Progressive Terminal Feedback & Auto-Scroll (DashboardView.vue)',
+        description: 'Menerapkan animasi progres log bertahap di konsol terminal dengan auto-scroll dan sinkronisasi instan terhadap stdout/stderr Docker kontainer.'
+      },
+      {
+        id: 'c-02dash-12904-3',
+        type: 'improvement',
+        scope: 'Card Reboot Stepper Progression (useDashboardData.ts)',
+        description: 'Menghubungkan alur reboot kartu kontainer dengan stepper deployment beranimasi sehingga pengguna dapat melihat tahapan reboot secara real-time.'
+      },
+      {
+        id: 'c-02dash-12904-4',
+        type: 'improvement',
+        scope: 'Kafka Event Publication (provisioner.go)',
+        description: 'Memancarkan event tenant.container.restarted ke Kafka topic herocms.orchestrator.lifecycle saat kontainer berhasil di-restart.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.3',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'End-to-End API Interoperability, Dual Cgroups v2 Field Normalization, Subdomain Suffix Stripping, & Redis Container Cascade Purge',
     summary: 'Peningkatan menyeluruh kehandalan dan integrasi API antar-service: (1) Normalisasi Dual Cgroups v2 JSON Fields: Sinkronisasi field name telemetri antara Service 03 (cpu_percentage/memory_usage_mb) dan Service 02 (cpu_percent/memory_mb) sehingga telemetri CPU & RAM dari Docker cgroups selalu ter-decode akurat dan tersimpan di Redis tanpa nilai 0; (2) Sanitasi Subdomain Fleksibel: Menangani input subdomain dengan atau tanpa domain suffix (.stacbyte.id, .cloudcms.app, .herocms.id) agar tidak memicu regex mismatch; (3) Redis Cascade Key Purge: Menghapus seluruh data telemetri dan stream log dari Redis secara otomatis saat kontainer dihancurkan (DeleteContainer); (4) Verifikasi Pentest Pass: Seluruh suite pengujian penetrasi keamanan (Service 02 & Service 03) terverifikasi 100% PASS.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

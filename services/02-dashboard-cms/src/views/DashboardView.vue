@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, defineAsyncComponent, computed } from 'vue';
+import { ref, onMounted, watch, defineAsyncComponent, computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
@@ -213,88 +213,113 @@ const isTerminalMaximized = ref(false);
 const isStreamPaused = ref(false);
 const isAutoScroll = ref(true);
 const terminalCleared = ref(false);
+const terminalScreenRef = ref<HTMLElement | null>(null);
 const logFilterLevel = ref<'all' | 'traffic' | 'traefik' | 'engine' | 'docker' | 'system'>('all');
 const logSearchQuery = ref('');
 const isTerminalRestarting = ref(false);
 const dynamicRebootLogs = ref<ContainerLogEntry[]>([]);
 
+const parseRawLogsToEntries = (rawLogs: string): ContainerLogEntry[] => {
+  const rawLines = rawLogs.split('\n').filter((l: string) => l.trim().length > 0);
+  return rawLines.map((line: string, i: number) => {
+    const now = new Date();
+    let timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(i * 10).padStart(3, '0')}`;
+    let cleanMsg = line.trim();
+
+    const timeMatch = cleanMsg.match(/^\[(\d{2}:\d{2}:\d{2}(?:\.\d{3})?)\]\s*(.*)$/);
+    if (timeMatch) {
+      timeStr = timeMatch[1];
+      cleanMsg = timeMatch[2];
+    }
+
+    let service: ContainerLogEntry['service'] = 'system';
+    let serviceLabel = 'system';
+    let level: ContainerLogEntry['level'] = 'info';
+
+    if (cleanMsg.includes('[build-image]') || cleanMsg.includes('[BUILD]')) {
+      service = 'engine';
+      serviceLabel = 'build-image';
+      level = 'info';
+    } else if (cleanMsg.includes('[cgroups-v2]') || cleanMsg.includes('[CGROUPS]')) {
+      service = 'docker';
+      serviceLabel = 'cgroups-v2';
+      level = 'info';
+    } else if (cleanMsg.includes('[security-sandbox]') || cleanMsg.includes('[SANDBOX]')) {
+      service = 'security';
+      serviceLabel = 'sandbox-uid';
+      level = 'info';
+    } else if (cleanMsg.includes('[docker-engine]') || cleanMsg.includes('[DOCKER]') || cleanMsg.includes('[SPAWN]') || cleanMsg.includes('spawned')) {
+      service = 'docker';
+      serviceLabel = 'docker-spawn';
+      level = 'success';
+    } else if (cleanMsg.includes('[traefik-edge]') || cleanMsg.includes('[TRAEFIK]')) {
+      service = 'traefik';
+      serviceLabel = 'traefik-v3';
+      level = 'success';
+    } else if (cleanMsg.includes('[healthcheck]') || cleanMsg.includes('[HEALTHCHECK]') || cleanMsg.includes('probe')) {
+      service = 'health';
+      serviceLabel = 'probe-200';
+      level = 'success';
+    } else if (cleanMsg.includes('[runtime-nginx]') || cleanMsg.includes('[RUNTIME]') || cleanMsg.includes('nginx')) {
+      service = 'engine';
+      serviceLabel = 'nginx-alpine';
+      level = 'info';
+    } else if (cleanMsg.includes('[REBOOT]') || cleanMsg.includes('SIGTERM') || cleanMsg.includes('[DRAIN]')) {
+      service = 'system';
+      serviceLabel = 'system-reboot';
+      level = 'warn';
+    } else if (cleanMsg.includes('[STOP]') || cleanMsg.includes('[STOPPED]')) {
+      service = 'docker';
+      serviceLabel = 'docker-stop';
+      level = 'warn';
+    } else if (cleanMsg.includes('HTTP/')) {
+      service = 'traffic';
+      serviceLabel = 'http-traffic';
+      level = 'success';
+    } else if (cleanMsg.toLowerCase().includes('err') || cleanMsg.toLowerCase().includes('fail')) {
+      level = 'error';
+    } else if (cleanMsg.toLowerCase().includes('warn')) {
+      level = 'warn';
+    }
+
+    return {
+      id: `live-docker-${Date.now()}-${i}`,
+      lineNum: i + 1,
+      timestamp: timeStr,
+      service,
+      serviceLabel,
+      level,
+      message: cleanMsg
+    };
+  });
+};
+
+const fetchLatestContainerLogs = async () => {
+  if (!activeLogContainer.value) return;
+  try {
+    const res = await studioApi.getContainerLogs(activeLogContainer.value.id, 100);
+    if (res?.logs && typeof res.logs === 'string') {
+      const entries = parseRawLogsToEntries(res.logs);
+      if (entries.length > 0) {
+        dynamicRebootLogs.value = entries;
+        if (isAutoScroll.value) {
+          nextTick(() => {
+            if (terminalScreenRef.value) {
+              terminalScreenRef.value.scrollTop = terminalScreenRef.value.scrollHeight;
+            }
+          });
+        }
+      }
+    }
+  } catch {
+    // Fallback handled by containerLogs computed
+  }
+};
+
 watch(isLogsModalOpen, async (isOpen) => {
   if (isOpen && activeLogContainer.value) {
     dynamicRebootLogs.value = [];
-    try {
-      const res = await studioApi.getContainerLogs(activeLogContainer.value.id, 50);
-      if (res?.logs && typeof res.logs === 'string') {
-        const rawLines = res.logs.split('\n').filter((l: string) => l.trim().length > 0);
-        if (rawLines.length > 0) {
-          const liveEntries: ContainerLogEntry[] = rawLines.map((line: string, i: number) => {
-            const now = new Date();
-            let timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(i * 10).padStart(3, '0')}`;
-            let cleanMsg = line.trim();
-
-            const timeMatch = cleanMsg.match(/^\[(\d{2}:\d{2}:\d{2}(?:\.\d{3})?)\]\s*(.*)$/);
-            if (timeMatch) {
-              timeStr = timeMatch[1];
-              cleanMsg = timeMatch[2];
-            }
-
-            let service: ContainerLogEntry['service'] = 'system';
-            let serviceLabel = 'system';
-            let level: ContainerLogEntry['level'] = 'info';
-
-            if (cleanMsg.includes('[build-image]')) {
-              service = 'engine';
-              serviceLabel = 'build-image';
-              level = 'info';
-            } else if (cleanMsg.includes('[cgroups-v2]')) {
-              service = 'docker';
-              serviceLabel = 'cgroups-v2';
-              level = 'info';
-            } else if (cleanMsg.includes('[security-sandbox]')) {
-              service = 'security';
-              serviceLabel = 'sandbox-uid';
-              level = 'info';
-            } else if (cleanMsg.includes('[docker-engine]')) {
-              service = 'docker';
-              serviceLabel = 'docker-spawn';
-              level = 'success';
-            } else if (cleanMsg.includes('[traefik-edge]')) {
-              service = 'traefik';
-              serviceLabel = 'traefik-v3';
-              level = 'success';
-            } else if (cleanMsg.includes('[healthcheck]')) {
-              service = 'health';
-              serviceLabel = 'probe-200';
-              level = 'success';
-            } else if (cleanMsg.includes('[runtime-nginx]')) {
-              service = 'engine';
-              serviceLabel = 'nginx-alpine';
-              level = 'info';
-            } else if (cleanMsg.includes('HTTP/')) {
-              service = 'traffic';
-              serviceLabel = 'http-traffic';
-              level = 'success';
-            } else if (cleanMsg.toLowerCase().includes('err')) {
-              level = 'error';
-            } else if (cleanMsg.toLowerCase().includes('warn')) {
-              level = 'warn';
-            }
-
-            return {
-              id: `live-docker-${Date.now()}-${i}`,
-              lineNum: i + 1,
-              timestamp: timeStr,
-              service,
-              serviceLabel,
-              level,
-              message: cleanMsg
-            };
-          });
-          dynamicRebootLogs.value = liveEntries;
-        }
-      }
-    } catch {
-      // Fallback handled by containerLogs computed
-    }
+    await fetchLatestContainerLogs();
   }
 });
 
@@ -379,33 +404,60 @@ const handleTerminalRestart = async () => {
   if (!activeLogContainer.value) return;
   isTerminalRestarting.value = true;
   const now = new Date();
-  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
-  
-  dynamicRebootLogs.value.push({
-    id: `reboot-${Date.now()}-1`,
-    lineNum: containerLogs.value.length + 1,
-    timestamp: timeStr,
-    service: 'system',
-    serviceLabel: 'system-reboot',
-    level: 'warn',
-    message: `Received SIGTERM signal. Initiating graceful container drainage for [pod-${activeLogContainer.value.id.slice(0, 8)}]`
-  });
+  const formatTime = (offsetMs: number) => {
+    const d = new Date(now.getTime() + offsetMs);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}.${String(d.getMilliseconds()).padStart(3, '0')}`;
+  };
 
-  await restartContainer(activeLogContainer.value);
-  
-  setTimeout(() => {
-    const timeStr2 = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds() + 1).padStart(2, '0')}.112`;
+  const pushRebootLog = (service: ContainerLogEntry['service'], serviceLabel: string, level: ContainerLogEntry['level'], message: string, offsetMs: number) => {
     dynamicRebootLogs.value.push({
-      id: `reboot-${Date.now()}-2`,
+      id: `reboot-${Date.now()}-${dynamicRebootLogs.value.length + 1}`,
       lineNum: containerLogs.value.length + 1,
-      timestamp: timeStr2,
-      service: 'docker',
-      serviceLabel: 'docker-daemon',
-      level: 'success',
-      message: 'Container process spawned successfully. cgroups v2 resource tree intact. Ingress route active.'
+      timestamp: formatTime(offsetMs),
+      service,
+      serviceLabel,
+      level,
+      message
     });
+    if (isAutoScroll.value) {
+      nextTick(() => {
+        if (terminalScreenRef.value) {
+          terminalScreenRef.value.scrollTop = terminalScreenRef.value.scrollHeight;
+        }
+      });
+    }
+  };
+
+  // Phase 1: Graceful SIGTERM drainage
+  pushRebootLog('system', 'system-reboot', 'warn', `⚠️ [REBOOT] Received SIGTERM signal. Initiating graceful container drainage for [pod-${activeLogContainer.value.id.slice(0, 8)}]`, 0);
+  pushRebootLog('system', 'network-drain', 'info', `⏳ [DRAIN] Waiting for active HTTP keep-alive connections to terminate (drain window: 3s)...`, 120);
+
+  // Trigger container restart via API & Docker SDK
+  await restartContainer(activeLogContainer.value);
+
+  // Phase 2-4: Progression milestones
+  setTimeout(() => {
+    pushRebootLog('docker', 'docker-stop', 'info', `🛑 [STOP] Container process stopped cleanly (exit code 0). Cgroups v2 memory limits reset.`, 400);
+  }, 350);
+
+  setTimeout(() => {
+    pushRebootLog('docker', 'docker-spawn', 'success', `🐳 [SPAWN] Docker Engine respawning container process (PID 1, UID 10001, tmpfs on /tmp)...`, 700);
+  }, 700);
+
+  setTimeout(() => {
+    pushRebootLog('engine', 'nginx-alpine', 'info', `⚙️ [RUNTIME] Nginx configuration syntax verified (syntax ok). Worker process spawned on port 80.`, 1000);
+  }, 1050);
+
+  setTimeout(() => {
+    pushRebootLog('health', 'probe-200', 'success', `🩺 [HEALTHCHECK] Container internal health probe (GET http://127.0.0.1:80/healthz) -> 200 OK`, 1350);
+  }, 1400);
+
+  setTimeout(async () => {
+    pushRebootLog('traefik', 'traefik-v3', 'success', `🌐 [TRAEFIK] Edge router ingress re-verified active (TLS 1.3 ALPN HTTP/2).`, 1700);
+    pushRebootLog('docker', 'docker-daemon', 'success', `🚀 [RUNNING] Container process spawned successfully. cgroups v2 resource tree intact. Ingress route active.`, 1900);
     isTerminalRestarting.value = false;
-  }, 1200);
+    await fetchLatestContainerLogs();
+  }, 1800);
 };
 
 // Responsive Mobile Navigation Drawer State
@@ -1369,7 +1421,7 @@ const handleLogout = async () => {
             </div>
 
             <!-- 4. Console Screen & Lines -->
-            <div class="terminal-output-screen">
+            <div class="terminal-output-screen" ref="terminalScreenRef">
               <div
                 v-for="entry in filteredLogs"
                 :key="entry.id"

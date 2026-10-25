@@ -531,8 +531,28 @@ func (p *Provisioner) EmergencyRestart(ctx context.Context, id string) error {
 	if !p.IsDockerLive(ctx) {
 		return nil
 	}
-	timeout := 10
-	return p.cli.ContainerRestart(ctx, realID, container.StopOptions{Timeout: &timeout})
+	timeout := 5
+	err := p.cli.ContainerRestart(ctx, realID, container.StopOptions{Timeout: &timeout})
+	if err != nil {
+		return err
+	}
+
+	if inspect, err := p.cli.ContainerInspect(ctx, realID); err == nil {
+		tenantID := inspect.Config.Labels["herocms.tenant.id"]
+		if p.kafkaProducer != nil {
+			_ = p.kafkaProducer.Publish(ctx, "herocms.orchestrator.lifecycle", kafka.LifecycleEvent{
+				Type:        kafka.EventContainerRestarted,
+				TenantID:    tenantID,
+				SiteID:      id,
+				ContainerID: realID,
+				Status:      "running",
+				Message:     fmt.Sprintf("Container %s restarted gracefully with cgroups v2 tree intact", realID[:12]),
+				Timestamp:   time.Now().UTC().Format(time.RFC3339),
+			})
+		}
+	}
+
+	return nil
 }
 
 // DestroyContainer completely terminates and removes a container, optionally purging storage

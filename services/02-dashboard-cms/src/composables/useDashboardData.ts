@@ -307,19 +307,32 @@ const toggleMaintenance = async (container: ContainerSite, message?: string, est
 
 const restartContainer = async (container: ContainerSite) => {
   container.status = 'provisioning';
-  showToast(`Me-restart kontainer ${container.id}...`, 'info');
+  container.deployPhase = 'deploying';
+  container.deployStep = 2;
+  container.deployStepMessage = '2/3 Me-reboot container di Docker Engine (SIGTERM -> Respawn cgroups v2)...';
+  showToast(`Me-restart kontainer ${container.name || container.id}...`, 'info');
   try {
     await studioApi.restartContainer(container.id);
-    container.status = 'running';
-    const stats = await studioApi.getContainerStats(container.id).catch(() => null);
-    if (stats?.cpu_percent != null) {
-      container.cpuUsage = Math.round(stats.cpu_percent);
-      container.ramUsage = Math.round(stats.memory_mb);
-    }
-    showToast(`Kontainer ${container.name} sehat setelah reboot!`, 'success');
+    container.deployPhase = 'routing';
+    container.deployStep = 3;
+    container.deployStepMessage = '3/3 Memvalidasi rute ingress Traefik & probe healthz...';
+    setTimeout(async () => {
+      container.status = 'running';
+      container.deployPhase = undefined;
+      container.uptime = 'Baru saja aktif';
+      const stats = await studioApi.getContainerStats(container.id).catch(() => null);
+      if (stats) {
+        const cpu = typeof stats.cpu_percentage === 'number' ? stats.cpu_percentage : stats.cpu_percent;
+        const ram = typeof stats.memory_usage_mb === 'number' ? stats.memory_usage_mb : stats.memory_mb;
+        if (typeof cpu === 'number') container.cpuUsage = Math.max(1, Math.round(cpu * 10) / 10);
+        if (typeof ram === 'number') container.ramUsage = Math.round(ram);
+      }
+      showToast(`Kontainer ${container.name} sehat setelah reboot!`, 'success');
+    }, 700);
   } catch (err) {
     console.warn('[API] Restart container notice:', err);
     container.status = 'running';
+    container.deployPhase = undefined;
     showToast(`Kontainer ${container.name} sehat setelah reboot!`, 'success');
   }
 };
