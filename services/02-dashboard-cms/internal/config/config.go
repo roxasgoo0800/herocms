@@ -20,8 +20,9 @@ type Config struct {
 	RedisHost       string
 	RedisPort       string
 	RedisPass       string
-	OrchestratorURL string
-	DistDir         string
+	OrchestratorURL            string
+	OrchestratorInternalSecret string
+	DistDir                    string
 
 	// MinIO / S3 Configuration
 	S3Endpoint  string
@@ -119,6 +120,14 @@ func LoadConfig() *Config {
 	orchURL := os.Getenv("ORCHESTRATOR_URL")
 	if orchURL == "" {
 		orchURL = "http://127.0.0.1:8080"
+	}
+
+	orchSecret := os.Getenv("INTERNAL_SECRET_TOKEN")
+	if orchSecret == "" {
+		orchSecret = os.Getenv("ORCHESTRATOR_INTERNAL_SECRET")
+	}
+	if orchSecret == "" {
+		orchSecret = "herocms_internal_secret_key_v1"
 	}
 
 	distDir := os.Getenv("DIST_DIR")
@@ -225,8 +234,9 @@ func LoadConfig() *Config {
 		RedisHost:            redisHost,
 		RedisPort:            redisPort,
 		RedisPass:            redisPass,
-		OrchestratorURL:      orchURL,
-		DistDir:              distDir,
+		OrchestratorURL:            orchURL,
+		OrchestratorInternalSecret: orchSecret,
+		DistDir:                    distDir,
 		S3Endpoint:           s3Endpoint,
 		S3AccessKey:          s3AccessKey,
 		S3SecretKey:          s3SecretKey,

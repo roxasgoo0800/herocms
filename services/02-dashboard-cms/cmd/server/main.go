@@ -135,11 +135,14 @@ func SetupRouter(cfg *config.Config, repo *repository.Repository, rdb *redis.Cli
 			// Containers & Multi-Site Hub
 			protected.GET("/containers", h.ListContainers)
 			protected.POST("/containers", h.CreateContainer)
+			protected.GET("/containers/:id/stats", h.GetContainerStats)
+			protected.GET("/containers/:id/logs", h.GetContainerLogs)
 			protected.PUT("/containers/:id/design", h.SaveSiteDesign)
 			protected.GET("/containers/:id/draft", h.GetEditorDraft)
 			protected.PUT("/containers/:id/draft", h.SaveEditorDraft)
 			protected.POST("/containers/:id/start", h.StartContainer)
 			protected.POST("/containers/:id/stop", h.StopContainer)
+			protected.POST("/containers/:id/restart", h.RestartContainer)
 			protected.PUT("/containers/:id/maintenance", h.ToggleMaintenance)
 			protected.DELETE("/containers/:id", h.DeleteContainer)
 

@@ -35,10 +35,43 @@ import {
 } from 'lucide-vue-next';
 import type { ContainerSite } from '../../types/dashboard';
 import { generatePodAnalytics } from '../../data/pod-analytics';
+import { studioApi } from '../../services/apiClient';
 
 const props = defineProps<{
   container: ContainerSite;
 }>();
+
+// Live cgroups v2 Telemetry from Service 03 (Orchestrator)
+const liveStats = ref<{
+  cpu_percent?: number;
+  memory_mb?: number;
+  memory_limit?: number;
+  memory_percent?: number;
+  network_rx_mb?: number;
+  network_tx_mb?: number;
+  pids_current?: number;
+  source?: string;
+} | null>(null);
+
+let statsPollInterval: any = null;
+
+const fetchLiveStats = async () => {
+  if (!props.container?.id) return;
+  try {
+    const data = await studioApi.getContainerStats(props.container.id);
+    if (data) {
+      liveStats.value = data;
+      if (typeof data.cpu_percent === 'number') {
+        props.container.cpuUsage = Math.round(data.cpu_percent);
+      }
+      if (typeof data.memory_mb === 'number') {
+        props.container.ramUsage = Math.round(data.memory_mb);
+      }
+    }
+  } catch {
+    // Graceful fallback to generated analytics
+  }
+};
 
 // Customer Reliability & Peace-of-Mind Actions
 const isRestoringSnapshot = ref(false);
@@ -347,6 +380,8 @@ const updateChart = () => {
 };
 
 onMounted(() => {
+  fetchLiveStats();
+  statsPollInterval = setInterval(fetchLiveStats, 5000);
   nextTick(() => {
     initChart();
     if (chartContainerRef.value) {
@@ -359,6 +394,10 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (statsPollInterval) {
+    clearInterval(statsPollInterval);
+    statsPollInterval = null;
+  }
   resizeObserver?.disconnect();
   chartInstance?.dispose();
   chartInstance = null;

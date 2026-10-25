@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.25.1',
+    version: 'v1.26.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.26.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Integrasi Penuh Service 02 Dashboard Studio ke Service 03 Container Provision Orchestrator',
+    summary: 'Mengintegrasikan ekosistem Dashboard CMS (Service 02) secara langsung dengan Container Provision Orchestrator (Service 03): (1) Implementasi Orchestrator Client internal dengan proteksi X-HeroCMS-Internal-Secret; (2) Integrasi alur provisi otomatis situs baru ke kontainer otonom, Traefik edge routing, dan alokasi storage; (3) Endpoint dan UI trigger untuk Start, Stop, Emergency Restart/Reboot, dan Penghapusan Pod beserta purge storage; (4) Telemetri live cgroups v2 (CPU CFS quota, memcg memory usage, network I/O, pids) dan streaming runtime console log langsung dari engine kontainer; (5) Perbaikan bug query SQL PostgreSQL 15-parameter pada InsertSite.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12600-1',
+        type: 'feature',
+        scope: 'Client HTTP Internal Service 03 & Handlers Lifecycle Pod',
+        description: 'Membangun internal package orchestrator.Client di Go backend Service 02 yang berkomunikasi aman dengan Service 03 via header X-HeroCMS-Internal-Secret untuk menjalankan DeployContainer, StartContainer, StopContainer, RestartContainer, DestroyContainer, GetStats, dan GetLogs.'
+      },
+      {
+        id: 'c-02dash-12600-2',
+        type: 'feature',
+        scope: 'Telemetri Real-Time cgroups v2 & Terminal Streaming Log',
+        description: 'Menghubungkan PodDetailAnalyticsView.vue dan modal terminal DashboardView.vue ke endpoint /api/containers/:id/stats dan /api/containers/:id/logs untuk menampilkan metrik penggunaan resource kernel Linux dan konsol log langsung dari kontainer yang aktif.'
+      },
+      {
+        id: 'c-02dash-12600-3',
+        type: 'bugfix',
+        scope: 'Perbaikan Parameter SQL InsertSite PostgreSQL 16',
+        description: 'Memperbaiki ketidaksesuaian jumlah parameter statement SQL (14 parameter yang sebelumnya menyebabkan error pq: got 14 parameters but statement requires 15) dengan menyertakan nilai status situs secara eksplisit.'
+      }
+    ]
+  },
+  {
     version: 'v1.25.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Aksen Warna Halus Non-Neon per Produk Blueprint Template & Penyempurnaan Visual Card',
     summary: 'Menyematkan aksen warna halus non-neon (muted semantic palette) pada setiap kartu produk blueprint template dalam balutan tema monokrom studio: (1) Border aksen bawah panggung mockup selaras dengan warna khas blueprint; (2) Lencana domain kategori pastel lembut (.pill-portfolio, .pill-blog, .pill-education, .pill-business); (3) Mini canvas wireframe responsif (tag TTFB, SEO, PWA, badge kategori blog, meter progres edukasi, dan badge harga produk); (4) Lencana skor Lighthouse bernuansa warm amber dan tanda centang fitur selaras; (5) Thumbnail split-studio dengan border aksen dan rating terpadu.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

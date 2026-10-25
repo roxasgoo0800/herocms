@@ -553,6 +553,13 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 		return nil
 	}
 	if r.DB != nil {
+		status := "running"
+		if s, ok := site["status"].(string); ok && s != "" {
+			status = s
+		}
+		cleanSubdomain := fmt.Sprintf("%v", site["subdomain"])
+		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".cloudcms.app")
+
 		_, err := r.DB.ExecContext(ctx, `
 			INSERT INTO sites (
 				tenant_id, name, category, template_name, subdomain, status,
@@ -564,7 +571,8 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 			fmt.Sprintf("%v", site["name"]),
 			fmt.Sprintf("%v", site["category"]),
 			fmt.Sprintf("%v", site["templateName"]),
-			fmt.Sprintf("%v", site["subdomain"]),
+			cleanSubdomain,
+			status,
 			14, 88, 256, "0.5 vCPU", "Baru saja aktif", 0,
 			fmt.Sprintf("%v", site["accentColor"]),
 			fmt.Sprintf("%v", site["roleOrHeadline"]),

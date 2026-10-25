@@ -90,6 +90,9 @@ export const studioApi = {
     apiFetch(`/containers/${id}/draft`, { method: 'PUT', body: JSON.stringify(draft) }),
   startContainer: (id: string) => apiFetch(`/containers/${id}/start`, { method: 'POST' }),
   stopContainer: (id: string) => apiFetch(`/containers/${id}/stop`, { method: 'POST' }),
+  restartContainer: (id: string) => apiFetch(`/containers/${id}/restart`, { method: 'POST' }),
+  getContainerStats: (id: string) => apiFetch(`/containers/${id}/stats`),
+  getContainerLogs: (id: string, tail: number = 100) => apiFetch(`/containers/${id}/logs?tail=${tail}`),
   toggleMaintenance: (id: string, enabled: boolean, message?: string, estimatedEndTime?: string) =>
     apiFetch(`/containers/${id}/maintenance`, {
       method: 'PUT',

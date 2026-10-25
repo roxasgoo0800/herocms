@@ -49,6 +49,7 @@ import {
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 import { generateContainerLogs, type ContainerLogEntry } from '../data/container-logs';
+import { studioApi } from '../services/apiClient';
 
 // Modular View Components (Lazy Loaded On-Demand for Maximum Speed & Lean Memory)
 const ContainersModule = defineAsyncComponent(() => import('../components/dashboard/ContainersModule.vue'));
@@ -216,6 +217,35 @@ const logFilterLevel = ref<'all' | 'traffic' | 'traefik' | 'engine' | 'docker' |
 const logSearchQuery = ref('');
 const isTerminalRestarting = ref(false);
 const dynamicRebootLogs = ref<ContainerLogEntry[]>([]);
+
+watch(isLogsModalOpen, async (isOpen) => {
+  if (isOpen && activeLogContainer.value) {
+    try {
+      const res = await studioApi.getContainerLogs(activeLogContainer.value.id, 50);
+      if (res?.logs && typeof res.logs === 'string') {
+        const rawLines = res.logs.split('\n').filter((l: string) => l.trim().length > 0);
+        if (rawLines.length > 0) {
+          const liveEntries: ContainerLogEntry[] = rawLines.map((line: string, i: number) => {
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(i * 10).padStart(3, '0')}`;
+            return {
+              id: `live-docker-${Date.now()}-${i}`,
+              lineNum: containerLogs.value.length + i + 1,
+              timestamp: timeStr,
+              service: line.includes('traefik') ? 'traefik' : line.includes('docker') ? 'docker' : 'system',
+              serviceLabel: 'orchestrator-runtime',
+              level: line.includes('ERR') || line.includes('error') ? 'error' : line.includes('WARN') ? 'warn' : 'info',
+              message: line
+            };
+          });
+          dynamicRebootLogs.value.push(...liveEntries);
+        }
+      }
+    } catch {
+      // Keep generated container logs
+    }
+  }
+});
 
 const containerLogs = computed<ContainerLogEntry[]>(() => {
   if (!activeLogContainer.value || terminalCleared.value) return [];

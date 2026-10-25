@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -326,6 +327,38 @@ func (h *Handler) StopContainer(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "stopped", "id": id})
+}
+
+func (h *Handler) RestartContainer(c *gin.Context) {
+	id := c.Param("id")
+	ok, err := h.Services.RestartContainer(c.Request.Context(), getTenantID(c), id)
+	if !ok || err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "running", "id": id, "action": "restart"})
+}
+
+func (h *Handler) GetContainerStats(c *gin.Context) {
+	id := c.Param("id")
+	stats, err := h.Services.GetContainerStats(c.Request.Context(), getTenantID(c), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, stats)
+}
+
+func (h *Handler) GetContainerLogs(c *gin.Context) {
+	id := c.Param("id")
+	tailStr := c.DefaultQuery("tail", "100")
+	tail, _ := strconv.Atoi(tailStr)
+	logs, err := h.Services.GetContainerLogs(c.Request.Context(), getTenantID(c), id, tail)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"id": id, "logs": logs, "tail": tail})
 }
 
 type SiteMaintenancePayload struct {
