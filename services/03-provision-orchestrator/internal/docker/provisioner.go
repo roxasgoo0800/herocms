@@ -376,13 +376,16 @@ func (p *Provisioner) InspectTenantContainer(ctx context.Context, id string) (*C
 
 // StartContainer starts an existing container
 func (p *Provisioner) StartContainer(ctx context.Context, id string) error {
-	if !p.IsDockerLive(ctx) {
-		p.mu.Lock()
-		if c, ok := p.simulated[id]; ok {
-			c.State = "running"
-			c.Status = "Up 1 second (Simulated)"
-		}
+	p.mu.Lock()
+	if c, ok := p.simulated[id]; ok {
+		c.State = "running"
+		c.Status = "Up 1 second (Simulated)"
 		p.mu.Unlock()
+		return nil
+	}
+	p.mu.Unlock()
+
+	if !p.IsDockerLive(ctx) {
 		return nil
 	}
 	return p.cli.ContainerStart(ctx, id, container.StartOptions{})
@@ -390,13 +393,16 @@ func (p *Provisioner) StartContainer(ctx context.Context, id string) error {
 
 // StopContainer stops a running container with graceful timeout
 func (p *Provisioner) StopContainer(ctx context.Context, id string) error {
-	if !p.IsDockerLive(ctx) {
-		p.mu.Lock()
-		if c, ok := p.simulated[id]; ok {
-			c.State = "stopped"
-			c.Status = "Exited (0) (Simulated)"
-		}
+	p.mu.Lock()
+	if c, ok := p.simulated[id]; ok {
+		c.State = "stopped"
+		c.Status = "Exited (0) (Simulated)"
 		p.mu.Unlock()
+		return nil
+	}
+	p.mu.Unlock()
+
+	if !p.IsDockerLive(ctx) {
 		return nil
 	}
 	timeout := 10
@@ -405,13 +411,16 @@ func (p *Provisioner) StopContainer(ctx context.Context, id string) error {
 
 // EmergencyRestart restarts a container with drainage timeout
 func (p *Provisioner) EmergencyRestart(ctx context.Context, id string) error {
-	if !p.IsDockerLive(ctx) {
-		p.mu.Lock()
-		if c, ok := p.simulated[id]; ok {
-			c.State = "running"
-			c.Status = "Restarted (Simulated)"
-		}
+	p.mu.Lock()
+	if c, ok := p.simulated[id]; ok {
+		c.State = "running"
+		c.Status = "Restarted (Simulated)"
 		p.mu.Unlock()
+		return nil
+	}
+	p.mu.Unlock()
+
+	if !p.IsDockerLive(ctx) {
 		return nil
 	}
 	timeout := 10
@@ -422,14 +431,14 @@ func (p *Provisioner) EmergencyRestart(ctx context.Context, id string) error {
 func (p *Provisioner) DestroyContainer(ctx context.Context, id string, purgeStorage bool) error {
 	var tenantID string
 
-	if !p.IsDockerLive(ctx) {
-		p.mu.Lock()
-		if c, ok := p.simulated[id]; ok {
-			tenantID = c.TenantID
-			delete(p.simulated, id)
-		}
-		p.mu.Unlock()
-	} else {
+	p.mu.Lock()
+	if c, ok := p.simulated[id]; ok {
+		tenantID = c.TenantID
+		delete(p.simulated, id)
+	}
+	p.mu.Unlock()
+
+	if p.IsDockerLive(ctx) {
 		inspect, err := p.cli.ContainerInspect(ctx, id)
 		if err == nil {
 			tenantID = inspect.Config.Labels["herocms.tenant.id"]
