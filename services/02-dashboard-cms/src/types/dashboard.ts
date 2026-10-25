@@ -47,7 +47,10 @@ export interface ContainerSite {
   templateName: string;
   subdomain: string;
   customDomain?: string;
-  status: 'running' | 'stopped' | 'provisioning' | 'maintenance';
+  status: 'running' | 'stopped' | 'provisioning' | 'maintenance' | 'building' | 'deploying';
+  deployPhase?: 'building' | 'deploying' | 'routing' | 'running';
+  deployStep?: number;
+  deployStepMessage?: string;
   cpuUsage: number;
   ramUsage: number;
   ramLimit: number;

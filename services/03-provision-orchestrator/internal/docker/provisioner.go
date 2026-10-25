@@ -364,18 +364,64 @@ func (p *Provisioner) ListTenantContainers(ctx context.Context) ([]ContainerSumm
 	return result, nil
 }
 
+// ResolveTargetContainer resolves any identifier (Container ID, Name, SiteID, TenantID, or Subdomain) to the real Docker container ID
+func (p *Provisioner) ResolveTargetContainer(ctx context.Context, id string) string {
+	if !p.IsDockerLive(ctx) {
+		return id
+	}
+	cleanID := strings.TrimSpace(id)
+	if cleanID == "" {
+		return ""
+	}
+
+	// 1. Direct inspect check
+	if inspect, err := p.cli.ContainerInspect(ctx, cleanID); err == nil {
+		return inspect.ID
+	}
+
+	// 2. Search all managed containers by labels and names
+	list, err := p.cli.ContainerList(ctx, container.ListOptions{All: true})
+	if err == nil {
+		for _, c := range list {
+			if c.ID == cleanID || strings.HasPrefix(c.ID, cleanID) {
+				return c.ID
+			}
+			if c.Labels["herocms.site.id"] == cleanID || c.Labels["herocms.tenant.id"] == cleanID {
+				return c.ID
+			}
+			for _, name := range c.Names {
+				trimmedName := strings.TrimPrefix(name, "/")
+				if trimmedName == cleanID || strings.Contains(trimmedName, cleanID) {
+					return c.ID
+				}
+			}
+			for k, v := range c.Labels {
+				if strings.Contains(k, "rule") && strings.Contains(v, cleanID) {
+					return c.ID
+				}
+			}
+		}
+	}
+
+	return cleanID
+}
+
 // InspectTenantContainer retrieves granular metadata about a container
 func (p *Provisioner) InspectTenantContainer(ctx context.Context, id string) (*ContainerSummary, error) {
+	realID := p.ResolveTargetContainer(ctx, id)
 	if !p.IsDockerLive(ctx) {
 		p.mu.RLock()
 		defer p.mu.RUnlock()
 		if c, ok := p.simulated[id]; ok {
 			return c, nil
 		}
+		if c, ok := p.simulated[realID]; ok {
+			return c, nil
+		}
 		return nil, fmt.Errorf("container not found: %s", id)
 	}
 
-	inspect, err := p.cli.ContainerInspect(ctx, id)
+	inspect, err := p.cli.ContainerInspect(ctx, realID)
 	if err != nil {
 		p.mu.RLock()
 		if c, ok := p.simulated[id]; ok {
@@ -403,6 +449,7 @@ func (p *Provisioner) InspectTenantContainer(ctx context.Context, id string) (*C
 
 // StartContainer starts an existing container
 func (p *Provisioner) StartContainer(ctx context.Context, id string) error {
+	realID := p.ResolveTargetContainer(ctx, id)
 	p.mu.Lock()
 	if c, ok := p.simulated[id]; ok {
 		c.State = "running"
@@ -415,11 +462,12 @@ func (p *Provisioner) StartContainer(ctx context.Context, id string) error {
 	if !p.IsDockerLive(ctx) {
 		return nil
 	}
-	return p.cli.ContainerStart(ctx, id, container.StartOptions{})
+	return p.cli.ContainerStart(ctx, realID, container.StartOptions{})
 }
 
 // StopContainer stops a running container with graceful timeout
 func (p *Provisioner) StopContainer(ctx context.Context, id string) error {
+	realID := p.ResolveTargetContainer(ctx, id)
 	p.mu.Lock()
 	if c, ok := p.simulated[id]; ok {
 		c.State = "stopped"
@@ -433,11 +481,12 @@ func (p *Provisioner) StopContainer(ctx context.Context, id string) error {
 		return nil
 	}
 	timeout := 10
-	return p.cli.ContainerStop(ctx, id, container.StopOptions{Timeout: &timeout})
+	return p.cli.ContainerStop(ctx, realID, container.StopOptions{Timeout: &timeout})
 }
 
 // EmergencyRestart restarts a container with drainage timeout
 func (p *Provisioner) EmergencyRestart(ctx context.Context, id string) error {
+	realID := p.ResolveTargetContainer(ctx, id)
 	p.mu.Lock()
 	if c, ok := p.simulated[id]; ok {
 		c.State = "running"
@@ -451,11 +500,12 @@ func (p *Provisioner) EmergencyRestart(ctx context.Context, id string) error {
 		return nil
 	}
 	timeout := 10
-	return p.cli.ContainerRestart(ctx, id, container.StopOptions{Timeout: &timeout})
+	return p.cli.ContainerRestart(ctx, realID, container.StopOptions{Timeout: &timeout})
 }
 
 // DestroyContainer completely terminates and removes a container, optionally purging storage
 func (p *Provisioner) DestroyContainer(ctx context.Context, id string, purgeStorage bool) error {
+	realID := p.ResolveTargetContainer(ctx, id)
 	var tenantID string
 
 	p.mu.Lock()
@@ -466,13 +516,13 @@ func (p *Provisioner) DestroyContainer(ctx context.Context, id string, purgeStor
 	p.mu.Unlock()
 
 	if p.IsDockerLive(ctx) {
-		inspect, err := p.cli.ContainerInspect(ctx, id)
+		inspect, err := p.cli.ContainerInspect(ctx, realID)
 		if err == nil {
 			tenantID = inspect.Config.Labels["herocms.tenant.id"]
 		}
 		timeout := 5
-		_ = p.cli.ContainerStop(ctx, id, container.StopOptions{Timeout: &timeout})
-		_ = p.cli.ContainerRemove(ctx, id, container.RemoveOptions{
+		_ = p.cli.ContainerStop(ctx, realID, container.StopOptions{Timeout: &timeout})
+		_ = p.cli.ContainerRemove(ctx, realID, container.RemoveOptions{
 			RemoveVolumes: true,
 			Force:         true,
 		})
@@ -493,9 +543,10 @@ func (p *Provisioner) DestroyContainer(ctx context.Context, id string, purgeStor
 
 // GetContainerStats captures resource utilization snapshot
 func (p *Provisioner) GetContainerStats(ctx context.Context, id string) (*ContainerStatsSnapshot, error) {
+	realID := p.ResolveTargetContainer(ctx, id)
 	if !p.IsDockerLive(ctx) {
 		return &ContainerStatsSnapshot{
-			ContainerID:   id,
+			ContainerID:   realID,
 			CPUPercentage: 1.45,
 			MemoryUsageMB: 48.2,
 			MemoryLimitMB: 256.0,
@@ -506,7 +557,7 @@ func (p *Provisioner) GetContainerStats(ctx context.Context, id string) (*Contai
 		}, nil
 	}
 
-	stats, err := p.cli.ContainerStats(ctx, id, false)
+	stats, err := p.cli.ContainerStats(ctx, realID, false)
 	if err != nil {
 		p.mu.RLock()
 		if _, ok := p.simulated[id]; ok {
@@ -541,7 +592,7 @@ func (p *Provisioner) GetContainerStats(ctx context.Context, id string) (*Contai
 	}
 
 	return &ContainerStatsSnapshot{
-		ContainerID:   id,
+		ContainerID:   realID,
 		CPUPercentage: 2.1,
 		MemoryUsageMB: memUsageMB,
 		MemoryLimitMB: memLimitMB,
@@ -557,10 +608,11 @@ func (p *Provisioner) GetContainerLogs(ctx context.Context, id string, tail stri
 	if !p.IsDockerLive(ctx) {
 		return io.NopCloser(os.Stdin), nil
 	}
+	realID := p.ResolveTargetContainer(ctx, id)
 	if tail == "" {
 		tail = "100"
 	}
-	return p.cli.ContainerLogs(ctx, id, container.LogsOptions{
+	return p.cli.ContainerLogs(ctx, realID, container.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Tail:       tail,

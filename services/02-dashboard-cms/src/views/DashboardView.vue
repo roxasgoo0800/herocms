@@ -48,7 +48,7 @@ import {
   ArrowUpRight
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
-import type { ContainerLogEntry } from '../data/container-logs';
+import { generateContainerLogs, type ContainerLogEntry } from '../data/container-logs';
 import { studioApi } from '../services/apiClient';
 
 // Modular View Components (Lazy Loaded On-Demand for Maximum Speed & Lean Memory)
@@ -220,6 +220,7 @@ const dynamicRebootLogs = ref<ContainerLogEntry[]>([]);
 
 watch(isLogsModalOpen, async (isOpen) => {
   if (isOpen && activeLogContainer.value) {
+    dynamicRebootLogs.value = [];
     try {
       const res = await studioApi.getContainerLogs(activeLogContainer.value.id, 50);
       if (res?.logs && typeof res.logs === 'string') {
@@ -227,22 +228,72 @@ watch(isLogsModalOpen, async (isOpen) => {
         if (rawLines.length > 0) {
           const liveEntries: ContainerLogEntry[] = rawLines.map((line: string, i: number) => {
             const now = new Date();
-            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(i * 10).padStart(3, '0')}`;
+            let timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(i * 10).padStart(3, '0')}`;
+            let cleanMsg = line.trim();
+
+            const timeMatch = cleanMsg.match(/^\[(\d{2}:\d{2}:\d{2}(?:\.\d{3})?)\]\s*(.*)$/);
+            if (timeMatch) {
+              timeStr = timeMatch[1];
+              cleanMsg = timeMatch[2];
+            }
+
+            let service: ContainerLogEntry['service'] = 'system';
+            let serviceLabel = 'system';
+            let level: ContainerLogEntry['level'] = 'info';
+
+            if (cleanMsg.includes('[build-image]')) {
+              service = 'engine';
+              serviceLabel = 'build-image';
+              level = 'info';
+            } else if (cleanMsg.includes('[cgroups-v2]')) {
+              service = 'docker';
+              serviceLabel = 'cgroups-v2';
+              level = 'info';
+            } else if (cleanMsg.includes('[security-sandbox]')) {
+              service = 'security';
+              serviceLabel = 'sandbox-uid';
+              level = 'info';
+            } else if (cleanMsg.includes('[docker-engine]')) {
+              service = 'docker';
+              serviceLabel = 'docker-spawn';
+              level = 'success';
+            } else if (cleanMsg.includes('[traefik-edge]')) {
+              service = 'traefik';
+              serviceLabel = 'traefik-v3';
+              level = 'success';
+            } else if (cleanMsg.includes('[healthcheck]')) {
+              service = 'health';
+              serviceLabel = 'probe-200';
+              level = 'success';
+            } else if (cleanMsg.includes('[runtime-nginx]')) {
+              service = 'engine';
+              serviceLabel = 'nginx-alpine';
+              level = 'info';
+            } else if (cleanMsg.includes('HTTP/')) {
+              service = 'traffic';
+              serviceLabel = 'http-traffic';
+              level = 'success';
+            } else if (cleanMsg.toLowerCase().includes('err')) {
+              level = 'error';
+            } else if (cleanMsg.toLowerCase().includes('warn')) {
+              level = 'warn';
+            }
+
             return {
               id: `live-docker-${Date.now()}-${i}`,
-              lineNum: containerLogs.value.length + i + 1,
+              lineNum: i + 1,
               timestamp: timeStr,
-              service: line.includes('traefik') ? 'traefik' : line.includes('docker') ? 'docker' : 'system',
-              serviceLabel: 'orchestrator-runtime',
-              level: line.includes('ERR') || line.includes('error') ? 'error' : line.includes('WARN') ? 'warn' : 'info',
-              message: line
+              service,
+              serviceLabel,
+              level,
+              message: cleanMsg
             };
           });
-          dynamicRebootLogs.value.push(...liveEntries);
+          dynamicRebootLogs.value = liveEntries;
         }
       }
     } catch {
-      // Keep generated container logs
+      // Fallback handled by containerLogs computed
     }
   }
 });
@@ -252,38 +303,7 @@ const containerLogs = computed<ContainerLogEntry[]>(() => {
   if (dynamicRebootLogs.value.length > 0) {
     return dynamicRebootLogs.value;
   }
-  const c = activeLogContainer.value;
-  const now = new Date();
-  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.000`;
-  return [
-    {
-      id: 'init-1',
-      lineNum: 1,
-      timestamp: timeStr,
-      service: 'docker',
-      serviceLabel: 'cgroups-v2',
-      level: 'info',
-      message: `Container ${c.id} runtime attached to Linux cgroups v2 (CPU: ${c.cpuLimit}, RAM: ${c.ramLimit}MB, PidsLimit: 50)`
-    },
-    {
-      id: 'init-2',
-      lineNum: 2,
-      timestamp: timeStr,
-      service: 'traefik',
-      serviceLabel: 'traefik-edge',
-      level: 'success',
-      message: `Edge Router active on entrypoint web (Host: https://${c.subdomain})`
-    },
-    {
-      id: 'init-3',
-      lineNum: 3,
-      timestamp: timeStr,
-      service: 'engine',
-      serviceLabel: 'runtime-engine',
-      level: 'info',
-      message: `Container state: ${c.status.toUpperCase()} • Listening on port 80 (TLS 1.3 ALPN ready)`
-    }
-  ];
+  return generateContainerLogs(activeLogContainer.value);
 });
 
 const logCounts = computed(() => {

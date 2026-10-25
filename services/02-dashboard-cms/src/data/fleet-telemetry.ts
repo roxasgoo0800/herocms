@@ -49,7 +49,7 @@ export interface FleetContainerBenchmark {
   name: string;
   subdomain: string;
   customDomain?: string;
-  status: 'running' | 'stopped' | 'provisioning' | 'maintenance';
+  status: ContainerSite['status'];
   uptime: string;
   visits: number;
   trafficSharePct: number;

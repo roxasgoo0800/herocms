@@ -2227,6 +2227,176 @@ a[class*="btn-"] svg,
   }
 }
 
+.radar-ping-ring.blue {
+  background: #3b82f6;
+}
+
+.radar-status-pill.status-building {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.radar-status-pill.status-deploying {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.radar-status-pill.status-routing {
+  background: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+/* Deployment Stepper Box inside Card */
+.deployment-stepper-box {
+  margin: 10px 0 14px 0;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stepper-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stepper-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepper-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #1e40af;
+}
+
+.btn-stepper-terminal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.btn-stepper-terminal:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.stepper-steps-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  gap: 4px;
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+.stepper-step .step-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.stepper-step.active .step-circle {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.stepper-step.done .step-circle {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+
+.stepper-step .step-name {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.stepper-step.active .step-name {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.stepper-step.done .step-name {
+  color: #059669;
+}
+
+.stepper-line {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin-top: -14px;
+  z-index: 1;
+  transition: background 0.3s ease;
+}
+
+.stepper-line.filled {
+  background: #10b981;
+}
+
+.stepper-status-msg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #1e3a8a;
+  background: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #dbeafe;
+  font-weight: 500;
+}
+
+.spinner-spin-icon {
+  animation: studio-spin 1s linear infinite;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+@keyframes studio-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Bespoke Terminal URL Box */
 .site-url-box {
   display: flex;

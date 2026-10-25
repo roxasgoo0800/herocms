@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.28.1',
+    version: 'v1.29.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Visual Deployment Stepper, Dynamic Container Resolution, & Comprehensive Docker Lifecycle Logs',
+    summary: 'Peningkatan transparansi menyeluruh pada alur pembuatan dan deployment website/kontainer baru: (1) Penambahan Visual Deployment Stepper langsung pada kartu kontainer (1. Build App -> 2. Start Docker -> 3. Edge Traefik -> 4. Live Running) dengan indikator progress dan estimasi status realtime; (2) Integrasi tombol shortcut "Lihat Logs" langsung pada banner stepper kartu; (3) Resolusi identifier kontainer dinamis pada Service 03 Orchestrator yang otomatis mencocokkan ID, Name, SiteID, TenantID, dan Subdomain ke instance Docker riil; (4) Penyelarasan chronicle dan parser terminal log terintegrasi yang menyajikan jejak build image, penegakan cgroups v2, sandboxing non-root UID 10001, registrasi rute Traefik, healthcheck probe, hingga access logs stdout/stderr Nginx container.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12900-1',
+        type: 'feature',
+        scope: 'Container Cards & Visual Stepper (ContainersModule.vue & studio-master.css)',
+        description: 'Menambahkan banner stepper visual 4-tahap pada kartu kontainer baru yang memperlihatkan fase Build App, Start Docker, Edge Traefik, dan Running secara transparan dan dinamis.'
+      },
+      {
+        id: 'c-02dash-12900-2',
+        type: 'feature',
+        scope: 'Orchestrator Container Target Resolution (internal/docker/provisioner.go)',
+        description: 'Mengimplementasikan ResolveTargetContainer pada Provisioner untuk memetakan site ID, nama kontainer, tenant ID, atau subdomain ke Docker Container ID yang tepat.'
+      },
+      {
+        id: 'c-02dash-12900-3',
+        type: 'improvement',
+        scope: 'Live Logs Chronicle & Parsing (internal/service/service.go & DashboardView.vue)',
+        description: 'Mengintegrasikan chronicle build, cgroups v2, sandboxing UID 10001, rute Traefik, probe healthcheck, dan stream stdout/stderr Nginx riil ke dalam viewer developer terminal.'
+      },
+      {
+        id: 'c-02dash-12900-4',
+        type: 'improvement',
+        scope: 'Deployment State Machine (useDashboardData.ts)',
+        description: 'Menerapkan transisi status kontainer baru secara bertahap dari building (1/3), deploying (2/3), routing (3/3), hingga running (4/4) dengan feedback toast yang informatif.'
+      }
+    ]
+  },
+  {
     version: 'v1.28.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Purge Dummy Static Seeds, Relational Query Joins, & Traefik Docker API 1.44 Negotiation',
     summary: 'Pembersihan total data dummy statis dan perbaikan komunikasi Docker API: (1) Konfigurasi DOCKER_API_VERSION=1.44 dan docker endpoint Traefik v3 untuk menyelesaikan error negosiasi API Docker daemon macOS; (2) Pembersihan seluruh data dummy SQL lama (situs rizal & wedak, domain rizalpratama.cloud, tiket, invoice, dan webhook dummy) dari database PostgreSQL dan in-memory fallback; (3) Refaktor query repository Go dengan LEFT JOIN ke tabel sites sehingga artikel dan custom domain secara dinamis menggunakan nama kontainer dan ID kontainer nyata; (4) Penyelarasan fallback UI frontend Vue 3 agar tidak menampilkan nama atau ID kontainer placeholder.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

@@ -410,16 +410,78 @@ const navigateToAnalytics = (c: ContainerSite) => {
               'status-running': c.status === 'running',
               'status-maintenance': c.status === 'maintenance',
               'status-stopped': c.status === 'stopped',
-              'status-provisioning': c.status === 'provisioning'
+              'status-building': c.deployPhase === 'building',
+              'status-deploying': c.deployPhase === 'deploying',
+              'status-routing': c.deployPhase === 'routing',
+              'status-provisioning': c.status === 'provisioning' && !c.deployPhase
             }"
           >
             <span class="radar-ping-ring" v-if="c.status === 'running'"></span>
             <span class="radar-ping-ring amber" v-if="c.status === 'maintenance'"></span>
+            <span class="radar-ping-ring blue" v-if="c.status === 'provisioning' || c.status === 'building' || c.status === 'deploying'"></span>
             <span class="radar-dot"></span>
             <span v-if="c.status === 'running'">Running</span>
             <span v-else-if="c.status === 'maintenance'">Maintenance</span>
             <span v-else-if="c.status === 'stopped'">Standby</span>
+            <span v-else-if="c.deployPhase === 'building'">1/3 Build App...</span>
+            <span v-else-if="c.deployPhase === 'deploying'">2/3 Start Docker...</span>
+            <span v-else-if="c.deployPhase === 'routing'">3/3 Edge Traefik...</span>
             <span v-else>Deploying...</span>
+          </div>
+        </div>
+
+        <!-- Live Deployment Stepper Banner (Transparent Build & Docker Progress) -->
+        <div v-if="c.status === 'provisioning' || c.status === 'building' || c.status === 'deploying'" class="deployment-stepper-box">
+          <div class="stepper-header-row">
+            <div class="stepper-title-wrap">
+              <span class="pulse-mini-dot" style="background-color: #2563eb;"></span>
+              <span class="stepper-title">PROSES PROVISIONING OTOMATIS</span>
+            </div>
+            <button type="button" class="btn-stepper-terminal" @click="openLogsModal(c)" title="Buka Terminal Live Logs">
+              <Terminal :size="12" />
+              <span>Lihat Logs</span>
+            </button>
+          </div>
+
+          <!-- Step Progression Pills -->
+          <div class="stepper-steps-track">
+            <div class="stepper-step" :class="{ done: (c.deployStep || 1) > 1, active: (c.deployStep || 1) === 1 }">
+              <div class="step-circle">
+                <Check v-if="(c.deployStep || 1) > 1" :size="10" stroke-width="3" />
+                <span v-else>1</span>
+              </div>
+              <span class="step-name">Build App</span>
+            </div>
+            <div class="stepper-line" :class="{ filled: (c.deployStep || 1) >= 2 }"></div>
+            <div class="stepper-step" :class="{ done: (c.deployStep || 1) > 2, active: (c.deployStep || 1) === 2 }">
+              <div class="step-circle">
+                <Check v-if="(c.deployStep || 1) > 2" :size="10" stroke-width="3" />
+                <span v-else>2</span>
+              </div>
+              <span class="step-name">Start Docker</span>
+            </div>
+            <div class="stepper-line" :class="{ filled: (c.deployStep || 1) >= 3 }"></div>
+            <div class="stepper-step" :class="{ done: (c.deployStep || 1) > 3, active: (c.deployStep || 1) === 3 }">
+              <div class="step-circle">
+                <Check v-if="(c.deployStep || 1) > 3" :size="10" stroke-width="3" />
+                <span v-else>3</span>
+              </div>
+              <span class="step-name">Edge Traefik</span>
+            </div>
+            <div class="stepper-line" :class="{ filled: (c.deployStep || 1) >= 4 }"></div>
+            <div class="stepper-step" :class="{ done: (c.deployStep || 1) >= 4, active: (c.deployStep || 1) === 4 }">
+              <div class="step-circle">
+                <Check v-if="(c.deployStep || 1) >= 4" :size="10" stroke-width="3" />
+                <span v-else>4</span>
+              </div>
+              <span class="step-name">Running</span>
+            </div>
+          </div>
+
+          <!-- Real-Time Progress Message -->
+          <div class="stepper-status-msg">
+            <RotateCw :size="11" class="spinner-spin-icon" />
+            <span>{{ c.deployStepMessage || 'Sedang mengalokasikan container Docker & routing...' }}</span>
           </div>
         </div>
 
@@ -730,15 +792,22 @@ const navigateToAnalytics = (c: ContainerSite) => {
                       'status-running': c.status === 'running',
                       'status-maintenance': c.status === 'maintenance',
                       'status-stopped': c.status === 'stopped',
-                      'status-provisioning': c.status === 'provisioning'
+                      'status-building': c.deployPhase === 'building',
+                      'status-deploying': c.deployPhase === 'deploying',
+                      'status-routing': c.deployPhase === 'routing',
+                      'status-provisioning': c.status === 'provisioning' && !c.deployPhase
                     }"
                   >
                     <span class="radar-ping-ring" v-if="c.status === 'running'"></span>
                     <span class="radar-ping-ring amber" v-if="c.status === 'maintenance'"></span>
+                    <span class="radar-ping-ring blue" v-if="c.status === 'provisioning' || c.status === 'building' || c.status === 'deploying'"></span>
                     <span class="radar-dot"></span>
                     <span v-if="c.status === 'running'">Running</span>
                     <span v-else-if="c.status === 'maintenance'">Maintenance</span>
                     <span v-else-if="c.status === 'stopped'">Standby</span>
+                    <span v-else-if="c.deployPhase === 'building'">1/3 Build App...</span>
+                    <span v-else-if="c.deployPhase === 'deploying'">2/3 Start Docker...</span>
+                    <span v-else-if="c.deployPhase === 'routing'">3/3 Edge Traefik...</span>
                     <span v-else>Deploying...</span>
                   </div>
                   <span style="font-size: 0.68rem; color: #94a3b8; font-family: monospace;">{{ c.uptime }}</span>
