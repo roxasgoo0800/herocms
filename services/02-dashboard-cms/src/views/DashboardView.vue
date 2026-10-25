@@ -1507,16 +1507,16 @@ const handleLogout = async () => {
         @click.self="cancelDeleteContainer"
       >
         <div
-          class="modal-dialog modal-dialog-delete"
+          class="modal-dialog modal-dialog-seamless modal-dialog-delete"
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-dialog-title"
         >
           <!-- Modal Header -->
-          <div class="modal-header">
+          <div class="modal-seamless-header">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box danger-icon-box">
-                <AlertTriangle :size="18" />
+              <div class="modal-header-icon-box modal-icon-danger">
+                <AlertTriangle :size="18" stroke-width="2.2" />
               </div>
               <div>
                 <h3 id="delete-dialog-title" class="modal-heading">Hapus Kontainer Runtime</h3>
@@ -1525,7 +1525,7 @@ const handleLogout = async () => {
             </div>
             <button
               type="button"
-              class="modal-close-button"
+              class="modal-close-button-ghost"
               :disabled="isDeletingContainer"
               @click="cancelDeleteContainer"
               title="Tutup dialog"
@@ -1535,22 +1535,22 @@ const handleLogout = async () => {
           </div>
 
           <!-- Modal Body -->
-          <div class="delete-modal-body">
+          <div class="modal-seamless-body">
             <!-- Target Pod Card -->
-            <div class="delete-target-card">
-              <div class="target-card-leading">
-                <div class="target-app-icon">
-                  <Server :size="17" />
+            <div class="modal-target-site-card">
+              <div class="modal-target-site-left">
+                <div class="modal-target-icon-box delete-pod-icon">
+                  <Server :size="18" />
                 </div>
-                <div class="target-app-info">
-                  <div class="target-app-name">{{ containerToDelete.name }}</div>
-                  <div class="target-app-subdomain">
+                <div class="modal-target-site-info">
+                  <div class="modal-target-site-name">{{ containerToDelete.name }}</div>
+                  <div class="modal-target-site-url">
                     <Globe :size="11" />
                     <span>https://{{ containerToDelete.subdomain }}</span>
                   </div>
                 </div>
               </div>
-              <div class="target-card-meta">
+              <div class="delete-pod-badges">
                 <span class="badge-target-spec">{{ containerToDelete.cpuLimit }} • {{ containerToDelete.ramLimit }} MB</span>
                 <span
                   class="badge-target-status"
@@ -1564,25 +1564,28 @@ const handleLogout = async () => {
             <!-- Danger Impact Callout -->
             <div class="delete-impact-callout">
               <div class="impact-callout-header">
-                <AlertCircle :size="13" />
+                <AlertCircle :size="15" />
                 <span>Konsekuensi penghapusan kontainer:</span>
               </div>
-              <ul class="impact-list">
-                <li>
-                  <strong>Proses Pod Dihentikan:</strong> Runtime Docker & cgroups v2 akan dimatikan seketika.
-                </li>
-                <li>
-                  <strong>Rute Traefik & SSL Dicabut:</strong> Permintaan masuk ke <code>{{ containerToDelete.subdomain }}</code> akan langsung mengembalikan status HTTP 404.
-                </li>
-                <li>
-                  <strong>Pengembalian Kuota:</strong> 1 slot kuota ({{ containers.length }}/{{ userPlan.maxContainers }}) akan otomatis dikembalikan ke kuota langganan Anda.
-                </li>
-              </ul>
+              <div class="impact-list-clean">
+                <div class="impact-item">
+                  <span class="impact-item-dot"></span>
+                  <div><strong>Proses Pod Dihentikan:</strong> Runtime Docker & cgroups v2 akan dimatikan seketika.</div>
+                </div>
+                <div class="impact-item">
+                  <span class="impact-item-dot"></span>
+                  <div><strong>Rute Ingress & SSL Dicabut:</strong> Permintaan masuk ke <code>{{ containerToDelete.subdomain }}</code> akan langsung mengembalikan status HTTP 404.</div>
+                </div>
+                <div class="impact-item">
+                  <span class="impact-item-dot"></span>
+                  <div><strong>Pengembalian Kuota:</strong> 1 slot kuota ({{ containers.length }}/{{ userPlan.maxContainers }}) akan otomatis dikembalikan ke kuota langganan Anda.</div>
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- Modal Footer Actions -->
-          <div class="modal-footer-row delete-footer-row">
+          <div class="modal-seamless-footer">
             <button
               type="button"
               class="btn-modal-ghost"

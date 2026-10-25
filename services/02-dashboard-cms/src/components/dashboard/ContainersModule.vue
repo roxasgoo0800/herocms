@@ -1055,24 +1055,24 @@ const navigateToAnalytics = (c: ContainerSite) => {
       @click.self="isMaintenanceModalOpen = false"
     >
       <div
-        class="modal-dialog"
-        style="max-width: 480px;"
+        class="modal-dialog modal-dialog-seamless modal-dialog-maintenance"
         role="dialog"
         aria-modal="true"
+        aria-labelledby="maintenance-modal-title"
       >
-        <div class="modal-header">
+        <div class="modal-seamless-header">
           <div class="modal-header-leading">
-            <div class="modal-header-icon-box" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">
-              <Wrench :size="18" />
+            <div class="modal-header-icon-box modal-icon-amber">
+              <Wrench :size="18" stroke-width="2.2" />
             </div>
             <div>
-              <h3 class="modal-heading">Aktifkan Mode Pemeliharaan</h3>
-              <p class="modal-subheading">Trafik publik akan dialihkan ke pesan pemeliharaan 503.</p>
+              <h3 id="maintenance-modal-title" class="modal-heading">Aktifkan Mode Pemeliharaan</h3>
+              <p class="modal-subheading">Trafik publik dialihkan sementara ke respons HTTP 503.</p>
             </div>
           </div>
           <button
             type="button"
-            class="modal-close-button"
+            class="modal-close-button-ghost"
             @click="isMaintenanceModalOpen = false"
             title="Tutup dialog"
           >
@@ -1080,20 +1080,20 @@ const navigateToAnalytics = (c: ContainerSite) => {
           </button>
         </div>
 
-        <div class="modal-body" style="padding: 20px 24px;">
+        <div class="modal-seamless-body">
           <!-- Target Site Overview Card -->
           <div class="modal-target-site-card">
             <div class="modal-target-site-left">
               <div class="modal-target-icon-box">
                 <Globe :size="16" />
               </div>
-              <div>
+              <div class="modal-target-site-info">
                 <div class="modal-target-site-name">{{ targetContainerForMaintenance.name }}</div>
                 <div class="modal-target-site-url">https://{{ targetContainerForMaintenance.subdomain }}</div>
               </div>
             </div>
-            <span class="modal-target-site-badge">
-              <Wrench :size="11" />
+            <span class="modal-target-site-badge amber-badge">
+              <span class="badge-dot-pulse amber-dot"></span>
               <span>HTTP 503 Service</span>
             </span>
           </div>
@@ -1107,12 +1107,12 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <textarea
               v-model="maintenanceMessageInput"
               rows="3"
-              class="field-textarea-input"
+              class="modal-field-textarea"
               placeholder="Contoh: Kami sedang melakukan pemeliharaan berkala untuk peningkatan performa. Kami akan segera kembali."
             ></textarea>
           </div>
 
-          <div class="modal-form-group" style="margin-bottom: 6px;">
+          <div class="modal-form-group" style="margin-bottom: 2px;">
             <label class="modal-field-label">
               <span>Estimasi Selesai (ETA)</span>
               <span class="modal-field-hint">Estimasi durasi downtime</span>
@@ -1120,7 +1120,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <input
               v-model="estimatedEndTimeInput"
               type="text"
-              class="field-text-input"
+              class="modal-field-input"
               placeholder="Contoh: 30 menit atau 14:00 WIB"
             />
             <!-- Quick ETA Presets -->
@@ -1161,7 +1161,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
           </div>
         </div>
 
-        <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px;">
+        <div class="modal-seamless-footer">
           <button
             type="button"
             class="btn-modal-ghost"
@@ -1171,11 +1171,10 @@ const navigateToAnalytics = (c: ContainerSite) => {
           </button>
           <button
             type="button"
-            class="btn-modal-confirm"
-            style="background: #b45309; border-color: #92400e; padding: 8px 16px; font-size: 0.82rem;"
+            class="btn-modal-amber-confirm"
             @click="confirmEnableMaintenance"
           >
-            <Wrench :size="13" />
+            <Wrench :size="13" stroke-width="2.2" />
             <span>Aktifkan Maintenance</span>
           </button>
         </div>

@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.8',
+    version: 'v1.29.9',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.9',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Seamless Enterprise Modal Dialog Architecture: Maintenance Mode & Destructive Pod Deletion UI/UX Refactor',
+    summary: 'Refaktor arsitektur visual dan tata letak dialog modal HeroCMS Studio: (1) Eliminasi Double-Padding & Edge-to-Edge Canvas: Menghadirkan class universal .modal-dialog-seamless dengan header dan footer tepi-ke-tepi (#f8fafc canvas) yang menyatu alami tanpa efek kotak melayang di dalam kotak; (2) Refaktor Dialog Mode Pemeliharaan: Penyelarasan palet warna Amber (#b45309), status pill HTTP 503 dengan dot berdenyut halus, preset durasi ETA bertema amber hangat, dan textarea berfokus ring; (3) Refaktor Dialog Hapus Kontainer Runtime: Redesain target pod card dengan icon server elegan, badge spesifikasi & status sejajar horizontal, callout konsekuensi terstruktur dengan red bullet indicator, serta tombol destruktif bergradasi bahaya; (4) Aksesibilitas & Responsivitas: Peningkatan ARIA labeling, penutupan dialog via tombol ghost close, dan adaptasi fluid pada resolusi tablet hingga mobile.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12909-1',
+        type: 'improvement',
+        scope: 'Seamless Modal Architecture (.modal-dialog-seamless)',
+        description: 'Menghilangkan margin collapse dan padding ganda pada dialog modal, menghasilkan footer canvas slate edge-to-edge yang bersih dan profesional.'
+      },
+      {
+        id: 'c-02dash-12909-2',
+        type: 'improvement',
+        scope: 'Maintenance Mode Modal Dialog (ContainersModule.vue)',
+        description: 'Penyelarasan palet warna Amber 503, perbaikan field textarea dan input ETA, serta chip preset waktu pemeliharaan yang harmonis.'
+      },
+      {
+        id: 'c-02dash-12909-3',
+        type: 'improvement',
+        scope: 'Pod Deletion Danger Zone Dialog (DashboardView.vue)',
+        description: 'Penyelarasan badge spesifikasi dan status secara horizontal, perapihan daftar konsekuensi teknis dengan bullet indicator, dan tombol destruktif bergradasi bahaya.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.8',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Container Web Storage Bind Mounting, Bespoke HTTP 503 Maintenance Page & Seamless Zero-Downtime Go-Live Reversion',
     summary: 'Integrasi penuh Mode Pemeliharaan dengan Engine Kontainer Docker Service 03: (1) Dynamic Public Storage Web Mounting: Menghubungkan direktori public host kontainer langsung ke root web Nginx (/usr/share/nginx/html:ro), memungkinkan pergantian tampilan situs seketika tanpa downtime atau rebuild kontainer; (2) Bespoke HTTP 503 Maintenance Page: Menampilkan halaman pemeliharaan visual elegan bertema HeroCMS Enterprise lengkap dengan noindex meta tag, auto-refresh 60 detik, estimasi waktu penyelesaian (ETA), dan badge status Amber; (3) Sinkronisasi Service 02 ke Service 03: Menghubungkan API PUT /api/containers/:id/maintenance ke Service 03 dengan passing tenant_id dan subdomain akurat; (4) Pemulihan Instan Go-Live: Backup otomatis index.html.live yang dipulihkan seketika saat mode pemeliharaan dinonaktifkan.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
