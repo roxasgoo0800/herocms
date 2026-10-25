@@ -271,38 +271,45 @@ const stopContainer = async (container: ContainerSite) => {
 
 const toggleMaintenance = async (container: ContainerSite, message?: string, estimatedEndTime?: string) => {
   const willEnable = container.status !== 'maintenance';
+  const targetId = container.id;
+  const targetName = container.name;
+
   container.status = 'provisioning';
+  containers.value = [...containers.value];
   showToast(
     willEnable
-      ? `Mengaktifkan Mode Pemeliharaan untuk ${container.name}...`
-      : `Mengakhiri Mode Pemeliharaan untuk ${container.name}...`,
+      ? `Mengaktifkan Mode Pemeliharaan untuk ${targetName}...`
+      : `Mengakhiri Mode Pemeliharaan untuk ${targetName}...`,
     'info'
   );
 
-  studioApi
-    .toggleMaintenance(container.id, willEnable, message, estimatedEndTime)
-    .catch(err => console.warn('[API] Maintenance notice:', err));
+  try {
+    await studioApi.toggleMaintenance(targetId, willEnable, message, estimatedEndTime);
+  } catch (err) {
+    console.warn('[API] Maintenance toggle warning:', err);
+  }
 
-  setTimeout(() => {
-    if (willEnable) {
-      container.status = 'maintenance';
-      container.maintenanceConfig = {
-        enabled: true,
-        message: message || 'Situs sedang dalam pemeliharaan berkala untuk peningkatan performa. Kami akan segera kembali.',
-        estimatedEndTime: estimatedEndTime || '30 menit'
-      };
-      showToast(
-        `Mode Pemeliharaan aktif untuk ${container.name}! Trafik publik dialihkan ke respons HTTP 503.`,
-        'info'
-      );
-    } else {
-      container.status = 'running';
-      if (container.maintenanceConfig) {
-        container.maintenanceConfig.enabled = false;
-      }
-      showToast(`Situs ${container.name} kembali Go-Live dan melayani trafik normal!`, 'success');
+  const target = containers.value.find(c => c.id === targetId) || container;
+  if (willEnable) {
+    target.status = 'maintenance';
+    target.maintenanceConfig = {
+      enabled: true,
+      message: message || 'Situs sedang dalam pemeliharaan berkala untuk peningkatan performa. Kami akan segera kembali.',
+      estimatedEndTime: estimatedEndTime || '30 menit'
+    };
+    showToast(
+      `Mode Pemeliharaan aktif untuk ${targetName}! Trafik publik dialihkan ke respons HTTP 503.`,
+      'info'
+    );
+  } else {
+    target.status = 'running';
+    if (target.maintenanceConfig) {
+      target.maintenanceConfig.enabled = false;
     }
-  }, 700);
+    showToast(`Situs ${targetName} kembali Go-Live dan melayani trafik normal!`, 'success');
+  }
+
+  containers.value = [...containers.value];
 };
 
 const restartContainer = async (container: ContainerSite) => {

@@ -341,7 +341,7 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 						bIntro = "Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio."
 					}
 
-					list = append(list, gin.H{
+					siteObj := gin.H{
 						"id":             id,
 						"name":           name,
 						"category":       category,
@@ -360,7 +360,15 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 						"accentColor":    accentColor,
 						"themeConfig":    parsedTheme,
 						"lastDeployed":   lastDeployed.Format("2 Jan 2006"),
-					})
+					}
+					if status == "maintenance" {
+						siteObj["maintenanceConfig"] = gin.H{
+							"enabled":          true,
+							"message":          "Situs sedang dalam pemeliharaan berkala untuk peningkatan performa. Kami akan segera kembali.",
+							"estimatedEndTime": "30 menit",
+						}
+					}
+					list = append(list, siteObj)
 				}
 			}
 			if err := rows.Err(); err != nil {

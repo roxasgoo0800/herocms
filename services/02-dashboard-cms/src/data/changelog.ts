@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.6',
+    version: 'v1.29.7',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.7',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Maintenance Mode End-to-End Execution, PostgreSQL Persistence, Reactive State Refresh, & Instant Status Switch',
+    summary: 'Penyempurnaan kapabilitas Mode Pemeliharaan (Maintenance Mode) end-to-end: (1) Eksekusi & Reaktivitas Instan: Menghubungkan toggleMaintenance secara asinkron dengan studioApi.toggleMaintenance, memperbarui status kontainer menjadi \'maintenance\' seketika serta memicu re-render reaktif instan di kartu grid, dense table, dan tab filter segmented; (2) Persistensi Basis Data PostgreSQL & Cache Invalidation: Memperbarui endpoint PUT /api/containers/:id/maintenance dan query GetSites untuk mengembalikan status maintenance beserta konfigurasi pesan dan estimasi waktu downtime (ETA); (3) Banner & Badge Indikator Amber: Kartu kontainer menampilkan strip peringatan interaktif dan badge status \'Maintenance\' dengan efek radar Amber saat mode pemeliharaan aktif, serta tombol toggle cepat untuk kembali Go-Live.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12907-1',
+        type: 'feature',
+        scope: 'Instant Maintenance Mode Workflow & Reactivity (useDashboardData.ts)',
+        description: 'Menerapkan eksekusi asinkron studioApi.toggleMaintenance dengan pembaruan reaktif langsung pada status kontainer dan penghitungan metrik tab filter.'
+      },
+      {
+        id: 'c-02dash-12907-2',
+        type: 'improvement',
+        scope: 'PostgreSQL & Redis Maintenance Metadata Serialization (repository.go)',
+        description: 'Menyertakan objek maintenanceConfig secara otomatis pada query GetSites saat status situs dalam pemeliharaan sehingga pesan dan ETA tetap tersimpan konsisten.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.6',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Fix Reactive Stepper Pipeline Multi-Stage Progression & In-Flight Instance Mutex',
     summary: 'Memperbaiki bug reaktivitas Vue 3 pada stepper alur deployment kontainer baru: (1) Reactive Proxy Instance Binding: Membungkus objek kontainer deployment baru dengan reactive() dan menerapkan helper mutasi setDeployProgress() yang memperbarui item di dalam array containers.value dan memicu trigger reaktivitas level atas sehingga seluruh tahapan (1/4 Build App -> 2/4 Start Docker Engine -> 3/4 Edge Traefik Ingress -> 4/4 Running Live -> 5/5 All Done) beranimasi lancar secara real-time tanpa stuck di tahap awal; (2) In-Flight Instance Object Identity: Mempertahankan referensi objek reaktif asli saat sinkronisasi latar belakang berjalan dengan Object.assign() alih-alih me-replace objek; (3) Status Done Stepper & Selebrasi Selesai: Menyempurnakan kondisi visual tahap 4 dengan spinner transisi hingga seluruh 4 lingkaran bercentang hijau (deployStep 5) dan pesan runtime aktif.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
