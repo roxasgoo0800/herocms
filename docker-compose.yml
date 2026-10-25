@@ -21,12 +21,13 @@ services:
   # 1. Edge Ingress Gateway & Reverse Proxy (Traefik v3 + ACME Let's Encrypt)
   # ---------------------------------------------------------------------------
   traefik:
-    image: traefik:v3.1
+    image: traefik:latest
     container_name: herocms_traefik
     restart: always
     environment:
       - DOCKER_API_VERSION=1.44
     command:
+      - "--ping=true"
       - "--api.dashboard=true"
       - "--api.insecure=false"
       - "--providers.docker=true"
