@@ -128,10 +128,14 @@ func SetupRouter(
 				return
 			}
 
+			cleanSub := strings.TrimSuffix(req.Subdomain, ".stacbyte.id")
+			cleanSub = strings.TrimSuffix(cleanSub, ".herocms.stackbyte.id")
+			cleanSub = strings.TrimSuffix(cleanSub, ".cloudcms.app")
+
 			c.JSON(http.StatusOK, gin.H{
 				"status":        "deployed",
 				"container_id":  containerID,
-				"subdomain":     req.Subdomain + ".herocms.stackbyte.id",
+				"subdomain":     cleanSub + ".stacbyte.id",
 				"custom_domain": req.CustomDomain,
 				"deployed_at":   time.Now().UTC().Format(time.RFC3339),
 			})

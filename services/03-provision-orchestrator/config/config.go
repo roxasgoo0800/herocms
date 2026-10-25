@@ -75,6 +75,11 @@ func LoadConfig() *Config {
 		requireAuth = false
 	}
 
+	redisPass := os.Getenv("REDIS_PASSWORD")
+	if redisPass == "" {
+		redisPass = "secret_redis_password"
+	}
+
 	return &Config{
 		Port:                port,
 		DockerSocket:        dockerSocket,
@@ -83,7 +88,7 @@ func LoadConfig() *Config {
 		TenantStorageBase:   storageBase,
 		InternalSecretToken: secretToken,
 		RedisAddr:           redisAddr,
-		RedisPassword:       os.Getenv("REDIS_PASSWORD"),
+		RedisPassword:       redisPass,
 		RedisDB:             redisDB,
 		KafkaBrokers:        kafkaBrokers,
 		RequireInternalAuth: requireAuth,

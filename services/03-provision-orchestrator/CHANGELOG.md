@@ -6,6 +6,17 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.0.2] - 25 Oktober 2026
+**Tipe Rilis**: Patch / Alignment & Integration Release  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Fallback Default Sandi Redis**: Menambahkan default fallback kata sandi Redis (`secret_redis_password`) pada `config/config.go` sehingga Service 03 langsung terhubung ke kontainer Docker `herocms_redis` tanpa kendala `NOAUTH Authentication required`.
+2. **Penyelarasan Host Router Domain stacbyte.id**: Memperbarui aturan Traefik router rules pada `internal/docker/sandbox.go` dan output API `internal/api/router.go` menjadi `Host(<subdomain>.stacbyte.id)` secara konsisten dengan ekosistem platform.
+
+---
+
 ### [03-orchestrator-v1.0.1] - 25 Oktober 2026
 **Tipe Rilis**: Patch / Security Hardening Release  
 **Status**: Production Ready & Stable  
