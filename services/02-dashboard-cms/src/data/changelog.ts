@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.29.5',
+    version: 'v1.29.6',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.29.6',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Fix Reactive Stepper Pipeline Multi-Stage Progression & In-Flight Instance Mutex',
+    summary: 'Memperbaiki bug reaktivitas Vue 3 pada stepper alur deployment kontainer baru: (1) Reactive Proxy Instance Binding: Membungkus objek kontainer deployment baru dengan reactive() dan menerapkan helper mutasi setDeployProgress() yang memperbarui item di dalam array containers.value dan memicu trigger reaktivitas level atas sehingga seluruh tahapan (1/4 Build App -> 2/4 Start Docker Engine -> 3/4 Edge Traefik Ingress -> 4/4 Running Live -> 5/5 All Done) beranimasi lancar secara real-time tanpa stuck di tahap awal; (2) In-Flight Instance Object Identity: Mempertahankan referensi objek reaktif asli saat sinkronisasi latar belakang berjalan dengan Object.assign() alih-alih me-replace objek; (3) Status Done Stepper & Selebrasi Selesai: Menyempurnakan kondisi visual tahap 4 dengan spinner transisi hingga seluruh 4 lingkaran bercentang hijau (deployStep 5) dan pesan runtime aktif.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12906-1',
+        type: 'bugfix',
+        scope: 'Vue 3 Reactive Proxy Stepper Pipeline (useDashboardData.ts)',
+        description: 'Menerapkan reactive() dan setDeployProgress() untuk memastikan setiap transisi tahapan deployment memicu re-render template secara instan tanpa tertahan pada tahap 1.'
+      },
+      {
+        id: 'c-02dash-12906-2',
+        type: 'improvement',
+        scope: '4-Stage Sequential Deployment Timing & Completion Celebration (ContainersModule.vue & useDashboardData.ts)',
+        description: 'Menyempurnakan durasi transisi tiap tahap deployment dan menambahkan fase selebrasi seluruh centang hijau sebelum banner transisi tertutup.'
+      },
+      {
+        id: 'c-02dash-12906-3',
+        type: 'bugfix',
+        scope: 'In-Flight Instance Retention via Object.assign (useDashboardData.ts)',
+        description: 'Mempertahankan identitas instans objek reaktif yang sama di dalam containers.value saat syncWithBackend dipanggil di latar belakang.'
+      }
+    ]
+  },
+  {
     version: 'v1.29.5',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Create Website Modal Responsive Architecture, Sticky Pinned Footer, 4-Stage Progressive Deployment Pipeline Stepper, & In-Flight State Preservation',
     summary: 'Peningkatan responsivitas modal pembuatan website dan visualisasi pipeline deployment kontainer otonom: (1) Modal Responsive Architecture & Pinned Sticky Footer: Mengubah layout modal dialog pembuatan website dari scroll monolitik menjadi flex-column dengan header dan footer pinned (sticky). Tombol "Deploy & Luncurkan Kontainer" selalu terlihat di layar laptop standar tanpa perlu scroll; body modal dipadatkan dan memiliki internal sleek scrollbar; (2) 4-Stage Progressive Deployment Pipeline Stepper: Menyempurnakan alur peluncuran kontainer di kartu antarmuka dengan stepper visual 4 tahap penuh: 1/4 Build App -> 2/4 Start Docker -> 3/4 Edge Traefik -> 4/4 Running dengan durasi animasi progresif dan deskripsi status cgroups v2/TLS ALPN; (3) In-Flight Provisioning State Preservation: Memastikan sinkronisasi latar belakang Redis/backend tidak menimpa atau menghilangkan kontainer yang sedang dalam status deployment aktif; (4) Pembersihan Filter Dummy: Menghapus pengecekan nama subdomain/nama user agar tidak menyaring atau menghapus kontainer riil yang dibuat oleh pengguna.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

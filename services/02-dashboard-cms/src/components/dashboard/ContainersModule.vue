@@ -510,9 +510,9 @@ const navigateToAnalytics = (c: ContainerSite) => {
               <span class="step-name">Edge Traefik</span>
             </div>
             <div class="stepper-line" :class="{ filled: (c.deployStep || 1) >= 4 }"></div>
-            <div class="stepper-step" :class="{ done: (c.deployStep || 1) >= 4, active: (c.deployStep || 1) === 4 }">
+            <div class="stepper-step" :class="{ done: (c.deployStep || 1) >= 5, active: (c.deployStep || 1) === 4 }">
               <div class="step-circle">
-                <Check v-if="(c.deployStep || 1) >= 4" :size="10" stroke-width="3" />
+                <Check v-if="(c.deployStep || 1) >= 5" :size="10" stroke-width="3" />
                 <RotateCw v-else-if="(c.deployStep || 1) === 4" :size="10" class="spinner-spin-icon" style="color: #ffffff;" />
                 <span v-else>4</span>
               </div>
