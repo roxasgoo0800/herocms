@@ -135,16 +135,28 @@ func SetupRouter(cfg *config.Config, repo *repository.Repository, rdb *redis.Cli
 			// Containers & Multi-Site Hub
 			protected.GET("/containers", h.ListContainers)
 			protected.POST("/containers", h.CreateContainer)
+			protected.GET("/containers/:id/stats", h.GetContainerStats)
+			protected.GET("/containers/:id/logs", h.GetContainerLogs)
 			protected.PUT("/containers/:id/design", h.SaveSiteDesign)
 			protected.GET("/containers/:id/draft", h.GetEditorDraft)
 			protected.PUT("/containers/:id/draft", h.SaveEditorDraft)
 			protected.POST("/containers/:id/start", h.StartContainer)
 			protected.POST("/containers/:id/stop", h.StopContainer)
+			protected.POST("/containers/:id/restart", h.RestartContainer)
 			protected.PUT("/containers/:id/maintenance", h.ToggleMaintenance)
 			protected.DELETE("/containers/:id", h.DeleteContainer)
 
 			// Publishing Engine (Articles & Content)
 			protected.GET("/articles", h.ListArticles)
+			protected.POST("/articles", h.CreateArticle)
+			protected.PUT("/articles/:id", h.UpdateArticle)
+			protected.DELETE("/articles/:id", h.DeleteArticle)
+
+			// Web Pages Engine (CMS Pages)
+			protected.GET("/pages", h.ListPages)
+			protected.POST("/pages", h.CreatePage)
+			protected.PUT("/pages/:id", h.UpdatePage)
+			protected.DELETE("/pages/:id", h.DeletePage)
 
 			// Asset Storage (MinIO S3)
 			protected.GET("/assets", h.ListAssets)

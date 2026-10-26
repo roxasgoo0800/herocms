@@ -25,6 +25,3 @@ http:
     gzip-compress:
       compress:
         minResponseBodyBytes: 1024
-        encodings:
-          - gzip
-          - br

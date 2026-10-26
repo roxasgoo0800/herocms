@@ -14,21 +14,21 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.25.1',
+    version: 'v1.31.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '25 Oktober 2026',
+    lastUpdated: '26 Oktober 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
     id: '03-provision-orchestrator',
     name: 'Service 03: Container Provision Orchestrator',
-    version: 'v1.8.0',
+    version: 'v1.2.1',
     serviceFolder: 'services/03-provision-orchestrator',
     badge: 'Stable',
     stack: 'Golang • Docker Engine SDK • cgroups v2',
-    lastUpdated: '18 Oktober 2026',
+    lastUpdated: '25 Oktober 2026',
     leadPic: 'Andalusia & Rizal'
   },
   {
@@ -64,7 +64,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '07-docs',
     name: 'Service 07: Docs & Mission Control Hub',
-    version: 'v1.5.6',
+    version: 'v1.5.7',
     serviceFolder: 'services/07-docs',
     badge: 'Latest',
     stack: 'Vue 3 • Go Native BFF (8087) • Docker',
@@ -75,13 +75,619 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.31.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '26 Oktober 2026',
+    title: '100% Dynamic Engine: Zero-Static Data Architecture for Articles & Web Pages',
+    summary: 'Transformasi penuh modul Artikel Editorial & Halaman Web menjadi 100% dinamis terisolasi per-tenant: (1) Zero Static Seeds: Menghapus seluruh array seed tiruan dan mock data statis (initialArticles, initialCmsPages, hardcoded Linux paragraphs), seluruh data dimulai dari kondisi bersih 0 data dan disimpan secara persisten di PostgreSQL; (2) Basis Data PostgreSQL & RLS: Menambahkan tabel pages dan memperluas content_items dengan kebijakan tenant_pages_isolation & tenant_content_isolation; (3) REST API CRUD Lengkap: Menyediakan endpoint Go BFF GET/POST/PUT/DELETE untuk /api/articles dan /api/pages yang terintegrasi dengan invalidasi cache Redis; (4) Dynamic Content Article Reader: Merender konten teks markdown dinamis asli yang ditulis pengguna alih-alih teks statis; (5) Empty State & UX Polishing: Menyediakan tampilan Zero-Data Empty State yang elegan dengan tombol aksi cepat, serta memperbarui label navigasi menjadi "Halaman Web (Pages)".',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13100-1',
+        type: 'feature',
+        scope: 'PostgreSQL Dynamic Storage & RLS Isolation',
+        description: 'Tabel PostgreSQL pages & Ekstensi content_items Terisolasi RLS: Menambahkan skema tabel pages dengan relasi tenant_id dan site_id, serta memperluas tabel content_items (excerpt, tags, meta_title, meta_desc). Diberlakukan kebijakan Row-Level Security tenant_pages_isolation & tenant_content_isolation untuk isolasi data multi-tenant ketat.'
+      },
+      {
+        id: 'c-02dash-13100-2',
+        type: 'feature',
+        scope: 'Go BFF REST API Endpoints',
+        description: 'Full CRUD REST API Endpoints untuk Articles & CMS Pages: Mengimplementasikan handler, service, dan repositori Go Gin untuk GET/POST/PUT/DELETE pada /api/articles dan /api/pages. Setiap mutasi data memicu invalidasi cache Redis tenant:%s:menu:* dan menghangatkan kembali dataset bundle secara otomatis.'
+      },
+      {
+        id: 'c-02dash-13100-3',
+        type: 'improvement',
+        scope: 'Editorial Reader Dynamic Rendering',
+        description: 'Dynamic Content Markdown Article Reader: Mengganti paragraf statis hardcoded seputar kernel Linux pada Reader View dengan parser blok markdown dinamis (parsedArticleBlocks) yang merender judul h2/h3, code blocks dengan tombol salin, dan paragraf asli sesuai artikel yang ditulis pengguna.'
+      },
+      {
+        id: 'c-02dash-13100-4',
+        type: 'improvement',
+        scope: 'Clean Zero-State & UI Renaming',
+        description: 'Pembersihan Total Seed Statis & Empty State Interaktif: Mengosongkan initialArticles dan initialCmsPages, membersihkan legacy dummy seeds dari PostgreSQL dan cache browser, menyematkan Zero-Data Empty State yang elegan dengan tombol tambah instan pada tampilan Grid maupun Tabel, serta memperbarui nama tab menjadi "Halaman Web (Pages)".'
+      }
+    ]
+  },
+  {
+    version: 'v1.30.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '26 Oktober 2026',
+    title: '100% Visual Parity: Standalone Template HTML Compiler for Container Deployment',
+    summary: 'Penyelarasan visual 100% antara Demo Live Katalog Template dan hasil deployment website di kontainer Nginx: (1) Standalone Template HTML Compiler: Mengembangkan templateHtmlCompiler.ts yang mengompilasi seluruh blok visual (Navbar dengan glyph monogram, Hero dengan terminal mockup Traefik v3, Kartu produk E-Commerce berharga Rupiah & checkout WhatsApp, Galeri showcase karya portofolio, Silabus kursus akordeon interaktif, Tier harga dengan toggle tagihan bulanan/tahunan, Call-to-Action, Footer, dan Floating Pod Badge status runtime) menjadi HTML mandiri beresolusi tinggi tanpa dependensi framework eksternal; (2) Integrasi End-to-End customHTML: Menghubungkan compiler HTML ke seluruh alur pembuatan kontainer (handleCreateContainer), adopsi blueprint dari katalog (applyTemplateToActiveContainer & deployContainerFromTemplate), serta publikasi Visual Editor (handlePublishChanges); (3) Sinkronisasi PostgreSQL & Storage Runtime: Menyimpan customHTML dan konfigurasi tema ke basis data PostgreSQL serta menyemainya langsung ke persistent storage container di Service 03 (public/index.html & public/index.html.live).',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13002-1',
+        type: 'feature',
+        scope: 'Visual Block HTML Compiler (templateHtmlCompiler.ts)',
+        description: 'Menghadirkan compiler template yang menerjemahkan array VisualBlock[] menjadi standalone responsive HTML dengan CSS pixel-perfect identik dengan TemplateLiveRenderer.vue.'
+      },
+      {
+        id: 'c-02dash-13002-2',
+        type: 'bugfix',
+        scope: 'Catalog & Editor Synchronization (useDashboardData.ts)',
+        description: 'Menghubungkan compileTemplateToHTML pada createContainer, saveSiteDesign, dan handlePublishChanges agar container Nginx melayani konten yang 100% sama dengan pratinjau katalog.'
+      },
+      {
+        id: 'c-02dash-13002-3',
+        type: 'improvement',
+        scope: 'BFF & Orchestrator Payload (handler.go, service.go, repository.go)',
+        description: 'Mendukung field customHTML pada CreateContainerPayload dan SaveSiteDesign serta memperbarui kolom template_name dan category di PostgreSQL.'
+      },
+      {
+        id: 'c-02dash-13002-4',
+        type: 'bugfix',
+        scope: 'Deployment Stepper Lifecycle (useDashboardData.ts & ContainersModule.vue)',
+        description: 'Memperbaiki siklus animasi stepper provisioning otomatis agar tidak stuck di fase 4/4 Running: menambahkan penanda deployStep 5 (seluruh 4 centang hijau), transisi otomatis ke tampilan kartu normal setelah 2.2 detik, pembersihan deployPhase residu pada sinkronisasi Redis/cache, serta tombol Selesai untuk menutup banner stepper.'
+      }
+    ]
+  },
+  {
+    version: 'v1.30.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Instant Template Re-deploy Animation & Live Multi-Theme Container Web Re-seeding',
+    summary: 'Penyempurnaan alur kerja katalog template saat memilih opsi \'Gunakan\' / \'Terapkan ke Situs Ini\': (1) Alur Re-deploy Kontainer Otomatis: Saat pengguna menerapkan blueprint dari katalog ke kontainer situs aktif, sistem langsung memicu re-deployment terstruktur dengan 4 fase animasi reaktif (1/4 Build & Blueprint Compilation -> 2/4 Docker Engine & Storage Update -> 3/4 Traefik Ingress Routing -> 4/4 Go Live Running) alih-alih hanya menyimpan draft lokal; (2) Re-seeding Web Storage Langsung ke Container: Menghubungkan SaveSiteDesign ke endpoint orchestrator POST /api/v1/containers/:id/template, sehingga file public/index.html kontainer Nginx langsung diperbarui seketika dengan konten tema baru (Toko Online, Portofolio, Blog, atau LMS Edukasi); (3) Sinkronisasi Visual Editor & Penerbitan Desain: Perubahan pada Visual Editor kini menyertakan metadata templateName dan category saat dipublikasikan, memastikan situs web live selalu identik dengan blueprint desain.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13001-1',
+        type: 'feature',
+        scope: 'Template Application Flow (useDashboardData.ts)',
+        description: 'Menerapkan siklus deployment 4 tahap saat menerapkan template ke kontainer aktif, lengkap dengan pembaruan status dan pesan progress.'
+      },
+      {
+        id: 'c-02dash-13001-2',
+        type: 'feature',
+        scope: 'Orchestrator Template Application (service.go & client.go)',
+        description: 'Menambahkan ApplyTemplate pada orchestrator client dan menghubungkan SaveSiteDesign agar menyemai ulang website kontainer runtime di Service 03.'
+      }
+    ]
+  },
+  {
+    version: 'v1.30.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Autonomous Multi-Theme Template Seeding & Instant Container Web Generation',
+    summary: 'Pembaruan fungsional utama pembuatan situs dan provisioning kontainer mandiri: (1) Dynamic Multi-Theme Template Seeding: Setiap website baru yang dibuat—baik melalui modal \'+ Buat Website Baru\' maupun melalui \'Katalog Blueprint Template\'—secara otomatis menyemai dan menyajikan website lengkap sesuai kategori dan tema yang dipilih (Toko Online/Retail dengan keranjang WhatsApp & harga rupiah, Portofolio Teknis Engineer dengan avatar monogram & kartu proyek terdistribusi, Media Editorial & Blog dengan artikel mingguan & newsletter, atau Pusat Edukasi LMS dengan silabus kursus & review siswa); (2) Identitas & Aksen Brand Dinamis: Menyuntikkan nama website, slogan/headline kustom, bio intro, alamat subdomain, dan kode warna aksen brand (--primary) ke dalam template yang langsung dirender oleh Nginx di dalam kontainer Docker terisolasi; (3) Sinkronisasi End-to-End BFF ke Orchestrator: Menghubungkan parameter templateName, accentColor, dan bioIntro dari Vue 3 apiClient -> Go BFF handler -> Service 03 Provision Orchestrator -> persistent storage index.html; (4) Endpoint Pembaruan HTML Langsung: Menghadirkan endpoint PUT /containers/:id/html untuk sinkronisasi kode HTML langsung ke media publik kontainer runtime tanpa downtime.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13000-1',
+        type: 'feature',
+        scope: 'Container Provisioning Pipeline (apiClient.ts & useDashboardData.ts)',
+        description: 'Menyertakan atribut templateName, category, accentColor, role, dan bioIntro pada pembuatan kontainer dari dialog modal maupun katalog blueprint.'
+      },
+      {
+        id: 'c-02dash-13000-2',
+        type: 'feature',
+        scope: 'Go BFF Handler & Orchestrator Client (handler.go & service.go)',
+        description: 'Menerima payload template kustom di backend Go dan menyalurkannya secara aman ke Service 03 Provision Orchestrator dengan token autentikasi internal.'
+      },
+      {
+        id: 'c-02dash-13000-3',
+        type: 'feature',
+        scope: 'Multi-Theme Web Generator (Service 03 generator.go & manager.go)',
+        description: 'Menyediakan engine generator HTML untuk 4 ekosistem blueprint (Business, Portfolio, Blog, Education) dengan UI modern, responsif, dan zero-dependency.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.10',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Dynamic Traffic Momentum & Zero-Hit Baseline Sparkline Calculation',
+    summary: 'Perbaikan bug anomali indikator pertumbuhan trafik pada kartu kontainer: (1) Dynamic Growth Calculation: Menggantikan persentase pertumbuhan statis (+24%) dengan komputasi momentum dinamis yang mengevaluasi hits riil (c.visitsThisWeek). Saat trafik bernilai 0 hits, sistem secara akurat menampilkan badge netral \'0%\' dengan icon minus, mencegah anomali visual \'0 hits tapi naik +24%\'; (2) Zero-Hit Baseline Sparkline: Saat kontainer belum memiliki kunjungan, grafik mini sparkline menyajikan garis baseline putus-putus netral (#cbd5e1) tanpa kurva naik palsu; (3) Sinkronisasi Modul Artikel & Analitik Pod: Penyelarasan badge pertumbuhan di modul Artikel dan Analitik Pod agar konsisten menampilkan 0% saat belum ada interaksi pembaca.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12910-1',
+        type: 'bugfix',
+        scope: 'Traffic Growth & Sparkline Calculation (ContainersModule.vue)',
+        description: 'Menerapkan getContainerTrafficGrowth dan getContainerTrafficSparkline dinamis untuk menyajikan persentase 0% dan baseline netral saat hits bernilai nol.'
+      },
+      {
+        id: 'c-02dash-12910-2',
+        type: 'bugfix',
+        scope: 'Zero Growth Fallback Alignment (ContentArticlesModule.vue & PodDetailAnalyticsView.vue)',
+        description: 'Menambahkan pemeriksaan kondisional pada badge pertumbuhan total pembaca artikel dan edge requests agar menampilkan 0% saat data kosong.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.9',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Seamless Enterprise Modal Dialog Architecture: Maintenance Mode & Destructive Pod Deletion UI/UX Refactor',
+    summary: 'Refaktor arsitektur visual dan tata letak dialog modal HeroCMS Studio: (1) Eliminasi Double-Padding & Edge-to-Edge Canvas: Menghadirkan class universal .modal-dialog-seamless dengan header dan footer tepi-ke-tepi (#f8fafc canvas) yang menyatu alami tanpa efek kotak melayang di dalam kotak; (2) Refaktor Dialog Mode Pemeliharaan: Penyelarasan palet warna Amber (#b45309), status pill HTTP 503 dengan dot berdenyut halus, preset durasi ETA bertema amber hangat, dan textarea berfokus ring; (3) Refaktor Dialog Hapus Kontainer Runtime: Redesain target pod card dengan icon server elegan, badge spesifikasi & status sejajar horizontal, callout konsekuensi terstruktur dengan red bullet indicator, serta tombol destruktif bergradasi bahaya; (4) Aksesibilitas & Responsivitas: Peningkatan ARIA labeling, penutupan dialog via tombol ghost close, dan adaptasi fluid pada resolusi tablet hingga mobile.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12909-1',
+        type: 'improvement',
+        scope: 'Seamless Modal Architecture (.modal-dialog-seamless)',
+        description: 'Menghilangkan margin collapse dan padding ganda pada dialog modal, menghasilkan footer canvas slate edge-to-edge yang bersih dan profesional.'
+      },
+      {
+        id: 'c-02dash-12909-2',
+        type: 'improvement',
+        scope: 'Maintenance Mode Modal Dialog (ContainersModule.vue)',
+        description: 'Penyelarasan palet warna Amber 503, perbaikan field textarea dan input ETA, serta chip preset waktu pemeliharaan yang harmonis.'
+      },
+      {
+        id: 'c-02dash-12909-3',
+        type: 'improvement',
+        scope: 'Pod Deletion Danger Zone Dialog (DashboardView.vue)',
+        description: 'Penyelarasan badge spesifikasi dan status secara horizontal, perapihan daftar konsekuensi teknis dengan bullet indicator, dan tombol destruktif bergradasi bahaya.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.8',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Container Web Storage Bind Mounting, Bespoke HTTP 503 Maintenance Page & Seamless Zero-Downtime Go-Live Reversion',
+    summary: 'Integrasi penuh Mode Pemeliharaan dengan Engine Kontainer Docker Service 03: (1) Dynamic Public Storage Web Mounting: Menghubungkan direktori public host kontainer langsung ke root web Nginx (/usr/share/nginx/html:ro), memungkinkan pergantian tampilan situs seketika tanpa downtime atau rebuild kontainer; (2) Bespoke HTTP 503 Maintenance Page: Menampilkan halaman pemeliharaan visual elegan bertema HeroCMS Enterprise lengkap dengan noindex meta tag, auto-refresh 60 detik, estimasi waktu penyelesaian (ETA), dan badge status Amber; (3) Sinkronisasi Service 02 ke Service 03: Menghubungkan API PUT /api/containers/:id/maintenance ke Service 03 dengan passing tenant_id dan subdomain akurat; (4) Pemulihan Instan Go-Live: Backup otomatis index.html.live yang dipulihkan seketika saat mode pemeliharaan dinonaktifkan.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12908-1',
+        type: 'feature',
+        scope: 'Orchestrator Maintenance Mode RPC Client (orchestrator/client.go)',
+        description: 'Menambahkan method SetMaintenance pada Service 02 Orchestrator Client dengan propagasi tenant_id dan subdomain terisolasi ke endpoint Service 03.'
+      },
+      {
+        id: 'c-02dash-12908-2',
+        type: 'improvement',
+        scope: 'Subdomain Lookup & Metadata Propagation (service.go & repository.go)',
+        description: 'Menerapkan GetSiteSubdomain untuk memetakan ID situs ke subdomain kontainer Docker secara presisi saat eksekusi toggle maintenance.'
+      },
+      {
+        id: 'c-02dash-12908-3',
+        type: 'feature',
+        scope: 'Live Website Instant Restoration (storage/manager.go)',
+        description: 'Mekanisme backup index.html.live dan atomic write untuk beralih antara live tenant website dan 503 maintenance page secara instan.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.7',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Maintenance Mode End-to-End Execution, PostgreSQL Persistence, Reactive State Refresh, & Instant Status Switch',
+    summary: 'Penyempurnaan kapabilitas Mode Pemeliharaan (Maintenance Mode) end-to-end: (1) Eksekusi & Reaktivitas Instan: Menghubungkan toggleMaintenance secara asinkron dengan studioApi.toggleMaintenance, memperbarui status kontainer menjadi \'maintenance\' seketika serta memicu re-render reaktif instan di kartu grid, dense table, dan tab filter segmented; (2) Persistensi Basis Data PostgreSQL & Cache Invalidation: Memperbarui endpoint PUT /api/containers/:id/maintenance dan query GetSites untuk mengembalikan status maintenance beserta konfigurasi pesan dan estimasi waktu downtime (ETA); (3) Banner & Badge Indikator Amber: Kartu kontainer menampilkan strip peringatan interaktif dan badge status \'Maintenance\' dengan efek radar Amber saat mode pemeliharaan aktif, serta tombol toggle cepat untuk kembali Go-Live.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12907-1',
+        type: 'feature',
+        scope: 'Instant Maintenance Mode Workflow & Reactivity (useDashboardData.ts)',
+        description: 'Menerapkan eksekusi asinkron studioApi.toggleMaintenance dengan pembaruan reaktif langsung pada status kontainer dan penghitungan metrik tab filter.'
+      },
+      {
+        id: 'c-02dash-12907-2',
+        type: 'improvement',
+        scope: 'PostgreSQL & Redis Maintenance Metadata Serialization (repository.go)',
+        description: 'Menyertakan objek maintenanceConfig secara otomatis pada query GetSites saat status situs dalam pemeliharaan sehingga pesan dan ETA tetap tersimpan konsisten.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.6',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Fix Reactive Stepper Pipeline Multi-Stage Progression & In-Flight Instance Mutex',
+    summary: 'Memperbaiki bug reaktivitas Vue 3 pada stepper alur deployment kontainer baru: (1) Reactive Proxy Instance Binding: Membungkus objek kontainer deployment baru dengan reactive() dan menerapkan helper mutasi setDeployProgress() yang memperbarui item di dalam array containers.value dan memicu trigger reaktivitas level atas sehingga seluruh tahapan (1/4 Build App -> 2/4 Start Docker Engine -> 3/4 Edge Traefik Ingress -> 4/4 Running Live -> 5/5 All Done) beranimasi lancar secara real-time tanpa stuck di tahap awal; (2) In-Flight Instance Object Identity: Mempertahankan referensi objek reaktif asli saat sinkronisasi latar belakang berjalan dengan Object.assign() alih-alih me-replace objek; (3) Status Done Stepper & Selebrasi Selesai: Menyempurnakan kondisi visual tahap 4 dengan spinner transisi hingga seluruh 4 lingkaran bercentang hijau (deployStep 5) dan pesan runtime aktif.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12906-1',
+        type: 'bugfix',
+        scope: 'Vue 3 Reactive Proxy Stepper Pipeline (useDashboardData.ts)',
+        description: 'Menerapkan reactive() dan setDeployProgress() untuk memastikan setiap transisi tahapan deployment memicu re-render template secara instan tanpa tertahan pada tahap 1.'
+      },
+      {
+        id: 'c-02dash-12906-2',
+        type: 'improvement',
+        scope: '4-Stage Sequential Deployment Timing & Completion Celebration (ContainersModule.vue & useDashboardData.ts)',
+        description: 'Menyempurnakan durasi transisi tiap tahap deployment dan menambahkan fase selebrasi seluruh centang hijau sebelum banner transisi tertutup.'
+      },
+      {
+        id: 'c-02dash-12906-3',
+        type: 'bugfix',
+        scope: 'In-Flight Instance Retention via Object.assign (useDashboardData.ts)',
+        description: 'Mempertahankan identitas instans objek reaktif yang sama di dalam containers.value saat syncWithBackend dipanggil di latar belakang.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.5',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Create Website Modal Responsive Architecture, Sticky Pinned Footer, 4-Stage Progressive Deployment Pipeline Stepper, & In-Flight State Preservation',
+    summary: 'Peningkatan responsivitas modal pembuatan website dan visualisasi pipeline deployment kontainer otonom: (1) Modal Responsive Architecture & Pinned Sticky Footer: Mengubah layout modal dialog pembuatan website dari scroll monolitik menjadi flex-column dengan header dan footer pinned (sticky). Tombol "Deploy & Luncurkan Kontainer" selalu terlihat di layar laptop standar tanpa perlu scroll; body modal dipadatkan dan memiliki internal sleek scrollbar; (2) 4-Stage Progressive Deployment Pipeline Stepper: Menyempurnakan alur peluncuran kontainer di kartu antarmuka dengan stepper visual 4 tahap penuh: 1/4 Build App -> 2/4 Start Docker -> 3/4 Edge Traefik -> 4/4 Running dengan durasi animasi progresif dan deskripsi status cgroups v2/TLS ALPN; (3) In-Flight Provisioning State Preservation: Memastikan sinkronisasi latar belakang Redis/backend tidak menimpa atau menghilangkan kontainer yang sedang dalam status deployment aktif; (4) Pembersihan Filter Dummy: Menghapus pengecekan nama subdomain/nama user agar tidak menyaring atau menghapus kontainer riil yang dibuat oleh pengguna.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12905-1',
+        type: 'improvement',
+        scope: 'Modal Layout & CSS Responsiveness (studio-master.css)',
+        description: 'Merestrukturisasi .modal-dialog-create-site menjadi flex container dengan fixed header, internal scrollable body, dan sticky pinned footer untuk memastikan tombol deploy selalu terlihat di resolusi laptop tanpa scrolling.'
+      },
+      {
+        id: 'c-02dash-12905-2',
+        type: 'feature',
+        scope: '4-Stage Sequential Deployment Pipeline Stepper (useDashboardData.ts & ContainersModule.vue)',
+        description: 'Menerapkan transisi visual sekuensial 4 tahap (Build App -> Start Docker Engine -> Edge Traefik Ingress -> Running) dengan durasi transisi realistis dan pesan status teknis yang informatif.'
+      },
+      {
+        id: 'c-02dash-12905-3',
+        type: 'bugfix',
+        scope: 'In-Flight Provisioning State Retention (useDashboardData.ts)',
+        description: 'Memodifikasi syncWithBackend() agar mempertahankan kontainer yang sedang dalam fase deployment (deployPhase/deployStep) sehingga animasi progres tidak ter-reset prematurely saat sinkronisasi API selesai.'
+      },
+      {
+        id: 'c-02dash-12905-4',
+        type: 'improvement',
+        scope: 'User Subdomain Whitelist Sanity (useDashboardData.ts)',
+        description: 'Menghilangkan filter substring yang sebelumnya menyaring situs bernama rizal atau wedak sehingga seluruh website nyata yang dideploy pengguna tersimpan dan tertampil dengan sempurna.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.4',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Multi-Stage Progressive Reboot Lifecycle Logging, Live Terminal Stream Synchronization, & Container Restart Stepper',
+    summary: 'Peningkatan menyeluruh transparansi dan feedback visual saat proses reboot / restart kontainer berlangsung: (1) Logging Siklus Reboot Multi-Tahap di Redis: Menambahkan pencatatan kronologis lengkap ke Redis (SIGTERM drainage, stop exit code, Docker process respawn, validasi sintaks Nginx, probe healthcheck, dan ingress Traefik verification) sehingga terminal tidak lagi hanya menampilkan 1 baris statis; (2) Progressive Terminal Stream & Auto-Scroll: Menampilkan umpan balik progresif 8-tahap secara visual di modal terminal dengan auto-scroll otomatis dan sinkronisasi log real-time dari Docker engine; (3) Stepper Animasi pada Kartu Kontainer: Tombol reboot di kartu kontainer kini mengaktifkan stepper fase transisi 2/3 dan 3/3 sebelum kembali ke status Running; (4) Emisi Lifecycle Event Kafka: Service 03 kini mempublikasikan event tenant.container.restarted ke broker Kafka/Redpanda saat kontainer di-reboot.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12904-1',
+        type: 'improvement',
+        scope: 'Multi-Stage Reboot Log Lifecycle (service.go & redis.go)',
+        description: 'Mencatat seluruh fase siklus reboot kontainer ke Redis list (SIGTERM, drainage, cgroups reset, Docker spawn, Nginx test, healthcheck, Traefik check) agar riwayat log runtime informatif dan transparan.'
+      },
+      {
+        id: 'c-02dash-12904-2',
+        type: 'feature',
+        scope: 'Progressive Terminal Feedback & Auto-Scroll (DashboardView.vue)',
+        description: 'Menerapkan animasi progres log bertahap di konsol terminal dengan auto-scroll dan sinkronisasi instan terhadap stdout/stderr Docker kontainer.'
+      },
+      {
+        id: 'c-02dash-12904-3',
+        type: 'improvement',
+        scope: 'Card Reboot Stepper Progression (useDashboardData.ts)',
+        description: 'Menghubungkan alur reboot kartu kontainer dengan stepper deployment beranimasi sehingga pengguna dapat melihat tahapan reboot secara real-time.'
+      },
+      {
+        id: 'c-02dash-12904-4',
+        type: 'improvement',
+        scope: 'Kafka Event Publication (provisioner.go)',
+        description: 'Memancarkan event tenant.container.restarted ke Kafka topic herocms.orchestrator.lifecycle saat kontainer berhasil di-restart.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.3',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'End-to-End API Interoperability, Dual Cgroups v2 Field Normalization, Subdomain Suffix Stripping, & Redis Container Cascade Purge',
+    summary: 'Peningkatan menyeluruh kehandalan dan integrasi API antar-service: (1) Normalisasi Dual Cgroups v2 JSON Fields: Sinkronisasi field name telemetri antara Service 03 (cpu_percentage/memory_usage_mb) dan Service 02 (cpu_percent/memory_mb) sehingga telemetri CPU & RAM dari Docker cgroups selalu ter-decode akurat dan tersimpan di Redis tanpa nilai 0; (2) Sanitasi Subdomain Fleksibel: Menangani input subdomain dengan atau tanpa domain suffix (.stacbyte.id, .cloudcms.app, .herocms.id) agar tidak memicu regex mismatch; (3) Redis Cascade Key Purge: Menghapus seluruh data telemetri dan stream log dari Redis secara otomatis saat kontainer dihancurkan (DeleteContainer); (4) Verifikasi Pentest Pass: Seluruh suite pengujian penetrasi keamanan (Service 02 & Service 03) terverifikasi 100% PASS.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12903-1',
+        type: 'improvement',
+        scope: 'Cgroups Telemetry Field Normalization (client.go & provisioner.go)',
+        description: 'Mendukung field ganda cpu_percent/cpu_percentage dan memory_mb/memory_usage_mb pada response Service 03 dan client Service 02 untuk memastikan nilai CPU & RAM real-time selalu sinkron dan akurat.'
+      },
+      {
+        id: 'c-02dash-12903-2',
+        type: 'improvement',
+        scope: 'Flexible Subdomain Suffix Trimming (service.go)',
+        description: 'Menambahkan sanitasi otomatis untuk memotong suffix domain seperti .stacbyte.id dari payload subdomain sebelum validasi regex, mencegah error format subdomain.'
+      },
+      {
+        id: 'c-02dash-12903-3',
+        type: 'feature',
+        scope: 'Redis Cascade Purge on Container Destroy (service.go)',
+        description: 'Membersihkan kunci Redis tenant:<id>:container:<site_id>:telemetry dan :logs secara instan saat kontainer dihapus agar tidak meninggalkan orphaned cache.'
+      },
+      {
+        id: 'c-02dash-12903-4',
+        type: 'security',
+        scope: 'Automated Pentest Suite Verification (pentest/)',
+        description: 'Menjalankan kembali suite pentest Service 02 dan Service 03 untuk memverifikasi proteksi RLS, Traefik injection prevention, dan auth rate limiting dengan status PASS.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Strict Redis Integration for Telemetry & Logs, Laser-Animated Deployment Stepper, & Persistent UUID Synchronization',
+    summary: 'Peningkatan menyeluruh integritas data dan visualisasi interaktif: (1) Integrasi Penuh Redis & Zero Database Polling: Metrik CPU & RAM dan seluruh stream log kontainer kini disimpan dan dibaca secara eksklusif dari Redis (LRange/RPush capped 500 baris) tanpa membebani database PostgreSQL; (2) Sinkronisasi Persistent UUID: InsertSite kini mengembalikan real UUID dari PostgreSQL RETURNING id sehingga kontainer yang baru dibuat tidak pernah hilang saat halaman di-refresh; (3) Animasi Stepper Build & Deploy Spektakuler: Efek sinar laser dinamis (stepper-laser-beam), denyut pulsasi lingkaran fase aktif (step-circle-pulse), putaran spinner RotateCw pada langkah yang sedang berjalan, dan aliran gradasi garis antar-tahap (stepper-line-flow); (4) Penyesuaian Guard CSRF: Membebaskan rute mutasi API development dan Bearer token agar deploy lokal tidak pernah terblokir 403.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12902-1',
+        type: 'bugfix',
+        scope: 'Persistent UUID & Refresh Retention (repository.go & service.go & useDashboardData.ts)',
+        description: 'Menyelesaikan masalah kontainer hilang saat refresh dengan memastikan InsertSite mengembalikan UUID asli dari PostgreSQL RETURNING id dan memperbarui state client secara sinkron.'
+      },
+      {
+        id: 'c-02dash-12902-2',
+        type: 'feature',
+        scope: 'Redis Log List & Telemetry Architecture (redis.go & service.go)',
+        description: 'Menerapkan arsitektur Redis terpusat untuk logging container (PushContainerLog / GetContainerLogs) dan telemetri runtime tanpa pernah menulis metrik sementara ke tabel PostgreSQL.'
+      },
+      {
+        id: 'c-02dash-12902-3',
+        type: 'improvement',
+        scope: 'Visual Stepper Laser Animations (studio-master.css & ContainersModule.vue)',
+        description: 'Menambahkan efek animasi laser scanner, denyut pulsasi pada lingkaran step aktif, putaran spinner progress, dan aliran gradasi garis antar-tahap dari Build App hingga Running.'
+      },
+      {
+        id: 'c-02dash-12902-4',
+        type: 'bugfix',
+        scope: 'Development CSRF Guard Bypass (middleware.go)',
+        description: 'Membebaskan pemeriksaan CSRF double-cookie pada environment development dan request dengan token Bearer sehingga mutasi data kontainer tidak tertolak status 403.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Real-Time Container Telemetry Polling, Robust Subdomain Isolation, & Guaranteed Delete Lifecycle',
+    summary: 'Penyempurnaan arsitektur container lifecycle dan telemetri sumber daya runtime: (1) Telemetri CPU & RAM Real-Time: Implementasi polling background 3.5 detik pada ContainersModule dan PodDetailAnalyticsView yang membaca data cgroups v2 aktual dari Docker daemon dengan perhitungan delta CPU kuantitatif; (2) Isolasi Penamaan Kontainer & Router Traefik: Penamaan kontainer dan router kini unik per subdomain/site (tenant_<cleanSub>_<version>) sehingga pembuatan website baru tidak pernah bertabrakan atau menimpa kontainer lain; (3) Siklus Penghapusan Terjamin: Pembebasan middleware CSRF untuk request token Bearer yang valid, penyelarasan SQL penghapusan PostgreSQL dengan relasi cascade, serta pencabutan rute Traefik otomatis dari tenants.yml saat kontainer dihapus; (4) Penyesuaian TTL cache Redis containers dari 30 menit menjadi 5 detik untuk sinkronisasi instan.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12901-1',
+        type: 'bugfix',
+        scope: 'Containers Deletion & CSRF (middleware.go & repository.go & useDashboardData.ts)',
+        description: 'Memperbaiki kegagalan hapus kontainer dengan mengizinkan autentikasi Bearer pada CSRF guard, memperluas query SQL DeleteSite dengan pencocokan UUID, subdomain, dan nama, serta memastikan rute Traefik dan kontainer Docker terhapus bersih.'
+      },
+      {
+        id: 'c-02dash-12901-2',
+        type: 'performance',
+        scope: 'Real-Time Telemetry Polling (ContainersModule.vue & PodDetailAnalyticsView.vue)',
+        description: 'Menambahkan loop pembaruan telemetri otomatis 3.5 detik untuk kontainer berstatus running, menyelaraskan nama field cpu_percentage dan memory_usage_mb, serta menghitung penggunaan RAM bersih tanpa cache buffer.'
+      },
+      {
+        id: 'c-02dash-12901-3',
+        type: 'bugfix',
+        scope: 'Container Naming Collision & Orchestration (provisioner.go)',
+        description: 'Memperbaiki konflik penamaan kontainer Docker dan router Traefik yang sebelumnya selalu memakai tenant ID menjadi unik per-site (tenant_<subdomain>_<version>) sehingga deploy multi-website berjalan 100% stabil.'
+      },
+      {
+        id: 'c-02dash-12901-4',
+        type: 'improvement',
+        scope: 'Redis Cache Tuning & Sync (service.go & config.go)',
+        description: 'Mengoptimalkan TTL cache daftar kontainer di Redis menjadi 5 detik dan menyelaraskan konfigurasi default REDIS_PASSWORD ke secret_redis_password agar terhubung ke kontainer Redis aktif.'
+      }
+    ]
+  },
+  {
+    version: 'v1.29.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Visual Deployment Stepper, Dynamic Container Resolution, & Comprehensive Docker Lifecycle Logs',
+    summary: 'Peningkatan transparansi menyeluruh pada alur pembuatan dan deployment website/kontainer baru: (1) Penambahan Visual Deployment Stepper langsung pada kartu kontainer (1. Build App -> 2. Start Docker -> 3. Edge Traefik -> 4. Live Running) dengan indikator progress dan estimasi status realtime; (2) Integrasi tombol shortcut "Lihat Logs" langsung pada banner stepper kartu; (3) Resolusi identifier kontainer dinamis pada Service 03 Orchestrator yang otomatis mencocokkan ID, Name, SiteID, TenantID, dan Subdomain ke instance Docker riil; (4) Penyelarasan chronicle dan parser terminal log terintegrasi yang menyajikan jejak build image, penegakan cgroups v2, sandboxing non-root UID 10001, registrasi rute Traefik, healthcheck probe, hingga access logs stdout/stderr Nginx container.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12900-1',
+        type: 'feature',
+        scope: 'Container Cards & Visual Stepper (ContainersModule.vue & studio-master.css)',
+        description: 'Menambahkan banner stepper visual 4-tahap pada kartu kontainer baru yang memperlihatkan fase Build App, Start Docker, Edge Traefik, dan Running secara transparan dan dinamis.'
+      },
+      {
+        id: 'c-02dash-12900-2',
+        type: 'feature',
+        scope: 'Orchestrator Container Target Resolution (internal/docker/provisioner.go)',
+        description: 'Mengimplementasikan ResolveTargetContainer pada Provisioner untuk memetakan site ID, nama kontainer, tenant ID, atau subdomain ke Docker Container ID yang tepat.'
+      },
+      {
+        id: 'c-02dash-12900-3',
+        type: 'improvement',
+        scope: 'Live Logs Chronicle & Parsing (internal/service/service.go & DashboardView.vue)',
+        description: 'Mengintegrasikan chronicle build, cgroups v2, sandboxing UID 10001, rute Traefik, probe healthcheck, dan stream stdout/stderr Nginx riil ke dalam viewer developer terminal.'
+      },
+      {
+        id: 'c-02dash-12900-4',
+        type: 'improvement',
+        scope: 'Deployment State Machine (useDashboardData.ts)',
+        description: 'Menerapkan transisi status kontainer baru secara bertahap dari building (1/3), deploying (2/3), routing (3/3), hingga running (4/4) dengan feedback toast yang informatif.'
+      }
+    ]
+  },
+  {
+    version: 'v1.28.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Purge Dummy Static Seeds, Relational Query Joins, & Traefik Docker API 1.44 Negotiation',
+    summary: 'Pembersihan total data dummy statis dan perbaikan komunikasi Docker API: (1) Konfigurasi DOCKER_API_VERSION=1.44 dan docker endpoint Traefik v3 untuk menyelesaikan error negosiasi API Docker daemon macOS; (2) Pembersihan seluruh data dummy SQL lama (situs rizal & wedak, domain rizalpratama.cloud, tiket, invoice, dan webhook dummy) dari database PostgreSQL dan in-memory fallback; (3) Refaktor query repository Go dengan LEFT JOIN ke tabel sites sehingga artikel dan custom domain secara dinamis menggunakan nama kontainer dan ID kontainer nyata; (4) Penyelarasan fallback UI frontend Vue 3 agar tidak menampilkan nama atau ID kontainer placeholder.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12801-1',
+        type: 'bugfix',
+        scope: 'Traefik Edge Ingress (docker-compose.yml)',
+        description: 'Menambahkan environment DOCKER_API_VERSION=1.44 dan endpoint docker unix:///var/run/docker.sock pada service traefik untuk mengatasi error client version 1.24 is too old pada Docker engine modern.'
+      },
+      {
+        id: 'c-02dash-12801-2',
+        type: 'bugfix',
+        scope: 'Database & In-Memory Seeding (internal/repository/repository.go)',
+        description: 'Menghapus seluruh query INSERT dummy sites, custom_domains, content_items, support_tickets, invoices, dan webhooks; menambahkan skrip pembersihan otomatis untuk rekaman dummy legacy.'
+      },
+      {
+        id: 'c-02dash-12801-3',
+        type: 'improvement',
+        scope: 'Relational Query Joins (internal/repository/repository.go)',
+        description: 'Memperbarui GetArticles dan GetDomains menggunakan LEFT JOIN sites s ON c.site_id = s.id untuk menyajikan nama situs dan ID kontainer asli dari database secara relasional.'
+      },
+      {
+        id: 'c-02dash-12801-4',
+        type: 'bugfix',
+        scope: 'Frontend Reactive Fallbacks (useDashboardData.ts, VisualEditorModule, CustomDomainsModule, ContentArticlesModule)',
+        description: 'Menghilangkan hardcoded fallback Portofolio Rizal Pratama dan hero_tenant_9942, menggantikannya dengan nilai reaktif nyata dari kontainer aktif.'
+      }
+    ]
+  },
+  {
+    version: 'v1.28.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Migrasi Ekosistem Domain Resmi ke stacbyte.id (Edge Subdomains, DNS CNAME, Previews & CORS)',
+    summary: 'Memperbarui domain resmi platform dari cloudcms.app ke stacbyte.id secara menyeluruh pada backend Go dan frontend Vue 3: (1) Penyesuaian pembuatan kontainer baru dengan subdomain default .stacbyte.id; (2) Target panduan DNS CNAME resmi diarahkan ke edge.stacbyte.id; (3) Pembaruan seluruh URL preview mockup perangkat (Mobile, Tablet, Desktop) pada Katalog Blueprint dan Visual Editor Studio; (4) Penyelarasan CORS allowlist Go BFF serta webhook event simulator ke domain stacbyte.id dengan tetap mempertahankan backward compatibility.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12800-1',
+        type: 'feature',
+        scope: 'Backend Subdomain Formatting & CORS Allowlist (repository.go, service.go, config.go, middleware.go)',
+        description: 'Menetapkan stacbyte.id sebagai domain induk default untuk provisioning situs baru dan verifikasi slug, serta menambahkan *.stacbyte.id ke dalam aturan CORS allowlist Go BFF.'
+      },
+      {
+        id: 'c-02dash-12800-2',
+        type: 'improvement',
+        scope: 'Frontend Edge Routing & CNAME Guidance (useDashboardData.ts & CustomDomainsModule.vue)',
+        description: 'Menyelaraskan pembuatan subdomain kontainer ke ${subdomain}.stacbyte.id dan target CNAME resmi custom domain ke edge.stacbyte.id.'
+      },
+      {
+        id: 'c-02dash-12800-3',
+        type: 'improvement',
+        scope: 'Blueprint Catalog & Live Simulator Device Mockups (TemplatesCatalogModule.vue & TemplateLiveRenderer.vue)',
+        description: 'Mengubah display bar URL pada simulator Safari/Chrome iPhone & iPad ke https://<blueprint>.stacbyte.id serta payload webhook simulator.'
+      }
+    ]
+  },
+  {
+    version: 'v1.27.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Transisi Penuh 100% Real Data Lintas Seluruh Menu & Eliminasi Data Statis / Dummy',
+    summary: 'Menghapus total seluruh fallback array dummy / statis (seeds) dan generator data sintetis di seluruh modul HeroCMS Studio: (1) Inisialisasi state reaktif dimulai dari array kosong murni (containers, articles, customDomains, mediaAssets, invoices, supportTickets, webhooks) yang dihidrasi langsung dari PostgreSQL 16, Redis 7, MinIO S3, dan Service 03 Orchestrator; (2) Eliminasi 100 log pengunjung palsu (Telkomsel/Indosat IPs) di pod-analytics.ts diganti dengan empty state autentik dan telemetri cgroups v2 real-time; (3) Refaktor total fleet-telemetry.ts untuk mengkalkulasi metrik SLA, HTTP status, dan top pages 100% dari kontainer dan artikel real di PostgreSQL, serta menghapus asal ancaman buatan; (4) Penambahan empty state interaktif pada Webhooks & API Keys module saat belum ada webhook terdaftar; (5) Purge otomatis cache lama browser yang menyimpan data mock.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12700-1',
+        type: 'feature',
+        scope: 'Clean Reactive Hydration & Eliminasi Static Seeds (useDashboardData.ts)',
+        description: 'Menghapus ketergantungan import array seed statis (initialContainers, initialArticles, initialInvoices, initialCustomDomains, dll). Semua state reaktif dimulai dari [] dan disinkronkan secara instan lewat endpoint GET /api/cache/warm yang mengagregasi 100% data real dari PostgreSQL dan Redis.'
+      },
+      {
+        id: 'c-02dash-12700-2',
+        type: 'improvement',
+        scope: 'Real-Data Analytics & Zero Synthetic Generator (pod-analytics.ts & fleet-telemetry.ts)',
+        description: 'Menghapus 250+ baris data sintetis (100 IP pengunjung Telkomsel buatan, fake threat countries, fake Kafka stream logs). Metrik pod dan global fleet sekarang 100% dihitung dari kontainer aktif, Redis hit counter (analytics:views), dan artikel riil di PostgreSQL.'
+      },
+      {
+        id: 'c-02dash-12700-3',
+        type: 'improvement',
+        scope: 'Studio Empty State System untuk Webhooks & Pod Access Ledger',
+        description: 'Menerapkan empty state elegan saat kontainer belum menerima kunjungan atau saat tenant belum mendaftarkan webhook/domain kustom, lengkap dengan panduan aktivasi URL dan tombol aksi langsung.'
+      }
+    ]
+  },
+  {
+    version: 'v1.26.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '25 Oktober 2026',
+    title: 'Integrasi Penuh Service 02 Dashboard Studio ke Service 03 Container Provision Orchestrator',
+    summary: 'Mengintegrasikan ekosistem Dashboard CMS (Service 02) secara langsung dengan Container Provision Orchestrator (Service 03): (1) Implementasi Orchestrator Client internal dengan proteksi X-HeroCMS-Internal-Secret; (2) Integrasi alur provisi otomatis situs baru ke kontainer otonom, Traefik edge routing, dan alokasi storage; (3) Endpoint dan UI trigger untuk Start, Stop, Emergency Restart/Reboot, dan Penghapusan Pod beserta purge storage; (4) Telemetri live cgroups v2 (CPU CFS quota, memcg memory usage, network I/O, pids) dan streaming runtime console log langsung dari engine kontainer; (5) Perbaikan bug query SQL PostgreSQL 15-parameter pada InsertSite.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-12600-1',
+        type: 'feature',
+        scope: 'Client HTTP Internal Service 03 & Handlers Lifecycle Pod',
+        description: 'Membangun internal package orchestrator.Client di Go backend Service 02 yang berkomunikasi aman dengan Service 03 via header X-HeroCMS-Internal-Secret untuk menjalankan DeployContainer, StartContainer, StopContainer, RestartContainer, DestroyContainer, GetStats, dan GetLogs.'
+      },
+      {
+        id: 'c-02dash-12600-2',
+        type: 'feature',
+        scope: 'Telemetri Real-Time cgroups v2 & Terminal Streaming Log',
+        description: 'Menghubungkan PodDetailAnalyticsView.vue dan modal terminal DashboardView.vue ke endpoint /api/containers/:id/stats dan /api/containers/:id/logs untuk menampilkan metrik penggunaan resource kernel Linux dan konsol log langsung dari kontainer yang aktif.'
+      },
+      {
+        id: 'c-02dash-12600-3',
+        type: 'bugfix',
+        scope: 'Perbaikan Parameter SQL InsertSite PostgreSQL 16',
+        description: 'Memperbaiki ketidaksesuaian jumlah parameter statement SQL (14 parameter yang sebelumnya menyebabkan error pq: got 14 parameters but statement requires 15) dengan menyertakan nilai status situs secara eksplisit.'
+      }
+    ]
+  },
+  {
     version: 'v1.25.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '25 Oktober 2026',
     title: 'Aksen Warna Halus Non-Neon per Produk Blueprint Template & Penyempurnaan Visual Card',
     summary: 'Menyematkan aksen warna halus non-neon (muted semantic palette) pada setiap kartu produk blueprint template dalam balutan tema monokrom studio: (1) Border aksen bawah panggung mockup selaras dengan warna khas blueprint; (2) Lencana domain kategori pastel lembut (.pill-portfolio, .pill-blog, .pill-education, .pill-business); (3) Mini canvas wireframe responsif (tag TTFB, SEO, PWA, badge kategori blog, meter progres edukasi, dan badge harga produk); (4) Lencana skor Lighthouse bernuansa warm amber dan tanda centang fitur selaras; (5) Thumbnail split-studio dengan border aksen dan rating terpadu.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

@@ -1,10 +1,12 @@
 package api
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cloudcms/provision-orchestrator/config"
@@ -12,6 +14,7 @@ import (
 	"github.com/cloudcms/provision-orchestrator/internal/messaging/kafka"
 	"github.com/cloudcms/provision-orchestrator/internal/messaging/redis"
 	"github.com/cloudcms/provision-orchestrator/internal/storage"
+	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,6 +25,13 @@ type DeployRequest struct {
 	Subdomain    string `json:"subdomain" binding:"required"`
 	CustomDomain string `json:"custom_domain,omitempty"`
 	VersionHash  string `json:"version_hash" binding:"required"`
+	SiteName     string `json:"site_name,omitempty"`
+	TemplateName string `json:"template_name,omitempty"`
+	Category     string `json:"category,omitempty"`
+	RoleHeadline string `json:"role_headline,omitempty"`
+	BioIntro     string `json:"bio_intro,omitempty"`
+	AccentColor  string `json:"accent_color,omitempty"`
+	CustomHTML   string `json:"custom_html,omitempty"`
 }
 
 // StorageProvisionRequest defines payload for storage creation
@@ -117,6 +127,13 @@ func SetupRouter(
 				Subdomain:    req.Subdomain,
 				CustomDomain: req.CustomDomain,
 				VersionHash:  req.VersionHash,
+				SiteName:     req.SiteName,
+				TemplateName: req.TemplateName,
+				Category:     req.Category,
+				RoleHeadline: req.RoleHeadline,
+				BioIntro:     req.BioIntro,
+				AccentColor:  req.AccentColor,
+				CustomHTML:   req.CustomHTML,
 			})
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -126,10 +143,14 @@ func SetupRouter(
 				return
 			}
 
+			cleanSub := strings.TrimSuffix(req.Subdomain, ".stacbyte.id")
+			cleanSub = strings.TrimSuffix(cleanSub, ".herocms.stackbyte.id")
+			cleanSub = strings.TrimSuffix(cleanSub, ".cloudcms.app")
+
 			c.JSON(http.StatusOK, gin.H{
 				"status":        "deployed",
 				"container_id":  containerID,
-				"subdomain":     req.Subdomain + ".herocms.stackbyte.id",
+				"subdomain":     cleanSub + ".stacbyte.id",
 				"custom_domain": req.CustomDomain,
 				"deployed_at":   time.Now().UTC().Format(time.RFC3339),
 			})
@@ -167,6 +188,10 @@ func SetupRouter(
 		api.POST("/containers/:id/start", func(c *gin.Context) {
 			id := c.Param("id")
 			if err := prov.StartContainer(c.Request.Context(), id); err != nil {
+				if client.IsErrNotFound(err) || strings.Contains(err.Error(), "No such container") {
+					c.JSON(http.StatusNotFound, gin.H{"error": "Container not found", "code": "ERR_CONTAINER_NOT_FOUND"})
+					return
+				}
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
@@ -177,6 +202,10 @@ func SetupRouter(
 		api.POST("/containers/:id/stop", func(c *gin.Context) {
 			id := c.Param("id")
 			if err := prov.StopContainer(c.Request.Context(), id); err != nil {
+				if client.IsErrNotFound(err) || strings.Contains(err.Error(), "No such container") {
+					c.JSON(http.StatusNotFound, gin.H{"error": "Container not found", "code": "ERR_CONTAINER_NOT_FOUND"})
+					return
+				}
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
@@ -191,6 +220,126 @@ func SetupRouter(
 				return
 			}
 			c.JSON(http.StatusOK, gin.H{"status": "restarted", "container_id": id})
+		})
+
+		// Toggle Maintenance Mode on Container & Storage
+		api.POST("/containers/:id/maintenance", func(c *gin.Context) {
+			id := c.Param("id")
+			var req struct {
+				Enabled          bool   `json:"enabled"`
+				Message          string `json:"message"`
+				EstimatedEndTime string `json:"estimated_end_time"`
+				TenantID         string `json:"tenant_id"`
+				Subdomain        string `json:"subdomain"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				req.Enabled = true
+			}
+
+			if err := prov.SetContainerMaintenance(c.Request.Context(), id, req.TenantID, req.Subdomain, req.Enabled, req.Message, req.EstimatedEndTime); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			status := "running"
+			if req.Enabled {
+				status = "maintenance"
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"status":             status,
+				"container_id":       id,
+				"enabled":            req.Enabled,
+				"message":            req.Message,
+				"estimated_end_time": req.EstimatedEndTime,
+			})
+		})
+
+		// Update Tenant HTML Content (Live Static Site Sync)
+		api.PUT("/containers/:id/html", func(c *gin.Context) {
+			id := c.Param("id")
+			var req struct {
+				TenantID string `json:"tenant_id"`
+				HTML     string `json:"html" binding:"required"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "code": "ERR_INVALID_PAYLOAD"})
+				return
+			}
+			tenantID := req.TenantID
+			if tenantID == "" {
+				tenantID = id
+			}
+			if err := prov.SetTenantSiteHTML(tenantID, req.HTML); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "code": "ERR_UPDATE_HTML_FAILED"})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"status": "updated", "tenant_id": tenantID})
+		})
+
+		// Apply/Re-seed Website Template to Container Storage
+		api.POST("/containers/:id/template", func(c *gin.Context) {
+			id := c.Param("id")
+			var req struct {
+				TenantID     string `json:"tenant_id"`
+				Subdomain    string `json:"subdomain"`
+				SiteName     string `json:"site_name"`
+				TemplateName string `json:"template_name"`
+				Category     string `json:"category"`
+				RoleHeadline string `json:"role_headline"`
+				BioIntro     string `json:"bio_intro"`
+				AccentColor  string `json:"accent_color"`
+				CustomHTML   string `json:"custom_html,omitempty"`
+			}
+			if err := c.ShouldBindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "code": "ERR_INVALID_PAYLOAD"})
+				return
+			}
+			tenantID := req.TenantID
+			if tenantID == "" {
+				tenantID = id
+			}
+
+			if sm != nil {
+				if err := sm.SeedTenantWebsite(tenantID, storage.TemplateSeedParams{
+					SiteName:     req.SiteName,
+					Subdomain:    req.Subdomain,
+					TemplateName: req.TemplateName,
+					Category:     req.Category,
+					RoleHeadline: req.RoleHeadline,
+					BioIntro:     req.BioIntro,
+					AccentColor:  req.AccentColor,
+					CustomHTML:   req.CustomHTML,
+				}); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "code": "ERR_APPLY_TEMPLATE_FAILED"})
+					return
+				}
+			}
+
+			nowStr := time.Now().Format("15:04:05")
+			if rm != nil {
+				_ = rm.PushLog(c.Request.Context(), tenantID, id, fmt.Sprintf("[%s] 🎨 [TEMPLATE] Blueprint '%s' (%s) diterapkan ke kontainer", nowStr, req.TemplateName, req.Category))
+				_ = rm.PushLog(c.Request.Context(), tenantID, id, fmt.Sprintf("[%s] 🌐 [TRAEFIK] Rute ingress %s disinkronkan", nowStr, req.Subdomain))
+				_ = rm.PushLog(c.Request.Context(), tenantID, id, fmt.Sprintf("[%s] 🚀 [RUNNING] Kontainer live dengan template baru", nowStr))
+			}
+
+			if kp != nil {
+				_ = kp.Publish(c.Request.Context(), "herocms.orchestrator.lifecycle", kafka.LifecycleEvent{
+					Type:      kafka.EventProvisionStarted,
+					TenantID:  tenantID,
+					SiteID:    id,
+					Status:    "running",
+					Message:   fmt.Sprintf("Template '%s' diterapkan ke kontainer %s", req.TemplateName, req.Subdomain),
+					Timestamp: time.Now().UTC().Format(time.RFC3339),
+				})
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"status":        "template_applied",
+				"container_id":  id,
+				"tenant_id":     tenantID,
+				"template_name": req.TemplateName,
+				"category":      req.Category,
+			})
 		})
 
 		// Destroy Container

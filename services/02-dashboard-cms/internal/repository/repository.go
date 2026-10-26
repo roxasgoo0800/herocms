@@ -12,6 +12,7 @@ import (
 
 	"github.com/cloudcms/dashboard-cms-backend/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 )
 
@@ -22,6 +23,7 @@ type Repository struct {
 	// Resilient in-memory models (fallback if DB unreachable)
 	Containers []gin.H
 	Articles   []gin.H
+	Pages      []gin.H
 	Assets     []gin.H
 	Domains    []gin.H
 	Tickets    []gin.H
@@ -232,8 +234,29 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	);
 
+	CREATE TABLE IF NOT EXISTS pages (
+		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+		tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+		site_id UUID REFERENCES sites(id) ON DELETE CASCADE,
+		title VARCHAR(255) NOT NULL,
+		path VARCHAR(255) NOT NULL,
+		template_layout VARCHAR(128) NOT NULL DEFAULT 'standard-prose',
+		status VARCHAR(32) NOT NULL DEFAULT 'published',
+		is_in_navbar BOOLEAN NOT NULL DEFAULT true,
+		is_in_footer BOOLEAN NOT NULL DEFAULT true,
+		meta_title VARCHAR(255),
+		meta_desc TEXT,
+		content TEXT NOT NULL DEFAULT '',
+		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	);
+
 	ALTER TABLE media_assets ALTER COLUMN mime_type TYPE VARCHAR(255);
 	ALTER TABLE media_assets ADD COLUMN IF NOT EXISTS bucket_name VARCHAR(128) NOT NULL DEFAULT '';
+	ALTER TABLE content_items ADD COLUMN IF NOT EXISTS excerpt TEXT NOT NULL DEFAULT '';
+	ALTER TABLE content_items ADD COLUMN IF NOT EXISTS tags JSONB NOT NULL DEFAULT '[]'::jsonb;
+	ALTER TABLE content_items ADD COLUMN IF NOT EXISTS meta_title VARCHAR(255) NOT NULL DEFAULT '';
+	ALTER TABLE content_items ADD COLUMN IF NOT EXISTS meta_desc TEXT NOT NULL DEFAULT '';
 	`
 
 	if _, err := r.DB.Exec(schemaSQL); err != nil {
@@ -275,181 +298,14 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		'active'
 	) ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
-	-- Sites (Containers)
-	INSERT INTO sites (id, tenant_id, name, category, template_name, subdomain, status, cpu_usage, ram_usage, ram_limit, cpu_limit, uptime, visits_this_week, role_headline)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000001',
-		'99420000-0000-0000-0000-000000009942',
-		'Portofolio Rizal Pratama',
-		'portfolio',
-		'Portofolio Teknis Engineer',
-		'rizal',
-		'running',
-		14,
-		88,
-		256,
-		'0.5 vCPU',
-		'4 hari 12 jam',
-		3892,
-		'Portofolio Teknis Engineer'
-	),
-	(
-		'99420000-0000-0000-0000-000000000002',
-		'99420000-0000-0000-0000-000000009942',
-		'Portal Informasi Utama',
-		'business',
-		'Portofolio Teknis Engineer',
-		'wedak',
-		'running',
-		12,
-		76,
-		256,
-		'0.5 vCPU',
-		'2 hari 6 jam',
-		1240,
-		'Portofolio Teknis Engineer'
-	) ON CONFLICT (id) DO NOTHING;
-
-	-- Content Items
-	INSERT INTO content_items (id, tenant_id, title, slug, category, author, status, views, published_at)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000101',
-		'99420000-0000-0000-0000-000000009942',
-		'Arsitektur Multi-Tenant Aether Core Stack dengan PostgreSQL RLS',
-		'arsitektur-multi-tenant-aether-core-stack-rls',
-		'Arsitektur',
-		'Rizal Pratama',
-		'published',
-		1420,
-		NOW() - INTERVAL '3 days'
-	),
-	(
-		'99420000-0000-0000-0000-000000000102',
-		'99420000-0000-0000-0000-000000009942',
-		'Strategi Caching Traefik v3 dan Dynamic TLS Edge Router',
-		'strategi-caching-traefik-v3-tls',
-		'DevOps',
-		'Rizal Pratama',
-		'published',
-		890,
-		NOW() - INTERVAL '5 days'
-	),
-	(
-		'99420000-0000-0000-0000-000000000103',
-		'99420000-0000-0000-0000-000000009942',
-		'Pengamanan Linux Kernel Cgroups v2 & Seccomp Sandbox untuk Container CaaS',
-		'pengamanan-linux-kernel-cgroups-seccomp',
-		'Security',
-		'Rizal Pratama',
-		'draft',
-		0,
-		NOW() - INTERVAL '7 days'
-	) ON CONFLICT (id) DO NOTHING;
-
-
-	-- Custom Domains
-	INSERT INTO custom_domains (id, tenant_id, domain, target_cname, target_ip, dns_status, ssl_status)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000301',
-		'99420000-0000-0000-0000-000000009942',
-		'rizalpratama.cloud',
-		'rizal.cloudcms.app',
-		'103.144.20.12',
-		'verified',
-		'active'
-	) ON CONFLICT (domain) DO NOTHING;
-
-	-- Support Tickets
-	INSERT INTO support_tickets (id, tenant_id, ticket_number, subject, category, priority, status, last_reply)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000401',
-		'99420000-0000-0000-0000-000000009942',
-		'TKT-9942-01',
-		'Permintaan Bantuan Konfigurasi Wildcard SSL Traefik',
-		'Infrastruktur',
-		'high',
-		'answered',
-		'18 Sep 2026, 11:02'
-	),
-	(
-		'99420000-0000-0000-0000-000000000402',
-		'99420000-0000-0000-0000-000000009942',
-		'TKT-9942-02',
-		'Konsultasi Kuota Penyimpanan Aset S3 MinIO',
-		'Storage & CDN',
-		'medium',
-		'open',
-		'17 Sep 2026, 14:30'
-	) ON CONFLICT (ticket_number) DO NOTHING;
-
-	-- Ticket Messages
-	INSERT INTO ticket_messages (id, ticket_id, sender_name, sender_role, message)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000501',
-		'99420000-0000-0000-0000-000000000401',
-		'Rizal Pratama',
-		'customer',
-		'Halo tim Support, saya ingin menanyakan apakah rute subdomain saya sudah aktif verifikasi Let''s Encrypt TLS-ALPN-01?'
-	),
-	(
-		'99420000-0000-0000-0000-000000000502',
-		'99420000-0000-0000-0000-000000000401',
-		'Budi Santoso (Cloud Support Engineer)',
-		'staff',
-		'Halo Pak Rizal! Rute Traefik v3 Anda telah diverifikasi sukses. Sertifikat SSL otomatis diperbarui setiap 60 hari.'
-	) ON CONFLICT (id) DO NOTHING;
-
-	-- Invoices
-	INSERT INTO invoices (id, tenant_id, invoice_number, plan_name, period, amount, tax, total, date, due_date, status, payment_method, container_quota)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000601',
-		'99420000-0000-0000-0000-000000009942',
-		'INV-2026-09-9942',
-		'Stack Pro Plan',
-		'1 Sep 2026 - 30 Sep 2026',
-		149000,
-		16390,
-		165390,
-		'1 Sep 2026',
-		'5 Sep 2026',
-		'paid',
-		'BCA Virtual Account (Otomatis)',
-		3
-	),
-	(
-		'99420000-0000-0000-0000-000000000602',
-		'99420000-0000-0000-0000-000000009942',
-		'INV-2026-08-9942',
-		'Stack Starter Plan',
-		'1 Agu 2026 - 31 Agu 2026',
-		49000,
-		5390,
-		54390,
-		'1 Agu 2026',
-		'5 Agu 2026',
-		'paid',
-		'Kartu Kredit Mandiri Visa',
-		1
-	) ON CONFLICT (invoice_number) DO NOTHING;
-
-	-- Webhooks
-	INSERT INTO webhooks (id, tenant_id, name, url, events, status, last_triggered)
-	VALUES
-	(
-		'99420000-0000-0000-0000-000000000701',
-		'99420000-0000-0000-0000-000000009942',
-		'Discord Deployment Notifier',
-		'https://discord.com/api/webhooks/1289942001/abc123xyz',
-		'["site.deployed", "container.crashed"]'::jsonb,
-		'active',
-		'10 menit lalu (200 OK)'
-	) ON CONFLICT (id) DO NOTHING;
+	-- Purge legacy dummy seeds so the dashboard strictly displays 100% genuine user resources
+	DELETE FROM sites WHERE subdomain IN ('rizal', 'wedak', 'rizal.stacbyte.id', 'wedak.stacbyte.id', 'rizal.cloudcms.app', 'wedak.cloudcms.app') OR id IN ('99420000-0000-0000-0000-000000000001', '99420000-0000-0000-0000-000000000002');
+	DELETE FROM custom_domains WHERE domain = 'rizalpratama.cloud';
+	DELETE FROM content_items WHERE slug IN ('arsitektur-multi-tenant-aether-core-stack-rls', 'strategi-caching-traefik-v3-tls', 'pengamanan-linux-kernel-cgroups-seccomp');
+	DELETE FROM ticket_messages WHERE ticket_id IN ('99420000-0000-0000-0000-000000000401', '99420000-0000-0000-0000-000000000402');
+	DELETE FROM support_tickets WHERE ticket_number IN ('TKT-9942-01', 'TKT-9942-02');
+	DELETE FROM invoices WHERE invoice_number IN ('INV-2026-09-9942', 'INV-2026-08-9942');
+	DELETE FROM webhooks WHERE id = '99420000-0000-0000-0000-000000000701';
 	`
 
 	if _, err := r.DB.Exec(seedSQL); err != nil {
@@ -491,8 +347,8 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 					&accentColor, &roleHeadline, &bioIntro, &themeConfigBytes, &lastDeployed); err == nil {
 
 					subDomainFull := subdomain
-					if len(subdomain) < 14 || subdomain[len(subdomain)-13:] != ".cloudcms.app" {
-						subDomainFull = fmt.Sprintf("%s.cloudcms.app", subdomain)
+					if !strings.HasSuffix(subdomain, ".stacbyte.id") && !strings.HasSuffix(subdomain, ".cloudcms.app") {
+						subDomainFull = fmt.Sprintf("%s.stacbyte.id", subdomain)
 					}
 
 					var parsedTheme gin.H
@@ -508,7 +364,7 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 						bIntro = "Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio."
 					}
 
-					list = append(list, gin.H{
+					siteObj := gin.H{
 						"id":             id,
 						"name":           name,
 						"category":       category,
@@ -527,7 +383,15 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 						"accentColor":    accentColor,
 						"themeConfig":    parsedTheme,
 						"lastDeployed":   lastDeployed.Format("2 Jan 2006"),
-					})
+					}
+					if status == "maintenance" {
+						siteObj["maintenanceConfig"] = gin.H{
+							"enabled":          true,
+							"message":          "Situs sedang dalam pemeliharaan berkala untuk peningkatan performa. Kami akan segera kembali.",
+							"estimatedEndTime": "30 menit",
+						}
+					}
+					list = append(list, siteObj)
 				}
 			}
 			if err := rows.Err(); err != nil {
@@ -553,27 +417,39 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 		return nil
 	}
 	if r.DB != nil {
-		_, err := r.DB.ExecContext(ctx, `
+		status := "running"
+		if s, ok := site["status"].(string); ok && s != "" {
+			status = s
+		}
+		cleanSubdomain := fmt.Sprintf("%v", site["subdomain"])
+		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".stacbyte.id")
+		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".cloudcms.app")
+
+		var newUUID string
+		err := r.DB.QueryRowContext(ctx, `
 			INSERT INTO sites (
 				tenant_id, name, category, template_name, subdomain, status,
 				cpu_usage, ram_usage, ram_limit, cpu_limit, uptime, visits_this_week,
 				accent_color, role_headline, bio_intro, last_deployed_at
 			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
+			RETURNING id
 		`,
 			tenantID,
 			fmt.Sprintf("%v", site["name"]),
 			fmt.Sprintf("%v", site["category"]),
 			fmt.Sprintf("%v", site["templateName"]),
-			fmt.Sprintf("%v", site["subdomain"]),
+			cleanSubdomain,
+			status,
 			14, 88, 256, "0.5 vCPU", "Baru saja aktif", 0,
 			fmt.Sprintf("%v", site["accentColor"]),
 			fmt.Sprintf("%v", site["roleOrHeadline"]),
 			fmt.Sprintf("%v", site["bioIntro"]),
-		)
+		).Scan(&newUUID)
 		if err != nil {
 			log.Printf("[DB ERROR] InsertSite: %v", err)
 			return err
 		}
+		site["id"] = newUUID
 		return nil
 	}
 
@@ -604,6 +480,34 @@ func (r *Repository) UpdateSiteStatus(ctx context.Context, tenantID, siteID, sta
 		}
 	}
 	return nil
+}
+
+// GetSiteSubdomain retrieves the subdomain or name for a site
+func (r *Repository) GetSiteSubdomain(ctx context.Context, tenantID, siteID string) string {
+	if r == nil {
+		return ""
+	}
+	if r.DB != nil {
+		var sub string
+		err := r.DB.QueryRowContext(ctx, `
+			SELECT subdomain FROM sites 
+			WHERE tenant_id = $1 AND (id::text = $2 OR subdomain LIKE $3) 
+			LIMIT 1
+		`, tenantID, siteID, siteID+"%").Scan(&sub)
+		if err == nil {
+			return sub
+		}
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, c := range r.Containers {
+		if c["id"] == siteID {
+			if sub, ok := c["subdomain"].(string); ok {
+				return sub
+			}
+		}
+	}
+	return ""
 }
 
 func (r *Repository) UpdateSiteMaintenance(ctx context.Context, tenantID, siteID string, enabled bool, message, estimatedEndTime string) error {
@@ -656,16 +560,30 @@ func (r *Repository) UpdateSiteDesign(ctx context.Context, tenantID, siteID stri
 			themeConfigBytes = []byte("{}")
 		}
 
+		tplName := fmt.Sprintf("%v", payload["templateName"])
+		if tplName == "" || tplName == "<nil>" {
+			tplName = fmt.Sprintf("%v", payload["template_name"])
+		}
+		if tplName == "<nil>" {
+			tplName = ""
+		}
+		category := fmt.Sprintf("%v", payload["category"])
+		if category == "<nil>" {
+			category = ""
+		}
+
 		_, err := r.DB.ExecContext(ctx, `
 			UPDATE sites 
 			SET role_headline = $1, 
 			    bio_intro = $2, 
 			    accent_color = $3, 
 			    theme_config = $4::jsonb, 
+			    template_name = CASE WHEN $8 <> '' THEN $8 ELSE template_name END,
+			    category = CASE WHEN $9 <> '' THEN $9 ELSE category END,
 			    last_deployed_at = NOW(), 
 			    updated_at = NOW()
 			WHERE tenant_id = $5 AND (id::text = $6 OR subdomain LIKE $7)
-		`, roleHeadline, bioIntro, accentColor, string(themeConfigBytes), tenantID, siteID, siteID+"%")
+		`, roleHeadline, bioIntro, accentColor, string(themeConfigBytes), tenantID, siteID, siteID+"%", tplName, category)
 		if err != nil {
 			log.Printf("[DB ERROR] UpdateSiteDesign: %v", err)
 			return err
@@ -686,6 +604,12 @@ func (r *Repository) UpdateSiteDesign(ctx context.Context, tenantID, siteID stri
 			if v, ok := payload["accentColor"]; ok {
 				c["accentColor"] = v
 			}
+			if v, ok := payload["templateName"]; ok && v != nil && fmt.Sprintf("%v", v) != "" && fmt.Sprintf("%v", v) != "<nil>" {
+				c["templateName"] = v
+			}
+			if v, ok := payload["category"]; ok && v != nil && fmt.Sprintf("%v", v) != "" && fmt.Sprintf("%v", v) != "<nil>" {
+				c["category"] = v
+			}
 			if v, ok := payload["themeConfig"]; ok {
 				c["themeConfig"] = v
 			}
@@ -700,17 +624,20 @@ func (r *Repository) DeleteSite(ctx context.Context, tenantID, siteID string) er
 	if r == nil {
 		return nil
 	}
+	cleanSub := strings.TrimSuffix(strings.TrimSuffix(siteID, ".stacbyte.id"), ".cloudcms.app")
 	if r.DB != nil {
 		_, err := r.DB.ExecContext(ctx, `
-			DELETE FROM sites WHERE tenant_id = $1 AND (id::text = $2 OR subdomain LIKE $3)
-		`, tenantID, siteID, siteID+"%")
+			DELETE FROM sites 
+			WHERE tenant_id = $1 
+			  AND (id::text = $2 OR subdomain = $2 OR subdomain LIKE $3 OR subdomain = $4 OR name = $2)
+		`, tenantID, siteID, cleanSub+"%", cleanSub)
 		return err
 	}
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	for i, c := range r.Containers {
-		if c["id"] == siteID {
+		if c["id"] == siteID || c["subdomain"] == siteID || c["name"] == siteID {
 			r.Containers = append(r.Containers[:i], r.Containers[i+1:]...)
 			return nil
 		}
@@ -724,19 +651,32 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
-			SELECT id, title, slug, category, author, status, views, published_at
-			FROM content_items
-			WHERE tenant_id = $1
-			ORDER BY created_at DESC
+			SELECT c.id, c.title, c.slug, c.category, c.author, c.status, c.views, c.published_at,
+			       COALESCE(s.name, ''), COALESCE(c.site_id::text, ''),
+			       COALESCE(c.content_markdown, ''), COALESCE(c.excerpt, ''),
+			       COALESCE(c.tags::text, '[]'), COALESCE(c.meta_title, ''), COALESCE(c.meta_desc, '')
+			FROM content_items c
+			LEFT JOIN sites s ON c.site_id = s.id
+			WHERE c.tenant_id = $1
+			ORDER BY c.created_at DESC
 		`, tenantID)
 		if err == nil {
 			defer rows.Close()
 			var list []gin.H
 			for rows.Next() {
-				var id, title, slug, category, author, status string
+				var id, title, slug, category, author, status, siteName, siteID string
+				var contentMarkdown, excerpt, tagsJSON, metaTitle, metaDesc string
 				var views int
 				var publishedAt time.Time
-				if err := rows.Scan(&id, &title, &slug, &category, &author, &status, &views, &publishedAt); err == nil {
+				if err := rows.Scan(&id, &title, &slug, &category, &author, &status, &views, &publishedAt, &siteName, &siteID,
+					&contentMarkdown, &excerpt, &tagsJSON, &metaTitle, &metaDesc); err == nil {
+
+					var tags []string
+					_ = json.Unmarshal([]byte(tagsJSON), &tags)
+					if tags == nil {
+						tags = []string{}
+					}
+
 					list = append(list, gin.H{
 						"id":          id,
 						"title":       title,
@@ -746,7 +686,13 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 						"status":      status,
 						"views":       views,
 						"publishedAt": publishedAt.Format("2 Jan 2006"),
-						"siteName":    "Portofolio Rizal Pratama",
+						"siteName":    siteName,
+						"containerId": siteID,
+						"content":     contentMarkdown,
+						"excerpt":     excerpt,
+						"tags":        tags,
+						"metaTitle":   metaTitle,
+						"metaDesc":    metaDesc,
 					})
 				}
 			}
@@ -763,6 +709,383 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.Articles, nil
+}
+
+func (r *Repository) InsertArticle(ctx context.Context, tenantID string, art gin.H) (gin.H, error) {
+	if r == nil {
+		return art, nil
+	}
+
+	title := fmt.Sprintf("%v", art["title"])
+	slug := fmt.Sprintf("%v", art["slug"])
+	if slug == "" || slug == "<nil>" {
+		slug = strings.ToLower(strings.ReplaceAll(title, " ", "-"))
+	}
+	category := "Engineering"
+	if c, ok := art["category"].(string); ok && c != "" {
+		category = c
+	}
+	author := "Rizal Pratama"
+	if a, ok := art["author"].(string); ok && a != "" {
+		author = a
+	}
+	status := "published"
+	if s, ok := art["status"].(string); ok && s != "" {
+		status = s
+	}
+	content := ""
+	if c, ok := art["content"].(string); ok {
+		content = c
+	}
+	excerpt := ""
+	if e, ok := art["excerpt"].(string); ok {
+		excerpt = e
+	}
+	metaTitle := title
+	if mt, ok := art["metaTitle"].(string); ok && mt != "" {
+		metaTitle = mt
+	}
+	metaDesc := excerpt
+	if md, ok := art["metaDesc"].(string); ok && md != "" {
+		metaDesc = md
+	}
+
+	var tagsBytes []byte
+	if tags, ok := art["tags"]; ok && tags != nil {
+		tagsBytes, _ = json.Marshal(tags)
+	}
+	if len(tagsBytes) == 0 {
+		tagsBytes = []byte("[]")
+	}
+
+	var siteID *string
+	if sid, ok := art["containerId"].(string); ok && sid != "" {
+		if _, err := uuid.Parse(sid); err == nil {
+			siteID = &sid
+		}
+	}
+
+	artID := uuid.New().String()
+	if rawID, ok := art["id"].(string); ok && rawID != "" {
+		if _, err := uuid.Parse(rawID); err == nil {
+			artID = rawID
+		}
+	}
+
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			INSERT INTO content_items (id, tenant_id, site_id, title, slug, category, author, status, views, content_markdown, excerpt, tags, meta_title, meta_desc, published_at, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10, $11::jsonb, $12, $13, NOW(), NOW(), NOW())
+		`, artID, tenantID, siteID, title, slug, category, author, status, content, excerpt, string(tagsBytes), metaTitle, metaDesc)
+		if err != nil {
+			log.Printf("[DB ERROR] InsertArticle: %v", err)
+			return nil, err
+		}
+	}
+
+	art["id"] = artID
+	art["publishedAt"] = time.Now().Format("2 Jan 2006")
+	art["views"] = 0
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.Articles = append([]gin.H{art}, r.Articles...)
+	return art, nil
+}
+
+func (r *Repository) UpdateArticle(ctx context.Context, tenantID, articleID string, art gin.H) error {
+	if r == nil {
+		return nil
+	}
+
+	title := fmt.Sprintf("%v", art["title"])
+	slug := fmt.Sprintf("%v", art["slug"])
+	category := fmt.Sprintf("%v", art["category"])
+	author := fmt.Sprintf("%v", art["author"])
+	status := fmt.Sprintf("%v", art["status"])
+	content := fmt.Sprintf("%v", art["content"])
+	excerpt := fmt.Sprintf("%v", art["excerpt"])
+	metaTitle := fmt.Sprintf("%v", art["metaTitle"])
+	metaDesc := fmt.Sprintf("%v", art["metaDesc"])
+
+	var tagsBytes []byte
+	if tags, ok := art["tags"]; ok && tags != nil {
+		tagsBytes, _ = json.Marshal(tags)
+	}
+	if len(tagsBytes) == 0 {
+		tagsBytes = []byte("[]")
+	}
+
+	var siteID *string
+	if sid, ok := art["containerId"].(string); ok && sid != "" {
+		if _, err := uuid.Parse(sid); err == nil {
+			siteID = &sid
+		}
+	}
+
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			UPDATE content_items
+			SET title = $1, slug = $2, category = $3, author = $4, status = $5,
+			    content_markdown = $6, excerpt = $7, tags = $8::jsonb, meta_title = $9, meta_desc = $10,
+			    site_id = COALESCE($11, site_id), updated_at = NOW()
+			WHERE tenant_id = $12 AND (id::text = $13 OR slug = $13)
+		`, title, slug, category, author, status, content, excerpt, string(tagsBytes), metaTitle, metaDesc, siteID, tenantID, articleID)
+		if err != nil {
+			log.Printf("[DB ERROR] UpdateArticle: %v", err)
+			return err
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, a := range r.Articles {
+		if a["id"] == articleID || a["slug"] == articleID {
+			for k, v := range art {
+				r.Articles[i][k] = v
+			}
+			return nil
+		}
+	}
+	return nil
+}
+
+func (r *Repository) DeleteArticle(ctx context.Context, tenantID, articleID string) error {
+	if r == nil {
+		return nil
+	}
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			DELETE FROM content_items
+			WHERE tenant_id = $1 AND (id::text = $2 OR slug = $2)
+		`, tenantID, articleID)
+		if err != nil {
+			log.Printf("[DB ERROR] DeleteArticle: %v", err)
+			return err
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, a := range r.Articles {
+		if a["id"] == articleID || a["slug"] == articleID {
+			r.Articles = append(r.Articles[:i], r.Articles[i+1:]...)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (r *Repository) GetPages(ctx context.Context, tenantID string) ([]gin.H, error) {
+	if r == nil {
+		return []gin.H{}, nil
+	}
+	if r.DB != nil {
+		rows, err := r.DB.QueryContext(ctx, `
+			SELECT p.id, p.title, p.path, p.template_layout, p.status, p.is_in_navbar, p.is_in_footer,
+			       COALESCE(p.meta_title, ''), COALESCE(p.meta_desc, ''), COALESCE(p.content, ''),
+			       p.updated_at, COALESCE(s.name, ''), COALESCE(p.site_id::text, '')
+			FROM pages p
+			LEFT JOIN sites s ON p.site_id = s.id
+			WHERE p.tenant_id = $1
+			ORDER BY p.created_at ASC
+		`, tenantID)
+		if err == nil {
+			defer rows.Close()
+			var list []gin.H
+			for rows.Next() {
+				var id, title, path, templateLayout, status, metaTitle, metaDesc, content, siteName, siteID string
+				var isInNavbar, isInFooter bool
+				var updatedAt time.Time
+				if err := rows.Scan(&id, &title, &path, &templateLayout, &status, &isInNavbar, &isInFooter,
+					&metaTitle, &metaDesc, &content, &updatedAt, &siteName, &siteID); err == nil {
+
+					list = append(list, gin.H{
+						"id":             id,
+						"title":          title,
+						"path":           path,
+						"templateLayout": templateLayout,
+						"status":         status,
+						"isInNavbar":     isInNavbar,
+						"isInFooter":     isInFooter,
+						"metaTitle":      metaTitle,
+						"metaDesc":       metaDesc,
+						"content":        content,
+						"updatedAt":      updatedAt.Format("2 Jan 2006"),
+						"siteName":       siteName,
+						"containerId":    siteID,
+					})
+				}
+			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
+			if list != nil {
+				return list, nil
+			}
+			return []gin.H{}, nil
+		}
+	}
+
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.Pages, nil
+}
+
+func (r *Repository) InsertPage(ctx context.Context, tenantID string, pg gin.H) (gin.H, error) {
+	if r == nil {
+		return pg, nil
+	}
+
+	title := fmt.Sprintf("%v", pg["title"])
+	path := fmt.Sprintf("%v", pg["path"])
+	if path == "" || path == "<nil>" {
+		path = "/" + strings.ToLower(strings.ReplaceAll(title, " ", "-"))
+	}
+	templateLayout := "standard-prose"
+	if tl, ok := pg["templateLayout"].(string); ok && tl != "" {
+		templateLayout = tl
+	}
+	status := "published"
+	if s, ok := pg["status"].(string); ok && s != "" {
+		status = s
+	}
+	content := ""
+	if c, ok := pg["content"].(string); ok {
+		content = c
+	}
+	metaTitle := title
+	if mt, ok := pg["metaTitle"].(string); ok && mt != "" {
+		metaTitle = mt
+	}
+	metaDesc := ""
+	if md, ok := pg["metaDesc"].(string); ok && md != "" {
+		metaDesc = md
+	}
+
+	isInNavbar := true
+	if nb, ok := pg["isInNavbar"].(bool); ok {
+		isInNavbar = nb
+	}
+	isInFooter := true
+	if ft, ok := pg["isInFooter"].(bool); ok {
+		isInFooter = ft
+	}
+
+	var siteID *string
+	if sid, ok := pg["containerId"].(string); ok && sid != "" {
+		if _, err := uuid.Parse(sid); err == nil {
+			siteID = &sid
+		}
+	}
+
+	pageID := uuid.New().String()
+	if rawID, ok := pg["id"].(string); ok && rawID != "" {
+		if _, err := uuid.Parse(rawID); err == nil {
+			pageID = rawID
+		}
+	}
+
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			INSERT INTO pages (id, tenant_id, site_id, title, path, template_layout, status, is_in_navbar, is_in_footer, meta_title, meta_desc, content, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+		`, pageID, tenantID, siteID, title, path, templateLayout, status, isInNavbar, isInFooter, metaTitle, metaDesc, content)
+		if err != nil {
+			log.Printf("[DB ERROR] InsertPage: %v", err)
+			return nil, err
+		}
+	}
+
+	pg["id"] = pageID
+	pg["updatedAt"] = time.Now().Format("2 Jan 2006")
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.Pages = append([]gin.H{pg}, r.Pages...)
+	return pg, nil
+}
+
+func (r *Repository) UpdatePage(ctx context.Context, tenantID, pageID string, pg gin.H) error {
+	if r == nil {
+		return nil
+	}
+
+	title := fmt.Sprintf("%v", pg["title"])
+	path := fmt.Sprintf("%v", pg["path"])
+	templateLayout := fmt.Sprintf("%v", pg["templateLayout"])
+	status := fmt.Sprintf("%v", pg["status"])
+	content := fmt.Sprintf("%v", pg["content"])
+	metaTitle := fmt.Sprintf("%v", pg["metaTitle"])
+	metaDesc := fmt.Sprintf("%v", pg["metaDesc"])
+
+	isInNavbar := true
+	if nb, ok := pg["isInNavbar"].(bool); ok {
+		isInNavbar = nb
+	}
+	isInFooter := true
+	if ft, ok := pg["isInFooter"].(bool); ok {
+		isInFooter = ft
+	}
+
+	var siteID *string
+	if sid, ok := pg["containerId"].(string); ok && sid != "" {
+		if _, err := uuid.Parse(sid); err == nil {
+			siteID = &sid
+		}
+	}
+
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			UPDATE pages
+			SET title = $1, path = $2, template_layout = $3, status = $4,
+			    is_in_navbar = $5, is_in_footer = $6, meta_title = $7, meta_desc = $8, content = $9,
+			    site_id = COALESCE($10, site_id), updated_at = NOW()
+			WHERE tenant_id = $11 AND (id::text = $12 OR path = $12)
+		`, title, path, templateLayout, status, isInNavbar, isInFooter, metaTitle, metaDesc, content, siteID, tenantID, pageID)
+		if err != nil {
+			log.Printf("[DB ERROR] UpdatePage: %v", err)
+			return err
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, p := range r.Pages {
+		if p["id"] == pageID || p["path"] == pageID {
+			for k, v := range pg {
+				r.Pages[i][k] = v
+			}
+			return nil
+		}
+	}
+	return nil
+}
+
+func (r *Repository) DeletePage(ctx context.Context, tenantID, pageID string) error {
+	if r == nil {
+		return nil
+	}
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			DELETE FROM pages
+			WHERE tenant_id = $1 AND (id::text = $2 OR path = $2)
+		`, tenantID, pageID)
+		if err != nil {
+			log.Printf("[DB ERROR] DeletePage: %v", err)
+			return err
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, p := range r.Pages {
+		if p["id"] == pageID || p["path"] == pageID {
+			r.Pages = append(r.Pages[:i], r.Pages[i+1:]...)
+			return nil
+		}
+	}
+	return nil
 }
 
 func (r *Repository) GetTenantStorageUsageBytes(ctx context.Context, tenantID string) (int64, error) {
@@ -952,27 +1275,30 @@ func (r *Repository) GetDomains(ctx context.Context, tenantID string) ([]gin.H, 
 	}
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
-			SELECT id, domain, target_cname, target_ip, dns_status, ssl_status, created_at
-			FROM custom_domains
-			WHERE tenant_id = $1
-			ORDER BY created_at DESC
+			SELECT c.id, c.domain, c.target_cname, c.target_ip, c.dns_status, c.ssl_status, 
+			       COALESCE(c.site_id::text, ''), COALESCE(s.name, ''), c.created_at
+			FROM custom_domains c
+			LEFT JOIN sites s ON c.site_id = s.id
+			WHERE c.tenant_id = $1
+			ORDER BY c.created_at DESC
 		`, tenantID)
 		if err == nil {
 			defer rows.Close()
 			var list []gin.H
 			for rows.Next() {
-				var id, domain, targetCname, targetIp, dnsStatus, sslStatus string
+				var id, domain, targetCname, targetIp, dnsStatus, sslStatus, siteID, siteName string
 				var createdAt time.Time
-				if err := rows.Scan(&id, &domain, &targetCname, &targetIp, &dnsStatus, &sslStatus, &createdAt); err == nil {
+				if err := rows.Scan(&id, &domain, &targetCname, &targetIp, &dnsStatus, &sslStatus, &siteID, &siteName, &createdAt); err == nil {
 					list = append(list, gin.H{
-						"id":          id,
-						"domain":      domain,
-						"targetCname": targetCname,
-						"targetIp":    targetIp,
-						"dnsStatus":   dnsStatus,
-						"sslStatus":   sslStatus,
-						"containerId": "hero_tenant_9942",
-						"createdAt":   createdAt.Format("2 Jan 2006"),
+						"id":              id,
+						"domain":          domain,
+						"targetCname":     targetCname,
+						"targetIp":        targetIp,
+						"dnsStatus":       dnsStatus,
+						"sslStatus":       sslStatus,
+						"containerId":     siteID,
+						"targetContainer": siteName,
+						"createdAt":       createdAt.Format("2 Jan 2006"),
 					})
 				}
 			}
@@ -1525,120 +1851,13 @@ func (r *Repository) seedInitialData() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	r.Containers = []gin.H{
-		{
-			"id":             "hero_tenant_9942",
-			"name":           "Portofolio Rizal Pratama",
-			"category":       "portfolio",
-			"templateName":   "Portofolio Teknis Engineer",
-			"subdomain":      "rizal.cloudcms.app",
-			"status":         "running",
-			"cpuUsage":       14,
-			"ramUsage":       88,
-			"ramLimit":       256,
-			"cpuLimit":       "0.5 vCPU",
-			"uptime":         "4 hari 12 jam",
-			"visitsThisWeek": 3892,
-			"ssl":            true,
-			"roleOrHeadline": "Portofolio Teknis Engineer",
-			"accentColor":    "#2563eb",
-			"lastDeployed":   "18 Sep 2026",
-		},
-		{
-			"id":             "hero_tenant_2002",
-			"name":           "Portal Informasi Utama",
-			"category":       "business",
-			"templateName":   "Portofolio Teknis Engineer",
-			"subdomain":      "wedak.cloudcms.app",
-			"status":         "running",
-			"cpuUsage":       12,
-			"ramUsage":       76,
-			"ramLimit":       256,
-			"cpuLimit":       "0.5 vCPU",
-			"uptime":         "2 hari 6 jam",
-			"visitsThisWeek": 1240,
-			"ssl":            true,
-			"roleOrHeadline": "Portofolio Teknis Engineer",
-			"accentColor":    "#2563eb",
-			"lastDeployed":   "17 Sep 2026",
-		},
-	}
-
-	r.Articles = []gin.H{
-		{
-			"id":          "art_01",
-			"title":       "Arsitektur Multi-Tenant Aether Core Stack dengan PostgreSQL RLS",
-			"slug":        "arsitektur-multi-tenant-aether-core-stack-rls",
-			"category":    "Arsitektur",
-			"status":      "published",
-			"publishedAt": "18 Sep 2026",
-			"views":       1420,
-			"author":      "Rizal Pratama",
-			"siteName":    "Portofolio Rizal Pratama",
-		},
-	}
-
+	r.Containers = []gin.H{}
+	r.Articles = []gin.H{}
+	r.Pages = []gin.H{}
 	r.Assets = []gin.H{}
-
-	r.Domains = []gin.H{
-		{
-			"id":          "dom_9942",
-			"domain":      "rizalpratama.cloud",
-			"targetCname": "rizal.cloudcms.app",
-			"targetIp":    "103.144.20.12",
-			"dnsStatus":   "verified",
-			"sslStatus":   "active",
-			"containerId": "hero_tenant_9942",
-			"createdAt":   "12 Sep 2026",
-		},
-	}
-
-	r.Tickets = []gin.H{
-		{
-			"id":        "TKT-9942-01",
-			"subject":   "Permintaan Bantuan Konfigurasi Wildcard SSL Traefik",
-			"category":  "Infrastruktur",
-			"priority":  "high",
-			"status":    "answered",
-			"createdAt": "18 Sep 2026, 10:14",
-			"lastReply": "18 Sep 2026, 11:02",
-		},
-	}
-
-	r.Messages["TKT-9942-01"] = []gin.H{
-		{
-			"id":         "msg_01",
-			"senderName": "Rizal Pratama",
-			"senderRole": "customer",
-			"message":    "Halo tim Support, saya ingin menanyakan apakah rute subdomain saya sudah aktif verifikasi Let's Encrypt TLS-ALPN-01?",
-			"createdAt":  "18 Sep 2026, 10:14",
-		},
-	}
-
-	r.Invoices = []gin.H{
-		{
-			"id":             "INV-2026-09-9942",
-			"planName":       "Stack Pro Plan",
-			"period":         "1 Sep 2026 - 30 Sep 2026",
-			"amount":         149000,
-			"tax":            16390,
-			"total":          165390,
-			"date":           "1 Sep 2026",
-			"dueDate":        "5 Sep 2026",
-			"status":         "paid",
-			"paymentMethod":  "BCA Virtual Account (Otomatis)",
-			"containerQuota": 3,
-		},
-	}
-
-	r.Webhooks = []gin.H{
-		{
-			"id":            "wh_01",
-			"name":          "Discord Deployment Notifier",
-			"url":           "https://discord.com/api/webhooks/1289942001/abc123xyz",
-			"events":        []string{"site.deployed", "container.crashed"},
-			"status":        "active",
-			"lastTriggered": "10 menit lalu (200 OK)",
-		},
-	}
+	r.Domains = []gin.H{}
+	r.Tickets = []gin.H{}
+	r.Messages = make(map[string][]gin.H)
+	r.Invoices = []gin.H{}
+	r.Webhooks = []gin.H{}
 }

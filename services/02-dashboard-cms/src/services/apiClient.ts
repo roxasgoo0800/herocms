@@ -81,8 +81,16 @@ export const studioApi = {
 
   // Containers
   getContainers: () => apiFetch('/containers'),
-  createContainer: (payload: { name: string; subdomain: string; category?: string; role?: string }) =>
-    apiFetch('/containers', { method: 'POST', body: JSON.stringify(payload) }),
+  createContainer: (payload: {
+    name: string;
+    subdomain: string;
+    category?: string;
+    role?: string;
+    templateName?: string;
+    accentColor?: string;
+    bioIntro?: string;
+    customHTML?: string;
+  }) => apiFetch('/containers', { method: 'POST', body: JSON.stringify(payload) }),
   saveSiteDesign: (id: string, payload: any) =>
     apiFetch(`/containers/${id}/design`, { method: 'PUT', body: JSON.stringify(payload) }),
   getEditorDraft: (id: string) => apiFetch(`/containers/${id}/draft`),
@@ -90,6 +98,9 @@ export const studioApi = {
     apiFetch(`/containers/${id}/draft`, { method: 'PUT', body: JSON.stringify(draft) }),
   startContainer: (id: string) => apiFetch(`/containers/${id}/start`, { method: 'POST' }),
   stopContainer: (id: string) => apiFetch(`/containers/${id}/stop`, { method: 'POST' }),
+  restartContainer: (id: string) => apiFetch(`/containers/${id}/restart`, { method: 'POST' }),
+  getContainerStats: (id: string) => apiFetch(`/containers/${id}/stats`),
+  getContainerLogs: (id: string, tail: number = 100) => apiFetch(`/containers/${id}/logs?tail=${tail}`),
   toggleMaintenance: (id: string, enabled: boolean, message?: string, estimatedEndTime?: string) =>
     apiFetch(`/containers/${id}/maintenance`, {
       method: 'PUT',
@@ -99,6 +110,21 @@ export const studioApi = {
 
   // Articles
   getArticles: () => apiFetch('/articles'),
+  createArticle: (payload: any) =>
+    apiFetch('/articles', { method: 'POST', body: JSON.stringify(payload) }),
+  updateArticle: (id: string, payload: any) =>
+    apiFetch(`/articles/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteArticle: (id: string) =>
+    apiFetch(`/articles/${id}`, { method: 'DELETE' }),
+
+  // Pages
+  getPages: () => apiFetch('/pages'),
+  createPage: (payload: any) =>
+    apiFetch('/pages', { method: 'POST', body: JSON.stringify(payload) }),
+  updatePage: (id: string, payload: any) =>
+    apiFetch(`/pages/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deletePage: (id: string) =>
+    apiFetch(`/pages/${id}`, { method: 'DELETE' }),
 
   // Assets
   getAssets: () => apiFetch('/assets'),

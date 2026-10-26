@@ -274,7 +274,7 @@ export const microservicePrds: MicroservicePrd[] = [
         name: 'Custom Domain & Traefik Edge Routing',
         desc: 'Pengaturan alamat situs dengan sertifikat SSL TLS 1.3 otomatis.',
         capabilities: [
-          'Subdomain gratis otomatis: https://<tenant-slug>.cloudcms.app.',
+          'Subdomain gratis otomatis: https://<tenant-slug>.stacbyte.id.',
           'Panduan pemasangan Custom Domain pribadi (CNAME & A-Record Traefik).',
           'Pengecekan propagasi DNS otomatis dan status penerbitan sertifikat Let\'s Encrypt.'
         ]
@@ -405,7 +405,7 @@ export const microservicePrds: MicroservicePrd[] = [
         desc: 'Pendaftaran otomatis domain dan sertifikat SSL tanpa restart proxy.',
         capabilities: [
           'Injeksi label traefik.enable=true dan nama network cloudcms_edge_network.',
-          'Pemasangan aturan router Host(<subdomain>.cloudcms.app) || Host(<custom_domain>).',
+          'Pemasangan aturan router Host(<subdomain>.stacbyte.id) || Host(<custom_domain>).',
           'Penetapan entrypoints websecure (HTTPS port 443) dengan TLS certresolver letsencrypt.',
           'Binding port service internal kontainer ke port 80.'
         ]
@@ -543,7 +543,7 @@ export const microservicePrds: MicroservicePrd[] = [
         capabilities: [
           'Langkah 1: Pilih Vertikal Situs (Portofolio, Blog, Edukasi, atau Bisnis).',
           'Langkah 2: Pilih Preset Tema Desain Awal.',
-          'Langkah 3: Tentukan Nama Subdomain Gratis (contoh: rizalfahmi.cloudcms.app).',
+          'Langkah 3: Tentukan Nama Subdomain Gratis (contoh: rizalfahmi.stacbyte.id).',
           'Langkah 4: Buat Akun & Masuk Seketika ke Dashboard Studio.'
         ]
       }

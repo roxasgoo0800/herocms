@@ -58,7 +58,7 @@ func CORS(cfg *config.Config) gin.HandlerFunc {
 					break
 				}
 			}
-			if !allowed && strings.HasSuffix(origin, ".cloudcms.app") {
+			if !allowed && (strings.HasSuffix(origin, ".stacbyte.id") || strings.HasSuffix(origin, ".cloudcms.app")) {
 				allowed = true
 			}
 		}
@@ -85,7 +85,7 @@ func CORS(cfg *config.Config) gin.HandlerFunc {
 // CSRFProtection implements the Double Submit Cookie pattern + Redis session check
 func CSRFProtection(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if cfg == nil || !cfg.CSRFEnabled {
+		if cfg == nil || !cfg.CSRFEnabled || cfg.Environment == "development" || cfg.AllowDevAuthBypass {
 			c.Next()
 			return
 		}
@@ -116,6 +116,13 @@ func CSRFProtection(cfg *config.Config) gin.HandlerFunc {
 		path := c.Request.URL.Path
 		if path == "/api/auth/login" || strings.HasPrefix(path, "/api/auth/login") ||
 			path == "/api/auth/register" || strings.HasPrefix(path, "/api/auth/register") {
+			c.Next()
+			return
+		}
+
+		// Mutating requests with Authorization Bearer header are explicitly protected via token auth
+		authHeader := c.GetHeader("Authorization")
+		if strings.HasPrefix(authHeader, "Bearer ") && len(authHeader) > 10 {
 			c.Next()
 			return
 		}

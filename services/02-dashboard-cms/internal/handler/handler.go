@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -281,10 +282,14 @@ func (h *Handler) ListContainers(c *gin.Context) {
 }
 
 type CreateContainerPayload struct {
-	Name      string `json:"name" binding:"required"`
-	Subdomain string `json:"subdomain" binding:"required"`
-	Category  string `json:"category"`
-	Role      string `json:"role"`
+	Name         string `json:"name" binding:"required"`
+	Subdomain    string `json:"subdomain" binding:"required"`
+	Category     string `json:"category"`
+	Role         string `json:"role"`
+	TemplateName string `json:"templateName"`
+	AccentColor  string `json:"accentColor"`
+	BioIntro     string `json:"bioIntro"`
+	CustomHTML   string `json:"customHTML"`
 }
 
 func (h *Handler) CreateContainer(c *gin.Context) {
@@ -295,10 +300,14 @@ func (h *Handler) CreateContainer(c *gin.Context) {
 	}
 
 	created, err := h.Services.CreateContainer(c.Request.Context(), getTenantID(c), service.CreateContainerInput{
-		Name:      req.Name,
-		Subdomain: req.Subdomain,
-		Category:  req.Category,
-		Role:      req.Role,
+		Name:         req.Name,
+		Subdomain:    req.Subdomain,
+		Category:     req.Category,
+		Role:         req.Role,
+		TemplateName: req.TemplateName,
+		AccentColor:  req.AccentColor,
+		BioIntro:     req.BioIntro,
+		CustomHTML:   req.CustomHTML,
 	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -326,6 +335,38 @@ func (h *Handler) StopContainer(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "stopped", "id": id})
+}
+
+func (h *Handler) RestartContainer(c *gin.Context) {
+	id := c.Param("id")
+	ok, err := h.Services.RestartContainer(c.Request.Context(), getTenantID(c), id)
+	if !ok || err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "running", "id": id, "action": "restart"})
+}
+
+func (h *Handler) GetContainerStats(c *gin.Context) {
+	id := c.Param("id")
+	stats, err := h.Services.GetContainerStats(c.Request.Context(), getTenantID(c), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, stats)
+}
+
+func (h *Handler) GetContainerLogs(c *gin.Context) {
+	id := c.Param("id")
+	tailStr := c.DefaultQuery("tail", "100")
+	tail, _ := strconv.Atoi(tailStr)
+	logs, err := h.Services.GetContainerLogs(c.Request.Context(), getTenantID(c), id, tail)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"id": id, "logs": logs, "tail": tail})
 }
 
 type SiteMaintenancePayload struct {
@@ -453,6 +494,92 @@ func (h *Handler) SaveUserState(c *gin.Context) {
 
 func (h *Handler) ListArticles(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"articles": h.Services.GetArticles(c.Request.Context(), getTenantID(c))})
+}
+
+func (h *Handler) CreateArticle(c *gin.Context) {
+	var payload gin.H
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload artikel tidak valid"})
+		return
+	}
+	art, err := h.Services.CreateArticle(c.Request.Context(), getTenantID(c), payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan artikel: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"article": art, "message": "Artikel berhasil dibuat!"})
+}
+
+func (h *Handler) UpdateArticle(c *gin.Context) {
+	id := c.Param("id")
+	var payload gin.H
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload artikel tidak valid"})
+		return
+	}
+	err := h.Services.UpdateArticle(c.Request.Context(), getTenantID(c), id, payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui artikel: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Artikel berhasil diperbarui!", "id": id})
+}
+
+func (h *Handler) DeleteArticle(c *gin.Context) {
+	id := c.Param("id")
+	err := h.Services.DeleteArticle(c.Request.Context(), getTenantID(c), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus artikel: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Artikel berhasil dihapus!", "id": id})
+}
+
+// -----------------------------------------------------------------------------
+// Pages
+// -----------------------------------------------------------------------------
+
+func (h *Handler) ListPages(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"pages": h.Services.GetPages(c.Request.Context(), getTenantID(c))})
+}
+
+func (h *Handler) CreatePage(c *gin.Context) {
+	var payload gin.H
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload halaman tidak valid"})
+		return
+	}
+	pg, err := h.Services.CreatePage(c.Request.Context(), getTenantID(c), payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan halaman: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"page": pg, "message": "Halaman berhasil dibuat!"})
+}
+
+func (h *Handler) UpdatePage(c *gin.Context) {
+	id := c.Param("id")
+	var payload gin.H
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload halaman tidak valid"})
+		return
+	}
+	err := h.Services.UpdatePage(c.Request.Context(), getTenantID(c), id, payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui halaman: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Halaman berhasil diperbarui!", "id": id})
+}
+
+func (h *Handler) DeletePage(c *gin.Context) {
+	id := c.Param("id")
+	err := h.Services.DeletePage(c.Request.Context(), getTenantID(c), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus halaman: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Halaman berhasil dihapus!", "id": id})
 }
 
 // -----------------------------------------------------------------------------

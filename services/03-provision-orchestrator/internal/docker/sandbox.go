@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -32,7 +33,10 @@ func DefaultSandboxSpecs(edgeNetwork string) SandboxSpecs {
 
 // BuildTraefikLabels generates dynamic router and service labels for Traefik v3 ingress
 func BuildTraefikLabels(subdomain, customDomain, routerName, edgeNetwork string) map[string]string {
-	rule := fmt.Sprintf("Host(`%s.herocms.stackbyte.id`)", subdomain)
+	cleanSub := strings.TrimSuffix(subdomain, ".stacbyte.id")
+	cleanSub = strings.TrimSuffix(cleanSub, ".herocms.stackbyte.id")
+	cleanSub = strings.TrimSuffix(cleanSub, ".cloudcms.app")
+	rule := fmt.Sprintf("Host(`%s.stacbyte.id`)", cleanSub)
 	if customDomain != "" {
 		rule += fmt.Sprintf(" || Host(`%s`)", customDomain)
 	}
@@ -59,6 +63,7 @@ func BuildHostConfig(specs SandboxSpecs, dataPath, uploadsPath, publicPath strin
 	}
 	if publicPath != "" {
 		binds = append(binds, fmt.Sprintf("%s:/app/public:ro", publicPath))
+		binds = append(binds, fmt.Sprintf("%s:/usr/share/nginx/html:ro", publicPath))
 	}
 
 	pids := specs.PidsLimit
@@ -78,8 +83,8 @@ func BuildHostConfig(specs SandboxSpecs, dataPath, uploadsPath, publicPath strin
 		CapDrop: []string{"ALL"},
 		CapAdd:  []string{"NET_BIND_SERVICE"},
 		Tmpfs: map[string]string{
-			"/tmp": "size=16m,noexec,nosuid,nodev",
-			"/run": "size=4m,noexec,nosuid,nodev",
+			"/tmp": "size=32m,mode=1777,noexec,nosuid,nodev",
+			"/run": "size=4m,mode=1777,noexec,nosuid,nodev",
 		},
 		RestartPolicy: container.RestartPolicy{
 			Name:              "on-failure",

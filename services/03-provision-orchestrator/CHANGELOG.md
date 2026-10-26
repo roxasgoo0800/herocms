@@ -6,6 +6,105 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.2.1] - 25 Oktober 2026
+**Tipe Rilis**: Patch / Feature Hardening (Live Container Template Re-seeding Endpoint `/containers/:id/template`)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Andalusia (Full Stack Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Endpoint Re-seeding Template Kontainer (`POST /api/v1/containers/:id/template`)**:
+   - Menghadirkan endpoint khusus untuk menyemai ulang website kontainer yang sedang berjalan saat pengguna berganti tema dari katalog template.
+   - Menerima `tenant_id`, `subdomain`, `site_name`, `template_name`, `category`, `role_headline`, `bio_intro`, dan `accent_color`.
+   - Mengenerasi kode HTML lengkap dan memperbarui file `public/index.html` serta `public/index.html.live` di direktori persistent storage kontainer.
+2. **Penerbitan Event & Logging Audit**:
+   - Menerbitkan event siklus hidup Kafka (`herocms.orchestrator.lifecycle`) bertipe `EventProvisionStarted`.
+   - Menyimpan jejak log deployment ke Redis secara real-time (`[TEMPLATE] Blueprint ... diterapkan ke kontainer`).
+3. **Verifikasi Kontainer Live**:
+   - Teruji memutakhirkan situs kontainer Nginx aktif (`tenant_testapp_v100prod`) dari template portofolio ke editorial media secara instan tanpa downtime.
+
+---
+
+### [03-orchestrator-v1.2.0] - 25 Oktober 2026
+**Tipe Rilis**: Minor / Feature Release (Dynamic Multi-Theme Template Seeding & Live Storage HTML Sync)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Andalusia (Full Stack Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Dynamic Website Generator (`GenerateWebsiteHTML`)**:
+   - Menghadirkan engine generator HTML (`internal/storage/generator.go`) yang mampu menghasilkan struktur web lengkap, interaktif, dan responsif sesuai kategori tema yang dipilih pengguna:
+     - **Toko Online / Retail / E-Commerce**: Navigasi store, banner hero, statistik pesanan & respon CS, katalog produk dengan harga rupiah & diskon, jaminan garansi/COD/QRIS, serta tombol order WhatsApp instan.
+     - **Portofolio Teknis & Insinyur**: Monogram avatar, status ketersediaan kerja, headline spesialisasi, chips tech-stack (Go, Docker, Traefik, dsb.), dan kartu showcase proyek dengan metrik performa.
+     - **Media Editorial & Blog**: Masthead berita, artikel unggulan mingguan dengan estimasi waktu baca, grid tulisan teknis, dan formulir pendaftaran buletin (newsletter).
+     - **Pusat Edukasi & LMS**: Header akademi, kurikulum bertingkat (pemula, menengah, lanjutan), statistik modul/alumni, dan kartu kursus dengan review bintang serta silabus.
+2. **Template Seeding Otomatis pada Deploy Kontainer**:
+   - Menambahkan field `site_name`, `template_name`, `category`, `role_headline`, `bio_intro`, `accent_color`, dan `custom_html` pada `DeployRequest` (`internal/api/router.go`) dan `TenantDeployParams` (`internal/docker/provisioner.go`).
+   - Secara otomatis menyemai file `public/index.html` dan `public/index.html.live` di direktori storage kontainer tenant saat pembuatan awal pod baru.
+3. **Endpoint Sinkronisasi HTML Kontainer (`PUT /api/v1/containers/:id/html`)**:
+   - Menyediakan endpoint langsung untuk memperbarui konten HTML situs tenant di storage persistensinya secara instan tanpa perlu mematikan atau me-restart kontainer.
+4. **Verifikasi Keamanan & Black-Box Pentest**:
+   - 100% lulus suite pengujian penetrasi keamanan (`go test -v ./pentest/...`), memastikan isolasi traversal direktori (`SanitizeTenantID`), sanitasi injeksi router Traefik, dan penjagaan token secret internal (`InternalSecretGuard`).
+
+---
+
+### [03-orchestrator-v1.1.1] - 25 Oktober 2026
+**Tipe Rilis**: Patch / Feature Hardening (Container Public Storage Web Mounting & Instant Maintenance Page Ingress)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Andalusia (Full Stack Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Dynamic Public Storage Web Mounting (`/usr/share/nginx/html:ro`)**:
+   - Memetakan mount bind direktori publik tenant (`publicPath`) langsung ke root document Nginx kontainer (`/usr/share/nginx/html:ro`) di `internal/docker/sandbox.go`.
+   - Mengizinkan pembaruan konten web langsung dari sisi host tanpa perlu me-reload Nginx, me-restart kontainer, ataupun membatalkan batasan `ReadonlyRootfs: true`.
+2. **Bespoke HTTP 503 Maintenance Page Generator**:
+   - Mengimplementasikan `SetMaintenanceHTML` di `internal/storage/manager.go` yang menghasilkan halaman pemeliharaan visual berstandar HeroCMS Enterprise (`<meta name="robots" content="noindex, nofollow">`, auto-refresh setiap 60 detik, estimasi durasi ETA kustom, dan badge radar Amber 503).
+   - Menghadirkan backup otomatis `index.html.live` untuk pemulihan instan ke halaman live website seketika saat mode pemeliharaan dinonaktifkan tanpa downtime.
+3. **Endpoint API `/api/v1/containers/:id/maintenance`**:
+   - Menghadirkan endpoint API yang menerima `tenant_id`, `subdomain`, `enabled`, `message`, dan `estimated_end_time`.
+   - Menghubungkan resolusi kontainer berbasis label `herocms.site.id` dan `herocms.subdomain`, menerbitkan event siklus hidup Kafka (`herocms.orchestrator.lifecycle`), serta mencatat log audit ke Redis secara real-time.
+
+---
+
+### [03-orchestrator-v1.1.0] - 25 Oktober 2026
+**Tipe Rilis**: Minor / Feature Release (Autonomous Local Image Builder & Traefik Dynamic File Sync)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Andalusia (Full Stack Lead), Rizal (Security & DevOps Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Autonomous Local Image Builder (Zero Registry Push)**:
+   - Sebelum kontainer tenant dibuat, Service 03 secara otomatis memeriksa ketersediaan image `roxas0800/tenant-runtime:alpine-v1` di cache lokal Docker via `ensureRuntimeImage`.
+   - Apabila belum tersedia, orchestrator mengkompilasi/membangun image lokal langsung dari Dockerfile template (`templates/vue-alpine-runtime`) secara otomatis tanpa perlu melakukan push ke Docker Hub.
+2. **Sinkronisasi File Konfigurasi Dinamis Traefik (`tenants.yml`)**:
+   - Menghadirkan `internal/traefik/sync.go` yang menulis aturan perutean rute dinamis tenant (`Host(<subdomain>.stacbyte.id)`) dan service upstream target kontainer ke `deploy/traefik/dynamic/tenants.yml`.
+   - Traefik v3 yang berjalan di `docker-compose.yml` (`providers.file.directory=/etc/traefik/dynamic`, `watch=true`) seketika mendeteksi rute baru dan menghubungkan trafik secara instan (< 100ms) dengan dukungan ganda (Docker labels + Dynamic File Provider).
+3. **Standarisasi Namespace Image `roxas0800`**:
+   - Mengganti seluruh referensi image `cloudcms` menjadi standar organisasi `roxas0800` pada `docker-compose.yml`, `config/config.go`, dan `internal/docker/provisioner.go`.
+
+---
+
+### [03-orchestrator-v1.0.2] - 25 Oktober 2026
+**Tipe Rilis**: Patch / Alignment & Integration Release  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Fallback Default Sandi Redis**: Menambahkan default fallback kata sandi Redis (`secret_redis_password`) pada `config/config.go` sehingga Service 03 langsung terhubung ke kontainer Docker `herocms_redis` tanpa kendala `NOAUTH Authentication required`.
+2. **Penyelarasan Host Router Domain stacbyte.id**: Memperbarui aturan Traefik router rules pada `internal/docker/sandbox.go` dan output API `internal/api/router.go` menjadi `Host(<subdomain>.stacbyte.id)` secara konsisten dengan ekosistem platform.
+
+---
+
+### [03-orchestrator-v1.0.1] - 25 Oktober 2026
+**Tipe Rilis**: Patch / Security Hardening Release  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+Pengerasan keamanan berstandar 21 Matriks Keamanan Web, Backend & Sandboxing Kontainer:
+1. **Pencegahan Serangan Timing (Timing Attack Resistance)**: Pemutakhiran verifikasi token `X-HeroCMS-Internal-Secret` menggunakan `subtle.ConstantTimeCompare` pada `internal/api/middleware.go`.
+2. **Penanganan Status Container Not Found (HTTP 404)**: Respons yang konsisten dengan kode status 404 saat target kontainer tidak ditemukan pada operasi Start dan Stop.
+3. **Audit Kepatuhan Matriks 21 Keamanan**: Penegakan 100% parameter pengerasan cgroups v2 (`256 MB RAM`, `0.5 vCPU`, `PidsLimit 50`, `UID 10001`, `ReadonlyRootfs`, `CapDrop ALL`, `tmpfs noexec`) dan isolasi direktori penyimpanan tenant.
+
+---
+
 ### [03-orchestrator-v1.0.0] - 25 Oktober 2026
 **Tipe Rilis**: Milestone / Major Architectural Release  
 **Status**: Production Ready & Stable  

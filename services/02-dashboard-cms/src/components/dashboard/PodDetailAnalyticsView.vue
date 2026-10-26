@@ -35,10 +35,45 @@ import {
 } from 'lucide-vue-next';
 import type { ContainerSite } from '../../types/dashboard';
 import { generatePodAnalytics } from '../../data/pod-analytics';
+import { studioApi } from '../../services/apiClient';
 
 const props = defineProps<{
   container: ContainerSite;
 }>();
+
+// Live cgroups v2 Telemetry from Service 03 (Orchestrator)
+const liveStats = ref<{
+  cpu_percent?: number;
+  memory_mb?: number;
+  memory_limit?: number;
+  memory_percent?: number;
+  network_rx_mb?: number;
+  network_tx_mb?: number;
+  pids_current?: number;
+  source?: string;
+} | null>(null);
+
+let statsPollInterval: any = null;
+
+const fetchLiveStats = async () => {
+  if (!props.container?.id) return;
+  try {
+    const data = await studioApi.getContainerStats(props.container.id);
+    if (data) {
+      liveStats.value = data;
+      const cpu = typeof data.cpu_percentage === 'number' ? data.cpu_percentage : data.cpu_percent;
+      const ram = typeof data.memory_usage_mb === 'number' ? data.memory_usage_mb : data.memory_mb;
+      if (typeof cpu === 'number') {
+        props.container.cpuUsage = Math.max(1, Math.round(cpu * 10) / 10);
+      }
+      if (typeof ram === 'number') {
+        props.container.ramUsage = Math.round(ram);
+      }
+    }
+  } catch {
+    // Graceful fallback to generated analytics
+  }
+};
 
 // Customer Reliability & Peace-of-Mind Actions
 const isRestoringSnapshot = ref(false);
@@ -347,6 +382,8 @@ const updateChart = () => {
 };
 
 onMounted(() => {
+  fetchLiveStats();
+  statsPollInterval = setInterval(fetchLiveStats, 5000);
   nextTick(() => {
     initChart();
     if (chartContainerRef.value) {
@@ -359,6 +396,10 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (statsPollInterval) {
+    clearInterval(statsPollInterval);
+    statsPollInterval = null;
+  }
   resizeObserver?.disconnect();
   chartInstance?.dispose();
   chartInstance = null;
@@ -1007,7 +1048,8 @@ const exportTelemetry = () => {
         </div>
         <div class="cf-metric-value">
           <span>{{ report.totalRequests.toLocaleString() }}</span>
-          <span class="cf-growth-badge">+18.4%</span>
+          <span v-if="report.totalRequests > 0" class="cf-growth-badge">+18.4%</span>
+          <span v-else class="cf-growth-badge is-zero">0%</span>
         </div>
         <div class="cf-metric-sub">
           <span>{{ report.uniqueCountriesCount }} negara pengakses terdeteksi</span>
@@ -1062,13 +1104,14 @@ const exportTelemetry = () => {
           <span class="deep-card-title">
             <Cpu :size="15" style="color: #2563eb;" />
             <span>CPU & CFS Quota (cgroups v2)</span>
+            <span v-if="liveStats?.source" class="radar-status-pill status-running" style="font-size: 0.62rem; padding: 1px 6px; margin-left: 6px;">Live</span>
           </span>
           <span style="font-size: 0.7rem; font-weight: 700; color: #2563eb;">
-            {{ report.deepResources.cpuUsagePct }}% / {{ container.cpuLimit }}
+            {{ liveStats?.cpu_percent != null ? liveStats.cpu_percent.toFixed(1) : report.deepResources.cpuUsagePct }}% / {{ container.cpuLimit }}
           </span>
         </div>
         <div class="custom-meter-track">
-          <div class="custom-meter-fill fill-blue" :style="{ width: `${report.deepResources.cpuUsagePct}%` }"></div>
+          <div class="custom-meter-fill fill-blue" :style="{ width: `${liveStats?.cpu_percent != null ? liveStats.cpu_percent : report.deepResources.cpuUsagePct}%` }"></div>
         </div>
         <div class="deep-metric-row-list">
           <div class="deep-row-item">
@@ -1096,13 +1139,14 @@ const exportTelemetry = () => {
           <span class="deep-card-title">
             <HardDrive :size="15" style="color: #059669;" />
             <span>Memori memcg Linux</span>
+            <span v-if="liveStats?.source" class="radar-status-pill status-running" style="font-size: 0.62rem; padding: 1px 6px; margin-left: 6px;">Live</span>
           </span>
           <span style="font-size: 0.7rem; font-weight: 700; color: #059669;">
-            {{ container.ramUsage }}MB / {{ report.deepResources.memLimitMB }}MB
+            {{ liveStats?.memory_mb != null ? liveStats.memory_mb.toFixed(1) : container.ramUsage }}MB / {{ liveStats?.memory_limit != null ? liveStats.memory_limit.toFixed(0) : report.deepResources.memLimitMB }}MB
           </span>
         </div>
         <div class="custom-meter-track">
-          <div class="custom-meter-fill fill-emerald" :style="{ width: `${(container.ramUsage / report.deepResources.memLimitMB) * 100}%` }"></div>
+          <div class="custom-meter-fill fill-emerald" :style="{ width: `${((liveStats?.memory_mb != null ? liveStats.memory_mb : container.ramUsage) / (liveStats?.memory_limit || report.deepResources.memLimitMB)) * 100}%` }"></div>
         </div>
         <div class="deep-metric-row-list">
           <div class="deep-row-item">
@@ -1130,6 +1174,7 @@ const exportTelemetry = () => {
           <span class="deep-card-title">
             <Server :size="15" style="color: #7c3aed;" />
             <span>Network & Disk I/O</span>
+            <span v-if="liveStats?.source" class="radar-status-pill status-running" style="font-size: 0.62rem; padding: 1px 6px; margin-left: 6px;">Live</span>
           </span>
           <span style="font-size: 0.7rem; font-weight: 700; color: #7c3aed;">
             {{ report.deepResources.diskUsedMB }}MB / {{ report.deepResources.diskTotalMB }}MB
@@ -1141,11 +1186,11 @@ const exportTelemetry = () => {
         <div class="deep-metric-row-list">
           <div class="deep-row-item">
             <span>Throughput Jaringan</span>
-            <strong>↓ {{ report.deepResources.networkIngressRate }} • ↑ {{ report.deepResources.networkEgressRate }}</strong>
+            <strong>↓ {{ liveStats?.network_rx_mb != null ? liveStats.network_rx_mb.toFixed(2) + ' MB' : report.deepResources.networkIngressRate }} • ↑ {{ liveStats?.network_tx_mb != null ? liveStats.network_tx_mb.toFixed(2) + ' MB' : report.deepResources.networkEgressRate }}</strong>
           </div>
           <div class="deep-row-item">
-            <span>Active TCP Socket Connections</span>
-            <strong>{{ report.deepResources.tcpActiveSockets }} Active ({{ report.deepResources.tcpKeepAlive }} Keep-Alive)</strong>
+            <span>Active Processes / PIDs</span>
+            <strong>{{ liveStats?.pids_current != null ? liveStats.pids_current : 18 }} PIDs (Anti Fork-Bomb Limit: 50)</strong>
           </div>
           <div class="deep-row-item">
             <span>Disk IOPS Read / Write</span>
@@ -1632,8 +1677,15 @@ const exportTelemetry = () => {
             </tr>
 
             <tr v-if="filteredDailyHits.length === 0">
-              <td colspan="8" style="text-align: center; padding: 40px 20px; color: #64748b;">
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <td colspan="8" style="text-align: center; padding: 48px 20px; color: #64748b;">
+                <div v-if="report.dailyHits.length === 0" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <Globe :size="28" style="color: #94a3b8;" />
+                  <span style="font-weight: 700; color: #0f172a; font-size: 0.9rem;">Belum Ada Rekaman Lalu Lintas Pengunjung</span>
+                  <span style="font-size: 0.76rem; color: #64748b; max-width: 480px; line-height: 1.5;">
+                    Data akses, alamat IP pengunjung, dan saluran rujukan akan dicatat secara real-time saat pengunjung mengakses rute publik kontainer di <strong>https://{{ container.subdomain }}</strong>.
+                  </span>
+                </div>
+                <div v-else style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
                   <Search :size="24" style="color: #94a3b8;" />
                   <span style="font-weight: 600; color: #1e293b; font-size: 0.85rem;">Tidak ada log akses yang cocok</span>
                   <span style="font-size: 0.74rem; color: #94a3b8; max-width: 420px;">

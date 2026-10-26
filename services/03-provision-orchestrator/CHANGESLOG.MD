@@ -6,6 +6,47 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.1.0] - 25 Oktober 2026
+**Tipe Rilis**: Minor / Feature Release (Autonomous Local Image Builder & Traefik Dynamic File Sync)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Andalusia (Full Stack Lead), Rizal (Security & DevOps Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Autonomous Local Image Builder (Zero Registry Push)**:
+   - Sebelum kontainer tenant dibuat, Service 03 secara otomatis memeriksa ketersediaan image `roxas0800/tenant-runtime:alpine-v1` di cache lokal Docker via `ensureRuntimeImage`.
+   - Apabila belum tersedia, orchestrator mengkompilasi/membangun image lokal langsung dari Dockerfile template (`templates/vue-alpine-runtime`) secara otomatis tanpa perlu melakukan push ke Docker Hub.
+2. **Sinkronisasi File Konfigurasi Dinamis Traefik (`tenants.yml`)**:
+   - Menghadirkan `internal/traefik/sync.go` yang menulis aturan perutean rute dinamis tenant (`Host(<subdomain>.stacbyte.id)`) dan service upstream target kontainer ke `deploy/traefik/dynamic/tenants.yml`.
+   - Traefik v3 yang berjalan di `docker-compose.yml` (`providers.file.directory=/etc/traefik/dynamic`, `watch=true`) seketika mendeteksi rute baru dan menghubungkan trafik secara instan (< 100ms) dengan dukungan ganda (Docker labels + Dynamic File Provider).
+3. **Standarisasi Namespace Image `roxas0800`**:
+   - Mengganti seluruh referensi image `cloudcms` menjadi standar organisasi `roxas0800` pada `docker-compose.yml`, `config/config.go`, dan `internal/docker/provisioner.go`.
+
+---
+
+### [03-orchestrator-v1.0.2] - 25 Oktober 2026
+**Tipe Rilis**: Patch / Alignment & Integration Release  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Fallback Default Sandi Redis**: Menambahkan default fallback kata sandi Redis (`secret_redis_password`) pada `config/config.go` sehingga Service 03 langsung terhubung ke kontainer Docker `herocms_redis` tanpa kendala `NOAUTH Authentication required`.
+2. **Penyelarasan Host Router Domain stacbyte.id**: Memperbarui aturan Traefik router rules pada `internal/docker/sandbox.go` dan output API `internal/api/router.go` menjadi `Host(<subdomain>.stacbyte.id)` secara konsisten dengan ekosistem platform.
+
+---
+
+### [03-orchestrator-v1.0.1] - 25 Oktober 2026
+**Tipe Rilis**: Patch / Security Hardening Release  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (Security & DevOps Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+Pengerasan keamanan berstandar 21 Matriks Keamanan Web, Backend & Sandboxing Kontainer:
+1. **Pencegahan Serangan Timing (Timing Attack Resistance)**: Pemutakhiran verifikasi token `X-HeroCMS-Internal-Secret` menggunakan `subtle.ConstantTimeCompare` pada `internal/api/middleware.go`.
+2. **Penanganan Status Container Not Found (HTTP 404)**: Respons yang konsisten dengan kode status 404 saat target kontainer tidak ditemukan pada operasi Start dan Stop.
+3. **Audit Kepatuhan Matriks 21 Keamanan**: Penegakan 100% parameter pengerasan cgroups v2 (`256 MB RAM`, `0.5 vCPU`, `PidsLimit 50`, `UID 10001`, `ReadonlyRootfs`, `CapDrop ALL`, `tmpfs noexec`) dan isolasi direktori penyimpanan tenant.
+
+---
+
 ### [03-orchestrator-v1.0.0] - 25 Oktober 2026
 **Tipe Rilis**: Milestone / Major Architectural Release  
 **Status**: Production Ready & Stable  

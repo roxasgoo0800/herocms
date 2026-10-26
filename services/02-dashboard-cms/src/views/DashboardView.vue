@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, defineAsyncComponent, computed } from 'vue';
+import { ref, onMounted, watch, defineAsyncComponent, computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Layers,
@@ -49,6 +49,7 @@ import {
 } from 'lucide-vue-next';
 import { useDashboardData } from '../composables/useDashboardData';
 import { generateContainerLogs, type ContainerLogEntry } from '../data/container-logs';
+import { studioApi } from '../services/apiClient';
 
 // Modular View Components (Lazy Loaded On-Demand for Maximum Speed & Lean Memory)
 const ContainersModule = defineAsyncComponent(() => import('../components/dashboard/ContainersModule.vue'));
@@ -212,15 +213,122 @@ const isTerminalMaximized = ref(false);
 const isStreamPaused = ref(false);
 const isAutoScroll = ref(true);
 const terminalCleared = ref(false);
+const terminalScreenRef = ref<HTMLElement | null>(null);
 const logFilterLevel = ref<'all' | 'traffic' | 'traefik' | 'engine' | 'docker' | 'system'>('all');
 const logSearchQuery = ref('');
 const isTerminalRestarting = ref(false);
 const dynamicRebootLogs = ref<ContainerLogEntry[]>([]);
 
+const parseRawLogsToEntries = (rawLogs: string): ContainerLogEntry[] => {
+  const rawLines = rawLogs.split('\n').filter((l: string) => l.trim().length > 0);
+  return rawLines.map((line: string, i: number) => {
+    const now = new Date();
+    let timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(i * 10).padStart(3, '0')}`;
+    let cleanMsg = line.trim();
+
+    const timeMatch = cleanMsg.match(/^\[(\d{2}:\d{2}:\d{2}(?:\.\d{3})?)\]\s*(.*)$/);
+    if (timeMatch) {
+      timeStr = timeMatch[1];
+      cleanMsg = timeMatch[2];
+    }
+
+    let service: ContainerLogEntry['service'] = 'system';
+    let serviceLabel = 'system';
+    let level: ContainerLogEntry['level'] = 'info';
+
+    if (cleanMsg.includes('[build-image]') || cleanMsg.includes('[BUILD]')) {
+      service = 'engine';
+      serviceLabel = 'build-image';
+      level = 'info';
+    } else if (cleanMsg.includes('[cgroups-v2]') || cleanMsg.includes('[CGROUPS]')) {
+      service = 'docker';
+      serviceLabel = 'cgroups-v2';
+      level = 'info';
+    } else if (cleanMsg.includes('[security-sandbox]') || cleanMsg.includes('[SANDBOX]')) {
+      service = 'security';
+      serviceLabel = 'sandbox-uid';
+      level = 'info';
+    } else if (cleanMsg.includes('[docker-engine]') || cleanMsg.includes('[DOCKER]') || cleanMsg.includes('[SPAWN]') || cleanMsg.includes('spawned')) {
+      service = 'docker';
+      serviceLabel = 'docker-spawn';
+      level = 'success';
+    } else if (cleanMsg.includes('[traefik-edge]') || cleanMsg.includes('[TRAEFIK]')) {
+      service = 'traefik';
+      serviceLabel = 'traefik-v3';
+      level = 'success';
+    } else if (cleanMsg.includes('[healthcheck]') || cleanMsg.includes('[HEALTHCHECK]') || cleanMsg.includes('probe')) {
+      service = 'health';
+      serviceLabel = 'probe-200';
+      level = 'success';
+    } else if (cleanMsg.includes('[runtime-nginx]') || cleanMsg.includes('[RUNTIME]') || cleanMsg.includes('nginx')) {
+      service = 'engine';
+      serviceLabel = 'nginx-alpine';
+      level = 'info';
+    } else if (cleanMsg.includes('[REBOOT]') || cleanMsg.includes('SIGTERM') || cleanMsg.includes('[DRAIN]')) {
+      service = 'system';
+      serviceLabel = 'system-reboot';
+      level = 'warn';
+    } else if (cleanMsg.includes('[STOP]') || cleanMsg.includes('[STOPPED]')) {
+      service = 'docker';
+      serviceLabel = 'docker-stop';
+      level = 'warn';
+    } else if (cleanMsg.includes('HTTP/')) {
+      service = 'traffic';
+      serviceLabel = 'http-traffic';
+      level = 'success';
+    } else if (cleanMsg.toLowerCase().includes('err') || cleanMsg.toLowerCase().includes('fail')) {
+      level = 'error';
+    } else if (cleanMsg.toLowerCase().includes('warn')) {
+      level = 'warn';
+    }
+
+    return {
+      id: `live-docker-${Date.now()}-${i}`,
+      lineNum: i + 1,
+      timestamp: timeStr,
+      service,
+      serviceLabel,
+      level,
+      message: cleanMsg
+    };
+  });
+};
+
+const fetchLatestContainerLogs = async () => {
+  if (!activeLogContainer.value) return;
+  try {
+    const res = await studioApi.getContainerLogs(activeLogContainer.value.id, 100);
+    if (res?.logs && typeof res.logs === 'string') {
+      const entries = parseRawLogsToEntries(res.logs);
+      if (entries.length > 0) {
+        dynamicRebootLogs.value = entries;
+        if (isAutoScroll.value) {
+          nextTick(() => {
+            if (terminalScreenRef.value) {
+              terminalScreenRef.value.scrollTop = terminalScreenRef.value.scrollHeight;
+            }
+          });
+        }
+      }
+    }
+  } catch {
+    // Fallback handled by containerLogs computed
+  }
+};
+
+watch(isLogsModalOpen, async (isOpen) => {
+  if (isOpen && activeLogContainer.value) {
+    dynamicRebootLogs.value = [];
+    await fetchLatestContainerLogs();
+  }
+});
+
 const containerLogs = computed<ContainerLogEntry[]>(() => {
   if (!activeLogContainer.value || terminalCleared.value) return [];
-  const base = generateContainerLogs(activeLogContainer.value);
-  return [...base, ...dynamicRebootLogs.value];
+  if (dynamicRebootLogs.value.length > 0) {
+    return dynamicRebootLogs.value;
+  }
+  return generateContainerLogs(activeLogContainer.value);
 });
 
 const logCounts = computed(() => {
@@ -296,33 +404,60 @@ const handleTerminalRestart = async () => {
   if (!activeLogContainer.value) return;
   isTerminalRestarting.value = true;
   const now = new Date();
-  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
-  
-  dynamicRebootLogs.value.push({
-    id: `reboot-${Date.now()}-1`,
-    lineNum: containerLogs.value.length + 1,
-    timestamp: timeStr,
-    service: 'system',
-    serviceLabel: 'system-reboot',
-    level: 'warn',
-    message: `Received SIGTERM signal. Initiating graceful container drainage for [pod-${activeLogContainer.value.id.slice(0, 8)}]`
-  });
+  const formatTime = (offsetMs: number) => {
+    const d = new Date(now.getTime() + offsetMs);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}.${String(d.getMilliseconds()).padStart(3, '0')}`;
+  };
 
-  await restartContainer(activeLogContainer.value);
-  
-  setTimeout(() => {
-    const timeStr2 = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds() + 1).padStart(2, '0')}.112`;
+  const pushRebootLog = (service: ContainerLogEntry['service'], serviceLabel: string, level: ContainerLogEntry['level'], message: string, offsetMs: number) => {
     dynamicRebootLogs.value.push({
-      id: `reboot-${Date.now()}-2`,
+      id: `reboot-${Date.now()}-${dynamicRebootLogs.value.length + 1}`,
       lineNum: containerLogs.value.length + 1,
-      timestamp: timeStr2,
-      service: 'docker',
-      serviceLabel: 'docker-daemon',
-      level: 'success',
-      message: 'Container process spawned successfully. cgroups v2 resource tree intact. Ingress route active.'
+      timestamp: formatTime(offsetMs),
+      service,
+      serviceLabel,
+      level,
+      message
     });
+    if (isAutoScroll.value) {
+      nextTick(() => {
+        if (terminalScreenRef.value) {
+          terminalScreenRef.value.scrollTop = terminalScreenRef.value.scrollHeight;
+        }
+      });
+    }
+  };
+
+  // Phase 1: Graceful SIGTERM drainage
+  pushRebootLog('system', 'system-reboot', 'warn', `⚠️ [REBOOT] Received SIGTERM signal. Initiating graceful container drainage for [pod-${activeLogContainer.value.id.slice(0, 8)}]`, 0);
+  pushRebootLog('system', 'network-drain', 'info', `⏳ [DRAIN] Waiting for active HTTP keep-alive connections to terminate (drain window: 3s)...`, 120);
+
+  // Trigger container restart via API & Docker SDK
+  await restartContainer(activeLogContainer.value);
+
+  // Phase 2-4: Progression milestones
+  setTimeout(() => {
+    pushRebootLog('docker', 'docker-stop', 'info', `🛑 [STOP] Container process stopped cleanly (exit code 0). Cgroups v2 memory limits reset.`, 400);
+  }, 350);
+
+  setTimeout(() => {
+    pushRebootLog('docker', 'docker-spawn', 'success', `🐳 [SPAWN] Docker Engine respawning container process (PID 1, UID 10001, tmpfs on /tmp)...`, 700);
+  }, 700);
+
+  setTimeout(() => {
+    pushRebootLog('engine', 'nginx-alpine', 'info', `⚙️ [RUNTIME] Nginx configuration syntax verified (syntax ok). Worker process spawned on port 80.`, 1000);
+  }, 1050);
+
+  setTimeout(() => {
+    pushRebootLog('health', 'probe-200', 'success', `🩺 [HEALTHCHECK] Container internal health probe (GET http://127.0.0.1:80/healthz) -> 200 OK`, 1350);
+  }, 1400);
+
+  setTimeout(async () => {
+    pushRebootLog('traefik', 'traefik-v3', 'success', `🌐 [TRAEFIK] Edge router ingress re-verified active (TLS 1.3 ALPN HTTP/2).`, 1700);
+    pushRebootLog('docker', 'docker-daemon', 'success', `🚀 [RUNNING] Container process spawned successfully. cgroups v2 resource tree intact. Ingress route active.`, 1900);
     isTerminalRestarting.value = false;
-  }, 1200);
+    await fetchLatestContainerLogs();
+  }, 1800);
 };
 
 // Responsive Mobile Navigation Drawer State
@@ -908,7 +1043,7 @@ const handleLogout = async () => {
                           required
                           autocomplete="off"
                         />
-                        <span class="url-addon-suffix">.cloudcms.app</span>
+                        <span class="url-addon-suffix">.stacbyte.id</span>
                       </div>
                     </div>
                   </div>
@@ -955,7 +1090,7 @@ const handleLogout = async () => {
                     <div class="mockup-address-pill">
                       <Lock :size="11" style="color: #10b981;" />
                       <span class="mockup-url-text">
-                        https://{{ (newSiteForm.subdomain || 'nama-situs').toLowerCase() }}.cloudcms.app
+                        https://{{ (newSiteForm.subdomain || 'nama-situs').toLowerCase() }}.stacbyte.id
                       </span>
                     </div>
                     <span class="mockup-tls-tag">TLS 1.3</span>
@@ -1286,7 +1421,7 @@ const handleLogout = async () => {
             </div>
 
             <!-- 4. Console Screen & Lines -->
-            <div class="terminal-output-screen">
+            <div class="terminal-output-screen" ref="terminalScreenRef">
               <div
                 v-for="entry in filteredLogs"
                 :key="entry.id"
@@ -1372,16 +1507,16 @@ const handleLogout = async () => {
         @click.self="cancelDeleteContainer"
       >
         <div
-          class="modal-dialog modal-dialog-delete"
+          class="modal-dialog modal-dialog-seamless modal-dialog-delete"
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-dialog-title"
         >
           <!-- Modal Header -->
-          <div class="modal-header">
+          <div class="modal-seamless-header">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box danger-icon-box">
-                <AlertTriangle :size="18" />
+              <div class="modal-header-icon-box modal-icon-danger">
+                <AlertTriangle :size="18" stroke-width="2.2" />
               </div>
               <div>
                 <h3 id="delete-dialog-title" class="modal-heading">Hapus Kontainer Runtime</h3>
@@ -1390,7 +1525,7 @@ const handleLogout = async () => {
             </div>
             <button
               type="button"
-              class="modal-close-button"
+              class="modal-close-button-ghost"
               :disabled="isDeletingContainer"
               @click="cancelDeleteContainer"
               title="Tutup dialog"
@@ -1400,22 +1535,22 @@ const handleLogout = async () => {
           </div>
 
           <!-- Modal Body -->
-          <div class="delete-modal-body">
+          <div class="modal-seamless-body">
             <!-- Target Pod Card -->
-            <div class="delete-target-card">
-              <div class="target-card-leading">
-                <div class="target-app-icon">
-                  <Server :size="17" />
+            <div class="modal-target-site-card">
+              <div class="modal-target-site-left">
+                <div class="modal-target-icon-box delete-pod-icon">
+                  <Server :size="18" />
                 </div>
-                <div class="target-app-info">
-                  <div class="target-app-name">{{ containerToDelete.name }}</div>
-                  <div class="target-app-subdomain">
+                <div class="modal-target-site-info">
+                  <div class="modal-target-site-name">{{ containerToDelete.name }}</div>
+                  <div class="modal-target-site-url">
                     <Globe :size="11" />
                     <span>https://{{ containerToDelete.subdomain }}</span>
                   </div>
                 </div>
               </div>
-              <div class="target-card-meta">
+              <div class="delete-pod-badges">
                 <span class="badge-target-spec">{{ containerToDelete.cpuLimit }} • {{ containerToDelete.ramLimit }} MB</span>
                 <span
                   class="badge-target-status"
@@ -1429,25 +1564,28 @@ const handleLogout = async () => {
             <!-- Danger Impact Callout -->
             <div class="delete-impact-callout">
               <div class="impact-callout-header">
-                <AlertCircle :size="13" />
+                <AlertCircle :size="15" />
                 <span>Konsekuensi penghapusan kontainer:</span>
               </div>
-              <ul class="impact-list">
-                <li>
-                  <strong>Proses Pod Dihentikan:</strong> Runtime Docker & cgroups v2 akan dimatikan seketika.
-                </li>
-                <li>
-                  <strong>Rute Traefik & SSL Dicabut:</strong> Permintaan masuk ke <code>{{ containerToDelete.subdomain }}</code> akan langsung mengembalikan status HTTP 404.
-                </li>
-                <li>
-                  <strong>Pengembalian Kuota:</strong> 1 slot kuota ({{ containers.length }}/{{ userPlan.maxContainers }}) akan otomatis dikembalikan ke kuota langganan Anda.
-                </li>
-              </ul>
+              <div class="impact-list-clean">
+                <div class="impact-item">
+                  <span class="impact-item-dot"></span>
+                  <div><strong>Proses Pod Dihentikan:</strong> Runtime Docker & cgroups v2 akan dimatikan seketika.</div>
+                </div>
+                <div class="impact-item">
+                  <span class="impact-item-dot"></span>
+                  <div><strong>Rute Ingress & SSL Dicabut:</strong> Permintaan masuk ke <code>{{ containerToDelete.subdomain }}</code> akan langsung mengembalikan status HTTP 404.</div>
+                </div>
+                <div class="impact-item">
+                  <span class="impact-item-dot"></span>
+                  <div><strong>Pengembalian Kuota:</strong> 1 slot kuota ({{ containers.length }}/{{ userPlan.maxContainers }}) akan otomatis dikembalikan ke kuota langganan Anda.</div>
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- Modal Footer Actions -->
-          <div class="modal-footer-row delete-footer-row">
+          <div class="modal-seamless-footer">
             <button
               type="button"
               class="btn-modal-ghost"

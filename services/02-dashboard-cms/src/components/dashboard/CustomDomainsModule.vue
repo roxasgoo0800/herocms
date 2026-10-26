@@ -54,7 +54,7 @@ const registrarGuides: RegistrarGuide[] = [
   {
     id: 'niagahoster',
     name: 'Niagahoster',
-    tip: 'Buka cPanel > Zone Editor, tambahkan CNAME Record mengarah ke target edge.cloudcms.app.',
+    tip: 'Buka cPanel > Zone Editor, tambahkan CNAME Record mengarah ke target edge.stacbyte.id.',
     recommendedTTL: '14400 (4 Jam)'
   },
   {
@@ -135,7 +135,7 @@ const recheckDnsPoPs = () => {
 };
 
 const copyAllDnsRecords = (dom: CustomDomainItem) => {
-  const cname = dom.cnameRecord || 'edge.cloudcms.app';
+  const cname = dom.cnameRecord || 'edge.stacbyte.id';
   const a = dom.aRecord || '103.144.20.1';
   const zoneSnippet = `; --- Stack DNS Zone File (Aether Core) for ${dom.domain} ---
 ; CNAME Record (Subdomain & www)
@@ -359,11 +359,11 @@ ${dom.domain}.        3600    IN    A        ${a}`;
                 </span>
                 <span class="domain-target-pill">
                   <ArrowRight :size="11" />
-                  {{ dom.targetContainer || 'Portofolio Rizal Pratama' }}
+                  {{ dom.targetContainer || '-' }}
                 </span>
               </div>
               <span class="domain-created-txt">
-                Ditambahkan pada {{ dom.addedDate || '12 Sep 2026' }} • Ingress Rule: <code>route-{{ dom.id }}</code> • HTTP/2 & HTTP/3 ALPN
+                Ditambahkan pada {{ dom.addedDate || 'Baru saja' }} • Ingress Rule: <code>route-{{ dom.id }}</code> • HTTP/2 & HTTP/3 ALPN
               </span>
             </div>
           </div>
@@ -433,10 +433,10 @@ ${dom.domain}.        3600    IN    A        ${a}`;
               <div class="dns-col-val">
                 <span class="col-lbl">TARGET / VALUE</span>
                 <div class="val-copy-group">
-                  <code>{{ dom.cnameRecord || 'edge.cloudcms.app' }}</code>
+                  <code>{{ dom.cnameRecord || 'edge.stacbyte.id' }}</code>
                   <button
                     class="btn-mini-copy"
-                    @click="copyToClipboard(dom.cnameRecord || 'edge.cloudcms.app', 'cname_' + dom.id)"
+                    @click="copyToClipboard(dom.cnameRecord || 'edge.stacbyte.id', 'cname_' + dom.id)"
                     title="Salin Target CNAME"
                   >
                     <Check v-if="copiedSubdomain === 'cname_' + dom.id" :size="13" class="text-green" />
