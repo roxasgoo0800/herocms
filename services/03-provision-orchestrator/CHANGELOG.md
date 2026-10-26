@@ -6,6 +6,20 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.2.2] - 26 Oktober 2026
+**Tipe Rilis**: Bugfix & Traefik Routing Middleware Alignment (`security-headers@file,gzip-compress@file`)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (DevOps & Security), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Penyelarasan Middleware Traefik (`BuildTraefikLabels`)**:
+   - Memperbaiki label Traefik router middleware dari `secure-headers@file` menjadi `security-headers@file,gzip-compress@file` sesuai definisi standar Traefik dynamic file.
+   - Mengaktifkan status router tenant menjadi `enabled` di Traefik API tanpa memicu error `middleware does not exist`.
+2. **Penyelarasan Domain Platform `*.stackbyte.id`**:
+   - Memastikan aturan router rules kontainer tenant konsisten menggunakan `Host(<subdomain>.stackbyte.id)`.
+
+---
+
 ### [03-orchestrator-v1.2.1] - 25 Oktober 2026
 **Tipe Rilis**: Patch / Feature Hardening (Live Container Template Re-seeding Endpoint `/containers/:id/template`)  
 **Status**: Production Ready & Stable  

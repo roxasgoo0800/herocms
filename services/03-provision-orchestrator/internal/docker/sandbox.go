@@ -48,7 +48,7 @@ func BuildTraefikLabels(subdomain, customDomain, routerName, edgeNetwork string)
 		fmt.Sprintf("traefik.http.routers.%s.entrypoints", routerName):             "web",
 		fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", routerName): "80",
 		// Security middleware references if configured
-		fmt.Sprintf("traefik.http.routers.%s.middlewares", routerName):            "secure-headers@file",
+		fmt.Sprintf("traefik.http.routers.%s.middlewares", routerName):            "security-headers@file,gzip-compress@file",
 	}
 }
 
