@@ -88,7 +88,7 @@ func TestSandbox_BuildTraefikLabels(t *testing.T) {
 	}
 
 	rule := labels["traefik.http.routers.tenant-t100.rule"]
-	if !strings.Contains(rule, "Host(`kucing-lucu.stacbyte.id`)") {
+	if !strings.Contains(rule, "Host(`kucing-lucu.stackbyte.id`)") {
 		t.Errorf("expected rule to contain subdomain host, got %s", rule)
 	}
 	if !strings.Contains(rule, "Host(`kucing.com`)") {

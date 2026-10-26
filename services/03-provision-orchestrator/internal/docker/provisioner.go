@@ -223,7 +223,7 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 		version = params.VersionHash[:8]
 	}
 
-	cleanSub := strings.TrimSuffix(params.Subdomain, ".stacbyte.id")
+	cleanSub := strings.TrimSuffix(params.Subdomain, ".stackbyte.id")
 	cleanSub = strings.TrimSuffix(cleanSub, ".cloudcms.app")
 	cleanSub = regexp.MustCompile(`[^a-zA-Z0-9_-]`).ReplaceAllString(cleanSub, "")
 	if cleanSub == "" {
@@ -429,7 +429,7 @@ func (p *Provisioner) ResolveTargetContainer(ctx context.Context, id string) str
 	// 2. Search all managed containers by labels, names, and subdomain rules
 	list, err := p.cli.ContainerList(ctx, container.ListOptions{All: true})
 	if err == nil {
-		cleanSub := strings.TrimSuffix(strings.TrimSuffix(cleanID, ".stacbyte.id"), ".cloudcms.app")
+		cleanSub := strings.TrimSuffix(strings.TrimSuffix(cleanID, ".stackbyte.id"), ".cloudcms.app")
 		for _, c := range list {
 			if c.ID == cleanID || strings.HasPrefix(c.ID, cleanID) {
 				return c.ID
@@ -617,7 +617,7 @@ func (p *Provisioner) DestroyContainer(ctx context.Context, id string, purgeStor
 		if routerName != "" {
 			_ = p.traefikManager.RemoveTenantRoute(routerName)
 		}
-		cleanID := strings.TrimSuffix(strings.TrimSuffix(id, ".stacbyte.id"), ".cloudcms.app")
+		cleanID := strings.TrimSuffix(strings.TrimSuffix(id, ".stackbyte.id"), ".cloudcms.app")
 		cleanID = regexp.MustCompile(`[^a-zA-Z0-9_-]`).ReplaceAllString(cleanID, "")
 		if cleanID != "" {
 			_ = p.traefikManager.RemoveTenantRoute(fmt.Sprintf("tenant-%s", cleanID))
@@ -859,8 +859,8 @@ func (p *Provisioner) SetContainerMaintenance(ctx context.Context, id, reqTenant
 	tenantID := reqTenantID
 	subdomain := reqSubdomain
 
-	if strings.Contains(subdomain, ".stacbyte.id") {
-		subdomain = strings.TrimSuffix(subdomain, ".stacbyte.id")
+	if strings.Contains(subdomain, ".stackbyte.id") {
+		subdomain = strings.TrimSuffix(subdomain, ".stackbyte.id")
 	}
 	if strings.Contains(subdomain, ".") {
 		subdomain = strings.Split(subdomain, ".")[0]

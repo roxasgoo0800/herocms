@@ -168,8 +168,8 @@ func LoadConfig() *Config {
 			"http://localhost:8081",
 			"http://localhost:8085",
 			"http://127.0.0.1:8085",
-			"https://stacbyte.id",
-			"https://*.stacbyte.id",
+			"https://stackbyte.id",
+			"https://*.stackbyte.id",
 			"https://cloudcms.app",
 		}
 	}

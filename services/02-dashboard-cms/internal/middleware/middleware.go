@@ -58,7 +58,7 @@ func CORS(cfg *config.Config) gin.HandlerFunc {
 					break
 				}
 			}
-			if !allowed && (strings.HasSuffix(origin, ".stacbyte.id") || strings.HasSuffix(origin, ".cloudcms.app")) {
+			if !allowed && (strings.HasSuffix(origin, ".stackbyte.id") || strings.HasSuffix(origin, ".cloudcms.app")) {
 				allowed = true
 			}
 		}

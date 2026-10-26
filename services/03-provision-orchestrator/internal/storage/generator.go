@@ -31,7 +31,7 @@ func GenerateWebsiteHTML(p TemplateSeedParams) string {
 
 	subdomain := strings.TrimSpace(p.Subdomain)
 	if subdomain == "" {
-		subdomain = "stacbyte.id"
+		subdomain = "stackbyte.id"
 	}
 
 	accentColor := strings.TrimSpace(p.AccentColor)

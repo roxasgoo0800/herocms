@@ -481,7 +481,7 @@ const getSamplePayload = (eventId: string) => {
           category: 'Teknologi & Cloud',
           author: 'Rizal Pratama',
           published_at: nowIso,
-          url: 'https://rizalpratama.stacbyte.id/artikel/membangun-arsitektur-cloud-mandiri'
+          url: 'https://rizalpratama.stackbyte.id/artikel/membangun-arsitektur-cloud-mandiri'
         }
       };
     case 'lead.received':
@@ -497,7 +497,7 @@ const getSamplePayload = (eventId: string) => {
           phone: '+6281234567890',
           company: 'PT Solusi Bangsa Digital',
           message: 'Tertarik dengan implementasi Stack untuk 50 kontainer website.',
-          source_site: 'rizalpratama.stacbyte.id'
+          source_site: 'rizalpratama.stackbyte.id'
         }
       };
     case 'ssl.renewed':
@@ -507,7 +507,7 @@ const getSamplePayload = (eventId: string) => {
         tenant_id: 'tenant-9942',
         webhook_id: 'wh_auto_generated',
         data: {
-          domain: 'rizalpratama.stacbyte.id',
+          domain: 'rizalpratama.stackbyte.id',
           issuer: "Let's Encrypt Authority X3",
           tls_version: 'TLS 1.3',
           valid_until: '2027-01-18T00:00:00Z',
@@ -522,7 +522,7 @@ const getSamplePayload = (eventId: string) => {
         webhook_id: 'wh_auto_generated',
         data: {
           container_id: 'cnt_9942_01',
-          subdomain: 'rizalpratama.stacbyte.id',
+          subdomain: 'rizalpratama.stackbyte.id',
           requests_per_minute: 4820,
           normal_baseline: 450,
           ratio: '10.7x spike',

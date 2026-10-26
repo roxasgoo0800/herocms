@@ -180,8 +180,8 @@ const handleDemoClick = (actionName: string) => {
           </div>
           <div class="terminal-strip-content">
             <div class="t-line">
-              <span class="t-prefix">rizal@stacbyte:~$</span>
-              <span class="t-command">curl -s https://rizal.stacbyte.id/telemetry | jq '{status, engine, latency}'</span>
+              <span class="t-prefix">rizal@stackbyte:~$</span>
+              <span class="t-command">curl -s https://rizal.stackbyte.id/telemetry | jq '{status, engine, latency}'</span>
             </div>
             <div class="t-response">
               <span class="t-bracket">{</span>

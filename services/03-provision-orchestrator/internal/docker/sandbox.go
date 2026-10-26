@@ -33,10 +33,10 @@ func DefaultSandboxSpecs(edgeNetwork string) SandboxSpecs {
 
 // BuildTraefikLabels generates dynamic router and service labels for Traefik v3 ingress
 func BuildTraefikLabels(subdomain, customDomain, routerName, edgeNetwork string) map[string]string {
-	cleanSub := strings.TrimSuffix(subdomain, ".stacbyte.id")
+	cleanSub := strings.TrimSuffix(subdomain, ".stackbyte.id")
 	cleanSub = strings.TrimSuffix(cleanSub, ".herocms.stackbyte.id")
 	cleanSub = strings.TrimSuffix(cleanSub, ".cloudcms.app")
-	rule := fmt.Sprintf("Host(`%s.stacbyte.id`)", cleanSub)
+	rule := fmt.Sprintf("Host(`%s.stackbyte.id`)", cleanSub)
 	if customDomain != "" {
 		rule += fmt.Sprintf(" || Host(`%s`)", customDomain)
 	}

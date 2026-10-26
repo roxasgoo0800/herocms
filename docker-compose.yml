@@ -39,7 +39,7 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       # ACME Let's Encrypt Automatic TLS Configuration
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@herocms.stacbyte.id}"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@herocms.stackbyte.id}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
