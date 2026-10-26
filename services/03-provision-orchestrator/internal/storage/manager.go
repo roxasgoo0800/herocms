@@ -236,7 +236,7 @@ func (m *Manager) SetMaintenanceHTML(tenantID, subdomain, message, eta string, e
 			eta = "30 menit"
 		}
 		if subdomain == "" {
-			subdomain = "stacbyte.id"
+			subdomain = "stackbyte.id"
 		}
 
 		html := fmt.Sprintf(`<!DOCTYPE html>

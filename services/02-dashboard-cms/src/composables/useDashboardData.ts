@@ -142,11 +142,11 @@ const getArticleLiveUrl = (art: ContentArticle | null): string => {
   if (!art) return '#';
   const container = containers.value.find(c => c.id === art.containerId);
   if (container) {
-    const domain = container.customDomain || (container.subdomain.includes('.') ? container.subdomain : `${container.subdomain}.stacbyte.id`);
+    const domain = container.customDomain || (container.subdomain.includes('.') ? container.subdomain : `${container.subdomain}.stackbyte.id`);
     return `https://${domain}/${art.slug}`;
   }
   const slugified = (art.siteName || 'portal').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  return `https://${slugified}.stacbyte.id/${art.slug}`;
+  return `https://${slugified}.stackbyte.id/${art.slug}`;
 };
 
 // Watch activeMenu and persist across refresh (Cookies, LocalStorage, URL Hash, & Redis)
@@ -458,7 +458,7 @@ const handleCreateContainer = async () => {
   const clonedBlocks = matchedTpl ? JSON.parse(JSON.stringify(matchedTpl.blocks)) : [];
   const fullHTML = matchedTpl ? compileTemplateToHTML(matchedTpl, {
     siteName: newSiteForm.value.name,
-    subdomain: `${cleanSubdomain}.stacbyte.id`,
+    subdomain: `${cleanSubdomain}.stackbyte.id`,
     accentColor: chosenAccent,
     roleOrHeadline: newSiteForm.value.role || matchedTpl.defaultRole,
     bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
@@ -470,7 +470,7 @@ const handleCreateContainer = async () => {
     name: newSiteForm.value.name,
     category: newSiteForm.value.category,
     templateName: tplName,
-    subdomain: `${cleanSubdomain}.stacbyte.id`,
+    subdomain: `${cleanSubdomain}.stackbyte.id`,
     status: 'provisioning',
     deployPhase: 'building',
     deployStep: 1,
@@ -558,7 +558,7 @@ const handleCreateContainer = async () => {
         setDeployProgress(tempId, {
           id: res.id,
           containerId: res.container_id,
-          subdomain: res.subdomain || `${cleanSubdomain}.stacbyte.id`
+          subdomain: res.subdomain || `${cleanSubdomain}.stackbyte.id`
         });
 
         if (typeof localStorage !== 'undefined') {
@@ -571,7 +571,7 @@ const handleCreateContainer = async () => {
 
         studioApi.saveSiteDesign(res.id, {
           name: newContainerObj.name,
-          subdomain: res.subdomain || `${cleanSubdomain}.stacbyte.id`,
+          subdomain: res.subdomain || `${cleanSubdomain}.stackbyte.id`,
           roleOrHeadline: newContainerObj.roleOrHeadline,
           bioIntro: newContainerObj.bioIntro,
           accentColor: newContainerObj.accentColor,
@@ -591,9 +591,9 @@ const handleCreateContainer = async () => {
     setDeployProgress(realId, {
       deployPhase: 'routing',
       deployStep: 3,
-      deployStepMessage: '3/4 Mendaftarkan rute Traefik v3 & validasi TLS ALPN (stacbyte.id)...'
+      deployStepMessage: '3/4 Mendaftarkan rute Traefik v3 & validasi TLS ALPN (stackbyte.id)...'
     });
-    showToast(`[3/4 Traefik] Sinkronisasi rute https://${cleanSubdomain}.stacbyte.id...`, 'info');
+    showToast(`[3/4 Traefik] Sinkronisasi rute https://${cleanSubdomain}.stackbyte.id...`, 'info');
 
     await sleep(1800);
 
@@ -613,7 +613,7 @@ const handleCreateContainer = async () => {
       deployStep: 5,
       deployStepMessage: '4/4 Live Runtime Aktif & Sehat (HTTP 200 OK)'
     });
-    showToast(`Kontainer '${newSiteForm.value.name}' sukses running! Rute aktif di https://${cleanSubdomain}.stacbyte.id`, 'success');
+    showToast(`Kontainer '${newSiteForm.value.name}' sukses running! Rute aktif di https://${cleanSubdomain}.stackbyte.id`, 'success');
 
     // Keep celebration visible for 2.2 seconds so user sees all 4 green checkmarks clearly
     await sleep(2200);
@@ -849,7 +849,7 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     name: payload.name.trim(),
     category: tpl ? tpl.category : 'portfolio',
     templateName: tpl ? tpl.title : 'Portofolio Teknis Engineer',
-    subdomain: `${cleanSubdomain}.stacbyte.id`,
+    subdomain: `${cleanSubdomain}.stackbyte.id`,
     status: 'provisioning',
     deployPhase: 'building',
     deployStep: 1,
@@ -902,7 +902,7 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
 
   const fullHTML = tpl ? compileTemplateToHTML(tpl, {
     siteName: payload.name.trim(),
-    subdomain: `${cleanSubdomain}.stacbyte.id`,
+    subdomain: `${cleanSubdomain}.stackbyte.id`,
     accentColor: newContainerObj.accentColor,
     roleOrHeadline: newContainerObj.roleOrHeadline,
     bioIntro: newContainerObj.bioIntro,
@@ -941,7 +941,7 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
         setDeployProgress(tempId, {
           id: res.id,
           containerId: res.container_id,
-          subdomain: res.subdomain || `${cleanSubdomain}.stacbyte.id`
+          subdomain: res.subdomain || `${cleanSubdomain}.stackbyte.id`
         });
 
         if (typeof localStorage !== 'undefined') {
@@ -976,7 +976,7 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
       deployStep: 3,
       deployStepMessage: '3/4 Mengonfigurasi rute ingress Traefik v3 HTTP/3 & TLS Let\'s Encrypt...'
     });
-    showToast(`[3/4 Traefik] Memetakan ingress https://${cleanSubdomain}.stacbyte.id...`, 'info');
+    showToast(`[3/4 Traefik] Memetakan ingress https://${cleanSubdomain}.stackbyte.id...`, 'info');
 
     await sleep(1200);
 
@@ -992,7 +992,7 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
       ramUsage: 72
     });
 
-    showToast(`Kontainer '${newContainerObj.name}' aktif! Rute live di https://${cleanSubdomain}.stacbyte.id`, 'success');
+    showToast(`Kontainer '${newContainerObj.name}' aktif! Rute live di https://${cleanSubdomain}.stackbyte.id`, 'success');
 
     // Keep celebration visible for 2.2 seconds then transition to clean normal view
     setTimeout(() => {
@@ -1161,7 +1161,7 @@ const normalizeCustomDomain = (dom: any): CustomDomainItem => {
     containerId: dom.containerId || containers.value[0]?.id || '',
     status: dom.status === 'verified' ? 'active' : (dom.status || dom.dnsStatus || 'active'),
     sslStatus: dom.sslStatus === 'active' ? 'issued' : (dom.sslStatus || 'issued'),
-    cnameRecord: dom.cnameRecord || dom.targetCname || 'edge.stacbyte.id',
+    cnameRecord: dom.cnameRecord || dom.targetCname || 'edge.stackbyte.id',
     aRecord: dom.aRecord || dom.targetIp || '103.144.20.1',
     addedDate: dom.addedDate || dom.createdAt || 'Baru saja'
   };
@@ -1188,7 +1188,7 @@ const handleAddDomain = () => {
     containerId: targetId,
     status: 'verifying',
     sslStatus: 'pending',
-    cnameRecord: 'edge.stacbyte.id',
+    cnameRecord: 'edge.stackbyte.id',
     aRecord: '103.144.20.1',
     addedDate: 'Baru saja'
   };

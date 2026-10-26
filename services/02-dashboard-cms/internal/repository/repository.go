@@ -299,7 +299,7 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 	) ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
 	-- Purge legacy dummy seeds so the dashboard strictly displays 100% genuine user resources
-	DELETE FROM sites WHERE subdomain IN ('rizal', 'wedak', 'rizal.stacbyte.id', 'wedak.stacbyte.id', 'rizal.cloudcms.app', 'wedak.cloudcms.app') OR id IN ('99420000-0000-0000-0000-000000000001', '99420000-0000-0000-0000-000000000002');
+	DELETE FROM sites WHERE subdomain IN ('rizal', 'wedak', 'rizal.stackbyte.id', 'wedak.stackbyte.id', 'rizal.cloudcms.app', 'wedak.cloudcms.app') OR id IN ('99420000-0000-0000-0000-000000000001', '99420000-0000-0000-0000-000000000002');
 	DELETE FROM custom_domains WHERE domain = 'rizalpratama.cloud';
 	DELETE FROM content_items WHERE slug IN ('arsitektur-multi-tenant-aether-core-stack-rls', 'strategi-caching-traefik-v3-tls', 'pengamanan-linux-kernel-cgroups-seccomp');
 	DELETE FROM ticket_messages WHERE ticket_id IN ('99420000-0000-0000-0000-000000000401', '99420000-0000-0000-0000-000000000402');
@@ -347,8 +347,8 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 					&accentColor, &roleHeadline, &bioIntro, &themeConfigBytes, &lastDeployed); err == nil {
 
 					subDomainFull := subdomain
-					if !strings.HasSuffix(subdomain, ".stacbyte.id") && !strings.HasSuffix(subdomain, ".cloudcms.app") {
-						subDomainFull = fmt.Sprintf("%s.stacbyte.id", subdomain)
+					if !strings.HasSuffix(subdomain, ".stackbyte.id") && !strings.HasSuffix(subdomain, ".cloudcms.app") {
+						subDomainFull = fmt.Sprintf("%s.stackbyte.id", subdomain)
 					}
 
 					var parsedTheme gin.H
@@ -422,7 +422,7 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 			status = s
 		}
 		cleanSubdomain := fmt.Sprintf("%v", site["subdomain"])
-		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".stacbyte.id")
+		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".stackbyte.id")
 		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".cloudcms.app")
 
 		var newUUID string
@@ -624,7 +624,7 @@ func (r *Repository) DeleteSite(ctx context.Context, tenantID, siteID string) er
 	if r == nil {
 		return nil
 	}
-	cleanSub := strings.TrimSuffix(strings.TrimSuffix(siteID, ".stacbyte.id"), ".cloudcms.app")
+	cleanSub := strings.TrimSuffix(strings.TrimSuffix(siteID, ".stackbyte.id"), ".cloudcms.app")
 	if r.DB != nil {
 		_, err := r.DB.ExecContext(ctx, `
 			DELETE FROM sites 

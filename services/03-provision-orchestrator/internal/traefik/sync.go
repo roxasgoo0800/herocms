@@ -132,11 +132,11 @@ func (m *Manager) SyncTenantRoute(routerName, subdomain, customDomain, container
 		log.Printf("[TRAEFIK SYNC WARNING] Failed to load config, initializing fresh: %v", err)
 	}
 
-	cleanSub := strings.TrimSuffix(subdomain, ".stacbyte.id")
+	cleanSub := strings.TrimSuffix(subdomain, ".stackbyte.id")
 	cleanSub = strings.TrimSuffix(cleanSub, ".herocms.stackbyte.id")
 	cleanSub = strings.TrimSuffix(cleanSub, ".cloudcms.app")
 
-	rule := fmt.Sprintf("Host(`%s.stacbyte.id`)", cleanSub)
+	rule := fmt.Sprintf("Host(`%s.stackbyte.id`)", cleanSub)
 	if customDomain != "" {
 		rule += fmt.Sprintf(" || Host(`%s`)", customDomain)
 	}

@@ -26,7 +26,7 @@ export function compileTemplateToHTML(
   options: CompileTemplateOptions = {}
 ): string {
   const siteName = escapeHtml(options.siteName || template.title.split('&')[0].trim());
-  const subdomain = escapeHtml(options.subdomain || 'stacbyte.id');
+  const subdomain = escapeHtml(options.subdomain || 'stackbyte.id');
   const accentColor = options.accentColor || template.accentColor || '#2563eb';
   const roleHeadline = escapeHtml(options.roleOrHeadline || template.defaultRole || template.title);
   const bioIntro = escapeHtml(options.bioIntro || template.defaultBio || template.desc);
@@ -111,7 +111,7 @@ export function compileTemplateToHTML(
             </div>
             <div class="terminal-strip-content">
               <div class="t-line">
-                <span class="t-prefix">rizal@stacbyte:~$</span>
+                <span class="t-prefix">rizal@stackbyte:~$</span>
                 <span class="t-command">curl -s https://${subdomain}/telemetry | jq '{status, engine, latency}'</span>
               </div>
               <div class="t-response">

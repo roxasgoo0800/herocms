@@ -54,7 +54,7 @@ Aplikasi telah dilengkapi dengan perlindungan keamanan enterprise berlapis:
    - Token ditandatangani menggunakan secret acak berkekuatan tinggi (`crypto/rand`).
    - Fitur logout instan dengan menyimpan hash SHA-256 token pada Redis Blacklist.
 5. **Strict CORS Allowlist**:
-   - Hanya mengizinkan domain lokal terpercaya (`localhost:5173`, `localhost:3000`, `localhost:8085`) dan domain internal `*.stacbyte.id` / `*.cloudcms.app` dengan dukungan kredensial (tanpa wildcard `*`).
+   - Hanya mengizinkan domain lokal terpercaya (`localhost:5173`, `localhost:3000`, `localhost:8085`) dan domain internal `*.stackbyte.id` / `*.cloudcms.app` dengan dukungan kredensial (tanpa wildcard `*`).
 6. **Customer-First UX Isolation**:
    - Seluruh modul disesuaikan untuk peran **Customer** (tidak ada kontrol platform SuperAdmin yang terekspos). Seluruh dialog modal (`Teleport to="body"`, `z-index: 99999`) terisolasi dari overflow layout.
 

@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.31.0',
+    version: 'v1.31.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -24,11 +24,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '03-provision-orchestrator',
     name: 'Service 03: Container Provision Orchestrator',
-    version: 'v1.2.1',
+    version: 'v1.2.2',
     serviceFolder: 'services/03-provision-orchestrator',
     badge: 'Stable',
     stack: 'Golang • Docker Engine SDK • cgroups v2',
-    lastUpdated: '25 Oktober 2026',
+    lastUpdated: '26 Oktober 2026',
     leadPic: 'Andalusia & Rizal'
   },
   {
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.31.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '26 Oktober 2026',
+    title: 'Domain Correction to stackbyte.id & Provision Orchestrator Live Sync',
+    summary: 'Penyelarasan domain resmi platform dan perbaikan routing: (1) Koreksi Typo Domain: Mengoreksi seluruh referensi domain dari stacbyte.id menjadi stackbyte.id (dengan huruf "k") di seluruh modul frontend dan backend, memastikan DNS publik Cloudflare & rute Traefik v3 tersinkronisasi sempurna; (2) Integrasi Orchestrator: Menghubungkan variabel ORCHESTRATOR_URL dan token secret internal pada kontainer Dashboard CMS agar provisioning kontainer tenant baru di Service 03 langsung dieksekusi secara real-time via Docker SDK.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13110-1',
+        type: 'bugfix',
+        scope: 'Platform Domain Suffix Alignment',
+        description: 'Koreksi Domain Resmi stackbyte.id: Mengubah default subdomain kontainer, input domain wizard, mockup browser preview, dan aturan CORS allowlist dari stacbyte.id menjadi stackbyte.id.'
+      },
+      {
+        id: 'c-02dash-13110-2',
+        type: 'bugfix',
+        scope: 'Orchestrator RPC Client Communication',
+        description: 'Sinkronisasi Komunikasi Orchestrator: Mengonfigurasi ORCHESTRATOR_URL=http://herocms_provision_orchestrator:8080 pada docker-compose untuk memastikan setiap aksi deploy, restart, stop, dan get stats terkirim langsung ke engine Service 03.'
+      }
+    ]
+  },
+  {
     version: 'v1.31.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '26 Oktober 2026',
     title: '100% Dynamic Engine: Zero-Static Data Architecture for Articles & Web Pages',
     summary: 'Transformasi penuh modul Artikel Editorial & Halaman Web menjadi 100% dinamis terisolasi per-tenant: (1) Zero Static Seeds: Menghapus seluruh array seed tiruan dan mock data statis (initialArticles, initialCmsPages, hardcoded Linux paragraphs), seluruh data dimulai dari kondisi bersih 0 data dan disimpan secara persisten di PostgreSQL; (2) Basis Data PostgreSQL & RLS: Menambahkan tabel pages dan memperluas content_items dengan kebijakan tenant_pages_isolation & tenant_content_isolation; (3) REST API CRUD Lengkap: Menyediakan endpoint Go BFF GET/POST/PUT/DELETE untuk /api/articles dan /api/pages yang terintegrasi dengan invalidasi cache Redis; (4) Dynamic Content Article Reader: Merender konten teks markdown dinamis asli yang ditulis pengguna alih-alih teks statis; (5) Empty State & UX Polishing: Menyediakan tampilan Zero-Data Empty State yang elegan dengan tombol aksi cepat, serta memperbarui label navigasi menjadi "Halaman Web (Pages)".',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

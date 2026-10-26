@@ -1043,7 +1043,7 @@ const handleLogout = async () => {
                           required
                           autocomplete="off"
                         />
-                        <span class="url-addon-suffix">.stacbyte.id</span>
+                        <span class="url-addon-suffix">.stackbyte.id</span>
                       </div>
                     </div>
                   </div>
@@ -1090,7 +1090,7 @@ const handleLogout = async () => {
                     <div class="mockup-address-pill">
                       <Lock :size="11" style="color: #10b981;" />
                       <span class="mockup-url-text">
-                        https://{{ (newSiteForm.subdomain || 'nama-situs').toLowerCase() }}.stacbyte.id
+                        https://{{ (newSiteForm.subdomain || 'nama-situs').toLowerCase() }}.stackbyte.id
                       </span>
                     </div>
                     <span class="mockup-tls-tag">TLS 1.3</span>

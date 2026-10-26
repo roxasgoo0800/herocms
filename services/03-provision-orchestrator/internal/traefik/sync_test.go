@@ -25,7 +25,7 @@ func TestTraefikManager_SyncAndRemove(t *testing.T) {
 	}
 
 	sContent := string(content)
-	if !strings.Contains(sContent, "Host(`mybrand.stacbyte.id`)") {
+	if !strings.Contains(sContent, "Host(`mybrand.stackbyte.id`)") {
 		t.Errorf("expected subdomain rule in config, got:\n%s", sContent)
 	}
 	if !strings.Contains(sContent, "Host(`mybrand.com`)") {
