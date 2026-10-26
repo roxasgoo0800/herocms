@@ -831,6 +831,100 @@ func (s *Services) GetArticles(ctx context.Context, tenantID string) []gin.H {
 	return items
 }
 
+func (s *Services) CreateArticle(ctx context.Context, tenantID string, input gin.H) (gin.H, error) {
+	if s.Repo == nil {
+		return input, nil
+	}
+	art, err := s.Repo.InsertArticle(ctx, tenantID, input)
+	if err != nil {
+		return nil, err
+	}
+	s.InvalidateTenantCache(ctx, tenantID)
+	return art, nil
+}
+
+func (s *Services) UpdateArticle(ctx context.Context, tenantID, id string, input gin.H) error {
+	if s.Repo == nil {
+		return nil
+	}
+	err := s.Repo.UpdateArticle(ctx, tenantID, id, input)
+	if err != nil {
+		return err
+	}
+	s.InvalidateTenantCache(ctx, tenantID)
+	return nil
+}
+
+func (s *Services) DeleteArticle(ctx context.Context, tenantID, id string) error {
+	if s.Repo == nil {
+		return nil
+	}
+	err := s.Repo.DeleteArticle(ctx, tenantID, id)
+	if err != nil {
+		return err
+	}
+	s.InvalidateTenantCache(ctx, tenantID)
+	return nil
+}
+
+// -----------------------------------------------------------------------------
+// CMS Pages Service (With Redis Caching)
+// -----------------------------------------------------------------------------
+
+func (s *Services) GetPages(ctx context.Context, tenantID string) []gin.H {
+	cacheKey := fmt.Sprintf("tenant:%s:menu:pages", tenantID)
+	var cached []gin.H
+	if hit, _ := s.Redis.GetJSON(ctx, cacheKey, &cached); hit && cached != nil {
+		return cached
+	}
+
+	var items []gin.H
+	if s.Repo != nil {
+		items, _ = s.Repo.GetPages(ctx, tenantID)
+	}
+	if items == nil {
+		items = []gin.H{}
+	}
+	_ = s.Redis.SetJSON(ctx, cacheKey, items, 30*time.Minute)
+	return items
+}
+
+func (s *Services) CreatePage(ctx context.Context, tenantID string, input gin.H) (gin.H, error) {
+	if s.Repo == nil {
+		return input, nil
+	}
+	pg, err := s.Repo.InsertPage(ctx, tenantID, input)
+	if err != nil {
+		return nil, err
+	}
+	s.InvalidateTenantCache(ctx, tenantID)
+	return pg, nil
+}
+
+func (s *Services) UpdatePage(ctx context.Context, tenantID, id string, input gin.H) error {
+	if s.Repo == nil {
+		return nil
+	}
+	err := s.Repo.UpdatePage(ctx, tenantID, id, input)
+	if err != nil {
+		return err
+	}
+	s.InvalidateTenantCache(ctx, tenantID)
+	return nil
+}
+
+func (s *Services) DeletePage(ctx context.Context, tenantID, id string) error {
+	if s.Repo == nil {
+		return nil
+	}
+	err := s.Repo.DeletePage(ctx, tenantID, id)
+	if err != nil {
+		return err
+	}
+	s.InvalidateTenantCache(ctx, tenantID)
+	return nil
+}
+
 // -----------------------------------------------------------------------------
 // Assets Service (With 2GB Quota, Security Whitelist & Multi-Bucket S3)
 // -----------------------------------------------------------------------------
@@ -1448,6 +1542,7 @@ func (s *Services) WarmAllMenusCache(ctx context.Context, tenantID string) (gin.
 		return nil, err
 	}
 	articles := s.GetArticles(ctx, tenantID)
+	pages := s.GetPages(ctx, tenantID)
 	assets := s.GetAssets(ctx, tenantID)
 	domains := s.GetDomains(ctx, tenantID)
 	tickets := s.GetTickets(ctx, tenantID)
@@ -1459,6 +1554,7 @@ func (s *Services) WarmAllMenusCache(ctx context.Context, tenantID string) (gin.
 	bundle := gin.H{
 		"containers": containers,
 		"articles":   gin.H{"articles": articles},
+		"pages":      gin.H{"pages": pages},
 		"assets":     assets,
 		"domains":    gin.H{"domains": domains},
 		"tickets":    gin.H{"tickets": tickets},

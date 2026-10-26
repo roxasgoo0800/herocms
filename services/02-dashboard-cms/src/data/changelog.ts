@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.30.2',
+    version: 'v1.31.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.31.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '26 Oktober 2026',
+    title: '100% Dynamic Engine: Zero-Static Data Architecture for Articles & Web Pages',
+    summary: 'Transformasi penuh modul Artikel Editorial & Halaman Web menjadi 100% dinamis terisolasi per-tenant: (1) Zero Static Seeds: Menghapus seluruh array seed tiruan dan mock data statis (initialArticles, initialCmsPages, hardcoded Linux paragraphs), seluruh data dimulai dari kondisi bersih 0 data dan disimpan secara persisten di PostgreSQL; (2) Basis Data PostgreSQL & RLS: Menambahkan tabel pages dan memperluas content_items dengan kebijakan tenant_pages_isolation & tenant_content_isolation; (3) REST API CRUD Lengkap: Menyediakan endpoint Go BFF GET/POST/PUT/DELETE untuk /api/articles dan /api/pages yang terintegrasi dengan invalidasi cache Redis; (4) Dynamic Content Article Reader: Merender konten teks markdown dinamis asli yang ditulis pengguna alih-alih teks statis; (5) Empty State & UX Polishing: Menyediakan tampilan Zero-Data Empty State yang elegan dengan tombol aksi cepat, serta memperbarui label navigasi menjadi "Halaman Web (Pages)".',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13100-1',
+        type: 'feature',
+        scope: 'PostgreSQL Dynamic Storage & RLS Isolation',
+        description: 'Tabel PostgreSQL pages & Ekstensi content_items Terisolasi RLS: Menambahkan skema tabel pages dengan relasi tenant_id dan site_id, serta memperluas tabel content_items (excerpt, tags, meta_title, meta_desc). Diberlakukan kebijakan Row-Level Security tenant_pages_isolation & tenant_content_isolation untuk isolasi data multi-tenant ketat.'
+      },
+      {
+        id: 'c-02dash-13100-2',
+        type: 'feature',
+        scope: 'Go BFF REST API Endpoints',
+        description: 'Full CRUD REST API Endpoints untuk Articles & CMS Pages: Mengimplementasikan handler, service, dan repositori Go Gin untuk GET/POST/PUT/DELETE pada /api/articles dan /api/pages. Setiap mutasi data memicu invalidasi cache Redis tenant:%s:menu:* dan menghangatkan kembali dataset bundle secara otomatis.'
+      },
+      {
+        id: 'c-02dash-13100-3',
+        type: 'improvement',
+        scope: 'Editorial Reader Dynamic Rendering',
+        description: 'Dynamic Content Markdown Article Reader: Mengganti paragraf statis hardcoded seputar kernel Linux pada Reader View dengan parser blok markdown dinamis (parsedArticleBlocks) yang merender judul h2/h3, code blocks dengan tombol salin, dan paragraf asli sesuai artikel yang ditulis pengguna.'
+      },
+      {
+        id: 'c-02dash-13100-4',
+        type: 'improvement',
+        scope: 'Clean Zero-State & UI Renaming',
+        description: 'Pembersihan Total Seed Statis & Empty State Interaktif: Mengosongkan initialArticles dan initialCmsPages, membersihkan legacy dummy seeds dari PostgreSQL dan cache browser, menyematkan Zero-Data Empty State yang elegan dengan tombol tambah instan pada tampilan Grid maupun Tabel, serta memperbarui nama tab menjadi "Halaman Web (Pages)".'
+      }
+    ]
+  },
+  {
     version: 'v1.30.2',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '26 Oktober 2026',
     title: '100% Visual Parity: Standalone Template HTML Compiler for Container Deployment',
     summary: 'Penyelarasan visual 100% antara Demo Live Katalog Template dan hasil deployment website di kontainer Nginx: (1) Standalone Template HTML Compiler: Mengembangkan templateHtmlCompiler.ts yang mengompilasi seluruh blok visual (Navbar dengan glyph monogram, Hero dengan terminal mockup Traefik v3, Kartu produk E-Commerce berharga Rupiah & checkout WhatsApp, Galeri showcase karya portofolio, Silabus kursus akordeon interaktif, Tier harga dengan toggle tagihan bulanan/tahunan, Call-to-Action, Footer, dan Floating Pod Badge status runtime) menjadi HTML mandiri beresolusi tinggi tanpa dependensi framework eksternal; (2) Integrasi End-to-End customHTML: Menghubungkan compiler HTML ke seluruh alur pembuatan kontainer (handleCreateContainer), adopsi blueprint dari katalog (applyTemplateToActiveContainer & deployContainerFromTemplate), serta publikasi Visual Editor (handlePublishChanges); (3) Sinkronisasi PostgreSQL & Storage Runtime: Menyimpan customHTML dan konfigurasi tema ke basis data PostgreSQL serta menyemainya langsung ke persistent storage container di Service 03 (public/index.html & public/index.html.live).',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

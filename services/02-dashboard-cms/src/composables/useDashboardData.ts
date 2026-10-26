@@ -1223,7 +1223,7 @@ const newArticleForm = ref({
   status: 'published' as 'published' | 'draft'
 });
 
-const handleCreateArticle = () => {
+const handleCreateArticle = async () => {
   if (!newArticleForm.value.title.trim()) {
     showToast('Judul artikel wajib diisi.', 'error');
     return;
@@ -1247,46 +1247,97 @@ const handleCreateArticle = () => {
   isCreateArticleModalOpen.value = false;
   newArticleForm.value.title = '';
   showToast(`Artikel '${newArt.title}' berhasil disimpan!`, 'success');
+
+  try {
+    const res = await studioApi.createArticle(newArt);
+    if (res?.article?.id) {
+      newArt.id = res.article.id;
+    }
+  } catch (err) {
+    console.warn('[API] Create article notice:', err);
+  }
 };
 
-const saveArticle = (art: ContentArticle) => {
+const saveArticle = async (art: ContentArticle) => {
   const idx = articles.value.findIndex(a => a.id === art.id);
-  if (idx !== -1) {
+  const isNew = idx === -1;
+  if (!isNew) {
     articles.value[idx] = { ...art };
     showToast(`Artikel '${art.title}' berhasil diperbarui!`, 'success');
   } else {
     articles.value.unshift({ ...art });
     showToast(`Artikel '${art.title}' berhasil ditambahkan!`, 'success');
   }
+
+  try {
+    if (isNew) {
+      const res = await studioApi.createArticle(art);
+      if (res?.article?.id) {
+        art.id = res.article.id;
+        const freshIdx = articles.value.findIndex(a => a.id === art.id || a.slug === art.slug);
+        if (freshIdx !== -1) articles.value[freshIdx].id = res.article.id;
+      }
+    } else {
+      await studioApi.updateArticle(art.id, art);
+    }
+  } catch (err) {
+    console.warn('[API] Save article notice:', err);
+  }
 };
 
-const deleteArticle = (art: ContentArticle) => {
+const deleteArticle = async (art: ContentArticle) => {
   if (confirm(`Apakah Anda yakin ingin menghapus artikel '${art.title}'?`)) {
     const idx = articles.value.findIndex(a => a.id === art.id);
     if (idx !== -1) {
       articles.value.splice(idx, 1);
       showToast(`Artikel '${art.title}' berhasil dihapus.`, 'info');
     }
+    try {
+      await studioApi.deleteArticle(art.id);
+    } catch (err) {
+      console.warn('[API] Delete article notice:', err);
+    }
   }
 };
 
-const saveCmsPage = (page: CmsPage) => {
+const saveCmsPage = async (page: CmsPage) => {
   const idx = cmsPages.value.findIndex(p => p.id === page.id);
-  if (idx !== -1) {
+  const isNew = idx === -1;
+  if (!isNew) {
     cmsPages.value[idx] = { ...page };
     showToast(`Halaman '${page.title}' berhasil diperbarui!`, 'success');
   } else {
     cmsPages.value.unshift({ ...page });
     showToast(`Halaman baru '${page.title}' berhasil ditambahkan!`, 'success');
   }
+
+  try {
+    if (isNew) {
+      const res = await studioApi.createPage(page);
+      if (res?.page?.id) {
+        page.id = res.page.id;
+        const freshIdx = cmsPages.value.findIndex(p => p.id === page.id || p.path === page.path);
+        if (freshIdx !== -1) cmsPages.value[freshIdx].id = res.page.id;
+      }
+    } else {
+      await studioApi.updatePage(page.id, page);
+    }
+  } catch (err) {
+    console.warn('[API] Save page notice:', err);
+  }
 };
 
-const deleteCmsPage = (page: CmsPage) => {
+const deleteCmsPage = async (page: CmsPage) => {
   if (confirm(`Apakah Anda yakin ingin menghapus halaman '${page.title}' (${page.path})?`)) {
     const idx = cmsPages.value.findIndex(p => p.id === page.id);
     if (idx !== -1) {
       cmsPages.value.splice(idx, 1);
       showToast(`Halaman '${page.title}' telah dihapus.`, 'info');
+    }
+    try {
+      await studioApi.deletePage(page.id);
+    } catch (err) {
+      console.warn('[API] Delete page notice:', err);
     }
   }
 };
@@ -2148,6 +2199,9 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
         if (Array.isArray(b.articles?.articles)) {
           articles.value = b.articles.articles;
         }
+        if (Array.isArray(b.pages?.pages)) {
+          cmsPages.value = b.pages.pages;
+        }
         if (b.assets) {
           if (Array.isArray(b.assets.assets)) {
             mediaAssets.value = b.assets.assets;
@@ -2220,9 +2274,10 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
     }
 
     // 2. Secondary Strategy: Parallel fetch across individual endpoints
-    const [cRes, aRes, mRes, dRes, tRes, iRes, wRes] = await Promise.allSettled([
+    const [cRes, aRes, pRes, mRes, dRes, tRes, iRes, wRes] = await Promise.allSettled([
       studioApi.getContainers(),
       studioApi.getArticles(),
+      studioApi.getPages(),
       studioApi.getAssets(),
       studioApi.getDomains(),
       studioApi.getTickets(),
@@ -2279,6 +2334,9 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
     if (aRes.status === 'fulfilled' && Array.isArray(aRes.value?.articles)) {
       articles.value = aRes.value.articles;
     }
+    if (pRes.status === 'fulfilled' && Array.isArray(pRes.value?.pages)) {
+      cmsPages.value = pRes.value.pages;
+    }
     if (mRes.status === 'fulfilled' && mRes.value) {
       if (Array.isArray(mRes.value?.assets)) {
         mediaAssets.value = mRes.value.assets;
@@ -2333,6 +2391,7 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
         user: userEmail.value,
         containers: containers.value,
         articles: articles.value,
+        cmsPages: cmsPages.value,
         mediaAssets: mediaAssets.value,
         mediaStorage: mediaStorage.value,
         mediaBucketName: mediaBucketName.value,
@@ -2391,8 +2450,12 @@ const hydrateFromCache = (overrideEmail?: string) => {
           activeContainerId.value = containers.value[0].id;
         }
       }
-      if (Array.isArray(data.articles)) articles.value = data.articles;
-      if (Array.isArray(data.cmsPages)) cmsPages.value = data.cmsPages;
+      if (Array.isArray(data.articles)) {
+        articles.value = data.articles.filter((a: any) => !a.slug?.startsWith('arsitektur-multi-tenant'));
+      }
+      if (Array.isArray(data.cmsPages)) {
+        cmsPages.value = data.cmsPages.filter((p: any) => !p.id?.startsWith('page_'));
+      }
       if (Array.isArray(data.mediaAssets)) {
         mediaAssets.value = data.mediaAssets;
         if (data.mediaStorage) {

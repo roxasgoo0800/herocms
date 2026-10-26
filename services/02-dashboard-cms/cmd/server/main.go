@@ -148,6 +148,15 @@ func SetupRouter(cfg *config.Config, repo *repository.Repository, rdb *redis.Cli
 
 			// Publishing Engine (Articles & Content)
 			protected.GET("/articles", h.ListArticles)
+			protected.POST("/articles", h.CreateArticle)
+			protected.PUT("/articles/:id", h.UpdateArticle)
+			protected.DELETE("/articles/:id", h.DeleteArticle)
+
+			// Web Pages Engine (CMS Pages)
+			protected.GET("/pages", h.ListPages)
+			protected.POST("/pages", h.CreatePage)
+			protected.PUT("/pages/:id", h.UpdatePage)
+			protected.DELETE("/pages/:id", h.DeletePage)
 
 			// Asset Storage (MinIO S3)
 			protected.GET("/assets", h.ListAssets)

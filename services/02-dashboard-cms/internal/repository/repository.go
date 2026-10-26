@@ -12,6 +12,7 @@ import (
 
 	"github.com/cloudcms/dashboard-cms-backend/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 )
 
@@ -22,6 +23,7 @@ type Repository struct {
 	// Resilient in-memory models (fallback if DB unreachable)
 	Containers []gin.H
 	Articles   []gin.H
+	Pages      []gin.H
 	Assets     []gin.H
 	Domains    []gin.H
 	Tickets    []gin.H
@@ -232,8 +234,29 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	);
 
+	CREATE TABLE IF NOT EXISTS pages (
+		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+		tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+		site_id UUID REFERENCES sites(id) ON DELETE CASCADE,
+		title VARCHAR(255) NOT NULL,
+		path VARCHAR(255) NOT NULL,
+		template_layout VARCHAR(128) NOT NULL DEFAULT 'standard-prose',
+		status VARCHAR(32) NOT NULL DEFAULT 'published',
+		is_in_navbar BOOLEAN NOT NULL DEFAULT true,
+		is_in_footer BOOLEAN NOT NULL DEFAULT true,
+		meta_title VARCHAR(255),
+		meta_desc TEXT,
+		content TEXT NOT NULL DEFAULT '',
+		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	);
+
 	ALTER TABLE media_assets ALTER COLUMN mime_type TYPE VARCHAR(255);
 	ALTER TABLE media_assets ADD COLUMN IF NOT EXISTS bucket_name VARCHAR(128) NOT NULL DEFAULT '';
+	ALTER TABLE content_items ADD COLUMN IF NOT EXISTS excerpt TEXT NOT NULL DEFAULT '';
+	ALTER TABLE content_items ADD COLUMN IF NOT EXISTS tags JSONB NOT NULL DEFAULT '[]'::jsonb;
+	ALTER TABLE content_items ADD COLUMN IF NOT EXISTS meta_title VARCHAR(255) NOT NULL DEFAULT '';
+	ALTER TABLE content_items ADD COLUMN IF NOT EXISTS meta_desc TEXT NOT NULL DEFAULT '';
 	`
 
 	if _, err := r.DB.Exec(schemaSQL); err != nil {
@@ -629,7 +652,9 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 	if r.DB != nil {
 		rows, err := r.DB.QueryContext(ctx, `
 			SELECT c.id, c.title, c.slug, c.category, c.author, c.status, c.views, c.published_at,
-			       COALESCE(s.name, ''), COALESCE(c.site_id::text, '')
+			       COALESCE(s.name, ''), COALESCE(c.site_id::text, ''),
+			       COALESCE(c.content_markdown, ''), COALESCE(c.excerpt, ''),
+			       COALESCE(c.tags::text, '[]'), COALESCE(c.meta_title, ''), COALESCE(c.meta_desc, '')
 			FROM content_items c
 			LEFT JOIN sites s ON c.site_id = s.id
 			WHERE c.tenant_id = $1
@@ -640,9 +665,18 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 			var list []gin.H
 			for rows.Next() {
 				var id, title, slug, category, author, status, siteName, siteID string
+				var contentMarkdown, excerpt, tagsJSON, metaTitle, metaDesc string
 				var views int
 				var publishedAt time.Time
-				if err := rows.Scan(&id, &title, &slug, &category, &author, &status, &views, &publishedAt, &siteName, &siteID); err == nil {
+				if err := rows.Scan(&id, &title, &slug, &category, &author, &status, &views, &publishedAt, &siteName, &siteID,
+					&contentMarkdown, &excerpt, &tagsJSON, &metaTitle, &metaDesc); err == nil {
+
+					var tags []string
+					_ = json.Unmarshal([]byte(tagsJSON), &tags)
+					if tags == nil {
+						tags = []string{}
+					}
+
 					list = append(list, gin.H{
 						"id":          id,
 						"title":       title,
@@ -654,6 +688,11 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 						"publishedAt": publishedAt.Format("2 Jan 2006"),
 						"siteName":    siteName,
 						"containerId": siteID,
+						"content":     contentMarkdown,
+						"excerpt":     excerpt,
+						"tags":        tags,
+						"metaTitle":   metaTitle,
+						"metaDesc":    metaDesc,
 					})
 				}
 			}
@@ -670,6 +709,383 @@ func (r *Repository) GetArticles(ctx context.Context, tenantID string) ([]gin.H,
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.Articles, nil
+}
+
+func (r *Repository) InsertArticle(ctx context.Context, tenantID string, art gin.H) (gin.H, error) {
+	if r == nil {
+		return art, nil
+	}
+
+	title := fmt.Sprintf("%v", art["title"])
+	slug := fmt.Sprintf("%v", art["slug"])
+	if slug == "" || slug == "<nil>" {
+		slug = strings.ToLower(strings.ReplaceAll(title, " ", "-"))
+	}
+	category := "Engineering"
+	if c, ok := art["category"].(string); ok && c != "" {
+		category = c
+	}
+	author := "Rizal Pratama"
+	if a, ok := art["author"].(string); ok && a != "" {
+		author = a
+	}
+	status := "published"
+	if s, ok := art["status"].(string); ok && s != "" {
+		status = s
+	}
+	content := ""
+	if c, ok := art["content"].(string); ok {
+		content = c
+	}
+	excerpt := ""
+	if e, ok := art["excerpt"].(string); ok {
+		excerpt = e
+	}
+	metaTitle := title
+	if mt, ok := art["metaTitle"].(string); ok && mt != "" {
+		metaTitle = mt
+	}
+	metaDesc := excerpt
+	if md, ok := art["metaDesc"].(string); ok && md != "" {
+		metaDesc = md
+	}
+
+	var tagsBytes []byte
+	if tags, ok := art["tags"]; ok && tags != nil {
+		tagsBytes, _ = json.Marshal(tags)
+	}
+	if len(tagsBytes) == 0 {
+		tagsBytes = []byte("[]")
+	}
+
+	var siteID *string
+	if sid, ok := art["containerId"].(string); ok && sid != "" {
+		if _, err := uuid.Parse(sid); err == nil {
+			siteID = &sid
+		}
+	}
+
+	artID := uuid.New().String()
+	if rawID, ok := art["id"].(string); ok && rawID != "" {
+		if _, err := uuid.Parse(rawID); err == nil {
+			artID = rawID
+		}
+	}
+
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			INSERT INTO content_items (id, tenant_id, site_id, title, slug, category, author, status, views, content_markdown, excerpt, tags, meta_title, meta_desc, published_at, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10, $11::jsonb, $12, $13, NOW(), NOW(), NOW())
+		`, artID, tenantID, siteID, title, slug, category, author, status, content, excerpt, string(tagsBytes), metaTitle, metaDesc)
+		if err != nil {
+			log.Printf("[DB ERROR] InsertArticle: %v", err)
+			return nil, err
+		}
+	}
+
+	art["id"] = artID
+	art["publishedAt"] = time.Now().Format("2 Jan 2006")
+	art["views"] = 0
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.Articles = append([]gin.H{art}, r.Articles...)
+	return art, nil
+}
+
+func (r *Repository) UpdateArticle(ctx context.Context, tenantID, articleID string, art gin.H) error {
+	if r == nil {
+		return nil
+	}
+
+	title := fmt.Sprintf("%v", art["title"])
+	slug := fmt.Sprintf("%v", art["slug"])
+	category := fmt.Sprintf("%v", art["category"])
+	author := fmt.Sprintf("%v", art["author"])
+	status := fmt.Sprintf("%v", art["status"])
+	content := fmt.Sprintf("%v", art["content"])
+	excerpt := fmt.Sprintf("%v", art["excerpt"])
+	metaTitle := fmt.Sprintf("%v", art["metaTitle"])
+	metaDesc := fmt.Sprintf("%v", art["metaDesc"])
+
+	var tagsBytes []byte
+	if tags, ok := art["tags"]; ok && tags != nil {
+		tagsBytes, _ = json.Marshal(tags)
+	}
+	if len(tagsBytes) == 0 {
+		tagsBytes = []byte("[]")
+	}
+
+	var siteID *string
+	if sid, ok := art["containerId"].(string); ok && sid != "" {
+		if _, err := uuid.Parse(sid); err == nil {
+			siteID = &sid
+		}
+	}
+
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			UPDATE content_items
+			SET title = $1, slug = $2, category = $3, author = $4, status = $5,
+			    content_markdown = $6, excerpt = $7, tags = $8::jsonb, meta_title = $9, meta_desc = $10,
+			    site_id = COALESCE($11, site_id), updated_at = NOW()
+			WHERE tenant_id = $12 AND (id::text = $13 OR slug = $13)
+		`, title, slug, category, author, status, content, excerpt, string(tagsBytes), metaTitle, metaDesc, siteID, tenantID, articleID)
+		if err != nil {
+			log.Printf("[DB ERROR] UpdateArticle: %v", err)
+			return err
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, a := range r.Articles {
+		if a["id"] == articleID || a["slug"] == articleID {
+			for k, v := range art {
+				r.Articles[i][k] = v
+			}
+			return nil
+		}
+	}
+	return nil
+}
+
+func (r *Repository) DeleteArticle(ctx context.Context, tenantID, articleID string) error {
+	if r == nil {
+		return nil
+	}
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			DELETE FROM content_items
+			WHERE tenant_id = $1 AND (id::text = $2 OR slug = $2)
+		`, tenantID, articleID)
+		if err != nil {
+			log.Printf("[DB ERROR] DeleteArticle: %v", err)
+			return err
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, a := range r.Articles {
+		if a["id"] == articleID || a["slug"] == articleID {
+			r.Articles = append(r.Articles[:i], r.Articles[i+1:]...)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (r *Repository) GetPages(ctx context.Context, tenantID string) ([]gin.H, error) {
+	if r == nil {
+		return []gin.H{}, nil
+	}
+	if r.DB != nil {
+		rows, err := r.DB.QueryContext(ctx, `
+			SELECT p.id, p.title, p.path, p.template_layout, p.status, p.is_in_navbar, p.is_in_footer,
+			       COALESCE(p.meta_title, ''), COALESCE(p.meta_desc, ''), COALESCE(p.content, ''),
+			       p.updated_at, COALESCE(s.name, ''), COALESCE(p.site_id::text, '')
+			FROM pages p
+			LEFT JOIN sites s ON p.site_id = s.id
+			WHERE p.tenant_id = $1
+			ORDER BY p.created_at ASC
+		`, tenantID)
+		if err == nil {
+			defer rows.Close()
+			var list []gin.H
+			for rows.Next() {
+				var id, title, path, templateLayout, status, metaTitle, metaDesc, content, siteName, siteID string
+				var isInNavbar, isInFooter bool
+				var updatedAt time.Time
+				if err := rows.Scan(&id, &title, &path, &templateLayout, &status, &isInNavbar, &isInFooter,
+					&metaTitle, &metaDesc, &content, &updatedAt, &siteName, &siteID); err == nil {
+
+					list = append(list, gin.H{
+						"id":             id,
+						"title":          title,
+						"path":           path,
+						"templateLayout": templateLayout,
+						"status":         status,
+						"isInNavbar":     isInNavbar,
+						"isInFooter":     isInFooter,
+						"metaTitle":      metaTitle,
+						"metaDesc":       metaDesc,
+						"content":        content,
+						"updatedAt":      updatedAt.Format("2 Jan 2006"),
+						"siteName":       siteName,
+						"containerId":    siteID,
+					})
+				}
+			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
+			if list != nil {
+				return list, nil
+			}
+			return []gin.H{}, nil
+		}
+	}
+
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.Pages, nil
+}
+
+func (r *Repository) InsertPage(ctx context.Context, tenantID string, pg gin.H) (gin.H, error) {
+	if r == nil {
+		return pg, nil
+	}
+
+	title := fmt.Sprintf("%v", pg["title"])
+	path := fmt.Sprintf("%v", pg["path"])
+	if path == "" || path == "<nil>" {
+		path = "/" + strings.ToLower(strings.ReplaceAll(title, " ", "-"))
+	}
+	templateLayout := "standard-prose"
+	if tl, ok := pg["templateLayout"].(string); ok && tl != "" {
+		templateLayout = tl
+	}
+	status := "published"
+	if s, ok := pg["status"].(string); ok && s != "" {
+		status = s
+	}
+	content := ""
+	if c, ok := pg["content"].(string); ok {
+		content = c
+	}
+	metaTitle := title
+	if mt, ok := pg["metaTitle"].(string); ok && mt != "" {
+		metaTitle = mt
+	}
+	metaDesc := ""
+	if md, ok := pg["metaDesc"].(string); ok && md != "" {
+		metaDesc = md
+	}
+
+	isInNavbar := true
+	if nb, ok := pg["isInNavbar"].(bool); ok {
+		isInNavbar = nb
+	}
+	isInFooter := true
+	if ft, ok := pg["isInFooter"].(bool); ok {
+		isInFooter = ft
+	}
+
+	var siteID *string
+	if sid, ok := pg["containerId"].(string); ok && sid != "" {
+		if _, err := uuid.Parse(sid); err == nil {
+			siteID = &sid
+		}
+	}
+
+	pageID := uuid.New().String()
+	if rawID, ok := pg["id"].(string); ok && rawID != "" {
+		if _, err := uuid.Parse(rawID); err == nil {
+			pageID = rawID
+		}
+	}
+
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			INSERT INTO pages (id, tenant_id, site_id, title, path, template_layout, status, is_in_navbar, is_in_footer, meta_title, meta_desc, content, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+		`, pageID, tenantID, siteID, title, path, templateLayout, status, isInNavbar, isInFooter, metaTitle, metaDesc, content)
+		if err != nil {
+			log.Printf("[DB ERROR] InsertPage: %v", err)
+			return nil, err
+		}
+	}
+
+	pg["id"] = pageID
+	pg["updatedAt"] = time.Now().Format("2 Jan 2006")
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.Pages = append([]gin.H{pg}, r.Pages...)
+	return pg, nil
+}
+
+func (r *Repository) UpdatePage(ctx context.Context, tenantID, pageID string, pg gin.H) error {
+	if r == nil {
+		return nil
+	}
+
+	title := fmt.Sprintf("%v", pg["title"])
+	path := fmt.Sprintf("%v", pg["path"])
+	templateLayout := fmt.Sprintf("%v", pg["templateLayout"])
+	status := fmt.Sprintf("%v", pg["status"])
+	content := fmt.Sprintf("%v", pg["content"])
+	metaTitle := fmt.Sprintf("%v", pg["metaTitle"])
+	metaDesc := fmt.Sprintf("%v", pg["metaDesc"])
+
+	isInNavbar := true
+	if nb, ok := pg["isInNavbar"].(bool); ok {
+		isInNavbar = nb
+	}
+	isInFooter := true
+	if ft, ok := pg["isInFooter"].(bool); ok {
+		isInFooter = ft
+	}
+
+	var siteID *string
+	if sid, ok := pg["containerId"].(string); ok && sid != "" {
+		if _, err := uuid.Parse(sid); err == nil {
+			siteID = &sid
+		}
+	}
+
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			UPDATE pages
+			SET title = $1, path = $2, template_layout = $3, status = $4,
+			    is_in_navbar = $5, is_in_footer = $6, meta_title = $7, meta_desc = $8, content = $9,
+			    site_id = COALESCE($10, site_id), updated_at = NOW()
+			WHERE tenant_id = $11 AND (id::text = $12 OR path = $12)
+		`, title, path, templateLayout, status, isInNavbar, isInFooter, metaTitle, metaDesc, content, siteID, tenantID, pageID)
+		if err != nil {
+			log.Printf("[DB ERROR] UpdatePage: %v", err)
+			return err
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, p := range r.Pages {
+		if p["id"] == pageID || p["path"] == pageID {
+			for k, v := range pg {
+				r.Pages[i][k] = v
+			}
+			return nil
+		}
+	}
+	return nil
+}
+
+func (r *Repository) DeletePage(ctx context.Context, tenantID, pageID string) error {
+	if r == nil {
+		return nil
+	}
+	if r.DB != nil {
+		_, err := r.DB.ExecContext(ctx, `
+			DELETE FROM pages
+			WHERE tenant_id = $1 AND (id::text = $2 OR path = $2)
+		`, tenantID, pageID)
+		if err != nil {
+			log.Printf("[DB ERROR] DeletePage: %v", err)
+			return err
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, p := range r.Pages {
+		if p["id"] == pageID || p["path"] == pageID {
+			r.Pages = append(r.Pages[:i], r.Pages[i+1:]...)
+			return nil
+		}
+	}
+	return nil
 }
 
 func (r *Repository) GetTenantStorageUsageBytes(ctx context.Context, tenantID string) (int64, error) {
@@ -1437,6 +1853,7 @@ func (r *Repository) seedInitialData() {
 
 	r.Containers = []gin.H{}
 	r.Articles = []gin.H{}
+	r.Pages = []gin.H{}
 	r.Assets = []gin.H{}
 	r.Domains = []gin.H{}
 	r.Tickets = []gin.H{}

@@ -226,17 +226,78 @@ const closeArticleReader = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-const copyCodeSnippet = () => {
-  const snippet = `func RecordArticleHit(ctx context.Context, slug string) error {
-    // Atomic increment via Redis Sorted Set (ZSET) - Sub-millisecond latency
-    return redisClient.ZIncrBy(ctx, "herocms:articles:views", 1.0, slug).Err()
-}`;
-  copyToClipboard(snippet, 'code_snippet');
-};
-
 const currentArticleIndex = computed(() => {
   if (!activeArticleForReader.value) return -1;
   return articles.value.findIndex(a => a.id === activeArticleForReader.value?.id);
+});
+
+interface ContentBlock {
+  type: 'heading2' | 'heading3' | 'code' | 'paragraph';
+  text: string;
+  codeLang?: string;
+}
+
+const parsedArticleBlocks = computed<ContentBlock[]>(() => {
+  if (!activeArticleForReader.value?.content) {
+    return [
+      {
+        type: 'paragraph',
+        text: activeArticleForReader.value?.excerpt || 'Belum ada konten teks untuk artikel ini.'
+      }
+    ];
+  }
+  const lines = activeArticleForReader.value.content.split('\n');
+  const blocks: ContentBlock[] = [];
+  let inCode = false;
+  let codeBuffer: string[] = [];
+  let codeLang = '';
+  let pBuffer: string[] = [];
+
+  const flushParagraph = () => {
+    if (pBuffer.length > 0) {
+      const joined = pBuffer.join('\n').trim();
+      if (joined) {
+        blocks.push({ type: 'paragraph', text: joined });
+      }
+      pBuffer = [];
+    }
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trimEnd();
+    if (line.startsWith('```')) {
+      if (inCode) {
+        blocks.push({ type: 'code', text: codeBuffer.join('\n'), codeLang });
+        codeBuffer = [];
+        inCode = false;
+      } else {
+        flushParagraph();
+        inCode = true;
+        codeLang = line.replace('```', '').trim() || 'code';
+      }
+      continue;
+    }
+    if (inCode) {
+      codeBuffer.push(rawLine);
+      continue;
+    }
+    if (line.startsWith('### ')) {
+      flushParagraph();
+      blocks.push({ type: 'heading3', text: line.replace('### ', '').trim() });
+    } else if (line.startsWith('## ')) {
+      flushParagraph();
+      blocks.push({ type: 'heading2', text: line.replace('## ', '').trim() });
+    } else if (line.trim() === '') {
+      flushParagraph();
+    } else {
+      pBuffer.push(line);
+    }
+  }
+  flushParagraph();
+  if (inCode && codeBuffer.length > 0) {
+    blocks.push({ type: 'code', text: codeBuffer.join('\n'), codeLang });
+  }
+  return blocks;
 });
 
 const prevArticle = computed(() => {
@@ -618,88 +679,56 @@ onUnmounted(() => {
           <!-- Editorial Body -->
           <div class="reader-prose-body">
             <div class="reader-markdown-render">
-              <p class="reader-lead-paragraph">
-                {{ activeArticleForReader.excerpt || 'Dalam implementasi cloud-native modern, optimalisasi latensi edge Traefik v3 dan isolasi CPU cgroups v2 menjadi fondasi performa tinggi.' }}
+              <p v-if="activeArticleForReader.excerpt" class="reader-lead-paragraph">
+                {{ activeArticleForReader.excerpt }}
               </p>
 
-              <h2 id="sec-1">
-                <span class="section-num-badge">01</span>
-                <span>Arsitektur Isolasi Kernel Linux & Kontainer Nginx</span>
-              </h2>
-              <p>
-                Setiap tenant Stack beroperasi di dalam sandbox Docker Alpine terisolasi mandiri. Batas memori hard-limit <code>256 MB</code> dan pembatasan alokasi CPU maksimum <code>0.5 vCPU</code> memastikan lonjakan beban pada satu tenant tidak mengganggu stabilitas tenant lain.
-              </p>
+              <template v-for="(block, idx) in parsedArticleBlocks" :key="idx">
+                <h2 v-if="block.type === 'heading2'">
+                  <span class="section-num-badge">{{ String(idx + 1).padStart(2, '0') }}</span>
+                  <span>{{ block.text }}</span>
+                </h2>
 
-              <div class="reader-info-callout">
-                <div class="info-callout-icon"><Zap :size="16" /></div>
-                <div class="info-callout-body">
-                  <strong>Catatan Arsitektur:</strong> Traefik v3 membaca event Docker secara real-time via <code>/var/run/docker.sock</code>. Routing otomatis dibuat dalam hitungan milidetik tanpa reload Nginx master.
-                </div>
-              </div>
+                <h3 v-else-if="block.type === 'heading3'">
+                  {{ block.text }}
+                </h3>
 
-              <h2 id="sec-2">
-                <span class="section-num-badge">02</span>
-                <span>Telemetri Real-Time Non-Blocking Redis ZSET</span>
-              </h2>
-              <p>
-                Setiap request halaman dicatat secara asinkron ke Redis Sorted Sets (<code>ZSET</code>) menggunakan perintah atomik dengan latensi sub-millisecond:
-              </p>
-
-              <div class="reader-code-card">
-                <div class="code-card-header">
-                  <div class="code-header-left">
-                    <div class="code-window-dots">
-                      <span class="code-dot red"></span>
-                      <span class="code-dot yellow"></span>
-                      <span class="code-dot green"></span>
+                <div v-else-if="block.type === 'code'" class="reader-code-card">
+                  <div class="code-card-header">
+                    <div class="code-header-left">
+                      <div class="code-window-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                      </div>
+                      <div class="code-file-tab">
+                        <FileCode :size="13" class="code-file-icon" />
+                        <span class="code-filename">{{ block.codeLang || 'snippet' }}</span>
+                      </div>
                     </div>
-                    <div class="code-file-tab">
-                      <FileCode :size="13" class="code-file-icon" />
-                      <span class="code-filename">internal/telemetry/redis_counter.go</span>
+                    <div class="code-header-right">
+                      <span class="code-lang-badge">{{ (block.codeLang || 'CODE').toUpperCase() }}</span>
+                      <button
+                        class="btn-code-copy"
+                        :class="{ copied: copiedSubdomain === 'code_' + idx }"
+                        @click="copyToClipboard(block.text, 'code_' + idx)"
+                        title="Salin kode cuplikan"
+                      >
+                        <Check v-if="copiedSubdomain === 'code_' + idx" :size="12" class="text-green" />
+                        <Copy v-else :size="12" />
+                        <span>{{ copiedSubdomain === 'code_' + idx ? 'Tersalin!' : 'Salin Kode' }}</span>
+                      </button>
                     </div>
                   </div>
-                  <div class="code-header-right">
-                    <span class="code-lang-badge">GO 1.22</span>
-                    <button
-                      class="btn-code-copy"
-                      :class="{ copied: copiedSubdomain === 'code_snippet' }"
-                      @click="copyCodeSnippet()"
-                      title="Salin kode cuplikan"
-                    >
-                      <Check v-if="copiedSubdomain === 'code_snippet'" :size="12" class="text-green" />
-                      <Copy v-else :size="12" />
-                      <span>{{ copiedSubdomain === 'code_snippet' ? 'Tersalin!' : 'Salin Kode' }}</span>
-                    </button>
+                  <div class="code-editor-viewport">
+                    <pre class="code-pre"><code>{{ block.text }}</code></pre>
                   </div>
                 </div>
-                <div class="code-editor-viewport">
-                  <div class="code-line-numbers" aria-hidden="true">
-                    <span>1</span>
-                    <span>2</span>
-                    <span>3</span>
-                    <span>4</span>
-                  </div>
-                  <pre class="code-pre"><code><span class="code-line"><span class="token-keyword">func</span> <span class="token-function">RecordArticleHit</span>(ctx context.Context, slug <span class="token-type">string</span>) <span class="token-type">error</span> {</span>
-<span class="code-line"><span class="token-indent">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="token-comment">// Atomic increment via Redis Sorted Set (ZSET) - Sub-millisecond latency</span></span>
-<span class="code-line"><span class="token-indent">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="token-keyword">return</span> redisClient.<span class="token-function">ZIncrBy</span>(ctx, <span class="token-string">"herocms:articles:views"</span>, <span class="token-number">1.0</span>, slug).<span class="token-function">Err</span>()</span>
-<span class="code-line">}</span></code></pre>
-                </div>
-                <div class="code-card-footer">
-                  <div class="code-footer-stat">
-                    <span class="footer-dot-live"></span>
-                    <span>Redis Sorted Set Atomic Counter (0.3ms latency)</span>
-                  </div>
-                  <span class="code-footer-engine">go1.22 • redis-v9</span>
-                </div>
-              </div>
 
-              <h2 id="sec-3">
-                <span class="section-num-badge">03</span>
-                <span>Optimasi Cache Header & TLS ALPN</span>
-              </h2>
-              <p>
-                Header <code>Cache-Control: public, max-age=31536000, immutable</code> diinjeksi pada file statis CSS, JS, dan WebP. Dokumen HTML di-cache di level edge Traefik dengan strategi <code>stale-while-revalidate</code>, memastikan TTFB konsisten di bawah 2ms.
-              </p>
+                <p v-else-if="block.type === 'paragraph'">
+                  {{ block.text }}
+                </p>
+              </template>
 
               <!-- Tags Cloud -->
               <div v-if="activeArticleForReader.tags && activeArticleForReader.tags.length" class="reader-article-tags">
@@ -845,7 +874,7 @@ onUnmounted(() => {
         <div>
           <h1 class="page-title">Artikel & Halaman CMS</h1>
           <p class="page-desc">
-            Pusat manajemen konten enterprise: publikasikan artikel editorial berkala dan kelola halaman website statis tenant Anda.
+            Pusat manajemen konten enterprise: publikasikan artikel editorial berkala dan kelola halaman website tenant Anda.
           </p>
         </div>
 
@@ -869,7 +898,7 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Segmented Tab Nav: Artikel & Blog vs Halaman Statis -->
+      <!-- Segmented Tab Nav: Artikel & Blog vs Halaman Web -->
       <div class="content-tab-navigation-bar">
         <div class="segmented-tab-group">
           <button
@@ -887,7 +916,7 @@ onUnmounted(() => {
             @click="activeContentTab = 'pages'"
           >
             <Layers :size="14" />
-            <span>Halaman Statis (Pages)</span>
+            <span>Halaman Web (Pages)</span>
             <span class="tab-count-badge">{{ cmsPages.length }}</span>
           </button>
         </div>
@@ -940,7 +969,7 @@ onUnmounted(() => {
         <div class="telemetry-card accent-blue">
           <div class="telemetry-corner-watermark blue"><Layers :size="58" /></div>
           <div class="telemetry-top">
-            <span class="telemetry-label">TOTAL HALAMAN STATIS</span>
+            <span class="telemetry-label">TOTAL HALAMAN WEB</span>
           </div>
           <div class="telemetry-val">{{ cmsPages.length }} <span class="telemetry-denom">Halaman</span></div>
           <div class="telemetry-sub"><span>Rute web terisolasi di Nginx tenant</span></div>
@@ -1266,8 +1295,13 @@ onUnmounted(() => {
 
           <div v-if="filteredArticles.length === 0" class="empty-state-box">
             <FileText :size="38" class="empty-icon" />
-            <h4>Tidak ada artikel yang cocok</h4>
-            <p>Sesuaikan kata kunci pencarian atau filter kategori Anda.</p>
+            <h4>Belum ada artikel</h4>
+            <p v-if="searchQuery">Tidak ditemukan artikel dengan kata kunci "{{ searchQuery }}".</p>
+            <p v-else>Mulai publikasikan konten tulisan dan artikel blog pertama Anda.</p>
+            <button v-if="!searchQuery" class="btn-top-create" style="margin-top: 14px;" @click="openCreateArticleModal()">
+              <Plus :size="14" />
+              <span>Tulis Artikel Baru</span>
+            </button>
           </div>
         </div>
 
@@ -1334,6 +1368,20 @@ onUnmounted(() => {
                       </button>
                       <button class="btn-action-icon danger" @click="deleteArticle(art)" title="Hapus Artikel">
                         <Trash2 :size="13" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="filteredArticles.length === 0">
+                  <td colspan="7" style="text-align: center; padding: 48px 16px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                      <FileText :size="32" style="color: #94a3b8;" />
+                      <h4 style="margin: 0; font-size: 15px; font-weight: 600; color: #1e293b;">Belum ada artikel</h4>
+                      <p v-if="searchQuery" style="margin: 0; font-size: 13px; color: #64748b;">Tidak ditemukan artikel dengan kata kunci "{{ searchQuery }}".</p>
+                      <p v-else style="margin: 0; font-size: 13px; color: #64748b;">Klik tombol di bawah untuk membuat artikel pertama Anda.</p>
+                      <button v-if="!searchQuery" class="btn-top-create" style="margin-top: 10px;" @click="openCreateArticleModal()">
+                        <Plus :size="13" />
+                        <span>Tulis Artikel Baru</span>
                       </button>
                     </div>
                   </td>
@@ -1633,8 +1681,13 @@ onUnmounted(() => {
 
           <div v-if="filteredPages.length === 0" class="empty-state-box">
             <Layers :size="38" class="empty-icon" />
-            <h4>Tidak ada halaman statis yang cocok</h4>
-            <p>Sesuaikan filter atau klik tombol "Tambah Halaman Baru" di atas.</p>
+            <h4>Belum ada halaman web</h4>
+            <p v-if="searchQuery">Tidak ditemukan halaman web dengan kata kunci "{{ searchQuery }}".</p>
+            <p v-else>Kelola halaman website tenant Anda (contoh: /about, /services, /contact).</p>
+            <button v-if="!searchQuery" class="btn-top-create" style="margin-top: 14px;" @click="openCreatePageModal()">
+              <Plus :size="14" />
+              <span>Tambah Halaman Baru</span>
+            </button>
           </div>
         </div>
 
@@ -1702,6 +1755,20 @@ onUnmounted(() => {
                     </div>
                   </td>
                 </tr>
+                <tr v-if="filteredPages.length === 0">
+                  <td colspan="7" style="text-align: center; padding: 48px 16px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                      <Layers :size="32" style="color: #94a3b8;" />
+                      <h4 style="margin: 0; font-size: 15px; font-weight: 600; color: #1e293b;">Belum ada halaman web</h4>
+                      <p v-if="searchQuery" style="margin: 0; font-size: 13px; color: #64748b;">Tidak ditemukan halaman web dengan kata kunci "{{ searchQuery }}".</p>
+                      <p v-else style="margin: 0; font-size: 13px; color: #64748b;">Klik tombol di bawah untuk menambahkan halaman web baru.</p>
+                      <button v-if="!searchQuery" class="btn-top-create" style="margin-top: 10px;" @click="openCreatePageModal()">
+                        <Plus :size="13" />
+                        <span>Tambah Halaman Baru</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -1723,7 +1790,7 @@ onUnmounted(() => {
             </div>
             <div>
               <h3 class="modal-title">
-                {{ editingId ? 'Edit ' + (editorContentType === 'article' ? 'Artikel Editorial' : 'Halaman Statis') : 'Buat ' + (editorContentType === 'article' ? 'Artikel Baru' : 'Halaman Statis Baru') }}
+                {{ editingId ? 'Edit ' + (editorContentType === 'article' ? 'Artikel Editorial' : 'Halaman Web') : 'Buat ' + (editorContentType === 'article' ? 'Artikel Baru' : 'Halaman Web Baru') }}
               </h3>
               <p class="modal-subtitle">
                 {{ editorContentType === 'article' ? 'Kelola publikasi konten berkala, slug URL, dan metadata SEO.' : 'Atur halaman website tenant, layout template, dan tautan navigasi.' }}

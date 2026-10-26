@@ -496,6 +496,92 @@ func (h *Handler) ListArticles(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"articles": h.Services.GetArticles(c.Request.Context(), getTenantID(c))})
 }
 
+func (h *Handler) CreateArticle(c *gin.Context) {
+	var payload gin.H
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload artikel tidak valid"})
+		return
+	}
+	art, err := h.Services.CreateArticle(c.Request.Context(), getTenantID(c), payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan artikel: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"article": art, "message": "Artikel berhasil dibuat!"})
+}
+
+func (h *Handler) UpdateArticle(c *gin.Context) {
+	id := c.Param("id")
+	var payload gin.H
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload artikel tidak valid"})
+		return
+	}
+	err := h.Services.UpdateArticle(c.Request.Context(), getTenantID(c), id, payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui artikel: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Artikel berhasil diperbarui!", "id": id})
+}
+
+func (h *Handler) DeleteArticle(c *gin.Context) {
+	id := c.Param("id")
+	err := h.Services.DeleteArticle(c.Request.Context(), getTenantID(c), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus artikel: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Artikel berhasil dihapus!", "id": id})
+}
+
+// -----------------------------------------------------------------------------
+// Pages
+// -----------------------------------------------------------------------------
+
+func (h *Handler) ListPages(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"pages": h.Services.GetPages(c.Request.Context(), getTenantID(c))})
+}
+
+func (h *Handler) CreatePage(c *gin.Context) {
+	var payload gin.H
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload halaman tidak valid"})
+		return
+	}
+	pg, err := h.Services.CreatePage(c.Request.Context(), getTenantID(c), payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan halaman: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"page": pg, "message": "Halaman berhasil dibuat!"})
+}
+
+func (h *Handler) UpdatePage(c *gin.Context) {
+	id := c.Param("id")
+	var payload gin.H
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload halaman tidak valid"})
+		return
+	}
+	err := h.Services.UpdatePage(c.Request.Context(), getTenantID(c), id, payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui halaman: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Halaman berhasil diperbarui!", "id": id})
+}
+
+func (h *Handler) DeletePage(c *gin.Context) {
+	id := c.Param("id")
+	err := h.Services.DeletePage(c.Request.Context(), getTenantID(c), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus halaman: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Halaman berhasil dihapus!", "id": id})
+}
+
 // -----------------------------------------------------------------------------
 // Assets
 // -----------------------------------------------------------------------------

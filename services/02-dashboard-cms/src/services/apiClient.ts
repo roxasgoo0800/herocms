@@ -110,6 +110,21 @@ export const studioApi = {
 
   // Articles
   getArticles: () => apiFetch('/articles'),
+  createArticle: (payload: any) =>
+    apiFetch('/articles', { method: 'POST', body: JSON.stringify(payload) }),
+  updateArticle: (id: string, payload: any) =>
+    apiFetch(`/articles/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteArticle: (id: string) =>
+    apiFetch(`/articles/${id}`, { method: 'DELETE' }),
+
+  // Pages
+  getPages: () => apiFetch('/pages'),
+  createPage: (payload: any) =>
+    apiFetch('/pages', { method: 'POST', body: JSON.stringify(payload) }),
+  updatePage: (id: string, payload: any) =>
+    apiFetch(`/pages/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deletePage: (id: string) =>
+    apiFetch(`/pages/${id}`, { method: 'DELETE' }),
 
   // Assets
   getAssets: () => apiFetch('/assets'),
