@@ -2,26 +2,56 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.5.8',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '26 Oktober 2026',
+    title: 'Penyelarasan Domain Platform stackbyte.id & Sinkronisasi Runtime Orchestrator',
+    summary: 'Pembaruan dokumentasi arsitektur dan spesifikasi operasional platform: (1) Penyelarasan Domain Resmi stackbyte.id: Mengoreksi seluruh referensi domain dari stacbyte.id menjadi stackbyte.id (dengan huruf "k") pada PRD, user journeys, dan panduan DNS routing Traefik v3; (2) Dokumentasi Integrasi Service 03 (Provision Orchestrator): Mencatat alur komunikasi RPC internal Go BFF Service 02 ke Service 03 (http://herocms_provision_orchestrator:8080) dengan autentikasi X-HeroCMS-Internal-Secret; (3) Status Kesiapan Deployment Raspberry Pi & Cloud Ingress.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-158-1',
+        type: 'improvement',
+        scope: 'Dokumentasi PRD & Router Rules (prds.ts)',
+        description: 'Penyelarasan dokumentasi Traefik router rules Host(<subdomain>.stackbyte.id) dan alur onboarding tenant subdomain resmi ke *.stackbyte.id.'
+      },
+      {
+        id: 'c-07docs-158-2',
+        type: 'improvement',
+        scope: 'User Journey Verification CLI & CDN URLs (journeys.ts)',
+        description: 'Penyelarasan instruksi CLI openssl s_client SSL test (demo.stackbyte.id) dan metadata URL CDN media ke storage.stackbyte.id.'
+      },
+      {
+        id: 'c-07docs-158-3',
+        type: 'feature',
+        scope: 'Orchestrator RPC Integration Architecture',
+        description: 'Dokumentasi arsitektur jaringan Traefik Edge & RPC provisioning tenant lokal tanpa port exposure publik.'
+      }
+    ]
+  },
+  {
     version: 'v1.5.7',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '25 Oktober 2026',
-    title: 'Penyelarasan Domain Platform stacbyte.id pada PRD dan User Journey Hub',
-    summary: 'Menyelaraskan seluruh spesifikasi PRD (PRD-02 Dashboard Studio, PRD-03 Orchestrator, PRD-04 Marketing Wizard) dan user journey (SSL certificate verification, Cloud Object Storage CDN endpoint) menggunakan domain resmi stacbyte.id.',
-    badge: 'Latest',
+    title: 'Penyelarasan Domain Platform stackbyte.id pada PRD dan User Journey Hub',
+    summary: 'Menyelaraskan seluruh spesifikasi PRD (PRD-02 Dashboard Studio, PRD-03 Orchestrator, PRD-04 Marketing Wizard) dan user journey (SSL certificate verification, Cloud Object Storage CDN endpoint) menggunakan domain resmi stackbyte.id.',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
     items: [
       {
         id: 'c-07docs-157-1',
         type: 'improvement',
         scope: 'Dokumentasi PRD & Router Rules (prds.ts)',
-        description: 'Penyelarasan dokumentasi Traefik router rules Host(<subdomain>.stacbyte.id) dan alur onboarding tenant subdomain gratis ke stacbyte.id.'
+        description: 'Penyelarasan dokumentasi Traefik router rules Host(<subdomain>.stackbyte.id) dan alur onboarding tenant subdomain gratis ke stackbyte.id.'
       },
       {
         id: 'c-07docs-157-2',
         type: 'improvement',
         scope: 'User Journey Verification CLI & CDN URLs (journeys.ts)',
-        description: 'Penyelarasan instruksi openssl s_client SSL test dan metadata URL CDN media ke stacbyte.id.'
+        description: 'Penyelarasan instruksi openssl s_client SSL test dan metadata URL CDN media ke stackbyte.id.'
       }
     ]
   },
