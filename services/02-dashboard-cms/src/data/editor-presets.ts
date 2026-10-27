@@ -233,6 +233,15 @@ export const blockCatalogItems: BlockCatalogItem[] = [
     desc: 'Penutup halaman dengan identitas brand, navigasi sekunder, dan legalitas hak cipta.',
     badge: 'FOOTER',
     previewWireframe: 'footer'
+  },
+  {
+    id: 'cat_marquee',
+    type: 'marquee',
+    category: 'content',
+    name: 'Infinite Logo Marquee',
+    desc: 'Running ticker baris logo mitra atau teknologi yang meluncur halus menyamping tanpa henti.',
+    badge: 'TREND 2027',
+    previewWireframe: 'features'
   }
 ];
 
@@ -251,6 +260,12 @@ export const createDefaultBlocks = (siteName: string, role: string, bio: string)
       buttonUrl: '#contact',
       isVisible: true,
       isLocked: false,
+      items: [
+        { id: 'nav_itm_1', title: 'Beranda', url: '#hero' },
+        { id: 'nav_itm_2', title: 'Keunggulan', url: '#features' },
+        { id: 'nav_itm_3', title: 'Layanan', url: '#pricing' },
+        { id: 'nav_itm_4', title: 'Kontak', url: '#cta' }
+      ],
       styles: {
         bgMode: 'glass',
         paddingY: 16,
@@ -696,6 +711,28 @@ export const createLibraryBlock = (type: VisualBlock['type']): VisualBlock => {
         styles: { paddingY: 36, align: 'center', bgMode: 'transparent' }
       };
 
+    case 'marquee':
+      return {
+        id: newId,
+        type: 'marquee',
+        name: 'Infinite Logo Marquee',
+        badge: 'TRUSTED BY GLOBAL TEAMS',
+        title: 'Dipercaya oleh Tim Rekayasa & Komunitas Pengembang Cloud Terkemuka',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          { id: 'mq_1', title: 'Docker', icon: 'server' },
+          { id: 'mq_2', title: 'Kubernetes', icon: 'cpu' },
+          { id: 'mq_3', title: 'PostgreSQL', icon: 'database' },
+          { id: 'mq_4', title: 'Redis Cache', icon: 'zap' },
+          { id: 'mq_5', title: 'Golang Engine', icon: 'terminal' },
+          { id: 'mq_6', title: 'Traefik Ingress', icon: 'globe' },
+          { id: 'mq_7', title: 'Tailwind CSS', icon: 'layers' },
+          { id: 'mq_8', title: 'Vue 3 Studio', icon: 'code' }
+        ],
+        styles: { paddingY: 32, align: 'center', bgMode: 'transparent' }
+      };
+
     default:
       return {
         id: newId,
@@ -810,7 +847,7 @@ export const editorIconOptions: EditorIconOption[] = [
 ];
 
 export interface AnimationOption {
-  id: 'none' | 'fadeInUp' | 'slideInLeft' | 'zoomIn' | 'bounce' | 'pulseGlow' | 'float';
+  id: 'none' | 'fadeInUp' | 'slideInLeft' | 'zoomIn' | 'bounce' | 'pulseGlow' | 'float' | 'blurFade' | 'springPop' | 'tiltIn';
   name: string;
   desc: string;
   icon: string;
@@ -823,5 +860,8 @@ export const animationOptions: AnimationOption[] = [
   { id: 'zoomIn', name: 'Zoom In Pop', desc: 'Membesar dinamis dari titik tengah', icon: 'maximize' },
   { id: 'bounce', name: 'Dynamic Bounce', desc: 'Efek membal ceria untuk memikat perhatian', icon: 'zap' },
   { id: 'pulseGlow', name: 'Pulse Glow', desc: 'Berdenyut dengan pendar royal blue halus', icon: 'sparkles' },
-  { id: 'float', name: 'Floating Infinite', desc: 'Mengambang naik-turun halus secara terus menerus', icon: 'cloud' }
+  { id: 'float', name: 'Floating Infinite', desc: 'Mengambang naik-turun halus secara terus menerus', icon: 'cloud' },
+  { id: 'blurFade', name: 'Cinematic Blur Fade', desc: 'Transisi sinematik blur halus ala Apple & macOS', icon: 'sparkles' },
+  { id: 'springPop', name: 'Spring 3D Elastic', desc: 'Gerakan membal 3D elastis dinamis dan modern', icon: 'zap' },
+  { id: 'tiltIn', name: 'Perspective Tilt 3D', desc: 'Masuk dengan sudut perspektif ruang 3D futuristik', icon: 'layers' }
 ];

@@ -93,7 +93,8 @@ export interface VisualBlock {
     | 'card'
     | 'listgroup'
     | 'stats'
-    | 'breadcrumb';
+    | 'breadcrumb'
+    | 'marquee';
   name: string;
   badge?: string;
   title: string;
@@ -126,6 +127,9 @@ export interface VisualBlock {
     status?: string;
     label?: string;
     url?: string;
+    buttonRadius?: number;
+    buttonStyle?: 'solid' | 'outline' | 'glow' | 'pill';
+    buttonColor?: string;
   }>;
   styles?: {
     paddingY?: number;
@@ -142,10 +146,22 @@ export interface VisualBlock {
     fontSize?: number;
     letterSpacing?: number;
     textTransform?: 'none' | 'uppercase' | 'capitalize' | 'lowercase';
-    animation?: 'none' | 'fadeInUp' | 'slideInLeft' | 'zoomIn' | 'bounce' | 'pulseGlow' | 'float';
+    animation?: 'none' | 'fadeInUp' | 'slideInLeft' | 'zoomIn' | 'bounce' | 'pulseGlow' | 'float' | 'blurFade' | 'springPop' | 'tiltIn';
     animationDuration?: number;
     animationDelay?: number;
     richContent?: string;
+    buttonRadius?: number;
+    buttonStyle?: 'solid' | 'outline' | 'glow' | 'pill';
+    buttonColor?: string;
+    secondaryButtonRadius?: number;
+    secondaryButtonStyle?: 'solid' | 'outline' | 'glow' | 'pill';
+    secondaryButtonColor?: string;
+    cardStyle?: 'default' | 'flat' | 'bordered' | 'glass' | 'glow';
+    cardColumns?: 2 | 3 | 4;
+    cardOrientation?: 'vertical' | 'horizontal';
+    cardRadius?: number;
+    bgPattern?: 'none' | 'dots' | 'grid' | 'mesh';
+    shapeDivider?: 'none' | 'wave' | 'tilt' | 'curve';
   };
 }
 

@@ -23,6 +23,7 @@ import {
   Edit3,
   Sliders,
   Plus,
+  GripVertical,
   Trash2,
   Copy,
   ChevronUp,
@@ -42,8 +43,6 @@ import {
   FileCode,
   ArrowRight,
   ArrowLeft,
-  PanelLeftClose,
-  PanelLeftOpen,
   Cloud,
   AlignLeft,
   AlignCenter,
@@ -212,6 +211,7 @@ const activeTool = ref<ActiveTool>('select');
 const editorViewMode = ref<EditorViewMode>('design');
 const activeLeftTab = ref<'blocks' | 'layers' | 'design' | 'ai'>('blocks');
 const activeRightTab = ref<'layout' | 'appearance'>('layout');
+const isKatalogOpen = ref(false);
 
 watch(activeLeftTab, (newTab) => {
   if (newTab === 'blocks') {
@@ -364,6 +364,15 @@ const selectedBlockId = ref<string | null>('hero_1');
 const hoveredBlockId = ref<string | null>(null);
 
 const pageBlocks = ref<VisualBlock[]>([]);
+
+const selectedBlock = computed<VisualBlock | null>(() => {
+  if (!selectedBlockId.value) return null;
+  const block = pageBlocks.value.find((b) => b.id === selectedBlockId.value);
+  if (block && !block.styles) {
+    block.styles = {};
+  }
+  return block || null;
+});
 
 interface EditorDraftData {
   blocks: VisualBlock[];
@@ -719,11 +728,25 @@ const startArtboardResize = (dir: 'e' | 's' | 'se', e: MouseEvent) => {
 };
 
 // -----------------------------------------------------------------------------
-// Keyboard Shortcuts
+// Keyboard Shortcuts & Focus Guards
 // -----------------------------------------------------------------------------
 
+const isEditingText = (target: EventTarget | null): boolean => {
+  if (!target || !(target instanceof HTMLElement)) return false;
+  const tagName = target.tagName.toUpperCase();
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tagName)) return true;
+  if (target.isContentEditable || Boolean(target.closest('[contenteditable="true"]'))) return true;
+  if (Boolean(target.closest('.studio-top-context-bar, .wysiwyg-card-surface, input, textarea, select'))) return true;
+  return false;
+};
+
 const onKeyDown = (e: KeyboardEvent) => {
-  if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+  // Cegah tombol keyboard shortcut memanipulasi canvas ketika user sedang mengetik teks
+  if (isEditingText(e.target)) {
+    return;
+  }
+
+  if (e.code === 'Space') {
     isSpacePressed.value = true;
   }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
@@ -750,14 +773,14 @@ const onKeyDown = (e: KeyboardEvent) => {
     }
   }
 
-  if (e.key === 'v' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+  if (e.key === 'v') {
     activeTool.value = 'select';
   }
-  if (e.key === 'h' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+  if (e.key === 'h') {
     activeTool.value = 'hand';
   }
   if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (selectedBlockId.value && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+    if (selectedBlockId.value) {
       deleteBlock(selectedBlockId.value);
     }
   }
@@ -782,6 +805,7 @@ onMounted(async () => {
 
 
   // Smooth booting transition & dependency/draft load
+  isEditorSidebarHidden.value = true;
   isEditorBooting.value = true;
   bootProgress.value = 25;
   bootStatusText.value = 'Menyiapkan kanvas visual...';
@@ -837,7 +861,421 @@ onUnmounted(() => {
 const selectBlock = (id: string, e?: MouseEvent) => {
   if (activeTool.value === 'hand') return;
   if (e) e.stopPropagation();
-  selectedBlockId.value = id;
+  if (selectedBlockId.value !== id) {
+    selectedBlockId.value = id;
+    hudContext.value = { type: 'section' };
+  }
+};
+
+// -----------------------------------------------------------------------------
+// Top Context Toolbar (Shelf) State & Methods (100% In-Front & Outside Canvas)
+// -----------------------------------------------------------------------------
+const hudContext = ref<{
+  type: 'section' | 'text' | 'button' | 'card' | 'progressbar' | 'image';
+  field?: string;
+  itemIndex?: number;
+  buttonRole?: 'primary' | 'secondary' | number;
+  subType?: string;
+}>({ type: 'section' });
+
+const currentActiveButtonRadius = computed(() => {
+  if (!selectedBlock.value) return 8;
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') return selectedBlock.value.styles?.secondaryButtonRadius ?? 8;
+  if (typeof role === 'number' && selectedBlock.value.items?.[role]?.buttonRadius !== undefined) {
+    return selectedBlock.value.items[role].buttonRadius ?? 8;
+  }
+  return selectedBlock.value.styles?.buttonRadius ?? 8;
+});
+
+const currentActiveButtonStyle = computed(() => {
+  if (!selectedBlock.value) return 'solid';
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') return selectedBlock.value.styles?.secondaryButtonStyle ?? 'outline';
+  if (typeof role === 'number' && selectedBlock.value.items?.[role]?.buttonStyle) {
+    return selectedBlock.value.items[role].buttonStyle ?? 'solid';
+  }
+  return selectedBlock.value.styles?.buttonStyle ?? 'solid';
+});
+
+const currentActiveButtonColor = computed(() => {
+  if (!selectedBlock.value) return activeContainer.value?.accentColor || '#2563eb';
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') return selectedBlock.value.styles?.secondaryButtonColor || '#64748b';
+  if (typeof role === 'number' && selectedBlock.value.items?.[role]?.buttonColor) {
+    return selectedBlock.value.items[role].buttonColor || '#2563eb';
+  }
+  return selectedBlock.value.styles?.buttonColor || selectedBlock.value.styles?.accentColor || activeContainer.value?.accentColor || '#2563eb';
+});
+
+const setHudContext = (
+  type: 'section' | 'text' | 'button' | 'card' | 'progressbar' | 'image',
+  block: VisualBlock,
+  field?: string | number,
+  subType?: string
+) => {
+  if (selectedBlockId.value !== block.id) {
+    selectedBlockId.value = block.id;
+  }
+  hudContext.value = {
+    type,
+    field: typeof field === 'string' ? field : undefined,
+    itemIndex: typeof field === 'number' ? field : undefined,
+    buttonRole: type === 'button' ? 'primary' : undefined,
+    subType
+  };
+};
+
+// -----------------------------------------------------------------------------
+// Direct Inline & Interactive WYSIWYG Manipulation Handlers
+// -----------------------------------------------------------------------------
+
+const onInlineTextBlur = (block: VisualBlock, field: 'title' | 'subtitle' | 'badge' | 'buttonText' | 'secondaryButtonText', e: FocusEvent) => {
+  const text = (e.target as HTMLElement).innerText.trim();
+  (block as any)[field] = text;
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const onInlineItemTextBlur = (block: VisualBlock, itemIndex: number, field: 'title' | 'desc' | 'tag' | 'price' | 'period' | 'percentage' | 'role' | 'label', e: FocusEvent) => {
+  if (block.items && block.items[itemIndex]) {
+    const text = (e.target as HTMLElement).innerText.trim();
+    if (field === 'percentage') {
+      const num = parseInt(text.replace(/[^0-9]/g, ''), 10);
+      block.items[itemIndex].percentage = isNaN(num) ? 0 : Math.min(100, Math.max(0, num));
+    } else {
+      (block.items[itemIndex] as any)[field] = text;
+    }
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const onInlineFeatureBlur = (block: VisualBlock, itemIndex: number, featureIndex: number, e: FocusEvent) => {
+  if (block.items && block.items[itemIndex] && block.items[itemIndex].features) {
+    const text = (e.target as HTMLElement).innerText.trim();
+    block.items[itemIndex].features![featureIndex] = text;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const onInlineTextKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    (e.target as HTMLElement).blur();
+  }
+};
+
+const onTextClick = (block: VisualBlock, field: string, e: MouseEvent) => {
+  e.stopPropagation();
+  selectBlock(block.id);
+  setHudContext('text', block, field);
+};
+
+const onButtonClick = (block: VisualBlock, roleOrIndex: 'primary' | 'secondary' | number = 'primary', e?: MouseEvent) => {
+  if (e) e.stopPropagation();
+  selectBlock(block.id);
+  hudContext.value = {
+    type: 'button',
+    buttonRole: roleOrIndex,
+    itemIndex: typeof roleOrIndex === 'number' ? roleOrIndex : undefined
+  };
+};
+
+const onCardItemClick = (block: VisualBlock, idx: number, e: MouseEvent) => {
+  e.stopPropagation();
+  selectBlock(block.id);
+  setHudContext('card', block, idx);
+};
+
+const onProgressItemClick = (block: VisualBlock, idx: number, e: MouseEvent) => {
+  e.stopPropagation();
+  selectBlock(block.id);
+  setHudContext('progressbar', block, idx);
+};
+
+const onImageClick = (block: VisualBlock, idx?: number, e?: MouseEvent) => {
+  if (e) e.stopPropagation();
+  selectBlock(block.id);
+  setHudContext('image', block, idx);
+};
+
+const adjustFontSize = (delta: number) => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const current = selectedBlock.value.styles.fontSize || 16;
+  selectedBlock.value.styles.fontSize = Math.max(12, Math.min(64, current + delta));
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const toggleBlockBold = () => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const isBold = ['700', '800', '900'].includes(selectedBlock.value.styles.fontWeight || '');
+  selectedBlock.value.styles.fontWeight = isBold ? '400' : '700';
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const toggleBlockUppercase = () => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const isUpper = selectedBlock.value.styles.textTransform === 'uppercase';
+  selectedBlock.value.styles.textTransform = isUpper ? 'none' : 'uppercase';
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const setBlockAlign = (align: 'left' | 'center' | 'right') => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.align = align;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockFont = (font: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.fontFamily = font;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockBgColor = (color: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.bgColor = color;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockTextColor = (color: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.textColor = color;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockAccentColor = (color: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.accentColor = color;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockPaddingY = (padding: number) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.paddingY = padding;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockBgPattern = (pattern: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.bgPattern = pattern as any;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockAnimation = (anim: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.animation = anim as any;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setButtonRadius = (r: number) => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') {
+    selectedBlock.value.styles.secondaryButtonRadius = r;
+  } else if (typeof role === 'number' && selectedBlock.value.items?.[role]) {
+    selectedBlock.value.items[role].buttonRadius = r;
+  } else {
+    selectedBlock.value.styles.buttonRadius = r;
+  }
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const setButtonStyle = (style: 'solid' | 'outline' | 'glow' | 'pill') => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const role = hudContext.value.buttonRole;
+  const rad = style === 'pill' ? 999 : 8;
+  if (role === 'secondary') {
+    selectedBlock.value.styles.secondaryButtonStyle = style;
+    if (style === 'pill') selectedBlock.value.styles.secondaryButtonRadius = rad;
+  } else if (typeof role === 'number' && selectedBlock.value.items?.[role]) {
+    selectedBlock.value.items[role].buttonStyle = style;
+    if (style === 'pill') selectedBlock.value.items[role].buttonRadius = rad;
+  } else {
+    selectedBlock.value.styles.buttonStyle = style;
+    if (style === 'pill') selectedBlock.value.styles.buttonRadius = rad;
+  }
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const setButtonColor = (color: string) => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') {
+    selectedBlock.value.styles.secondaryButtonColor = color;
+  } else if (typeof role === 'number' && selectedBlock.value.items?.[role]) {
+    selectedBlock.value.items[role].buttonColor = color;
+  } else {
+    selectedBlock.value.styles.buttonColor = color;
+    selectedBlock.value.styles.accentColor = color;
+  }
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const setCardStyle = (style: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.cardStyle = style as any;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setCardColumns = (cols: number) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.cardColumns = cols as any;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setCardOrientation = (orient: 'vertical' | 'horizontal') => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.cardOrientation = orient;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setCardRadius = (radius: number) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.cardRadius = radius;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const addCardItem = (block: VisualBlock) => {
+  if (!block.items) block.items = [];
+  const newId = 'card_' + Date.now();
+  block.items.push({
+    id: newId,
+    title: 'Fitur Baru',
+    desc: 'Deskripsi singkat mengenai kapabilitas dan nilai tambah fitur ini.',
+    icon: 'Zap'
+  });
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const deleteCardItem = (block: VisualBlock, itemIndex: number) => {
+  if (!block.items || block.items.length <= 1) return;
+  block.items.splice(itemIndex, 1);
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const updateProgressValue = (idx: number, val: number) => {
+  if (!selectedBlock.value || !selectedBlock.value.items) return;
+  if (selectedBlock.value.items[idx]) {
+    selectedBlock.value.items[idx].percentage = val;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const unsplashPresets = [
+  { short: 'Cloud', label: 'Cloud Server & Datacenter', url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80' },
+  { short: 'Studio', label: 'Tech Workspace & Studio', url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80' },
+  { short: 'Neural', label: 'Cyber Neural & Network', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80' },
+  { short: 'Work', label: 'Minimal Developer Desk', url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80' }
+];
+
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const pendingUploadTarget = ref<{ blockId: string; itemIndex?: number } | null>(null);
+
+const triggerImageUpload = (blockId: string, itemIndex?: number) => {
+  pendingUploadTarget.value = { blockId, itemIndex };
+  if (fileInputRef.value) {
+    fileInputRef.value.value = '';
+    fileInputRef.value.click();
+  }
+};
+
+const handleFileInputChange = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file || !pendingUploadTarget.value) return;
+  const { blockId, itemIndex } = pendingUploadTarget.value;
+  pendingUploadTarget.value = null;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    if (typeof evt.target?.result === 'string') {
+      commitImageChange(blockId, itemIndex, evt.target.result);
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
+const commitImageChange = (blockId: string, itemIndex: number | undefined, imageUrl: string) => {
+  const block = pageBlocks.value.find((b) => b.id === blockId);
+  if (block) {
+    if (typeof itemIndex === 'number' && block.items && block.items[itemIndex]) {
+      block.items[itemIndex].image = imageUrl;
+    } else {
+      block.imageUrl = imageUrl;
+    }
+    if (editingBlockDraft.value && editingBlockDraft.value.id === blockId) {
+      if (typeof itemIndex === 'number' && editingBlockDraft.value.items && editingBlockDraft.value.items[itemIndex]) {
+        editingBlockDraft.value.items[itemIndex].image = imageUrl;
+      } else {
+        editingBlockDraft.value.imageUrl = imageUrl;
+      }
+    }
+    if (activeContainer.value) {
+      if (!activeContainer.value.themeConfig) activeContainer.value.themeConfig = {};
+      activeContainer.value.themeConfig.blocks = JSON.parse(JSON.stringify(pageBlocks.value));
+    }
+    recordHistory();
+    triggerAutoSaveDraft();
+    showToast('Gambar berhasil diperbarui!', 'success');
+  }
+};
+
+const openItemIconPicker = (blockId: string, _itemIndex: number, _e: MouseEvent) => {
+  const block = pageBlocks.value.find((b) => b.id === blockId);
+  if (block) openRichModalEditor(block);
 };
 
 const moveBlockUp = (id: string) => {
@@ -907,6 +1345,56 @@ const addBlockFromLibrary = (type: VisualBlock['type']) => {
   }
   selectedBlockId.value = newBlock.id;
   showToast(`Komponen '${newBlock.name}' berhasil ditambahkan ke kanvas!`, 'success');
+};
+
+// Drag & Drop Block from Catalog to Canvas
+const draggedBlockType = ref<string | null>(null);
+const activeDropSlotIndex = ref<number | null>(null);
+
+const onCatalogDragStart = (e: DragEvent, type: string) => {
+  draggedBlockType.value = type;
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('text/plain', type);
+    e.dataTransfer.effectAllowed = 'copy';
+  }
+};
+
+const onCatalogDragEnd = () => {
+  draggedBlockType.value = null;
+  activeDropSlotIndex.value = null;
+};
+
+const onCanvasDropSlotDragOver = (e: DragEvent, idx: number) => {
+  e.preventDefault();
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'copy';
+  }
+  activeDropSlotIndex.value = idx;
+};
+
+const onCanvasDropSlotDragLeave = (idx: number) => {
+  if (activeDropSlotIndex.value === idx) {
+    activeDropSlotIndex.value = null;
+  }
+};
+
+const onCanvasDropSlotDrop = (e: DragEvent, idx: number) => {
+  e.preventDefault();
+  const type = (e.dataTransfer?.getData('text/plain') || draggedBlockType.value) as VisualBlock['type'];
+  if (type) {
+    insertBlockFromLibraryAt(type, idx);
+  }
+  draggedBlockType.value = null;
+  activeDropSlotIndex.value = null;
+};
+
+const insertBlockFromLibraryAt = (type: VisualBlock['type'], idx: number) => {
+  const newBlock = createLibraryBlock(type);
+  pageBlocks.value.splice(idx, 0, newBlock);
+  selectedBlockId.value = newBlock.id;
+  recordHistory();
+  triggerAutoSaveDraft();
+  showToast(`Komponen '${newBlock.name}' berhasil dipasang ke kanvas!`, 'success');
 };
 
 const currentFont = ref('Plus Jakarta Sans');
@@ -1660,14 +2148,15 @@ const executeVsCodeReplaceAll = () => {
             <span>Dashboard</span>
           </button>
 
+          <!-- Toggle Konten Sidebar Drawer -->
           <button
-            class="btn-toggle-sidebar"
-            :class="{ active: !isEditorSidebarHidden }"
-            @click="isEditorSidebarHidden = !isEditorSidebarHidden"
-            :title="isEditorSidebarHidden ? 'Tampilkan Menu Sidebar' : 'Sembunyikan Menu Sidebar'"
+            class="btn-toggle-sidebar btn-konten-toggle"
+            :class="{ active: isKatalogOpen }"
+            @click="isKatalogOpen = !isKatalogOpen"
+            :title="isKatalogOpen ? 'Tutup Katalog Blok Website' : 'Buka Katalog Blok Website'"
           >
-            <PanelLeftOpen v-if="isEditorSidebarHidden" :size="15" />
-            <PanelLeftClose v-else :size="15" />
+            <Plus :size="13" />
+            <span>Konten +</span>
           </button>
 
           <div class="v-divider"></div>
@@ -1982,7 +2471,7 @@ const executeVsCodeReplaceAll = () => {
         <!-- ----------------------------------------------------------------- -->
         <!-- LEFT STUDIO DOCK (Blocks Library, Layers Tree, Design Tokens, AI) -->
         <!-- ----------------------------------------------------------------- -->
-        <aside class="studio-left-dock" :class="{ 'dock-hidden': editorViewMode !== 'design' }">
+        <aside class="studio-left-dock" :class="{ 'dock-hidden': !isKatalogOpen || editorViewMode !== 'design' }">
           <!-- Dock Tabs Header -->
           <nav class="left-dock-tabs">
             <button
@@ -2110,8 +2599,11 @@ const executeVsCodeReplaceAll = () => {
                   v-for="item in filteredCatalogItems"
                   :key="item.id"
                   class="visual-wireframe-card"
+                  draggable="true"
+                  @dragstart="onCatalogDragStart($event, item.type)"
+                  @dragend="onCatalogDragEnd"
                   @click="addBlockFromLibrary(item.type)"
-                  :title="'Tambah ' + item.name + ' ke Kanvas'"
+                  :title="'Klik atau Drag ' + item.name + ' ke Kanvas'"
                 >
                   <!-- Top Bar: Category Pill & Quick Add Button -->
                   <div class="card-top-row">
@@ -2484,8 +2976,18 @@ const executeVsCodeReplaceAll = () => {
         <!-- CENTER WORKSPACE: DUAL ENGINE (CANVAS & VS CODE WORKSPACE)          -->
         <!-- ----------------------------------------------------------------- -->
         <div class="studio-center-workspace">
+          <!-- Hidden native image upload input -->
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept="image/*"
+            style="display: none;"
+            @change="handleFileInputChange"
+          />
+
           <!-- 1. Infinite Canvas Workspace & Resizable Artboard -->
           <main
+            ref="viewportAreaRef"
             class="studio-viewport-area"
             :class="{
               'is-view-hidden': editorViewMode === 'code',
@@ -2496,8 +2998,395 @@ const executeVsCodeReplaceAll = () => {
             @mousedown="onCanvasMouseDown"
             @wheel="onCanvasWheel"
           >
-          <!-- Coordinate Rulers (Photoshop Style) -->
-          <div v-if="showRulers" class="canvas-ruler-top">
+            <!-- TOP FLOATING HUD LAYER (ABOVE CANVAS, FULL WIDTH, NEVER CLIPPED) -->
+            <transition name="hud-slide-down">
+              <div
+                v-if="selectedBlock && editorViewMode === 'design'"
+                class="studio-viewport-floating-shelf"
+                @click.stop
+                @mousedown.stop
+              >
+                <!-- 1. LEFT GROUP: Drag Handle & Context Selector Pills -->
+                <div class="hud-left-group">
+                  <span class="shelf-drag-handle" title="Urutan Section">
+                    <GripVertical :size="13" />
+                  </span>
+
+                  <div class="shelf-context-selector">
+                    <!-- Section Context Pill -->
+                    <button
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'section' }"
+                      @click="setHudContext('section', selectedBlock)"
+                      title="Pengaturan Section (Latar, Spacing, Pola, Animasi)"
+                    >
+                      <Layers :size="12" />
+                      <span class="shelf-pill-text">{{ selectedBlock.name }}</span>
+                    </button>
+
+                    <!-- Teks Context Pill -->
+                    <button
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'text' }"
+                      @click="setHudContext('text', selectedBlock)"
+                      title="Pengaturan Teks & Tipografi"
+                    >
+                      <Type :size="12" />
+                      <span>Teks</span>
+                    </button>
+
+                    <!-- Tombol Context Pill (Conditional) -->
+                    <button
+                      v-if="selectedBlock.buttonText || ['hero', 'cta', 'navbar', 'pricing'].includes(selectedBlock.type)"
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'button' }"
+                      @click="setHudContext('button', selectedBlock)"
+                      title="Pengaturan Tombol & CTA"
+                    >
+                      <Rocket :size="12" />
+                      <span>Tombol</span>
+                    </button>
+
+                    <!-- Kartu Context Pill (Conditional) -->
+                    <button
+                      v-if="selectedBlock.items && selectedBlock.items.length > 0 && selectedBlock.type !== 'progressbar'"
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'card' }"
+                      @click="setHudContext('card', selectedBlock)"
+                      title="Pengaturan Kartu & Fitur Bento"
+                    >
+                      <Box :size="12" />
+                      <span>Kartu</span>
+                    </button>
+
+                    <!-- Progress Context Pill (Conditional) -->
+                    <button
+                      v-if="selectedBlock.type === 'progressbar' || (selectedBlock.items && selectedBlock.items[0]?.percentage !== undefined)"
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'progressbar' }"
+                      @click="setHudContext('progressbar', selectedBlock)"
+                      title="Pengaturan Meteran Progress"
+                    >
+                      <Activity :size="12" />
+                      <span>Progress</span>
+                    </button>
+
+                    <!-- Gambar Context Pill (Conditional) -->
+                    <button
+                      v-if="selectedBlock.type === 'carousel' || selectedBlock.imageUrl || (selectedBlock.items && selectedBlock.items.some(i => i.image))"
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'image' }"
+                      @click="setHudContext('image', selectedBlock)"
+                      title="Pengaturan Gambar & Foto"
+                    >
+                      <ImageIcon :size="12" />
+                      <span>Gambar</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="shelf-divider"></div>
+
+                <!-- 2. CENTER GROUP: Dynamic Context Controls -->
+                <div class="hud-center-group">
+                  <!-- A. Context: TEXT -->
+                  <div v-if="hudContext.type === 'text'" class="shelf-controls-group">
+                    <select
+                      class="shelf-select font-select"
+                      :value="selectedBlock.styles?.fontFamily || currentFont"
+                      @change="setBlockFont(($event.target as HTMLSelectElement).value)"
+                      title="Keluarga Font"
+                    >
+                      <option v-for="f in fontOptions" :key="f.id" :value="f.family">{{ f.name }}</option>
+                    </select>
+
+                    <div class="shelf-btn-group">
+                      <button type="button" class="shelf-btn" @click="adjustFontSize(-2)" title="Kecilkan Font (A-)">
+                        <span style="font-size: 11px; font-weight: 700;">A-</span>
+                      </button>
+                      <span class="shelf-val-badge">{{ selectedBlock.styles?.fontSize || 16 }}px</span>
+                      <button type="button" class="shelf-btn" @click="adjustFontSize(2)" title="Besarkan Font (A+)">
+                        <span style="font-size: 13px; font-weight: 700;">A+</span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="shelf-btn"
+                      :class="{ active: ['700', '800', '900'].includes(selectedBlock.styles?.fontWeight || '') }"
+                      @click="toggleBlockBold"
+                      title="Tebal (Bold)"
+                    >
+                      <Bold :size="13" />
+                    </button>
+
+                    <div class="shelf-btn-group">
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'left' }" @click="setBlockAlign('left')" title="Rata Kiri">
+                        <AlignLeft :size="13" />
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'center' || !selectedBlock.styles?.align }" @click="setBlockAlign('center')" title="Rata Tengah">
+                        <AlignCenter :size="13" />
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'right' }" @click="setBlockAlign('right')" title="Rata Kanan">
+                        <AlignRight :size="13" />
+                      </button>
+                    </div>
+
+                    <div class="shelf-color-wrap" title="Warna Teks">
+                      <input
+                        type="color"
+                        :value="selectedBlock.styles?.textColor || '#0f172a'"
+                        @input="setBlockTextColor(($event.target as HTMLInputElement).value)"
+                        class="shelf-color-input"
+                      />
+                      <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.textColor || '#0f172a' }"></span>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="shelf-btn"
+                      :class="{ active: selectedBlock.styles?.textTransform === 'uppercase' }"
+                      @click="toggleBlockUppercase"
+                      title="KAPITAL (Semua Huruf Besar)"
+                    >
+                      <span style="font-size: 11px; font-weight: 800;">AA</span>
+                    </button>
+                  </div>
+
+                  <!-- B. Context: BUTTON -->
+                  <div v-else-if="hudContext.type === 'button'" class="shelf-controls-group">
+                    <span class="shelf-lbl-mini" style="font-weight: 700; color: #38bdf8;">
+                      {{ hudContext.buttonRole === 'secondary' ? 'Tombol Sekunder' : (typeof hudContext.buttonRole === 'number' ? `Tombol Kartu #${(hudContext.buttonRole as number) + 1}` : 'Tombol Utama') }}
+                    </span>
+                    <div class="shelf-btn-group" title="Bentuk Sudut Tombol">
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 0 }" @click="setButtonRadius(0)" title="Kotak (0px)">
+                        <span class="shape-icon is-sq"></span>
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 8 }" @click="setButtonRadius(8)" title="Sedang (8px)">
+                        <span class="shape-icon is-rd"></span>
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 16 }" @click="setButtonRadius(16)" title="Bulat (16px)">
+                        <span class="shape-icon is-cr"></span>
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius >= 50 || currentActiveButtonStyle === 'pill' }" @click="setButtonStyle('pill')" title="Pill (Kapsul)">
+                        <span class="shape-icon is-pl"></span>
+                      </button>
+                    </div>
+
+                    <div class="shelf-btn-group">
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonStyle === 'solid' }" @click="setButtonStyle('solid')">Solid</button>
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonStyle === 'outline' }" @click="setButtonStyle('outline')">Outline</button>
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonStyle === 'glow' }" @click="setButtonStyle('glow')">Glow ✨</button>
+                    </div>
+
+                    <div class="shelf-color-wrap" title="Warna Tombol">
+                      <input
+                        type="color"
+                        :value="currentActiveButtonColor"
+                        @input="setButtonColor(($event.target as HTMLInputElement).value)"
+                        class="shelf-color-input"
+                      />
+                      <span class="shelf-color-dot" :style="{ backgroundColor: currentActiveButtonColor }"></span>
+                    </div>
+                  </div>
+
+                  <!-- C. Context: CARD -->
+                  <div v-else-if="hudContext.type === 'card'" class="shelf-controls-group">
+                    <button type="button" class="shelf-btn highlight" @click="openItemIconPicker(selectedBlock.id, hudContext.itemIndex || 0, $event)" title="Ganti Icon Item">
+                      <Palette :size="12" />
+                      <span>Ganti Ikon</span>
+                    </button>
+
+                    <div class="shelf-btn-group">
+                      <button type="button" class="shelf-btn" :class="{ active: !selectedBlock.styles?.cardStyle || selectedBlock.styles?.cardStyle === 'default' }" @click="setCardStyle('default')">Standar</button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardStyle === 'glass' }" @click="setCardStyle('glass')">Glass</button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardStyle === 'bordered' }" @click="setCardStyle('bordered')">Border</button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardStyle === 'glow' }" @click="setCardStyle('glow')">Glow ✨</button>
+                    </div>
+
+                    <div class="shelf-btn-group" title="Jumlah Kolom">
+                      <button type="button" class="shelf-btn" :class="{ active: (selectedBlock.styles?.cardColumns || 3) === 2 }" @click="setCardColumns(2)">2 Kol</button>
+                      <button type="button" class="shelf-btn" :class="{ active: (selectedBlock.styles?.cardColumns || 3) === 3 }" @click="setCardColumns(3)">3 Kol</button>
+                      <button type="button" class="shelf-btn" :class="{ active: (selectedBlock.styles?.cardColumns || 3) === 4 }" @click="setCardColumns(4)">4 Kol</button>
+                    </div>
+
+                    <div class="shelf-btn-group" title="Arah Posisi Ikon">
+                      <button type="button" class="shelf-btn" :class="{ active: !selectedBlock.styles?.cardOrientation || selectedBlock.styles?.cardOrientation === 'vertical' }" @click="setCardOrientation('vertical')">Atas</button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardOrientation === 'horizontal' }" @click="setCardOrientation('horizontal')">Samping</button>
+                    </div>
+
+                    <div class="shelf-btn-group" title="Sudut Kartu">
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardRadius === 0 }" @click="setCardRadius(0)">0px</button>
+                      <button type="button" class="shelf-btn" :class="{ active: !selectedBlock.styles?.cardRadius || selectedBlock.styles?.cardRadius === 14 }" @click="setCardRadius(14)">14px</button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardRadius === 24 }" @click="setCardRadius(24)">24px</button>
+                    </div>
+
+                    <button type="button" class="shelf-btn" @click="addCardItem(selectedBlock)" title="Tambah Kartu Baru">
+                      <Plus :size="13" />
+                    </button>
+                    <button
+                      v-if="selectedBlock.items && selectedBlock.items.length > 1"
+                      type="button"
+                      class="shelf-btn delete"
+                      @click="deleteCardItem(selectedBlock, hudContext.itemIndex || 0)"
+                      title="Hapus Kartu Ini"
+                    >
+                      <Trash2 :size="13" />
+                    </button>
+                  </div>
+
+                  <!-- D. Context: PROGRESSBAR -->
+                  <div v-else-if="hudContext.type === 'progressbar'" class="shelf-controls-group">
+                    <span class="shelf-lbl-mini">Persen:</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      :value="selectedBlock.items?.[hudContext.itemIndex || 0]?.percentage || 75"
+                      @input="updateProgressValue(hudContext.itemIndex || 0, Number(($event.target as HTMLInputElement).value))"
+                      class="shelf-slider"
+                    />
+                    <span class="shelf-val-badge">{{ selectedBlock.items?.[hudContext.itemIndex || 0]?.percentage || 75 }}%</span>
+
+                    <div class="shelf-color-wrap" title="Warna Progress">
+                      <input
+                        type="color"
+                        :value="selectedBlock.styles?.accentColor || activeContainer.accentColor"
+                        @input="setBlockAccentColor(($event.target as HTMLInputElement).value)"
+                        class="shelf-color-input"
+                      />
+                      <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.accentColor || activeContainer.accentColor }"></span>
+                    </div>
+                  </div>
+
+                  <!-- E. Context: IMAGE -->
+                  <div v-else-if="hudContext.type === 'image'" class="shelf-controls-group">
+                    <button type="button" class="shelf-btn highlight" @click="triggerImageUpload(selectedBlock.id, hudContext.itemIndex)" title="Unggah Foto dari Komputer">
+                      <UploadCloud :size="12" />
+                      <span>Upload Foto</span>
+                    </button>
+                    <div class="shelf-btn-group" title="Preset Gambar Siap Pakai">
+                      <button
+                        v-for="p in unsplashPresets"
+                        :key="p.short"
+                        type="button"
+                        class="shelf-btn"
+                        @click="commitImageChange(selectedBlock.id, hudContext.itemIndex, p.url)"
+                        :title="p.label"
+                      >
+                        {{ p.short }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- F. Context: SECTION (DEFAULT) -->
+                  <div v-else class="shelf-controls-group">
+                    <div class="shelf-btn-group">
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'left' }" @click="setBlockAlign('left')" title="Rata Kiri">
+                        <AlignLeft :size="13" />
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'center' || !selectedBlock.styles?.align }" @click="setBlockAlign('center')" title="Rata Tengah">
+                        <AlignCenter :size="13" />
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'right' }" @click="setBlockAlign('right')" title="Rata Kanan">
+                        <AlignRight :size="13" />
+                      </button>
+                    </div>
+
+                    <div class="shelf-color-wrap" title="Warna Latar Section">
+                      <input
+                        type="color"
+                        :value="selectedBlock.styles?.bgColor || '#ffffff'"
+                        @input="setBlockBgColor(($event.target as HTMLInputElement).value)"
+                        class="shelf-color-input"
+                      />
+                      <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.bgColor || '#ffffff' }"></span>
+                    </div>
+
+                    <div class="shelf-slider-wrap" title="Jarak Vertikal (Padding Atas/Bawah)">
+                      <span class="shelf-lbl-mini">↕</span>
+                      <input
+                        type="range"
+                        min="16"
+                        max="160"
+                        step="4"
+                        :value="selectedBlock.styles?.paddingY || 60"
+                        @input="setBlockPaddingY(Number(($event.target as HTMLInputElement).value))"
+                        class="shelf-slider"
+                      />
+                      <span class="shelf-val-badge">{{ selectedBlock.styles?.paddingY || 60 }}px</span>
+                    </div>
+
+                    <select
+                      class="shelf-select"
+                      :value="selectedBlock.styles?.bgPattern || 'none'"
+                      @change="setBlockBgPattern(($event.target as HTMLSelectElement).value)"
+                      title="Pola Tekstur Latar Belakang"
+                    >
+                      <option value="none">Pola: Off</option>
+                      <option value="dots">Dot Grid</option>
+                      <option value="grid">Matrix Grid</option>
+                      <option value="mesh">Ambient Glow</option>
+                    </select>
+
+                    <select
+                      class="shelf-select"
+                      :value="selectedBlock.styles?.animation || 'none'"
+                      @change="setBlockAnimation(($event.target as HTMLSelectElement).value)"
+                      title="Animasi Masuk (Motion 2027)"
+                    >
+                      <option value="none">Anim: Off</option>
+                      <option value="fade">Fade In</option>
+                      <option value="blurFade">Blur Fade</option>
+                      <option value="slideUp">Slide Up</option>
+                      <option value="springPop">Spring 3D</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="shelf-divider"></div>
+
+                <!-- 3. RIGHT GROUP: Section Actions -->
+                <div class="hud-right-group">
+                  <button type="button" class="shelf-btn" @click="moveBlockUp(selectedBlock.id)" title="Pindah ke Atas">
+                    <ChevronUp :size="13" />
+                  </button>
+                  <button type="button" class="shelf-btn" @click="moveBlockDown(selectedBlock.id)" title="Pindah ke Bawah">
+                    <ChevronDown :size="13" />
+                  </button>
+                  <button type="button" class="shelf-btn" @click="duplicateBlock(selectedBlock.id)" title="Duplikat Section">
+                    <Copy :size="13" />
+                  </button>
+                  <button type="button" class="shelf-btn" @click="toggleBlockLock(selectedBlock)" :title="selectedBlock.isLocked ? 'Buka Kunci' : 'Kunci Section'">
+                    <Lock v-if="selectedBlock.isLocked" :size="13" />
+                    <Unlock v-else :size="13" />
+                  </button>
+                  <button type="button" class="shelf-btn delete" @click="deleteBlock(selectedBlock.id)" title="Hapus Section">
+                    <Trash2 :size="13" />
+                  </button>
+                  <div class="shelf-divider-sm"></div>
+                  <button
+                    type="button"
+                    class="shelf-btn highlight"
+                    @click="openRichModalEditor(selectedBlock)"
+                    title="Buka Modal Editor Rinci"
+                  >
+                    <Edit3 :size="12" />
+                    <span>Detail</span>
+                  </button>
+                </div>
+              </div>
+            </transition>
+
+            <!-- Coordinate Rulers (Photoshop Style) -->
+            <div v-if="showRulers" class="canvas-ruler-top">
             <div class="ruler-tick-cluster" :style="{ transform: `translateX(${panX}px) scaleX(${zoom})` }">
               <span v-for="i in 40" :key="`rt_${i}`" class="ruler-mark" :style="{ left: `${(i - 1) * 100}px` }">
                 {{ (i - 1) * 100 }}
@@ -2526,7 +3415,8 @@ const executeVsCodeReplaceAll = () => {
             class="artboard-transform-wrapper"
             :style="{
               transform: `translate(calc(-50% + ${panX}px), ${panY}px) scale(${zoom})`,
-              transformOrigin: 'top center'
+              transformOrigin: 'top center',
+              '--canvas-zoom': zoom
             }"
           >
             <!-- Resizable Website Frame Shell -->
@@ -2556,10 +3446,29 @@ const executeVsCodeReplaceAll = () => {
 
               <!-- Website Content Stage -->
               <div class="website-rendered-surface" :style="{ '--accent-brand': activeContainer.accentColor }">
-                <!-- Loop Over Blocks -->
+                <!-- Loop Over Blocks with Drag & Drop Slots -->
                 <template v-for="(block, bIdx) in pageBlocks" :key="block.id">
+                  <!-- Canvas Drag and Drop Slot (Before Block) -->
+                  <div
+                    class="canvas-drop-slot"
+                    :class="{
+                      'is-drag-in-progress': draggedBlockType !== null,
+                      'is-active-drop': activeDropSlotIndex === bIdx
+                    }"
+                    @dragover="onCanvasDropSlotDragOver($event, bIdx)"
+                    @dragleave="onCanvasDropSlotDragLeave(bIdx)"
+                    @drop="onCanvasDropSlotDrop($event, bIdx)"
+                  >
+                    <div class="drop-slot-line">
+                      <span class="drop-slot-badge">
+                        <Plus :size="12" /> Pasang di sini
+                      </span>
+                    </div>
+                  </div>
+
                   <div
                     v-if="block.isVisible"
+                    :id="`canvas-block-node-${block.id}`"
                     class="block-node-wrapper"
                     :class="{
                       'is-first-block': bIdx === 0 || pageBlocks.findIndex(b => b.isVisible) === bIdx,
@@ -2569,6 +3478,8 @@ const executeVsCodeReplaceAll = () => {
                       [block.styles?.animation && block.styles.animation !== 'none' ? 'anim-' + block.styles.animation : '']: true
                     }"
                     :style="{
+                      zIndex: selectedBlockId === block.id && editorViewMode === 'design' ? 99999 : 1,
+                      position: 'relative',
                       backgroundColor: block.styles?.bgColor,
                       color: block.styles?.textColor,
                       fontFamily: block.styles?.fontFamily,
@@ -2579,49 +3490,16 @@ const executeVsCodeReplaceAll = () => {
                       '--accent-brand': block.styles?.accentColor || activeContainer.accentColor
                     }"
                     @click="selectBlock(block.id, $event)"
-                    @dblclick="openRichModalEditor(block)"
                     @mouseenter="hoveredBlockId = block.id"
                     @mouseleave="hoveredBlockId = null"
                   >
-                    <!-- SELECTION BOUNDING BOX & ACTION BAR OVERLAY (Photoshop/Canva Selection) -->
+                    <!-- SELECTION BOUNDING BOX (Canva/Figma Crisp Canvas Outlines) -->
                     <div v-if="selectedBlockId === block.id && editorViewMode === 'design'" class="selection-overlay-box">
                       <!-- 4 Corner Transformation Anchors -->
                       <span class="corner-anchor tl"></span>
                       <span class="corner-anchor tr"></span>
                       <span class="corner-anchor bl"></span>
                       <span class="corner-anchor br"></span>
-
-                      <!-- Floating Action Bar Attached to Selected Block -->
-                      <div class="floating-selection-bar" @click.stop>
-                        <span class="selection-tag-pill">◆ {{ block.name }}</span>
-                        <div class="bar-divider"></div>
-                        <!-- Tombol Buka Editor Konten, Tipografi, Warna & Animasi -->
-                        <button
-                          type="button"
-                          class="float-btn highlight-edit-btn"
-                          @click="openRichModalEditor(block)"
-                          title="Buka Editor Konten, Tipografi, Warna & Animasi"
-                        >
-                          <Edit3 :size="12" /> Edit Konten & Gaya
-                        </button>
-                        <div class="bar-divider"></div>
-                        <button class="float-btn" @click="moveBlockUp(block.id)" title="Pindah ke Atas">
-                          <ChevronUp :size="13" />
-                        </button>
-                        <button class="float-btn" @click="moveBlockDown(block.id)" title="Pindah ke Bawah">
-                          <ChevronDown :size="13" />
-                        </button>
-                        <button class="float-btn" @click="duplicateBlock(block.id)" title="Duplikat Section">
-                          <Copy :size="13" />
-                        </button>
-                        <button class="float-btn" @click="toggleBlockLock(block)" :title="block.isLocked ? 'Buka Kunci' : 'Kunci'">
-                          <Lock v-if="block.isLocked" :size="13" />
-                          <Unlock v-else :size="13" />
-                        </button>
-                        <button class="float-btn delete" @click="deleteBlock(block.id)" title="Hapus Section">
-                          <Trash2 :size="13" />
-                        </button>
-                      </div>
                     </div>
 
                     <!-- BLOCK TYPE 1: NAVBAR -->
@@ -2632,15 +3510,37 @@ const executeVsCodeReplaceAll = () => {
                     >
                       <div class="site-brand-logo" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">
                         <span class="brand-cube-icon">◆</span>
-                        <span class="brand-title">{{ block.title }}</span>
+                        <span
+                          class="brand-title inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                          title="Klik untuk mengedit brand"
+                        >{{ block.title }}</span>
                       </div>
                       <div class="nav-links-cluster">
                         <a href="#hero" class="nav-anchor active">Beranda</a>
                         <a href="#features" class="nav-anchor">Keunggulan</a>
                         <a href="#pricing" class="nav-anchor">Layanan</a>
                         <a href="#cta" class="nav-anchor">Kontak</a>
-                        <button class="btn-nav-action" :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }">
-                          {{ block.buttonText || 'Hubungi Saya' }}
+                        <button
+                          class="btn-nav-action"
+                          :style="{
+                            backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
+                            borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
+                            border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
+                            boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 16px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
+                          }"
+                          @click="onButtonClick(block, 'primary', $event)"
+                        >
+                          <span
+                            class="inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                            title="Klik untuk mengedit tombol"
+                          >{{ block.buttonText || 'Hubungi Saya' }}</span>
                         </button>
                       </div>
                     </nav>
@@ -2670,29 +3570,75 @@ const executeVsCodeReplaceAll = () => {
                           borderColor: (block.styles?.accentColor || activeContainer.accentColor) + '40',
                           backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
                         }"
+                        @click="onTextClick(block, 'badge', $event)"
                       >
-                        <span>{{ block.badge }}</span>
+                        <span
+                          class="inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
                       </div>
 
-                      <h1 class="hero-main-heading">
+                      <h1
+                        class="hero-main-heading inline-editable-text"
+                        :contenteditable="selectedBlockId === block.id"
+                        @click="onTextClick(block, 'title', $event)"
+                        @keydown="onInlineTextKeyDown"
+                        @blur="onInlineTextBlur(block, 'title', $event)"
+                        title="Klik untuk mengedit judul hero"
+                      >
                         {{ block.title }}
                       </h1>
 
-                      <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="hero-bio-lead"></div>
-                      <p v-else class="hero-bio-lead">
+                      <p
+                        class="hero-bio-lead inline-editable-text"
+                        :contenteditable="selectedBlockId === block.id"
+                        @click="onTextClick(block, 'subtitle', $event)"
+                        @keydown="onInlineTextKeyDown"
+                        @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        title="Klik untuk mengedit deskripsi hero"
+                      >
                         {{ block.subtitle }}
                       </p>
 
                       <div class="hero-cta-cluster">
                         <button
                           class="btn-primary-glow"
-                          :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
+                          :style="{
+                            backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
+                            borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
+                            border: block.styles?.buttonStyle === 'outline' ? `2px solid ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}` : undefined,
+                            boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
+                          }"
+                          @click="onButtonClick(block, 'primary', $event)"
                         >
-                          <span>{{ block.buttonText || 'Eksplorasi Karya' }}</span>
+                          <span
+                            class="inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                            title="Klik untuk mengedit tombol"
+                          >{{ block.buttonText || 'Eksplorasi Karya' }}</span>
                           <ArrowRight :size="14" />
                         </button>
-                        <button v-if="block.secondaryButtonText" class="btn-secondary-clean">
-                          <span>{{ block.secondaryButtonText }}</span>
+                        <button
+                          v-if="block.secondaryButtonText"
+                          class="btn-secondary-clean"
+                          :style="{
+                            backgroundColor: block.styles?.secondaryButtonColor || 'transparent',
+                            borderRadius: (block.styles?.secondaryButtonRadius !== undefined ? block.styles.secondaryButtonRadius + 'px' : '8px'),
+                            border: block.styles?.secondaryButtonStyle === 'outline' ? '2px solid #cbd5e1' : undefined,
+                            boxShadow: block.styles?.secondaryButtonStyle === 'glow' ? '0 0 16px rgba(100, 116, 139, 0.4)' : undefined
+                          }"
+                          @click="onButtonClick(block, 'secondary', $event)"
+                        >
+                          <span
+                            class="inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'secondaryButtonText', $event)"
+                          >{{ block.secondaryButtonText }}</span>
                         </button>
                       </div>
                     </header>
@@ -2704,29 +3650,69 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
+                        <p
+                          v-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
-                      <div class="features-cards-trio">
+                      <div
+                        class="features-cards-trio"
+                        :style="{
+                          gridTemplateColumns: block.styles?.cardColumns ? `repeat(${block.styles.cardColumns}, minmax(0, 1fr))` : undefined
+                        }"
+                      >
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="feature-bento-card"
+                          :style="{
+                            borderRadius: (block.styles?.cardRadius !== undefined ? block.styles.cardRadius + 'px' : undefined)
+                          }"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
                           <div
-                            class="card-icon-pill"
+                            class="card-icon-pill is-clickable-icon"
                             :style="{
                               color: block.styles?.accentColor || activeContainer.accentColor,
                               backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
                             }"
+                            @click="openItemIconPicker(block.id, idx, $event)"
+                            title="Klik ganti icon item"
                           >
                             <component :is="getIconComponent(item.icon)" :size="20" />
                           </div>
-                          <h3 class="card-item-title">{{ item.title }}</h3>
-                          <p class="card-item-desc">{{ item.desc }}</p>
+                          <h3
+                            class="card-item-title inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                          >{{ item.title }}</h3>
+                          <p
+                            class="card-item-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                          >{{ item.desc }}</p>
                         </div>
                       </div>
                     </section>
@@ -2738,42 +3724,104 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="pricing-cards-row">
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="price-tier-card"
                           :class="{ featured: item.tag === 'Terpopuler' }"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
-                          <span v-if="item.tag" class="tier-tag-pill" :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }">
+                          <span
+                            v-if="item.tag"
+                            class="tier-tag-pill inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'tag', $event)"
+                          >
                             {{ item.tag }}
                           </span>
-                          <h4 class="tier-name">{{ item.title }}</h4>
+                          <h4
+                            class="tier-name inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                          >{{ item.title }}</h4>
                           <div class="tier-price-val">
-                            <span class="price-num">{{ item.price }}</span>
-                            <span class="price-cycle">{{ item.period }}</span>
+                            <span
+                              class="price-num inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'price', $event)"
+                            >{{ item.price }}</span>
+                            <span
+                              class="price-cycle inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'period', $event)"
+                            >{{ item.period }}</span>
                           </div>
-                          <p class="tier-desc">{{ item.desc }}</p>
+                          <p
+                            class="tier-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                          >{{ item.desc }}</p>
                           <ul v-if="item.features" class="tier-feature-list">
                             <li v-for="(f, fi) in item.features" :key="fi">
                               <Check :size="13" :color="block.styles?.accentColor || activeContainer.accentColor" />
-                              <span>{{ f }}</span>
+                              <span
+                                class="inline-editable-text"
+                                :contenteditable="selectedBlockId === block.id"
+                                @keydown="onInlineTextKeyDown"
+                                @blur="onInlineFeatureBlur(block, idx, fi, $event)"
+                              >{{ f }}</span>
                             </li>
                           </ul>
                           <button
                             class="btn-tier-action"
                             :style="{
-                              backgroundColor: item.tag === 'Terpopuler' ? (block.styles?.accentColor || activeContainer.accentColor) : '#f1f5f9',
-                              color: item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a'
+                              backgroundColor: item.buttonColor || (item.tag === 'Terpopuler' ? (block.styles?.accentColor || activeContainer.accentColor) : '#f1f5f9'),
+                              color: item.buttonColor ? '#ffffff' : (item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a'),
+                              borderRadius: (item.buttonRadius !== undefined ? item.buttonRadius + 'px' : (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px')),
+                              border: item.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
+                              boxShadow: item.buttonStyle === 'glow' ? `0 0 16px ${(item.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
                             }"
+                            @click="onButtonClick(block, idx, $event)"
                           >
-                            Pilih Paket
+                            <span
+                              class="inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                            >{{ block.buttonText || 'Pilih Paket' }}</span>
                           </button>
                         </div>
                       </div>
@@ -2792,14 +3840,38 @@ const executeVsCodeReplaceAll = () => {
                           background: `linear-gradient(135deg, ${(block.styles?.accentColor || activeContainer.accentColor)}15 0%, #ffffff80 100%)`
                         }"
                       >
-                        <h2 class="cta-heading">{{ block.title }}</h2>
+                        <h2
+                          class="cta-heading inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="cta-lead"></div>
-                        <p v-else class="cta-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else
+                          class="cta-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                         <button
                           class="btn-cta-big"
-                          :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
+                          :style="{
+                            backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
+                            borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
+                            border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
+                            boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
+                          }"
+                          @click="onButtonClick(block, 'primary', $event)"
                         >
-                          {{ block.buttonText || 'Mulai Sekarang' }}
+                          <span
+                            class="inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                          >{{ block.buttonText || 'Mulai Sekarang' }}</span>
                         </button>
                       </div>
                     </section>
@@ -2811,23 +3883,56 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="progress-meters-grid">
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="progress-meter-card"
+                          @click="onProgressItemClick(block, idx, $event)"
                         >
                           <div class="pm-head">
-                            <span class="pm-title">{{ item.title }}</span>
-                            <span class="pm-val" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">{{ item.percentage || 0 }}%</span>
+                            <span
+                              class="pm-title inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                            >{{ item.title }}</span>
+                            <span
+                              class="pm-val inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              :style="{ color: block.styles?.accentColor || activeContainer.accentColor }"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'percentage', $event)"
+                              title="Klik untuk ubah persen"
+                            >{{ item.percentage || 0 }}%</span>
                           </div>
-                          <div class="pm-track">
+                          <div class="pm-track" @click="onProgressItemClick(block, idx, $event)">
                             <div
                               class="pm-fill"
                               :style="{
@@ -2836,7 +3941,13 @@ const executeVsCodeReplaceAll = () => {
                               }"
                             ></div>
                           </div>
-                          <p v-if="item.desc" class="pm-desc">{{ item.desc }}</p>
+                          <p
+                            v-if="item.desc"
+                            class="pm-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                          >{{ item.desc }}</p>
                         </div>
                       </div>
                     </section>
@@ -2848,10 +3959,30 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="accordion-items-stack">
@@ -2860,12 +3991,24 @@ const executeVsCodeReplaceAll = () => {
                           :key="item.id"
                           class="accordion-card-item"
                           :class="{ 'is-expanded': (block.activeItemIndex ?? 0) === idx }"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
                           <button class="acc-card-trigger" @click.stop="toggleAccordionItem(block, idx)">
-                            <span class="acc-card-title">{{ item.title }}</span>
+                            <span
+                              class="acc-card-title inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                            >{{ item.title }}</span>
                             <ChevronDown :size="16" class="acc-card-icon" />
                           </button>
-                          <div v-if="(block.activeItemIndex ?? 0) === idx" class="acc-card-content">
+                          <div
+                            v-if="(block.activeItemIndex ?? 0) === idx"
+                            class="acc-card-content inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                          >
                             {{ item.desc }}
                           </div>
                         </div>
@@ -2879,27 +4022,75 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="carousel-stage-container">
                         <div v-if="block.items && block.items.length > 0" class="carousel-slide-card">
-                          <div v-if="block.items[block.activeItemIndex || 0]?.image" class="carousel-slide-img-wrap">
+                          <div
+                            v-if="block.items[block.activeItemIndex || 0]?.image"
+                            class="carousel-slide-img-wrap"
+                            @click="onImageClick(block, block.activeItemIndex || 0, $event)"
+                            title="Klik ganti foto slide"
+                            style="cursor: pointer;"
+                          >
                             <img
                               :src="block.items[block.activeItemIndex || 0].image"
                               :alt="block.items[block.activeItemIndex || 0].title || 'Slide Image'"
                               class="carousel-slide-img"
                             />
                           </div>
-                          <span v-if="block.items[block.activeItemIndex || 0]?.tag" class="carousel-tag-badge">
+                          <span
+                            v-if="block.items[block.activeItemIndex || 0]?.tag"
+                            class="carousel-tag-badge inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'tag', $event)"
+                          >
                             {{ block.items[block.activeItemIndex || 0]?.tag }}
                           </span>
-                          <h3 class="carousel-headline">{{ block.items[block.activeItemIndex || 0]?.title }}</h3>
-                          <p class="carousel-lead-desc">{{ block.items[block.activeItemIndex || 0]?.desc }}</p>
-                          <span v-if="block.items[block.activeItemIndex || 0]?.author" class="carousel-author-credit">
+                          <h3
+                            class="carousel-headline inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'title', $event)"
+                          >{{ block.items[block.activeItemIndex || 0]?.title }}</h3>
+                          <p
+                            class="carousel-lead-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'desc', $event)"
+                          >{{ block.items[block.activeItemIndex || 0]?.desc }}</p>
+                          <span
+                            v-if="block.items[block.activeItemIndex || 0]?.author"
+                            class="carousel-author-credit inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'role', $event)"
+                          >
                             — {{ block.items[block.activeItemIndex || 0]?.author }}
                           </span>
                         </div>
@@ -2934,16 +4125,41 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="form-card-container">
                         <form class="form-fields-stack" @submit.prevent>
-                          <div v-for="item in block.items" :key="item.id" class="form-field-group">
-                            <label class="form-field-label">{{ item.title }}</label>
+                          <div v-for="(item, idx) in block.items" :key="item.id" class="form-field-group">
+                            <label
+                              class="form-field-label inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                            >{{ item.title }}</label>
                             <select v-if="item.tag === 'select'" class="form-rendered-select">
                               <option>Pilihan 1: Solusi Cloud & Docker</option>
                               <option>Pilihan 2: Visual Studio CMS</option>
@@ -2964,9 +4180,18 @@ const executeVsCodeReplaceAll = () => {
                           </div>
                           <button
                             class="btn-form-submit"
-                            :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
+                            :style="{
+                              backgroundColor: block.styles?.accentColor || activeContainer.accentColor,
+                              borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px')
+                            }"
+                            @click="onButtonClick(block, 'primary', $event)"
                           >
-                            {{ block.buttonText || 'Kirim Pesan Sekarang' }}
+                            <span
+                              class="inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                            >{{ block.buttonText || 'Kirim Pesan Sekarang' }}</span>
                           </button>
                         </form>
                       </div>
@@ -2980,25 +4205,68 @@ const executeVsCodeReplaceAll = () => {
                     >
                       <div class="modal-preview-stage">
                         <div class="modal-stage-header">
-                          <span class="modal-stage-badge">{{ block.badge || 'POPUP PROMOSI' }}</span>
+                          <span
+                            class="modal-stage-badge inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'badge', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'badge', $event)"
+                          >{{ block.badge || 'POPUP PROMOSI' }}</span>
                           <button class="modal-stage-close" @click.stop="toggleBlockOpen(block)">
                             <X :size="14" />
                           </button>
                         </div>
                         <div class="modal-stage-body">
-                          <h3 class="modal-stage-title">{{ block.title }}</h3>
+                          <h3
+                            class="modal-stage-title inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'title', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'title', $event)"
+                          >{{ block.title }}</h3>
                           <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="modal-stage-desc"></div>
-                          <p v-else class="modal-stage-desc">{{ block.subtitle }}</p>
+                          <p
+                            v-else
+                            class="modal-stage-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'subtitle', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                          >{{ block.subtitle }}</p>
                           <div class="modal-stage-actions">
-                            <button class="btn-modal-secondary" @click.stop>
-                              {{ block.secondaryButtonText || 'Nanti Saja' }}
+                            <button
+                              class="btn-modal-secondary"
+                              :style="{
+                                backgroundColor: block.styles?.secondaryButtonColor || 'transparent',
+                                borderRadius: (block.styles?.secondaryButtonRadius !== undefined ? block.styles.secondaryButtonRadius + 'px' : '8px'),
+                                border: block.styles?.secondaryButtonStyle === 'outline' ? '2px solid #cbd5e1' : undefined,
+                                boxShadow: block.styles?.secondaryButtonStyle === 'glow' ? '0 0 16px rgba(100, 116, 139, 0.4)' : undefined
+                              }"
+                              @click="onButtonClick(block, 'secondary', $event)"
+                            >
+                              <span
+                                class="inline-editable-text"
+                                :contenteditable="selectedBlockId === block.id"
+                                @keydown="onInlineTextKeyDown"
+                                @blur="onInlineTextBlur(block, 'secondaryButtonText', $event)"
+                              >{{ block.secondaryButtonText || 'Nanti Saja' }}</span>
                             </button>
                             <button
                               class="btn-modal-primary"
-                              :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
-                              @click.stop
+                              :style="{
+                                backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
+                                borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
+                                border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
+                                boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
+                              }"
+                              @click="onButtonClick(block, 'primary', $event)"
                             >
-                              {{ block.buttonText || 'Klaim Sekarang' }}
+                              <span
+                                class="inline-editable-text"
+                                :contenteditable="selectedBlockId === block.id"
+                                @keydown="onInlineTextKeyDown"
+                                @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                              >{{ block.buttonText || 'Klaim Sekarang' }}</span>
                             </button>
                           </div>
                         </div>
@@ -3013,10 +4281,32 @@ const executeVsCodeReplaceAll = () => {
                     >
                       <div class="dropdown-component-card">
                         <div class="section-title-wrap" style="margin-bottom: 12px; text-align: left;">
-                          <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                          <h3 class="sec-headline" style="font-size: 1.1rem;">{{ block.title }}</h3>
+                          <span
+                            v-if="block.badge"
+                            class="badge-mini-caps inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'badge', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'badge', $event)"
+                          >{{ block.badge }}</span>
+                          <h3
+                            class="sec-headline inline-editable-text"
+                            style="font-size: 1.1rem;"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'title', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'title', $event)"
+                          >{{ block.title }}</h3>
                           <div v-if="block.styles?.richContent" v-html="block.styles.richContent" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;"></div>
-                          <p v-else-if="block.subtitle" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">{{ block.subtitle }}</p>
+                          <p
+                            v-else-if="block.subtitle"
+                            class="inline-editable-text"
+                            style="font-size: 0.85rem; color: #64748b; margin-top: 4px;"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'subtitle', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                          >{{ block.subtitle }}</p>
                         </div>
                         <button class="dropdown-trigger-btn" @click.stop="toggleBlockOpen(block)">
                           <span>{{ block.items?.[block.activeItemIndex || 0]?.title || 'Pilih Kategori...' }}</span>
@@ -3030,8 +4320,20 @@ const executeVsCodeReplaceAll = () => {
                             :class="{ 'is-selected': (block.activeItemIndex || 0) === dIdx }"
                             @click.stop="selectDropdownOption(block, dIdx)"
                           >
-                            <span>{{ item.title }}</span>
-                            <span v-if="item.desc" style="font-size: 0.72rem; color: #94a3b8;">{{ item.desc }}</span>
+                            <span
+                              class="inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, dIdx, 'title', $event)"
+                            >{{ item.title }}</span>
+                            <span
+                              v-if="item.desc"
+                              class="inline-editable-text"
+                              style="font-size: 0.72rem; color: #94a3b8;"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, dIdx, 'desc', $event)"
+                            >{{ item.desc }}</span>
                           </div>
                         </div>
                       </div>
@@ -3044,25 +4346,76 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
-                      <div class="cards-showcase-grid">
+                      <div
+                        class="cards-showcase-grid"
+                        :style="{
+                          gridTemplateColumns: block.styles?.cardColumns ? `repeat(${block.styles?.cardColumns}, minmax(0, 1fr))` : undefined
+                        }"
+                      >
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="showcase-grid-card"
+                          :style="{
+                            borderRadius: (block.styles?.cardRadius !== undefined ? block.styles.cardRadius + 'px' : undefined)
+                          }"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
                           <div class="card-header-banner">
-                            <span v-if="item.tag" class="card-tag-pill">{{ item.tag }}</span>
+                            <span
+                              v-if="item.tag"
+                              class="card-tag-pill inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'tag', $event)"
+                            >{{ item.tag }}</span>
                           </div>
                           <div class="card-body-content">
-                            <h3 class="card-grid-title">{{ item.title }}</h3>
-                            <p class="card-grid-desc">{{ item.desc }}</p>
-                            <span v-if="item.role" class="card-role-label">Peran: {{ item.role }}</span>
+                            <h3
+                              class="card-grid-title inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                            >{{ item.title }}</h3>
+                            <p
+                              class="card-grid-desc inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                            >{{ item.desc }}</p>
+                            <span
+                              v-if="item.role"
+                              class="card-role-label inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'role', $event)"
+                            >Peran: {{ item.role }}</span>
                           </div>
                         </div>
                       </div>
@@ -3075,24 +4428,62 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="listgroup-stack-card">
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="listgroup-item-row"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
                           <span class="lg-check-icon"><Check :size="14" /></span>
                           <div class="lg-text-meta">
-                            <span class="lg-item-title">{{ item.title }}</span>
-                            <span v-if="item.desc" class="lg-item-desc">{{ item.desc }}</span>
+                            <span
+                              class="lg-item-title inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                            >{{ item.title }}</span>
+                            <span
+                              v-if="item.desc"
+                              class="lg-item-desc inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                            >{{ item.desc }}</span>
                           </div>
-                          <span v-if="item.tag" class="lg-badge-tag">{{ item.tag }}</span>
+                          <span
+                            v-if="item.tag"
+                            class="lg-badge-tag inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'tag', $event)"
+                          >{{ item.tag }}</span>
                         </div>
                       </div>
                     </section>
@@ -3104,20 +4495,53 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="stats-counters-row">
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="stat-counter-box"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
-                          <span class="stat-number-val">{{ item.title }}</span>
-                          <span class="stat-number-desc">{{ item.desc }}</span>
+                          <span
+                            class="stat-number-val inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'title', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                          >{{ item.title }}</span>
+                          <span
+                            class="stat-number-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'subtitle', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                          >{{ item.desc }}</span>
                         </div>
                       </div>
                     </section>
@@ -3128,7 +4552,15 @@ const executeVsCodeReplaceAll = () => {
                       class="rendered-pagination-block"
                       :style="{ padding: `${block.styles?.paddingY || 32}px 32px` }"
                     >
-                      <div v-if="block.subtitle" style="text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">
+                      <div
+                        v-if="block.subtitle"
+                        class="inline-editable-text"
+                        style="text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 8px;"
+                        :contenteditable="selectedBlockId === block.id"
+                        @click="onTextClick(block, 'subtitle', $event)"
+                        @keydown="onInlineTextKeyDown"
+                        @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                      >
                         {{ block.subtitle }}
                       </div>
                       <div class="pagination-controls-row">
@@ -3140,7 +4572,12 @@ const executeVsCodeReplaceAll = () => {
                           :class="{ 'is-active': (block.activeItemIndex || 0) === pIdx }"
                           @click.stop="setPageNumber(block, pIdx)"
                         >
-                          {{ item.title }}
+                          <span
+                            class="inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, pIdx, 'title', $event)"
+                          >{{ item.title }}</span>
                         </button>
                         <button class="pagination-btn" title="Berikutnya">&raquo;</button>
                       </div>
@@ -3161,9 +4598,20 @@ const executeVsCodeReplaceAll = () => {
                             class="bc-item-anchor"
                             @click.prevent
                           >
-                            {{ item.title }}
+                            <span
+                              class="inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, bIdx, 'title', $event)"
+                            >{{ item.title }}</span>
                           </a>
-                          <span v-else class="bc-item-current">{{ item.title }}</span>
+                          <span
+                            v-else
+                            class="bc-item-current inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, bIdx, 'title', $event)"
+                          >{{ item.title }}</span>
                         </template>
                       </div>
                     </nav>
@@ -3178,13 +4626,45 @@ const executeVsCodeReplaceAll = () => {
                       <div class="footer-content-row">
                         <div class="footer-brand">
                           <span class="brand-cube-icon" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">◆</span>
-                          <strong>{{ block.title }}</strong>
+                          <strong
+                            class="inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'title', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'title', $event)"
+                            title="Klik untuk mengedit brand footer"
+                          >{{ block.title }}</strong>
                         </div>
-                        <p class="footer-copy">{{ block.subtitle }}</p>
+                        <p
+                          class="footer-copy inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                          title="Klik untuk mengedit copyright footer"
+                        >{{ block.subtitle }}</p>
                       </div>
                     </footer>
                   </div>
                 </template>
+
+                <!-- Final Drop Slot at Bottom of Canvas -->
+                <div
+                  class="canvas-drop-slot"
+                  :class="{
+                    'is-drag-in-progress': draggedBlockType !== null,
+                    'is-active-drop': activeDropSlotIndex === pageBlocks.length
+                  }"
+                  @dragover="onCanvasDropSlotDragOver($event, pageBlocks.length)"
+                  @dragleave="onCanvasDropSlotDragLeave(pageBlocks.length)"
+                  @drop="onCanvasDropSlotDrop($event, pageBlocks.length)"
+                >
+                  <div class="drop-slot-line">
+                    <span class="drop-slot-badge">
+                      <Plus :size="12" /> Pasang di akhir halaman
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <!-- RESIZE HANDLES (Canva / Figma Freeform Resizer) -->

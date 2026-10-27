@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.31.1',
+    version: 'v1.38.2',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '26 Oktober 2026',
+    lastUpdated: '27 Oktober 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,13 +75,433 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.38.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Top-Layer Viewport Floating Shelf, Individual Button Styling, & Google Fonts Enterprise',
+    summary: 'Penyempurnaan arsitektur bilah perkakas floating dan interaktivitas kanvas tingkat enterprise: (1) Top-Layer Viewport Floating Shelf: Memindahkan bilah perkakas sepenuhnya keluar dari wrapper konten kanvas ke layer viewport teratas (.studio-viewport-floating-shelf, z-index: 9999999). Bilah kini dapat melebar penuh (bisa penuh!), tidak pernah terpotong, tidak pernah tenggelam atau menabrak kartu kanvas, dan tetap melekat (stick 0ms delay) di bagian atas viewport saat kanvas digeser atau di-scroll; (2) Individual Button Styling: Memperbaiki pemilihan tombol sehingga kustomisasi bentuk sudut (radius), style (solid/outline/glow), dan warna berlaku secara independen pada tombol spesifik yang diklik (Primary, Secondary, atau paket kartu tertentu), tidak lagi tertimpa secara global ke seluruh tombol; (3) Google Fonts Enterprise & Font Switcher Fix: Mengimpor paket Google Fonts resmi (Inter, Plus Jakarta Sans, Outfit, Poppins, Playfair Display, Fira Code, Roboto, Syne) ke index.html dan memperbaiki selector font agar menerapkan string font-family CSS yang valid seketika.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3821',
+        type: 'feature',
+        scope: 'Top-Layer Viewport Floating Shelf',
+        description: 'Bilah perkakas berada di layer teratas di depan kanvas, tidak terpotong, bisa melebar penuh, dan menempel tanpa jeda lag.'
+      },
+      {
+        id: 'CHG-3822',
+        type: 'bugfix',
+        scope: 'Individual Button Styling',
+        description: 'Styling radius, style, dan warna tombol kini berlaku secara terisolasi hanya pada tombol yang diklik (primary, secondary, atau item kartu).'
+      },
+      {
+        id: 'CHG-3823',
+        type: 'bugfix',
+        scope: 'Google Fonts Enterprise Integration',
+        description: 'Memuat seluruh koleksi Google Fonts dan menghubungkan nilai font-family CSS asli pada dropdown HUD agar penggantian font langsung terlihat di kanvas.'
+      }
+    ]
+  },
+  {
+    version: 'v1.38.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Anti-Submerge In-Section HUD Positioning, Pruned Streamlined Toolbar, & Zero Spillover',
+    summary: 'Perbaikan posisi bilah perkakas (Floating HUD) agar tidak tenggelam ("anti-tenggelam") dan tidak menabrak section lain: (1) In-Section Smart Float (top: 12px): Menempatkan bilah perkakas di dalam ruang padding atas (whitespace) milik section aktif itu sendiri (top: 12px), sehingga 100% bebas dari tabrakan atau menutupi kartu section di atasnya dan tidak lagi terselip di garis batas pembatas; (2) Special Navbar Placement: Khusus blok navbar yang ramping, toolbar secara otomatis diletakkan tepat di bawah bilah navigasi; (3) Streamlined Compact Controls & Zero Spillover: Menyederhanakan kontrol section menjadi ringkas (Align, Latar, Jarak, Pola, Anim) dengan lebar optimal (~650px) dan membungkus seluruh tombol di dalam container gelap tanpa ada tombol yang meluber atau terpotong tanpa latar belakang.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3811',
+        type: 'bugfix',
+        scope: 'Anti-Submerge In-Section Positioning',
+        description: 'Memindahkan posisi bilah perkakas ke top: 12px di dalam padding atas section aktif, mencegah tabrakan dengan kartu blok di atasnya.'
+      },
+      {
+        id: 'CHG-3812',
+        type: 'improvement',
+        scope: 'Streamlined Toolbar & Anti-Spill Container',
+        description: 'Merampingkan dropdown dan memastikan latar gelap bilah membungkus seluruh aksi dan tombol Detail tanpa terpotong.'
+      }
+    ]
+  },
+  {
+    version: 'v1.38.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'In-Canvas WYSIWYG Direct Interactive Editing & Element HUD Synchronizer',
+    summary: 'Penyempurnaan kemampuan pengeditan langsung di atas kanvas (WYSIWYG Inline & Direct Click Manipulation) tanpa wajib membuka modal Detail: (1) Direct In-Canvas Editing: Semua elemen kanvas—termasuk tulisan (judul, subjudul, badge), progress bar, gambar, kartu bento, tombol CTA, formulir, modal, navbar, carousel, dan footer—kini dapat diklik langsung di kanvas untuk diedit secara inline menggunakan contenteditable; (2) Context-Aware HUD Sync: Mengklik elemen otomatis mengaktifkan tab kontrol terkait di floating toolbar atas (misal: klik tombol membuka pengaturan radius dan warna tombol, klik progress bar membuka slider persen reaktif, klik gambar membuka modal ganti foto); (3) Preserved Detail Modal: Tombol [Detail] di toolbar tetap tersedia penuh untuk pengeditan komprehensif bila diinginkan pengguna.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3801',
+        type: 'feature',
+        scope: 'In-Canvas Direct WYSIWYG Editing',
+        description: 'Teks, tombol, gambar, progress bar, kartu, dan footer dapat diklik langsung dan diedit tanpa harus membuka modal detail.'
+      },
+      {
+        id: 'CHG-3802',
+        type: 'improvement',
+        scope: 'Real-Time Element HUD Synchronization',
+        description: 'Klik langsung pada elemen spesifik kanvas otomatis mengalihkan tab HUD floating toolbar ke konteks yang sesuai (teks, tombol, kartu, progressbar, gambar).'
+      },
+      {
+        id: 'CHG-3803',
+        type: 'feature',
+        scope: 'Preserved Detail Modal Launcher',
+        description: 'Tombol Detail tetap hadir di bilah perkakas untuk pengeditan visual menyeluruh dan konfigurasi tingkat lanjut.'
+      }
+    ]
+  },
+  {
+    version: 'v1.37.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Zero-Delay Block-Attached HUD, Isolated "Konten +" Drawer, & Focus Studio Canvas',
+    summary: 'Penyempurnaan total UX interaksi editor visual: (1) Zero-Delay Block-Stuck HUD: Menempelkan bilah perkakas langsung pada elemen section aktif (inside selection-overlay-box) sehingga saat pengguna melakukan scroll kanvas, bilah bergerak sinkron secara instan 0ms delay tanpa lag animasi trailing ("ngikut berjarak") yang mengganggu; (2) Zero-Clipping & Anti-Outside: Menghapus batas overflow kanvas (overflow: visible !important) dan membatasi lebar maks toolbar (max-width: calc(100% - 20px)) agar tidak pernah terpotong dan tidak pernah keluar dari kanvas; (3) Isolated "Konten +" Drawer: Tombol [Konten +] kini khusus membuka dan menutup Katalog Blok Website (studio-left-dock) yang tersembunyi secara default, sementara menu sidebar dashboard utama tetap terisolasi 100% hidden demi kenyamanan fokus.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3701',
+        type: 'feature',
+        scope: 'Zero-Delay Direct-Attached HUD',
+        description: 'Bilah perkakas menempel langsung pada section aktif, bergerak serentak dengan scroll kanvas tanpa delay lag.'
+      },
+      {
+        id: 'CHG-3702',
+        type: 'improvement',
+        scope: 'Dedicated "Konten +" Catalog Drawer',
+        description: 'Tombol [Konten +] mengendalikan buka-tutup Katalog Blok Website di kiri, bukan membuka menu sidebar dashboard.'
+      },
+      {
+        id: 'CHG-3703',
+        type: 'bugfix',
+        scope: 'Zero-Clipping & Anti-Outside Width',
+        description: 'Mengaktifkan overflow: visible pada rendered surface dan membatasi lebar toolbar agar tidak keluar atau terpotong.'
+      }
+    ]
+  },
+  {
+    version: 'v1.36.4',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Viewport Unclipped Floating Island HUD Engine (Ngawang di Depan Kanvas, Zero Clipping & True Native 1:1 Scale)',
+    summary: 'Restrukturisasi arsitektur bilah perkakas floating HUD langsung ke root viewport layer (.studio-viewport-area): (1) Viewport-Level Unclipped Floating Layer: Toolbar diletakkan melayang bebas ("ngawang") tepat di depan kanvas artboard dan di luar website-rendered-surface, membebaskan perkakas dari pemotongan overflow: hidden kanvas (Zero Clipping dari kiri, kanan, maupun atas); (2) True Native 1:1 Scale: Karena berada di luar wrapper transform kanvas, bilah perkakas beroperasi pada rasio pixel 1:1 native yang tajam dan proporsional di semua tingkat resolusi monitor dan level zoom; (3) Dynamic Boundary Clamping & Real-Time Section Tracking: Menghitung koordinat target secara reaktif mengikuti section yang sedang diedit dengan pembatasan margin aman layar dan transisi instan 60fps saat canvas panning/scrolling.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3641',
+        type: 'feature',
+        scope: 'Viewport Floating HUD Architecture',
+        description: 'Memindahkan bilah perkakas langsung ke container viewport utama di depan kanvas artboard, melenyapkan pemotongan batas overflow section.'
+      },
+      {
+        id: 'CHG-3642',
+        type: 'improvement',
+        scope: 'True Native 1:1 UI Scaling',
+        description: 'Memastikan ukuran tombol, chip, input teks, dan dropdown bilah perkakas selalu konsisten tajam dan tidak mengecil atau membesar saat kanvas di-zoom.'
+      },
+      {
+        id: 'CHG-3643',
+        type: 'bugfix',
+        scope: 'Safe Edge Clamping & Pan Synchrony',
+        description: 'Menerapkan dynamic boundary clamping agar bilah perkakas tidak pernah keluar dari tepi kiri/kanan viewport dengan tracking mulus saat scrolling dan panning.'
+      }
+    ]
+  },
+  {
+    version: 'v1.36.3',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Floating HUD Stacking Elevation (z-index 99999) & Canvas Zoom Counter-Scaling',
+    summary: 'Penyempurnaan posisi melayang bilah perkakas (Floating Island HUD) di atas section aktif: (1) Absolute Stacking Elevation (z-index 99999): Menetapkan zIndex 99999 langsung pada inline style section yang dipilih, menjamin bilah perkakas selalu berada di layer paling depan dan 100% tidak pernah tertutupi atau membelakangi/tenggelam di balik kartu atau section di atasnya; (2) Zoom Counter-Scaling (1:1 Pixel Precision): Menerapkan kompensasi skala scale(calc(1 / var(--canvas-zoom))) pada toolbar melayang sehingga ukuran perkakas tetap konsisten 1:1 pixel tajam di semua level zoom dan resolusi monitor, tidak lagi membesar saat zoom in atau mengecil saat zoom out; (3) Auto-Flip Top Edge Clamping: Section teratas secara otomatis membalik posisi toolbar ke dalam (top: 14px) agar tidak terpotong tepi layar.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3631',
+        type: 'bugfix',
+        scope: 'Inline Stacking Elevation (z-index 99999)',
+        description: 'Memosisikan section aktif dan bilah melayang di layer mutlak z-index 99999 sehingga tidak pernah lagi tertimpa kartu section di atasnya.'
+      },
+      {
+        id: 'CHG-3632',
+        type: 'bugfix',
+        scope: 'Zoom-Immune Counter-Scale Engine',
+        description: 'Menerapkan kalkulasi inverse zoom scale(calc(1 / var(--canvas-zoom))) sehingga toolbar selalu tampil pada ukuran proporsional 1:1 di segala resolusi dan level zoom.'
+      },
+      {
+        id: 'CHG-3633',
+        type: 'improvement',
+        scope: 'Smart Auto-Flip Viewport Clamping',
+        description: 'Menjaga toolbar tetap nyaman dijangkau tepat di atas section, dan meluncur ke dalam pada section paling atas agar tidak keluar batas kanvas.'
+      }
+    ]
+  },
+  {
+    version: 'v1.36.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Absolute Stacking Elevation (z-index 9999) & Ultra-Compact HUD Geometry',
+    summary: 'Penyempurnaan tuntas geometri dan kedalaman bilah alat melayang (HUD): (1) Stacking Context Inline Elevation: Menetapkan z-index 9999 langsung pada inline style section terpilih, overlay box, dan toolbar melayang, menjamin 100% tidak ada section lain yang dapat menutupi atau menenggelamkan bagian atas HUD; (2) Ultra-Compact HUD Architecture: Merestrukturisasi label menjadi format ringkas (Shadow: Off, Pola: Off, Divider: Off, Anim: Off) dan ikonik context chip (Section, Teks, Tombol, Kartu, Gambar), menghemat 220px lebar toolbar sehingga tidak lagi terpotong pada batas tepi layar kiri dan kanan.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3621',
+        type: 'bugfix',
+        scope: 'Inline Stacking Context Elevation (z-index 9999)',
+        description: 'Memindahkan z-index 9999 langsung ke inline style DOM section aktif agar tidak kalah spesifisitas dari section tetangga dengan shadow.'
+      },
+      {
+        id: 'CHG-3622',
+        type: 'improvement',
+        scope: 'Ultra-Compact HUD Horizontal Geometry',
+        description: 'Mengoptimalkan lebar komponen HUD (tinggi 25px, padding 6px, label ringkas) agar muat sempurna di dalam lebar kanvas tanpa terpotong di tepi.'
+      }
+    ]
+  },
+  {
+    version: 'v1.36.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Text Editing Delete Key Protection, Isolated Tool Animation & Floating HUD Stacking Fix',
+    summary: 'Perbaikan stabilitas kanvas dan interaksi UI: (1) In-Context Text Safety Guard: Menambahkan proteksi cerdas pada tombol Backspace dan Delete saat pengguna sedang mengetik atau mengedit teks/heading di kanvas, sehingga menekan Backspace/Delete hanya menghapus huruf dan tidak lagi menghapus section kanvas; (2) Isolated Motion Viewport: Memisahkan layer animasi konten ke viewport independen sehingga Smart Floating HUD (tools) dan bounding box seleksi tetap diam stabil dan tidak ikut membal/bergoyang saat efek animasi diputar; (3) Anti-Submerged HUD Stacking: Menetapkan z-index 800+ pada section terpilih agar bilah alat melayang (HUD) selalu berada di atas semua section lain dan tidak tertelan oleh tombol section sebelumnya.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3611',
+        type: 'bugfix',
+        scope: 'In-Context Text Editing Keydown Guard',
+        description: 'Mencegah shortcut Delete/Backspace menghapus section kanvas saat kursor berada di elemen contenteditable teks atau form input.'
+      },
+      {
+        id: 'CHG-3612',
+        type: 'improvement',
+        scope: 'Isolated Tool Motion Viewport',
+        description: 'Memindahkan kelas animasi CSS anim-* dari wrapper utama ke viewport konten internal, menjaga bilah alat Floating HUD tetap stabil di tempat.'
+      },
+      {
+        id: 'CHG-3613',
+        type: 'bugfix',
+        scope: 'HUD Stacking & Overflow Prevention',
+        description: 'Menaikkan z-index section aktif ke layer 800+ dan memperpendek label dropdown sehingga toolbar tidak tenggelam di bawah section lain maupun terpotong ke samping.'
+      }
+    ]
+  },
+  {
+    version: 'v1.36.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Modern Motion & Animation Engine & Complete Elimination of Legacy Modal Form',
+    summary: 'Pembaruan arsitektur interaksi kanvas: (1) Penghapusan total modal popup form legacy ("Studio Editor Konten & Desain") yang sebelumnya muncul saat double-click, dialihkan 100% ke pengalaman in-context direct editing Canva/Figma; (2) Next-Gen Animation Suite: Menambahkan efek animasi modern 2027 (Cinematic Blur Fade ala Apple, Spring 3D Elastic, Perspective Tilt 3D); (3) Smart Floating HUD Motion Bar: Selektor animasi, scrubber durasi/kecepatan (0.2s - 2.5s), dan tombol preview/replay instan langsung di toolbar melayang kanvas.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3601',
+        type: 'feature',
+        scope: 'Next-Gen 2027 Motion Presets (Blur Fade, Spring 3D, Tilt 3D)',
+        description: 'Menambahkan efek animasi masuk terkini dengan akselerasi halus: Cinematic Blur Fade, Spring 3D Elastic, dan Perspective Tilt 3D.'
+      },
+      {
+        id: 'CHG-3602',
+        type: 'feature',
+        scope: 'In-Context Floating HUD Animation & Duration Controls',
+        description: 'Menyediakan selektor animasi langsung di toolbar melayang Section lengkap dengan scrubber kecepatan dan tombol putar ulang (preview).'
+      },
+      {
+        id: 'CHG-3603',
+        type: 'improvement',
+        scope: 'Eliminasi Modal Popup Form Legacy',
+        description: 'Menonaktifkan modal form popup Studio Editor Konten & Desain yang menginterupsi alur kerja, memastikan 100% editing dilakukan langsung di atas kanvas.'
+      }
+    ]
+  },
+  {
+    version: 'v1.35.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Era 2027 Visual Suite: Infinite Logo Marquee, Section Shape Dividers, Ambient Micro-Patterns, Adaptive Bento Grid & Pricing Switcher',
+    summary: 'Lompatan estetika dan fleksibilitas kanvas berorientasi standar desain modern 2027: (1) Infinite Running Logo Marquee: Komponen baru running ticker dengan animasi CSS mulus meluncur horizontal tanpa henti, mask gradient fade di tepi, dan pause saat kursor diarahkan; (2) Section Shape Dividers: Pilihan transisi antar-section berbentuk Gelombang Halus (Wave), Garis Miring Dinamis (Slant Tilt), dan Lengkungan Cembung (Curved Arch); (3) Ambient Background Micro-Patterns: Pilihan tekstur latar section berupa Ambient Dot Grid, Blueprint Matrix Grid, dan Soft Radial Aura Glow Mesh; (4) Adaptive Bento Grid Card Layout: Pengaturan jumlah kolom grid (2, 3, 4 kolom), orientasi kartu vertikal/horizontal (icon side by side), serta kustomisasi border radius kartu di Floating HUD; (5) Interactive Pricing Switcher: Saklar periode tagihan Bulanan vs Tahunan (-20% diskon) yang langsung mengalkulasi dan mengubah angka harga di kanvas secara real-time.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3501',
+        type: 'feature',
+        scope: 'Infinite Logo Marquee Component (Trend 2027)',
+        description: 'Menambahkan blok katalog baru "Infinite Logo Marquee" dengan running track otomatis meluncur tanpa henti, masking gradient pinggir ala Apple/Vercel, serta dukungan edit judul dan badge langsung.'
+      },
+      {
+        id: 'CHG-3502',
+        type: 'feature',
+        scope: 'Section Shape Dividers (Wave, Tilt, Curve)',
+        description: 'Menyediakan pemisah batas bawah section berbasis vektor SVG (Wave, Slant Tilt, Curved Arch) yang dapat dipilih langsung melalui Floating HUD Section.'
+      },
+      {
+        id: 'CHG-3503',
+        type: 'feature',
+        scope: 'Ambient Background Patterns & Gradient Meshes',
+        description: 'Menyediakan layer tekstur latar belakang section mencakup Dot Grid, Blueprint Grid, dan Ambient Radial Aura Glow yang dapat diatur via Floating HUD.'
+      },
+      {
+        id: 'CHG-3504',
+        type: 'feature',
+        scope: 'Adaptive Bento Card Columns & Orientation Controls',
+        description: 'Memperluas Floating HUD Card dengan kontrol fleksibel: pilihan 2/3/4 kolom grid, orientasi horizontal vs vertikal, serta kustomisasi sudut kartu (0px, 14px, 24px).'
+      },
+      {
+        id: 'CHG-3505',
+        type: 'feature',
+        scope: 'Interactive Pricing Billing Switcher (Monthly vs Yearly -20%)',
+        description: 'Menambahkan saklar interaktif Bulanan vs Tahunan pada blok Pricing yang mengalkulasi harga diskon 20% tahunan dan memperbarui visual kanvas secara seketika.'
+      }
+    ]
+  },
+  {
+    version: 'v1.34.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Precision Drag-and-Drop Insertion Engine & Direct On-Canvas Image Upload Architecture',
+    summary: 'Penyempurnaan arsitektur kanvas interaktif dan penanganan media di Visual Studio: (1) Precision Drag-and-Drop Insertion: Menghilangkan anomali di mana elemen selalu jatuh di bagian paling bawah halaman. Sistem kini membaca koordinat kursor dan indeks target secara akurat (atas/bawah elemen) dengan drop event langsung di node blok; (2) Context-Aware Quick Add: Menambahkan komponen dari katalog langsung menyisipkannya tepat di bawah blok yang sedang aktif/dipilih, bukan di paling bawah; (3) Direct On-Canvas Image Upload: Interaksi upload gambar instan ala Canva/Figma dengan pill hover "Ganti Foto", dialog picker berkas native komputer, dan drag-and-drop file gambar langsung dari desktop ke kanvas; (4) Smart Floating HUD Image Context: Menambahkan mode Image Tools di Floating Island Toolbar dengan tombol Upload Cepat dan preset fotografi resolusi tinggi Unsplash (Cloud, Studio, Neural AI, Workspace).',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-3401',
+        type: 'bugfix',
+        scope: 'Precision Drag-and-Drop Insertion & Reordering',
+        description: 'Memperbaiki penanganan drop event pada .block-node-wrapper dan website-rendered-surface sehingga penempatan blok hasil drag-and-drop dari katalog atau pergeseran urutan kanvas tepat berada di indeks yang dituju pengguna, bukan jatuh ke indeks terbawah (pageBlocks.length).'
+      },
+      {
+        id: 'CHG-3402',
+        type: 'improvement',
+        scope: 'Contextual In-Place Insertion from Catalog Modal',
+        description: 'Blok yang dipilih dari katalog kini langsung disisipkan persis di bawah blok yang sedang aktif/dipilih di kanvas, memberikan alur desain yang cepat dan alami seperti Notion dan Webflow.'
+      },
+      {
+        id: 'CHG-3403',
+        type: 'feature',
+        scope: 'Direct On-Canvas Image Upload & Draft Persistence',
+        description: 'Menyediakan mekanisme penggantian gambar instan pada kanvas via tombol overlay "Ganti Foto", file picker terintegrasi, kompresi client-side hemat memori, auto-save draf seketika ke Redis dan localStorage, serta dukungan Drag & Drop file gambar langsung dari desktop.'
+      },
+      {
+        id: 'CHG-3404',
+        type: 'feature',
+        scope: 'Smart Floating Island Image Context & Unsplash Presets',
+        description: 'Menyediakan context mode "Gambar" di Floating Island HUD dengan tombol aksi upload cepat dan curated preset fotografi resolusi tinggi siap pakai.'
+      }
+    ]
+  },
+  {
+    version: 'v1.33.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Floating In-Context Smart Island HUD, 100% Immersive Full Canvas & Dynamic Tooling Architecture',
+    summary: 'Evolusi radikal antarmuka Visual Studio HeroCMS ke paradigma ultra-modern dan futuristik: (1) 100% Immersive Full Canvas: Taskbar sidebar kiri disembunyikan secara default sehingga ruang desain menjadi lapang, bersih, dan bebas distraksi; (2) Floating In-Context Smart Island HUD: Toolbar pintar glassmorphic gelap melayang tepat di atas kotak seleksi elemen yang aktif (zero travel distance); (3) Dynamic Context-Aware Tooling: Toolbar secara otomatis mengubah perkakasnya sesuai elemen yang diklik — Tipografi & Font saat mengklik teks, Shape Radius & Style Glow saat mengklik tombol, Scrubber Slider 0-100% saat mengklik progress bar, serta Ganti Ikon & Card Style (Glass, Border, Glow) saat mengklik kartu; (4) Smart Viewport Auto-Flip: Meluncur ke bawah elemen secara otomatis saat mendekati tepi atas layar agar tidak terpotong header.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13300-1',
+        type: 'feature',
+        scope: 'Floating In-Context Smart Island HUD',
+        description: 'Dynamic Floating Toolbar: Toolbar melayang di atas elemen terpilih dengan glassmorphism blur, spring animation, dan auto-flip positioning.'
+      },
+      {
+        id: 'c-02dash-13300-2',
+        type: 'feature',
+        scope: 'Context-Aware Dynamic Controls',
+        description: 'Multi-Context Engine: Kontrol otomatis berganti antara Mode Teks (font, size A-/A+, bold, alignment, color, uppercase), Mode Tombol (radius 0-999px, variant solid/outline/glow, link popover), Mode Kartu (ganti ikon, card style glass/border/glow), dan Mode Progressbar (live scrubber 0-100%).'
+      },
+      {
+        id: 'c-02dash-13300-3',
+        type: 'feature',
+        scope: '100% Immersive Full Canvas Experience',
+        description: 'Distraction-Free Workspace: Sidebar kiri dan panel kanan tertutup secara default, dilengkapi tombol pill melayang di kanvas untuk membuka katalog blok kapan pun dibutuhkan.'
+      },
+      {
+        id: 'c-02dash-13300-4',
+        type: 'feature',
+        scope: 'Live Interactive Progressbar Scrubber & Card Presets',
+        description: 'In-Canvas Customization: Pengguna dapat menggeser persentase meteran secara live di floating HUD serta mengubah preset gaya kartu ke glassmorphism atau neon glow.'
+      }
+    ]
+  },
+  {
+    version: 'v1.32.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '27 Oktober 2026',
+    title: 'Canva-Style Visual Studio: Inline Direct Canvas Editing, Right Property Inspector, Button Design System & Native Drag-Drop',
+    summary: 'Perombakan radikal pengalaman visual editor Studio menuju paradigma Canva/Figma Direct Manipulation: (1) Zero-Modal Inline Editing: Menggantikan modal form popup dengan kemampuan mengetik teks langsung pada kanvas (contenteditable) saat section aktif; (2) Contextual Right Property Inspector: Bilah properti sebelah kanan adaptif untuk mengatur tipografi, font weight, text-transform, alignment teks, warna section, aksen brand, padding, dan daftar kartu; (3) Full Button & CTA Design Controls: Pengaturan bentuk sudut tombol (Kotak 0px, Sedang 8px, Bulat 16px, Pill 999px), varian gaya (Solid, Outline, Glow ✨), label & URL tombol primer, serta aktivasi/tata kelola tombol sekunder dengan live rendering di kanvas; (4) Click-to-Change Quick Icon Picker: Mengklik ikon pada kartu kanvas memunculkan dialog pemilih visual untuk mengganti ikon seketika; (5) Native Drag & Drop: Drag kartu dari katalog sidebar langsung ke sela-sela kanvas dengan slot indikator pemandu.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'c-02dash-13200-1',
+        type: 'feature',
+        scope: 'Inline Direct Canvas Editing',
+        description: 'Direct Text Typing: Teks headline, subjudul, badge, dan kartu dalam section terseleksi dapat langsung diklik dan diketik di kanvas tanpa terhalang modal popup.'
+      },
+      {
+        id: 'c-02dash-13200-2',
+        type: 'feature',
+        scope: 'Contextual Right Property Inspector',
+        description: 'Bilah Properti Kanan: Panel taskbar kanan Canva-style yang menyediakan kontrol perataan teks, font selector, background & text colors, padding slider, serta manajemen kartu.'
+      },
+      {
+        id: 'c-02dash-13200-3',
+        type: 'feature',
+        scope: 'Button Design & CTA Navigation System',
+        description: 'Kontrol Tombol Komprehensif: Pengaturan bentuk sudut tombol (Kotak, Sedang, Bulat, Pill), varian tampilan (Solid, Outline, Glow), label & URL link tombol utama, serta toggle saklar tombol sekunder dengan efek real-time di kanvas.'
+      },
+      {
+        id: 'c-02dash-13200-4',
+        type: 'feature',
+        scope: 'Typography & Elevation Styling',
+        description: 'Tipografi Lanjutan & Elevasi: Pengaturan font weight (400-900), text transform (Normal, Kapital Semua, Huruf Besar Depan), bayangan (sm, md, lg, glow), dan slider radius section.'
+      },
+      {
+        id: 'c-02dash-13200-5',
+        type: 'feature',
+        scope: 'Click-to-Change Icon Picker Popover',
+        description: 'Quick Icon Picker: Ikon pada kartu kanvas dapat diklik langsung untuk memilih ikon baru dari koleksi visual secara real-time.'
+      },
+      {
+        id: 'c-02dash-13200-6',
+        type: 'feature',
+        scope: 'Visual Editor Drag & Drop Architecture',
+        description: 'Native HTML5 Drag & Drop: Menambahkan draggable="true", event payload dragstart/dragend, dan slot indikator drop di sela-sela antar-blok kanvas.'
+      }
+    ]
+  },
+  {
     version: 'v1.31.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '26 Oktober 2026',
     title: 'Domain Correction to stackbyte.id & Provision Orchestrator Live Sync',
     summary: 'Penyelarasan domain resmi platform dan perbaikan routing: (1) Koreksi Typo Domain: Mengoreksi seluruh referensi domain dari stacbyte.id menjadi stackbyte.id (dengan huruf "k") di seluruh modul frontend dan backend, memastikan DNS publik Cloudflare & rute Traefik v3 tersinkronisasi sempurna; (2) Integrasi Orchestrator: Menghubungkan variabel ORCHESTRATOR_URL dan token secret internal pada kontainer Dashboard CMS agar provisioning kontainer tenant baru di Service 03 langsung dieksekusi secara real-time via Docker SDK.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

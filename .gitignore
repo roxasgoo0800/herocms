@@ -46,3 +46,8 @@ Thumbs.db
 *.swo
 *.tsbuildinfo
 *.log
+
+# Chat & Session Logs
+hasil-chat-terakhir.md
+*.chat-summary.md
+
