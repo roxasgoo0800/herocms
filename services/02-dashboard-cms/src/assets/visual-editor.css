@@ -8956,14 +8956,14 @@
   gap: 8px;
   background: #0f172a !important;
   color: #ffffff;
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow: 0 20px 48px -4px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.15);
   pointer-events: auto;
   white-space: nowrap;
   width: max-content;
-  max-width: calc(100% - 32px);
+  max-width: calc(100vw - 16px);
   overflow: visible !important;
   scrollbar-width: none;
   transform-origin: top center;
@@ -10896,3 +10896,59 @@
 
 
 
+
+/* Card Showcase Cover Image & Overlay */
+.card-header-banner {
+  position: relative;
+  overflow: hidden;
+}
+.card-cover-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.showcase-grid-card:hover .card-cover-image {
+  transform: scale(1.05);
+}
+.card-cover-hover-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 5;
+}
+.card-header-banner:hover .card-cover-hover-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+.btn-card-change-photo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  color: #0f172a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.btn-card-change-photo:hover {
+  transform: scale(1.04);
+  background: #ffffff;
+}

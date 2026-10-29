@@ -2247,11 +2247,6 @@ const commitImageChange = (blockId: string, itemIndex: number | undefined, image
   }
 };
 
-const openItemIconPicker = (blockId: string, _itemIndex: number, _e: MouseEvent) => {
-  const block = pageBlocks.value.find((b) => b.id === blockId);
-  if (block) openRichModalEditor(block);
-};
-
 const moveBlockUp = (id: string) => {
   const idx = pageBlocks.value.findIndex((b) => b.id === id);
   if (idx > 0) {
@@ -2444,8 +2439,25 @@ const filteredIconOptions = computed(() => {
   return list;
 });
 
+
+const activeDirectIconBlockId = ref<string | null>(null);
+
+const openIconPickerForBlock = (blockId: string, itemIdx: number) => {
+  activeDirectIconBlockId.value = blockId;
+  openIconPicker(itemIdx);
+};
+
 const selectIconForItem = (iconId: string) => {
-  if (
+  if (activeDirectIconBlockId.value && activeIconPickerSubIdx.value !== null) {
+    const targetBlock = pageBlocks.value.find(b => b.id === activeDirectIconBlockId.value);
+    if (targetBlock?.items && targetBlock.items[activeIconPickerSubIdx.value]) {
+      targetBlock.items[activeIconPickerSubIdx.value].icon = iconId;
+      recordHistory();
+      triggerAutoSaveDraft();
+      showToast('Ikon berhasil diubah!', 'success');
+    }
+    activeDirectIconBlockId.value = null;
+  } else if (
     activeIconPickerSubIdx.value !== null &&
     editingBlockDraft.value?.items &&
     editingBlockDraft.value.items[activeIconPickerSubIdx.value]
@@ -4268,16 +4280,16 @@ const executeVsCodeReplaceAll = () => {
                       {{ hudContext.buttonRole === 'secondary' ? 'Tombol Sekunder' : (typeof hudContext.buttonRole === 'number' ? `Tombol Kartu #${(hudContext.buttonRole as number) + 1}` : 'Tombol Utama') }}
                     </span>
                     <div class="shelf-btn-group" title="Bentuk Sudut Tombol">
-                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 0 }" @click="setButtonRadius(0)" title="Kotak (0px)">
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 0 && currentActiveButtonStyle !== 'pill' }" @click="setButtonRadius(0)" title="Kotak (0px)">
                         <span class="shape-icon is-sq"></span>
                       </button>
-                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 8 }" @click="setButtonRadius(8)" title="Sedang (8px)">
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 8 && currentActiveButtonStyle !== 'pill' }" @click="setButtonRadius(8)" title="Sedang (8px)">
                         <span class="shape-icon is-rd"></span>
                       </button>
-                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 16 }" @click="setButtonRadius(16)" title="Bulat (16px)">
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 16 && currentActiveButtonStyle !== 'pill' }" @click="setButtonRadius(16)" title="Bulat (16px)">
                         <span class="shape-icon is-cr"></span>
                       </button>
-                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius >= 50 || currentActiveButtonStyle === 'pill' }" @click="setButtonStyle('pill')" title="Pill (Kapsul)">
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonStyle === 'pill' }" @click="setButtonStyle('pill')" title="Pill (Kapsul)">
                         <span class="shape-icon is-pl"></span>
                       </button>
                     </div>
@@ -4317,9 +4329,20 @@ const executeVsCodeReplaceAll = () => {
 
                   <!-- C. Context: CARD -->
                   <div v-else-if="hudContext.type === 'card'" class="shelf-controls-group">
-                    <button type="button" class="shelf-btn highlight" @click="openItemIconPicker(selectedBlock.id, hudContext.itemIndex || 0, $event)" title="Ganti Icon Item">
+                    <button type="button" class="shelf-btn highlight" @click="openIconPickerForBlock(selectedBlock.id, hudContext.itemIndex || 0)" title="Ganti Icon Item Langsung">
                       <Palette :size="12" />
                       <span>Ganti Ikon</span>
+                    </button>
+
+                    <!-- Add / Change Card Photo -->
+                    <button
+                      type="button"
+                      class="shelf-btn"
+                      @click="triggerImageUpload(selectedBlock.id, hudContext.itemIndex || 0)"
+                      title="Pasang / Ganti Foto Cover Kartu"
+                    >
+                      <ImageIcon :size="12" />
+                      <span>{{ selectedBlock.items?.[hudContext.itemIndex || 0]?.image ? 'Ganti Foto' : '+ Foto' }}</span>
                     </button>
 
                     <div class="shelf-color-field" title="Warna Ikon & Aksen Kartu">
@@ -5090,6 +5113,7 @@ const executeVsCodeReplaceAll = () => {
                           class="btn-nav-action"
                           :style="{
                             backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
+                            color: block.styles?.buttonTextColor || '#ffffff',
                             borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
                             border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
                             boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 16px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
@@ -5169,6 +5193,7 @@ const executeVsCodeReplaceAll = () => {
                           class="btn-primary-glow"
                           :style="{
                             backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
+                            color: block.styles?.buttonTextColor || '#ffffff',
                             borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
                             border: block.styles?.buttonStyle === 'outline' ? `2px solid ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}` : undefined,
                             boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
@@ -5177,6 +5202,7 @@ const executeVsCodeReplaceAll = () => {
                         >
                           <span
                             class="inline-editable-text"
+                            :style="{ color: block.styles?.buttonTextColor || '#ffffff' }"
                             :contenteditable="selectedBlockId === block.id"
                             @keydown="onInlineTextKeyDown"
                             @blur="onInlineTextBlur(block, 'buttonText', $event)"
@@ -5189,6 +5215,7 @@ const executeVsCodeReplaceAll = () => {
                           class="btn-secondary-clean"
                           :style="{
                             backgroundColor: block.styles?.secondaryButtonColor || 'transparent',
+                            color: block.styles?.secondaryButtonTextColor || '#0f172a',
                             borderRadius: (block.styles?.secondaryButtonRadius !== undefined ? block.styles.secondaryButtonRadius + 'px' : '8px'),
                             border: block.styles?.secondaryButtonStyle === 'outline' ? '2px solid #cbd5e1' : undefined,
                             boxShadow: block.styles?.secondaryButtonStyle === 'glow' ? '0 0 16px rgba(100, 116, 139, 0.4)' : undefined
@@ -5197,6 +5224,7 @@ const executeVsCodeReplaceAll = () => {
                         >
                           <span
                             class="inline-editable-text"
+                            :style="{ color: block.styles?.secondaryButtonTextColor || '#0f172a' }"
                             :contenteditable="selectedBlockId === block.id"
                             @keydown="onInlineTextKeyDown"
                             @blur="onInlineTextBlur(block, 'secondaryButtonText', $event)"
@@ -5258,10 +5286,13 @@ const executeVsCodeReplaceAll = () => {
                               color: block.styles?.accentColor || activeContainer.accentColor,
                               backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
                             }"
-                            @click="openItemIconPicker(block.id, idx, $event)"
-                            title="Klik ganti icon item"
+                            @click="openIconPickerForBlock(block.id, idx)"
+                            title="Klik untuk langsung ganti icon item"
                           >
                             <component :is="getIconComponent(item.icon)" :size="20" />
+                            <span class="icon-edit-pencil-badge" title="Ganti Ikon">
+                              <Edit3 :size="8" />
+                            </span>
                           </div>
                           <h3
                             class="card-item-title inline-editable-text"
@@ -5616,7 +5647,7 @@ const executeVsCodeReplaceAll = () => {
                             v-if="block.items[block.activeItemIndex || 0]?.image"
                             class="carousel-slide-img-wrap"
                             @click="onImageClick(block, block.activeItemIndex || 0, $event)"
-                            title="Klik ganti foto slide"
+                            title="Klik ganti foto slide langsung"
                             style="cursor: pointer;"
                           >
                             <img
@@ -5624,6 +5655,13 @@ const executeVsCodeReplaceAll = () => {
                               :alt="block.items[block.activeItemIndex || 0].title || 'Slide Image'"
                               class="carousel-slide-img"
                             />
+                            <!-- Hover Overlay: Ganti Foto Langsung -->
+                            <div class="carousel-img-hover-overlay">
+                              <span class="btn-change-photo-badge">
+                                <UploadCloud :size="13" />
+                                <span>Ganti Foto</span>
+                              </span>
+                            </div>
                           </div>
                           <span
                             v-if="block.items[block.activeItemIndex || 0]?.tag"
@@ -5950,9 +5988,24 @@ const executeVsCodeReplaceAll = () => {
                           @click="onCardItemClick(block, idx, $event)"
                         >
                           <div class="card-header-banner">
+                            <!-- Cover Image if present -->
+                            <img
+                              v-if="item.image"
+                              :src="item.image"
+                              :alt="item.title || 'Card Cover'"
+                              class="card-cover-image"
+                            />
+                            <!-- Hover Overlay: Ganti Foto Langsung -->
+                            <div class="card-cover-hover-overlay" @click.stop="triggerImageUpload(block.id, idx)">
+                              <span class="btn-card-change-photo">
+                                <UploadCloud :size="12" />
+                                <span>{{ item.image ? 'Ganti Foto' : '+ Pasang Foto' }}</span>
+                              </span>
+                            </div>
                             <span
                               v-if="item.tag"
                               class="card-tag-pill inline-editable-text"
+                              style="position: relative; z-index: 2;"
                               :contenteditable="selectedBlockId === block.id"
                               @keydown="onInlineTextKeyDown"
                               @blur="onInlineItemTextBlur(block, idx, 'tag', $event)"
