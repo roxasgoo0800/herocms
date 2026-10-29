@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import {
   MousePointer,
   Hand,
@@ -69,11 +69,14 @@ import {
   Star,
   Key,
   Image as ImageIcon,
-  UploadCloud
+  UploadCloud,
+  Workflow
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
-import type { VisualBlock } from '../../types/dashboard';
+import { compileTemplateToHTML } from '../../utils/templateHtmlCompiler';
+import type { VisualBlock, MultiPageItem } from '../../types/dashboard';
+import { officialTemplatesData } from '../../data/templates-data';
 import {
   zoomPresets,
   devicePresets,
@@ -104,6 +107,7 @@ const {
   activeContainer,
   isPublishing,
   handlePublishChanges,
+  officialTemplates,
   aiPromptInput,
   isGeneratingAI,
   handleAiGenerateContent,
@@ -286,6 +290,9 @@ const handleAllDropdownOutsideClick = (e: MouseEvent) => {
   if (zoomDropdownRef.value && !zoomDropdownRef.value.contains(e.target as Node)) {
     isZoomDropdownOpen.value = false;
   }
+  if (pageSwitcherRef.value && !pageSwitcherRef.value.contains(e.target as Node)) {
+    isPageSwitcherOpen.value = false;
+  }
 };
 
 // Canvas Zoom & Pan
@@ -340,15 +347,23 @@ const setZoom = (val: number) => {
   zoom.value = val;
 };
 const fitToScreen = () => {
-  const container = document.querySelector('.studio-viewport-area');
+  const container = viewportAreaRef.value || (document.querySelector('.studio-viewport-area') as HTMLElement | null);
   if (container) {
     const rect = container.getBoundingClientRect();
-    const availableWidth = rect.width - 60;
-    const availableHeight = rect.height - 80;
-    const scale = Math.min(availableWidth / artboardWidth.value, availableHeight / 850);
-    zoom.value = Math.min(1.0, Math.max(0.35, parseFloat(scale.toFixed(2))));
-    panX.value = 0;
-    panY.value = 0;
+    const availableWidth = rect.width - 80;
+    const availableHeight = rect.height - 120;
+    if (canvasViewMode.value === 'sitemap') {
+      const totalWidth = sitemapCanvasWidth.value;
+      const scale = Math.min(availableWidth / (totalWidth || 2000), availableHeight / 980);
+      zoom.value = Math.min(0.55, Math.max(0.28, parseFloat(scale.toFixed(2))));
+      panX.value = 0;
+      panY.value = 40;
+    } else {
+      const scale = Math.min(availableWidth / artboardWidth.value, availableHeight / 850);
+      zoom.value = Math.min(1.0, Math.max(0.35, parseFloat(scale.toFixed(2))));
+      panX.value = 0;
+      panY.value = 0;
+    }
   }
 };
 
@@ -374,8 +389,567 @@ const selectedBlock = computed<VisualBlock | null>(() => {
   return block || null;
 });
 
+// -----------------------------------------------------------------------------
+// Top-Layer Smart Sticky Floating HUD Architecture
+// -----------------------------------------------------------------------------
+const viewportAreaRef = ref<HTMLElement | null>(null);
+const floatingShelfRef = ref<HTMLElement | null>(null);
+const shelfCoords = reactive({
+  top: 14,
+  left: 0,
+  visible: false,
+  isStickyAtTop: false,
+  scale: 1.0
+});
+
+const updateShelfPosition = () => {
+  if (!selectedBlockId.value || editorViewMode.value !== 'design' || canvasViewMode.value !== 'single') {
+    shelfCoords.visible = false;
+    return;
+  }
+
+  const viewportEl = viewportAreaRef.value;
+  const blockEl = document.getElementById(`canvas-block-node-${selectedBlockId.value}`);
+
+  if (!viewportEl || !blockEl) {
+    shelfCoords.visible = false;
+    return;
+  }
+
+  const vRect = viewportEl.getBoundingClientRect();
+  const bRect = blockEl.getBoundingClientRect();
+
+  // Zoom-aware scale: Synchronized 1:1 with canvas zoom level.
+  // When zoomed out (< 100%), scale toolbar down proportionally so it never dwarfs or covers the layout.
+  // Max scale capped at 1.0 (clean desktop size when zoomed in), min floor at 0.35 (comfortable overview size).
+  const shelfScale = Math.min(1.0, Math.max(0.35, zoom.value));
+  shelfCoords.scale = shelfScale;
+
+  // Offset under top ruler or top padding
+  const minTop = showRulers.value ? 30 : 14;
+  const rawShelfHeight = floatingShelfRef.value?.offsetHeight || 44;
+  const rawShelfWidth = floatingShelfRef.value?.offsetWidth || 760;
+
+  const effectiveShelfHeight = rawShelfHeight * shelfScale;
+  const effectiveShelfWidth = rawShelfWidth * shelfScale;
+
+  // If the entire block has scrolled above the viewport
+  if (bRect.bottom < vRect.top + minTop + effectiveShelfHeight) {
+    shelfCoords.visible = false;
+    return;
+  }
+  // If the block is far below the viewport (not visible yet)
+  if (bRect.top > vRect.bottom) {
+    shelfCoords.visible = false;
+    return;
+  }
+
+  // 1. Vertical calculation: 10px directly above the active block top, relative to viewportArea
+  const idealTop = (bRect.top - vRect.top) - effectiveShelfHeight - 10;
+
+  // The sticky ceiling: when block top is above viewport, clamp targetTop to minTop!
+  // And stay above the bottom of the block so it scrolls away gracefully when the block ends
+  const maxAllowedTop = (bRect.bottom - vRect.top) - effectiveShelfHeight - 10;
+  const targetTop = Math.min(maxAllowedTop, Math.max(minTop, idealTop));
+
+  // 2. Horizontal calculation: centered on the active block, strictly clamped within viewport boundaries
+  const blockCenterX = (bRect.left - vRect.left) + (bRect.width / 2);
+  const halfEffectiveShelf = effectiveShelfWidth / 2;
+  const minLeft = halfEffectiveShelf + 16;
+  const maxLeft = vRect.width - halfEffectiveShelf - 16;
+
+  let targetLeft = blockCenterX;
+  if (maxLeft > minLeft) {
+    targetLeft = Math.min(maxLeft, Math.max(minLeft, targetLeft));
+  } else {
+    targetLeft = vRect.width / 2;
+  }
+
+  shelfCoords.top = Math.round(targetTop);
+  shelfCoords.left = Math.round(targetLeft);
+  shelfCoords.isStickyAtTop = idealTop < minTop;
+  shelfCoords.visible = true;
+};
+
+// -----------------------------------------------------------------------------
+// MULTI-PAGE & FIGMA FLOW CANVAS ARCHITECTURE
+// -----------------------------------------------------------------------------
+const canvasViewMode = ref<'single' | 'sitemap'>('single');
+const multiPages = ref<MultiPageItem[]>([]);
+const activePageId = ref<string>('page_home');
+const isPageSwitcherOpen = ref(false);
+const pageSwitcherRef = ref<HTMLElement | null>(null);
+const isNewPageModalOpen = ref(false);
+const newPageForm = reactive({
+  title: '',
+  path: '',
+  templateType: 'content' as 'blank' | 'content' | 'contact'
+});
+
+const activePage = computed<MultiPageItem | null>(() => {
+  if (multiPages.value.length === 0) return null;
+  return multiPages.value.find(p => p.id === activePageId.value) || multiPages.value[0];
+});
+
+const ARTBOARD_GAP = 360;
+
+const getPageCanvasX = (index: number) => {
+  return index * (artboardWidth.value + ARTBOARD_GAP);
+};
+
+const sitemapCanvasWidth = computed(() => {
+  if (multiPages.value.length === 0) return artboardWidth.value + 400;
+  // Exact width spanning from first page (0px) to add-page node right edge + margin
+  return getPageCanvasX(multiPages.value.length) + 320 + 80;
+});
+
+const sitemapConnectors = computed(() => {
+  if (multiPages.value.length <= 1) return [];
+  const home = multiPages.value.find(p => p.path === '/') || multiPages.value[0];
+  if (!home) return [];
+
+  const homeIdx = multiPages.value.findIndex(p => p.id === home.id);
+  const homeLeft = getPageCanvasX(homeIdx >= 0 ? homeIdx : 0);
+  const homeRight = homeLeft + artboardWidth.value;
+
+  const connectors: Array<{
+    id: string;
+    sourcePageId: string;
+    targetPageId: string;
+    label: string;
+    path: string;
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    midX: number;
+    midY: number;
+  }> = [];
+
+  const childPages = multiPages.value.filter(p => p.id !== home.id);
+  childPages.forEach((child) => {
+    const childIdx = multiPages.value.findIndex(p => p.id === child.id);
+    const childLeft = getPageCanvasX(childIdx >= 0 ? childIdx : 1);
+
+    const startX = homeRight + 2;
+    const startY = 170 + (Math.max(0, childIdx - 1) * 44);
+
+    const endX = childLeft - 4;
+    const endY = 170;
+
+    const dx = Math.max(120, (endX - startX) * 0.45);
+    const cp1x = startX + dx;
+    const cp1y = startY;
+    const cp2x = endX - dx;
+    const cp2y = endY;
+
+    const pathD = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
+    const midX = (startX + endX) / 2;
+    const midY = (startY + endY) / 2;
+
+    connectors.push({
+      id: `conn_${home.id}_to_${child.id}`,
+      sourcePageId: home.id,
+      targetPageId: child.id,
+      label: `➜ ${child.path}`,
+      path: pathD,
+      startX,
+      startY,
+      endX,
+      endY,
+      midX,
+      midY
+    });
+  });
+
+  return connectors;
+});
+
+const setCanvasViewMode = (mode: 'single' | 'sitemap') => {
+  if (mode === 'sitemap') {
+    syncActivePageBlocks();
+    editorViewMode.value = 'design';
+    selectedBlockId.value = null;
+    canvasViewMode.value = mode;
+    nextTick(() => {
+      fitToScreen();
+    });
+  } else {
+    editorViewMode.value = 'design';
+    canvasViewMode.value = mode;
+    nextTick(() => {
+      fitToScreen();
+    });
+  }
+};
+
+const syncActivePageBlocks = () => {
+  if (!activePageId.value) return;
+  const currentPage = multiPages.value.find(p => p.id === activePageId.value);
+  if (currentPage) {
+    currentPage.blocks = JSON.parse(JSON.stringify(pageBlocks.value));
+  }
+};
+
+const switchPage = (pageId: string, autoSwitchToSingle: boolean = false) => {
+  if (pageId === activePageId.value) {
+    if (autoSwitchToSingle) {
+      canvasViewMode.value = 'single';
+      nextTick(() => {
+        fitToScreen();
+      });
+    }
+    return;
+  }
+  // 1. Simpan blok halaman aktif saat ini ke multiPages
+  syncActivePageBlocks();
+
+  // 2. Set halaman target
+  activePageId.value = pageId;
+  const target = multiPages.value.find(p => p.id === pageId);
+  if (target) {
+    pageBlocks.value = JSON.parse(JSON.stringify(target.blocks));
+    selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
+  }
+
+  if (autoSwitchToSingle) {
+    canvasViewMode.value = 'single';
+    nextTick(() => {
+      fitToScreen();
+    });
+  }
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const switchPageByPath = (path: string) => {
+  const cleanPath = path.split('#')[0];
+  const target = multiPages.value.find(p => p.path === cleanPath || p.path === `/${cleanPath.replace(/^\//, '')}`);
+  if (target) {
+    switchPage(target.id, false);
+    showToast(`Beralih ke halaman: ${target.title} (${target.path})`, 'info');
+  }
+};
+
+const openNewPageModal = () => {
+  newPageForm.title = '';
+  newPageForm.path = '';
+  newPageForm.templateType = 'content';
+  isNewPageModalOpen.value = true;
+};
+
+const createNewPage = () => {
+  const title = newPageForm.title.trim();
+  if (!title) {
+    showToast('Judul halaman tidak boleh kosong.', 'error');
+    return;
+  }
+
+  let path = newPageForm.path.trim();
+  if (!path) {
+    path = '/' + title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+  }
+  if (!path.startsWith('/')) {
+    path = '/' + path;
+  }
+
+  // Cek duplikasi path
+  if (multiPages.value.some(p => p.path.toLowerCase() === path.toLowerCase())) {
+    showToast(`Rute '${path}' sudah ada di website ini.`, 'error');
+    return;
+  }
+
+  syncActivePageBlocks();
+
+  const newId = `page_${Date.now()}`;
+
+  // Buat default blocks untuk rute baru
+  const siteName = activeContainer.value?.name || 'AetherCorp';
+  const navBlock: VisualBlock = {
+    id: `nav_${newId}`,
+    type: 'navbar',
+    name: 'Header & Navigasi',
+    title: siteName,
+    buttonText: 'Kontak Kami',
+    buttonUrl: '/contact',
+    isVisible: true,
+    isLocked: false,
+    styles: {
+      bgMode: 'glass',
+      navStyle: 'glass',
+      navAlign: 'split',
+      brandGlyph: '◆',
+      isSticky: true
+    },
+    items: [
+      { id: 'n1', title: 'Beranda', url: '/' },
+      { id: 'n2', title: title, url: path, active: true }
+    ]
+  };
+
+  const footerBlock: VisualBlock = {
+    id: `footer_${newId}`,
+    type: 'footer',
+    name: 'Footer Korporasi',
+    title: `© 2026 ${siteName}. Hak Cipta Dilindungi.`,
+    content: 'Platform Solusi Cloud & Rekayasa Enterprise.',
+    isVisible: true,
+    isLocked: false,
+    styles: {
+      bgColor: '#0f172a',
+      textColor: '#94a3b8'
+    }
+  };
+
+  let centerBlocks: VisualBlock[] = [];
+  if (newPageForm.templateType === 'contact') {
+    centerBlocks = [
+      {
+        id: `hero_${newId}`,
+        type: 'hero',
+        name: 'Hero Kontak Kami',
+        title: `Hubungi Tim ${siteName}`,
+        content: 'Kami siap membantu kebutuhan implementasi sistem & konsultasi infrastruktur digital Anda.',
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          align: 'center',
+          paddingY: 64,
+          bgColor: '#ffffff'
+        }
+      },
+      {
+        id: `form_${newId}`,
+        type: 'contact',
+        name: 'Formulir Kontak',
+        title: 'Kirimkan Pesan atau Permintaan Demo',
+        content: 'Isi formulir di bawah ini dan tim engineer kami akan merespons dalam waktu 1x24 jam.',
+        buttonText: 'Kirim Pesan',
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          paddingY: 48,
+          bgColor: '#f8fafc'
+        }
+      }
+    ];
+  } else if (newPageForm.templateType === 'content') {
+    centerBlocks = [
+      {
+        id: `hero_${newId}`,
+        type: 'hero',
+        name: `Hero ${title}`,
+        title: title,
+        content: `Pelajari lebih lanjut mengenai dedikasi ${siteName} dalam menghadirkan produk dan solusi unggulan.`,
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          align: 'center',
+          paddingY: 64,
+          bgColor: '#ffffff'
+        }
+      },
+      {
+        id: `features_${newId}`,
+        type: 'features',
+        name: 'Fitur & Keunggulan',
+        title: 'Keunggulan Solusi Kami',
+        content: 'Arsitektur performa tinggi dengan skalabilitas komputasi kontainer otonom.',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          { id: `feat_1_${newId}`, title: 'Performa Tinggi', desc: 'Latency TTFB sub-millisecond dengan akselerasi HTTP/3.', icon: 'Zap' },
+          { id: `feat_2_${newId}`, title: 'Keamanan RLS', desc: 'Row-Level Security PostgreSQL multi-tenant terisolasi.', icon: 'Shield' },
+          { id: `feat_3_${newId}`, title: 'Infrastruktur Mandiri', desc: 'Kontainer Docker otonom yang berjalan 24/7 tanpa downtime.', icon: 'Server' }
+        ],
+        styles: {
+          paddingY: 56,
+          bgColor: '#f8fafc'
+        }
+      }
+    ];
+  } else {
+    centerBlocks = [
+      {
+        id: `blank_${newId}`,
+        type: 'hero',
+        name: `Section Utama ${title}`,
+        title: title,
+        content: 'Halaman rute baru siap dikustomisasi dengan komponen dan blok desain.',
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          align: 'center',
+          paddingY: 80,
+          bgColor: '#ffffff'
+        }
+      }
+    ];
+  }
+
+  const newBlocks: VisualBlock[] = [navBlock, ...centerBlocks, footerBlock];
+
+  const newPageItem: MultiPageItem = {
+    id: newId,
+    path,
+    title,
+    description: `Halaman ${title}`,
+    canvasX: getPageCanvasX(multiPages.value.length),
+    canvasY: 0,
+    blocks: newBlocks
+  };
+
+  multiPages.value.push(newPageItem);
+
+  // Perbarui navigasi pada semua halaman yang ada agar menyertakan rute baru ini
+  multiPages.value.forEach(p => {
+    const nav = p.blocks.find(b => b.type === 'navbar');
+    if (nav) {
+      if (!nav.items) nav.items = [];
+      if (!nav.items.some(i => i.url === path)) {
+        nav.items.push({
+          id: `link_${newId}`,
+          title,
+          url: path
+        });
+      }
+    }
+  });
+
+  isNewPageModalOpen.value = false;
+  switchPage(newId, true);
+  showToast(`Halaman '${title}' (${path}) berhasil dibuat!`, 'success');
+  triggerAutoSaveDraft();
+};
+
+const deletePage = (pageId: string) => {
+  const target = multiPages.value.find(p => p.id === pageId);
+  if (!target) return;
+  if (target.path === '/') {
+    showToast('Halaman beranda (/) adalah halaman utama dan tidak dapat dihapus.', 'error');
+    return;
+  }
+  if (multiPages.value.length <= 1) {
+    showToast('Situs harus memiliki minimal satu halaman.', 'error');
+    return;
+  }
+
+  // 1. If currently active page is NOT the deleted page, sync its blocks first
+  if (activePageId.value !== pageId) {
+    syncActivePageBlocks();
+  }
+
+  // 2. Remove the deleted page from multiPages
+  multiPages.value = multiPages.value.filter(p => p.id !== pageId);
+
+  // 3. Remove route link from all navbars
+  multiPages.value.forEach(p => {
+    const nav = p.blocks.find(b => b.type === 'navbar');
+    if (nav && nav.items) {
+      nav.items = nav.items.filter(i => i.url !== target.path);
+    }
+  });
+
+  // 4. Handle active page transition cleanly without overwriting!
+  if (activePageId.value === pageId) {
+    // Deleted page was currently active! Safely switch to home WITHOUT syncing deleted blocks
+    const home = multiPages.value.find(p => p.path === '/') || multiPages.value[0];
+    if (home) {
+      activePageId.value = home.id;
+      pageBlocks.value = JSON.parse(JSON.stringify(home.blocks));
+      selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
+    }
+  } else {
+    // Current page is still active, just update its navbar
+    const currentNav = pageBlocks.value.find(b => b.type === 'navbar');
+    if (currentNav && currentNav.items) {
+      currentNav.items = currentNav.items.filter(i => i.url !== target.path);
+    }
+  }
+
+  showToast(`Halaman '${target.title}' (${target.path}) telah dihapus.`, 'info');
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const getCompiledPageHtml = (page: MultiPageItem): string => {
+  const matchedTpl = officialTemplates.value.find(t =>
+    t.title === activeContainer.value?.templateName ||
+    t.category === activeContainer.value?.category
+  ) || officialTemplates.value[0];
+
+  if (!matchedTpl) return '';
+  return compileTemplateToHTML(matchedTpl, {
+    siteName: activeContainer.value?.name || 'Situs Utama',
+    subdomain: activeContainer.value?.subdomain || 'stackbyte.id',
+    accentColor: activeContainer.value?.accentColor || '#2563eb',
+    roleOrHeadline: page.title,
+    bioIntro: page.description,
+    blocksOverride: page.blocks
+  });
+};
+
+// Navbar Context & Interactive Canvas Helpers
+const defaultNavItems: Array<{ id: string; title: string; url: string; active?: boolean }> = [
+  { id: 'nav_1', title: 'Beranda', url: '/', active: true },
+  { id: 'nav_2', title: 'Tentang Kami', url: '/about', active: false },
+  { id: 'nav_3', title: 'Layanan', url: '/services', active: false },
+  { id: 'nav_4', title: 'Kontak', url: '/contact', active: false }
+];
+
+const onNavItemClick = (block: VisualBlock, idx: number, e: MouseEvent) => {
+  e.stopPropagation();
+  if (editorViewMode.value === 'preview') {
+    const item = block.items?.[idx] || defaultNavItems[idx];
+    if (item && item.url) {
+      switchPageByPath(item.url);
+    }
+    return;
+  }
+  selectBlock(block.id);
+  setHudContext('card', block, idx);
+};
+
+const addNavItem = (block: VisualBlock) => {
+  if (!block.items) {
+    block.items = [...defaultNavItems];
+  }
+  const nextNum = block.items.length + 1;
+  block.items.push({
+    id: `nav_${Date.now() % 10000}`,
+    title: `Menu ${nextNum}`,
+    url: `#section_${nextNum}`
+  });
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const removeNavItem = (block: VisualBlock, idx: number) => {
+  if (!block.items) return;
+  if (block.items.length <= 1) {
+    showToast('Navigasi minimal harus memiliki satu menu tautan.', 'info');
+    return;
+  }
+  block.items.splice(idx, 1);
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const cycleNavbarBrandGlyph = (block: VisualBlock) => {
+  const glyphs = ['◆', '▲', '●', '★', '❖', '✦', '◼', '⬥'];
+  const current = block.styles?.brandGlyph || '◆';
+  const nextIdx = (glyphs.indexOf(current) + 1) % glyphs.length;
+  if (!block.styles) block.styles = {};
+  block.styles.brandGlyph = glyphs[nextIdx];
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
 interface EditorDraftData {
   blocks: VisualBlock[];
+  pages?: MultiPageItem[];
+  activePageId?: string;
+  canvasViewMode?: 'single' | 'sitemap';
   roleOrHeadline?: string;
   bioIntro?: string;
   accentColor?: string;
@@ -393,14 +967,94 @@ const getDraftStorageKey = (containerId: string) => `herocms_editor_draft_${cont
 
 // Initialize blocks from activeContainer themeConfig or defaults
 const loadBlocksForActiveContainer = () => {
-  if (activeContainer.value?.themeConfig?.blocks && Array.isArray(activeContainer.value.themeConfig.blocks)) {
-    pageBlocks.value = JSON.parse(JSON.stringify(activeContainer.value.themeConfig.blocks));
-  } else {
-    const siteName = activeContainer.value?.name || 'Situs Utama';
-    const role = activeContainer.value?.roleOrHeadline || 'Portofolio Teknis Engineer';
-    const bio = activeContainer.value?.bioIntro || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.';
-    pageBlocks.value = createDefaultBlocks(siteName, role, bio);
+  const container = activeContainer.value;
+  if (!container) return;
+
+  // 1. HIGHEST PRIORITY: Container's own saved pages (never overwrite user's pages with template)
+  if (container.themeConfig?.pages && Array.isArray(container.themeConfig.pages) && container.themeConfig.pages.length > 0) {
+    multiPages.value = JSON.parse(JSON.stringify(container.themeConfig.pages)).map((p: any, idx: number) => ({
+      ...p,
+      canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
+      canvasY: p.canvasY || 0
+    }));
+    activePageId.value = multiPages.value[0]?.id || 'page_home';
+    pageBlocks.value = JSON.parse(JSON.stringify(multiPages.value[0]?.blocks || []));
+    if (pageBlocks.value.length > 0) {
+      selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
+    }
+    return;
   }
+
+  // 2. SECOND PRIORITY: Container's own saved blocks
+  if (container.themeConfig?.blocks && Array.isArray(container.themeConfig.blocks) && container.themeConfig.blocks.length > 0) {
+    pageBlocks.value = JSON.parse(JSON.stringify(container.themeConfig.blocks));
+    multiPages.value = [
+      {
+        id: 'page_home',
+        path: '/',
+        title: 'Beranda',
+        description: 'Halaman Utama',
+        canvasX: 0,
+        canvasY: 0,
+        blocks: pageBlocks.value
+      }
+    ];
+    activePageId.value = 'page_home';
+    if (pageBlocks.value.length > 0) {
+      selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
+    }
+    return;
+  }
+
+  // 3. THIRD PRIORITY: Official template specifically matching this container's assigned template
+  const templateId = (container.themeConfig as any)?.templateId || '';
+  const matchedTemplate = officialTemplatesData.find(t =>
+    (templateId && t.id === templateId) ||
+    (container.templateName && t.title === container.templateName)
+  );
+
+  if (matchedTemplate?.isMultiPage && matchedTemplate.pages && matchedTemplate.pages.length > 0) {
+    multiPages.value = JSON.parse(JSON.stringify(matchedTemplate.pages)).map((p: any, idx: number) => ({
+      ...p,
+      canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
+      canvasY: p.canvasY || 0
+    }));
+    activePageId.value = multiPages.value[0]?.id || 'page_home';
+    pageBlocks.value = JSON.parse(JSON.stringify(multiPages.value[0]?.blocks || []));
+  } else if (matchedTemplate?.blocks && Array.isArray(matchedTemplate.blocks) && matchedTemplate.blocks.length > 0) {
+    pageBlocks.value = JSON.parse(JSON.stringify(matchedTemplate.blocks));
+    multiPages.value = [
+      {
+        id: 'page_home',
+        path: '/',
+        title: 'Beranda',
+        description: 'Halaman Utama',
+        canvasX: 0,
+        canvasY: 0,
+        blocks: pageBlocks.value
+      }
+    ];
+    activePageId.value = 'page_home';
+  } else {
+    // 4. FALLBACK: Default starter blocks
+    const siteName = container.name || 'Situs Utama';
+    const role = container.roleOrHeadline || 'Portofolio Teknis Engineer';
+    const bio = container.bioIntro || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.';
+    pageBlocks.value = createDefaultBlocks(siteName, role, bio);
+    multiPages.value = [
+      {
+        id: 'page_home',
+        path: '/',
+        title: 'Beranda',
+        description: 'Halaman Utama',
+        canvasX: 0,
+        canvasY: 0,
+        blocks: pageBlocks.value
+      }
+    ];
+    activePageId.value = 'page_home';
+  }
+
   if (pageBlocks.value.length > 0) {
     selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
   }
@@ -414,36 +1068,63 @@ const restoreDraftForActiveContainer = async (containerId: string) => {
 
     let draftData: EditorDraftData | null = null;
 
-    // 1. Coba ambil dari Redis Backend terlebih dahulu
+    // 1. Cek localStorage terlebih dahulu (sinkron & tercepat saat browser refresh)
+    const localStr = localStorage.getItem(getDraftStorageKey(containerId));
+    if (localStr) {
+      try {
+        draftData = JSON.parse(localStr);
+      } catch {}
+    }
+
+    // 2. Coba sinkronisasi dari Redis Backend jika ada versi server yang lebih mutakhir
     try {
       const res = await studioApi.getEditorDraft(containerId);
       const serverDraft = res?.draft || res?.data;
       if (serverDraft && serverDraft.blocks && Array.isArray(serverDraft.blocks)) {
-        draftData = serverDraft;
+        if (!draftData || (serverDraft.updatedAt && new Date(serverDraft.updatedAt) > new Date(draftData.updatedAt || 0))) {
+          draftData = serverDraft;
+        }
       }
     } catch (apiErr) {
       console.warn('[VisualEditor] Redis draft fetch fallback:', apiErr);
     }
 
-    // 2. Fallback ke localStorage jika Redis belum ada
-    if (!draftData) {
-      const localStr = localStorage.getItem(getDraftStorageKey(containerId));
-      if (localStr) {
-        try {
-          draftData = JSON.parse(localStr);
-        } catch {}
-      }
-    }
-
     // 3. Hydrate state
     if (draftData && Array.isArray(draftData.blocks) && draftData.blocks.length > 0) {
       pageBlocks.value = draftData.blocks;
+
+      if (draftData.pages && Array.isArray(draftData.pages) && draftData.pages.length > 0) {
+        multiPages.value = draftData.pages;
+        activePageId.value = draftData.activePageId || draftData.pages[0]?.id || 'page_home';
+        const activePg = multiPages.value.find(p => p.id === activePageId.value) || multiPages.value[0];
+        if (activePg) {
+          activePageId.value = activePg.id;
+          pageBlocks.value = JSON.parse(JSON.stringify(activePg.blocks));
+        }
+      } else {
+        multiPages.value = [
+          {
+            id: 'page_home',
+            path: '/',
+            title: 'Beranda',
+            description: 'Halaman Utama',
+            canvasX: 0,
+            canvasY: 0,
+            blocks: pageBlocks.value
+          }
+        ];
+        activePageId.value = 'page_home';
+      }
+
+      if (draftData.canvasViewMode) canvasViewMode.value = draftData.canvasViewMode;
+
       if (activeContainer.value) {
         if (draftData.roleOrHeadline !== undefined) activeContainer.value.roleOrHeadline = draftData.roleOrHeadline;
         if (draftData.bioIntro !== undefined) activeContainer.value.bioIntro = draftData.bioIntro;
         if (draftData.accentColor !== undefined) activeContainer.value.accentColor = draftData.accentColor;
         if (!activeContainer.value.themeConfig) activeContainer.value.themeConfig = {};
-        activeContainer.value.themeConfig.blocks = draftData.blocks;
+        activeContainer.value.themeConfig.blocks = pageBlocks.value;
+        activeContainer.value.themeConfig.pages = multiPages.value;
       }
       if (draftData.selectedBlockId) selectedBlockId.value = draftData.selectedBlockId;
       if (draftData.currentDevice) applyDevicePreset(draftData.currentDevice);
@@ -472,34 +1153,48 @@ let autoSaveTimer: any = null;
 const triggerAutoSaveDraft = () => {
   if (isEditorBooting.value || !activeContainerId.value) return;
 
+  syncActivePageBlocks();
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  const draftPayload: EditorDraftData = {
+    blocks: pageBlocks.value,
+    pages: multiPages.value,
+    activePageId: activePageId.value,
+    canvasViewMode: canvasViewMode.value,
+    roleOrHeadline: activeContainer.value?.roleOrHeadline,
+    bioIntro: activeContainer.value?.bioIntro,
+    accentColor: activeContainer.value?.accentColor,
+    selectedBlockId: selectedBlockId.value,
+    currentDevice: currentDevice.value,
+    zoom: zoom.value,
+    panX: panX.value,
+    panY: panY.value,
+    activeLeftTab: activeLeftTab.value,
+    activeRightTab: activeRightTab.value,
+    updatedAt: now.toISOString()
+  };
+
+  // 1. INSTANT LOCAL PERSISTENCE (0ms synchronous write - guarantees zero loss on refresh)
+  try {
+    localStorage.setItem(getDraftStorageKey(activeContainerId.value), JSON.stringify(draftPayload));
+    if (activeContainer.value) {
+      if (!activeContainer.value.themeConfig) activeContainer.value.themeConfig = {};
+      activeContainer.value.themeConfig.blocks = pageBlocks.value;
+      activeContainer.value.themeConfig.pages = multiPages.value;
+    }
+  } catch (e) {
+    console.warn('[VisualEditor] LocalStorage immediate save notice:', e);
+  }
+
+  // 2. Debounce remote persistence to Redis / Go Backend API
   if (autoSaveTimer) clearTimeout(autoSaveTimer);
   isDraftSaving.value = true;
 
   autoSaveTimer = setTimeout(async () => {
     try {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-      const draftPayload: EditorDraftData = {
-        blocks: pageBlocks.value,
-        roleOrHeadline: activeContainer.value?.roleOrHeadline,
-        bioIntro: activeContainer.value?.bioIntro,
-        accentColor: activeContainer.value?.accentColor,
-        selectedBlockId: selectedBlockId.value,
-        currentDevice: currentDevice.value,
-        zoom: zoom.value,
-        panX: panX.value,
-        panY: panY.value,
-        activeLeftTab: activeLeftTab.value,
-        activeRightTab: activeRightTab.value,
-        updatedAt: now.toISOString()
-      };
-
-      // 1. Simpan di localStorage seketika
-      localStorage.setItem(getDraftStorageKey(activeContainerId.value), JSON.stringify(draftPayload));
-
-      // 2. Persist ke Redis via backend API
       await studioApi.saveEditorDraft(activeContainerId.value, draftPayload);
-
       lastSavedDraftAt.value = timeStr;
     } catch (e) {
       console.warn('[VisualEditor] Auto-save to Redis failed:', e);
@@ -543,6 +1238,7 @@ watch(
 watch(
   pageBlocks,
   (newBlocks) => {
+    syncActivePageBlocks();
     if (activeContainer.value) {
       if (!activeContainer.value.themeConfig) {
         activeContainer.value.themeConfig = {};
@@ -584,6 +1280,17 @@ watch(
     triggerAutoSaveDraft();
   }
 );
+
+watch(selectedBlockId, () => {
+  nextTick(() => {
+    updateShelfPosition();
+    setTimeout(updateShelfPosition, 40);
+  });
+});
+
+watch([panX, panY, zoom, showRulers, canvasViewMode, editorViewMode], () => {
+  updateShelfPosition();
+});
 
 
 
@@ -636,8 +1343,28 @@ const handleRedo = () => {
 // Mouse & Gesture Handlers: Canvas Panning & Zooming
 // -----------------------------------------------------------------------------
 
+const isInteractiveElement = (target: HTMLElement | null): boolean => {
+  if (!target) return false;
+  return !!target.closest(
+    'button, a, input, select, textarea, [contenteditable="true"], .studio-viewport-floating-shelf, .block-floating-context-toolbar, .shelf-context-popup, .custom-floating-dropdown, .tool-btn, .btn-top-create, .studio-top-context-bar, .studio-left-sidebar, .studio-right-sidebar, .modal-backdrop, .modal-dialog, .canvas-resizer, .btn-figma-focus-page, .btn-figma-delete-page, .btn-add-node-cta, .sitemap-route-pill-node'
+  );
+};
+
+let canvasClickStartPos = { x: 0, y: 0 };
+let hasCanvasDragged = false;
+
 const onCanvasMouseDown = (e: MouseEvent) => {
-  // If clicking on artboard or handles, don't pan unless Hand tool or Space is active
+  canvasClickStartPos = { x: e.clientX, y: e.clientY };
+  hasCanvasDragged = false;
+
+  const target = e.target as HTMLElement | null;
+
+  // Don't pan if clicking an interactive control
+  if (isInteractiveElement(target)) {
+    return;
+  }
+
+  // 1. Hand tool, Spacebar, or Middle Mouse Button: Always start pan
   if (activeTool.value === 'hand' || isSpacePressed.value || e.button === 1) {
     isPanning.value = true;
     panStart.value = {
@@ -645,10 +1372,40 @@ const onCanvasMouseDown = (e: MouseEvent) => {
       y: e.clientY - panY.value
     };
     e.preventDefault();
+    return;
+  }
+
+  // 2. Normal Left click (e.button === 0)
+  if (e.button === 0) {
+    // In Sitemap / Alur Figma mode: the entire workspace is a freeform canvas!
+    // Left-click dragging anywhere (background, empty space, card surface) starts pan!
+    if (canvasViewMode.value === 'sitemap') {
+      isPanning.value = true;
+      panStart.value = {
+        x: e.clientX - panX.value,
+        y: e.clientY - panY.value
+      };
+      return;
+    }
+
+    // In Single Page mode: clicking on canvas background (outside artboard) pans freely
+    const isInsideArtboard = target?.closest('.artboard-frame, .block-node-wrapper');
+    if (!isInsideArtboard) {
+      isPanning.value = true;
+      panStart.value = {
+        x: e.clientX - panX.value,
+        y: e.clientY - panY.value
+      };
+      return;
+    }
   }
 };
 
 const onCanvasMouseMove = (e: MouseEvent) => {
+  if (Math.hypot(e.clientX - canvasClickStartPos.x, e.clientY - canvasClickStartPos.y) > 6) {
+    hasCanvasDragged = true;
+  }
+
   // Update coordinates HUD
   mouseCoords.value = {
     x: Math.round((e.clientX - panX.value) / zoom.value),
@@ -660,6 +1417,7 @@ const onCanvasMouseMove = (e: MouseEvent) => {
     panX.value = e.clientX - panStart.value.x;
     panY.value = e.clientY - panStart.value.y;
     clampPan();
+    updateShelfPosition();
     return;
   }
 
@@ -692,25 +1450,64 @@ const onCanvasMouseUp = () => {
   resizeDirection.value = null;
 };
 
-// Clamp pan values to prevent infinite scrolling
-const PAN_LIMIT = 4000;
+const onCanvasBackgroundClick = (e: MouseEvent) => {
+  if (hasCanvasDragged) return;
+
+  const target = e.target as HTMLElement | null;
+  if (!target) return;
+
+  // Don't deselect if clicked inside block, floating shelf, dropdowns, popups, or toolbars
+  if (target.closest('.block-node-wrapper, .studio-viewport-floating-shelf, .block-floating-context-toolbar, .shelf-context-popup, .custom-floating-dropdown, .tool-btn, .btn-top-create, .studio-top-context-bar, .studio-left-sidebar, .studio-right-sidebar, .modal-backdrop, .modal-dialog')) {
+    return;
+  }
+
+  // Deselect active block when clicking on canvas background or outside blocks
+  selectedBlockId.value = null;
+  hoveredBlockId.value = null;
+  hudContext.value = { type: 'section' };
+};
+
+// Sitemap Card & Node click handlers with drag suppression
+const onSitemapCardClick = (pageId: string) => {
+  if (hasCanvasDragged) return;
+  switchPage(pageId, true);
+};
+
+const onRoutePillClick = (targetPageId: string) => {
+  if (hasCanvasDragged) return;
+  switchPage(targetPageId, true);
+};
+
+const onAddPageNodeClick = () => {
+  if (hasCanvasDragged) return;
+  openNewPageModal();
+};
+
+// Dynamic pan clamping to allow ultra-wide free exploration across multi-artboards
 const clampPan = () => {
-  panX.value = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panX.value));
-  panY.value = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panY.value));
+  const dynamicXLimit = Math.max(16000, sitemapCanvasWidth.value + 6000);
+  const dynamicYLimit = 8000;
+  panX.value = Math.max(-dynamicXLimit, Math.min(dynamicXLimit, panX.value));
+  panY.value = Math.max(-dynamicYLimit, Math.min(dynamicYLimit, panY.value));
 };
 
 const onCanvasWheel = (e: WheelEvent) => {
   e.preventDefault();
   if (e.ctrlKey || e.metaKey) {
+    // Pinch-to-zoom on Mac trackpad or Ctrl/Cmd + wheel zoom
     const delta = e.deltaY > 0 ? -0.05 : 0.05;
     zoom.value = Math.max(0.25, Math.min(2.0, parseFloat((zoom.value + delta).toFixed(2))));
-  } else if (e.shiftKey) {
+  } else if (e.shiftKey && Math.abs(e.deltaX) < 1) {
+    // Shift + vertical wheel translates to horizontal pan
     panX.value -= e.deltaY;
   } else {
-    // Normal scroll down / up moves canvas smoothly!
-    panY.value -= e.deltaY * 0.85;
+    // Free 2D Pan: Handles both deltaX and deltaY simultaneously!
+    // Native smooth navigation for Mac trackpads (2-finger swipe in any direction) and 2D wheel mice
+    panX.value -= e.deltaX;
+    panY.value -= e.deltaY;
   }
   clampPan();
+  updateShelfPosition();
 };
 
 // Start Resizing Artboard
@@ -741,6 +1538,16 @@ const isEditingText = (target: EventTarget | null): boolean => {
 };
 
 const onKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape') {
+    if (isEditingText(e.target)) {
+      (e.target as HTMLElement).blur();
+    }
+    selectedBlockId.value = null;
+    hoveredBlockId.value = null;
+    hudContext.value = { type: 'section' };
+    return;
+  }
+
   // Cegah tombol keyboard shortcut memanipulasi canvas ketika user sedang mengetik teks
   if (isEditingText(e.target)) {
     return;
@@ -800,6 +1607,8 @@ onMounted(async () => {
   window.addEventListener('mouseup', onCanvasMouseUp);
   window.addEventListener('resize', fitToScreen);
   window.addEventListener('resize', updateChipsScrollState);
+  window.addEventListener('resize', updateShelfPosition);
+  window.addEventListener('scroll', updateShelfPosition, true);
   document.addEventListener('click', handleSiteDropdownOutsideClick);
   document.addEventListener('click', handleAllDropdownOutsideClick);
 
@@ -848,6 +1657,8 @@ onUnmounted(() => {
   window.removeEventListener('mouseup', onCanvasMouseUp);
   window.removeEventListener('resize', fitToScreen);
   window.removeEventListener('resize', updateChipsScrollState);
+  window.removeEventListener('resize', updateShelfPosition);
+  window.removeEventListener('scroll', updateShelfPosition, true);
   document.removeEventListener('click', handleSiteDropdownOutsideClick);
   document.removeEventListener('click', handleAllDropdownOutsideClick);
 
@@ -865,6 +1676,10 @@ const selectBlock = (id: string, e?: MouseEvent) => {
     selectedBlockId.value = id;
     hudContext.value = { type: 'section' };
   }
+  nextTick(() => {
+    updateShelfPosition();
+    setTimeout(updateShelfPosition, 40);
+  });
 };
 
 // -----------------------------------------------------------------------------
@@ -2217,6 +3032,74 @@ const executeVsCodeReplaceAll = () => {
 
           <div class="v-divider"></div>
 
+          <!-- Multi-Page Sitemap & Page Switcher -->
+          <div class="page-switcher-cluster" ref="pageSwitcherRef">
+            <button
+              type="button"
+              class="page-switcher-pill-trigger"
+              :class="{ 'is-open': isPageSwitcherOpen, 'has-multipage': multiPages.length > 1 }"
+              @click.stop="isPageSwitcherOpen = !isPageSwitcherOpen"
+              title="Pilih Halaman Aktif atau Tambah Halaman"
+            >
+              <FileText :size="13" class="page-switcher-icon" />
+              <span class="page-switcher-title">{{ activePage?.title || 'Beranda' }}</span>
+              <span class="page-switcher-path">{{ activePage?.path || '/' }}</span>
+              <span v-if="multiPages.length > 1" class="page-count-badge">{{ multiPages.length }} Rute</span>
+              <ChevronDown :size="11" class="page-chevron-icon" :class="{ 'is-rotated': isPageSwitcherOpen }" />
+            </button>
+
+            <transition name="dropdown-scale">
+              <div v-if="isPageSwitcherOpen" class="custom-floating-dropdown page-switcher-dropdown">
+                <div class="custom-dropdown-header">
+                  <span class="custom-dropdown-title">Daftar Halaman Website (Sitemap)</span>
+                  <span class="page-dropdown-counter">{{ multiPages.length }} Halaman</span>
+                </div>
+                <div class="custom-dropdown-list">
+                  <div
+                    v-for="p in multiPages"
+                    :key="p.id"
+                    class="custom-dropdown-item page-dropdown-item"
+                    :class="{ active: p.id === activePageId }"
+                    @click="switchPage(p.id, false); isPageSwitcherOpen = false"
+                  >
+                    <div class="page-item-info">
+                      <div class="page-item-title-row">
+                        <span class="page-item-glyph">{{ p.path === '/' ? '🏠' : '📄' }}</span>
+                        <span class="page-item-title">{{ p.title }}</span>
+                      </div>
+                      <span class="page-item-path">{{ p.path }}</span>
+                    </div>
+                    <div class="page-item-actions-cluster">
+                      <span class="page-item-blocks-count">{{ p.blocks?.length || 0 }} blok</span>
+                      <button
+                        v-if="p.path !== '/' && multiPages.length > 1"
+                        type="button"
+                        class="btn-delete-page-mini"
+                        @click.stop="deletePage(p.id)"
+                        title="Hapus Halaman Ini"
+                      >
+                        <Trash2 :size="11" />
+                      </button>
+                      <Check v-if="p.id === activePageId" :size="13" class="custom-dropdown-check" />
+                    </div>
+                  </div>
+                </div>
+                <div class="page-dropdown-footer">
+                  <button
+                    type="button"
+                    class="btn-dropdown-add-page"
+                    @click="openNewPageModal(); isPageSwitcherOpen = false"
+                  >
+                    <Plus :size="12" />
+                    <span>+ Tambah Halaman Rute Baru</span>
+                  </button>
+                </div>
+              </div>
+            </transition>
+          </div>
+
+          <div class="v-divider"></div>
+
           <!-- Studio Tools Segment -->
           <div class="tools-segment">
             <button
@@ -2404,16 +3287,25 @@ const executeVsCodeReplaceAll = () => {
           <div class="viewmode-toggle-group">
             <button
               class="vmode-btn"
-              :class="{ active: editorViewMode === 'design' }"
-              @click="editorViewMode = 'design'"
-              title="Mode Desain Studio"
+              :class="{ active: editorViewMode === 'design' && canvasViewMode === 'single' }"
+              @click="setCanvasViewMode('single')"
+              title="Mode Desain Studio (WYSIWYG Single Page)"
             >
               Desain
             </button>
             <button
               class="vmode-btn"
+              :class="{ active: canvasViewMode === 'sitemap' }"
+              @click="setCanvasViewMode('sitemap')"
+              title="Tampilan Alur Figma (Multi-Artboard Sitemap Flow & Bezier Connector)"
+            >
+              <Workflow :size="12" style="margin-right: 4px;" />
+              <span>Alur Figma</span>
+            </button>
+            <button
+              class="vmode-btn"
               :class="{ active: editorViewMode === 'preview' }"
-              @click="editorViewMode = 'preview'"
+              @click="editorViewMode = 'preview'; canvasViewMode = 'single'"
               title="Mode Simulasi Pengunjung"
             >
               Pratinjau
@@ -2991,18 +3883,28 @@ const executeVsCodeReplaceAll = () => {
             class="studio-viewport-area"
             :class="{
               'is-view-hidden': editorViewMode === 'code',
+              'is-sitemap-mode': canvasViewMode === 'sitemap',
               'tool-hand-active': activeTool === 'hand' || isSpacePressed,
               'is-dragging-canvas': isPanning,
               'grid-dots-visible': showGrid
             }"
             @mousedown="onCanvasMouseDown"
+            @click="onCanvasBackgroundClick"
             @wheel="onCanvasWheel"
           >
-            <!-- TOP FLOATING HUD LAYER (ABOVE CANVAS, FULL WIDTH, NEVER CLIPPED) -->
+            <!-- SMART STICKY FLOATING HUD LAYER (TOP LAYER, NEVER CLIPPED, TRACKS ACTIVE CONTENT & STICKS AT TOP) -->
             <transition name="hud-slide-down">
               <div
-                v-if="selectedBlock && editorViewMode === 'design'"
+                v-if="selectedBlock && editorViewMode === 'design' && canvasViewMode === 'single' && shelfCoords.visible"
+                ref="floatingShelfRef"
                 class="studio-viewport-floating-shelf"
+                :class="{ 'is-sticky-at-top': shelfCoords.isStickyAtTop }"
+                :style="{
+                  top: `${shelfCoords.top}px`,
+                  left: `${shelfCoords.left}px`,
+                  transform: `translate(-50%, 0) scale(${shelfCoords.scale})`,
+                  '--shelf-scale': shelfCoords.scale
+                }"
                 @click.stop
                 @mousedown.stop
               >
@@ -3410,8 +4312,218 @@ const executeVsCodeReplaceAll = () => {
             <span>Zoom: {{ Math.round(zoom * 100) }}%</span>
           </div>
 
+          <!-- =================================================================== -->
+          <!-- 1. B. SITEMAP FLOW WORKSPACE (FIGMA MULTI-ARTBOARD VIEW)             -->
+          <!-- =================================================================== -->
+          <div
+            v-if="canvasViewMode === 'sitemap'"
+            class="sitemap-flow-workspace"
+            :style="{
+              transform: `translate(calc(-50% + ${panX}px), ${panY}px) scale(${zoom})`,
+              transformOrigin: 'top center',
+              '--canvas-zoom': zoom,
+              width: `${sitemapCanvasWidth}px`
+            }"
+          >
+            <!-- SVG Flow Connector Bezier Layer -->
+            <svg
+              class="sitemap-flow-svg-layer"
+              :width="sitemapCanvasWidth"
+              height="2400"
+            >
+              <!-- Connector Paths with Bezier Curves and Route badges -->
+              <g v-for="conn in sitemapConnectors" :key="conn.id">
+                <!-- 1. Source Node Anchor Dot -->
+                <circle
+                  :cx="conn.startX"
+                  :cy="conn.startY"
+                  r="5"
+                  fill="#38bdf8"
+                  stroke="#0f172a"
+                  stroke-width="2"
+                />
+
+                <!-- 2. Base Guide Track (Subtle Gray Underlay) -->
+                <path
+                  :d="conn.path"
+                  fill="none"
+                  stroke="#cbd5e1"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+
+                <!-- 3. Active Flowing Animated Dashed Line -->
+                <path
+                  :d="conn.path"
+                  fill="none"
+                  stroke="#2563eb"
+                  stroke-width="2.5"
+                  stroke-dasharray="10,7"
+                  stroke-linecap="round"
+                  class="sitemap-flow-line-anim"
+                />
+
+                <!-- 4. Pulsing Signal Particle Moving from Source to Destination -->
+                <circle r="4.5" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5">
+                  <animateMotion
+                    :path="conn.path"
+                    dur="2.2s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+
+                <!-- 5. Destination Arrowhead (Direct Polygon, Reliable in All Browsers) -->
+                <polygon
+                  :points="`${conn.endX},${conn.endY} ${conn.endX - 10},${conn.endY - 6} ${conn.endX - 7},${conn.endY} ${conn.endX - 10},${conn.endY + 6}`"
+                  fill="#2563eb"
+                  stroke="#38bdf8"
+                  stroke-width="1"
+                />
+
+                <!-- 6. Interactive Route Pill Badge in Midpoint -->
+                <g
+                  class="sitemap-route-pill-node"
+                  :transform="`translate(${conn.midX}, ${conn.midY})`"
+                  style="pointer-events: auto; cursor: pointer;"
+                  @click="onRoutePillClick(conn.targetPageId)"
+                >
+                  <rect
+                    x="-52"
+                    y="-13"
+                    width="104"
+                    height="26"
+                    rx="13"
+                    fill="#0f172a"
+                    stroke="#38bdf8"
+                    stroke-width="1.5"
+                  />
+                  <text
+                    x="0"
+                    y="4.5"
+                    text-anchor="middle"
+                    fill="#ffffff"
+                    font-size="11"
+                    font-weight="700"
+                    font-family="system-ui, sans-serif"
+                    letter-spacing="0.02em"
+                  >
+                    {{ conn.label }}
+                  </text>
+                </g>
+              </g>
+            </svg>
+
+            <!-- Render All Artboards Side-by-Side (Figma Frame Structure) -->
+            <div
+              v-for="(page, pIdx) in multiPages"
+              :key="page.id"
+              class="sitemap-artboard-wrapper"
+              :style="{
+                left: `${getPageCanvasX(pIdx)}px`,
+                top: '40px',
+                width: `${artboardWidth}px`
+              }"
+            >
+              <!-- 1. Floating Frame Title Shelf (Figma Canvas Label) -->
+              <div class="sitemap-frame-title-shelf">
+                <div class="title-shelf-left">
+                  <span class="figma-frame-hash">#</span>
+                  <span class="figma-frame-name">{{ page.title }}</span>
+                  <span class="figma-frame-route-pill">{{ page.path }}</span>
+                  <span v-if="page.id === activePageId" class="figma-frame-badge-active">Aktif</span>
+                </div>
+                <div class="title-shelf-right">
+                  <span class="figma-frame-blocks-count">{{ page.blocks.length }} Blok</span>
+                  <button
+                    type="button"
+                    class="btn-figma-focus-page"
+                    @click.stop="switchPage(page.id, true)"
+                    title="Fokus Edit Halaman Ini (Single WYSIWYG Mode)"
+                  >
+                    <Edit3 :size="11" />
+                    <span>Edit Halaman</span>
+                  </button>
+                  <button
+                    v-if="page.path !== '/' && multiPages.length > 1"
+                    type="button"
+                    class="btn-figma-delete-page"
+                    @click.stop="deletePage(page.id)"
+                    title="Hapus Halaman Ini"
+                  >
+                    <Trash2 :size="11" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. Artboard Browser Window Card -->
+              <div
+                class="sitemap-artboard-card"
+                :class="{ 'is-selected-artboard': page.id === activePageId }"
+                :style="{ width: `${artboardWidth}px`, fontFamily: currentFont }"
+                @click="onSitemapCardClick(page.id)"
+              >
+                <!-- Browser window chrome -->
+                <div class="artboard-window-bar">
+                  <div class="window-traffic-dots">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                  </div>
+                  <div class="window-url-capsule">
+                    <ShieldCheck :size="12" color="#10b981" />
+                    <span class="url-text">https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}{{ page.path }}</span>
+                  </div>
+                  <div class="window-ingress-tag">
+                    <span class="live-dot-mini"></span>
+                    <span>Traefik v3 Edge: 1.8ms</span>
+                  </div>
+                </div>
+
+                <!-- Sandboxed Pixel-Perfect Live HTML Preview -->
+                <div class="sitemap-artboard-preview-shell">
+                  <iframe
+                    :srcdoc="getCompiledPageHtml(page)"
+                    class="sitemap-preview-iframe"
+                    title="Page Artboard Preview"
+                    sandbox="allow-scripts allow-same-origin"
+                  ></iframe>
+                  <!-- Clean hover overlay with centered pill hint -->
+                  <div class="artboard-hover-overlay">
+                    <div class="artboard-focus-hint-pill">
+                      <Edit3 :size="13" />
+                      <span>Klik untuk Edit Halaman</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card: + Tambah Halaman Baru -->
+            <div
+              class="sitemap-add-page-canvas-node"
+              :style="{
+                left: `${getPageCanvasX(multiPages.length)}px`,
+                top: '74px'
+              }"
+              @click="onAddPageNodeClick"
+            >
+              <div class="add-node-content">
+                <div class="add-node-icon-ring">
+                  <Plus :size="24" />
+                </div>
+                <h3 class="add-node-title">Tambah Halaman Rute</h3>
+                <p class="add-node-desc">Buat rute halaman konvensional baru (misal: /pricing, /team, /blog) dan hubungkan ke sitemap kanvas.</p>
+                <button type="button" class="btn-add-node-cta">
+                  <Plus :size="13" />
+                  <span>+ Buat Halaman</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- The Zoomable & Transformed Artboard Container -->
           <div
+            v-else
             class="artboard-transform-wrapper"
             :style="{
               transform: `translate(calc(-50% + ${panX}px), ${panY}px) scale(${zoom})`,
@@ -3428,7 +4540,7 @@ const executeVsCodeReplaceAll = () => {
               }"
             >
               <!-- Browser Chrome Window Bar -->
-              <div class="artboard-window-bar">
+              <div class="artboard-window-bar" @click="selectedBlockId = null; hudContext = { type: 'section' }">
                 <div class="window-traffic-dots">
                   <span class="dot red"></span>
                   <span class="dot yellow"></span>
@@ -3436,11 +4548,11 @@ const executeVsCodeReplaceAll = () => {
                 </div>
                 <div class="window-url-capsule">
                   <ShieldCheck :size="12" color="#10b981" />
-                  <span class="url-text">https://{{ activeContainer.subdomain }}</span>
+                  <span class="url-text">https://{{ activeContainer.subdomain }}{{ activePage?.path === '/' ? '' : activePage?.path }}</span>
                 </div>
                 <div class="window-ingress-tag">
                   <span class="live-dot-mini"></span>
-                  <span>Traefik v3 Edge: 1.8ms</span>
+                  <span>{{ activePage?.title || 'Beranda' }} ({{ activePage?.path || '/' }}) • Traefik v3</span>
                 </div>
               </div>
 
@@ -3455,6 +4567,7 @@ const executeVsCodeReplaceAll = () => {
                       'is-drag-in-progress': draggedBlockType !== null,
                       'is-active-drop': activeDropSlotIndex === bIdx
                     }"
+                    @click="selectedBlockId = null; hudContext = { type: 'section' }"
                     @dragover="onCanvasDropSlotDragOver($event, bIdx)"
                     @dragleave="onCanvasDropSlotDragLeave(bIdx)"
                     @drop="onCanvasDropSlotDrop($event, bIdx)"
@@ -3506,10 +4619,29 @@ const executeVsCodeReplaceAll = () => {
                     <nav
                       v-if="block.type === 'navbar'"
                       class="rendered-nav-block"
-                      :style="{ padding: `${block.styles?.paddingY || 16}px 32px` }"
+                      :class="[
+                        `nav-style-${block.styles?.navStyle || block.styles?.bgMode || 'glass'}`,
+                        `nav-align-${block.styles?.navAlign || 'split'}`
+                      ]"
+                      :style="{
+                        padding: `${block.styles?.paddingY || 16}px 32px`,
+                        position: block.styles?.isSticky ? 'sticky' : 'relative',
+                        top: block.styles?.isSticky ? '0' : undefined,
+                        zIndex: block.styles?.isSticky ? 40 : undefined,
+                        backgroundColor: block.styles?.navStyle === 'solid' ? (block.styles?.bgColor || '#ffffff') :
+                                         block.styles?.navStyle === 'transparent' ? 'transparent' :
+                                         block.styles?.navStyle === 'bordered' ? (block.styles?.bgColor || '#ffffff') : undefined,
+                        borderBottom: block.styles?.navStyle === 'bordered' ? `2px solid ${block.styles?.accentColor || '#cbd5e1'}` : undefined
+                      }"
                     >
                       <div class="site-brand-logo" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">
-                        <span class="brand-cube-icon">◆</span>
+                        <span
+                          class="brand-cube-icon"
+                          @click="cycleNavbarBrandGlyph(block)"
+                          title="Klik untuk ganti lambang brand"
+                        >
+                          {{ block.styles?.brandGlyph || '◆' }}
+                        </span>
                         <span
                           class="brand-title inline-editable-text"
                           :contenteditable="selectedBlockId === block.id"
@@ -3519,11 +4651,51 @@ const executeVsCodeReplaceAll = () => {
                           title="Klik untuk mengedit brand"
                         >{{ block.title }}</span>
                       </div>
-                      <div class="nav-links-cluster">
-                        <a href="#hero" class="nav-anchor active">Beranda</a>
-                        <a href="#features" class="nav-anchor">Keunggulan</a>
-                        <a href="#pricing" class="nav-anchor">Layanan</a>
-                        <a href="#cta" class="nav-anchor">Kontak</a>
+
+                      <div class="nav-links-cluster" :class="{ 'is-centered': block.styles?.navAlign === 'center' }">
+                        <div
+                          v-for="(item, idx) in (block.items && block.items.length > 0 ? block.items : defaultNavItems)"
+                          :key="item.id || idx"
+                          class="nav-link-item-wrapper"
+                          @click="onNavItemClick(block, idx, $event)"
+                        >
+                          <a
+                            :href="item.url || '#'"
+                            class="nav-anchor"
+                            :class="{ active: (item as any).active || (activePage && activePage.path === item.url) || idx === 0 }"
+                            :style="{ color: ((item as any).active || (activePage && activePage.path === item.url) || idx === 0) ? (block.styles?.accentColor || activeContainer.accentColor) : undefined }"
+                            @click.prevent
+                          >
+                            <span
+                              class="inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                              title="Klik untuk edit menu navigasi"
+                            >{{ item.title }}</span>
+                          </a>
+                          <button
+                            v-if="selectedBlockId === block.id && (block.items?.length || 0) > 1"
+                            type="button"
+                            class="btn-nav-link-delete"
+                            @click.stop="removeNavItem(block, idx)"
+                            title="Hapus tautan ini"
+                          >
+                            ×
+                          </button>
+                        </div>
+
+                        <!-- Quick Add Link Button on Canvas when Navbar selected -->
+                        <button
+                          v-if="selectedBlockId === block.id"
+                          type="button"
+                          class="btn-nav-quick-add"
+                          @click.stop="addNavItem(block)"
+                          title="Tambah Link Navigasi Baru"
+                        >
+                          <Plus :size="11" />
+                        </button>
+
                         <button
                           class="btn-nav-action"
                           :style="{
@@ -6638,6 +7810,113 @@ const executeVsCodeReplaceAll = () => {
                 <span class="icon-tile-name">{{ opt.name }}</span>
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- STUDIO MODAL: TAMBAH HALAMAN RUTE BARU                              -->
+      <!-- =================================================================== -->
+      <div v-if="isNewPageModalOpen" class="modal-backdrop" @click.self="isNewPageModalOpen = false">
+        <div class="modal-dialog modal-dialog-new-page">
+          <!-- Header -->
+          <div class="modal-header">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box" style="background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.2);">
+                <Workflow :size="20" style="color: #2563eb;" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Tambah Halaman Rute Baru</h3>
+                <p class="modal-subheading">Perluas arsitektur website menjadi multi-halaman konvensional.</p>
+              </div>
+            </div>
+            <button type="button" class="modal-close-button" @click="isNewPageModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="new-page-modal-body">
+            <div class="new-page-field">
+              <label class="new-page-label">Judul Halaman</label>
+              <input
+                v-model="newPageForm.title"
+                type="text"
+                placeholder="Contoh: Paket & Harga, Tim Pengembang, Portofolio"
+                class="new-page-input"
+                @keyup.enter="createNewPage"
+              />
+            </div>
+
+            <div class="new-page-field">
+              <label class="new-page-label">Rute URL (Path)</label>
+              <div class="new-page-path-prefix-wrap">
+                <span class="path-prefix">https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}</span>
+                <input
+                  v-model="newPageForm.path"
+                  type="text"
+                  placeholder="/pricing"
+                  class="new-page-input path-input"
+                  @keyup.enter="createNewPage"
+                />
+              </div>
+              <span class="new-page-help">Rute akan otomatis dihubungkan ke bilah navigasi (Navbar) semua halaman.</span>
+            </div>
+
+            <div class="new-page-field">
+              <label class="new-page-label">Pilih Blueprint Layout Awal</label>
+              <div class="new-page-presets-grid">
+                <button
+                  type="button"
+                  class="page-preset-card"
+                  :class="{ active: newPageForm.templateType === 'content' }"
+                  @click="newPageForm.templateType = 'content'"
+                >
+                  <div class="preset-card-icon"><Layout :size="18" /></div>
+                  <div class="preset-card-title">Halaman Konten</div>
+                  <div class="preset-card-desc">Navbar + Hero Banner + Fitur Bento + Footer</div>
+                </button>
+                <button
+                  type="button"
+                  class="page-preset-card"
+                  :class="{ active: newPageForm.templateType === 'contact' }"
+                  @click="newPageForm.templateType = 'contact'"
+                >
+                  <div class="preset-card-icon"><FileText :size="18" /></div>
+                  <div class="preset-card-title">Halaman Kontak</div>
+                  <div class="preset-card-desc">Navbar + Hero Kontak + Formulir Leads + Footer</div>
+                </button>
+                <button
+                  type="button"
+                  class="page-preset-card"
+                  :class="{ active: newPageForm.templateType === 'blank' }"
+                  @click="newPageForm.templateType = 'blank'"
+                >
+                  <div class="preset-card-icon"><Box :size="18" /></div>
+                  <div class="preset-card-title">Halaman Bersih</div>
+                  <div class="preset-card-desc">Navbar + Section Minimal + Footer</div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-modal-ghost"
+              @click="isNewPageModalOpen = false"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              class="btn-modal-confirm"
+              @click="createNewPage"
+            >
+              <Plus :size="13" />
+              <span>Buat Halaman & Buka di Kanvas</span>
+            </button>
           </div>
         </div>
       </div>

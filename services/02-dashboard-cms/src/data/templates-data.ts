@@ -1,4 +1,4 @@
-import type { VisualBlock } from '../types/dashboard';
+import type { VisualBlock, TemplatePage } from '../types/dashboard';
 
 export interface OfficialTemplateItem {
   id: string;
@@ -20,6 +20,8 @@ export interface OfficialTemplateItem {
   isFeatured?: boolean;
   tags?: string[];
   layoutType?: string;
+  isMultiPage?: boolean;
+  pages?: TemplatePage[];
   stats: {
     ttfb: string;
     seo: string;
@@ -63,6 +65,434 @@ export const blueprintWorkflowSteps = [
 ];
 
 export const officialTemplatesData: OfficialTemplateItem[] = [
+  {
+    id: 'tpl_corporate_multipage',
+    title: 'Enterprise Corporate & Service Suite (Multi-Page Figma Architecture)',
+    category: 'business',
+    tier: 'Bespoke Enterprise',
+    priceText: 'Multi-Page Ready',
+    isPro: false,
+    isFeatured: true,
+    desc: 'Blueprint website korporasi konvensional multi-halaman dengan arsitektur sitemap visual gaya Figma. Dilengkapi rute lengkap Beranda (/), Tentang Kami (/about), Katalog Layanan (/services), dan Kontak Kami (/contact) yang saling terhubung dinamis.',
+    features: [
+      'Struktur Multi-Halaman Konvensional (/, /about, /services, /contact)',
+      'Arsitektur Visual Figma Flow Canvas dengan Garis Alur Konektor Bezier',
+      'Navigasi Navbar Dinamis yang Otomatis Berpindah Antar Halaman',
+      'Formulir Lead Generation, Showcase Portofolio, dan Tabel Layanan',
+      'SEO Multi-Halaman Terisolasi & Cache Traefik v3 HTTP/3'
+    ],
+    accentColor: '#2563eb',
+    fontFamily: 'Plus Jakarta Sans',
+    defaultRole: 'Platform Solusi Cloud & Rekayasa Enterprise',
+    defaultBio: 'Membangun infrastruktur perangkat lunak modern tingkat tinggi dengan isolasi runtime kontainer mandiri.',
+    lighthouseScore: 99.8,
+    layoutType: 'multi-page',
+    isMultiPage: true,
+    tags: ['Multi-Page', 'Sitemap Flow', 'Figma Canvas', 'Enterprise', 'Bespoke'],
+    stats: {
+      ttfb: '0.8ms',
+      seo: '100/100',
+      pwa: 'Multi-Page Ready'
+    },
+    themeConfig: {
+      fontFamily: 'Plus Jakarta Sans',
+      accentColor: '#2563eb',
+      borderRadius: 12,
+      bgMode: 'glass'
+    },
+    pages: [
+      {
+        id: 'page_home',
+        path: '/',
+        title: 'Beranda',
+        description: 'Halaman utama landing korporasi dengan headline impresif, keunggulan, dan portofolio.',
+        canvasX: 0,
+        canvasY: 0,
+        blocks: [
+          {
+            id: 'home_nav',
+            type: 'navbar',
+            name: 'Header & Navigasi Utama',
+            title: 'AetherCorp',
+            buttonText: 'Konsultasi Gratis',
+            buttonUrl: '/contact',
+            isVisible: true,
+            isLocked: false,
+            items: [
+              { id: 'hn_1', title: 'Beranda', url: '/' },
+              { id: 'hn_2', title: 'Tentang Kami', url: '/about' },
+              { id: 'hn_3', title: 'Layanan', url: '/services' },
+              { id: 'hn_4', title: 'Kontak', url: '/contact' }
+            ],
+            styles: { bgMode: 'glass', navStyle: 'glass', navAlign: 'split', isSticky: true, brandGlyph: '◆', paddingY: 16 }
+          },
+          {
+            id: 'home_hero',
+            type: 'hero',
+            name: 'Hero Showcase Korporat',
+            badge: '◆ ENTERPRISE MULTI-PAGE PLATFORM',
+            title: 'Solusi Rekayasa Digital & Cloud Enterprise',
+            subtitle: 'Menghadirkan ekosistem perangkat lunak berkinerja tinggi, isolasi kontainer aman, dan skalabilitas tanpa batas.',
+            buttonText: 'Eksplorasi Layanan',
+            buttonUrl: '/services',
+            secondaryButtonText: 'Tentang Perusahaan',
+            secondaryButtonUrl: '/about',
+            isVisible: true,
+            isLocked: false,
+            styles: { align: 'center', paddingY: 72, bgMode: 'transparent' }
+          },
+          {
+            id: 'home_features',
+            type: 'features',
+            name: 'Pilar Keunggulan Teknologi',
+            badge: 'PONDASI SISTEM',
+            title: 'Keandalan Tingkat Tinggi untuk Bisnis Kritis',
+            subtitle: 'Dirancang untuk ketahanan beban jutaan transaksi tanpa kompromi.',
+            isVisible: true,
+            isLocked: false,
+            items: [
+              { id: 'hf_1', title: 'Orkestrasi Mandiri Traefik v3', desc: 'Routing otomatis dengan penerbitan SSL TLS v1.3 Let\'s Encrypt.', icon: 'globe' },
+              { id: 'hf_2', title: 'Isolasi Memori Linux cgroups v2', desc: 'Proteksi sumber daya RAM dan CPU per-kontainer tanpa bottleneck.', icon: 'server' },
+              { id: 'hf_3', title: 'Telemetri Realtime Kafka & Redis', desc: 'Pemrosesan data mikrodetik dengan analitik streaming latensi ultra-rendah.', icon: 'trending-up' }
+            ],
+            styles: { paddingY: 60, align: 'center', bgMode: 'transparent' }
+          },
+          {
+            id: 'home_cta',
+            type: 'cta',
+            name: 'Call To Action Beranda',
+            title: 'Siap Mempercepat Transformasi Digital Anda?',
+            subtitle: 'Jadwalkan sesi konsultasi strategis bersama arsitek sistem senior kami hari ini.',
+            buttonText: 'Hubungi Tim Ahli',
+            buttonUrl: '/contact',
+            isVisible: true,
+            isLocked: false,
+            styles: { paddingY: 52, align: 'center', bgMode: 'glass', borderRadius: 16 }
+          },
+          {
+            id: 'home_footer',
+            type: 'footer',
+            name: 'Site Footer',
+            title: 'AetherCorp Platform Suite',
+            subtitle: 'Hak Cipta © 2026 AetherCorp Enterprise. Dilindungi Undang-Undang.',
+            isVisible: true,
+            isLocked: false,
+            styles: { paddingY: 36, align: 'center', bgMode: 'transparent' }
+          }
+        ]
+      },
+      {
+        id: 'page_about',
+        path: '/about',
+        title: 'Tentang Kami',
+        description: 'Profil visi, misi, milestone perjalanan, dan kultur rekayasa perusahaan.',
+        canvasX: 1800,
+        canvasY: 0,
+        blocks: [
+          {
+            id: 'about_nav',
+            type: 'navbar',
+            name: 'Header & Navigasi',
+            title: 'AetherCorp',
+            buttonText: 'Konsultasi Gratis',
+            buttonUrl: '/contact',
+            isVisible: true,
+            isLocked: false,
+            items: [
+              { id: 'an_1', title: 'Beranda', url: '/' },
+              { id: 'an_2', title: 'Tentang Kami', url: '/about' },
+              { id: 'an_3', title: 'Layanan', url: '/services' },
+              { id: 'an_4', title: 'Kontak', url: '/contact' }
+            ],
+            styles: { bgMode: 'glass', navStyle: 'glass', navAlign: 'split', isSticky: true, brandGlyph: '◆', paddingY: 16 }
+          },
+          {
+            id: 'about_hero',
+            type: 'hero',
+            name: 'Hero Profil Perusahaan',
+            badge: 'PROFIL & VISI KORPORAT',
+            title: 'Membangun Ekosistem Rekayasa Terdepan Sejak 2020',
+            subtitle: 'Berdedikasi membantu perusahaan skala nasional dan multinasional mencapai keandalan operasional sistem hingga 99.99%.',
+            buttonText: 'Pelajari Layanan Kami',
+            buttonUrl: '/services',
+            secondaryButtonText: 'Hubungi Manajemen',
+            secondaryButtonUrl: '/contact',
+            isVisible: true,
+            isLocked: false,
+            styles: { align: 'center', paddingY: 64, bgMode: 'transparent' }
+          },
+          {
+            id: 'about_stats',
+            type: 'stats',
+            name: 'Pencapaian & Skala Dampak',
+            badge: 'REKAM JEJAK',
+            title: 'Dampak Nyata di Berbagai Industri',
+            subtitle: 'Angka terverifikasi dari eksekusi proyek rekayasa skala enterprise.',
+            isVisible: true,
+            isLocked: false,
+            items: [
+              { id: 'as_1', title: '500+', desc: 'Proyek Sistem Berhasil Rilis' },
+              { id: 'as_2', title: '99.99%', desc: 'SLA Ketersediaan Infrastruktur' },
+              { id: 'as_3', title: '18M+', desc: 'Kunjungan Pengguna per Bulan' },
+              { id: 'as_4', title: '15+', desc: 'Negara Mitra Operasional' }
+            ],
+            styles: { paddingY: 56, align: 'center', bgMode: 'glass' }
+          },
+          {
+            id: 'about_list',
+            type: 'listgroup',
+            name: 'Standar Nilai & Kepatuhan',
+            badge: 'KOMITMEN INTEGRITAS',
+            title: 'Prinsip Kualitas Tanpa Kompromi',
+            subtitle: 'Pondasi filosofi teknis yang membimbing setiap baris kode yang kami kembangkan.',
+            isVisible: true,
+            isLocked: false,
+            items: [
+              { id: 'al_1', title: 'Kepatuhan Regulasi & Sertifikasi ISO/IEC 27001', desc: 'Enkripsi data berlapis dan audit keamanan independen berkala.', tag: 'Standar Global' },
+              { id: 'al_2', title: 'Isolasi Tenant Tingkat Kernel (Row-Level Security)', desc: 'Menjamin 100% privasi data tidak saling silang antar organisasi.', tag: 'Zero Leakage' },
+              { id: 'al_3', title: 'Dukungan Operasional 24/7 dengan MTTR < 10 Menit', desc: 'Tim engineer siaga memitigasi potensi gangguan sebelum berdampak pada pengguna.', tag: 'SLA Tinggi' }
+            ],
+            styles: { paddingY: 56, align: 'left', bgMode: 'transparent' }
+          },
+          {
+            id: 'about_footer',
+            type: 'footer',
+            name: 'Site Footer',
+            title: 'AetherCorp Platform Suite',
+            subtitle: 'Hak Cipta © 2026 AetherCorp Enterprise. Dilindungi Undang-Undang.',
+            isVisible: true,
+            isLocked: false,
+            styles: { paddingY: 36, align: 'center', bgMode: 'transparent' }
+          }
+        ]
+      },
+      {
+        id: 'page_services',
+        path: '/services',
+        title: 'Layanan & Solusi',
+        description: 'Daftar komprehensif paket solusi rekayasa, arsitektur, dan paket investasi.',
+        canvasX: 3600,
+        canvasY: 0,
+        blocks: [
+          {
+            id: 'srv_nav',
+            type: 'navbar',
+            name: 'Header & Navigasi',
+            title: 'AetherCorp',
+            buttonText: 'Konsultasi Gratis',
+            buttonUrl: '/contact',
+            isVisible: true,
+            isLocked: false,
+            items: [
+              { id: 'sn_1', title: 'Beranda', url: '/' },
+              { id: 'sn_2', title: 'Tentang Kami', url: '/about' },
+              { id: 'sn_3', title: 'Layanan', url: '/services' },
+              { id: 'sn_4', title: 'Kontak', url: '/contact' }
+            ],
+            styles: { bgMode: 'glass', navStyle: 'glass', navAlign: 'split', isSticky: true, brandGlyph: '◆', paddingY: 16 }
+          },
+          {
+            id: 'srv_hero',
+            type: 'hero',
+            name: 'Hero Solusi & Katalog',
+            badge: 'KATALOG LAYANAN TEKNOLOGI',
+            title: 'Portofolio Solusi Menyeluruh untuk Pertumbuhan Eksponensial',
+            subtitle: 'Dirancang modular agar dapat disesuaikan dengan skala dan fase perkembangan teknologi bisnis Anda.',
+            buttonText: 'Pilih Paket Solusi',
+            buttonUrl: '#pricing-tiers',
+            secondaryButtonText: 'Tanya Tim Konsultan',
+            secondaryButtonUrl: '/contact',
+            isVisible: true,
+            isLocked: false,
+            styles: { align: 'center', paddingY: 64, bgMode: 'transparent' }
+          },
+          {
+            id: 'srv_pricing',
+            type: 'pricing',
+            name: 'Tabel Paket Solusi',
+            badge: 'INVESTASI TEKNOLOGI',
+            title: 'Pilihan Paket Layanan Rekayasa',
+            subtitle: 'Skalabilitas transparan tanpa biaya tersembunyi dengan dukungan teknis penuh.',
+            isVisible: true,
+            isLocked: false,
+            items: [
+              { id: 'sp_1', title: 'Startup Acceleration', price: 'Rp 2.490.000', period: '/ bln', desc: 'Pondasi cloud native dan domain kustom.', features: ['Isolasi Kontainer Docker', 'SSL Auto Let\'s Encrypt', 'SLA 99.9% Uptime'] },
+              { id: 'sp_2', title: 'Corporate Growth', price: 'Rp 5.990.000', period: '/ bln', tag: 'Paling Populer', desc: 'Optimalisasi penuh dan redis caching.', features: ['Dedicated Redis & Kafka', 'Audit Keamanan Berkala', 'Prioritas Engineer 24/7'] },
+              { id: 'sp_3', title: 'Enterprise Bespoke', price: 'Hubungi Kami', period: '', desc: 'Arsitektur kustom multi-region dan disaster recovery.', features: ['Multi-Region Failover', 'Custom Dedicated VPC', 'Dedicated Solutions Architect'] }
+            ],
+            styles: { paddingY: 60, align: 'center', bgMode: 'transparent' }
+          },
+          {
+            id: 'srv_accordion',
+            type: 'accordion',
+            name: 'Tanya Jawab Layanan (FAQ)',
+            badge: 'FAQ LAYANAN',
+            title: 'Pertanyaan yang Kerap Ditanyakan',
+            subtitle: 'Informasi transparan seputar proses migrasi, dukungan teknis, dan SLA kami.',
+            isVisible: true,
+            isLocked: false,
+            activeItemIndex: 0,
+            items: [
+              { id: 'sfaq_1', title: 'Berapa lama proses implementasi dan migrasi ke Aether Platform?', desc: 'Rata-rata integrasi dan provisioning kontainer mandiri selesai dalam waktu kurang dari 24 jam kerja.' },
+              { id: 'sfaq_2', title: 'Apakah ada kontrak jangka panjang yang mengikat?', desc: 'Kami menyediakan opsi fleksibel bulanan maupun tahunan dengan diskon khusus tanpa pengikatan vendor lock-in.' },
+              { id: 'sfaq_3', title: 'Bagaimana prosedur penanganan eskalasi insiden darurat?', desc: 'Tim NOC kami aktif 24/7/365 dengan waktu respon tanggap awal di bawah 15 menit melalui saluran dedicated.' }
+            ],
+            styles: { paddingY: 56, align: 'center', bgMode: 'glass' }
+          },
+          {
+            id: 'srv_footer',
+            type: 'footer',
+            name: 'Site Footer',
+            title: 'AetherCorp Platform Suite',
+            subtitle: 'Hak Cipta © 2026 AetherCorp Enterprise. Dilindungi Undang-Undang.',
+            isVisible: true,
+            isLocked: false,
+            styles: { paddingY: 36, align: 'center', bgMode: 'transparent' }
+          }
+        ]
+      },
+      {
+        id: 'page_contact',
+        path: '/contact',
+        title: 'Hubungi Kami',
+        description: 'Formulir kontak langsung, pemesanan jadwal konsultasi, dan informasi saluran resmi.',
+        canvasX: 5400,
+        canvasY: 0,
+        blocks: [
+          {
+            id: 'cnt_nav',
+            type: 'navbar',
+            name: 'Header & Navigasi',
+            title: 'AetherCorp',
+            buttonText: 'Konsultasi Gratis',
+            buttonUrl: '/contact',
+            isVisible: true,
+            isLocked: false,
+            items: [
+              { id: 'cn_1', title: 'Beranda', url: '/' },
+              { id: 'cn_2', title: 'Tentang Kami', url: '/about' },
+              { id: 'cn_3', title: 'Layanan', url: '/services' },
+              { id: 'cn_4', title: 'Kontak', url: '/contact' }
+            ],
+            styles: { bgMode: 'glass', navStyle: 'glass', navAlign: 'split', isSticky: true, brandGlyph: '◆', paddingY: 16 }
+          },
+          {
+            id: 'cnt_hero',
+            type: 'hero',
+            name: 'Hero Hubungi Kami',
+            badge: 'KOMUNIKASI LANGSUNG',
+            title: 'Mari Diskusikan Kebutuhan Proyek Strategis Anda',
+            subtitle: 'Arsitek sistem dan konsultan solusi kami siap mendengarkan tantangan teknologi bisnis Anda.',
+            buttonText: 'Isi Formulir Pesan',
+            buttonUrl: '#form-kontak',
+            isVisible: true,
+            isLocked: false,
+            styles: { align: 'center', paddingY: 60, bgMode: 'transparent' }
+          },
+          {
+            id: 'cnt_form',
+            type: 'formcontrol',
+            name: 'Formulir Kontak Resmi',
+            badge: 'FORMULIR INQUIRY',
+            title: 'Sampaikan Rincian Kebutuhan Anda',
+            subtitle: 'Kami menjamin kerahasiaan informasi proyek Anda melalui kesepakatan NDA standar industri.',
+            buttonText: 'Kirimkan Pesan Sekarang',
+            isVisible: true,
+            isLocked: false,
+            items: [
+              { id: 'cf_1', title: 'Nama Lengkap & Jabatan', label: 'Contoh: Budi Santoso (CTO)', tag: 'text' },
+              { id: 'cf_2', title: 'Email Perusahaan', label: 'budi@perusahaan.com', tag: 'email' },
+              { id: 'cf_3', title: 'Kategori Layanan yang Dibutuhkan', label: 'Cloud Migration / Web Platform', tag: 'select' },
+              { id: 'cf_4', title: 'Gambaran Singkat Rencana Proyek', label: 'Jelaskan perkiraan timeline dan tujuan utama...', tag: 'textarea' }
+            ],
+            styles: { paddingY: 56, align: 'center', bgMode: 'glass', borderRadius: 16 }
+          },
+          {
+            id: 'cnt_footer',
+            type: 'footer',
+            name: 'Site Footer',
+            title: 'AetherCorp Platform Suite',
+            subtitle: 'Hak Cipta © 2026 AetherCorp Enterprise. Dilindungi Undang-Undang.',
+            isVisible: true,
+            isLocked: false,
+            styles: { paddingY: 36, align: 'center', bgMode: 'transparent' }
+          }
+        ]
+      }
+    ],
+    blocks: [
+      {
+        id: 'home_nav',
+        type: 'navbar',
+        name: 'Header & Navigasi Utama',
+        title: 'AetherCorp',
+        buttonText: 'Konsultasi Gratis',
+        buttonUrl: '/contact',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          { id: 'hn_1', title: 'Beranda', url: '/' },
+          { id: 'hn_2', title: 'Tentang Kami', url: '/about' },
+          { id: 'hn_3', title: 'Layanan', url: '/services' },
+          { id: 'hn_4', title: 'Kontak', url: '/contact' }
+        ],
+        styles: { bgMode: 'glass', navStyle: 'glass', navAlign: 'split', isSticky: true, brandGlyph: '◆', paddingY: 16 }
+      },
+      {
+        id: 'home_hero',
+        type: 'hero',
+        name: 'Hero Showcase Korporat',
+        badge: '◆ ENTERPRISE MULTI-PAGE PLATFORM',
+        title: 'Solusi Rekayasa Digital & Cloud Enterprise',
+        subtitle: 'Menghadirkan ekosistem perangkat lunak berkinerja tinggi, isolasi kontainer aman, dan skalabilitas tanpa batas.',
+        buttonText: 'Eksplorasi Layanan',
+        buttonUrl: '/services',
+        secondaryButtonText: 'Tentang Perusahaan',
+        secondaryButtonUrl: '/about',
+        isVisible: true,
+        isLocked: false,
+        styles: { align: 'center', paddingY: 72, bgMode: 'transparent' }
+      },
+      {
+        id: 'home_features',
+        type: 'features',
+        name: 'Pilar Keunggulan Teknologi',
+        badge: 'PONDASI SISTEM',
+        title: 'Keandalan Tingkat Tinggi untuk Bisnis Kritis',
+        subtitle: 'Dirancang untuk ketahanan beban jutaan transaksi tanpa kompromi.',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          { id: 'hf_1', title: 'Orkestrasi Mandiri Traefik v3', desc: 'Routing otomatis dengan penerbitan SSL TLS v1.3 Let\'s Encrypt.', icon: 'globe' },
+          { id: 'hf_2', title: 'Isolasi Memori Linux cgroups v2', desc: 'Proteksi sumber daya RAM dan CPU per-kontainer tanpa bottleneck.', icon: 'server' },
+          { id: 'hf_3', title: 'Telemetri Realtime Kafka & Redis', desc: 'Pemrosesan data mikrodetik dengan analitik streaming latensi ultra-rendah.', icon: 'trending-up' }
+        ],
+        styles: { paddingY: 60, align: 'center', bgMode: 'transparent' }
+      },
+      {
+        id: 'home_cta',
+        type: 'cta',
+        name: 'Call To Action Beranda',
+        title: 'Siap Mempercepat Transformasi Digital Anda?',
+        subtitle: 'Jadwalkan sesi konsultasi strategis bersama arsitek sistem senior kami hari ini.',
+        buttonText: 'Hubungi Tim Ahli',
+        buttonUrl: '/contact',
+        isVisible: true,
+        isLocked: false,
+        styles: { paddingY: 52, align: 'center', bgMode: 'glass', borderRadius: 16 }
+      },
+      {
+        id: 'home_footer',
+        type: 'footer',
+        name: 'Site Footer',
+        title: 'AetherCorp Platform Suite',
+        subtitle: 'Hak Cipta © 2026 AetherCorp Enterprise. Dilindungi Undang-Undang.',
+        isVisible: true,
+        isLocked: false,
+        styles: { paddingY: 36, align: 'center', bgMode: 'transparent' }
+      }
+    ]
+  },
   {
     id: 'tpl_ecommerce_store',
     title: 'Toko Online Modern & Katalog Penjualan Produk (E-Commerce)',

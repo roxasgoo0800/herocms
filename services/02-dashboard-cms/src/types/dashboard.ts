@@ -130,6 +130,7 @@ export interface VisualBlock {
     buttonRadius?: number;
     buttonStyle?: 'solid' | 'outline' | 'glow' | 'pill';
     buttonColor?: string;
+    buttonTextColor?: string;
   }>;
   styles?: {
     paddingY?: number;
@@ -153,16 +154,43 @@ export interface VisualBlock {
     buttonRadius?: number;
     buttonStyle?: 'solid' | 'outline' | 'glow' | 'pill';
     buttonColor?: string;
+    buttonTextColor?: string;
     secondaryButtonRadius?: number;
     secondaryButtonStyle?: 'solid' | 'outline' | 'glow' | 'pill';
     secondaryButtonColor?: string;
+    secondaryButtonTextColor?: string;
     cardStyle?: 'default' | 'flat' | 'bordered' | 'glass' | 'glow';
     cardColumns?: 2 | 3 | 4;
     cardOrientation?: 'vertical' | 'horizontal';
     cardRadius?: number;
     bgPattern?: 'none' | 'dots' | 'grid' | 'mesh';
     shapeDivider?: 'none' | 'wave' | 'tilt' | 'curve';
+    isSticky?: boolean;
+    navStyle?: 'glass' | 'solid' | 'bordered' | 'transparent';
+    navAlign?: 'split' | 'center' | 'left';
+    brandGlyph?: string;
+    showBrandIcon?: boolean;
   };
+}
+
+export interface TemplatePage {
+  id: string;
+  path: string;
+  title: string;
+  description?: string;
+  canvasX?: number;
+  canvasY?: number;
+  blocks: VisualBlock[];
+}
+
+export interface MultiPageItem {
+  id: string;
+  path: string;
+  title: string;
+  description?: string;
+  canvasX: number;
+  canvasY: number;
+  blocks: VisualBlock[];
 }
 
 export interface ContentArticle {

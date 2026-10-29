@@ -99,7 +99,8 @@ const {
   isDeleteContainerModalOpen,
   isDeletingContainer,
   cancelDeleteContainer,
-  confirmDeleteContainer
+  confirmDeleteContainer,
+  isBackendOffline
 } = useDashboardData();
 
 const dashboardVersion = computed(() =>
@@ -816,10 +817,14 @@ const handleLogout = async () => {
         </div>
 
         <div v-else class="top-actions">
-          <!-- Engine Health Tag -->
-          <div class="edge-status-tag">
+          <!-- Engine Health Tag (Connected vs Offline Resilient Mode) -->
+          <div v-if="!isBackendOffline" class="edge-status-tag" title="Terhubung langsung ke Traefik Edge & PostgreSQL">
             <span class="pulse-green-sm"></span>
             <span>Traefik Edge: <strong>1.8ms TTFB</strong></span>
+          </div>
+          <div v-else class="edge-status-tag is-offline-tag" title="Docker / Backend Go sedang non-aktif. Bekerja dalam mode draf lokal.">
+            <span class="pulse-amber-sm"></span>
+            <span>Studio: <strong>Mode Offline</strong></span>
           </div>
 
           <!-- Primary Add Website Button -->

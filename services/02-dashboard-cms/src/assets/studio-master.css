@@ -1280,6 +1280,20 @@ a[class*="btn-"] svg,
   border-radius: 50%;
 }
 
+.pulse-amber-sm {
+  width: 6px;
+  height: 6px;
+  background: #f59e0b;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.edge-status-tag.is-offline-tag {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
 .btn-top-create {
   background: #0f172a;
   color: #ffffff;

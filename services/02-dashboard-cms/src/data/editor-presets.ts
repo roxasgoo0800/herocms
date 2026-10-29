@@ -268,6 +268,10 @@ export const createDefaultBlocks = (siteName: string, role: string, bio: string)
       ],
       styles: {
         bgMode: 'glass',
+        navStyle: 'glass',
+        navAlign: 'split',
+        isSticky: true,
+        brandGlyph: '◆',
         paddingY: 16,
         backdropBlur: 16
       }
@@ -421,7 +425,21 @@ export const createLibraryBlock = (type: VisualBlock['type']): VisualBlock => {
         buttonUrl: '#',
         isVisible: true,
         isLocked: false,
-        styles: { bgMode: 'glass', paddingY: 16, backdropBlur: 16 }
+        items: [
+          { id: 'nav_1', title: 'Beranda', url: '#hero' },
+          { id: 'nav_2', title: 'Keunggulan', url: '#features' },
+          { id: 'nav_3', title: 'Layanan', url: '#pricing' },
+          { id: 'nav_4', title: 'Kontak', url: '#cta' }
+        ],
+        styles: {
+          bgMode: 'glass',
+          navStyle: 'glass',
+          navAlign: 'split',
+          isSticky: true,
+          brandGlyph: '◆',
+          paddingY: 16,
+          backdropBlur: 16
+        }
       };
 
     case 'hero':
@@ -763,6 +781,7 @@ export const fontOptions: FontOption[] = [
   { id: 'plus-jakarta', name: 'Plus Jakarta Sans (Modern UI)', family: "'Plus Jakarta Sans', system-ui, sans-serif", category: 'sans' },
   { id: 'outfit', name: 'Outfit (Geometric High-End)', family: "'Outfit', system-ui, sans-serif", category: 'sans' },
   { id: 'poppins', name: 'Poppins (Friendly Tech)', family: "'Poppins', sans-serif", category: 'sans' },
+  { id: 'syne', name: 'Syne (Avant-Garde Display)', family: "'Syne', sans-serif", category: 'display' },
   { id: 'playfair', name: 'Playfair Display (Luxury Serif)', family: "'Playfair Display', Georgia, serif", category: 'serif' },
   { id: 'fira-code', name: 'Fira Code (Developer Mono)', family: "'Fira Code', 'Courier New', monospace", category: 'mono' },
   { id: 'roboto', name: 'Roboto (Neutral Pro)', family: "'Roboto', sans-serif", category: 'sans' }
