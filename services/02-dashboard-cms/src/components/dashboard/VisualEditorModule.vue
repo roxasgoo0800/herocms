@@ -293,7 +293,182 @@ const handleAllDropdownOutsideClick = (e: MouseEvent) => {
   if (pageSwitcherRef.value && !pageSwitcherRef.value.contains(e.target as Node)) {
     isPageSwitcherOpen.value = false;
   }
+  if (hudPatternDropdownRef.value && !hudPatternDropdownRef.value.contains(e.target as Node)) {
+    isHudPatternOpen.value = false;
+  }
+  if (hudAnimDropdownRef.value && !hudAnimDropdownRef.value.contains(e.target as Node)) {
+    isHudAnimOpen.value = false;
+  }
+  if (hudFontDropdownRef.value && !hudFontDropdownRef.value.contains(e.target as Node)) {
+    isHudFontOpen.value = false;
+  }
 };
+
+const siteAccentColor = computed(() => activeContainer.value?.accentColor || '#2563eb');
+
+const safeHexColor = (val?: string, fallback: string = '#2563eb'): string => {
+  if (!val || val === 'transparent') return fallback;
+  if (val.startsWith('#')) {
+    if (val.length === 7) return val;
+    if (val.length === 4) {
+      return '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
+    }
+  }
+  return fallback;
+};
+
+// HUD Floating Shelf Custom Popover States
+const isHudPatternOpen = ref(false);
+const isHudAnimOpen = ref(false);
+const isHudFontOpen = ref(false);
+const hudPatternDropdownRef = ref<HTMLElement | null>(null);
+const hudAnimDropdownRef = ref<HTMLElement | null>(null);
+const hudFontDropdownRef = ref<HTMLElement | null>(null);
+const blockAnimKeys = ref<Record<string, number>>({});
+
+const patternOptionsList = [
+  { id: 'none', name: 'Pola: Off' },
+  { id: 'dots', name: 'Dot Grid' },
+  { id: 'grid', name: 'Matrix Grid' },
+  { id: 'mesh', name: 'Ambient Glow' }
+];
+
+const hudAnimationList = [
+  { id: 'none', name: 'Tanpa Animasi' },
+  { id: 'fade', name: 'Fade In' },
+  { id: 'fadeInUp', name: 'Fade In Up' },
+  { id: 'slideUp', name: 'Slide Up' },
+  { id: 'slideInLeft', name: 'Slide In Left' },
+  { id: 'blurFade', name: 'Cinematic Blur Fade' },
+  { id: 'springPop', name: 'Spring 3D Elastic' },
+  { id: 'zoomIn', name: 'Zoom In Pop' },
+  { id: 'tiltIn', name: 'Perspective Tilt 3D' },
+  { id: 'float', name: 'Floating Infinite' },
+  { id: 'pulseGlow', name: 'Pulse Glow' },
+  { id: 'bounce', name: 'Dynamic Bounce' }
+];
+
+const currentPatternLabel = computed(() => {
+  const p = selectedBlock.value?.styles?.bgPattern || 'none';
+  if (p === 'none') return 'Pola: Off';
+  return patternOptionsList.find(x => x.id === p)?.name || 'Pola: ' + p;
+});
+
+const currentAnimLabel = computed(() => {
+  const a = selectedBlock.value?.styles?.animation || 'none';
+  if (a === 'none') return 'Anim: Off';
+  const found = hudAnimationList.find(x => x.id === a);
+  return found ? found.name : 'Anim: ' + a;
+});
+
+const currentBlockFontLabel = computed(() => {
+  const currentFam = selectedBlock.value?.styles?.fontFamily || currentFont.value;
+  const found = fontOptions.find(f => f.family === currentFam || f.id === currentFam || currentFam.includes(f.name.split(' (')[0]));
+  return found ? found.name.split(' (')[0] : 'Inter';
+});
+
+const toggleHudPatternDropdown = () => {
+  isHudPatternOpen.value = !isHudPatternOpen.value;
+  isHudAnimOpen.value = false;
+  isHudFontOpen.value = false;
+};
+
+const toggleHudAnimDropdown = () => {
+  isHudAnimOpen.value = !isHudAnimOpen.value;
+  isHudPatternOpen.value = false;
+  isHudFontOpen.value = false;
+};
+
+const toggleHudFontDropdown = () => {
+  isHudFontOpen.value = !isHudFontOpen.value;
+  isHudPatternOpen.value = false;
+  isHudAnimOpen.value = false;
+};
+
+const selectHudPattern = (pId: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.bgPattern = pId as any;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+  isHudPatternOpen.value = false;
+};
+
+const selectHudAnim = (aId: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.animation = aId as any;
+    // Remount key so CSS animation replays immediately with visible motion!
+    const bId = selectedBlock.value.id;
+    blockAnimKeys.value[bId] = (blockAnimKeys.value[bId] || 0) + 1;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+  isHudAnimOpen.value = false;
+};
+
+const selectHudFont = (family: string) => {
+  setBlockFont(family);
+  isHudFontOpen.value = false;
+};
+
+const setNavbarStyle = (style: 'glass' | 'solid' | 'bordered' | 'transparent') => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  selectedBlock.value.styles.navStyle = style;
+  selectedBlock.value.styles.bgMode = style === 'transparent' ? 'transparent' : style === 'solid' ? 'solid' : 'glass';
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const toggleNavbarSticky = () => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  selectedBlock.value.styles.isSticky = !selectedBlock.value.styles.isSticky;
+  recordHistory();
+  triggerAutoSaveDraft();
+  showToast(
+    selectedBlock.value.styles.isSticky
+      ? 'Mode Navbar Melayang (Sticky) diaktifkan!'
+      : 'Mode Navbar Statis diaktifkan!',
+    'info'
+  );
+};
+
+const setNavbarAlign = (align: 'split' | 'center' | 'left') => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  selectedBlock.value.styles.navAlign = align;
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const setButtonTextColor = (color: string) => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') {
+    selectedBlock.value.styles.secondaryButtonTextColor = color;
+  } else if (typeof role === 'number' && selectedBlock.value.items?.[role]) {
+    selectedBlock.value.items[role].buttonTextColor = color;
+  } else {
+    selectedBlock.value.styles.buttonTextColor = color;
+  }
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const currentActiveButtonTextColor = computed(() => {
+  if (!selectedBlock.value) return '#ffffff';
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') return selectedBlock.value.styles?.secondaryButtonTextColor || '#0f172a';
+  if (typeof role === 'number' && selectedBlock.value.items?.[role]?.buttonTextColor) {
+    return selectedBlock.value.items[role].buttonTextColor || '#ffffff';
+  }
+  return selectedBlock.value.styles?.buttonTextColor || '#ffffff';
+});
+
 
 // Canvas Zoom & Pan
 const zoom = ref(0.85);
@@ -1686,7 +1861,7 @@ const selectBlock = (id: string, e?: MouseEvent) => {
 // Top Context Toolbar (Shelf) State & Methods (100% In-Front & Outside Canvas)
 // -----------------------------------------------------------------------------
 const hudContext = ref<{
-  type: 'section' | 'text' | 'button' | 'card' | 'progressbar' | 'image';
+  type: 'section' | 'navbar' | 'text' | 'button' | 'card' | 'progressbar' | 'image';
   field?: string;
   itemIndex?: number;
   buttonRole?: 'primary' | 'secondary' | number;
@@ -1724,7 +1899,7 @@ const currentActiveButtonColor = computed(() => {
 });
 
 const setHudContext = (
-  type: 'section' | 'text' | 'button' | 'card' | 'progressbar' | 'image',
+  type: 'section' | 'navbar' | 'text' | 'button' | 'card' | 'progressbar' | 'image',
   block: VisualBlock,
   field?: string | number,
   subType?: string
@@ -1897,23 +2072,7 @@ const setBlockPaddingY = (padding: number) => {
   }
 };
 
-const setBlockBgPattern = (pattern: string) => {
-  if (selectedBlock.value) {
-    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
-    selectedBlock.value.styles.bgPattern = pattern as any;
-    recordHistory();
-    triggerAutoSaveDraft();
-  }
-};
 
-const setBlockAnimation = (anim: string) => {
-  if (selectedBlock.value) {
-    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
-    selectedBlock.value.styles.animation = anim as any;
-    recordHistory();
-    triggerAutoSaveDraft();
-  }
-};
 
 const setButtonRadius = (r: number) => {
   if (!selectedBlock.value) return;
@@ -3903,6 +4062,7 @@ const executeVsCodeReplaceAll = () => {
                   top: `${shelfCoords.top}px`,
                   left: `${shelfCoords.left}px`,
                   transform: `translate(-50%, 0) scale(${shelfCoords.scale})`,
+                  transformOrigin: 'top center',
                   '--shelf-scale': shelfCoords.scale
                 }"
                 @click.stop
@@ -3925,6 +4085,19 @@ const executeVsCodeReplaceAll = () => {
                     >
                       <Layers :size="12" />
                       <span class="shelf-pill-text">{{ selectedBlock.name }}</span>
+                    </button>
+
+                    <!-- Navbar Context Pill (Conditional) -->
+                    <button
+                      v-if="selectedBlock.type === 'navbar'"
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'navbar' }"
+                      @click="setHudContext('navbar', selectedBlock)"
+                      title="Pengaturan Navbar & Menu Navigasi"
+                    >
+                      <Navigation :size="12" />
+                      <span>Navbar</span>
                     </button>
 
                     <!-- Teks Context Pill -->
@@ -3999,14 +4172,39 @@ const executeVsCodeReplaceAll = () => {
                 <div class="hud-center-group">
                   <!-- A. Context: TEXT -->
                   <div v-if="hudContext.type === 'text'" class="shelf-controls-group">
-                    <select
-                      class="shelf-select font-select"
-                      :value="selectedBlock.styles?.fontFamily || currentFont"
-                      @change="setBlockFont(($event.target as HTMLSelectElement).value)"
-                      title="Keluarga Font"
-                    >
-                      <option v-for="f in fontOptions" :key="f.id" :value="f.family">{{ f.name }}</option>
-                    </select>
+                    <!-- Custom Popover Dropdown: Font Family -->
+                    <div class="hud-dropdown-wrapper" ref="hudFontDropdownRef">
+                      <button
+                        type="button"
+                        class="hud-pop-trigger font-pop-trigger"
+                        :class="{ 'is-open': isHudFontOpen }"
+                        @click.stop="toggleHudFontDropdown"
+                        title="Keluarga Font (Tipografi)"
+                      >
+                        <span class="hud-font-current-preview" :style="{ fontFamily: selectedBlock.styles?.fontFamily || currentFont }">
+                          {{ currentBlockFontLabel }}
+                        </span>
+                        <ChevronDown :size="11" class="hud-chevron" :class="{ 'is-rotated': isHudFontOpen }" />
+                      </button>
+                      <transition name="hud-pop-scale">
+                        <div v-if="isHudFontOpen" class="hud-popover-menu hud-font-popover-menu" @click.stop @mousedown.stop @wheel.stop>
+                          <button
+                            v-for="f in fontOptions"
+                            :key="f.id"
+                            type="button"
+                            class="hud-popover-item hud-font-item"
+                            :class="{ active: (selectedBlock.styles?.fontFamily || currentFont) === f.family }"
+                            @click="selectHudFont(f.family)"
+                          >
+                            <div class="hud-font-item-content">
+                              <span class="hud-font-item-name" :style="{ fontFamily: f.family }">{{ f.name.split(' (')[0] }}</span>
+                              <span class="hud-font-item-tag">{{ f.category }}</span>
+                            </div>
+                            <Check v-if="(selectedBlock.styles?.fontFamily || currentFont) === f.family" :size="12" class="hud-popover-check" />
+                          </button>
+                        </div>
+                      </transition>
+                    </div>
 
                     <div class="shelf-btn-group">
                       <button type="button" class="shelf-btn" @click="adjustFontSize(-2)" title="Kecilkan Font (A-)">
@@ -4040,14 +4238,17 @@ const executeVsCodeReplaceAll = () => {
                       </button>
                     </div>
 
-                    <div class="shelf-color-wrap" title="Warna Teks">
-                      <input
-                        type="color"
-                        :value="selectedBlock.styles?.textColor || '#0f172a'"
-                        @input="setBlockTextColor(($event.target as HTMLInputElement).value)"
-                        class="shelf-color-input"
-                      />
-                      <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.textColor || '#0f172a' }"></span>
+                    <div class="shelf-color-field" title="Warna Teks">
+                      <span class="shelf-color-tag">Teks</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(selectedBlock.styles?.textColor, '#0f172a')"
+                          @input="setBlockTextColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.textColor || '#0f172a' }"></span>
+                      </div>
                     </div>
 
                     <button
@@ -4087,14 +4288,30 @@ const executeVsCodeReplaceAll = () => {
                       <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonStyle === 'glow' }" @click="setButtonStyle('glow')">Glow ✨</button>
                     </div>
 
-                    <div class="shelf-color-wrap" title="Warna Tombol">
-                      <input
-                        type="color"
-                        :value="currentActiveButtonColor"
-                        @input="setButtonColor(($event.target as HTMLInputElement).value)"
-                        class="shelf-color-input"
-                      />
-                      <span class="shelf-color-dot" :style="{ backgroundColor: currentActiveButtonColor }"></span>
+                    <div class="shelf-color-field" title="Warna Latar Tombol">
+                      <span class="shelf-color-tag">Bg</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(currentActiveButtonColor, '#2563eb')"
+                          @input="setButtonColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :class="{ 'is-transparent': currentActiveButtonColor === 'transparent' }" :style="{ backgroundColor: currentActiveButtonColor === 'transparent' ? 'transparent' : currentActiveButtonColor }"></span>
+                      </div>
+                    </div>
+
+                    <div class="shelf-color-field" title="Warna Teks Tombol">
+                      <span class="shelf-color-tag">Teks</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(currentActiveButtonTextColor, '#ffffff')"
+                          @input="setButtonTextColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: currentActiveButtonTextColor }"></span>
+                      </div>
                     </div>
                   </div>
 
@@ -4104,6 +4321,19 @@ const executeVsCodeReplaceAll = () => {
                       <Palette :size="12" />
                       <span>Ganti Ikon</span>
                     </button>
+
+                    <div class="shelf-color-field" title="Warna Ikon & Aksen Kartu">
+                      <span class="shelf-color-tag">Ikon</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(selectedBlock.styles?.accentColor || siteAccentColor, '#2563eb')"
+                          @input="setBlockAccentColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.accentColor || siteAccentColor }"></span>
+                      </div>
+                    </div>
 
                     <div class="shelf-btn-group">
                       <button type="button" class="shelf-btn" :class="{ active: !selectedBlock.styles?.cardStyle || selectedBlock.styles?.cardStyle === 'default' }" @click="setCardStyle('default')">Standar</button>
@@ -4157,14 +4387,17 @@ const executeVsCodeReplaceAll = () => {
                     />
                     <span class="shelf-val-badge">{{ selectedBlock.items?.[hudContext.itemIndex || 0]?.percentage || 75 }}%</span>
 
-                    <div class="shelf-color-wrap" title="Warna Progress">
-                      <input
-                        type="color"
-                        :value="selectedBlock.styles?.accentColor || activeContainer.accentColor"
-                        @input="setBlockAccentColor(($event.target as HTMLInputElement).value)"
-                        class="shelf-color-input"
-                      />
-                      <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.accentColor || activeContainer.accentColor }"></span>
+                    <div class="shelf-color-field" title="Warna Meteran Progress">
+                      <span class="shelf-color-tag">Warna</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(selectedBlock.styles?.accentColor || siteAccentColor, '#2563eb')"
+                          @input="setBlockAccentColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.accentColor || siteAccentColor }"></span>
+                      </div>
                     </div>
                   </div>
 
@@ -4188,7 +4421,128 @@ const executeVsCodeReplaceAll = () => {
                     </div>
                   </div>
 
-                  <!-- F. Context: SECTION (DEFAULT) -->
+                  <!-- F. Context: NAVBAR -->
+                  <div v-else-if="hudContext.type === 'navbar'" class="shelf-controls-group">
+                    <span class="shelf-lbl-mini" style="font-weight: 700; color: #38bdf8;">Navigasi</span>
+
+                    <!-- Nav Style: Glass, Solid, Bordered, Transparent -->
+                    <div class="shelf-btn-group" title="Gaya Latar Navbar">
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: !selectedBlock.styles?.navStyle || selectedBlock.styles?.navStyle === 'glass' }"
+                        @click="setNavbarStyle('glass')"
+                      >
+                        Glass
+                      </button>
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: selectedBlock.styles?.navStyle === 'solid' }"
+                        @click="setNavbarStyle('solid')"
+                      >
+                        Solid
+                      </button>
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: selectedBlock.styles?.navStyle === 'bordered' }"
+                        @click="setNavbarStyle('bordered')"
+                      >
+                        Border
+                      </button>
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: selectedBlock.styles?.navStyle === 'transparent' }"
+                        @click="setNavbarStyle('transparent')"
+                      >
+                        Polos
+                      </button>
+                    </div>
+
+                    <!-- Sticky Toggle -->
+                    <button
+                      type="button"
+                      class="shelf-btn"
+                      :class="{ active: selectedBlock.styles?.isSticky }"
+                      @click="toggleNavbarSticky"
+                      :title="selectedBlock.styles?.isSticky ? 'Navbar Melayang (Sticky Aktif)' : 'Jadikan Navbar Melayang (Sticky)'"
+                    >
+                      <span style="font-size: 11px; font-weight: 700;">{{ selectedBlock.styles?.isSticky ? '📌 Sticky' : 'Static' }}</span>
+                    </button>
+
+                    <!-- Nav Align: Split, Center -->
+                    <div class="shelf-btn-group" title="Posisi Menu">
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: !selectedBlock.styles?.navAlign || selectedBlock.styles?.navAlign === 'split' }"
+                        @click="setNavbarAlign('split')"
+                        title="Rata Kiri-Kanan (Split)"
+                      >
+                        <AlignJustify :size="12" />
+                      </button>
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: selectedBlock.styles?.navAlign === 'center' }"
+                        @click="setNavbarAlign('center')"
+                        title="Menu di Tengah"
+                      >
+                        <AlignCenter :size="12" />
+                      </button>
+                    </div>
+
+                    <!-- Quick Cycle Brand Glyph Icon -->
+                    <button
+                      type="button"
+                      class="shelf-btn"
+                      @click="cycleNavbarBrandGlyph(selectedBlock)"
+                      title="Ganti Ikon Brand (Klik untuk ganti lambang)"
+                    >
+                      <span style="font-size: 13px;">{{ selectedBlock.styles?.brandGlyph || '◆' }}</span>
+                      <span style="font-size: 10px; margin-left: 2px;">Ikon</span>
+                    </button>
+
+                    <!-- Quick Add Nav Item Button -->
+                    <button
+                      type="button"
+                      class="shelf-btn highlight"
+                      @click="addNavItem(selectedBlock)"
+                      title="Tambah Tautan Menu Navigasi"
+                    >
+                      <Plus :size="12" />
+                      <span>+ Link</span>
+                    </button>
+
+                    <!-- Quick Delete Selected Nav Item Button -->
+                    <button
+                      v-if="hudContext.itemIndex !== undefined && (selectedBlock.items?.length || 0) > 1"
+                      type="button"
+                      class="shelf-btn delete"
+                      @click="removeNavItem(selectedBlock, hudContext.itemIndex)"
+                      :title="`Hapus menu '${selectedBlock.items?.[hudContext.itemIndex]?.title || 'ini'}'`"
+                    >
+                      <Trash2 :size="12" />
+                    </button>
+
+                    <!-- Accent Color Picker -->
+                    <div class="shelf-color-field" title="Warna Aksen Brand & Menu Aktif">
+                      <span class="shelf-color-tag">Aksen</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(selectedBlock.styles?.accentColor || siteAccentColor, '#2563eb')"
+                          @input="setBlockAccentColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.accentColor || siteAccentColor }"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- G. Context: SECTION (DEFAULT) -->
                   <div v-else class="shelf-controls-group">
                     <div class="shelf-btn-group">
                       <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'left' }" @click="setBlockAlign('left')" title="Rata Kiri">
@@ -4202,14 +4556,17 @@ const executeVsCodeReplaceAll = () => {
                       </button>
                     </div>
 
-                    <div class="shelf-color-wrap" title="Warna Latar Section">
-                      <input
-                        type="color"
-                        :value="selectedBlock.styles?.bgColor || '#ffffff'"
-                        @input="setBlockBgColor(($event.target as HTMLInputElement).value)"
-                        class="shelf-color-input"
-                      />
-                      <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.bgColor || '#ffffff' }"></span>
+                    <div class="shelf-color-field" title="Warna Latar Section">
+                      <span class="shelf-color-tag">Bg</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(selectedBlock.styles?.bgColor, '#ffffff')"
+                          @input="setBlockBgColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.bgColor || '#ffffff' }"></span>
+                      </div>
                     </div>
 
                     <div class="shelf-slider-wrap" title="Jarak Vertikal (Padding Atas/Bawah)">
@@ -4226,30 +4583,63 @@ const executeVsCodeReplaceAll = () => {
                       <span class="shelf-val-badge">{{ selectedBlock.styles?.paddingY || 60 }}px</span>
                     </div>
 
-                    <select
-                      class="shelf-select"
-                      :value="selectedBlock.styles?.bgPattern || 'none'"
-                      @change="setBlockBgPattern(($event.target as HTMLSelectElement).value)"
-                      title="Pola Tekstur Latar Belakang"
-                    >
-                      <option value="none">Pola: Off</option>
-                      <option value="dots">Dot Grid</option>
-                      <option value="grid">Matrix Grid</option>
-                      <option value="mesh">Ambient Glow</option>
-                    </select>
+                    <!-- Custom Popover Dropdown: Pola -->
+                    <div class="hud-dropdown-wrapper" ref="hudPatternDropdownRef">
+                      <button
+                        type="button"
+                        class="hud-pop-trigger"
+                        :class="{ 'is-open': isHudPatternOpen }"
+                        @click.stop="toggleHudPatternDropdown"
+                        title="Pola Tekstur Latar Belakang"
+                      >
+                        <span>{{ currentPatternLabel }}</span>
+                        <ChevronDown :size="11" class="hud-chevron" :class="{ 'is-rotated': isHudPatternOpen }" />
+                      </button>
+                      <transition name="hud-pop-scale">
+                        <div v-if="isHudPatternOpen" class="hud-popover-menu" @click.stop @mousedown.stop @wheel.stop>
+                          <button
+                            v-for="p in patternOptionsList"
+                            :key="p.id"
+                            type="button"
+                            class="hud-popover-item"
+                            :class="{ active: (selectedBlock.styles?.bgPattern || 'none') === p.id }"
+                            @click="selectHudPattern(p.id)"
+                          >
+                            <span class="hud-popover-item-label">{{ p.name }}</span>
+                            <Check v-if="(selectedBlock.styles?.bgPattern || 'none') === p.id" :size="12" class="hud-popover-check" />
+                          </button>
+                        </div>
+                      </transition>
+                    </div>
 
-                    <select
-                      class="shelf-select"
-                      :value="selectedBlock.styles?.animation || 'none'"
-                      @change="setBlockAnimation(($event.target as HTMLSelectElement).value)"
-                      title="Animasi Masuk (Motion 2027)"
-                    >
-                      <option value="none">Anim: Off</option>
-                      <option value="fade">Fade In</option>
-                      <option value="blurFade">Blur Fade</option>
-                      <option value="slideUp">Slide Up</option>
-                      <option value="springPop">Spring 3D</option>
-                    </select>
+                    <!-- Custom Popover Dropdown: Animasi -->
+                    <div class="hud-dropdown-wrapper" ref="hudAnimDropdownRef">
+                      <button
+                        type="button"
+                        class="hud-pop-trigger"
+                        :class="{ 'is-open': isHudAnimOpen }"
+                        @click.stop="toggleHudAnimDropdown"
+                        title="Animasi Masuk Section"
+                      >
+                        <span>{{ currentAnimLabel }}</span>
+                        <ChevronDown :size="11" class="hud-chevron" :class="{ 'is-rotated': isHudAnimOpen }" />
+                      </button>
+                      <transition name="hud-pop-scale">
+                        <div v-if="isHudAnimOpen" class="hud-popover-menu" @click.stop @mousedown.stop @wheel.stop>
+                          <button
+                            v-for="a in hudAnimationList"
+                            :key="a.id"
+                            type="button"
+                            class="hud-popover-item"
+                            :class="{ active: (selectedBlock.styles?.animation || 'none') === a.id }"
+                            @click="selectHudAnim(a.id)"
+                          >
+                            <span class="hud-popover-item-label">{{ a.name }}</span>
+                            <Check v-if="(selectedBlock.styles?.animation || 'none') === a.id" :size="12" class="hud-popover-check" />
+                          </button>
+                        </div>
+                      </transition>
+                    </div>
                   </div>
                 </div>
 
