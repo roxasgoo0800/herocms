@@ -1,5 +1,5 @@
 import type { OfficialTemplateItem } from '../data/templates-data';
-import type { VisualBlock } from '../types/dashboard';
+import type { VisualBlock, MultiPageItem } from '../types/dashboard';
 
 export interface CompileTemplateOptions {
   siteName?: string;
@@ -44,33 +44,63 @@ export function compileTemplateToHTML(
 
     switch (block.type) {
       case 'navbar': {
-        const glyph = template.category === 'portfolio' ? 'R' : siteName.slice(0, 1) || 'H';
+        const glyph = block.styles?.brandGlyph || (template.category === 'portfolio' ? 'R' : siteName.slice(0, 1) || 'H');
         const brandTitle = escapeHtml(block.title || siteName);
         const buttonText = block.buttonText ? escapeHtml(block.buttonText) : '';
-        const navLinks = template.category === 'business'
-          ? `
+        const buttonUrl = block.buttonUrl || '#contact';
+        const isSticky = block.styles?.isSticky !== false;
+        const navStyle = block.styles?.navStyle || 'glass';
+        const navAlign = block.styles?.navAlign || 'split';
+
+        let navLinks = '';
+        if (block.items && block.items.length > 0) {
+          navLinks = block.items
+            .map((item, i) => {
+              const activeClass = item.active || i === 0 ? ' class="active"' : '';
+              return `<a href="${escapeHtml(item.url || '#')}"${activeClass}>${escapeHtml(item.title)}</a>`;
+            })
+            .join('\n            ');
+        } else {
+          navLinks = template.category === 'business'
+            ? `
             <a href="#hero">Beranda</a>
             <a href="#products">Katalog Produk</a>
             <a href="#features">Keunggulan</a>
             <a href="#contact">WhatsApp Toko</a>
           `
-          : template.category === 'education'
-          ? `
+            : template.category === 'education'
+            ? `
             <a href="#hero">Beranda</a>
             <a href="#courses">Katalog Kursus</a>
             <a href="#syllabus">Silabus Modul</a>
             <a href="#pricing">Biaya Belajar</a>
           `
-          : `
+            : `
             <a href="#hero">Beranda</a>
             <a href="#showcase">Karya & Proyek</a>
             <a href="#features">Teknologi</a>
             <a href="#contact">Hubungi Saya</a>
           `;
+        }
+
+        const stickyStyle = isSticky ? 'position: sticky; top: 0; z-index: 50;' : 'position: relative;';
+        const bgStyle =
+          navStyle === 'solid'
+            ? isDarkMode
+              ? 'background: #0f172a;'
+              : 'background: #ffffff;'
+            : navStyle === 'transparent'
+            ? 'background: transparent; border-bottom: none; backdrop-filter: none;'
+            : navStyle === 'bordered'
+            ? isDarkMode
+              ? 'background: #0f172a; border-bottom: 2px solid #334155;'
+              : 'background: #ffffff; border-bottom: 2px solid #cbd5e1;'
+            : '';
+        const alignClass = navAlign === 'center' ? ' is-centered' : '';
 
         renderedBlocksHtml += `
         <!-- NAVBAR -->
-        <header class="sim-block-navbar">
+        <header class="sim-block-navbar${alignClass}" style="${stickyStyle} ${bgStyle}">
           <div class="sim-brand-area">
             <span class="sim-brand-glyph" style="background-color: ${accentColor}; color: #ffffff;">
               ${glyph}
@@ -83,7 +113,7 @@ export function compileTemplateToHTML(
             ${navLinks}
           </nav>
           <div class="sim-nav-actions">
-            ${buttonText ? `<a href="#contact" class="sim-btn-nav-cta" style="background-color: ${accentColor}; text-decoration: none;">${buttonText}</a>` : ''}
+            ${buttonText ? `<a href="${escapeHtml(buttonUrl)}" class="sim-btn-nav-cta" style="background-color: ${accentColor}; text-decoration: none;">${buttonText}</a>` : ''}
           </div>
         </header>`;
         break;
@@ -995,3 +1025,28 @@ export function compileTemplateToHTML(
 </body>
 </html>`;
 }
+
+export function compileMultiPageSiteToHTML(
+  template: OfficialTemplateItem,
+  options: CompileTemplateOptions & { pages?: MultiPageItem[] } = {}
+): Record<string, string> {
+  const pages = options.pages || (template.pages as MultiPageItem[]) || [];
+  if (!pages || pages.length === 0) {
+    return {
+      'index.html': compileTemplateToHTML(template, options)
+    };
+  }
+
+  const result: Record<string, string> = {};
+  for (const page of pages) {
+    const filename = page.path === '/' ? 'index.html' : `${page.path.replace(/^\//, '')}.html`;
+    result[filename] = compileTemplateToHTML(template, {
+      ...options,
+      roleOrHeadline: page.title,
+      bioIntro: page.description,
+      blocksOverride: page.blocks
+    });
+  }
+  return result;
+}
+

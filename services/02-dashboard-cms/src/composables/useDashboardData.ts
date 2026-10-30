@@ -27,7 +27,7 @@ import {
   subscriptionPlansCatalog
 } from '../data/dashboard-seeds';
 import type { OfficialTemplateItem } from '../data/templates-data';
-import { compileTemplateToHTML } from '../utils/templateHtmlCompiler';
+import { compileTemplateToHTML, compileMultiPageSiteToHTML } from '../utils/templateHtmlCompiler';
 
 const VALID_MENUS: ActiveMenu[] = [
   'containers',
@@ -120,12 +120,40 @@ const changeUserPlan = (planId: 'starter' | 'pro' | 'agency') => {
   showToast(`Paket langganan berhasil dialihkan ke ${target.name}! Kuota runtime kini ${target.containers} slot kontainer.`, 'success');
 };
 
-// Containers State (100% Real PostgreSQL & Service 03 Orchestrator State)
-const containers = ref<ContainerSite[]>([]);
+// Default Fallback Container (Guarantees zero-blank resilience during offline mode or cold starts)
+export const defaultFallbackContainer: ContainerSite = {
+  id: 'site_default_preview',
+  name: 'Situs Utama',
+  category: 'business',
+  templateName: 'Nova Corporate',
+  subdomain: 'site.stackbyte.id',
+  customDomain: '',
+  status: 'running',
+  cpuUsage: 8,
+  ramUsage: 64,
+  ramLimit: 256,
+  cpuLimit: '0.5 vCPU',
+  uptime: '99.9%',
+  visitsThisWeek: 0,
+  ssl: true,
+  accentColor: '#2563eb',
+  roleOrHeadline: 'Portofolio Teknis & Bisnis Studio',
+  bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.',
+  lastDeployed: 'Mode Offline / Siap Terbit',
+  themeConfig: {}
+};
 
-const activeContainerId = ref<string>(resolveInitialContainerId());
-const activeContainer = computed(() => {
-  return containers.value.find(c => c.id === activeContainerId.value) || containers.value[0];
+// Containers State (100% Real PostgreSQL & Service 03 Orchestrator State)
+const containers = ref<ContainerSite[]>([defaultFallbackContainer]);
+
+const activeContainerId = ref<string>(resolveInitialContainerId() || defaultFallbackContainer.id);
+const activeContainer = computed<ContainerSite>(() => {
+  if (containers.value && containers.value.length > 0) {
+    const found = containers.value.find(c => c && c.id === activeContainerId.value);
+    if (found) return found;
+    if (containers.value[0]) return containers.value[0];
+  }
+  return defaultFallbackContainer;
 });
 
 const activeArticleForReader = ref<ContentArticle | null>(null);
@@ -720,16 +748,27 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
     if (!activeContainer.value.themeConfig) {
       activeContainer.value.themeConfig = {};
     }
+
+    const clonedPages = (tpl.isMultiPage && tpl.pages) ? JSON.parse(JSON.stringify(tpl.pages)).map((p: any, idx: number) => ({
+      ...p,
+      canvasX: p.canvasX !== undefined ? p.canvasX : idx * 1350,
+      canvasY: p.canvasY || 0
+    })) : undefined;
+
     activeContainer.value.themeConfig = {
       ...activeContainer.value.themeConfig,
       ...tpl.themeConfig,
       accentColor: chosenAccent,
-      blocks: clonedBlocks
+      blocks: clonedBlocks,
+      pages: clonedPages,
+      isMultiPage: tpl.isMultiPage || false
     };
 
     // Payload draft lengkap untuk Visual Editor Studio
     const editorDraftPayload = {
       blocks: clonedBlocks,
+      pages: clonedPages,
+      activePageId: clonedPages ? clonedPages[0]?.id : undefined,
       roleOrHeadline: tpl.defaultRole,
       bioIntro: tpl.defaultBio,
       accentColor: chosenAccent,
@@ -843,6 +882,11 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
   const cleanSubdomain = payload.subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '');
   const tempId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
   const clonedBlocks = tpl ? JSON.parse(JSON.stringify(tpl.blocks)) : [];
+  const clonedPages = (tpl?.isMultiPage && tpl.pages) ? JSON.parse(JSON.stringify(tpl.pages)).map((p: any, idx: number) => ({
+    ...p,
+    canvasX: p.canvasX !== undefined ? p.canvasX : idx * 1350,
+    canvasY: p.canvasY || 0
+  })) : undefined;
 
   const newContainerObj: ContainerSite = reactive({
     id: tempId,
@@ -865,7 +909,7 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     bioIntro: tpl?.defaultBio || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
     accentColor: tpl?.accentColor || '#2563eb',
     lastDeployed: 'Sedang deploy...',
-    themeConfig: tpl ? { ...tpl.themeConfig, blocks: clonedBlocks } : { blocks: clonedBlocks }
+    themeConfig: tpl ? { ...tpl.themeConfig, blocks: clonedBlocks, pages: clonedPages, isMultiPage: tpl.isMultiPage || false } : { blocks: clonedBlocks }
   });
 
   containers.value.push(newContainerObj);
@@ -875,6 +919,8 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
   if (typeof localStorage !== 'undefined') {
     const editorDraftPayload = {
       blocks: clonedBlocks,
+      pages: clonedPages,
+      activePageId: clonedPages ? clonedPages[0]?.id : undefined,
       roleOrHeadline: newContainerObj.roleOrHeadline,
       bioIntro: newContainerObj.bioIntro,
       accentColor: newContainerObj.accentColor,
@@ -1040,6 +1086,19 @@ const handlePublishChanges = async () => {
       bioIntro: activeContainer.value.bioIntro,
       blocksOverride: currentBlocks
     }) : '';
+
+    const pages = activeContainer.value.themeConfig?.pages;
+    const isMulti = activeContainer.value.themeConfig?.isMultiPage && pages && pages.length > 0;
+    const multiPagesHtml = (matchedTpl && isMulti) ? compileMultiPageSiteToHTML(matchedTpl, {
+      siteName: activeContainer.value.name,
+      subdomain: activeContainer.value.subdomain,
+      accentColor: activeContainer.value.accentColor,
+      pages: pages
+    }) : undefined;
+
+    if (multiPagesHtml && activeContainer.value.themeConfig) {
+      (activeContainer.value.themeConfig as any).multiPagesHtml = multiPagesHtml;
+    }
 
     const payload = {
       name: activeContainer.value.name,
@@ -2141,6 +2200,7 @@ const getCacheKey = (email?: string) => {
 
 // Backend API Synchronization & Redis Warmup
 const isBackendSyncing = ref(false);
+const isBackendOffline = ref(false);
 const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
   try {
     isBackendSyncing.value = true;
@@ -2149,6 +2209,7 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
     try {
       const warmRes = await studioApi.warmAllMenusCache();
       if (warmRes?.bundle) {
+        isBackendOffline.value = false;
         const b = warmRes.bundle;
         if (Array.isArray(b.containers?.containers)) {
           const freshList = b.containers.containers.filter((c: any) => 
@@ -2405,7 +2466,12 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
       // Ignored
     }
   } catch (err) {
-    console.warn('[SYNC NOTICE] Backend sync deferred:', err);
+    isBackendOffline.value = true;
+    console.warn('[SYNC NOTICE] Backend sync deferred (running in offline resilient mode):', err);
+    if (!containers.value || containers.value.length === 0) {
+      containers.value = [defaultFallbackContainer];
+      activeContainerId.value = defaultFallbackContainer.id;
+    }
   } finally {
     isBackendSyncing.value = false;
   }
@@ -2433,6 +2499,10 @@ const hydrateFromCache = (overrideEmail?: string) => {
       if (hasLegacySeeds) {
         localStorage.removeItem(getCacheKey(targetEmail));
         localStorage.removeItem('herocms_dashboard_cache');
+        if (!containers.value || containers.value.length === 0) {
+          containers.value = [defaultFallbackContainer];
+          activeContainerId.value = defaultFallbackContainer.id;
+        }
       } else if (Array.isArray(data.containers)) {
         containers.value = data.containers.filter((c: any) => 
           c.id !== 'hero_tenant_9942' && 
@@ -2448,6 +2518,9 @@ const hydrateFromCache = (overrideEmail?: string) => {
         });
         if (containers.value.length > 0 && !containers.value.some(c => c.id === activeContainerId.value)) {
           activeContainerId.value = containers.value[0].id;
+        } else if (containers.value.length === 0) {
+          containers.value = [defaultFallbackContainer];
+          activeContainerId.value = defaultFallbackContainer.id;
         }
       }
       if (Array.isArray(data.articles)) {
@@ -2685,6 +2758,7 @@ export function useDashboardData() {
     updateUserEmail,
     getCacheKey,
     hydrateFromCache,
+    isBackendOffline,
     selectedContainerForDetail
   };
 }

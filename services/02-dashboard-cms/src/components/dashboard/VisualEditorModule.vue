@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import {
   MousePointer,
   Hand,
@@ -23,6 +23,7 @@ import {
   Edit3,
   Sliders,
   Plus,
+  GripVertical,
   Trash2,
   Copy,
   ChevronUp,
@@ -42,8 +43,6 @@ import {
   FileCode,
   ArrowRight,
   ArrowLeft,
-  PanelLeftClose,
-  PanelLeftOpen,
   Cloud,
   AlignLeft,
   AlignCenter,
@@ -70,11 +69,19 @@ import {
   Star,
   Key,
   Image as ImageIcon,
-  UploadCloud
+  UploadCloud,
+  Workflow,
+  Home,
+  CornerDownRight,
+  FileText,
+  Layout,
+  Mail,
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
-import type { VisualBlock } from '../../types/dashboard';
+import { compileTemplateToHTML } from '../../utils/templateHtmlCompiler';
+import type { VisualBlock, MultiPageItem } from '../../types/dashboard';
+import { officialTemplatesData } from '../../data/templates-data';
 import {
   zoomPresets,
   devicePresets,
@@ -105,6 +112,7 @@ const {
   activeContainer,
   isPublishing,
   handlePublishChanges,
+  officialTemplates,
   aiPromptInput,
   isGeneratingAI,
   handleAiGenerateContent,
@@ -212,6 +220,7 @@ const activeTool = ref<ActiveTool>('select');
 const editorViewMode = ref<EditorViewMode>('design');
 const activeLeftTab = ref<'blocks' | 'layers' | 'design' | 'ai'>('blocks');
 const activeRightTab = ref<'layout' | 'appearance'>('layout');
+const isKatalogOpen = ref(false);
 
 watch(activeLeftTab, (newTab) => {
   if (newTab === 'blocks') {
@@ -286,7 +295,185 @@ const handleAllDropdownOutsideClick = (e: MouseEvent) => {
   if (zoomDropdownRef.value && !zoomDropdownRef.value.contains(e.target as Node)) {
     isZoomDropdownOpen.value = false;
   }
+  if (pageSwitcherRef.value && !pageSwitcherRef.value.contains(e.target as Node)) {
+    isPageSwitcherOpen.value = false;
+  }
+  if (hudPatternDropdownRef.value && !hudPatternDropdownRef.value.contains(e.target as Node)) {
+    isHudPatternOpen.value = false;
+  }
+  if (hudAnimDropdownRef.value && !hudAnimDropdownRef.value.contains(e.target as Node)) {
+    isHudAnimOpen.value = false;
+  }
+  if (hudFontDropdownRef.value && !hudFontDropdownRef.value.contains(e.target as Node)) {
+    isHudFontOpen.value = false;
+  }
 };
+
+const siteAccentColor = computed(() => activeContainer.value?.accentColor || '#2563eb');
+
+const safeHexColor = (val?: string, fallback: string = '#2563eb'): string => {
+  if (!val || val === 'transparent') return fallback;
+  if (val.startsWith('#')) {
+    if (val.length === 7) return val;
+    if (val.length === 4) {
+      return '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
+    }
+  }
+  return fallback;
+};
+
+// HUD Floating Shelf Custom Popover States
+const isHudPatternOpen = ref(false);
+const isHudAnimOpen = ref(false);
+const isHudFontOpen = ref(false);
+const hudPatternDropdownRef = ref<HTMLElement | null>(null);
+const hudAnimDropdownRef = ref<HTMLElement | null>(null);
+const hudFontDropdownRef = ref<HTMLElement | null>(null);
+const blockAnimKeys = ref<Record<string, number>>({});
+
+const patternOptionsList = [
+  { id: 'none', name: 'Pola: Off' },
+  { id: 'dots', name: 'Dot Grid' },
+  { id: 'grid', name: 'Matrix Grid' },
+  { id: 'mesh', name: 'Ambient Glow' }
+];
+
+const hudAnimationList = [
+  { id: 'none', name: 'Tanpa Animasi' },
+  { id: 'fade', name: 'Fade In' },
+  { id: 'fadeInUp', name: 'Fade In Up' },
+  { id: 'slideUp', name: 'Slide Up' },
+  { id: 'slideInLeft', name: 'Slide In Left' },
+  { id: 'blurFade', name: 'Cinematic Blur Fade' },
+  { id: 'springPop', name: 'Spring 3D Elastic' },
+  { id: 'zoomIn', name: 'Zoom In Pop' },
+  { id: 'tiltIn', name: 'Perspective Tilt 3D' },
+  { id: 'float', name: 'Floating Infinite' },
+  { id: 'pulseGlow', name: 'Pulse Glow' },
+  { id: 'bounce', name: 'Dynamic Bounce' }
+];
+
+const currentPatternLabel = computed(() => {
+  const p = selectedBlock.value?.styles?.bgPattern || 'none';
+  if (p === 'none') return 'Pola: Off';
+  return patternOptionsList.find(x => x.id === p)?.name || 'Pola: ' + p;
+});
+
+const currentAnimLabel = computed(() => {
+  const a = selectedBlock.value?.styles?.animation || 'none';
+  if (a === 'none') return 'Anim: Off';
+  const found = hudAnimationList.find(x => x.id === a);
+  return found ? found.name : 'Anim: ' + a;
+});
+
+const currentBlockFontLabel = computed(() => {
+  const currentFam = selectedBlock.value?.styles?.fontFamily || currentFont.value;
+  const found = fontOptions.find(f => f.family === currentFam || f.id === currentFam || currentFam.includes(f.name.split(' (')[0]));
+  return found ? found.name.split(' (')[0] : 'Inter';
+});
+
+const toggleHudPatternDropdown = () => {
+  isHudPatternOpen.value = !isHudPatternOpen.value;
+  isHudAnimOpen.value = false;
+  isHudFontOpen.value = false;
+};
+
+const toggleHudAnimDropdown = () => {
+  isHudAnimOpen.value = !isHudAnimOpen.value;
+  isHudPatternOpen.value = false;
+  isHudFontOpen.value = false;
+};
+
+const toggleHudFontDropdown = () => {
+  isHudFontOpen.value = !isHudFontOpen.value;
+  isHudPatternOpen.value = false;
+  isHudAnimOpen.value = false;
+};
+
+const selectHudPattern = (pId: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.bgPattern = pId as any;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+  isHudPatternOpen.value = false;
+};
+
+const selectHudAnim = (aId: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.animation = aId as any;
+    // Remount key so CSS animation replays immediately with visible motion!
+    const bId = selectedBlock.value.id;
+    blockAnimKeys.value[bId] = (blockAnimKeys.value[bId] || 0) + 1;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+  isHudAnimOpen.value = false;
+};
+
+const selectHudFont = (family: string) => {
+  setBlockFont(family);
+  isHudFontOpen.value = false;
+};
+
+const setNavbarStyle = (style: 'glass' | 'solid' | 'bordered' | 'transparent') => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  selectedBlock.value.styles.navStyle = style;
+  selectedBlock.value.styles.bgMode = style === 'transparent' ? 'transparent' : style === 'solid' ? 'solid' : 'glass';
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const toggleNavbarSticky = () => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  selectedBlock.value.styles.isSticky = !selectedBlock.value.styles.isSticky;
+  recordHistory();
+  triggerAutoSaveDraft();
+  showToast(
+    selectedBlock.value.styles.isSticky
+      ? 'Mode Navbar Melayang (Sticky) diaktifkan!'
+      : 'Mode Navbar Statis diaktifkan!',
+    'info'
+  );
+};
+
+const setNavbarAlign = (align: 'split' | 'center' | 'left') => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  selectedBlock.value.styles.navAlign = align;
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const setButtonTextColor = (color: string) => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') {
+    selectedBlock.value.styles.secondaryButtonTextColor = color;
+  } else if (typeof role === 'number' && selectedBlock.value.items?.[role]) {
+    selectedBlock.value.items[role].buttonTextColor = color;
+  } else {
+    selectedBlock.value.styles.buttonTextColor = color;
+  }
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const currentActiveButtonTextColor = computed(() => {
+  if (!selectedBlock.value) return '#ffffff';
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') return selectedBlock.value.styles?.secondaryButtonTextColor || '#0f172a';
+  if (typeof role === 'number' && selectedBlock.value.items?.[role]?.buttonTextColor) {
+    return selectedBlock.value.items[role].buttonTextColor || '#ffffff';
+  }
+  return selectedBlock.value.styles?.buttonTextColor || '#ffffff';
+});
+
 
 // Canvas Zoom & Pan
 const zoom = ref(0.85);
@@ -340,15 +527,23 @@ const setZoom = (val: number) => {
   zoom.value = val;
 };
 const fitToScreen = () => {
-  const container = document.querySelector('.studio-viewport-area');
+  const container = viewportAreaRef.value || (document.querySelector('.studio-viewport-area') as HTMLElement | null);
   if (container) {
     const rect = container.getBoundingClientRect();
-    const availableWidth = rect.width - 60;
-    const availableHeight = rect.height - 80;
-    const scale = Math.min(availableWidth / artboardWidth.value, availableHeight / 850);
-    zoom.value = Math.min(1.0, Math.max(0.35, parseFloat(scale.toFixed(2))));
-    panX.value = 0;
-    panY.value = 0;
+    const availableWidth = rect.width - 80;
+    const availableHeight = rect.height - 120;
+    if (canvasViewMode.value === 'sitemap') {
+      const totalWidth = sitemapCanvasWidth.value;
+      const scale = Math.min(availableWidth / (totalWidth || 2000), availableHeight / (sitemapCanvasHeight.value || 980));
+      zoom.value = Math.min(0.55, Math.max(0.12, parseFloat(scale.toFixed(2))));
+      panX.value = 0;
+      panY.value = 40;
+    } else {
+      const scale = Math.min(availableWidth / artboardWidth.value, availableHeight / 850);
+      zoom.value = Math.min(1.0, Math.max(0.35, parseFloat(scale.toFixed(2))));
+      panX.value = 0;
+      panY.value = 0;
+    }
   }
 };
 
@@ -365,8 +560,803 @@ const hoveredBlockId = ref<string | null>(null);
 
 const pageBlocks = ref<VisualBlock[]>([]);
 
+const selectedBlock = computed<VisualBlock | null>(() => {
+  if (!selectedBlockId.value) return null;
+  const block = pageBlocks.value.find((b) => b.id === selectedBlockId.value);
+  if (block && !block.styles) {
+    block.styles = {};
+  }
+  return block || null;
+});
+
+// -----------------------------------------------------------------------------
+// Top-Layer Smart Sticky Floating HUD Architecture
+// -----------------------------------------------------------------------------
+const viewportAreaRef = ref<HTMLElement | null>(null);
+const floatingShelfRef = ref<HTMLElement | null>(null);
+const shelfCoords = reactive({
+  top: 14,
+  left: 0,
+  visible: false,
+  isStickyAtTop: false,
+  scale: 1.0
+});
+
+const updateShelfPosition = () => {
+  if (!selectedBlockId.value || editorViewMode.value !== 'design' || canvasViewMode.value !== 'single') {
+    shelfCoords.visible = false;
+    return;
+  }
+
+  const viewportEl = viewportAreaRef.value;
+  const blockEl = document.getElementById(`canvas-block-node-${selectedBlockId.value}`);
+
+  if (!viewportEl || !blockEl) {
+    shelfCoords.visible = false;
+    return;
+  }
+
+  const vRect = viewportEl.getBoundingClientRect();
+  const bRect = blockEl.getBoundingClientRect();
+
+  // Zoom-aware scale: Synchronized 1:1 with canvas zoom level.
+  // When zoomed out (< 100%), scale toolbar down proportionally so it never dwarfs or covers the layout.
+  // Max scale capped at 1.0 (clean desktop size when zoomed in), min floor at 0.35 (comfortable overview size).
+  const shelfScale = Math.min(1.0, Math.max(0.35, zoom.value));
+  shelfCoords.scale = shelfScale;
+
+  // Offset under top ruler or top padding
+  const minTop = showRulers.value ? 30 : 14;
+  const rawShelfHeight = floatingShelfRef.value?.offsetHeight || 44;
+  const rawShelfWidth = floatingShelfRef.value?.offsetWidth || 760;
+
+  const effectiveShelfHeight = rawShelfHeight * shelfScale;
+  const effectiveShelfWidth = rawShelfWidth * shelfScale;
+
+  // If the entire block has scrolled above the viewport
+  if (bRect.bottom < vRect.top + minTop + effectiveShelfHeight) {
+    shelfCoords.visible = false;
+    return;
+  }
+  // If the block is far below the viewport (not visible yet)
+  if (bRect.top > vRect.bottom) {
+    shelfCoords.visible = false;
+    return;
+  }
+
+  // 1. Vertical calculation: 10px directly above the active block top, relative to viewportArea
+  const idealTop = (bRect.top - vRect.top) - effectiveShelfHeight - 10;
+
+  // The sticky ceiling: when block top is above viewport, clamp targetTop to minTop!
+  // And stay above the bottom of the block so it scrolls away gracefully when the block ends
+  const maxAllowedTop = (bRect.bottom - vRect.top) - effectiveShelfHeight - 10;
+  const targetTop = Math.min(maxAllowedTop, Math.max(minTop, idealTop));
+
+  // 2. Horizontal calculation: centered on the active block, strictly clamped within viewport boundaries
+  const blockCenterX = (bRect.left - vRect.left) + (bRect.width / 2);
+  const halfEffectiveShelf = effectiveShelfWidth / 2;
+  const minLeft = halfEffectiveShelf + 16;
+  const maxLeft = vRect.width - halfEffectiveShelf - 16;
+
+  let targetLeft = blockCenterX;
+  if (maxLeft > minLeft) {
+    targetLeft = Math.min(maxLeft, Math.max(minLeft, targetLeft));
+  } else {
+    targetLeft = vRect.width / 2;
+  }
+
+  shelfCoords.top = Math.round(targetTop);
+  shelfCoords.left = Math.round(targetLeft);
+  shelfCoords.isStickyAtTop = idealTop < minTop;
+  shelfCoords.visible = true;
+};
+
+// -----------------------------------------------------------------------------
+// MULTI-PAGE & FIGMA FLOW CANVAS ARCHITECTURE
+// -----------------------------------------------------------------------------
+const canvasViewMode = ref<'single' | 'sitemap'>('single');
+const multiPages = ref<MultiPageItem[]>([]);
+const activePageId = ref<string>('page_home');
+const isPageSwitcherOpen = ref(false);
+const pageSwitcherRef = ref<HTMLElement | null>(null);
+const isNewPageModalOpen = ref(false);
+const newPageForm = reactive({
+  title: '',
+  path: '',
+  templateType: 'content' as 'blank' | 'content' | 'contact' | 'pricing'
+});
+
+const quickPagePresets = [
+  { label: 'Tentang Kami', path: '/about', template: 'content' as const },
+  { label: 'Paket & Harga', path: '/pricing', template: 'pricing' as const },
+  { label: 'Layanan', path: '/services', template: 'content' as const },
+  { label: 'Kontak Kami', path: '/contact', template: 'contact' as const },
+  { label: 'Portofolio', path: '/portfolio', template: 'content' as const }
+];
+
+const applyQuickPagePreset = (preset: typeof quickPagePresets[0]) => {
+  newPageForm.title = preset.label;
+  newPageForm.path = preset.path;
+  newPageForm.templateType = preset.template;
+};
+
+const existingParentPages = computed(() => {
+  return multiPages.value.filter(p => p.path !== '/' && !p.path.includes('/', 1));
+});
+
+const applyParentPrefix = (parentPath: string) => {
+  const currentSuffix = newPageForm.path.replace(/^\/[^\/]+\/?/, '');
+  newPageForm.path = `${parentPath}/${currentSuffix || ''}`;
+};
+
+const newPageHierarchy = computed(() => {
+  let raw = newPageForm.path.trim();
+  if (!raw) return { type: 'empty', depth: 0, parent: null, isValidParent: true };
+  if (!raw.startsWith('/')) raw = '/' + raw;
+  raw = raw.replace(/\/{2,}/g, '/').replace(/(.)\/+$/, '$1');
+
+  const parent = getParentPath(raw);
+  if (!parent) {
+    return { type: 'root', depth: 1, parent: null, isValidParent: true };
+  }
+  const hasParent = multiPages.value.some(p => p.path.toLowerCase() === parent.toLowerCase());
+  return {
+    type: 'nested',
+    depth: raw.split('/').length - 1,
+    parent,
+    isValidParent: hasParent
+  };
+});
+
+const activePage = computed<MultiPageItem | null>(() => {
+  if (multiPages.value.length === 0) return null;
+  return multiPages.value.find(p => p.id === activePageId.value) || multiPages.value[0];
+});
+
+const ARTBOARD_GAP = 420; // jarak horizontal antar kolom kedalaman rute
+const ARTBOARD_ROW_GAP = 160; // jarak vertikal antar halaman sejajar dalam satu kolom
+const SITEMAP_FRAME_H = 880; // shelf judul + window bar + preview 780px
+const SITEMAP_ANCHOR_Y = 40 + 44 + 390; // titik tengah preview (offset top + shelf + setengah preview)
+
+const getParentPath = (path: string): string | null => {
+  if (path === '/' || !path.includes('/', 1)) return null;
+  const segs = path.replace(/^\//, '').split('/');
+  segs.pop();
+  return '/' + segs.join('/');
+};
+
+// Pohon rute horizontal: kedalaman = kolom (bergerak ke kanan), halaman sejajar ditumpuk per kolom,
+// induk diposisikan di tengah rentang vertikal anak-anaknya.
+const sitemapLayout = computed(() => {
+  const pages = multiPages.value;
+  const W = artboardWidth.value;
+  const ROW = SITEMAP_FRAME_H + ARTBOARD_ROW_GAP;
+  if (pages.length === 0) {
+    return { nodes: [] as Array<{ page: MultiPageItem; x: number; y: number; parentId: string | null }>, canvasWidth: W + 400, canvasHeight: 2400 };
+  }
+
+  const root = pages.find(p => p.path === '/') || pages[0];
+  const childrenOf = new Map<string, MultiPageItem[]>();
+  const parentOf = new Map<string, string | null>();
+  parentOf.set(root.id, null);
+
+  pages.forEach(p => {
+    if (p.id === root.id) return;
+    const pp = getParentPath(p.path);
+    const parent = (pp && pages.find(x => x.path === pp)) || root;
+    parentOf.set(p.id, parent.id);
+    if (!childrenOf.has(parent.id)) childrenOf.set(parent.id, []);
+    childrenOf.get(parent.id)!.push(p);
+  });
+
+  const nodes: Array<{ page: MultiPageItem; x: number; y: number; parentId: string | null }> = [];
+  let nextRow = 0;
+
+  // Mengembalikan y halaman; daun mengambil baris berikutnya, induk berada di tengah anak-anaknya
+  const place = (page: MultiPageItem, depth: number): number => {
+    const kids = childrenOf.get(page.id) || [];
+    let y: number;
+    if (kids.length === 0) {
+      y = nextRow * ROW;
+      nextRow++;
+    } else {
+      const ys = kids.map(k => place(k, depth + 1));
+      y = (Math.min(...ys) + Math.max(...ys)) / 2;
+    }
+    nodes.push({ page, x: depth * (W + ARTBOARD_GAP), y, parentId: parentOf.get(page.id) ?? null });
+    return y;
+  };
+  place(root, 0);
+
+  const maxX = Math.max(...nodes.map(n => n.x));
+  const maxY = Math.max(...nodes.map(n => n.y));
+  // Kolom ekstra untuk node "+ Tambah Halaman"
+  const canvasWidth = Math.max(maxX + W, W + ARTBOARD_GAP + 320) + ARTBOARD_GAP;
+  const canvasHeight = Math.max(maxY + ROW, SITEMAP_FRAME_H) + 400;
+
+  return { nodes, canvasWidth, canvasHeight };
+});
+
+const sitemapCanvasWidth = computed(() => sitemapLayout.value.canvasWidth);
+const sitemapCanvasHeight = computed(() => sitemapLayout.value.canvasHeight);
+
+const getSitemapNodePos = (pageId: string): { x: number; y: number } => {
+  const node = sitemapLayout.value.nodes.find(n => n.page.id === pageId);
+  return node ? { x: node.x, y: node.y } : { x: 0, y: 0 };
+};
+
+// Node "+ Tambah Halaman" ditaruh di kolom rute utama, di bawah halaman terakhir
+const sitemapAddNodePos = computed(() => {
+  const W = artboardWidth.value;
+  const col1X = W + ARTBOARD_GAP;
+  const col1 = sitemapLayout.value.nodes.filter(n => n.x === col1X);
+  if (col1.length === 0) return { x: col1X, y: 74 };
+  return { x: col1X, y: Math.max(...col1.map(n => n.y)) + SITEMAP_FRAME_H + ARTBOARD_ROW_GAP / 2 };
+});
+
+const getPageCanvasX = (_index?: number) => sitemapAddNodePos.value.x;
+
+const sitemapConnectors = computed(() => {
+  const W = artboardWidth.value;
+  const byId = new Map(sitemapLayout.value.nodes.map(n => [n.page.id, n]));
+
+  return sitemapLayout.value.nodes
+    .filter(n => n.parentId)
+    .map(n => {
+      const parent = byId.get(n.parentId!)!;
+      const startX = parent.x + W + 2;
+      const startY = parent.y + SITEMAP_ANCHOR_Y;
+      const endX = n.x - 4;
+      const endY = n.y + SITEMAP_ANCHOR_Y;
+      // Kurva S halus: titik kontrol horizontal setengah jarak antar kolom
+      const dx = (endX - startX) * 0.5;
+      const pathD = `M ${startX} ${startY} C ${startX + dx} ${startY}, ${endX - dx} ${endY}, ${endX} ${endY}`;
+      // Pill rute diletakkan di 75% lintasan agar tidak menumpuk di titik percabangan
+      const t = 0.75;
+      const mt = 1 - t;
+      const midX = mt ** 3 * startX + 3 * mt ** 2 * t * (startX + dx) + 3 * mt * t ** 2 * (endX - dx) + t ** 3 * endX;
+      const midY = mt ** 3 * startY + 3 * mt ** 2 * t * startY + 3 * mt * t ** 2 * endY + t ** 3 * endY;
+      return {
+        id: `conn_${parent.page.id}_to_${n.page.id}`,
+        sourcePageId: parent.page.id,
+        targetPageId: n.page.id,
+        label: `➜ ${n.page.path}`,
+        path: pathD,
+        startX,
+        startY,
+        endX,
+        endY,
+        midX,
+        midY
+      };
+    });
+});
+
+const setCanvasViewMode = (mode: 'single' | 'sitemap') => {
+  if (mode === 'sitemap') {
+    syncActivePageBlocks();
+    editorViewMode.value = 'design';
+    selectedBlockId.value = null;
+    canvasViewMode.value = mode;
+    nextTick(() => {
+      fitToScreen();
+    });
+  } else {
+    editorViewMode.value = 'design';
+    canvasViewMode.value = mode;
+    nextTick(() => {
+      fitToScreen();
+    });
+  }
+};
+
+const syncActivePageBlocks = () => {
+  if (!activePageId.value) return;
+  const currentPage = multiPages.value.find(p => p.id === activePageId.value);
+  if (currentPage) {
+    currentPage.blocks = JSON.parse(JSON.stringify(pageBlocks.value));
+  }
+};
+
+const switchPage = (pageId: string, autoSwitchToSingle: boolean = false) => {
+  if (pageId === activePageId.value) {
+    if (autoSwitchToSingle) {
+      canvasViewMode.value = 'single';
+      nextTick(() => {
+        fitToScreen();
+      });
+    }
+    return;
+  }
+  // 1. Simpan blok halaman aktif saat ini ke multiPages
+  syncActivePageBlocks();
+
+  // 2. Set halaman target
+  activePageId.value = pageId;
+  const target = multiPages.value.find(p => p.id === pageId);
+  if (target) {
+    pageBlocks.value = JSON.parse(JSON.stringify(target.blocks));
+    selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
+  }
+
+  if (autoSwitchToSingle) {
+    canvasViewMode.value = 'single';
+    nextTick(() => {
+      fitToScreen();
+    });
+  }
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const switchPageByPath = (path: string) => {
+  const cleanPath = path.split('#')[0];
+  const target = multiPages.value.find(p => p.path === cleanPath || p.path === `/${cleanPath.replace(/^\//, '')}`);
+  if (target) {
+    switchPage(target.id, false);
+    showToast(`Beralih ke halaman: ${target.title} (${target.path})`, 'info');
+  }
+};
+
+const openNewPageModal = () => {
+  newPageForm.title = '';
+  newPageForm.path = '';
+  newPageForm.templateType = 'content';
+  isNewPageModalOpen.value = true;
+};
+
+const createNewPage = () => {
+  const title = newPageForm.title.trim();
+  if (!title) {
+    showToast('Judul halaman tidak boleh kosong.', 'error');
+    return;
+  }
+
+  let path = newPageForm.path.trim();
+  if (!path) {
+    path = '/' + title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+  }
+  if (!path.startsWith('/')) {
+    path = '/' + path;
+  }
+  path = path.replace(/\/{2,}/g, '/').replace(/(.)\/+$/, '$1');
+
+  // Rute bertingkat (/about/rizal) wajib punya halaman induk (/about)
+  const parentPathOfNew = getParentPath(path);
+  if (parentPathOfNew && !multiPages.value.some(p => p.path.toLowerCase() === parentPathOfNew.toLowerCase())) {
+    showToast(`Buat halaman induk '${parentPathOfNew}' terlebih dahulu sebelum menambahkan '${path}'.`, 'error');
+    return;
+  }
+
+  // Cek duplikasi path
+  if (multiPages.value.some(p => p.path.toLowerCase() === path.toLowerCase())) {
+    showToast(`Rute '${path}' sudah ada di website ini.`, 'error');
+    return;
+  }
+
+  syncActivePageBlocks();
+
+  const newId = `page_${Date.now()}`;
+
+  // Buat default blocks untuk rute baru
+  const siteName = activeContainer.value?.name || 'AetherCorp';
+  const navBlock: VisualBlock = {
+    id: `nav_${newId}`,
+    type: 'navbar',
+    name: 'Header & Navigasi',
+    title: siteName,
+    buttonText: 'Kontak Kami',
+    buttonUrl: '/contact',
+    isVisible: true,
+    isLocked: false,
+    styles: {
+      bgMode: 'glass',
+      navStyle: 'glass',
+      navAlign: 'split',
+      brandGlyph: '◆',
+      isSticky: true
+    },
+    items: [
+      { id: 'n1', title: 'Beranda', url: '/' },
+      { id: 'n2', title: title, url: path, active: true }
+    ]
+  };
+
+  const footerBlock: VisualBlock = {
+    id: `footer_${newId}`,
+    type: 'footer',
+    name: 'Footer Korporasi',
+    title: `© 2026 ${siteName}. Hak Cipta Dilindungi.`,
+    content: 'Platform Solusi Cloud & Rekayasa Enterprise.',
+    isVisible: true,
+    isLocked: false,
+    styles: {
+      bgColor: '#0f172a',
+      textColor: '#94a3b8'
+    }
+  };
+
+  let centerBlocks: VisualBlock[] = [];
+  if (newPageForm.templateType === 'contact') {
+    centerBlocks = [
+      {
+        id: `hero_${newId}`,
+        type: 'hero',
+        name: 'Hero Kontak Kami',
+        title: `Hubungi Tim ${siteName}`,
+        content: 'Kami siap membantu kebutuhan implementasi sistem & konsultasi infrastruktur digital Anda.',
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          align: 'center',
+          paddingY: 64,
+          bgColor: '#ffffff'
+        }
+      },
+      {
+        id: `form_${newId}`,
+        type: 'contact',
+        name: 'Formulir Kontak',
+        title: 'Kirimkan Pesan atau Permintaan Demo',
+        content: 'Isi formulir di bawah ini dan tim engineer kami akan merespons dalam waktu 1x24 jam.',
+        buttonText: 'Kirim Pesan',
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          paddingY: 48,
+          bgColor: '#f8fafc'
+        }
+      }
+    ];
+  } else if (newPageForm.templateType === 'pricing') {
+    centerBlocks = [
+      {
+        id: `hero_${newId}`,
+        type: 'hero',
+        name: `Hero ${title}`,
+        title: title,
+        content: `Pilihan paket investasi dan lisensi transparan yang dirancang untuk mendukung akselerasi bisnis Anda.`,
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          align: 'center',
+          paddingY: 64,
+          bgColor: '#ffffff'
+        }
+      },
+      {
+        id: `pricing_${newId}`,
+        type: 'pricing',
+        name: 'Matriks Harga & Layanan',
+        badge: 'SKEMA BIAYA TRANSPARAN',
+        title: 'Pilihan Paket Fleksibel Sesuai Pertumbuhan',
+        subtitle: 'Semua paket mencakup garansi SLA 99.9% dan infrastruktur komputasi kontainer otonom.',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          {
+            id: `p1_${newId}`,
+            title: 'Starter Node',
+            price: 'Rp 49.000',
+            period: '/ bln',
+            tag: 'Hemat',
+            desc: 'Cocok untuk inisiasi proyek baru, website personal, dan pengujian pasar.',
+            features: ['1 Kontainer Mandiri', 'Subdomain Kustom Gratis', 'SSL TLS 1.3 Terisolasi', 'Support Komunitas 24/7']
+          },
+          {
+            id: `p2_${newId}`,
+            title: 'Enterprise Pro',
+            price: 'Rp 149.000',
+            period: '/ bln',
+            tag: 'Terpopuler',
+            desc: 'Solusi terlengkap untuk akselerasi bisnis dan tim skala enterprise.',
+            features: ['Dedicated Kontainer Prioritas', 'Custom Domain Tanpa Batas', 'Backup Otomatis Harian', 'Akses AI Agent Editor Terpadu']
+          }
+        ],
+        styles: {
+          paddingY: 54,
+          accentColor: '#059669'
+        }
+      }
+    ];
+  } else if (newPageForm.templateType === 'content') {
+    centerBlocks = [
+      {
+        id: `hero_${newId}`,
+        type: 'hero',
+        name: `Hero ${title}`,
+        title: title,
+        content: `Pelajari lebih lanjut mengenai dedikasi ${siteName} dalam menghadirkan produk dan solusi unggulan.`,
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          align: 'center',
+          paddingY: 64,
+          bgColor: '#ffffff'
+        }
+      },
+      {
+        id: `features_${newId}`,
+        type: 'features',
+        name: 'Fitur & Keunggulan',
+        title: 'Keunggulan Solusi Kami',
+        content: 'Arsitektur performa tinggi dengan skalabilitas komputasi kontainer otonom.',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          { id: `feat_1_${newId}`, title: 'Performa Tinggi', desc: 'Latency TTFB sub-millisecond dengan akselerasi HTTP/3.', icon: 'Zap' },
+          { id: `feat_2_${newId}`, title: 'Keamanan RLS', desc: 'Row-Level Security PostgreSQL multi-tenant terisolasi.', icon: 'Shield' },
+          { id: `feat_3_${newId}`, title: 'Infrastruktur Mandiri', desc: 'Kontainer Docker otonom yang berjalan 24/7 tanpa downtime.', icon: 'Server' }
+        ],
+        styles: {
+          paddingY: 56,
+          bgColor: '#f8fafc'
+        }
+      }
+    ];
+  } else {
+    centerBlocks = [
+      {
+        id: `blank_${newId}`,
+        type: 'hero',
+        name: `Section Utama ${title}`,
+        title: title,
+        content: 'Halaman rute baru siap dikustomisasi dengan komponen dan blok desain.',
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          align: 'center',
+          paddingY: 80,
+          bgColor: '#ffffff'
+        }
+      }
+    ];
+  }
+
+  const newBlocks: VisualBlock[] = [navBlock, ...centerBlocks, footerBlock];
+
+  const newPageItem: MultiPageItem = {
+    id: newId,
+    path,
+    title,
+    description: `Halaman ${title}`,
+    canvasX: getPageCanvasX(multiPages.value.length),
+    canvasY: 0,
+    blocks: newBlocks
+  };
+
+  multiPages.value.push(newPageItem);
+
+  // Rute utama masuk ke navbar semua halaman; sub-rute hanya ke navbar halaman induk & dirinya
+  multiPages.value.forEach(p => {
+    if (parentPathOfNew && p.path !== parentPathOfNew && p.id !== newId) return;
+    const nav = p.blocks.find(b => b.type === 'navbar');
+    if (nav) {
+      if (!nav.items) nav.items = [];
+      if (!nav.items.some(i => i.url === path)) {
+        nav.items.push({
+          id: `link_${newId}`,
+          title,
+          url: path
+        });
+      }
+    }
+  });
+
+  isNewPageModalOpen.value = false;
+  switchPage(newId, true);
+  showToast(`Halaman '${title}' (${path}) berhasil dibuat!`, 'success');
+  triggerAutoSaveDraft();
+};
+
+// -----------------------------------------------------------------------------
+// Ganti alamat rute langsung dari pill judul frame di Alur Figma
+// -----------------------------------------------------------------------------
+const editingRoutePageId = ref<string | null>(null);
+const editingRouteValue = ref('');
+
+const startEditRoute = (page: MultiPageItem) => {
+  if (page.path === '/') {
+    showToast('Rute beranda (/) adalah rute utama dan tidak dapat diganti.', 'info');
+    return;
+  }
+  editingRoutePageId.value = page.id;
+  editingRouteValue.value = page.path;
+  nextTick(() => {
+    const el = document.querySelector<HTMLInputElement>('.figma-frame-route-input');
+    el?.focus();
+    el?.select();
+  });
+};
+
+const cancelEditRoute = () => {
+  editingRoutePageId.value = null;
+};
+
+const commitEditRoute = () => {
+  const pageId = editingRoutePageId.value;
+  if (!pageId) return;
+  editingRoutePageId.value = null;
+  const page = multiPages.value.find(p => p.id === pageId);
+  if (!page) return;
+
+  let next = editingRouteValue.value.trim().toLowerCase().replace(/\s+/g, '-');
+  if (!next.startsWith('/')) next = '/' + next;
+  next = next.replace(/\/{2,}/g, '/').replace(/(.)\/+$/, '$1');
+  const oldPath = page.path;
+  if (next === oldPath) return;
+
+  if (next === '/' || !/^\/[a-z0-9\-_/]+$/.test(next)) {
+    showToast('Rute hanya boleh berisi huruf kecil, angka, tanda - dan _.', 'error');
+    return;
+  }
+  if (next.startsWith(oldPath + '/')) {
+    showToast('Rute tidak boleh dipindah ke dalam sub-rutenya sendiri.', 'error');
+    return;
+  }
+  const parent = getParentPath(next);
+  if (parent && !multiPages.value.some(p => p.path === parent)) {
+    showToast(`Halaman induk '${parent}' belum ada.`, 'error');
+    return;
+  }
+
+  // Halaman ini beserta seluruh sub-rutenya ikut berpindah prefix
+  const renames = new Map<string, string>();
+  multiPages.value.forEach(p => {
+    if (p.path === oldPath || p.path.startsWith(oldPath + '/')) {
+      renames.set(p.path, next + p.path.slice(oldPath.length));
+    }
+  });
+  const renamedTargets = new Set(renames.values());
+  if (multiPages.value.some(p => !renames.has(p.path) && renamedTargets.has(p.path))) {
+    showToast(`Rute '${next}' sudah dipakai halaman lain.`, 'error');
+    return;
+  }
+
+  syncActivePageBlocks();
+  multiPages.value.forEach(p => {
+    const np = renames.get(p.path);
+    if (np) p.path = np;
+    const nav = p.blocks.find(b => b.type === 'navbar');
+    nav?.items?.forEach(item => {
+      if (item.url && renames.has(item.url)) item.url = renames.get(item.url)!;
+    });
+  });
+  const active = multiPages.value.find(p => p.id === activePageId.value);
+  if (active) pageBlocks.value = JSON.parse(JSON.stringify(active.blocks));
+
+  showToast(`Rute diganti: ${oldPath} → ${next}${renames.size > 1 ? ` (+${renames.size - 1} sub-rute)` : ''}`, 'success');
+  triggerAutoSaveDraft();
+};
+
+const deletePage = (pageId: string) => {
+  const target = multiPages.value.find(p => p.id === pageId);
+  if (!target) return;
+  if (target.path === '/') {
+    showToast('Halaman beranda (/) adalah halaman utama dan tidak dapat dihapus.', 'error');
+    return;
+  }
+  if (multiPages.value.length <= 1) {
+    showToast('Situs harus memiliki minimal satu halaman.', 'error');
+    return;
+  }
+
+  // 1. If currently active page is NOT the deleted page, sync its blocks first
+  if (activePageId.value !== pageId) {
+    syncActivePageBlocks();
+  }
+
+  // 2. Remove the deleted page from multiPages
+  multiPages.value = multiPages.value.filter(p => p.id !== pageId);
+
+  // 3. Remove route link from all navbars
+  multiPages.value.forEach(p => {
+    const nav = p.blocks.find(b => b.type === 'navbar');
+    if (nav && nav.items) {
+      nav.items = nav.items.filter(i => i.url !== target.path);
+    }
+  });
+
+  // 4. Handle active page transition cleanly without overwriting!
+  if (activePageId.value === pageId) {
+    // Deleted page was currently active! Safely switch to home WITHOUT syncing deleted blocks
+    const home = multiPages.value.find(p => p.path === '/') || multiPages.value[0];
+    if (home) {
+      activePageId.value = home.id;
+      pageBlocks.value = JSON.parse(JSON.stringify(home.blocks));
+      selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
+    }
+  } else {
+    // Current page is still active, just update its navbar
+    const currentNav = pageBlocks.value.find(b => b.type === 'navbar');
+    if (currentNav && currentNav.items) {
+      currentNav.items = currentNav.items.filter(i => i.url !== target.path);
+    }
+  }
+
+  showToast(`Halaman '${target.title}' (${target.path}) telah dihapus.`, 'info');
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const getCompiledPageHtml = (page: MultiPageItem): string => {
+  const matchedTpl = officialTemplates.value.find(t =>
+    t.title === activeContainer.value?.templateName ||
+    t.category === activeContainer.value?.category
+  ) || officialTemplates.value[0];
+
+  if (!matchedTpl) return '';
+  return compileTemplateToHTML(matchedTpl, {
+    siteName: activeContainer.value?.name || 'Situs Utama',
+    subdomain: activeContainer.value?.subdomain || 'stackbyte.id',
+    accentColor: activeContainer.value?.accentColor || '#2563eb',
+    roleOrHeadline: page.title,
+    bioIntro: page.description,
+    blocksOverride: page.blocks
+  });
+};
+
+// Navbar Context & Interactive Canvas Helpers
+const defaultNavItems: Array<{ id: string; title: string; url: string; active?: boolean }> = [
+  { id: 'nav_1', title: 'Beranda', url: '/', active: true },
+  { id: 'nav_2', title: 'Tentang Kami', url: '/about', active: false },
+  { id: 'nav_3', title: 'Layanan', url: '/services', active: false },
+  { id: 'nav_4', title: 'Kontak', url: '/contact', active: false }
+];
+
+const onNavItemClick = (block: VisualBlock, idx: number, e: MouseEvent) => {
+  e.stopPropagation();
+  if (editorViewMode.value === 'preview') {
+    const item = block.items?.[idx] || defaultNavItems[idx];
+    if (item && item.url) {
+      switchPageByPath(item.url);
+    }
+    return;
+  }
+  selectBlock(block.id);
+  setHudContext('card', block, idx);
+};
+
+const addNavItem = (block: VisualBlock) => {
+  if (!block.items) {
+    block.items = [...defaultNavItems];
+  }
+  const nextNum = block.items.length + 1;
+  block.items.push({
+    id: `nav_${Date.now() % 10000}`,
+    title: `Menu ${nextNum}`,
+    url: `#section_${nextNum}`
+  });
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const removeNavItem = (block: VisualBlock, idx: number) => {
+  if (!block.items) return;
+  if (block.items.length <= 1) {
+    showToast('Navigasi minimal harus memiliki satu menu tautan.', 'info');
+    return;
+  }
+  block.items.splice(idx, 1);
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const cycleNavbarBrandGlyph = (block: VisualBlock) => {
+  const glyphs = ['◆', '▲', '●', '★', '❖', '✦', '◼', '⬥'];
+  const current = block.styles?.brandGlyph || '◆';
+  const nextIdx = (glyphs.indexOf(current) + 1) % glyphs.length;
+  if (!block.styles) block.styles = {};
+  block.styles.brandGlyph = glyphs[nextIdx];
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
 interface EditorDraftData {
   blocks: VisualBlock[];
+  pages?: MultiPageItem[];
+  activePageId?: string;
+  canvasViewMode?: 'single' | 'sitemap';
   roleOrHeadline?: string;
   bioIntro?: string;
   accentColor?: string;
@@ -384,14 +1374,94 @@ const getDraftStorageKey = (containerId: string) => `herocms_editor_draft_${cont
 
 // Initialize blocks from activeContainer themeConfig or defaults
 const loadBlocksForActiveContainer = () => {
-  if (activeContainer.value?.themeConfig?.blocks && Array.isArray(activeContainer.value.themeConfig.blocks)) {
-    pageBlocks.value = JSON.parse(JSON.stringify(activeContainer.value.themeConfig.blocks));
-  } else {
-    const siteName = activeContainer.value?.name || 'Situs Utama';
-    const role = activeContainer.value?.roleOrHeadline || 'Portofolio Teknis Engineer';
-    const bio = activeContainer.value?.bioIntro || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.';
-    pageBlocks.value = createDefaultBlocks(siteName, role, bio);
+  const container = activeContainer.value;
+  if (!container) return;
+
+  // 1. HIGHEST PRIORITY: Container's own saved pages (never overwrite user's pages with template)
+  if (container.themeConfig?.pages && Array.isArray(container.themeConfig.pages) && container.themeConfig.pages.length > 0) {
+    multiPages.value = JSON.parse(JSON.stringify(container.themeConfig.pages)).map((p: any, idx: number) => ({
+      ...p,
+      canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
+      canvasY: p.canvasY || 0
+    }));
+    activePageId.value = multiPages.value[0]?.id || 'page_home';
+    pageBlocks.value = JSON.parse(JSON.stringify(multiPages.value[0]?.blocks || []));
+    if (pageBlocks.value.length > 0) {
+      selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
+    }
+    return;
   }
+
+  // 2. SECOND PRIORITY: Container's own saved blocks
+  if (container.themeConfig?.blocks && Array.isArray(container.themeConfig.blocks) && container.themeConfig.blocks.length > 0) {
+    pageBlocks.value = JSON.parse(JSON.stringify(container.themeConfig.blocks));
+    multiPages.value = [
+      {
+        id: 'page_home',
+        path: '/',
+        title: 'Beranda',
+        description: 'Halaman Utama',
+        canvasX: 0,
+        canvasY: 0,
+        blocks: pageBlocks.value
+      }
+    ];
+    activePageId.value = 'page_home';
+    if (pageBlocks.value.length > 0) {
+      selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
+    }
+    return;
+  }
+
+  // 3. THIRD PRIORITY: Official template specifically matching this container's assigned template
+  const templateId = (container.themeConfig as any)?.templateId || '';
+  const matchedTemplate = officialTemplatesData.find(t =>
+    (templateId && t.id === templateId) ||
+    (container.templateName && t.title === container.templateName)
+  );
+
+  if (matchedTemplate?.isMultiPage && matchedTemplate.pages && matchedTemplate.pages.length > 0) {
+    multiPages.value = JSON.parse(JSON.stringify(matchedTemplate.pages)).map((p: any, idx: number) => ({
+      ...p,
+      canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
+      canvasY: p.canvasY || 0
+    }));
+    activePageId.value = multiPages.value[0]?.id || 'page_home';
+    pageBlocks.value = JSON.parse(JSON.stringify(multiPages.value[0]?.blocks || []));
+  } else if (matchedTemplate?.blocks && Array.isArray(matchedTemplate.blocks) && matchedTemplate.blocks.length > 0) {
+    pageBlocks.value = JSON.parse(JSON.stringify(matchedTemplate.blocks));
+    multiPages.value = [
+      {
+        id: 'page_home',
+        path: '/',
+        title: 'Beranda',
+        description: 'Halaman Utama',
+        canvasX: 0,
+        canvasY: 0,
+        blocks: pageBlocks.value
+      }
+    ];
+    activePageId.value = 'page_home';
+  } else {
+    // 4. FALLBACK: Default starter blocks
+    const siteName = container.name || 'Situs Utama';
+    const role = container.roleOrHeadline || 'Portofolio Teknis Engineer';
+    const bio = container.bioIntro || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.';
+    pageBlocks.value = createDefaultBlocks(siteName, role, bio);
+    multiPages.value = [
+      {
+        id: 'page_home',
+        path: '/',
+        title: 'Beranda',
+        description: 'Halaman Utama',
+        canvasX: 0,
+        canvasY: 0,
+        blocks: pageBlocks.value
+      }
+    ];
+    activePageId.value = 'page_home';
+  }
+
   if (pageBlocks.value.length > 0) {
     selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
   }
@@ -405,36 +1475,63 @@ const restoreDraftForActiveContainer = async (containerId: string) => {
 
     let draftData: EditorDraftData | null = null;
 
-    // 1. Coba ambil dari Redis Backend terlebih dahulu
+    // 1. Cek localStorage terlebih dahulu (sinkron & tercepat saat browser refresh)
+    const localStr = localStorage.getItem(getDraftStorageKey(containerId));
+    if (localStr) {
+      try {
+        draftData = JSON.parse(localStr);
+      } catch {}
+    }
+
+    // 2. Coba sinkronisasi dari Redis Backend jika ada versi server yang lebih mutakhir
     try {
       const res = await studioApi.getEditorDraft(containerId);
       const serverDraft = res?.draft || res?.data;
       if (serverDraft && serverDraft.blocks && Array.isArray(serverDraft.blocks)) {
-        draftData = serverDraft;
+        if (!draftData || (serverDraft.updatedAt && new Date(serverDraft.updatedAt) > new Date(draftData.updatedAt || 0))) {
+          draftData = serverDraft;
+        }
       }
     } catch (apiErr) {
       console.warn('[VisualEditor] Redis draft fetch fallback:', apiErr);
     }
 
-    // 2. Fallback ke localStorage jika Redis belum ada
-    if (!draftData) {
-      const localStr = localStorage.getItem(getDraftStorageKey(containerId));
-      if (localStr) {
-        try {
-          draftData = JSON.parse(localStr);
-        } catch {}
-      }
-    }
-
     // 3. Hydrate state
     if (draftData && Array.isArray(draftData.blocks) && draftData.blocks.length > 0) {
       pageBlocks.value = draftData.blocks;
+
+      if (draftData.pages && Array.isArray(draftData.pages) && draftData.pages.length > 0) {
+        multiPages.value = draftData.pages;
+        activePageId.value = draftData.activePageId || draftData.pages[0]?.id || 'page_home';
+        const activePg = multiPages.value.find(p => p.id === activePageId.value) || multiPages.value[0];
+        if (activePg) {
+          activePageId.value = activePg.id;
+          pageBlocks.value = JSON.parse(JSON.stringify(activePg.blocks));
+        }
+      } else {
+        multiPages.value = [
+          {
+            id: 'page_home',
+            path: '/',
+            title: 'Beranda',
+            description: 'Halaman Utama',
+            canvasX: 0,
+            canvasY: 0,
+            blocks: pageBlocks.value
+          }
+        ];
+        activePageId.value = 'page_home';
+      }
+
+      if (draftData.canvasViewMode) canvasViewMode.value = draftData.canvasViewMode;
+
       if (activeContainer.value) {
         if (draftData.roleOrHeadline !== undefined) activeContainer.value.roleOrHeadline = draftData.roleOrHeadline;
         if (draftData.bioIntro !== undefined) activeContainer.value.bioIntro = draftData.bioIntro;
         if (draftData.accentColor !== undefined) activeContainer.value.accentColor = draftData.accentColor;
         if (!activeContainer.value.themeConfig) activeContainer.value.themeConfig = {};
-        activeContainer.value.themeConfig.blocks = draftData.blocks;
+        activeContainer.value.themeConfig.blocks = pageBlocks.value;
+        activeContainer.value.themeConfig.pages = multiPages.value;
       }
       if (draftData.selectedBlockId) selectedBlockId.value = draftData.selectedBlockId;
       if (draftData.currentDevice) applyDevicePreset(draftData.currentDevice);
@@ -463,34 +1560,48 @@ let autoSaveTimer: any = null;
 const triggerAutoSaveDraft = () => {
   if (isEditorBooting.value || !activeContainerId.value) return;
 
+  syncActivePageBlocks();
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  const draftPayload: EditorDraftData = {
+    blocks: pageBlocks.value,
+    pages: multiPages.value,
+    activePageId: activePageId.value,
+    canvasViewMode: canvasViewMode.value,
+    roleOrHeadline: activeContainer.value?.roleOrHeadline,
+    bioIntro: activeContainer.value?.bioIntro,
+    accentColor: activeContainer.value?.accentColor,
+    selectedBlockId: selectedBlockId.value,
+    currentDevice: currentDevice.value,
+    zoom: zoom.value,
+    panX: panX.value,
+    panY: panY.value,
+    activeLeftTab: activeLeftTab.value,
+    activeRightTab: activeRightTab.value,
+    updatedAt: now.toISOString()
+  };
+
+  // 1. INSTANT LOCAL PERSISTENCE (0ms synchronous write - guarantees zero loss on refresh)
+  try {
+    localStorage.setItem(getDraftStorageKey(activeContainerId.value), JSON.stringify(draftPayload));
+    if (activeContainer.value) {
+      if (!activeContainer.value.themeConfig) activeContainer.value.themeConfig = {};
+      activeContainer.value.themeConfig.blocks = pageBlocks.value;
+      activeContainer.value.themeConfig.pages = multiPages.value;
+    }
+  } catch (e) {
+    console.warn('[VisualEditor] LocalStorage immediate save notice:', e);
+  }
+
+  // 2. Debounce remote persistence to Redis / Go Backend API
   if (autoSaveTimer) clearTimeout(autoSaveTimer);
   isDraftSaving.value = true;
 
   autoSaveTimer = setTimeout(async () => {
     try {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-      const draftPayload: EditorDraftData = {
-        blocks: pageBlocks.value,
-        roleOrHeadline: activeContainer.value?.roleOrHeadline,
-        bioIntro: activeContainer.value?.bioIntro,
-        accentColor: activeContainer.value?.accentColor,
-        selectedBlockId: selectedBlockId.value,
-        currentDevice: currentDevice.value,
-        zoom: zoom.value,
-        panX: panX.value,
-        panY: panY.value,
-        activeLeftTab: activeLeftTab.value,
-        activeRightTab: activeRightTab.value,
-        updatedAt: now.toISOString()
-      };
-
-      // 1. Simpan di localStorage seketika
-      localStorage.setItem(getDraftStorageKey(activeContainerId.value), JSON.stringify(draftPayload));
-
-      // 2. Persist ke Redis via backend API
       await studioApi.saveEditorDraft(activeContainerId.value, draftPayload);
-
       lastSavedDraftAt.value = timeStr;
     } catch (e) {
       console.warn('[VisualEditor] Auto-save to Redis failed:', e);
@@ -534,6 +1645,7 @@ watch(
 watch(
   pageBlocks,
   (newBlocks) => {
+    syncActivePageBlocks();
     if (activeContainer.value) {
       if (!activeContainer.value.themeConfig) {
         activeContainer.value.themeConfig = {};
@@ -575,6 +1687,17 @@ watch(
     triggerAutoSaveDraft();
   }
 );
+
+watch(selectedBlockId, () => {
+  nextTick(() => {
+    updateShelfPosition();
+    setTimeout(updateShelfPosition, 40);
+  });
+});
+
+watch([panX, panY, zoom, showRulers, canvasViewMode, editorViewMode], () => {
+  updateShelfPosition();
+});
 
 
 
@@ -627,8 +1750,28 @@ const handleRedo = () => {
 // Mouse & Gesture Handlers: Canvas Panning & Zooming
 // -----------------------------------------------------------------------------
 
+const isInteractiveElement = (target: HTMLElement | null): boolean => {
+  if (!target) return false;
+  return !!target.closest(
+    'button, a, input, select, textarea, [contenteditable="true"], .studio-viewport-floating-shelf, .block-floating-context-toolbar, .shelf-context-popup, .custom-floating-dropdown, .tool-btn, .btn-top-create, .studio-top-context-bar, .studio-left-sidebar, .studio-right-sidebar, .modal-backdrop, .modal-dialog, .canvas-resizer, .btn-figma-focus-page, .btn-figma-delete-page, .btn-add-node-cta, .sitemap-route-pill-node'
+  );
+};
+
+let canvasClickStartPos = { x: 0, y: 0 };
+let hasCanvasDragged = false;
+
 const onCanvasMouseDown = (e: MouseEvent) => {
-  // If clicking on artboard or handles, don't pan unless Hand tool or Space is active
+  canvasClickStartPos = { x: e.clientX, y: e.clientY };
+  hasCanvasDragged = false;
+
+  const target = e.target as HTMLElement | null;
+
+  // Don't pan if clicking an interactive control
+  if (isInteractiveElement(target)) {
+    return;
+  }
+
+  // 1. Hand tool, Spacebar, or Middle Mouse Button: Always start pan
   if (activeTool.value === 'hand' || isSpacePressed.value || e.button === 1) {
     isPanning.value = true;
     panStart.value = {
@@ -636,10 +1779,40 @@ const onCanvasMouseDown = (e: MouseEvent) => {
       y: e.clientY - panY.value
     };
     e.preventDefault();
+    return;
+  }
+
+  // 2. Normal Left click (e.button === 0)
+  if (e.button === 0) {
+    // In Sitemap / Alur Figma mode: the entire workspace is a freeform canvas!
+    // Left-click dragging anywhere (background, empty space, card surface) starts pan!
+    if (canvasViewMode.value === 'sitemap') {
+      isPanning.value = true;
+      panStart.value = {
+        x: e.clientX - panX.value,
+        y: e.clientY - panY.value
+      };
+      return;
+    }
+
+    // In Single Page mode: clicking on canvas background (outside artboard) pans freely
+    const isInsideArtboard = target?.closest('.artboard-frame, .block-node-wrapper');
+    if (!isInsideArtboard) {
+      isPanning.value = true;
+      panStart.value = {
+        x: e.clientX - panX.value,
+        y: e.clientY - panY.value
+      };
+      return;
+    }
   }
 };
 
 const onCanvasMouseMove = (e: MouseEvent) => {
+  if (Math.hypot(e.clientX - canvasClickStartPos.x, e.clientY - canvasClickStartPos.y) > 6) {
+    hasCanvasDragged = true;
+  }
+
   // Update coordinates HUD
   mouseCoords.value = {
     x: Math.round((e.clientX - panX.value) / zoom.value),
@@ -651,6 +1824,7 @@ const onCanvasMouseMove = (e: MouseEvent) => {
     panX.value = e.clientX - panStart.value.x;
     panY.value = e.clientY - panStart.value.y;
     clampPan();
+    updateShelfPosition();
     return;
   }
 
@@ -683,25 +1857,59 @@ const onCanvasMouseUp = () => {
   resizeDirection.value = null;
 };
 
-// Clamp pan values to prevent infinite scrolling
-const PAN_LIMIT = 4000;
+const onCanvasBackgroundClick = (e: MouseEvent) => {
+  if (hasCanvasDragged) return;
+
+  const target = e.target as HTMLElement | null;
+  if (!target) return;
+
+  // Don't deselect if clicked inside block, floating shelf, dropdowns, popups, or toolbars
+  if (target.closest('.block-node-wrapper, .studio-viewport-floating-shelf, .block-floating-context-toolbar, .shelf-context-popup, .custom-floating-dropdown, .tool-btn, .btn-top-create, .studio-top-context-bar, .studio-left-sidebar, .studio-right-sidebar, .modal-backdrop, .modal-dialog')) {
+    return;
+  }
+
+  // Deselect active block when clicking on canvas background or outside blocks
+  selectedBlockId.value = null;
+  hoveredBlockId.value = null;
+  hudContext.value = { type: 'section' };
+};
+
+// Sitemap Card & Node click handlers with drag suppression
+const onSitemapCardClick = (pageId: string) => {
+  if (hasCanvasDragged) return;
+  switchPage(pageId, true);
+};
+
+const onRoutePillClick = (targetPageId: string) => {
+  if (hasCanvasDragged) return;
+  switchPage(targetPageId, true);
+};
+
+// Dynamic pan clamping to allow ultra-wide free exploration across multi-artboards
 const clampPan = () => {
-  panX.value = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panX.value));
-  panY.value = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panY.value));
+  const dynamicXLimit = Math.max(16000, sitemapCanvasWidth.value + 6000);
+  const dynamicYLimit = 8000;
+  panX.value = Math.max(-dynamicXLimit, Math.min(dynamicXLimit, panX.value));
+  panY.value = Math.max(-dynamicYLimit, Math.min(dynamicYLimit, panY.value));
 };
 
 const onCanvasWheel = (e: WheelEvent) => {
   e.preventDefault();
   if (e.ctrlKey || e.metaKey) {
+    // Pinch-to-zoom on Mac trackpad or Ctrl/Cmd + wheel zoom
     const delta = e.deltaY > 0 ? -0.05 : 0.05;
     zoom.value = Math.max(0.25, Math.min(2.0, parseFloat((zoom.value + delta).toFixed(2))));
-  } else if (e.shiftKey) {
+  } else if (e.shiftKey && Math.abs(e.deltaX) < 1) {
+    // Shift + vertical wheel translates to horizontal pan
     panX.value -= e.deltaY;
   } else {
-    // Normal scroll down / up moves canvas smoothly!
-    panY.value -= e.deltaY * 0.85;
+    // Free 2D Pan: Handles both deltaX and deltaY simultaneously!
+    // Native smooth navigation for Mac trackpads (2-finger swipe in any direction) and 2D wheel mice
+    panX.value -= e.deltaX;
+    panY.value -= e.deltaY;
   }
   clampPan();
+  updateShelfPosition();
 };
 
 // Start Resizing Artboard
@@ -719,11 +1927,35 @@ const startArtboardResize = (dir: 'e' | 's' | 'se', e: MouseEvent) => {
 };
 
 // -----------------------------------------------------------------------------
-// Keyboard Shortcuts
+// Keyboard Shortcuts & Focus Guards
 // -----------------------------------------------------------------------------
 
+const isEditingText = (target: EventTarget | null): boolean => {
+  if (!target || !(target instanceof HTMLElement)) return false;
+  const tagName = target.tagName.toUpperCase();
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tagName)) return true;
+  if (target.isContentEditable || Boolean(target.closest('[contenteditable="true"]'))) return true;
+  if (Boolean(target.closest('.studio-top-context-bar, .wysiwyg-card-surface, input, textarea, select'))) return true;
+  return false;
+};
+
 const onKeyDown = (e: KeyboardEvent) => {
-  if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+  if (e.key === 'Escape') {
+    if (isEditingText(e.target)) {
+      (e.target as HTMLElement).blur();
+    }
+    selectedBlockId.value = null;
+    hoveredBlockId.value = null;
+    hudContext.value = { type: 'section' };
+    return;
+  }
+
+  // Cegah tombol keyboard shortcut memanipulasi canvas ketika user sedang mengetik teks
+  if (isEditingText(e.target)) {
+    return;
+  }
+
+  if (e.code === 'Space') {
     isSpacePressed.value = true;
   }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
@@ -750,14 +1982,14 @@ const onKeyDown = (e: KeyboardEvent) => {
     }
   }
 
-  if (e.key === 'v' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+  if (e.key === 'v') {
     activeTool.value = 'select';
   }
-  if (e.key === 'h' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+  if (e.key === 'h') {
     activeTool.value = 'hand';
   }
   if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (selectedBlockId.value && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+    if (selectedBlockId.value) {
       deleteBlock(selectedBlockId.value);
     }
   }
@@ -777,11 +2009,14 @@ onMounted(async () => {
   window.addEventListener('mouseup', onCanvasMouseUp);
   window.addEventListener('resize', fitToScreen);
   window.addEventListener('resize', updateChipsScrollState);
+  window.addEventListener('resize', updateShelfPosition);
+  window.addEventListener('scroll', updateShelfPosition, true);
   document.addEventListener('click', handleSiteDropdownOutsideClick);
   document.addEventListener('click', handleAllDropdownOutsideClick);
 
 
   // Smooth booting transition & dependency/draft load
+  isEditorSidebarHidden.value = true;
   isEditorBooting.value = true;
   bootProgress.value = 25;
   bootStatusText.value = 'Menyiapkan kanvas visual...';
@@ -824,6 +2059,8 @@ onUnmounted(() => {
   window.removeEventListener('mouseup', onCanvasMouseUp);
   window.removeEventListener('resize', fitToScreen);
   window.removeEventListener('resize', updateChipsScrollState);
+  window.removeEventListener('resize', updateShelfPosition);
+  window.removeEventListener('scroll', updateShelfPosition, true);
   document.removeEventListener('click', handleSiteDropdownOutsideClick);
   document.removeEventListener('click', handleAllDropdownOutsideClick);
 
@@ -837,7 +2074,404 @@ onUnmounted(() => {
 const selectBlock = (id: string, e?: MouseEvent) => {
   if (activeTool.value === 'hand') return;
   if (e) e.stopPropagation();
-  selectedBlockId.value = id;
+  if (selectedBlockId.value !== id) {
+    selectedBlockId.value = id;
+    hudContext.value = { type: 'section' };
+  }
+  nextTick(() => {
+    updateShelfPosition();
+    setTimeout(updateShelfPosition, 40);
+  });
+};
+
+// -----------------------------------------------------------------------------
+// Top Context Toolbar (Shelf) State & Methods (100% In-Front & Outside Canvas)
+// -----------------------------------------------------------------------------
+const hudContext = ref<{
+  type: 'section' | 'navbar' | 'text' | 'button' | 'card' | 'progressbar' | 'image';
+  field?: string;
+  itemIndex?: number;
+  buttonRole?: 'primary' | 'secondary' | number;
+  subType?: string;
+}>({ type: 'section' });
+
+const currentActiveButtonRadius = computed(() => {
+  if (!selectedBlock.value) return 8;
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') return selectedBlock.value.styles?.secondaryButtonRadius ?? 8;
+  if (typeof role === 'number' && selectedBlock.value.items?.[role]?.buttonRadius !== undefined) {
+    return selectedBlock.value.items[role].buttonRadius ?? 8;
+  }
+  return selectedBlock.value.styles?.buttonRadius ?? 8;
+});
+
+const currentActiveButtonStyle = computed(() => {
+  if (!selectedBlock.value) return 'solid';
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') return selectedBlock.value.styles?.secondaryButtonStyle ?? 'outline';
+  if (typeof role === 'number' && selectedBlock.value.items?.[role]?.buttonStyle) {
+    return selectedBlock.value.items[role].buttonStyle ?? 'solid';
+  }
+  return selectedBlock.value.styles?.buttonStyle ?? 'solid';
+});
+
+const currentActiveButtonColor = computed(() => {
+  if (!selectedBlock.value) return activeContainer.value?.accentColor || '#2563eb';
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') return selectedBlock.value.styles?.secondaryButtonColor || '#64748b';
+  if (typeof role === 'number' && selectedBlock.value.items?.[role]?.buttonColor) {
+    return selectedBlock.value.items[role].buttonColor || '#2563eb';
+  }
+  return selectedBlock.value.styles?.buttonColor || selectedBlock.value.styles?.accentColor || activeContainer.value?.accentColor || '#2563eb';
+});
+
+const setHudContext = (
+  type: 'section' | 'navbar' | 'text' | 'button' | 'card' | 'progressbar' | 'image',
+  block: VisualBlock,
+  field?: string | number,
+  subType?: string
+) => {
+  if (selectedBlockId.value !== block.id) {
+    selectedBlockId.value = block.id;
+  }
+  hudContext.value = {
+    type,
+    field: typeof field === 'string' ? field : undefined,
+    itemIndex: typeof field === 'number' ? field : undefined,
+    buttonRole: type === 'button' ? 'primary' : undefined,
+    subType
+  };
+};
+
+// -----------------------------------------------------------------------------
+// Direct Inline & Interactive WYSIWYG Manipulation Handlers
+// -----------------------------------------------------------------------------
+
+const onInlineTextBlur = (block: VisualBlock, field: 'title' | 'subtitle' | 'badge' | 'buttonText' | 'secondaryButtonText', e: FocusEvent) => {
+  const text = (e.target as HTMLElement).innerText.trim();
+  (block as any)[field] = text;
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const onInlineItemTextBlur = (block: VisualBlock, itemIndex: number, field: 'title' | 'desc' | 'tag' | 'price' | 'period' | 'percentage' | 'role' | 'label', e: FocusEvent) => {
+  if (block.items && block.items[itemIndex]) {
+    const text = (e.target as HTMLElement).innerText.trim();
+    if (field === 'percentage') {
+      const num = parseInt(text.replace(/[^0-9]/g, ''), 10);
+      block.items[itemIndex].percentage = isNaN(num) ? 0 : Math.min(100, Math.max(0, num));
+    } else {
+      (block.items[itemIndex] as any)[field] = text;
+    }
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const onInlineFeatureBlur = (block: VisualBlock, itemIndex: number, featureIndex: number, e: FocusEvent) => {
+  if (block.items && block.items[itemIndex] && block.items[itemIndex].features) {
+    const text = (e.target as HTMLElement).innerText.trim();
+    block.items[itemIndex].features![featureIndex] = text;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const onInlineTextKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    (e.target as HTMLElement).blur();
+  }
+};
+
+const onTextClick = (block: VisualBlock, field: string, e: MouseEvent) => {
+  e.stopPropagation();
+  selectBlock(block.id);
+  setHudContext('text', block, field);
+};
+
+const onButtonClick = (block: VisualBlock, roleOrIndex: 'primary' | 'secondary' | number = 'primary', e?: MouseEvent) => {
+  if (e) e.stopPropagation();
+  selectBlock(block.id);
+  hudContext.value = {
+    type: 'button',
+    buttonRole: roleOrIndex,
+    itemIndex: typeof roleOrIndex === 'number' ? roleOrIndex : undefined
+  };
+};
+
+const onCardItemClick = (block: VisualBlock, idx: number, e: MouseEvent) => {
+  e.stopPropagation();
+  selectBlock(block.id);
+  setHudContext('card', block, idx);
+};
+
+const onProgressItemClick = (block: VisualBlock, idx: number, e: MouseEvent) => {
+  e.stopPropagation();
+  selectBlock(block.id);
+  setHudContext('progressbar', block, idx);
+};
+
+const onImageClick = (block: VisualBlock, idx?: number, e?: MouseEvent) => {
+  if (e) e.stopPropagation();
+  selectBlock(block.id);
+  setHudContext('image', block, idx);
+};
+
+const adjustFontSize = (delta: number) => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const current = selectedBlock.value.styles.fontSize || 16;
+  selectedBlock.value.styles.fontSize = Math.max(12, Math.min(64, current + delta));
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const toggleBlockBold = () => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const isBold = ['700', '800', '900'].includes(selectedBlock.value.styles.fontWeight || '');
+  selectedBlock.value.styles.fontWeight = isBold ? '400' : '700';
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const toggleBlockUppercase = () => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const isUpper = selectedBlock.value.styles.textTransform === 'uppercase';
+  selectedBlock.value.styles.textTransform = isUpper ? 'none' : 'uppercase';
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const setBlockAlign = (align: 'left' | 'center' | 'right') => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.align = align;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockFont = (font: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.fontFamily = font;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockBgColor = (color: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.bgColor = color;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockTextColor = (color: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.textColor = color;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockAccentColor = (color: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.accentColor = color;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setBlockPaddingY = (padding: number) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.paddingY = padding;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+
+
+const setButtonRadius = (r: number) => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') {
+    selectedBlock.value.styles.secondaryButtonRadius = r;
+  } else if (typeof role === 'number' && selectedBlock.value.items?.[role]) {
+    selectedBlock.value.items[role].buttonRadius = r;
+  } else {
+    selectedBlock.value.styles.buttonRadius = r;
+  }
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const setButtonStyle = (style: 'solid' | 'outline' | 'glow' | 'pill') => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const role = hudContext.value.buttonRole;
+  const rad = style === 'pill' ? 999 : 8;
+  if (role === 'secondary') {
+    selectedBlock.value.styles.secondaryButtonStyle = style;
+    if (style === 'pill') selectedBlock.value.styles.secondaryButtonRadius = rad;
+  } else if (typeof role === 'number' && selectedBlock.value.items?.[role]) {
+    selectedBlock.value.items[role].buttonStyle = style;
+    if (style === 'pill') selectedBlock.value.items[role].buttonRadius = rad;
+  } else {
+    selectedBlock.value.styles.buttonStyle = style;
+    if (style === 'pill') selectedBlock.value.styles.buttonRadius = rad;
+  }
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const setButtonColor = (color: string) => {
+  if (!selectedBlock.value) return;
+  if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+  const role = hudContext.value.buttonRole;
+  if (role === 'secondary') {
+    selectedBlock.value.styles.secondaryButtonColor = color;
+  } else if (typeof role === 'number' && selectedBlock.value.items?.[role]) {
+    selectedBlock.value.items[role].buttonColor = color;
+  } else {
+    selectedBlock.value.styles.buttonColor = color;
+    selectedBlock.value.styles.accentColor = color;
+  }
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const setCardStyle = (style: string) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.cardStyle = style as any;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setCardColumns = (cols: number) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.cardColumns = cols as any;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setCardOrientation = (orient: 'vertical' | 'horizontal') => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.cardOrientation = orient;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const setCardRadius = (radius: number) => {
+  if (selectedBlock.value) {
+    if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
+    selectedBlock.value.styles.cardRadius = radius;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const addCardItem = (block: VisualBlock) => {
+  if (!block.items) block.items = [];
+  const newId = 'card_' + Date.now();
+  block.items.push({
+    id: newId,
+    title: 'Fitur Baru',
+    desc: 'Deskripsi singkat mengenai kapabilitas dan nilai tambah fitur ini.',
+    icon: 'Zap'
+  });
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const deleteCardItem = (block: VisualBlock, itemIndex: number) => {
+  if (!block.items || block.items.length <= 1) return;
+  block.items.splice(itemIndex, 1);
+  recordHistory();
+  triggerAutoSaveDraft();
+};
+
+const updateProgressValue = (idx: number, val: number) => {
+  if (!selectedBlock.value || !selectedBlock.value.items) return;
+  if (selectedBlock.value.items[idx]) {
+    selectedBlock.value.items[idx].percentage = val;
+    recordHistory();
+    triggerAutoSaveDraft();
+  }
+};
+
+const unsplashPresets = [
+  { short: 'Cloud', label: 'Cloud Server & Datacenter', url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80' },
+  { short: 'Studio', label: 'Tech Workspace & Studio', url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80' },
+  { short: 'Neural', label: 'Cyber Neural & Network', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80' },
+  { short: 'Work', label: 'Minimal Developer Desk', url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80' }
+];
+
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const pendingUploadTarget = ref<{ blockId: string; itemIndex?: number } | null>(null);
+
+const triggerImageUpload = (blockId: string, itemIndex?: number) => {
+  pendingUploadTarget.value = { blockId, itemIndex };
+  if (fileInputRef.value) {
+    fileInputRef.value.value = '';
+    fileInputRef.value.click();
+  }
+};
+
+const handleFileInputChange = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file || !pendingUploadTarget.value) return;
+  const { blockId, itemIndex } = pendingUploadTarget.value;
+  pendingUploadTarget.value = null;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    if (typeof evt.target?.result === 'string') {
+      commitImageChange(blockId, itemIndex, evt.target.result);
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
+const commitImageChange = (blockId: string, itemIndex: number | undefined, imageUrl: string) => {
+  const block = pageBlocks.value.find((b) => b.id === blockId);
+  if (block) {
+    if (typeof itemIndex === 'number' && block.items && block.items[itemIndex]) {
+      block.items[itemIndex].image = imageUrl;
+    } else {
+      block.imageUrl = imageUrl;
+    }
+    if (editingBlockDraft.value && editingBlockDraft.value.id === blockId) {
+      if (typeof itemIndex === 'number' && editingBlockDraft.value.items && editingBlockDraft.value.items[itemIndex]) {
+        editingBlockDraft.value.items[itemIndex].image = imageUrl;
+      } else {
+        editingBlockDraft.value.imageUrl = imageUrl;
+      }
+    }
+    if (activeContainer.value) {
+      if (!activeContainer.value.themeConfig) activeContainer.value.themeConfig = {};
+      activeContainer.value.themeConfig.blocks = JSON.parse(JSON.stringify(pageBlocks.value));
+    }
+    recordHistory();
+    triggerAutoSaveDraft();
+    showToast('Gambar berhasil diperbarui!', 'success');
+  }
 };
 
 const moveBlockUp = (id: string) => {
@@ -907,6 +2541,56 @@ const addBlockFromLibrary = (type: VisualBlock['type']) => {
   }
   selectedBlockId.value = newBlock.id;
   showToast(`Komponen '${newBlock.name}' berhasil ditambahkan ke kanvas!`, 'success');
+};
+
+// Drag & Drop Block from Catalog to Canvas
+const draggedBlockType = ref<string | null>(null);
+const activeDropSlotIndex = ref<number | null>(null);
+
+const onCatalogDragStart = (e: DragEvent, type: string) => {
+  draggedBlockType.value = type;
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('text/plain', type);
+    e.dataTransfer.effectAllowed = 'copy';
+  }
+};
+
+const onCatalogDragEnd = () => {
+  draggedBlockType.value = null;
+  activeDropSlotIndex.value = null;
+};
+
+const onCanvasDropSlotDragOver = (e: DragEvent, idx: number) => {
+  e.preventDefault();
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'copy';
+  }
+  activeDropSlotIndex.value = idx;
+};
+
+const onCanvasDropSlotDragLeave = (idx: number) => {
+  if (activeDropSlotIndex.value === idx) {
+    activeDropSlotIndex.value = null;
+  }
+};
+
+const onCanvasDropSlotDrop = (e: DragEvent, idx: number) => {
+  e.preventDefault();
+  const type = (e.dataTransfer?.getData('text/plain') || draggedBlockType.value) as VisualBlock['type'];
+  if (type) {
+    insertBlockFromLibraryAt(type, idx);
+  }
+  draggedBlockType.value = null;
+  activeDropSlotIndex.value = null;
+};
+
+const insertBlockFromLibraryAt = (type: VisualBlock['type'], idx: number) => {
+  const newBlock = createLibraryBlock(type);
+  pageBlocks.value.splice(idx, 0, newBlock);
+  selectedBlockId.value = newBlock.id;
+  recordHistory();
+  triggerAutoSaveDraft();
+  showToast(`Komponen '${newBlock.name}' berhasil dipasang ke kanvas!`, 'success');
 };
 
 const currentFont = ref('Plus Jakarta Sans');
@@ -982,8 +2666,25 @@ const filteredIconOptions = computed(() => {
   return list;
 });
 
+
+const activeDirectIconBlockId = ref<string | null>(null);
+
+const openIconPickerForBlock = (blockId: string, itemIdx: number) => {
+  activeDirectIconBlockId.value = blockId;
+  openIconPicker(itemIdx);
+};
+
 const selectIconForItem = (iconId: string) => {
-  if (
+  if (activeDirectIconBlockId.value && activeIconPickerSubIdx.value !== null) {
+    const targetBlock = pageBlocks.value.find(b => b.id === activeDirectIconBlockId.value);
+    if (targetBlock?.items && targetBlock.items[activeIconPickerSubIdx.value]) {
+      targetBlock.items[activeIconPickerSubIdx.value].icon = iconId;
+      recordHistory();
+      triggerAutoSaveDraft();
+      showToast('Ikon berhasil diubah!', 'success');
+    }
+    activeDirectIconBlockId.value = null;
+  } else if (
     activeIconPickerSubIdx.value !== null &&
     editingBlockDraft.value?.items &&
     editingBlockDraft.value.items[activeIconPickerSubIdx.value]
@@ -1660,14 +3361,25 @@ const executeVsCodeReplaceAll = () => {
             <span>Dashboard</span>
           </button>
 
+          <!-- Toggle Konten Sidebar Drawer -->
           <button
-            class="btn-toggle-sidebar"
-            :class="{ active: !isEditorSidebarHidden }"
-            @click="isEditorSidebarHidden = !isEditorSidebarHidden"
-            :title="isEditorSidebarHidden ? 'Tampilkan Menu Sidebar' : 'Sembunyikan Menu Sidebar'"
+            v-if="canvasViewMode === 'sitemap'"
+            class="btn-toggle-sidebar btn-konten-toggle"
+            @click="openNewPageModal"
+            title="Tambah Halaman Rute Baru"
           >
-            <PanelLeftOpen v-if="isEditorSidebarHidden" :size="15" />
-            <PanelLeftClose v-else :size="15" />
+            <Plus :size="13" />
+            <span>Halaman Rute</span>
+          </button>
+          <button
+            v-else
+            class="btn-toggle-sidebar btn-konten-toggle"
+            :class="{ active: isKatalogOpen }"
+            @click="isKatalogOpen = !isKatalogOpen"
+            :title="isKatalogOpen ? 'Tutup Katalog Blok Website' : 'Buka Katalog Blok Website'"
+          >
+            <Plus :size="13" />
+            <span>Konten +</span>
           </button>
 
           <div class="v-divider"></div>
@@ -1720,6 +3432,122 @@ const executeVsCodeReplaceAll = () => {
                     <div class="site-item-action">
                       <Check v-if="c.id === activeContainerId" :size="14" class="site-item-check-icon" />
                     </div>
+                  </button>
+                </div>
+              </div>
+            </transition>
+          </div>
+
+          <div class="v-divider"></div>
+
+          <!-- Multi-Page Sitemap & Page Switcher -->
+          <div class="page-switcher-cluster" ref="pageSwitcherRef">
+            <button
+              type="button"
+              class="page-switcher-pill-trigger"
+              :class="{ 'is-open': isPageSwitcherOpen, 'has-multipage': multiPages.length > 1 }"
+              @click.stop="isPageSwitcherOpen = !isPageSwitcherOpen"
+              title="Pilih Halaman Aktif atau Tambah Halaman"
+            >
+              <FileText :size="13" class="page-switcher-icon" />
+              <span class="page-switcher-title">{{ activePage?.title || 'Beranda' }}</span>
+              <span class="page-switcher-path">{{ activePage?.path || '/' }}</span>
+              <span v-if="multiPages.length > 1" class="page-count-badge">{{ multiPages.length }} Rute</span>
+              <ChevronDown :size="11" class="page-chevron-icon" :class="{ 'is-rotated': isPageSwitcherOpen }" />
+            </button>
+
+            <transition name="dropdown-scale">
+              <div v-if="isPageSwitcherOpen" class="custom-floating-dropdown page-switcher-dropdown">
+                <!-- Dropdown Header -->
+                <div class="page-dropdown-head">
+                  <div class="head-title-wrap">
+                    <div class="head-icon-box">
+                      <Layers :size="13" />
+                    </div>
+                    <div>
+                      <div class="head-main-title">Daftar Halaman Website</div>
+                      <div class="head-sub-title">Arsitektur Rute & Navigasi</div>
+                    </div>
+                  </div>
+                  <span class="page-dropdown-counter-pill">{{ multiPages.length }} Rute</span>
+                </div>
+
+                <!-- Dropdown List with Visual Hierarchy -->
+                <div class="custom-dropdown-list page-dropdown-items-scroll">
+                  <div
+                    v-for="p in multiPages"
+                    :key="p.id"
+                    class="custom-dropdown-item page-dropdown-item"
+                    :class="{
+                      active: p.id === activePageId,
+                      'is-nested-route': !!getParentPath(p.path),
+                      'is-root-page': p.path === '/'
+                    }"
+                    @click="switchPage(p.id, false); isPageSwitcherOpen = false"
+                  >
+                    <!-- Indent branch guide for nested child route -->
+                    <div v-if="getParentPath(p.path)" class="tree-branch-guide" title="Sub-rute dari induk">
+                      <CornerDownRight :size="11" class="branch-icon" />
+                    </div>
+
+                    <!-- Page Icon -->
+                    <div class="page-item-leading-icon">
+                      <Home v-if="p.path === '/'" :size="13" class="icon-home" />
+                      <FileText v-else-if="!getParentPath(p.path)" :size="13" class="icon-page" />
+                      <FileCode v-else :size="13" class="icon-subpage" />
+                    </div>
+
+                    <!-- Page Info -->
+                    <div class="page-item-info">
+                      <div class="page-item-title-row">
+                        <span class="page-item-title">{{ p.title }}</span>
+                        <span v-if="p.path === '/'" class="badge-root-tag">Utama</span>
+                        <span v-else-if="getParentPath(p.path)" class="badge-nested-tag">Sub-Rute</span>
+                      </div>
+                      <span class="page-item-path">{{ p.path }}</span>
+                    </div>
+
+                    <!-- Actions & Metadata -->
+                    <div class="page-item-actions-cluster">
+                      <span class="page-item-blocks-pill">
+                        <Layers :size="10" />
+                        {{ p.blocks?.length || 0 }} blok
+                      </span>
+                      <button
+                        v-if="p.path !== '/' && multiPages.length > 1"
+                        type="button"
+                        class="btn-delete-page-mini"
+                        @click.stop="deletePage(p.id)"
+                        title="Hapus Halaman Ini"
+                      >
+                        <Trash2 :size="12" />
+                      </button>
+                      <div v-if="p.id === activePageId" class="active-dot-badge" title="Halaman Aktif">
+                        <Check :size="10" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dropdown Footer -->
+                <div class="page-dropdown-footer">
+                  <button
+                    type="button"
+                    class="btn-dropdown-add-page"
+                    @click="openNewPageModal(); isPageSwitcherOpen = false"
+                  >
+                    <Plus :size="13" />
+                    <span>Tambah Halaman Rute Baru</span>
+                  </button>
+                  <button
+                    v-if="canvasViewMode !== 'sitemap'"
+                    type="button"
+                    class="btn-dropdown-sitemap-view"
+                    @click="setCanvasViewMode('sitemap'); isPageSwitcherOpen = false"
+                    title="Buka Diagram Alur Figma untuk Melihat Struktur Hierarki Lengkap"
+                  >
+                    <Workflow :size="12" />
+                    <span>Lihat Alur Figma</span>
                   </button>
                 </div>
               </div>
@@ -1915,16 +3743,25 @@ const executeVsCodeReplaceAll = () => {
           <div class="viewmode-toggle-group">
             <button
               class="vmode-btn"
-              :class="{ active: editorViewMode === 'design' }"
-              @click="editorViewMode = 'design'"
-              title="Mode Desain Studio"
+              :class="{ active: editorViewMode === 'design' && canvasViewMode === 'single' }"
+              @click="setCanvasViewMode('single')"
+              title="Mode Desain Studio (WYSIWYG Single Page)"
             >
               Desain
             </button>
             <button
               class="vmode-btn"
+              :class="{ active: canvasViewMode === 'sitemap' }"
+              @click="setCanvasViewMode('sitemap')"
+              title="Tampilan Alur Figma (Multi-Artboard Sitemap Flow & Bezier Connector)"
+            >
+              <Workflow :size="12" style="margin-right: 4px;" />
+              <span>Alur Figma</span>
+            </button>
+            <button
+              class="vmode-btn"
               :class="{ active: editorViewMode === 'preview' }"
-              @click="editorViewMode = 'preview'"
+              @click="editorViewMode = 'preview'; canvasViewMode = 'single'"
               title="Mode Simulasi Pengunjung"
             >
               Pratinjau
@@ -1982,7 +3819,7 @@ const executeVsCodeReplaceAll = () => {
         <!-- ----------------------------------------------------------------- -->
         <!-- LEFT STUDIO DOCK (Blocks Library, Layers Tree, Design Tokens, AI) -->
         <!-- ----------------------------------------------------------------- -->
-        <aside class="studio-left-dock" :class="{ 'dock-hidden': editorViewMode !== 'design' }">
+        <aside class="studio-left-dock" :class="{ 'dock-hidden': !isKatalogOpen || editorViewMode !== 'design' }">
           <!-- Dock Tabs Header -->
           <nav class="left-dock-tabs">
             <button
@@ -2110,8 +3947,11 @@ const executeVsCodeReplaceAll = () => {
                   v-for="item in filteredCatalogItems"
                   :key="item.id"
                   class="visual-wireframe-card"
+                  draggable="true"
+                  @dragstart="onCatalogDragStart($event, item.type)"
+                  @dragend="onCatalogDragEnd"
                   @click="addBlockFromLibrary(item.type)"
-                  :title="'Tambah ' + item.name + ' ke Kanvas'"
+                  :title="'Klik atau Drag ' + item.name + ' ke Kanvas'"
                 >
                   <!-- Top Bar: Category Pill & Quick Add Button -->
                   <div class="card-top-row">
@@ -2484,20 +4324,669 @@ const executeVsCodeReplaceAll = () => {
         <!-- CENTER WORKSPACE: DUAL ENGINE (CANVAS & VS CODE WORKSPACE)          -->
         <!-- ----------------------------------------------------------------- -->
         <div class="studio-center-workspace">
+          <!-- Hidden native image upload input -->
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept="image/*"
+            style="display: none;"
+            @change="handleFileInputChange"
+          />
+
           <!-- 1. Infinite Canvas Workspace & Resizable Artboard -->
           <main
+            ref="viewportAreaRef"
             class="studio-viewport-area"
             :class="{
               'is-view-hidden': editorViewMode === 'code',
+              'is-sitemap-mode': canvasViewMode === 'sitemap',
               'tool-hand-active': activeTool === 'hand' || isSpacePressed,
               'is-dragging-canvas': isPanning,
               'grid-dots-visible': showGrid
             }"
             @mousedown="onCanvasMouseDown"
+            @click="onCanvasBackgroundClick"
             @wheel="onCanvasWheel"
           >
-          <!-- Coordinate Rulers (Photoshop Style) -->
-          <div v-if="showRulers" class="canvas-ruler-top">
+            <!-- SMART STICKY FLOATING HUD LAYER (TOP LAYER, NEVER CLIPPED, TRACKS ACTIVE CONTENT & STICKS AT TOP) -->
+            <transition name="hud-slide-down">
+              <div
+                v-if="selectedBlock && editorViewMode === 'design' && canvasViewMode === 'single' && shelfCoords.visible"
+                ref="floatingShelfRef"
+                class="studio-viewport-floating-shelf"
+                :class="{ 'is-sticky-at-top': shelfCoords.isStickyAtTop }"
+                :style="{
+                  top: `${shelfCoords.top}px`,
+                  left: `${shelfCoords.left}px`,
+                  transform: `translate(-50%, 0) scale(${shelfCoords.scale})`,
+                  transformOrigin: 'top center',
+                  '--shelf-scale': shelfCoords.scale
+                }"
+                @click.stop
+                @mousedown.stop
+              >
+                <!-- 1. LEFT GROUP: Drag Handle & Context Selector Pills -->
+                <div class="hud-left-group">
+                  <span class="shelf-drag-handle" title="Urutan Section">
+                    <GripVertical :size="13" />
+                  </span>
+
+                  <div class="shelf-context-selector">
+                    <!-- Section Context Pill -->
+                    <button
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'section' }"
+                      @click="setHudContext('section', selectedBlock)"
+                      title="Pengaturan Section (Latar, Spacing, Pola, Animasi)"
+                    >
+                      <Layers :size="12" />
+                      <span class="shelf-pill-text">{{ selectedBlock.name }}</span>
+                    </button>
+
+                    <!-- Navbar Context Pill (Conditional) -->
+                    <button
+                      v-if="selectedBlock.type === 'navbar'"
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'navbar' }"
+                      @click="setHudContext('navbar', selectedBlock)"
+                      title="Pengaturan Navbar & Menu Navigasi"
+                    >
+                      <Navigation :size="12" />
+                      <span>Navbar</span>
+                    </button>
+
+                    <!-- Teks Context Pill -->
+                    <button
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'text' }"
+                      @click="setHudContext('text', selectedBlock)"
+                      title="Pengaturan Teks & Tipografi"
+                    >
+                      <Type :size="12" />
+                      <span>Teks</span>
+                    </button>
+
+                    <!-- Tombol Context Pill (Conditional) -->
+                    <button
+                      v-if="selectedBlock.buttonText || ['hero', 'cta', 'navbar', 'pricing'].includes(selectedBlock.type)"
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'button' }"
+                      @click="setHudContext('button', selectedBlock)"
+                      title="Pengaturan Tombol & CTA"
+                    >
+                      <Rocket :size="12" />
+                      <span>Tombol</span>
+                    </button>
+
+                    <!-- Kartu Context Pill (Conditional) -->
+                    <button
+                      v-if="selectedBlock.items && selectedBlock.items.length > 0 && selectedBlock.type !== 'progressbar'"
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'card' }"
+                      @click="setHudContext('card', selectedBlock)"
+                      title="Pengaturan Kartu & Fitur Bento"
+                    >
+                      <Box :size="12" />
+                      <span>Kartu</span>
+                    </button>
+
+                    <!-- Progress Context Pill (Conditional) -->
+                    <button
+                      v-if="selectedBlock.type === 'progressbar' || (selectedBlock.items && selectedBlock.items[0]?.percentage !== undefined)"
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'progressbar' }"
+                      @click="setHudContext('progressbar', selectedBlock)"
+                      title="Pengaturan Meteran Progress"
+                    >
+                      <Activity :size="12" />
+                      <span>Progress</span>
+                    </button>
+
+                    <!-- Gambar Context Pill (Conditional) -->
+                    <button
+                      v-if="selectedBlock.type === 'carousel' || selectedBlock.imageUrl || (selectedBlock.items && selectedBlock.items.some(i => i.image))"
+                      type="button"
+                      class="shelf-context-pill"
+                      :class="{ active: hudContext.type === 'image' }"
+                      @click="setHudContext('image', selectedBlock)"
+                      title="Pengaturan Gambar & Foto"
+                    >
+                      <ImageIcon :size="12" />
+                      <span>Gambar</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="shelf-divider"></div>
+
+                <!-- 2. CENTER GROUP: Dynamic Context Controls -->
+                <div class="hud-center-group">
+                  <!-- A. Context: TEXT -->
+                  <div v-if="hudContext.type === 'text'" class="shelf-controls-group">
+                    <!-- Custom Popover Dropdown: Font Family -->
+                    <div class="hud-dropdown-wrapper" ref="hudFontDropdownRef">
+                      <button
+                        type="button"
+                        class="hud-pop-trigger font-pop-trigger"
+                        :class="{ 'is-open': isHudFontOpen }"
+                        @click.stop="toggleHudFontDropdown"
+                        title="Keluarga Font (Tipografi)"
+                      >
+                        <span class="hud-font-current-preview" :style="{ fontFamily: selectedBlock.styles?.fontFamily || currentFont }">
+                          {{ currentBlockFontLabel }}
+                        </span>
+                        <ChevronDown :size="11" class="hud-chevron" :class="{ 'is-rotated': isHudFontOpen }" />
+                      </button>
+                      <transition name="hud-pop-scale">
+                        <div v-if="isHudFontOpen" class="hud-popover-menu hud-font-popover-menu" @click.stop @mousedown.stop @wheel.stop>
+                          <button
+                            v-for="f in fontOptions"
+                            :key="f.id"
+                            type="button"
+                            class="hud-popover-item hud-font-item"
+                            :class="{ active: (selectedBlock.styles?.fontFamily || currentFont) === f.family }"
+                            @click="selectHudFont(f.family)"
+                          >
+                            <div class="hud-font-item-content">
+                              <span class="hud-font-item-name" :style="{ fontFamily: f.family }">{{ f.name.split(' (')[0] }}</span>
+                              <span class="hud-font-item-tag">{{ f.category }}</span>
+                            </div>
+                            <Check v-if="(selectedBlock.styles?.fontFamily || currentFont) === f.family" :size="12" class="hud-popover-check" />
+                          </button>
+                        </div>
+                      </transition>
+                    </div>
+
+                    <div class="shelf-btn-group">
+                      <button type="button" class="shelf-btn" @click="adjustFontSize(-2)" title="Kecilkan Font (A-)">
+                        <span style="font-size: 11px; font-weight: 700;">A-</span>
+                      </button>
+                      <span class="shelf-val-badge">{{ selectedBlock.styles?.fontSize || 16 }}px</span>
+                      <button type="button" class="shelf-btn" @click="adjustFontSize(2)" title="Besarkan Font (A+)">
+                        <span style="font-size: 13px; font-weight: 700;">A+</span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="shelf-btn"
+                      :class="{ active: ['700', '800', '900'].includes(selectedBlock.styles?.fontWeight || '') }"
+                      @click="toggleBlockBold"
+                      title="Tebal (Bold)"
+                    >
+                      <Bold :size="13" />
+                    </button>
+
+                    <div class="shelf-btn-group">
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'left' }" @click="setBlockAlign('left')" title="Rata Kiri">
+                        <AlignLeft :size="13" />
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'center' || !selectedBlock.styles?.align }" @click="setBlockAlign('center')" title="Rata Tengah">
+                        <AlignCenter :size="13" />
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'right' }" @click="setBlockAlign('right')" title="Rata Kanan">
+                        <AlignRight :size="13" />
+                      </button>
+                    </div>
+
+                    <div class="shelf-color-field" title="Warna Teks">
+                      <span class="shelf-color-tag">Teks</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(selectedBlock.styles?.textColor, '#0f172a')"
+                          @input="setBlockTextColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.textColor || '#0f172a' }"></span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="shelf-btn"
+                      :class="{ active: selectedBlock.styles?.textTransform === 'uppercase' }"
+                      @click="toggleBlockUppercase"
+                      title="KAPITAL (Semua Huruf Besar)"
+                    >
+                      <span style="font-size: 11px; font-weight: 800;">AA</span>
+                    </button>
+                  </div>
+
+                  <!-- B. Context: BUTTON -->
+                  <div v-else-if="hudContext.type === 'button'" class="shelf-controls-group">
+                    <span class="shelf-lbl-mini" style="font-weight: 700; color: #38bdf8;">
+                      {{ hudContext.buttonRole === 'secondary' ? 'Tombol Sekunder' : (typeof hudContext.buttonRole === 'number' ? `Tombol Kartu #${(hudContext.buttonRole as number) + 1}` : 'Tombol Utama') }}
+                    </span>
+                    <div class="shelf-btn-group" title="Bentuk Sudut Tombol">
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 0 && currentActiveButtonStyle !== 'pill' }" @click="setButtonRadius(0)" title="Kotak (0px)">
+                        <span class="shape-icon is-sq"></span>
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 8 && currentActiveButtonStyle !== 'pill' }" @click="setButtonRadius(8)" title="Sedang (8px)">
+                        <span class="shape-icon is-rd"></span>
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonRadius === 16 && currentActiveButtonStyle !== 'pill' }" @click="setButtonRadius(16)" title="Bulat (16px)">
+                        <span class="shape-icon is-cr"></span>
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonStyle === 'pill' }" @click="setButtonStyle('pill')" title="Pill (Kapsul)">
+                        <span class="shape-icon is-pl"></span>
+                      </button>
+                    </div>
+
+                    <div class="shelf-btn-group">
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonStyle === 'solid' }" @click="setButtonStyle('solid')">Solid</button>
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonStyle === 'outline' }" @click="setButtonStyle('outline')">Outline</button>
+                      <button type="button" class="shelf-btn" :class="{ active: currentActiveButtonStyle === 'glow' }" @click="setButtonStyle('glow')">Glow ✨</button>
+                    </div>
+
+                    <div class="shelf-color-field" title="Warna Latar Tombol">
+                      <span class="shelf-color-tag">Bg</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(currentActiveButtonColor, '#2563eb')"
+                          @input="setButtonColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :class="{ 'is-transparent': currentActiveButtonColor === 'transparent' }" :style="{ backgroundColor: currentActiveButtonColor === 'transparent' ? 'transparent' : currentActiveButtonColor }"></span>
+                      </div>
+                    </div>
+
+                    <div class="shelf-color-field" title="Warna Teks Tombol">
+                      <span class="shelf-color-tag">Teks</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(currentActiveButtonTextColor, '#ffffff')"
+                          @input="setButtonTextColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: currentActiveButtonTextColor }"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- C. Context: CARD -->
+                  <div v-else-if="hudContext.type === 'card'" class="shelf-controls-group">
+                    <button type="button" class="shelf-btn highlight" @click="openIconPickerForBlock(selectedBlock.id, hudContext.itemIndex || 0)" title="Ganti Icon Item Langsung">
+                      <Palette :size="12" />
+                      <span>Ganti Ikon</span>
+                    </button>
+
+                    <!-- Add / Change Card Photo -->
+                    <button
+                      type="button"
+                      class="shelf-btn"
+                      @click="triggerImageUpload(selectedBlock.id, hudContext.itemIndex || 0)"
+                      title="Pasang / Ganti Foto Cover Kartu"
+                    >
+                      <ImageIcon :size="12" />
+                      <span>{{ selectedBlock.items?.[hudContext.itemIndex || 0]?.image ? 'Ganti Foto' : '+ Foto' }}</span>
+                    </button>
+
+                    <div class="shelf-color-field" title="Warna Ikon & Aksen Kartu">
+                      <span class="shelf-color-tag">Ikon</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(selectedBlock.styles?.accentColor || siteAccentColor, '#2563eb')"
+                          @input="setBlockAccentColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.accentColor || siteAccentColor }"></span>
+                      </div>
+                    </div>
+
+                    <div class="shelf-btn-group">
+                      <button type="button" class="shelf-btn" :class="{ active: !selectedBlock.styles?.cardStyle || selectedBlock.styles?.cardStyle === 'default' }" @click="setCardStyle('default')">Standar</button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardStyle === 'glass' }" @click="setCardStyle('glass')">Glass</button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardStyle === 'bordered' }" @click="setCardStyle('bordered')">Border</button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardStyle === 'glow' }" @click="setCardStyle('glow')">Glow ✨</button>
+                    </div>
+
+                    <div class="shelf-btn-group" title="Jumlah Kolom">
+                      <button type="button" class="shelf-btn" :class="{ active: (selectedBlock.styles?.cardColumns || 3) === 2 }" @click="setCardColumns(2)">2 Kol</button>
+                      <button type="button" class="shelf-btn" :class="{ active: (selectedBlock.styles?.cardColumns || 3) === 3 }" @click="setCardColumns(3)">3 Kol</button>
+                      <button type="button" class="shelf-btn" :class="{ active: (selectedBlock.styles?.cardColumns || 3) === 4 }" @click="setCardColumns(4)">4 Kol</button>
+                    </div>
+
+                    <div class="shelf-btn-group" title="Arah Posisi Ikon">
+                      <button type="button" class="shelf-btn" :class="{ active: !selectedBlock.styles?.cardOrientation || selectedBlock.styles?.cardOrientation === 'vertical' }" @click="setCardOrientation('vertical')">Atas</button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardOrientation === 'horizontal' }" @click="setCardOrientation('horizontal')">Samping</button>
+                    </div>
+
+                    <div class="shelf-btn-group" title="Sudut Kartu">
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardRadius === 0 }" @click="setCardRadius(0)">0px</button>
+                      <button type="button" class="shelf-btn" :class="{ active: !selectedBlock.styles?.cardRadius || selectedBlock.styles?.cardRadius === 14 }" @click="setCardRadius(14)">14px</button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.cardRadius === 24 }" @click="setCardRadius(24)">24px</button>
+                    </div>
+
+                    <button type="button" class="shelf-btn" @click="addCardItem(selectedBlock)" title="Tambah Kartu Baru">
+                      <Plus :size="13" />
+                    </button>
+                    <button
+                      v-if="selectedBlock.items && selectedBlock.items.length > 1"
+                      type="button"
+                      class="shelf-btn delete"
+                      @click="deleteCardItem(selectedBlock, hudContext.itemIndex || 0)"
+                      title="Hapus Kartu Ini"
+                    >
+                      <Trash2 :size="13" />
+                    </button>
+                  </div>
+
+                  <!-- D. Context: PROGRESSBAR -->
+                  <div v-else-if="hudContext.type === 'progressbar'" class="shelf-controls-group">
+                    <span class="shelf-lbl-mini">Persen:</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      :value="selectedBlock.items?.[hudContext.itemIndex || 0]?.percentage || 75"
+                      @input="updateProgressValue(hudContext.itemIndex || 0, Number(($event.target as HTMLInputElement).value))"
+                      class="shelf-slider"
+                    />
+                    <span class="shelf-val-badge">{{ selectedBlock.items?.[hudContext.itemIndex || 0]?.percentage || 75 }}%</span>
+
+                    <div class="shelf-color-field" title="Warna Meteran Progress">
+                      <span class="shelf-color-tag">Warna</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(selectedBlock.styles?.accentColor || siteAccentColor, '#2563eb')"
+                          @input="setBlockAccentColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.accentColor || siteAccentColor }"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- E. Context: IMAGE -->
+                  <div v-else-if="hudContext.type === 'image'" class="shelf-controls-group">
+                    <button type="button" class="shelf-btn highlight" @click="triggerImageUpload(selectedBlock.id, hudContext.itemIndex)" title="Unggah Foto dari Komputer">
+                      <UploadCloud :size="12" />
+                      <span>Upload Foto</span>
+                    </button>
+                    <div class="shelf-btn-group" title="Preset Gambar Siap Pakai">
+                      <button
+                        v-for="p in unsplashPresets"
+                        :key="p.short"
+                        type="button"
+                        class="shelf-btn"
+                        @click="commitImageChange(selectedBlock.id, hudContext.itemIndex, p.url)"
+                        :title="p.label"
+                      >
+                        {{ p.short }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- F. Context: NAVBAR -->
+                  <div v-else-if="hudContext.type === 'navbar'" class="shelf-controls-group">
+                    <span class="shelf-lbl-mini" style="font-weight: 700; color: #38bdf8;">Navigasi</span>
+
+                    <!-- Nav Style: Glass, Solid, Bordered, Transparent -->
+                    <div class="shelf-btn-group" title="Gaya Latar Navbar">
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: !selectedBlock.styles?.navStyle || selectedBlock.styles?.navStyle === 'glass' }"
+                        @click="setNavbarStyle('glass')"
+                      >
+                        Glass
+                      </button>
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: selectedBlock.styles?.navStyle === 'solid' }"
+                        @click="setNavbarStyle('solid')"
+                      >
+                        Solid
+                      </button>
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: selectedBlock.styles?.navStyle === 'bordered' }"
+                        @click="setNavbarStyle('bordered')"
+                      >
+                        Border
+                      </button>
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: selectedBlock.styles?.navStyle === 'transparent' }"
+                        @click="setNavbarStyle('transparent')"
+                      >
+                        Polos
+                      </button>
+                    </div>
+
+                    <!-- Sticky Toggle -->
+                    <button
+                      type="button"
+                      class="shelf-btn"
+                      :class="{ active: selectedBlock.styles?.isSticky }"
+                      @click="toggleNavbarSticky"
+                      :title="selectedBlock.styles?.isSticky ? 'Navbar Melayang (Sticky Aktif)' : 'Jadikan Navbar Melayang (Sticky)'"
+                    >
+                      <span style="font-size: 11px; font-weight: 700;">{{ selectedBlock.styles?.isSticky ? '📌 Sticky' : 'Static' }}</span>
+                    </button>
+
+                    <!-- Nav Align: Split, Center -->
+                    <div class="shelf-btn-group" title="Posisi Menu">
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: !selectedBlock.styles?.navAlign || selectedBlock.styles?.navAlign === 'split' }"
+                        @click="setNavbarAlign('split')"
+                        title="Rata Kiri-Kanan (Split)"
+                      >
+                        <AlignJustify :size="12" />
+                      </button>
+                      <button
+                        type="button"
+                        class="shelf-btn"
+                        :class="{ active: selectedBlock.styles?.navAlign === 'center' }"
+                        @click="setNavbarAlign('center')"
+                        title="Menu di Tengah"
+                      >
+                        <AlignCenter :size="12" />
+                      </button>
+                    </div>
+
+                    <!-- Quick Cycle Brand Glyph Icon -->
+                    <button
+                      type="button"
+                      class="shelf-btn"
+                      @click="cycleNavbarBrandGlyph(selectedBlock)"
+                      title="Ganti Ikon Brand (Klik untuk ganti lambang)"
+                    >
+                      <span style="font-size: 13px;">{{ selectedBlock.styles?.brandGlyph || '◆' }}</span>
+                      <span style="font-size: 10px; margin-left: 2px;">Ikon</span>
+                    </button>
+
+                    <!-- Quick Add Nav Item Button -->
+                    <button
+                      type="button"
+                      class="shelf-btn highlight"
+                      @click="addNavItem(selectedBlock)"
+                      title="Tambah Tautan Menu Navigasi"
+                    >
+                      <Plus :size="12" />
+                      <span>+ Link</span>
+                    </button>
+
+                    <!-- Quick Delete Selected Nav Item Button -->
+                    <button
+                      v-if="hudContext.itemIndex !== undefined && (selectedBlock.items?.length || 0) > 1"
+                      type="button"
+                      class="shelf-btn delete"
+                      @click="removeNavItem(selectedBlock, hudContext.itemIndex)"
+                      :title="`Hapus menu '${selectedBlock.items?.[hudContext.itemIndex]?.title || 'ini'}'`"
+                    >
+                      <Trash2 :size="12" />
+                    </button>
+
+                    <!-- Accent Color Picker -->
+                    <div class="shelf-color-field" title="Warna Aksen Brand & Menu Aktif">
+                      <span class="shelf-color-tag">Aksen</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(selectedBlock.styles?.accentColor || siteAccentColor, '#2563eb')"
+                          @input="setBlockAccentColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.accentColor || siteAccentColor }"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- G. Context: SECTION (DEFAULT) -->
+                  <div v-else class="shelf-controls-group">
+                    <div class="shelf-btn-group">
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'left' }" @click="setBlockAlign('left')" title="Rata Kiri">
+                        <AlignLeft :size="13" />
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'center' || !selectedBlock.styles?.align }" @click="setBlockAlign('center')" title="Rata Tengah">
+                        <AlignCenter :size="13" />
+                      </button>
+                      <button type="button" class="shelf-btn" :class="{ active: selectedBlock.styles?.align === 'right' }" @click="setBlockAlign('right')" title="Rata Kanan">
+                        <AlignRight :size="13" />
+                      </button>
+                    </div>
+
+                    <div class="shelf-color-field" title="Warna Latar Section">
+                      <span class="shelf-color-tag">Bg</span>
+                      <div class="shelf-color-wrap">
+                        <input
+                          type="color"
+                          :value="safeHexColor(selectedBlock.styles?.bgColor, '#ffffff')"
+                          @input="setBlockBgColor(($event.target as HTMLInputElement).value)"
+                          class="shelf-color-input"
+                        />
+                        <span class="shelf-color-dot" :style="{ backgroundColor: selectedBlock.styles?.bgColor || '#ffffff' }"></span>
+                      </div>
+                    </div>
+
+                    <div class="shelf-slider-wrap" title="Jarak Vertikal (Padding Atas/Bawah)">
+                      <span class="shelf-lbl-mini">↕</span>
+                      <input
+                        type="range"
+                        min="16"
+                        max="160"
+                        step="4"
+                        :value="selectedBlock.styles?.paddingY || 60"
+                        @input="setBlockPaddingY(Number(($event.target as HTMLInputElement).value))"
+                        class="shelf-slider"
+                      />
+                      <span class="shelf-val-badge">{{ selectedBlock.styles?.paddingY || 60 }}px</span>
+                    </div>
+
+                    <!-- Custom Popover Dropdown: Pola -->
+                    <div class="hud-dropdown-wrapper" ref="hudPatternDropdownRef">
+                      <button
+                        type="button"
+                        class="hud-pop-trigger"
+                        :class="{ 'is-open': isHudPatternOpen }"
+                        @click.stop="toggleHudPatternDropdown"
+                        title="Pola Tekstur Latar Belakang"
+                      >
+                        <span>{{ currentPatternLabel }}</span>
+                        <ChevronDown :size="11" class="hud-chevron" :class="{ 'is-rotated': isHudPatternOpen }" />
+                      </button>
+                      <transition name="hud-pop-scale">
+                        <div v-if="isHudPatternOpen" class="hud-popover-menu" @click.stop @mousedown.stop @wheel.stop>
+                          <button
+                            v-for="p in patternOptionsList"
+                            :key="p.id"
+                            type="button"
+                            class="hud-popover-item"
+                            :class="{ active: (selectedBlock.styles?.bgPattern || 'none') === p.id }"
+                            @click="selectHudPattern(p.id)"
+                          >
+                            <span class="hud-popover-item-label">{{ p.name }}</span>
+                            <Check v-if="(selectedBlock.styles?.bgPattern || 'none') === p.id" :size="12" class="hud-popover-check" />
+                          </button>
+                        </div>
+                      </transition>
+                    </div>
+
+                    <!-- Custom Popover Dropdown: Animasi -->
+                    <div class="hud-dropdown-wrapper" ref="hudAnimDropdownRef">
+                      <button
+                        type="button"
+                        class="hud-pop-trigger"
+                        :class="{ 'is-open': isHudAnimOpen }"
+                        @click.stop="toggleHudAnimDropdown"
+                        title="Animasi Masuk Section"
+                      >
+                        <span>{{ currentAnimLabel }}</span>
+                        <ChevronDown :size="11" class="hud-chevron" :class="{ 'is-rotated': isHudAnimOpen }" />
+                      </button>
+                      <transition name="hud-pop-scale">
+                        <div v-if="isHudAnimOpen" class="hud-popover-menu" @click.stop @mousedown.stop @wheel.stop>
+                          <button
+                            v-for="a in hudAnimationList"
+                            :key="a.id"
+                            type="button"
+                            class="hud-popover-item"
+                            :class="{ active: (selectedBlock.styles?.animation || 'none') === a.id }"
+                            @click="selectHudAnim(a.id)"
+                          >
+                            <span class="hud-popover-item-label">{{ a.name }}</span>
+                            <Check v-if="(selectedBlock.styles?.animation || 'none') === a.id" :size="12" class="hud-popover-check" />
+                          </button>
+                        </div>
+                      </transition>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="shelf-divider"></div>
+
+                <!-- 3. RIGHT GROUP: Section Actions -->
+                <div class="hud-right-group">
+                  <button type="button" class="shelf-btn" @click="moveBlockUp(selectedBlock.id)" title="Pindah ke Atas">
+                    <ChevronUp :size="13" />
+                  </button>
+                  <button type="button" class="shelf-btn" @click="moveBlockDown(selectedBlock.id)" title="Pindah ke Bawah">
+                    <ChevronDown :size="13" />
+                  </button>
+                  <button type="button" class="shelf-btn" @click="duplicateBlock(selectedBlock.id)" title="Duplikat Section">
+                    <Copy :size="13" />
+                  </button>
+                  <button type="button" class="shelf-btn" @click="toggleBlockLock(selectedBlock)" :title="selectedBlock.isLocked ? 'Buka Kunci' : 'Kunci Section'">
+                    <Lock v-if="selectedBlock.isLocked" :size="13" />
+                    <Unlock v-else :size="13" />
+                  </button>
+                  <button type="button" class="shelf-btn delete" @click="deleteBlock(selectedBlock.id)" title="Hapus Section">
+                    <Trash2 :size="13" />
+                  </button>
+                  <div class="shelf-divider-sm"></div>
+                  <button
+                    type="button"
+                    class="shelf-btn highlight"
+                    @click="openRichModalEditor(selectedBlock)"
+                    title="Buka Modal Editor Rinci"
+                  >
+                    <Edit3 :size="12" />
+                    <span>Detail</span>
+                  </button>
+                </div>
+              </div>
+            </transition>
+
+            <!-- Coordinate Rulers (Photoshop Style) -->
+            <div v-if="showRulers" class="canvas-ruler-top">
             <div class="ruler-tick-cluster" :style="{ transform: `translateX(${panX}px) scaleX(${zoom})` }">
               <span v-for="i in 40" :key="`rt_${i}`" class="ruler-mark" :style="{ left: `${(i - 1) * 100}px` }">
                 {{ (i - 1) * 100 }}
@@ -2521,12 +5010,223 @@ const executeVsCodeReplaceAll = () => {
             <span>Zoom: {{ Math.round(zoom * 100) }}%</span>
           </div>
 
+          <!-- =================================================================== -->
+          <!-- 1. B. SITEMAP FLOW WORKSPACE (FIGMA MULTI-ARTBOARD VIEW)             -->
+          <!-- =================================================================== -->
+          <div
+            v-if="canvasViewMode === 'sitemap'"
+            class="sitemap-flow-workspace"
+            :style="{
+              transform: `translate(calc(-50% + ${panX}px), ${panY}px) scale(${zoom})`,
+              transformOrigin: 'top center',
+              '--canvas-zoom': zoom,
+              width: `${sitemapCanvasWidth}px`,
+              height: `${sitemapCanvasHeight}px`
+            }"
+          >
+            <!-- SVG Flow Connector Bezier Layer -->
+            <svg
+              class="sitemap-flow-svg-layer"
+              :width="sitemapCanvasWidth"
+              :height="sitemapCanvasHeight"
+            >
+              <!-- Connector Paths with Bezier Curves and Route badges -->
+              <g v-for="conn in sitemapConnectors" :key="conn.id">
+                <!-- 1. Source Node Anchor Dot -->
+                <circle
+                  :cx="conn.startX"
+                  :cy="conn.startY"
+                  r="5"
+                  fill="#38bdf8"
+                  stroke="#0f172a"
+                  stroke-width="2"
+                />
+
+                <!-- 2. Base Guide Track (Subtle Gray Underlay) -->
+                <path
+                  :d="conn.path"
+                  fill="none"
+                  stroke="#cbd5e1"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+
+                <!-- 3. Active Flowing Animated Dashed Line -->
+                <path
+                  :d="conn.path"
+                  fill="none"
+                  stroke="#2563eb"
+                  stroke-width="2.5"
+                  stroke-dasharray="10,7"
+                  stroke-linecap="round"
+                  class="sitemap-flow-line-anim"
+                />
+
+                <!-- 4. Pulsing Signal Particle Moving from Source to Destination -->
+                <circle r="4.5" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5">
+                  <animateMotion
+                    :path="conn.path"
+                    dur="2.2s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+
+                <!-- 5. Destination Arrowhead (Direct Polygon, Reliable in All Browsers) -->
+                <polygon
+                  :points="`${conn.endX},${conn.endY} ${conn.endX - 10},${conn.endY - 6} ${conn.endX - 7},${conn.endY} ${conn.endX - 10},${conn.endY + 6}`"
+                  fill="#2563eb"
+                  stroke="#38bdf8"
+                  stroke-width="1"
+                />
+
+                <!-- 6. Interactive Route Pill Badge in Midpoint -->
+                <g
+                  class="sitemap-route-pill-node"
+                  :transform="`translate(${conn.midX}, ${conn.midY})`"
+                  style="pointer-events: auto; cursor: pointer;"
+                  @click="onRoutePillClick(conn.targetPageId)"
+                >
+                  <rect
+                    x="-52"
+                    y="-13"
+                    width="104"
+                    height="26"
+                    rx="13"
+                    fill="#0f172a"
+                    stroke="#38bdf8"
+                    stroke-width="1.5"
+                  />
+                  <text
+                    x="0"
+                    y="4.5"
+                    text-anchor="middle"
+                    fill="#ffffff"
+                    font-size="11"
+                    font-weight="700"
+                    font-family="system-ui, sans-serif"
+                    letter-spacing="0.02em"
+                  >
+                    {{ conn.label }}
+                  </text>
+                </g>
+              </g>
+            </svg>
+
+            <!-- Render All Artboards Side-by-Side (Figma Frame Structure) -->
+            <div
+              v-for="page in multiPages"
+              :key="page.id"
+              class="sitemap-artboard-wrapper"
+              :style="{
+                left: `${getSitemapNodePos(page.id).x}px`,
+                top: `${getSitemapNodePos(page.id).y + 40}px`,
+                width: `${artboardWidth}px`
+              }"
+            >
+              <!-- 1. Floating Frame Title Shelf (Figma Canvas Label) -->
+              <div class="sitemap-frame-title-shelf">
+                <div class="title-shelf-left">
+                  <span class="figma-frame-hash">#</span>
+                  <span class="figma-frame-name">{{ page.title }}</span>
+                  <input
+                    v-if="editingRoutePageId === page.id"
+                    v-model="editingRouteValue"
+                    class="figma-frame-route-pill figma-frame-route-input"
+                    spellcheck="false"
+                    @keydown.enter.prevent="commitEditRoute"
+                    @keydown.esc.prevent="cancelEditRoute"
+                    @blur="commitEditRoute"
+                    @mousedown.stop
+                  />
+                  <button
+                    v-else
+                    type="button"
+                    class="figma-frame-route-pill"
+                    :class="{ 'is-editable': page.path !== '/' }"
+                    :title="page.path === '/' ? 'Rute beranda' : 'Klik untuk ganti alamat rute'"
+                    @click.stop="startEditRoute(page)"
+                  >
+                    {{ page.path }}
+                    <Edit3 v-if="page.path !== '/'" :size="10" />
+                  </button>
+                  <span v-if="page.id === activePageId" class="figma-frame-badge-active">Aktif</span>
+                </div>
+                <div class="title-shelf-right">
+                  <span class="figma-frame-blocks-count">{{ page.blocks.length }} Blok</span>
+                  <button
+                    type="button"
+                    class="btn-figma-focus-page"
+                    @click.stop="switchPage(page.id, true)"
+                    title="Fokus Edit Halaman Ini (Single WYSIWYG Mode)"
+                  >
+                    <Edit3 :size="11" />
+                    <span>Edit Halaman</span>
+                  </button>
+                  <button
+                    v-if="page.path !== '/' && multiPages.length > 1"
+                    type="button"
+                    class="btn-figma-delete-page"
+                    @click.stop="deletePage(page.id)"
+                    title="Hapus Halaman Ini"
+                  >
+                    <Trash2 :size="11" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. Artboard Browser Window Card -->
+              <div
+                class="sitemap-artboard-card"
+                :class="{ 'is-selected-artboard': page.id === activePageId }"
+                :style="{ width: `${artboardWidth}px`, fontFamily: currentFont }"
+                @click="onSitemapCardClick(page.id)"
+              >
+                <!-- Browser window chrome -->
+                <div class="artboard-window-bar">
+                  <div class="window-traffic-dots">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                  </div>
+                  <div class="window-url-capsule">
+                    <ShieldCheck :size="12" color="#10b981" />
+                    <span class="url-text">https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}{{ page.path }}</span>
+                  </div>
+                  <div class="window-ingress-tag">
+                    <span class="live-dot-mini"></span>
+                    <span>Traefik v3 Edge: 1.8ms</span>
+                  </div>
+                </div>
+
+                <!-- Sandboxed Pixel-Perfect Live HTML Preview -->
+                <div class="sitemap-artboard-preview-shell">
+                  <iframe
+                    :srcdoc="getCompiledPageHtml(page)"
+                    class="sitemap-preview-iframe"
+                    title="Page Artboard Preview"
+                    sandbox="allow-scripts allow-same-origin"
+                  ></iframe>
+                  <!-- Clean hover overlay with centered pill hint -->
+                  <div class="artboard-hover-overlay">
+                    <div class="artboard-focus-hint-pill">
+                      <Edit3 :size="13" />
+                      <span>Klik untuk Edit Halaman</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
           <!-- The Zoomable & Transformed Artboard Container -->
           <div
+            v-else
             class="artboard-transform-wrapper"
             :style="{
               transform: `translate(calc(-50% + ${panX}px), ${panY}px) scale(${zoom})`,
-              transformOrigin: 'top center'
+              transformOrigin: 'top center',
+              '--canvas-zoom': zoom
             }"
           >
             <!-- Resizable Website Frame Shell -->
@@ -2538,7 +5238,7 @@ const executeVsCodeReplaceAll = () => {
               }"
             >
               <!-- Browser Chrome Window Bar -->
-              <div class="artboard-window-bar">
+              <div class="artboard-window-bar" @click="selectedBlockId = null; hudContext = { type: 'section' }">
                 <div class="window-traffic-dots">
                   <span class="dot red"></span>
                   <span class="dot yellow"></span>
@@ -2546,20 +5246,40 @@ const executeVsCodeReplaceAll = () => {
                 </div>
                 <div class="window-url-capsule">
                   <ShieldCheck :size="12" color="#10b981" />
-                  <span class="url-text">https://{{ activeContainer.subdomain }}</span>
+                  <span class="url-text">https://{{ activeContainer.subdomain }}{{ activePage?.path === '/' ? '' : activePage?.path }}</span>
                 </div>
                 <div class="window-ingress-tag">
                   <span class="live-dot-mini"></span>
-                  <span>Traefik v3 Edge: 1.8ms</span>
+                  <span>{{ activePage?.title || 'Beranda' }} ({{ activePage?.path || '/' }}) • Traefik v3</span>
                 </div>
               </div>
 
               <!-- Website Content Stage -->
               <div class="website-rendered-surface" :style="{ '--accent-brand': activeContainer.accentColor }">
-                <!-- Loop Over Blocks -->
+                <!-- Loop Over Blocks with Drag & Drop Slots -->
                 <template v-for="(block, bIdx) in pageBlocks" :key="block.id">
+                  <!-- Canvas Drag and Drop Slot (Before Block) -->
+                  <div
+                    class="canvas-drop-slot"
+                    :class="{
+                      'is-drag-in-progress': draggedBlockType !== null,
+                      'is-active-drop': activeDropSlotIndex === bIdx
+                    }"
+                    @click="selectedBlockId = null; hudContext = { type: 'section' }"
+                    @dragover="onCanvasDropSlotDragOver($event, bIdx)"
+                    @dragleave="onCanvasDropSlotDragLeave(bIdx)"
+                    @drop="onCanvasDropSlotDrop($event, bIdx)"
+                  >
+                    <div class="drop-slot-line">
+                      <span class="drop-slot-badge">
+                        <Plus :size="12" /> Pasang di sini
+                      </span>
+                    </div>
+                  </div>
+
                   <div
                     v-if="block.isVisible"
+                    :id="`canvas-block-node-${block.id}`"
                     class="block-node-wrapper"
                     :class="{
                       'is-first-block': bIdx === 0 || pageBlocks.findIndex(b => b.isVisible) === bIdx,
@@ -2569,6 +5289,8 @@ const executeVsCodeReplaceAll = () => {
                       [block.styles?.animation && block.styles.animation !== 'none' ? 'anim-' + block.styles.animation : '']: true
                     }"
                     :style="{
+                      zIndex: selectedBlockId === block.id && editorViewMode === 'design' ? 99999 : 1,
+                      position: 'relative',
                       backgroundColor: block.styles?.bgColor,
                       color: block.styles?.textColor,
                       fontFamily: block.styles?.fontFamily,
@@ -2579,68 +5301,117 @@ const executeVsCodeReplaceAll = () => {
                       '--accent-brand': block.styles?.accentColor || activeContainer.accentColor
                     }"
                     @click="selectBlock(block.id, $event)"
-                    @dblclick="openRichModalEditor(block)"
                     @mouseenter="hoveredBlockId = block.id"
                     @mouseleave="hoveredBlockId = null"
                   >
-                    <!-- SELECTION BOUNDING BOX & ACTION BAR OVERLAY (Photoshop/Canva Selection) -->
+                    <!-- SELECTION BOUNDING BOX (Canva/Figma Crisp Canvas Outlines) -->
                     <div v-if="selectedBlockId === block.id && editorViewMode === 'design'" class="selection-overlay-box">
                       <!-- 4 Corner Transformation Anchors -->
                       <span class="corner-anchor tl"></span>
                       <span class="corner-anchor tr"></span>
                       <span class="corner-anchor bl"></span>
                       <span class="corner-anchor br"></span>
-
-                      <!-- Floating Action Bar Attached to Selected Block -->
-                      <div class="floating-selection-bar" @click.stop>
-                        <span class="selection-tag-pill">◆ {{ block.name }}</span>
-                        <div class="bar-divider"></div>
-                        <!-- Tombol Buka Editor Konten, Tipografi, Warna & Animasi -->
-                        <button
-                          type="button"
-                          class="float-btn highlight-edit-btn"
-                          @click="openRichModalEditor(block)"
-                          title="Buka Editor Konten, Tipografi, Warna & Animasi"
-                        >
-                          <Edit3 :size="12" /> Edit Konten & Gaya
-                        </button>
-                        <div class="bar-divider"></div>
-                        <button class="float-btn" @click="moveBlockUp(block.id)" title="Pindah ke Atas">
-                          <ChevronUp :size="13" />
-                        </button>
-                        <button class="float-btn" @click="moveBlockDown(block.id)" title="Pindah ke Bawah">
-                          <ChevronDown :size="13" />
-                        </button>
-                        <button class="float-btn" @click="duplicateBlock(block.id)" title="Duplikat Section">
-                          <Copy :size="13" />
-                        </button>
-                        <button class="float-btn" @click="toggleBlockLock(block)" :title="block.isLocked ? 'Buka Kunci' : 'Kunci'">
-                          <Lock v-if="block.isLocked" :size="13" />
-                          <Unlock v-else :size="13" />
-                        </button>
-                        <button class="float-btn delete" @click="deleteBlock(block.id)" title="Hapus Section">
-                          <Trash2 :size="13" />
-                        </button>
-                      </div>
                     </div>
 
                     <!-- BLOCK TYPE 1: NAVBAR -->
                     <nav
                       v-if="block.type === 'navbar'"
                       class="rendered-nav-block"
-                      :style="{ padding: `${block.styles?.paddingY || 16}px 32px` }"
+                      :class="[
+                        `nav-style-${block.styles?.navStyle || block.styles?.bgMode || 'glass'}`,
+                        `nav-align-${block.styles?.navAlign || 'split'}`
+                      ]"
+                      :style="{
+                        padding: `${block.styles?.paddingY || 16}px 32px`,
+                        position: block.styles?.isSticky ? 'sticky' : 'relative',
+                        top: block.styles?.isSticky ? '0' : undefined,
+                        zIndex: block.styles?.isSticky ? 40 : undefined,
+                        backgroundColor: block.styles?.navStyle === 'solid' ? (block.styles?.bgColor || '#ffffff') :
+                                         block.styles?.navStyle === 'transparent' ? 'transparent' :
+                                         block.styles?.navStyle === 'bordered' ? (block.styles?.bgColor || '#ffffff') : undefined,
+                        borderBottom: block.styles?.navStyle === 'bordered' ? `2px solid ${block.styles?.accentColor || '#cbd5e1'}` : undefined
+                      }"
                     >
                       <div class="site-brand-logo" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">
-                        <span class="brand-cube-icon">◆</span>
-                        <span class="brand-title">{{ block.title }}</span>
+                        <span
+                          class="brand-cube-icon"
+                          @click="cycleNavbarBrandGlyph(block)"
+                          title="Klik untuk ganti lambang brand"
+                        >
+                          {{ block.styles?.brandGlyph || '◆' }}
+                        </span>
+                        <span
+                          class="brand-title inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                          title="Klik untuk mengedit brand"
+                        >{{ block.title }}</span>
                       </div>
-                      <div class="nav-links-cluster">
-                        <a href="#hero" class="nav-anchor active">Beranda</a>
-                        <a href="#features" class="nav-anchor">Keunggulan</a>
-                        <a href="#pricing" class="nav-anchor">Layanan</a>
-                        <a href="#cta" class="nav-anchor">Kontak</a>
-                        <button class="btn-nav-action" :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }">
-                          {{ block.buttonText || 'Hubungi Saya' }}
+
+                      <div class="nav-links-cluster" :class="{ 'is-centered': block.styles?.navAlign === 'center' }">
+                        <div
+                          v-for="(item, idx) in (block.items && block.items.length > 0 ? block.items : defaultNavItems)"
+                          :key="item.id || idx"
+                          class="nav-link-item-wrapper"
+                          @click="onNavItemClick(block, idx, $event)"
+                        >
+                          <a
+                            :href="item.url || '#'"
+                            class="nav-anchor"
+                            :class="{ active: (item as any).active || (activePage && activePage.path === item.url) || idx === 0 }"
+                            :style="{ color: ((item as any).active || (activePage && activePage.path === item.url) || idx === 0) ? (block.styles?.accentColor || activeContainer.accentColor) : undefined }"
+                            @click.prevent
+                          >
+                            <span
+                              class="inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                              title="Klik untuk edit menu navigasi"
+                            >{{ item.title }}</span>
+                          </a>
+                          <button
+                            v-if="selectedBlockId === block.id && (block.items?.length || 0) > 1"
+                            type="button"
+                            class="btn-nav-link-delete"
+                            @click.stop="removeNavItem(block, idx)"
+                            title="Hapus tautan ini"
+                          >
+                            ×
+                          </button>
+                        </div>
+
+                        <!-- Quick Add Link Button on Canvas when Navbar selected -->
+                        <button
+                          v-if="selectedBlockId === block.id"
+                          type="button"
+                          class="btn-nav-quick-add"
+                          @click.stop="addNavItem(block)"
+                          title="Tambah Link Navigasi Baru"
+                        >
+                          <Plus :size="11" />
+                        </button>
+
+                        <button
+                          class="btn-nav-action"
+                          :style="{
+                            backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
+                            color: block.styles?.buttonTextColor || '#ffffff',
+                            borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
+                            border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
+                            boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 16px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
+                          }"
+                          @click="onButtonClick(block, 'primary', $event)"
+                        >
+                          <span
+                            class="inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                            title="Klik untuk mengedit tombol"
+                          >{{ block.buttonText || 'Hubungi Saya' }}</span>
                         </button>
                       </div>
                     </nav>
@@ -2670,29 +5441,79 @@ const executeVsCodeReplaceAll = () => {
                           borderColor: (block.styles?.accentColor || activeContainer.accentColor) + '40',
                           backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
                         }"
+                        @click="onTextClick(block, 'badge', $event)"
                       >
-                        <span>{{ block.badge }}</span>
+                        <span
+                          class="inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
                       </div>
 
-                      <h1 class="hero-main-heading">
+                      <h1
+                        class="hero-main-heading inline-editable-text"
+                        :contenteditable="selectedBlockId === block.id"
+                        @click="onTextClick(block, 'title', $event)"
+                        @keydown="onInlineTextKeyDown"
+                        @blur="onInlineTextBlur(block, 'title', $event)"
+                        title="Klik untuk mengedit judul hero"
+                      >
                         {{ block.title }}
                       </h1>
 
-                      <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="hero-bio-lead"></div>
-                      <p v-else class="hero-bio-lead">
+                      <p
+                        class="hero-bio-lead inline-editable-text"
+                        :contenteditable="selectedBlockId === block.id"
+                        @click="onTextClick(block, 'subtitle', $event)"
+                        @keydown="onInlineTextKeyDown"
+                        @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        title="Klik untuk mengedit deskripsi hero"
+                      >
                         {{ block.subtitle }}
                       </p>
 
                       <div class="hero-cta-cluster">
                         <button
                           class="btn-primary-glow"
-                          :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
+                          :style="{
+                            backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
+                            color: block.styles?.buttonTextColor || '#ffffff',
+                            borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
+                            border: block.styles?.buttonStyle === 'outline' ? `2px solid ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}` : undefined,
+                            boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
+                          }"
+                          @click="onButtonClick(block, 'primary', $event)"
                         >
-                          <span>{{ block.buttonText || 'Eksplorasi Karya' }}</span>
+                          <span
+                            class="inline-editable-text"
+                            :style="{ color: block.styles?.buttonTextColor || '#ffffff' }"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                            title="Klik untuk mengedit tombol"
+                          >{{ block.buttonText || 'Eksplorasi Karya' }}</span>
                           <ArrowRight :size="14" />
                         </button>
-                        <button v-if="block.secondaryButtonText" class="btn-secondary-clean">
-                          <span>{{ block.secondaryButtonText }}</span>
+                        <button
+                          v-if="block.secondaryButtonText"
+                          class="btn-secondary-clean"
+                          :style="{
+                            backgroundColor: block.styles?.secondaryButtonColor || 'transparent',
+                            color: block.styles?.secondaryButtonTextColor || '#0f172a',
+                            borderRadius: (block.styles?.secondaryButtonRadius !== undefined ? block.styles.secondaryButtonRadius + 'px' : '8px'),
+                            border: block.styles?.secondaryButtonStyle === 'outline' ? '2px solid #cbd5e1' : undefined,
+                            boxShadow: block.styles?.secondaryButtonStyle === 'glow' ? '0 0 16px rgba(100, 116, 139, 0.4)' : undefined
+                          }"
+                          @click="onButtonClick(block, 'secondary', $event)"
+                        >
+                          <span
+                            class="inline-editable-text"
+                            :style="{ color: block.styles?.secondaryButtonTextColor || '#0f172a' }"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'secondaryButtonText', $event)"
+                          >{{ block.secondaryButtonText }}</span>
                         </button>
                       </div>
                     </header>
@@ -2704,29 +5525,72 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
+                        <p
+                          v-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
-                      <div class="features-cards-trio">
+                      <div
+                        class="features-cards-trio"
+                        :style="{
+                          gridTemplateColumns: block.styles?.cardColumns ? `repeat(${block.styles.cardColumns}, minmax(0, 1fr))` : undefined
+                        }"
+                      >
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="feature-bento-card"
+                          :style="{
+                            borderRadius: (block.styles?.cardRadius !== undefined ? block.styles.cardRadius + 'px' : undefined)
+                          }"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
                           <div
-                            class="card-icon-pill"
+                            class="card-icon-pill is-clickable-icon"
                             :style="{
                               color: block.styles?.accentColor || activeContainer.accentColor,
                               backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
                             }"
+                            @click="openIconPickerForBlock(block.id, idx)"
+                            title="Klik untuk langsung ganti icon item"
                           >
                             <component :is="getIconComponent(item.icon)" :size="20" />
+                            <span class="icon-edit-pencil-badge" title="Ganti Ikon">
+                              <Edit3 :size="8" />
+                            </span>
                           </div>
-                          <h3 class="card-item-title">{{ item.title }}</h3>
-                          <p class="card-item-desc">{{ item.desc }}</p>
+                          <h3
+                            class="card-item-title inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                          >{{ item.title }}</h3>
+                          <p
+                            class="card-item-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                          >{{ item.desc }}</p>
                         </div>
                       </div>
                     </section>
@@ -2738,42 +5602,104 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="pricing-cards-row">
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="price-tier-card"
                           :class="{ featured: item.tag === 'Terpopuler' }"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
-                          <span v-if="item.tag" class="tier-tag-pill" :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }">
+                          <span
+                            v-if="item.tag"
+                            class="tier-tag-pill inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'tag', $event)"
+                          >
                             {{ item.tag }}
                           </span>
-                          <h4 class="tier-name">{{ item.title }}</h4>
+                          <h4
+                            class="tier-name inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                          >{{ item.title }}</h4>
                           <div class="tier-price-val">
-                            <span class="price-num">{{ item.price }}</span>
-                            <span class="price-cycle">{{ item.period }}</span>
+                            <span
+                              class="price-num inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'price', $event)"
+                            >{{ item.price }}</span>
+                            <span
+                              class="price-cycle inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'period', $event)"
+                            >{{ item.period }}</span>
                           </div>
-                          <p class="tier-desc">{{ item.desc }}</p>
+                          <p
+                            class="tier-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                          >{{ item.desc }}</p>
                           <ul v-if="item.features" class="tier-feature-list">
                             <li v-for="(f, fi) in item.features" :key="fi">
                               <Check :size="13" :color="block.styles?.accentColor || activeContainer.accentColor" />
-                              <span>{{ f }}</span>
+                              <span
+                                class="inline-editable-text"
+                                :contenteditable="selectedBlockId === block.id"
+                                @keydown="onInlineTextKeyDown"
+                                @blur="onInlineFeatureBlur(block, idx, fi, $event)"
+                              >{{ f }}</span>
                             </li>
                           </ul>
                           <button
                             class="btn-tier-action"
                             :style="{
-                              backgroundColor: item.tag === 'Terpopuler' ? (block.styles?.accentColor || activeContainer.accentColor) : '#f1f5f9',
-                              color: item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a'
+                              backgroundColor: item.buttonColor || (item.tag === 'Terpopuler' ? (block.styles?.accentColor || activeContainer.accentColor) : '#f1f5f9'),
+                              color: item.buttonColor ? '#ffffff' : (item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a'),
+                              borderRadius: (item.buttonRadius !== undefined ? item.buttonRadius + 'px' : (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px')),
+                              border: item.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
+                              boxShadow: item.buttonStyle === 'glow' ? `0 0 16px ${(item.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
                             }"
+                            @click="onButtonClick(block, idx, $event)"
                           >
-                            Pilih Paket
+                            <span
+                              class="inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                            >{{ block.buttonText || 'Pilih Paket' }}</span>
                           </button>
                         </div>
                       </div>
@@ -2792,14 +5718,38 @@ const executeVsCodeReplaceAll = () => {
                           background: `linear-gradient(135deg, ${(block.styles?.accentColor || activeContainer.accentColor)}15 0%, #ffffff80 100%)`
                         }"
                       >
-                        <h2 class="cta-heading">{{ block.title }}</h2>
+                        <h2
+                          class="cta-heading inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="cta-lead"></div>
-                        <p v-else class="cta-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else
+                          class="cta-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                         <button
                           class="btn-cta-big"
-                          :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
+                          :style="{
+                            backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
+                            borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
+                            border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
+                            boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
+                          }"
+                          @click="onButtonClick(block, 'primary', $event)"
                         >
-                          {{ block.buttonText || 'Mulai Sekarang' }}
+                          <span
+                            class="inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                          >{{ block.buttonText || 'Mulai Sekarang' }}</span>
                         </button>
                       </div>
                     </section>
@@ -2811,23 +5761,56 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="progress-meters-grid">
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="progress-meter-card"
+                          @click="onProgressItemClick(block, idx, $event)"
                         >
                           <div class="pm-head">
-                            <span class="pm-title">{{ item.title }}</span>
-                            <span class="pm-val" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">{{ item.percentage || 0 }}%</span>
+                            <span
+                              class="pm-title inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                            >{{ item.title }}</span>
+                            <span
+                              class="pm-val inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              :style="{ color: block.styles?.accentColor || activeContainer.accentColor }"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'percentage', $event)"
+                              title="Klik untuk ubah persen"
+                            >{{ item.percentage || 0 }}%</span>
                           </div>
-                          <div class="pm-track">
+                          <div class="pm-track" @click="onProgressItemClick(block, idx, $event)">
                             <div
                               class="pm-fill"
                               :style="{
@@ -2836,7 +5819,13 @@ const executeVsCodeReplaceAll = () => {
                               }"
                             ></div>
                           </div>
-                          <p v-if="item.desc" class="pm-desc">{{ item.desc }}</p>
+                          <p
+                            v-if="item.desc"
+                            class="pm-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                          >{{ item.desc }}</p>
                         </div>
                       </div>
                     </section>
@@ -2848,10 +5837,30 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="accordion-items-stack">
@@ -2860,12 +5869,24 @@ const executeVsCodeReplaceAll = () => {
                           :key="item.id"
                           class="accordion-card-item"
                           :class="{ 'is-expanded': (block.activeItemIndex ?? 0) === idx }"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
                           <button class="acc-card-trigger" @click.stop="toggleAccordionItem(block, idx)">
-                            <span class="acc-card-title">{{ item.title }}</span>
+                            <span
+                              class="acc-card-title inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                            >{{ item.title }}</span>
                             <ChevronDown :size="16" class="acc-card-icon" />
                           </button>
-                          <div v-if="(block.activeItemIndex ?? 0) === idx" class="acc-card-content">
+                          <div
+                            v-if="(block.activeItemIndex ?? 0) === idx"
+                            class="acc-card-content inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                          >
                             {{ item.desc }}
                           </div>
                         </div>
@@ -2879,27 +5900,82 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="carousel-stage-container">
                         <div v-if="block.items && block.items.length > 0" class="carousel-slide-card">
-                          <div v-if="block.items[block.activeItemIndex || 0]?.image" class="carousel-slide-img-wrap">
+                          <div
+                            v-if="block.items[block.activeItemIndex || 0]?.image"
+                            class="carousel-slide-img-wrap"
+                            @click="onImageClick(block, block.activeItemIndex || 0, $event)"
+                            title="Klik ganti foto slide langsung"
+                            style="cursor: pointer;"
+                          >
                             <img
                               :src="block.items[block.activeItemIndex || 0].image"
                               :alt="block.items[block.activeItemIndex || 0].title || 'Slide Image'"
                               class="carousel-slide-img"
                             />
+                            <!-- Hover Overlay: Ganti Foto Langsung -->
+                            <div class="carousel-img-hover-overlay">
+                              <span class="btn-change-photo-badge">
+                                <UploadCloud :size="13" />
+                                <span>Ganti Foto</span>
+                              </span>
+                            </div>
                           </div>
-                          <span v-if="block.items[block.activeItemIndex || 0]?.tag" class="carousel-tag-badge">
+                          <span
+                            v-if="block.items[block.activeItemIndex || 0]?.tag"
+                            class="carousel-tag-badge inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'tag', $event)"
+                          >
                             {{ block.items[block.activeItemIndex || 0]?.tag }}
                           </span>
-                          <h3 class="carousel-headline">{{ block.items[block.activeItemIndex || 0]?.title }}</h3>
-                          <p class="carousel-lead-desc">{{ block.items[block.activeItemIndex || 0]?.desc }}</p>
-                          <span v-if="block.items[block.activeItemIndex || 0]?.author" class="carousel-author-credit">
+                          <h3
+                            class="carousel-headline inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'title', $event)"
+                          >{{ block.items[block.activeItemIndex || 0]?.title }}</h3>
+                          <p
+                            class="carousel-lead-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'desc', $event)"
+                          >{{ block.items[block.activeItemIndex || 0]?.desc }}</p>
+                          <span
+                            v-if="block.items[block.activeItemIndex || 0]?.author"
+                            class="carousel-author-credit inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'role', $event)"
+                          >
                             — {{ block.items[block.activeItemIndex || 0]?.author }}
                           </span>
                         </div>
@@ -2934,16 +6010,41 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="form-card-container">
                         <form class="form-fields-stack" @submit.prevent>
-                          <div v-for="item in block.items" :key="item.id" class="form-field-group">
-                            <label class="form-field-label">{{ item.title }}</label>
+                          <div v-for="(item, idx) in block.items" :key="item.id" class="form-field-group">
+                            <label
+                              class="form-field-label inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                            >{{ item.title }}</label>
                             <select v-if="item.tag === 'select'" class="form-rendered-select">
                               <option>Pilihan 1: Solusi Cloud & Docker</option>
                               <option>Pilihan 2: Visual Studio CMS</option>
@@ -2964,9 +6065,18 @@ const executeVsCodeReplaceAll = () => {
                           </div>
                           <button
                             class="btn-form-submit"
-                            :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
+                            :style="{
+                              backgroundColor: block.styles?.accentColor || activeContainer.accentColor,
+                              borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px')
+                            }"
+                            @click="onButtonClick(block, 'primary', $event)"
                           >
-                            {{ block.buttonText || 'Kirim Pesan Sekarang' }}
+                            <span
+                              class="inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                            >{{ block.buttonText || 'Kirim Pesan Sekarang' }}</span>
                           </button>
                         </form>
                       </div>
@@ -2980,25 +6090,68 @@ const executeVsCodeReplaceAll = () => {
                     >
                       <div class="modal-preview-stage">
                         <div class="modal-stage-header">
-                          <span class="modal-stage-badge">{{ block.badge || 'POPUP PROMOSI' }}</span>
+                          <span
+                            class="modal-stage-badge inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'badge', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'badge', $event)"
+                          >{{ block.badge || 'POPUP PROMOSI' }}</span>
                           <button class="modal-stage-close" @click.stop="toggleBlockOpen(block)">
                             <X :size="14" />
                           </button>
                         </div>
                         <div class="modal-stage-body">
-                          <h3 class="modal-stage-title">{{ block.title }}</h3>
+                          <h3
+                            class="modal-stage-title inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'title', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'title', $event)"
+                          >{{ block.title }}</h3>
                           <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="modal-stage-desc"></div>
-                          <p v-else class="modal-stage-desc">{{ block.subtitle }}</p>
+                          <p
+                            v-else
+                            class="modal-stage-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'subtitle', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                          >{{ block.subtitle }}</p>
                           <div class="modal-stage-actions">
-                            <button class="btn-modal-secondary" @click.stop>
-                              {{ block.secondaryButtonText || 'Nanti Saja' }}
+                            <button
+                              class="btn-modal-secondary"
+                              :style="{
+                                backgroundColor: block.styles?.secondaryButtonColor || 'transparent',
+                                borderRadius: (block.styles?.secondaryButtonRadius !== undefined ? block.styles.secondaryButtonRadius + 'px' : '8px'),
+                                border: block.styles?.secondaryButtonStyle === 'outline' ? '2px solid #cbd5e1' : undefined,
+                                boxShadow: block.styles?.secondaryButtonStyle === 'glow' ? '0 0 16px rgba(100, 116, 139, 0.4)' : undefined
+                              }"
+                              @click="onButtonClick(block, 'secondary', $event)"
+                            >
+                              <span
+                                class="inline-editable-text"
+                                :contenteditable="selectedBlockId === block.id"
+                                @keydown="onInlineTextKeyDown"
+                                @blur="onInlineTextBlur(block, 'secondaryButtonText', $event)"
+                              >{{ block.secondaryButtonText || 'Nanti Saja' }}</span>
                             </button>
                             <button
                               class="btn-modal-primary"
-                              :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
-                              @click.stop
+                              :style="{
+                                backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
+                                borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
+                                border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
+                                boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
+                              }"
+                              @click="onButtonClick(block, 'primary', $event)"
                             >
-                              {{ block.buttonText || 'Klaim Sekarang' }}
+                              <span
+                                class="inline-editable-text"
+                                :contenteditable="selectedBlockId === block.id"
+                                @keydown="onInlineTextKeyDown"
+                                @blur="onInlineTextBlur(block, 'buttonText', $event)"
+                              >{{ block.buttonText || 'Klaim Sekarang' }}</span>
                             </button>
                           </div>
                         </div>
@@ -3013,10 +6166,32 @@ const executeVsCodeReplaceAll = () => {
                     >
                       <div class="dropdown-component-card">
                         <div class="section-title-wrap" style="margin-bottom: 12px; text-align: left;">
-                          <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                          <h3 class="sec-headline" style="font-size: 1.1rem;">{{ block.title }}</h3>
+                          <span
+                            v-if="block.badge"
+                            class="badge-mini-caps inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'badge', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'badge', $event)"
+                          >{{ block.badge }}</span>
+                          <h3
+                            class="sec-headline inline-editable-text"
+                            style="font-size: 1.1rem;"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'title', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'title', $event)"
+                          >{{ block.title }}</h3>
                           <div v-if="block.styles?.richContent" v-html="block.styles.richContent" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;"></div>
-                          <p v-else-if="block.subtitle" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">{{ block.subtitle }}</p>
+                          <p
+                            v-else-if="block.subtitle"
+                            class="inline-editable-text"
+                            style="font-size: 0.85rem; color: #64748b; margin-top: 4px;"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'subtitle', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                          >{{ block.subtitle }}</p>
                         </div>
                         <button class="dropdown-trigger-btn" @click.stop="toggleBlockOpen(block)">
                           <span>{{ block.items?.[block.activeItemIndex || 0]?.title || 'Pilih Kategori...' }}</span>
@@ -3030,8 +6205,20 @@ const executeVsCodeReplaceAll = () => {
                             :class="{ 'is-selected': (block.activeItemIndex || 0) === dIdx }"
                             @click.stop="selectDropdownOption(block, dIdx)"
                           >
-                            <span>{{ item.title }}</span>
-                            <span v-if="item.desc" style="font-size: 0.72rem; color: #94a3b8;">{{ item.desc }}</span>
+                            <span
+                              class="inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, dIdx, 'title', $event)"
+                            >{{ item.title }}</span>
+                            <span
+                              v-if="item.desc"
+                              class="inline-editable-text"
+                              style="font-size: 0.72rem; color: #94a3b8;"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, dIdx, 'desc', $event)"
+                            >{{ item.desc }}</span>
                           </div>
                         </div>
                       </div>
@@ -3044,25 +6231,91 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
-                      <div class="cards-showcase-grid">
+                      <div
+                        class="cards-showcase-grid"
+                        :style="{
+                          gridTemplateColumns: block.styles?.cardColumns ? `repeat(${block.styles?.cardColumns}, minmax(0, 1fr))` : undefined
+                        }"
+                      >
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="showcase-grid-card"
+                          :style="{
+                            borderRadius: (block.styles?.cardRadius !== undefined ? block.styles.cardRadius + 'px' : undefined)
+                          }"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
                           <div class="card-header-banner">
-                            <span v-if="item.tag" class="card-tag-pill">{{ item.tag }}</span>
+                            <!-- Cover Image if present -->
+                            <img
+                              v-if="item.image"
+                              :src="item.image"
+                              :alt="item.title || 'Card Cover'"
+                              class="card-cover-image"
+                            />
+                            <!-- Hover Overlay: Ganti Foto Langsung -->
+                            <div class="card-cover-hover-overlay" @click.stop="triggerImageUpload(block.id, idx)">
+                              <span class="btn-card-change-photo">
+                                <UploadCloud :size="12" />
+                                <span>{{ item.image ? 'Ganti Foto' : '+ Pasang Foto' }}</span>
+                              </span>
+                            </div>
+                            <span
+                              v-if="item.tag"
+                              class="card-tag-pill inline-editable-text"
+                              style="position: relative; z-index: 2;"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'tag', $event)"
+                            >{{ item.tag }}</span>
                           </div>
                           <div class="card-body-content">
-                            <h3 class="card-grid-title">{{ item.title }}</h3>
-                            <p class="card-grid-desc">{{ item.desc }}</p>
-                            <span v-if="item.role" class="card-role-label">Peran: {{ item.role }}</span>
+                            <h3
+                              class="card-grid-title inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                            >{{ item.title }}</h3>
+                            <p
+                              class="card-grid-desc inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                            >{{ item.desc }}</p>
+                            <span
+                              v-if="item.role"
+                              class="card-role-label inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'role', $event)"
+                            >Peran: {{ item.role }}</span>
                           </div>
                         </div>
                       </div>
@@ -3075,24 +6328,62 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="listgroup-stack-card">
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="listgroup-item-row"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
                           <span class="lg-check-icon"><Check :size="14" /></span>
                           <div class="lg-text-meta">
-                            <span class="lg-item-title">{{ item.title }}</span>
-                            <span v-if="item.desc" class="lg-item-desc">{{ item.desc }}</span>
+                            <span
+                              class="lg-item-title inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                            >{{ item.title }}</span>
+                            <span
+                              v-if="item.desc"
+                              class="lg-item-desc inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                            >{{ item.desc }}</span>
                           </div>
-                          <span v-if="item.tag" class="lg-badge-tag">{{ item.tag }}</span>
+                          <span
+                            v-if="item.tag"
+                            class="lg-badge-tag inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'tag', $event)"
+                          >{{ item.tag }}</span>
                         </div>
                       </div>
                     </section>
@@ -3104,20 +6395,53 @@ const executeVsCodeReplaceAll = () => {
                       :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
                     >
                       <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span v-if="block.badge" class="badge-mini-caps">{{ block.badge }}</span>
-                        <h2 class="sec-headline">{{ block.title }}</h2>
+                        <span
+                          v-if="block.badge"
+                          class="badge-mini-caps inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'badge', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'badge', $event)"
+                        >{{ block.badge }}</span>
+                        <h2
+                          class="sec-headline inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'title', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'title', $event)"
+                        >{{ block.title }}</h2>
                         <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p v-else-if="block.subtitle" class="sec-lead">{{ block.subtitle }}</p>
+                        <p
+                          v-else-if="block.subtitle"
+                          class="sec-lead inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                        >{{ block.subtitle }}</p>
                       </div>
 
                       <div class="stats-counters-row">
                         <div
-                          v-for="item in block.items"
+                          v-for="(item, idx) in block.items"
                           :key="item.id"
                           class="stat-counter-box"
+                          @click="onCardItemClick(block, idx, $event)"
                         >
-                          <span class="stat-number-val">{{ item.title }}</span>
-                          <span class="stat-number-desc">{{ item.desc }}</span>
+                          <span
+                            class="stat-number-val inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'title', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
+                          >{{ item.title }}</span>
+                          <span
+                            class="stat-number-desc inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'subtitle', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
+                          >{{ item.desc }}</span>
                         </div>
                       </div>
                     </section>
@@ -3128,7 +6452,15 @@ const executeVsCodeReplaceAll = () => {
                       class="rendered-pagination-block"
                       :style="{ padding: `${block.styles?.paddingY || 32}px 32px` }"
                     >
-                      <div v-if="block.subtitle" style="text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">
+                      <div
+                        v-if="block.subtitle"
+                        class="inline-editable-text"
+                        style="text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 8px;"
+                        :contenteditable="selectedBlockId === block.id"
+                        @click="onTextClick(block, 'subtitle', $event)"
+                        @keydown="onInlineTextKeyDown"
+                        @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                      >
                         {{ block.subtitle }}
                       </div>
                       <div class="pagination-controls-row">
@@ -3140,7 +6472,12 @@ const executeVsCodeReplaceAll = () => {
                           :class="{ 'is-active': (block.activeItemIndex || 0) === pIdx }"
                           @click.stop="setPageNumber(block, pIdx)"
                         >
-                          {{ item.title }}
+                          <span
+                            class="inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, pIdx, 'title', $event)"
+                          >{{ item.title }}</span>
                         </button>
                         <button class="pagination-btn" title="Berikutnya">&raquo;</button>
                       </div>
@@ -3161,9 +6498,20 @@ const executeVsCodeReplaceAll = () => {
                             class="bc-item-anchor"
                             @click.prevent
                           >
-                            {{ item.title }}
+                            <span
+                              class="inline-editable-text"
+                              :contenteditable="selectedBlockId === block.id"
+                              @keydown="onInlineTextKeyDown"
+                              @blur="onInlineItemTextBlur(block, bIdx, 'title', $event)"
+                            >{{ item.title }}</span>
                           </a>
-                          <span v-else class="bc-item-current">{{ item.title }}</span>
+                          <span
+                            v-else
+                            class="bc-item-current inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineItemTextBlur(block, bIdx, 'title', $event)"
+                          >{{ item.title }}</span>
                         </template>
                       </div>
                     </nav>
@@ -3178,13 +6526,45 @@ const executeVsCodeReplaceAll = () => {
                       <div class="footer-content-row">
                         <div class="footer-brand">
                           <span class="brand-cube-icon" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">◆</span>
-                          <strong>{{ block.title }}</strong>
+                          <strong
+                            class="inline-editable-text"
+                            :contenteditable="selectedBlockId === block.id"
+                            @click="onTextClick(block, 'title', $event)"
+                            @keydown="onInlineTextKeyDown"
+                            @blur="onInlineTextBlur(block, 'title', $event)"
+                            title="Klik untuk mengedit brand footer"
+                          >{{ block.title }}</strong>
                         </div>
-                        <p class="footer-copy">{{ block.subtitle }}</p>
+                        <p
+                          class="footer-copy inline-editable-text"
+                          :contenteditable="selectedBlockId === block.id"
+                          @click="onTextClick(block, 'subtitle', $event)"
+                          @keydown="onInlineTextKeyDown"
+                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
+                          title="Klik untuk mengedit copyright footer"
+                        >{{ block.subtitle }}</p>
                       </div>
                     </footer>
                   </div>
                 </template>
+
+                <!-- Final Drop Slot at Bottom of Canvas -->
+                <div
+                  class="canvas-drop-slot"
+                  :class="{
+                    'is-drag-in-progress': draggedBlockType !== null,
+                    'is-active-drop': activeDropSlotIndex === pageBlocks.length
+                  }"
+                  @dragover="onCanvasDropSlotDragOver($event, pageBlocks.length)"
+                  @dragleave="onCanvasDropSlotDragLeave(pageBlocks.length)"
+                  @drop="onCanvasDropSlotDrop($event, pageBlocks.length)"
+                >
+                  <div class="drop-slot-line">
+                    <span class="drop-slot-badge">
+                      <Plus :size="12" /> Pasang di akhir halaman
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <!-- RESIZE HANDLES (Canva / Figma Freeform Resizer) -->
@@ -5156,6 +8536,285 @@ const executeVsCodeReplaceAll = () => {
               >
                 <component :is="getIconComponent(opt.icon)" :size="20" />
                 <span class="icon-tile-name">{{ opt.name }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- STUDIO MODAL: TAMBAH HALAMAN RUTE BARU                              -->
+      <!-- =================================================================== -->
+      <div v-if="isNewPageModalOpen" class="modal-backdrop" @click.self="isNewPageModalOpen = false">
+        <div class="modal-dialog modal-dialog-new-page modal-dialog-bespoke">
+          <!-- Header -->
+          <div class="modal-header modal-header-bespoke">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box modal-icon-gradient">
+                <Workflow :size="20" />
+              </div>
+              <div>
+                <div class="modal-title-row">
+                  <h3 class="modal-heading">Tambah Halaman Rute Baru</h3>
+                  <span class="modal-tag-badge">Traefik Ingress Edge</span>
+                </div>
+                <p class="modal-subheading">Perluas website dengan rute multi-halaman & blueprint layout terintegrasi.</p>
+              </div>
+            </div>
+            <button type="button" class="modal-close-button" @click="isNewPageModalOpen = false" title="Tutup">
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="new-page-modal-body">
+            <!-- 1. Quick Presets Chips Strip -->
+            <div class="quick-presets-strip">
+              <span class="quick-presets-label">Pintasan Cepat:</span>
+              <button
+                v-for="qp in quickPagePresets"
+                :key="qp.path"
+                type="button"
+                class="quick-preset-chip"
+                @click="applyQuickPagePreset(qp)"
+                :title="`Klik untuk isi otomatis '${qp.label}' (${qp.path})`"
+              >
+                <span>{{ qp.label }}</span>
+                <span class="chip-path">{{ qp.path }}</span>
+              </button>
+            </div>
+
+            <!-- 2. Form Fields Grid -->
+            <div class="new-page-form-grid">
+              <!-- Judul Halaman -->
+              <div class="new-page-field">
+                <div class="field-label-row">
+                  <label class="new-page-label">Judul Halaman <span class="req-star">*</span></label>
+                  <span class="field-hint">Nama tampilan di navigasi & tab browser</span>
+                </div>
+                <div class="input-with-leading-icon">
+                  <Type :size="14" class="input-leading-icon" />
+                  <input
+                    v-model="newPageForm.title"
+                    type="text"
+                    placeholder="Contoh: Paket & Harga, Layanan Kami, Portofolio..."
+                    class="new-page-input has-icon"
+                    @keyup.enter="createNewPage"
+                  />
+                </div>
+              </div>
+
+              <!-- Rute URL (Path) -->
+              <div class="new-page-field">
+                <div class="field-label-row">
+                  <label class="new-page-label">Rute URL (Path) <span class="req-star">*</span></label>
+                  <span class="field-hint">Alamat akses web di browser</span>
+                </div>
+                <div class="new-page-path-prefix-wrap">
+                  <span class="path-prefix">
+                    <ShieldCheck :size="12" class="prefix-lock-icon" />
+                    https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}
+                  </span>
+                  <input
+                    v-model="newPageForm.path"
+                    type="text"
+                    placeholder="/pricing"
+                    class="new-page-input path-input"
+                    @keyup.enter="createNewPage"
+                  />
+                </div>
+
+                <!-- Sub-route quick helper chips (if existing parent pages exist) -->
+                <div v-if="existingParentPages.length > 0" class="parent-nesting-strip">
+                  <span class="parent-nesting-label">↳ Jadikan Sub-Rute dari:</span>
+                  <button
+                    v-for="parentPg in existingParentPages"
+                    :key="parentPg.id"
+                    type="button"
+                    class="parent-nesting-chip"
+                    @click="applyParentPrefix(parentPg.path)"
+                    :title="`Klik untuk buat sub-rute di bawah ${parentPg.path}`"
+                  >
+                    <span>{{ parentPg.path }}/...</span>
+                  </button>
+                </div>
+
+                <!-- Dynamic Hierarchy Telemetry Banner -->
+                <div
+                  v-if="newPageHierarchy.type !== 'empty'"
+                  class="hierarchy-feedback-card"
+                  :class="{
+                    'is-root': newPageHierarchy.type === 'root',
+                    'is-nested-ok': newPageHierarchy.type === 'nested' && newPageHierarchy.isValidParent,
+                    'is-nested-err': newPageHierarchy.type === 'nested' && !newPageHierarchy.isValidParent
+                  }"
+                >
+                  <div class="hierarchy-card-lead">
+                    <div class="hierarchy-dot-indicator"></div>
+                    <span v-if="newPageHierarchy.type === 'root'" class="hierarchy-title">
+                      Level 1: Rute Utama (Berdampingan di Navbar Utama)
+                    </span>
+                    <span v-else-if="newPageHierarchy.type === 'nested' && newPageHierarchy.isValidParent" class="hierarchy-title">
+                      Level {{ newPageHierarchy.depth }}: Sub-Rute bernaung di bawah <strong>{{ newPageHierarchy.parent }}</strong>
+                    </span>
+                    <span v-else class="hierarchy-title is-error">
+                      Peringatan: Halaman induk '<strong>{{ newPageHierarchy.parent }}</strong>' belum ada di website ini!
+                    </span>
+                  </div>
+                  <div class="hierarchy-card-desc">
+                    <span v-if="newPageHierarchy.type === 'root'">
+                      Halaman akan diposisikan sejajar di kolom rute utama dan terhubung otomatis dari Beranda (/).
+                    </span>
+                    <span v-else-if="newPageHierarchy.type === 'nested' && newPageHierarchy.isValidParent">
+                      Konektor kurva otomatis ditarik dari {{ newPageHierarchy.parent }} → {{ newPageForm.path }} pada diagram Alur Figma.
+                    </span>
+                    <span v-else>
+                      Harap buat halaman induk {{ newPageHierarchy.parent }} terlebih dahulu sebelum mendaftarkan sub-rute ini.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Colorful Blueprint Layout Presets -->
+            <div class="new-page-field">
+              <div class="field-label-row">
+                <label class="new-page-label">Pilih Blueprint Layout Awal</label>
+                <span class="field-hint">Susunan komponen siap pakai yang langsung dirender</span>
+              </div>
+
+              <div class="new-page-presets-grid-bespoke">
+                <!-- 1. Halaman Konten (Showcase & Bento) - Blue -->
+                <div
+                  class="page-preset-card-bespoke theme-blue"
+                  :class="{ active: newPageForm.templateType === 'content' }"
+                  @click="newPageForm.templateType = 'content'"
+                >
+                  <div class="card-head-row">
+                    <div class="preset-icon-badge blue">
+                      <Layout :size="16" />
+                    </div>
+                    <div class="preset-badges-cluster">
+                      <span class="preset-tag-pill blue">Populer</span>
+                      <span v-if="newPageForm.templateType === 'content'" class="preset-chosen-pill blue">
+                        <Check :size="11" /> Dipilih
+                      </span>
+                    </div>
+                  </div>
+                  <div class="preset-card-title">Halaman Konten</div>
+                  <div class="preset-card-desc">Showcase visual berkelas dengan hero banner & bento grid 3 kolom fitur.</div>
+                  <div class="preset-included-blocks">
+                    <span class="block-tag">Navbar</span>
+                    <span class="block-tag">Hero Showcase</span>
+                    <span class="block-tag">Bento Features</span>
+                    <span class="block-tag">Footer</span>
+                  </div>
+                </div>
+
+                <!-- 2. Paket & Harga - Emerald -->
+                <div
+                  class="page-preset-card-bespoke theme-emerald"
+                  :class="{ active: newPageForm.templateType === 'pricing' }"
+                  @click="newPageForm.templateType = 'pricing'"
+                >
+                  <div class="card-head-row">
+                    <div class="preset-icon-badge emerald">
+                      <Award :size="16" />
+                    </div>
+                    <div class="preset-badges-cluster">
+                      <span class="preset-tag-pill emerald">Komersial</span>
+                      <span v-if="newPageForm.templateType === 'pricing'" class="preset-chosen-pill emerald">
+                        <Check :size="11" /> Dipilih
+                      </span>
+                    </div>
+                  </div>
+                  <div class="preset-card-title">Paket & Harga</div>
+                  <div class="preset-card-desc">Tabel komparasi harga 2 tier transparan, checklist benefit, dan garansi SLA.</div>
+                  <div class="preset-included-blocks">
+                    <span class="block-tag">Navbar</span>
+                    <span class="block-tag">Hero Banner</span>
+                    <span class="block-tag">Tabel Harga</span>
+                    <span class="block-tag">Footer</span>
+                  </div>
+                </div>
+
+                <!-- 3. Halaman Kontak - Amber -->
+                <div
+                  class="page-preset-card-bespoke theme-amber"
+                  :class="{ active: newPageForm.templateType === 'contact' }"
+                  @click="newPageForm.templateType = 'contact'"
+                >
+                  <div class="card-head-row">
+                    <div class="preset-icon-badge amber">
+                      <Mail :size="16" />
+                    </div>
+                    <div class="preset-badges-cluster">
+                      <span class="preset-tag-pill amber">Interaktif</span>
+                      <span v-if="newPageForm.templateType === 'contact'" class="preset-chosen-pill amber">
+                        <Check :size="11" /> Dipilih
+                      </span>
+                    </div>
+                  </div>
+                  <div class="preset-card-title">Halaman Kontak</div>
+                  <div class="preset-card-desc">Hero kontak langsung terpadu dengan formulir pengiriman leads & info respons CS.</div>
+                  <div class="preset-included-blocks">
+                    <span class="block-tag">Navbar</span>
+                    <span class="block-tag">Hero Kontak</span>
+                    <span class="block-tag">Formulir Leads</span>
+                    <span class="block-tag">Footer</span>
+                  </div>
+                </div>
+
+                <!-- 4. Kanvas Bersih - Indigo -->
+                <div
+                  class="page-preset-card-bespoke theme-indigo"
+                  :class="{ active: newPageForm.templateType === 'blank' }"
+                  @click="newPageForm.templateType = 'blank'"
+                >
+                  <div class="card-head-row">
+                    <div class="preset-icon-badge indigo">
+                      <Box :size="16" />
+                    </div>
+                    <div class="preset-badges-cluster">
+                      <span class="preset-tag-pill indigo">Fleksibel</span>
+                      <span v-if="newPageForm.templateType === 'blank'" class="preset-chosen-pill indigo">
+                        <Check :size="11" /> Dipilih
+                      </span>
+                    </div>
+                  </div>
+                  <div class="preset-card-title">Kanvas Bersih</div>
+                  <div class="preset-card-desc">Halaman minimalis siap kustomisasi untuk merangkai aneka blok desain secara bebas.</div>
+                  <div class="preset-included-blocks">
+                    <span class="block-tag">Navbar</span>
+                    <span class="block-tag">Section Kosong</span>
+                    <span class="block-tag">Footer</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer modal-footer-bespoke">
+            <div class="footer-help-note">
+              <Workflow :size="13" class="note-icon" />
+              <span>Rute & tata letak dapat dikustomisasi visual kapan saja di Alur Figma.</span>
+            </div>
+            <div class="footer-actions-group">
+              <button
+                type="button"
+                class="btn-modal-ghost"
+                @click="isNewPageModalOpen = false"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                class="btn-modal-confirm btn-modal-create-page"
+                @click="createNewPage"
+              >
+                <Plus :size="13" />
+                <span>Buat Halaman & Buka di Kanvas</span>
               </button>
             </div>
           </div>

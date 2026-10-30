@@ -46,3 +46,13 @@ Thumbs.db
 *.swo
 *.tsbuildinfo
 *.log
+
+# Chat & Session Logs
+hasil-chat-terakhir.md
+*.chat-summary.md
+
+# Local Dev Runner Scripts
+run-dev.sh
+scripts/run-dev.sh
+
+

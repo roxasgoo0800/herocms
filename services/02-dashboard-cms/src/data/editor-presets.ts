@@ -233,6 +233,15 @@ export const blockCatalogItems: BlockCatalogItem[] = [
     desc: 'Penutup halaman dengan identitas brand, navigasi sekunder, dan legalitas hak cipta.',
     badge: 'FOOTER',
     previewWireframe: 'footer'
+  },
+  {
+    id: 'cat_marquee',
+    type: 'marquee',
+    category: 'content',
+    name: 'Infinite Logo Marquee',
+    desc: 'Running ticker baris logo mitra atau teknologi yang meluncur halus menyamping tanpa henti.',
+    badge: 'TREND 2027',
+    previewWireframe: 'features'
   }
 ];
 
@@ -251,8 +260,18 @@ export const createDefaultBlocks = (siteName: string, role: string, bio: string)
       buttonUrl: '#contact',
       isVisible: true,
       isLocked: false,
+      items: [
+        { id: 'nav_itm_1', title: 'Beranda', url: '#hero' },
+        { id: 'nav_itm_2', title: 'Keunggulan', url: '#features' },
+        { id: 'nav_itm_3', title: 'Layanan', url: '#pricing' },
+        { id: 'nav_itm_4', title: 'Kontak', url: '#cta' }
+      ],
       styles: {
         bgMode: 'glass',
+        navStyle: 'glass',
+        navAlign: 'split',
+        isSticky: true,
+        brandGlyph: '◆',
         paddingY: 16,
         backdropBlur: 16
       }
@@ -406,7 +425,21 @@ export const createLibraryBlock = (type: VisualBlock['type']): VisualBlock => {
         buttonUrl: '#',
         isVisible: true,
         isLocked: false,
-        styles: { bgMode: 'glass', paddingY: 16, backdropBlur: 16 }
+        items: [
+          { id: 'nav_1', title: 'Beranda', url: '#hero' },
+          { id: 'nav_2', title: 'Keunggulan', url: '#features' },
+          { id: 'nav_3', title: 'Layanan', url: '#pricing' },
+          { id: 'nav_4', title: 'Kontak', url: '#cta' }
+        ],
+        styles: {
+          bgMode: 'glass',
+          navStyle: 'glass',
+          navAlign: 'split',
+          isSticky: true,
+          brandGlyph: '◆',
+          paddingY: 16,
+          backdropBlur: 16
+        }
       };
 
     case 'hero':
@@ -696,6 +729,28 @@ export const createLibraryBlock = (type: VisualBlock['type']): VisualBlock => {
         styles: { paddingY: 36, align: 'center', bgMode: 'transparent' }
       };
 
+    case 'marquee':
+      return {
+        id: newId,
+        type: 'marquee',
+        name: 'Infinite Logo Marquee',
+        badge: 'TRUSTED BY GLOBAL TEAMS',
+        title: 'Dipercaya oleh Tim Rekayasa & Komunitas Pengembang Cloud Terkemuka',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          { id: 'mq_1', title: 'Docker', icon: 'server' },
+          { id: 'mq_2', title: 'Kubernetes', icon: 'cpu' },
+          { id: 'mq_3', title: 'PostgreSQL', icon: 'database' },
+          { id: 'mq_4', title: 'Redis Cache', icon: 'zap' },
+          { id: 'mq_5', title: 'Golang Engine', icon: 'terminal' },
+          { id: 'mq_6', title: 'Traefik Ingress', icon: 'globe' },
+          { id: 'mq_7', title: 'Tailwind CSS', icon: 'layers' },
+          { id: 'mq_8', title: 'Vue 3 Studio', icon: 'code' }
+        ],
+        styles: { paddingY: 32, align: 'center', bgMode: 'transparent' }
+      };
+
     default:
       return {
         id: newId,
@@ -726,6 +781,7 @@ export const fontOptions: FontOption[] = [
   { id: 'plus-jakarta', name: 'Plus Jakarta Sans (Modern UI)', family: "'Plus Jakarta Sans', system-ui, sans-serif", category: 'sans' },
   { id: 'outfit', name: 'Outfit (Geometric High-End)', family: "'Outfit', system-ui, sans-serif", category: 'sans' },
   { id: 'poppins', name: 'Poppins (Friendly Tech)', family: "'Poppins', sans-serif", category: 'sans' },
+  { id: 'syne', name: 'Syne (Avant-Garde Display)', family: "'Syne', sans-serif", category: 'display' },
   { id: 'playfair', name: 'Playfair Display (Luxury Serif)', family: "'Playfair Display', Georgia, serif", category: 'serif' },
   { id: 'fira-code', name: 'Fira Code (Developer Mono)', family: "'Fira Code', 'Courier New', monospace", category: 'mono' },
   { id: 'roboto', name: 'Roboto (Neutral Pro)', family: "'Roboto', sans-serif", category: 'sans' }
@@ -810,7 +866,7 @@ export const editorIconOptions: EditorIconOption[] = [
 ];
 
 export interface AnimationOption {
-  id: 'none' | 'fadeInUp' | 'slideInLeft' | 'zoomIn' | 'bounce' | 'pulseGlow' | 'float';
+  id: 'none' | 'fadeInUp' | 'slideInLeft' | 'zoomIn' | 'bounce' | 'pulseGlow' | 'float' | 'blurFade' | 'springPop' | 'tiltIn';
   name: string;
   desc: string;
   icon: string;
@@ -823,5 +879,8 @@ export const animationOptions: AnimationOption[] = [
   { id: 'zoomIn', name: 'Zoom In Pop', desc: 'Membesar dinamis dari titik tengah', icon: 'maximize' },
   { id: 'bounce', name: 'Dynamic Bounce', desc: 'Efek membal ceria untuk memikat perhatian', icon: 'zap' },
   { id: 'pulseGlow', name: 'Pulse Glow', desc: 'Berdenyut dengan pendar royal blue halus', icon: 'sparkles' },
-  { id: 'float', name: 'Floating Infinite', desc: 'Mengambang naik-turun halus secara terus menerus', icon: 'cloud' }
+  { id: 'float', name: 'Floating Infinite', desc: 'Mengambang naik-turun halus secara terus menerus', icon: 'cloud' },
+  { id: 'blurFade', name: 'Cinematic Blur Fade', desc: 'Transisi sinematik blur halus ala Apple & macOS', icon: 'sparkles' },
+  { id: 'springPop', name: 'Spring 3D Elastic', desc: 'Gerakan membal 3D elastis dinamis dan modern', icon: 'zap' },
+  { id: 'tiltIn', name: 'Perspective Tilt 3D', desc: 'Masuk dengan sudut perspektif ruang 3D futuristik', icon: 'layers' }
 ];
