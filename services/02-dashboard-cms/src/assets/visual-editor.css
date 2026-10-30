@@ -10519,6 +10519,26 @@
   font-family: monospace;
 }
 
+.figma-frame-route-pill.is-editable {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.figma-frame-route-pill.is-editable:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.figma-frame-route-input {
+  width: 180px;
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
 .figma-frame-badge-active {
   font-size: 0.68rem;
   font-weight: 700;

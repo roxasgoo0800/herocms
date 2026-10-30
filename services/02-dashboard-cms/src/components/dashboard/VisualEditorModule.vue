@@ -1051,6 +1051,86 @@ const createNewPage = () => {
   triggerAutoSaveDraft();
 };
 
+// -----------------------------------------------------------------------------
+// Ganti alamat rute langsung dari pill judul frame di Alur Figma
+// -----------------------------------------------------------------------------
+const editingRoutePageId = ref<string | null>(null);
+const editingRouteValue = ref('');
+
+const startEditRoute = (page: MultiPageItem) => {
+  if (page.path === '/') {
+    showToast('Rute beranda (/) adalah rute utama dan tidak dapat diganti.', 'info');
+    return;
+  }
+  editingRoutePageId.value = page.id;
+  editingRouteValue.value = page.path;
+  nextTick(() => {
+    const el = document.querySelector<HTMLInputElement>('.figma-frame-route-input');
+    el?.focus();
+    el?.select();
+  });
+};
+
+const cancelEditRoute = () => {
+  editingRoutePageId.value = null;
+};
+
+const commitEditRoute = () => {
+  const pageId = editingRoutePageId.value;
+  if (!pageId) return;
+  editingRoutePageId.value = null;
+  const page = multiPages.value.find(p => p.id === pageId);
+  if (!page) return;
+
+  let next = editingRouteValue.value.trim().toLowerCase().replace(/\s+/g, '-');
+  if (!next.startsWith('/')) next = '/' + next;
+  next = next.replace(/\/{2,}/g, '/').replace(/(.)\/+$/, '$1');
+  const oldPath = page.path;
+  if (next === oldPath) return;
+
+  if (next === '/' || !/^\/[a-z0-9\-_/]+$/.test(next)) {
+    showToast('Rute hanya boleh berisi huruf kecil, angka, tanda - dan _.', 'error');
+    return;
+  }
+  if (next.startsWith(oldPath + '/')) {
+    showToast('Rute tidak boleh dipindah ke dalam sub-rutenya sendiri.', 'error');
+    return;
+  }
+  const parent = getParentPath(next);
+  if (parent && !multiPages.value.some(p => p.path === parent)) {
+    showToast(`Halaman induk '${parent}' belum ada.`, 'error');
+    return;
+  }
+
+  // Halaman ini beserta seluruh sub-rutenya ikut berpindah prefix
+  const renames = new Map<string, string>();
+  multiPages.value.forEach(p => {
+    if (p.path === oldPath || p.path.startsWith(oldPath + '/')) {
+      renames.set(p.path, next + p.path.slice(oldPath.length));
+    }
+  });
+  const renamedTargets = new Set(renames.values());
+  if (multiPages.value.some(p => !renames.has(p.path) && renamedTargets.has(p.path))) {
+    showToast(`Rute '${next}' sudah dipakai halaman lain.`, 'error');
+    return;
+  }
+
+  syncActivePageBlocks();
+  multiPages.value.forEach(p => {
+    const np = renames.get(p.path);
+    if (np) p.path = np;
+    const nav = p.blocks.find(b => b.type === 'navbar');
+    nav?.items?.forEach(item => {
+      if (item.url && renames.has(item.url)) item.url = renames.get(item.url)!;
+    });
+  });
+  const active = multiPages.value.find(p => p.id === activePageId.value);
+  if (active) pageBlocks.value = JSON.parse(JSON.stringify(active.blocks));
+
+  showToast(`Rute diganti: ${oldPath} → ${next}${renames.size > 1 ? ` (+${renames.size - 1} sub-rute)` : ''}`, 'success');
+  triggerAutoSaveDraft();
+};
+
 const deletePage = (pageId: string) => {
   const target = multiPages.value.find(p => p.id === pageId);
   if (!target) return;
@@ -3190,6 +3270,16 @@ const executeVsCodeReplaceAll = () => {
 
           <!-- Toggle Konten Sidebar Drawer -->
           <button
+            v-if="canvasViewMode === 'sitemap'"
+            class="btn-toggle-sidebar btn-konten-toggle"
+            @click="openNewPageModal"
+            title="Tambah Halaman Rute Baru"
+          >
+            <Plus :size="13" />
+            <span>Halaman Rute</span>
+          </button>
+          <button
+            v-else
             class="btn-toggle-sidebar btn-konten-toggle"
             :class="{ active: isKatalogOpen }"
             @click="isKatalogOpen = !isKatalogOpen"
@@ -4897,7 +4987,27 @@ const executeVsCodeReplaceAll = () => {
                 <div class="title-shelf-left">
                   <span class="figma-frame-hash">#</span>
                   <span class="figma-frame-name">{{ page.title }}</span>
-                  <span class="figma-frame-route-pill">{{ page.path }}</span>
+                  <input
+                    v-if="editingRoutePageId === page.id"
+                    v-model="editingRouteValue"
+                    class="figma-frame-route-pill figma-frame-route-input"
+                    spellcheck="false"
+                    @keydown.enter.prevent="commitEditRoute"
+                    @keydown.esc.prevent="cancelEditRoute"
+                    @blur="commitEditRoute"
+                    @mousedown.stop
+                  />
+                  <button
+                    v-else
+                    type="button"
+                    class="figma-frame-route-pill"
+                    :class="{ 'is-editable': page.path !== '/' }"
+                    :title="page.path === '/' ? 'Rute beranda' : 'Klik untuk ganti alamat rute'"
+                    @click.stop="startEditRoute(page)"
+                  >
+                    {{ page.path }}
+                    <Edit3 v-if="page.path !== '/'" :size="10" />
+                  </button>
                   <span v-if="page.id === activePageId" class="figma-frame-badge-active">Aktif</span>
                 </div>
                 <div class="title-shelf-right">
