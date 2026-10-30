@@ -8694,7 +8694,12 @@ const executeVsCodeReplaceAll = () => {
                     <div class="preset-icon-badge blue">
                       <Layout :size="16" />
                     </div>
-                    <span class="preset-tag-pill blue">Populer</span>
+                    <div class="preset-badges-cluster">
+                      <span class="preset-tag-pill blue">Populer</span>
+                      <span v-if="newPageForm.templateType === 'content'" class="preset-chosen-pill blue">
+                        <Check :size="11" /> Dipilih
+                      </span>
+                    </div>
                   </div>
                   <div class="preset-card-title">Halaman Konten</div>
                   <div class="preset-card-desc">Showcase visual berkelas dengan hero banner & bento grid 3 kolom fitur.</div>
@@ -8703,9 +8708,6 @@ const executeVsCodeReplaceAll = () => {
                     <span class="block-tag">Hero Showcase</span>
                     <span class="block-tag">Bento Features</span>
                     <span class="block-tag">Footer</span>
-                  </div>
-                  <div class="preset-selection-indicator">
-                    <Check v-if="newPageForm.templateType === 'content'" :size="12" />
                   </div>
                 </div>
 
@@ -8719,7 +8721,12 @@ const executeVsCodeReplaceAll = () => {
                     <div class="preset-icon-badge emerald">
                       <Award :size="16" />
                     </div>
-                    <span class="preset-tag-pill emerald">Komersial</span>
+                    <div class="preset-badges-cluster">
+                      <span class="preset-tag-pill emerald">Komersial</span>
+                      <span v-if="newPageForm.templateType === 'pricing'" class="preset-chosen-pill emerald">
+                        <Check :size="11" /> Dipilih
+                      </span>
+                    </div>
                   </div>
                   <div class="preset-card-title">Paket & Harga</div>
                   <div class="preset-card-desc">Tabel komparasi harga 2 tier transparan, checklist benefit, dan garansi SLA.</div>
@@ -8728,9 +8735,6 @@ const executeVsCodeReplaceAll = () => {
                     <span class="block-tag">Hero Banner</span>
                     <span class="block-tag">Tabel Harga</span>
                     <span class="block-tag">Footer</span>
-                  </div>
-                  <div class="preset-selection-indicator">
-                    <Check v-if="newPageForm.templateType === 'pricing'" :size="12" />
                   </div>
                 </div>
 
@@ -8744,7 +8748,12 @@ const executeVsCodeReplaceAll = () => {
                     <div class="preset-icon-badge amber">
                       <Mail :size="16" />
                     </div>
-                    <span class="preset-tag-pill amber">Interaktif</span>
+                    <div class="preset-badges-cluster">
+                      <span class="preset-tag-pill amber">Interaktif</span>
+                      <span v-if="newPageForm.templateType === 'contact'" class="preset-chosen-pill amber">
+                        <Check :size="11" /> Dipilih
+                      </span>
+                    </div>
                   </div>
                   <div class="preset-card-title">Halaman Kontak</div>
                   <div class="preset-card-desc">Hero kontak langsung terpadu dengan formulir pengiriman leads & info respons CS.</div>
@@ -8753,9 +8762,6 @@ const executeVsCodeReplaceAll = () => {
                     <span class="block-tag">Hero Kontak</span>
                     <span class="block-tag">Formulir Leads</span>
                     <span class="block-tag">Footer</span>
-                  </div>
-                  <div class="preset-selection-indicator">
-                    <Check v-if="newPageForm.templateType === 'contact'" :size="12" />
                   </div>
                 </div>
 
@@ -8769,7 +8775,12 @@ const executeVsCodeReplaceAll = () => {
                     <div class="preset-icon-badge indigo">
                       <Box :size="16" />
                     </div>
-                    <span class="preset-tag-pill indigo">Fleksibel</span>
+                    <div class="preset-badges-cluster">
+                      <span class="preset-tag-pill indigo">Fleksibel</span>
+                      <span v-if="newPageForm.templateType === 'blank'" class="preset-chosen-pill indigo">
+                        <Check :size="11" /> Dipilih
+                      </span>
+                    </div>
                   </div>
                   <div class="preset-card-title">Kanvas Bersih</div>
                   <div class="preset-card-desc">Halaman minimalis siap kustomisasi untuk merangkai aneka blok desain secara bebas.</div>
@@ -8777,9 +8788,6 @@ const executeVsCodeReplaceAll = () => {
                     <span class="block-tag">Navbar</span>
                     <span class="block-tag">Section Kosong</span>
                     <span class="block-tag">Footer</span>
-                  </div>
-                  <div class="preset-selection-indicator">
-                    <Check v-if="newPageForm.templateType === 'blank'" :size="12" />
                   </div>
                 </div>
               </div>

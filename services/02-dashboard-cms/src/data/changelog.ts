@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.0',
+    version: 'v1.42.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '30 Oktober 2026',
+    title: 'Fix Perapihan Tata Letak Form Modal Tambah Halaman & Anti-Tumpang Tindih Badge Blueprint',
+    summary: 'Perbaikan menyeluruh tata letak visual modal tambah halaman: (1) Form Layout & Input Restoration: Menambahkan kembali class CSS .new-page-field, .new-page-input, dan .new-page-path-prefix-wrap dengan deklarasi eksplisit display: flex; width: 100% dan height: 42px sehingga input judul dan input path tidak lagi menyusut sempit (20ch) atau sejajar liar dengan label petunjuk di sisi kanan; (2) Badge Collision Fix: Menghilangkan absolute indicator yang bertumpuk menimpa tag "Populer" pada kartu blueprint dan menggantinya dengan inline badge cluster .preset-chosen-pill [✓ Dipilih] yang rapi berdampingan; (3) Spacing & Visual Rhythm: Mengatur margin dan padding ruang modal secara proporsional agar tidak berdempetan.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-4034',
+        type: 'bugfix',
+        scope: 'Modal Form Inputs Full-Width & Padding',
+        description: 'Memperbaiki ukuran input judul dan rute path agar membentang 100% penuh dengan border, tinggi 42px, dan label terpisah ke atas.'
+      },
+      {
+        id: 'CHG-4035',
+        type: 'bugfix',
+        scope: 'Blueprint Tag & Checkmark Overlap Fix',
+        description: 'Menata ulang posisi badge pilihan pada kartu blueprint agar checkmark tidak lagi menumpuk di atas tag status.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '30 Oktober 2026',
     title: 'Redesain Komprehensif Dropdown Sitemap & Modal Tambah Halaman dengan Blueprint Berwarna',
     summary: 'Refaktor visual dan arsitektural menyeluruh pada komponen navigasi sitemap: (1) Redesain Dropdown Daftar Halaman (page-switcher-dropdown): Mengganti emoji statis dengan ikon Lucide presisi (Home, FileText, FileCode, CornerDownRight), menyajikan indentasi visual cabang hierarki pohon untuk sub-rute bertingkat, menambahkan pill badge "Utama" dan "Sub-Rute", micro-counter blok komponen, serta memperbaiki duplikasi simbol plus pada tombol aksi; (2) Redesain Modal Tambah Halaman (modal-dialog-new-page): Header bespoke dengan icon gradient dan tag Traefik Edge, quick-presets strip untuk pengisian instan 1-klik rute populer (/about, /pricing, /services, /contact, /portfolio), parent-nesting helper untuk pembuatan sub-rute hierarkis, live feedback card status hierarki URL, serta 4 kartu blueprint berwarna berkelas (Halaman Konten, Paket & Harga, Halaman Kontak, dan Kanvas Bersih); (3) Pembersihan Kartu Tambah Rute di Kanvas: Menghapus artboard placeholder duplikat di kanvas sitemap dan memusatkan seluruh aksi pembuatan rute ke bilah navigasi top bar.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
