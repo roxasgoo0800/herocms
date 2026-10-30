@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.40.8',
+    version: 'v1.40.9',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '29 Oktober 2026',
+    lastUpdated: '30 Oktober 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.40.9',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '30 Oktober 2026',
+    title: 'Sitemap Alur Figma: Layout Hierarki Rute Bertingkat & Anti-Tumpang Tindih',
+    summary: 'Perombakan tata letak kanvas Alur Figma: (1) Frame halaman kini diposisikan dari pohon rute, bukan indeks array. Rute utama (/about, /harga) berjajar horizontal, sedangkan sub-rute (/about/rizal) ditumpuk vertikal tepat di bawah halaman induknya; (2) Tinggi frame dihitung dari tinggi riil artboard (±880px) sehingga frame tidak lagi saling menimpa, dan tinggi kanvas/SVG mengikuti isi; (3) Konektor kini ditarik dari halaman induk langsung (/about → /about/rizal) dengan kurva vertikal, bukan semuanya dari beranda; (4) Pembuatan sub-rute wajib memiliki halaman induk, path dinormalisasi (slash ganda/akhir), dan link sub-rute hanya ditambahkan ke navbar halaman induk.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-4024',
+        type: 'bugfix',
+        scope: 'Sitemap Frame Overlap',
+        description: 'Posisi frame dihitung dari layout pohon rute dengan tinggi frame riil sehingga artboard tidak saling menumpuk.'
+      },
+      {
+        id: 'CHG-4025',
+        type: 'feature',
+        scope: 'Nested Route Hierarchy',
+        description: 'Sub-rute ditempatkan di bawah halaman induknya dengan konektor vertikal induk → anak; validasi halaman induk dan navbar sub-rute hanya di halaman induk.'
+      }
+    ]
+  },
+  {
     version: 'v1.40.8',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '29 Oktober 2026',
     title: 'Adaptive Zoom-Proportional Floating Shelf HUD & Dynamic Boundary Clamping',
     summary: 'Penyempurnaan arsitektur floating tools shelf (.studio-viewport-floating-shelf) agar beradaptasi secara dinamis terhadap level zoom kanvas: (1) Proportional Zoom Scaling: Toolbar tools kini otomatis menyesuaikan ukurannya secara tersinkronisasi 1:1 dengan rasio zoom kanvas (scale = Math.min(1.0, Math.max(0.35, zoom.value))), sehingga saat pengguna melakukan zoom out (misal: 35%, 40%, 50%), toolbar tidak lagi tampak raksasa ("ngikut gede") melainkan mengecil proporsional mengikuti ukuran artboard website; (2) Boundary Clearance & Auto-Clamping: Menghitung effectiveShelfWidth dan effectiveShelfHeight yang mempertimbangkan faktor skala sehingga kalkulasi posisi vertikal (idealTop) dan pembatasan horizontal (minLeft/maxLeft) selalu presisi 16px dari batas layar dan tombol Detail di sisi kanan tidak pernah terpotong; (3) Transform & Motion Parity: Menetapkan transformOrigin: top center dan sinkronisasi variabel CSS --shelf-scale pada transisi hud-slide-down untuk pergerakan bebas lonjakan; (4) Strict View Mode Guard: Memastikan tools toolbar secara mutlak hanya muncul pada mode Single WYSIWYG dan otomatis tersembunyi ketika berada di mode Alur Figma, Pratinjau, maupun saat menekan ESC / klik di latar kanvas.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
