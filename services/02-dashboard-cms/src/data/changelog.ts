@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.41.0',
+    version: 'v1.41.1',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,31 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.41.1',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '30 Oktober 2026',
+    title: 'Fix Dropdown Top Bar Terpotong di Belakang Kanvas',
+    summary: 'Dropdown pemilih halaman, situs, dan zoom di top bar tampak "membelakangi" karena .studio-command-bar memakai overflow-x: auto yang secara implisit juga memotong sumbu Y. Kini top bar otomatis beralih ke overflow: visible dengan z-index lebih tinggi (via :has) hanya saat salah satu dropdown terbuka, sehingga daftar halaman tampil penuh di atas penggaris dan kanvas tanpa mengorbankan scroll horizontal di layar sempit.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-4030',
+        type: 'bugfix',
+        scope: 'Top Bar Dropdown Clipping',
+        description: 'Top bar membuka overflow saat dropdown halaman/situs/zoom terbuka agar menu tampil di atas kanvas.'
+      }
+    ]
+  },
+  {
     version: 'v1.41.0',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '30 Oktober 2026',
     title: 'Ganti Alamat Rute di Alur Figma & Tombol Halaman Rute Kontekstual',
     summary: 'Pill rute pada judul frame Alur Figma (misal /about) kini bisa diklik untuk mengganti alamat secara langsung: Enter menyimpan, Esc membatalkan. Seluruh sub-rute ikut berpindah prefix (/about/rizal → /tentang/rizal), link navbar di semua halaman ikut diperbarui, dan ada validasi format, duplikasi, halaman induk, serta larangan memindah rute ke dalam sub-rutenya sendiri. Rute beranda (/) dikunci. Tombol "Konten +" di top bar otomatis berubah menjadi "+ Halaman Rute" saat berada di mode Alur Figma dan langsung membuka modal tambah halaman.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

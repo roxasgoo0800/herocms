@@ -77,6 +77,13 @@
   display: none;
 }
 
+/* overflow-x: auto ikut memotong sumbu Y; buka saat dropdown (halaman, situs, zoom) sedang tampil */
+.studio-command-bar:has(.custom-floating-dropdown, .site-floating-dropdown) {
+  overflow: visible;
+  position: relative;
+  z-index: 200;
+}
+
 .btn-back-dashboard {
   display: inline-flex;
   align-items: center;
