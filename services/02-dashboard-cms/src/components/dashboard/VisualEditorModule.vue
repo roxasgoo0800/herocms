@@ -70,7 +70,12 @@ import {
   Key,
   Image as ImageIcon,
   UploadCloud,
-  Workflow
+  Workflow,
+  Home,
+  CornerDownRight,
+  FileText,
+  Layout,
+  Mail,
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
@@ -658,7 +663,49 @@ const isNewPageModalOpen = ref(false);
 const newPageForm = reactive({
   title: '',
   path: '',
-  templateType: 'content' as 'blank' | 'content' | 'contact'
+  templateType: 'content' as 'blank' | 'content' | 'contact' | 'pricing'
+});
+
+const quickPagePresets = [
+  { label: 'Tentang Kami', path: '/about', template: 'content' as const },
+  { label: 'Paket & Harga', path: '/pricing', template: 'pricing' as const },
+  { label: 'Layanan', path: '/services', template: 'content' as const },
+  { label: 'Kontak Kami', path: '/contact', template: 'contact' as const },
+  { label: 'Portofolio', path: '/portfolio', template: 'content' as const }
+];
+
+const applyQuickPagePreset = (preset: typeof quickPagePresets[0]) => {
+  newPageForm.title = preset.label;
+  newPageForm.path = preset.path;
+  newPageForm.templateType = preset.template;
+};
+
+const existingParentPages = computed(() => {
+  return multiPages.value.filter(p => p.path !== '/' && !p.path.includes('/', 1));
+});
+
+const applyParentPrefix = (parentPath: string) => {
+  const currentSuffix = newPageForm.path.replace(/^\/[^\/]+\/?/, '');
+  newPageForm.path = `${parentPath}/${currentSuffix || ''}`;
+};
+
+const newPageHierarchy = computed(() => {
+  let raw = newPageForm.path.trim();
+  if (!raw) return { type: 'empty', depth: 0, parent: null, isValidParent: true };
+  if (!raw.startsWith('/')) raw = '/' + raw;
+  raw = raw.replace(/\/{2,}/g, '/').replace(/(.)\/+$/, '$1');
+
+  const parent = getParentPath(raw);
+  if (!parent) {
+    return { type: 'root', depth: 1, parent: null, isValidParent: true };
+  }
+  const hasParent = multiPages.value.some(p => p.path.toLowerCase() === parent.toLowerCase());
+  return {
+    type: 'nested',
+    depth: raw.split('/').length - 1,
+    parent,
+    isValidParent: hasParent
+  };
 });
 
 const activePage = computed<MultiPageItem | null>(() => {
@@ -958,6 +1005,57 @@ const createNewPage = () => {
         styles: {
           paddingY: 48,
           bgColor: '#f8fafc'
+        }
+      }
+    ];
+  } else if (newPageForm.templateType === 'pricing') {
+    centerBlocks = [
+      {
+        id: `hero_${newId}`,
+        type: 'hero',
+        name: `Hero ${title}`,
+        title: title,
+        content: `Pilihan paket investasi dan lisensi transparan yang dirancang untuk mendukung akselerasi bisnis Anda.`,
+        isVisible: true,
+        isLocked: false,
+        styles: {
+          align: 'center',
+          paddingY: 64,
+          bgColor: '#ffffff'
+        }
+      },
+      {
+        id: `pricing_${newId}`,
+        type: 'pricing',
+        name: 'Matriks Harga & Layanan',
+        badge: 'SKEMA BIAYA TRANSPARAN',
+        title: 'Pilihan Paket Fleksibel Sesuai Pertumbuhan',
+        subtitle: 'Semua paket mencakup garansi SLA 99.9% dan infrastruktur komputasi kontainer otonom.',
+        isVisible: true,
+        isLocked: false,
+        items: [
+          {
+            id: `p1_${newId}`,
+            title: 'Starter Node',
+            price: 'Rp 49.000',
+            period: '/ bln',
+            tag: 'Hemat',
+            desc: 'Cocok untuk inisiasi proyek baru, website personal, dan pengujian pasar.',
+            features: ['1 Kontainer Mandiri', 'Subdomain Kustom Gratis', 'SSL TLS 1.3 Terisolasi', 'Support Komunitas 24/7']
+          },
+          {
+            id: `p2_${newId}`,
+            title: 'Enterprise Pro',
+            price: 'Rp 149.000',
+            period: '/ bln',
+            tag: 'Terpopuler',
+            desc: 'Solusi terlengkap untuk akselerasi bisnis dan tim skala enterprise.',
+            features: ['Dedicated Kontainer Prioritas', 'Custom Domain Tanpa Batas', 'Backup Otomatis Harian', 'Akses AI Agent Editor Terpadu']
+          }
+        ],
+        styles: {
+          paddingY: 54,
+          accentColor: '#059669'
         }
       }
     ];
@@ -1785,11 +1883,6 @@ const onSitemapCardClick = (pageId: string) => {
 const onRoutePillClick = (targetPageId: string) => {
   if (hasCanvasDragged) return;
   switchPage(targetPageId, true);
-};
-
-const onAddPageNodeClick = () => {
-  if (hasCanvasDragged) return;
-  openNewPageModal();
 };
 
 // Dynamic pan clamping to allow ultra-wide free exploration across multi-artboards
@@ -3365,27 +3458,61 @@ const executeVsCodeReplaceAll = () => {
 
             <transition name="dropdown-scale">
               <div v-if="isPageSwitcherOpen" class="custom-floating-dropdown page-switcher-dropdown">
-                <div class="custom-dropdown-header">
-                  <span class="custom-dropdown-title">Daftar Halaman Website (Sitemap)</span>
-                  <span class="page-dropdown-counter">{{ multiPages.length }} Halaman</span>
+                <!-- Dropdown Header -->
+                <div class="page-dropdown-head">
+                  <div class="head-title-wrap">
+                    <div class="head-icon-box">
+                      <Layers :size="13" />
+                    </div>
+                    <div>
+                      <div class="head-main-title">Daftar Halaman Website</div>
+                      <div class="head-sub-title">Arsitektur Rute & Navigasi</div>
+                    </div>
+                  </div>
+                  <span class="page-dropdown-counter-pill">{{ multiPages.length }} Rute</span>
                 </div>
-                <div class="custom-dropdown-list">
+
+                <!-- Dropdown List with Visual Hierarchy -->
+                <div class="custom-dropdown-list page-dropdown-items-scroll">
                   <div
                     v-for="p in multiPages"
                     :key="p.id"
                     class="custom-dropdown-item page-dropdown-item"
-                    :class="{ active: p.id === activePageId }"
+                    :class="{
+                      active: p.id === activePageId,
+                      'is-nested-route': !!getParentPath(p.path),
+                      'is-root-page': p.path === '/'
+                    }"
                     @click="switchPage(p.id, false); isPageSwitcherOpen = false"
                   >
+                    <!-- Indent branch guide for nested child route -->
+                    <div v-if="getParentPath(p.path)" class="tree-branch-guide" title="Sub-rute dari induk">
+                      <CornerDownRight :size="11" class="branch-icon" />
+                    </div>
+
+                    <!-- Page Icon -->
+                    <div class="page-item-leading-icon">
+                      <Home v-if="p.path === '/'" :size="13" class="icon-home" />
+                      <FileText v-else-if="!getParentPath(p.path)" :size="13" class="icon-page" />
+                      <FileCode v-else :size="13" class="icon-subpage" />
+                    </div>
+
+                    <!-- Page Info -->
                     <div class="page-item-info">
                       <div class="page-item-title-row">
-                        <span class="page-item-glyph">{{ p.path === '/' ? '🏠' : '📄' }}</span>
                         <span class="page-item-title">{{ p.title }}</span>
+                        <span v-if="p.path === '/'" class="badge-root-tag">Utama</span>
+                        <span v-else-if="getParentPath(p.path)" class="badge-nested-tag">Sub-Rute</span>
                       </div>
                       <span class="page-item-path">{{ p.path }}</span>
                     </div>
+
+                    <!-- Actions & Metadata -->
                     <div class="page-item-actions-cluster">
-                      <span class="page-item-blocks-count">{{ p.blocks?.length || 0 }} blok</span>
+                      <span class="page-item-blocks-pill">
+                        <Layers :size="10" />
+                        {{ p.blocks?.length || 0 }} blok
+                      </span>
                       <button
                         v-if="p.path !== '/' && multiPages.length > 1"
                         type="button"
@@ -3393,20 +3520,34 @@ const executeVsCodeReplaceAll = () => {
                         @click.stop="deletePage(p.id)"
                         title="Hapus Halaman Ini"
                       >
-                        <Trash2 :size="11" />
+                        <Trash2 :size="12" />
                       </button>
-                      <Check v-if="p.id === activePageId" :size="13" class="custom-dropdown-check" />
+                      <div v-if="p.id === activePageId" class="active-dot-badge" title="Halaman Aktif">
+                        <Check :size="10" />
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                <!-- Dropdown Footer -->
                 <div class="page-dropdown-footer">
                   <button
                     type="button"
                     class="btn-dropdown-add-page"
                     @click="openNewPageModal(); isPageSwitcherOpen = false"
                   >
-                    <Plus :size="12" />
-                    <span>+ Tambah Halaman Rute Baru</span>
+                    <Plus :size="13" />
+                    <span>Tambah Halaman Rute Baru</span>
+                  </button>
+                  <button
+                    v-if="canvasViewMode !== 'sitemap'"
+                    type="button"
+                    class="btn-dropdown-sitemap-view"
+                    @click="setCanvasViewMode('sitemap'); isPageSwitcherOpen = false"
+                    title="Buka Diagram Alur Figma untuk Melihat Struktur Hierarki Lengkap"
+                  >
+                    <Workflow :size="12" />
+                    <span>Lihat Alur Figma</span>
                   </button>
                 </div>
               </div>
@@ -5076,27 +5217,6 @@ const executeVsCodeReplaceAll = () => {
               </div>
             </div>
 
-            <!-- Card: + Tambah Halaman Baru -->
-            <div
-              class="sitemap-add-page-canvas-node"
-              :style="{
-                left: `${sitemapAddNodePos.x}px`,
-                top: `${sitemapAddNodePos.y}px`
-              }"
-              @click="onAddPageNodeClick"
-            >
-              <div class="add-node-content">
-                <div class="add-node-icon-ring">
-                  <Plus :size="24" />
-                </div>
-                <h3 class="add-node-title">Tambah Halaman Rute</h3>
-                <p class="add-node-desc">Buat rute halaman konvensional baru (misal: /pricing, /team, /blog) dan hubungkan ke sitemap kanvas.</p>
-                <button type="button" class="btn-add-node-cta">
-                  <Plus :size="13" />
-                  <span>+ Buat Halaman</span>
-                </button>
-              </div>
-            </div>
           </div>
 
           <!-- The Zoomable & Transformed Artboard Container -->
@@ -8426,16 +8546,19 @@ const executeVsCodeReplaceAll = () => {
       <!-- STUDIO MODAL: TAMBAH HALAMAN RUTE BARU                              -->
       <!-- =================================================================== -->
       <div v-if="isNewPageModalOpen" class="modal-backdrop" @click.self="isNewPageModalOpen = false">
-        <div class="modal-dialog modal-dialog-new-page">
+        <div class="modal-dialog modal-dialog-new-page modal-dialog-bespoke">
           <!-- Header -->
-          <div class="modal-header">
+          <div class="modal-header modal-header-bespoke">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box" style="background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.2);">
-                <Workflow :size="20" style="color: #2563eb;" />
+              <div class="modal-header-icon-box modal-icon-gradient">
+                <Workflow :size="20" />
               </div>
               <div>
-                <h3 class="modal-heading">Tambah Halaman Rute Baru</h3>
-                <p class="modal-subheading">Perluas arsitektur website menjadi multi-halaman konvensional.</p>
+                <div class="modal-title-row">
+                  <h3 class="modal-heading">Tambah Halaman Rute Baru</h3>
+                  <span class="modal-tag-badge">Traefik Ingress Edge</span>
+                </div>
+                <p class="modal-subheading">Perluas website dengan rute multi-halaman & blueprint layout terintegrasi.</p>
               </div>
             </div>
             <button type="button" class="modal-close-button" @click="isNewPageModalOpen = false" title="Tutup">
@@ -8445,86 +8568,247 @@ const executeVsCodeReplaceAll = () => {
 
           <!-- Body -->
           <div class="new-page-modal-body">
-            <div class="new-page-field">
-              <label class="new-page-label">Judul Halaman</label>
-              <input
-                v-model="newPageForm.title"
-                type="text"
-                placeholder="Contoh: Paket & Harga, Tim Pengembang, Portofolio"
-                class="new-page-input"
-                @keyup.enter="createNewPage"
-              />
+            <!-- 1. Quick Presets Chips Strip -->
+            <div class="quick-presets-strip">
+              <span class="quick-presets-label">Pintasan Cepat:</span>
+              <button
+                v-for="qp in quickPagePresets"
+                :key="qp.path"
+                type="button"
+                class="quick-preset-chip"
+                @click="applyQuickPagePreset(qp)"
+                :title="`Klik untuk isi otomatis '${qp.label}' (${qp.path})`"
+              >
+                <span>{{ qp.label }}</span>
+                <span class="chip-path">{{ qp.path }}</span>
+              </button>
             </div>
 
-            <div class="new-page-field">
-              <label class="new-page-label">Rute URL (Path)</label>
-              <div class="new-page-path-prefix-wrap">
-                <span class="path-prefix">https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}</span>
-                <input
-                  v-model="newPageForm.path"
-                  type="text"
-                  placeholder="/pricing"
-                  class="new-page-input path-input"
-                  @keyup.enter="createNewPage"
-                />
+            <!-- 2. Form Fields Grid -->
+            <div class="new-page-form-grid">
+              <!-- Judul Halaman -->
+              <div class="new-page-field">
+                <div class="field-label-row">
+                  <label class="new-page-label">Judul Halaman <span class="req-star">*</span></label>
+                  <span class="field-hint">Nama tampilan di navigasi & tab browser</span>
+                </div>
+                <div class="input-with-leading-icon">
+                  <Type :size="14" class="input-leading-icon" />
+                  <input
+                    v-model="newPageForm.title"
+                    type="text"
+                    placeholder="Contoh: Paket & Harga, Layanan Kami, Portofolio..."
+                    class="new-page-input has-icon"
+                    @keyup.enter="createNewPage"
+                  />
+                </div>
               </div>
-              <span class="new-page-help">Rute akan otomatis dihubungkan ke bilah navigasi (Navbar) semua halaman.</span>
+
+              <!-- Rute URL (Path) -->
+              <div class="new-page-field">
+                <div class="field-label-row">
+                  <label class="new-page-label">Rute URL (Path) <span class="req-star">*</span></label>
+                  <span class="field-hint">Alamat akses web di browser</span>
+                </div>
+                <div class="new-page-path-prefix-wrap">
+                  <span class="path-prefix">
+                    <ShieldCheck :size="12" class="prefix-lock-icon" />
+                    https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}
+                  </span>
+                  <input
+                    v-model="newPageForm.path"
+                    type="text"
+                    placeholder="/pricing"
+                    class="new-page-input path-input"
+                    @keyup.enter="createNewPage"
+                  />
+                </div>
+
+                <!-- Sub-route quick helper chips (if existing parent pages exist) -->
+                <div v-if="existingParentPages.length > 0" class="parent-nesting-strip">
+                  <span class="parent-nesting-label">↳ Jadikan Sub-Rute dari:</span>
+                  <button
+                    v-for="parentPg in existingParentPages"
+                    :key="parentPg.id"
+                    type="button"
+                    class="parent-nesting-chip"
+                    @click="applyParentPrefix(parentPg.path)"
+                    :title="`Klik untuk buat sub-rute di bawah ${parentPg.path}`"
+                  >
+                    <span>{{ parentPg.path }}/...</span>
+                  </button>
+                </div>
+
+                <!-- Dynamic Hierarchy Telemetry Banner -->
+                <div
+                  v-if="newPageHierarchy.type !== 'empty'"
+                  class="hierarchy-feedback-card"
+                  :class="{
+                    'is-root': newPageHierarchy.type === 'root',
+                    'is-nested-ok': newPageHierarchy.type === 'nested' && newPageHierarchy.isValidParent,
+                    'is-nested-err': newPageHierarchy.type === 'nested' && !newPageHierarchy.isValidParent
+                  }"
+                >
+                  <div class="hierarchy-card-lead">
+                    <div class="hierarchy-dot-indicator"></div>
+                    <span v-if="newPageHierarchy.type === 'root'" class="hierarchy-title">
+                      Level 1: Rute Utama (Berdampingan di Navbar Utama)
+                    </span>
+                    <span v-else-if="newPageHierarchy.type === 'nested' && newPageHierarchy.isValidParent" class="hierarchy-title">
+                      Level {{ newPageHierarchy.depth }}: Sub-Rute bernaung di bawah <strong>{{ newPageHierarchy.parent }}</strong>
+                    </span>
+                    <span v-else class="hierarchy-title is-error">
+                      Peringatan: Halaman induk '<strong>{{ newPageHierarchy.parent }}</strong>' belum ada di website ini!
+                    </span>
+                  </div>
+                  <div class="hierarchy-card-desc">
+                    <span v-if="newPageHierarchy.type === 'root'">
+                      Halaman akan diposisikan sejajar di kolom rute utama dan terhubung otomatis dari Beranda (/).
+                    </span>
+                    <span v-else-if="newPageHierarchy.type === 'nested' && newPageHierarchy.isValidParent">
+                      Konektor kurva otomatis ditarik dari {{ newPageHierarchy.parent }} → {{ newPageForm.path }} pada diagram Alur Figma.
+                    </span>
+                    <span v-else>
+                      Harap buat halaman induk {{ newPageHierarchy.parent }} terlebih dahulu sebelum mendaftarkan sub-rute ini.
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
+            <!-- 3. Colorful Blueprint Layout Presets -->
             <div class="new-page-field">
-              <label class="new-page-label">Pilih Blueprint Layout Awal</label>
-              <div class="new-page-presets-grid">
-                <button
-                  type="button"
-                  class="page-preset-card"
+              <div class="field-label-row">
+                <label class="new-page-label">Pilih Blueprint Layout Awal</label>
+                <span class="field-hint">Susunan komponen siap pakai yang langsung dirender</span>
+              </div>
+
+              <div class="new-page-presets-grid-bespoke">
+                <!-- 1. Halaman Konten (Showcase & Bento) - Blue -->
+                <div
+                  class="page-preset-card-bespoke theme-blue"
                   :class="{ active: newPageForm.templateType === 'content' }"
                   @click="newPageForm.templateType = 'content'"
                 >
-                  <div class="preset-card-icon"><Layout :size="18" /></div>
+                  <div class="card-head-row">
+                    <div class="preset-icon-badge blue">
+                      <Layout :size="16" />
+                    </div>
+                    <span class="preset-tag-pill blue">Populer</span>
+                  </div>
                   <div class="preset-card-title">Halaman Konten</div>
-                  <div class="preset-card-desc">Navbar + Hero Banner + Fitur Bento + Footer</div>
-                </button>
-                <button
-                  type="button"
-                  class="page-preset-card"
+                  <div class="preset-card-desc">Showcase visual berkelas dengan hero banner & bento grid 3 kolom fitur.</div>
+                  <div class="preset-included-blocks">
+                    <span class="block-tag">Navbar</span>
+                    <span class="block-tag">Hero Showcase</span>
+                    <span class="block-tag">Bento Features</span>
+                    <span class="block-tag">Footer</span>
+                  </div>
+                  <div class="preset-selection-indicator">
+                    <Check v-if="newPageForm.templateType === 'content'" :size="12" />
+                  </div>
+                </div>
+
+                <!-- 2. Paket & Harga - Emerald -->
+                <div
+                  class="page-preset-card-bespoke theme-emerald"
+                  :class="{ active: newPageForm.templateType === 'pricing' }"
+                  @click="newPageForm.templateType = 'pricing'"
+                >
+                  <div class="card-head-row">
+                    <div class="preset-icon-badge emerald">
+                      <Award :size="16" />
+                    </div>
+                    <span class="preset-tag-pill emerald">Komersial</span>
+                  </div>
+                  <div class="preset-card-title">Paket & Harga</div>
+                  <div class="preset-card-desc">Tabel komparasi harga 2 tier transparan, checklist benefit, dan garansi SLA.</div>
+                  <div class="preset-included-blocks">
+                    <span class="block-tag">Navbar</span>
+                    <span class="block-tag">Hero Banner</span>
+                    <span class="block-tag">Tabel Harga</span>
+                    <span class="block-tag">Footer</span>
+                  </div>
+                  <div class="preset-selection-indicator">
+                    <Check v-if="newPageForm.templateType === 'pricing'" :size="12" />
+                  </div>
+                </div>
+
+                <!-- 3. Halaman Kontak - Amber -->
+                <div
+                  class="page-preset-card-bespoke theme-amber"
                   :class="{ active: newPageForm.templateType === 'contact' }"
                   @click="newPageForm.templateType = 'contact'"
                 >
-                  <div class="preset-card-icon"><FileText :size="18" /></div>
+                  <div class="card-head-row">
+                    <div class="preset-icon-badge amber">
+                      <Mail :size="16" />
+                    </div>
+                    <span class="preset-tag-pill amber">Interaktif</span>
+                  </div>
                   <div class="preset-card-title">Halaman Kontak</div>
-                  <div class="preset-card-desc">Navbar + Hero Kontak + Formulir Leads + Footer</div>
-                </button>
-                <button
-                  type="button"
-                  class="page-preset-card"
+                  <div class="preset-card-desc">Hero kontak langsung terpadu dengan formulir pengiriman leads & info respons CS.</div>
+                  <div class="preset-included-blocks">
+                    <span class="block-tag">Navbar</span>
+                    <span class="block-tag">Hero Kontak</span>
+                    <span class="block-tag">Formulir Leads</span>
+                    <span class="block-tag">Footer</span>
+                  </div>
+                  <div class="preset-selection-indicator">
+                    <Check v-if="newPageForm.templateType === 'contact'" :size="12" />
+                  </div>
+                </div>
+
+                <!-- 4. Kanvas Bersih - Indigo -->
+                <div
+                  class="page-preset-card-bespoke theme-indigo"
                   :class="{ active: newPageForm.templateType === 'blank' }"
                   @click="newPageForm.templateType = 'blank'"
                 >
-                  <div class="preset-card-icon"><Box :size="18" /></div>
-                  <div class="preset-card-title">Halaman Bersih</div>
-                  <div class="preset-card-desc">Navbar + Section Minimal + Footer</div>
-                </button>
+                  <div class="card-head-row">
+                    <div class="preset-icon-badge indigo">
+                      <Box :size="16" />
+                    </div>
+                    <span class="preset-tag-pill indigo">Fleksibel</span>
+                  </div>
+                  <div class="preset-card-title">Kanvas Bersih</div>
+                  <div class="preset-card-desc">Halaman minimalis siap kustomisasi untuk merangkai aneka blok desain secara bebas.</div>
+                  <div class="preset-included-blocks">
+                    <span class="block-tag">Navbar</span>
+                    <span class="block-tag">Section Kosong</span>
+                    <span class="block-tag">Footer</span>
+                  </div>
+                  <div class="preset-selection-indicator">
+                    <Check v-if="newPageForm.templateType === 'blank'" :size="12" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Footer -->
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn-modal-ghost"
-              @click="isNewPageModalOpen = false"
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              class="btn-modal-confirm"
-              @click="createNewPage"
-            >
-              <Plus :size="13" />
-              <span>Buat Halaman & Buka di Kanvas</span>
-            </button>
+          <div class="modal-footer modal-footer-bespoke">
+            <div class="footer-help-note">
+              <Workflow :size="13" class="note-icon" />
+              <span>Rute & tata letak dapat dikustomisasi visual kapan saja di Alur Figma.</span>
+            </div>
+            <div class="footer-actions-group">
+              <button
+                type="button"
+                class="btn-modal-ghost"
+                @click="isNewPageModalOpen = false"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                class="btn-modal-confirm btn-modal-create-page"
+                @click="createNewPage"
+              >
+                <Plus :size="13" />
+                <span>Buat Halaman & Buka di Kanvas</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

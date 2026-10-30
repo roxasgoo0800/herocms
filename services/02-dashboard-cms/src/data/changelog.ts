@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.41.1',
+    version: 'v1.42.0',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.0',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '30 Oktober 2026',
+    title: 'Redesain Komprehensif Dropdown Sitemap & Modal Tambah Halaman dengan Blueprint Berwarna',
+    summary: 'Refaktor visual dan arsitektural menyeluruh pada komponen navigasi sitemap: (1) Redesain Dropdown Daftar Halaman (page-switcher-dropdown): Mengganti emoji statis dengan ikon Lucide presisi (Home, FileText, FileCode, CornerDownRight), menyajikan indentasi visual cabang hierarki pohon untuk sub-rute bertingkat, menambahkan pill badge "Utama" dan "Sub-Rute", micro-counter blok komponen, serta memperbaiki duplikasi simbol plus pada tombol aksi; (2) Redesain Modal Tambah Halaman (modal-dialog-new-page): Header bespoke dengan icon gradient dan tag Traefik Edge, quick-presets strip untuk pengisian instan 1-klik rute populer (/about, /pricing, /services, /contact, /portfolio), parent-nesting helper untuk pembuatan sub-rute hierarkis, live feedback card status hierarki URL, serta 4 kartu blueprint berwarna berkelas (Halaman Konten, Paket & Harga, Halaman Kontak, dan Kanvas Bersih); (3) Pembersihan Kartu Tambah Rute di Kanvas: Menghapus artboard placeholder duplikat di kanvas sitemap dan memusatkan seluruh aksi pembuatan rute ke bilah navigasi top bar.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-4031',
+        type: 'improvement',
+        scope: 'Sitemap Switcher Dropdown Redesign',
+        description: 'Redesain dropdown daftar halaman dengan indikator cabang hierarki, ikon Lucide tematik, perbaikan double plus, dan tautan alur Figma.'
+      },
+      {
+        id: 'CHG-4032',
+        type: 'feature',
+        scope: 'Vibrant Add Page Modal & Blueprint Cards',
+        description: 'Modal tambah halaman baru dengan 4 blueprint layout berwarna (Konten, Pricing, Kontak, Bersih), quick chips 1-klik, dan telemetry feedback rute.'
+      },
+      {
+        id: 'CHG-4033',
+        type: 'improvement',
+        scope: 'Clean Canvas Node Cleanup',
+        description: 'Menghapus node placeholder kartu tambah halaman dari kanvas alur sitemap dan menyatukannya ke tombol kontekstual top bar.'
+      }
+    ]
+  },
+  {
     version: 'v1.41.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '30 Oktober 2026',
     title: 'Fix Dropdown Top Bar Terpotong di Belakang Kanvas',
     summary: 'Dropdown pemilih halaman, situs, dan zoom di top bar tampak "membelakangi" karena .studio-command-bar memakai overflow-x: auto yang secara implisit juga memotong sumbu Y. Kini top bar otomatis beralih ke overflow: visible dengan z-index lebih tinggi (via :has) hanya saat salah satu dropdown terbuka, sehingga daftar halaman tampil penuh di atas penggaris dan kanvas tanpa mengorbankan scroll horizontal di layar sempit.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
