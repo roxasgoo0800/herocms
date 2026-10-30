@@ -529,8 +529,8 @@ const fitToScreen = () => {
     const availableHeight = rect.height - 120;
     if (canvasViewMode.value === 'sitemap') {
       const totalWidth = sitemapCanvasWidth.value;
-      const scale = Math.min(availableWidth / (totalWidth || 2000), availableHeight / 980);
-      zoom.value = Math.min(0.55, Math.max(0.28, parseFloat(scale.toFixed(2))));
+      const scale = Math.min(availableWidth / (totalWidth || 2000), availableHeight / (sitemapCanvasHeight.value || 980));
+      zoom.value = Math.min(0.55, Math.max(0.12, parseFloat(scale.toFixed(2))));
       panX.value = 0;
       panY.value = 40;
     } else {
@@ -666,15 +666,10 @@ const activePage = computed<MultiPageItem | null>(() => {
   return multiPages.value.find(p => p.id === activePageId.value) || multiPages.value[0];
 });
 
-const ARTBOARD_GAP = 320;
-const ARTBOARD_CHILD_GAP = 220; // jarak vertikal antara frame induk dan sub-rute
+const ARTBOARD_GAP = 420; // jarak horizontal antar kolom kedalaman rute
+const ARTBOARD_ROW_GAP = 160; // jarak vertikal antar halaman sejajar dalam satu kolom
 const SITEMAP_FRAME_H = 880; // shelf judul + window bar + preview 780px
-
-// Parse path segments to determine hierarchy depth
-const getPathDepth = (path: string): number => {
-  if (path === '/') return 0;
-  return path.replace(/^\//, '').split('/').length;
-};
+const SITEMAP_ANCHOR_Y = 40 + 44 + 390; // titik tengah preview (offset top + shelf + setengah preview)
 
 const getParentPath = (path: string): string | null => {
   if (path === '/' || !path.includes('/', 1)) return null;
@@ -683,159 +678,111 @@ const getParentPath = (path: string): string | null => {
   return '/' + segs.join('/');
 };
 
-// Build a tree structure: root-level pages in columns, children stacked below parent
+// Pohon rute horizontal: kedalaman = kolom (bergerak ke kanan), halaman sejajar ditumpuk per kolom,
+// induk diposisikan di tengah rentang vertikal anak-anaknya.
 const sitemapLayout = computed(() => {
   const pages = multiPages.value;
-  if (pages.length === 0) return { nodes: [], canvasWidth: artboardWidth.value + 400, canvasHeight: 2400 };
+  const W = artboardWidth.value;
+  const ROW = SITEMAP_FRAME_H + ARTBOARD_ROW_GAP;
+  if (pages.length === 0) {
+    return { nodes: [] as Array<{ page: MultiPageItem; x: number; y: number; parentId: string | null }>, canvasWidth: W + 400, canvasHeight: 2400 };
+  }
 
-  // Separate root-level pages (depth 0 or depth 1) from nested children
-  const rootPages = pages.filter(p => getPathDepth(p.path) <= 1);
-  const childPages = pages.filter(p => getPathDepth(p.path) > 1);
+  const root = pages.find(p => p.path === '/') || pages[0];
+  const childrenOf = new Map<string, MultiPageItem[]>();
+  const parentOf = new Map<string, string | null>();
+  parentOf.set(root.id, null);
 
-  const ARTBOARD_W = artboardWidth.value;
-  const ARTBOARD_CARD_H = SITEMAP_FRAME_H;
-
-  const nodeMap = new Map<string, { page: MultiPageItem; x: number; y: number }>();
-
-  // Layout root pages horizontally
-  rootPages.forEach((page, colIdx) => {
-    nodeMap.set(page.id, { page, x: colIdx * (ARTBOARD_W + ARTBOARD_GAP), y: 0 });
+  pages.forEach(p => {
+    if (p.id === root.id) return;
+    const pp = getParentPath(p.path);
+    const parent = (pp && pages.find(x => x.path === pp)) || root;
+    parentOf.set(p.id, parent.id);
+    if (!childrenOf.has(parent.id)) childrenOf.set(parent.id, []);
+    childrenOf.get(parent.id)!.push(p);
   });
 
-  // Layout child pages below their parent, stacked vertically
-  // Group children by parent
-  const childrenByParent = new Map<string, MultiPageItem[]>();
-  childPages.forEach(cp => {
-    const parentPath = getParentPath(cp.path);
-    const parentPage = pages.find(p => p.path === parentPath);
-    if (!parentPage) {
-      // Orphan: treat as additional root column
-      const colIdx = rootPages.length + childPages.indexOf(cp);
-      nodeMap.set(cp.id, { page: cp, x: colIdx * (ARTBOARD_W + ARTBOARD_GAP), y: 0 });
-      return;
+  const nodes: Array<{ page: MultiPageItem; x: number; y: number; parentId: string | null }> = [];
+  let nextRow = 0;
+
+  // Mengembalikan y halaman; daun mengambil baris berikutnya, induk berada di tengah anak-anaknya
+  const place = (page: MultiPageItem, depth: number): number => {
+    const kids = childrenOf.get(page.id) || [];
+    let y: number;
+    if (kids.length === 0) {
+      y = nextRow * ROW;
+      nextRow++;
+    } else {
+      const ys = kids.map(k => place(k, depth + 1));
+      y = (Math.min(...ys) + Math.max(...ys)) / 2;
     }
-    if (!childrenByParent.has(parentPage.id)) childrenByParent.set(parentPage.id, []);
-    childrenByParent.get(parentPage.id)!.push(cp);
-  });
+    nodes.push({ page, x: depth * (W + ARTBOARD_GAP), y, parentId: parentOf.get(page.id) ?? null });
+    return y;
+  };
+  place(root, 0);
 
-  childrenByParent.forEach((children, parentId) => {
-    const parentNode = nodeMap.get(parentId);
-    if (!parentNode) return;
-    children.forEach((child, rowIdx) => {
-      nodeMap.set(child.id, {
-        page: child,
-        x: parentNode.x,
-        y: parentNode.y + ARTBOARD_CARD_H + ARTBOARD_CHILD_GAP + rowIdx * (ARTBOARD_CARD_H + ARTBOARD_CHILD_GAP)
-      });
-    });
-  });
+  const maxX = Math.max(...nodes.map(n => n.x));
+  const maxY = Math.max(...nodes.map(n => n.y));
+  // Kolom ekstra untuk node "+ Tambah Halaman"
+  const canvasWidth = Math.max(maxX + W, W + ARTBOARD_GAP + 320) + ARTBOARD_GAP;
+  const canvasHeight = Math.max(maxY + ROW, SITEMAP_FRAME_H) + 400;
 
-  // Calculate total canvas width
-  const maxX = Math.max(...Array.from(nodeMap.values()).map(n => n.x));
-  const canvasWidth = maxX + ARTBOARD_W + 400;
-
-  const maxY = Math.max(...Array.from(nodeMap.values()).map(n => n.y));
-  const canvasHeight = maxY + ARTBOARD_CARD_H + 400;
-
-  return { nodes: Array.from(nodeMap.values()), canvasWidth, canvasHeight };
+  return { nodes, canvasWidth, canvasHeight };
 });
 
-const sitemapCanvasHeight = computed(() => sitemapLayout.value.canvasHeight);
-
 const sitemapCanvasWidth = computed(() => sitemapLayout.value.canvasWidth);
+const sitemapCanvasHeight = computed(() => sitemapLayout.value.canvasHeight);
 
 const getSitemapNodePos = (pageId: string): { x: number; y: number } => {
   const node = sitemapLayout.value.nodes.find(n => n.page.id === pageId);
   return node ? { x: node.x, y: node.y } : { x: 0, y: 0 };
 };
 
-// Legacy helper for add-page node placement (last root column position)
-const getPageCanvasX = (_index?: number) => {
-  const topRow = sitemapLayout.value.nodes.filter(n => n.y === 0);
-  if (topRow.length === 0) return 0;
-  return Math.max(...topRow.map(n => n.x)) + artboardWidth.value + ARTBOARD_GAP;
-};
+// Node "+ Tambah Halaman" ditaruh di kolom rute utama, di bawah halaman terakhir
+const sitemapAddNodePos = computed(() => {
+  const W = artboardWidth.value;
+  const col1X = W + ARTBOARD_GAP;
+  const col1 = sitemapLayout.value.nodes.filter(n => n.x === col1X);
+  if (col1.length === 0) return { x: col1X, y: 74 };
+  return { x: col1X, y: Math.max(...col1.map(n => n.y)) + SITEMAP_FRAME_H + ARTBOARD_ROW_GAP / 2 };
+});
+
+const getPageCanvasX = (_index?: number) => sitemapAddNodePos.value.x;
 
 const sitemapConnectors = computed(() => {
-  if (multiPages.value.length <= 1) return [];
+  const W = artboardWidth.value;
+  const byId = new Map(sitemapLayout.value.nodes.map(n => [n.page.id, n]));
 
-  const connectors: Array<{
-    id: string;
-    sourcePageId: string;
-    targetPageId: string;
-    label: string;
-    path: string;
-    startX: number;
-    startY: number;
-    endX: number;
-    endY: number;
-    midX: number;
-    midY: number;
-    isVertical: boolean;
-  }> = [];
-
-  const ARTBOARD_W = artboardWidth.value;
-  const ARTBOARD_CARD_H = SITEMAP_FRAME_H;
-
-  multiPages.value.forEach(page => {
-    if (page.path === '/') return;
-
-    // Determine connector source:
-    // If has a parent page → connect from that parent
-    // Else → connect from home (/)
-    const parentPath = getParentPath(page.path);
-    const parentPage = parentPath
-      ? multiPages.value.find(p => p.path === parentPath)
-      : multiPages.value.find(p => p.path === '/') || multiPages.value[0];
-
-    if (!parentPage) return;
-
-    const sourcePos = getSitemapNodePos(parentPage.id);
-    const targetPos = getSitemapNodePos(page.id);
-
-    // Vertical connection (child below parent in same column)
-    const isVertical = Math.abs(sourcePos.x - targetPos.x) < 50 && targetPos.y > sourcePos.y;
-
-    let startX: number, startY: number, endX: number, endY: number, pathD: string;
-
-    if (isVertical) {
-      // Parent bottom center → child top center
-      startX = sourcePos.x + ARTBOARD_W / 2;
-      startY = sourcePos.y + ARTBOARD_CARD_H + 40;
-      endX = targetPos.x + ARTBOARD_W / 2;
-      endY = targetPos.y + 40;
-      const dy = Math.max(60, (endY - startY) * 0.45);
-      pathD = `M ${startX} ${startY} C ${startX} ${startY + dy}, ${endX} ${endY - dy}, ${endX} ${endY}`;
-    } else {
-      // Horizontal: parent right center → child left center
-      startX = sourcePos.x + ARTBOARD_W + 2;
-      startY = sourcePos.y + 170;
-      endX = targetPos.x - 4;
-      endY = targetPos.y + 170;
-      const dx = Math.max(120, (endX - startX) * 0.45);
-      pathD = `M ${startX} ${startY} C ${startX + dx} ${startY}, ${endX - dx} ${endY}, ${endX} ${endY}`;
-    }
-
-    const midX = (startX + endX) / 2;
-    const midY = (startY + endY) / 2;
-
-    connectors.push({
-      id: `conn_${parentPage.id}_to_${page.id}`,
-      sourcePageId: parentPage.id,
-      targetPageId: page.id,
-      label: `➜ ${page.path}`,
-      path: pathD,
-      startX,
-      startY,
-      endX,
-      endY,
-      midX,
-      midY,
-      isVertical
+  return sitemapLayout.value.nodes
+    .filter(n => n.parentId)
+    .map(n => {
+      const parent = byId.get(n.parentId!)!;
+      const startX = parent.x + W + 2;
+      const startY = parent.y + SITEMAP_ANCHOR_Y;
+      const endX = n.x - 4;
+      const endY = n.y + SITEMAP_ANCHOR_Y;
+      // Kurva S halus: titik kontrol horizontal setengah jarak antar kolom
+      const dx = (endX - startX) * 0.5;
+      const pathD = `M ${startX} ${startY} C ${startX + dx} ${startY}, ${endX - dx} ${endY}, ${endX} ${endY}`;
+      // Pill rute diletakkan di 75% lintasan agar tidak menumpuk di titik percabangan
+      const t = 0.75;
+      const mt = 1 - t;
+      const midX = mt ** 3 * startX + 3 * mt ** 2 * t * (startX + dx) + 3 * mt * t ** 2 * (endX - dx) + t ** 3 * endX;
+      const midY = mt ** 3 * startY + 3 * mt ** 2 * t * startY + 3 * mt * t ** 2 * endY + t ** 3 * endY;
+      return {
+        id: `conn_${parent.page.id}_to_${n.page.id}`,
+        sourcePageId: parent.page.id,
+        targetPageId: n.page.id,
+        label: `➜ ${n.page.path}`,
+        path: pathD,
+        startX,
+        startY,
+        endX,
+        endY,
+        midX,
+        midY
+      };
     });
-  });
-
-  return connectors;
 });
 
 const setCanvasViewMode = (mode: 'single' | 'sitemap') => {
@@ -5023,8 +4970,8 @@ const executeVsCodeReplaceAll = () => {
             <div
               class="sitemap-add-page-canvas-node"
               :style="{
-                left: `${getPageCanvasX(multiPages.length)}px`,
-                top: '74px'
+                left: `${sitemapAddNodePos.x}px`,
+                top: `${sitemapAddNodePos.y}px`
               }"
               @click="onAddPageNodeClick"
             >

@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.40.9',
+    version: 'v1.40.10',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.40.10',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '30 Oktober 2026',
+    title: 'Sitemap Alur Figma: Pohon Rute Horizontal dengan Konektor Kurva',
+    summary: 'Tata letak sitemap diubah dari susunan vertikal menjadi pohon horizontal kiri → kanan: kedalaman rute menjadi kolom (/ → /about → /about/rizal), halaman sejajar (/about, /pricing, /location) ditumpuk dalam satu kolom, dan halaman induk diposisikan di tengah rentang anak-anaknya. Semua konektor kini berupa kurva S bezier halus dari tengah frame induk ke tengah frame anak, dengan pill rute di 75% lintasan agar tidak menumpuk di titik cabang. Node "+ Tambah Halaman" pindah ke kolom rute utama di bawah halaman terakhir, dan Fit-to-Screen memperhitungkan tinggi pohon.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
+    items: [
+      {
+        id: 'CHG-4026',
+        type: 'improvement',
+        scope: 'Horizontal Route Tree Layout',
+        description: 'Kedalaman rute dipetakan ke kolom ke kanan; halaman sejajar ditumpuk per kolom dan induk dipusatkan terhadap anak-anaknya.'
+      },
+      {
+        id: 'CHG-4027',
+        type: 'improvement',
+        scope: 'Fluid Bezier Connectors',
+        description: 'Konektor induk → anak memakai kurva S halus dengan pill rute di 75% lintasan; node tambah halaman dan fit-to-screen disesuaikan.'
+      }
+    ]
+  },
+  {
     version: 'v1.40.9',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '30 Oktober 2026',
     title: 'Sitemap Alur Figma: Layout Hierarki Rute Bertingkat & Anti-Tumpang Tindih',
     summary: 'Perombakan tata letak kanvas Alur Figma: (1) Frame halaman kini diposisikan dari pohon rute, bukan indeks array. Rute utama (/about, /harga) berjajar horizontal, sedangkan sub-rute (/about/rizal) ditumpuk vertikal tepat di bawah halaman induknya; (2) Tinggi frame dihitung dari tinggi riil artboard (±880px) sehingga frame tidak lagi saling menimpa, dan tinggi kanvas/SVG mengikuti isi; (3) Konektor kini ditarik dari halaman induk langsung (/about → /about/rizal) dengan kurva vertikal, bukan semuanya dari beranda; (4) Pembuatan sub-rute wajib memiliki halaman induk, path dinormalisasi (slash ganda/akhir), dan link sub-rute hanya ditambahkan ke navbar halaman induk.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {
