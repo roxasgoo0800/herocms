@@ -497,4 +497,83 @@ export const systemJourneys: SystemJourney[] = [
     ],
     verificationCli: 'cd services/02-dashboard-cms && go test -v ./pentest/... && npm run build'
   }
+,
+  {
+    id: 'JRN-09',
+    title: 'Pemodelan Multi-Halaman Hierarkis, Kanvas Alur Figma Bebas Overlap, dan Routing Dinamis Traefik Edge',
+    category: 'routing',
+    badge: 'Multi-Page Sitemap & Routing',
+    latencySla: '< 1.8ms (Traefik Ingress)',
+    summary: 'Alur kerja lengkap saat arsitek web atau pengguna merancang struktur website multi-halaman di HeroCMS Studio: mulai dari pembuatan rute bertingkat di modal blueprint berwarna, visualisasi diagram pohon rute horizontal di kanvas Alur Figma dengan kurva bezier non-overlapping, inline path renaming, hingga penerbitan konfigurasi routing ke edge proxy Traefik v3 tanpa reload server.',
+    actors: [
+      'Web Architect & CMS Designer',
+      'HeroCMS Visual Editor Engine (Pinia + Vue 3)',
+      'Traefik v3 Edge Ingress Controller',
+      'Nginx Multi-Page Static Compiler'
+    ],
+    steps: [
+      {
+        stepNum: 1,
+        actor: 'Web Architect & CMS Designer',
+        action: 'Inisiasi Penambahan Halaman Rute via Modal Bespoke',
+        technicalDetail: 'Pengguna menekan tombol "+ Halaman Rute" di top bar atau memilih opsi di Dropdown Daftar Halaman. Modal 680px bespoke terbuka menampilkan 4 kartu blueprint berwarna (Konten, Pricing, Kontak, Bersih), quick chips 1-klik, dan parent nesting helper.',
+        outcome: 'Pengguna memilih blueprint yang diinginkan dan menentukan judul halaman serta rute URL.'
+      },
+      {
+        stepNum: 2,
+        actor: 'HeroCMS Visual Editor Engine',
+        action: 'Evaluasi Hierarki & Live Telemetry Routing',
+        technicalDetail: 'Sistem menganalisis kedalaman path via getPathDepth(path) dan getParentPath(path). Kartu telemetri memberikan umpan balik instan: Level 1 (Rute Utama) atau Level 2 (Sub-Rute bernaung di bawah halaman induk) dengan validasi keberadaan induk.',
+        outcome: 'Validasi memastikan sub-rute bertingkat (misal: /about/rizal) hanya dapat dibuat jika halaman induk (/about) telah terdaftar.'
+      },
+      {
+        stepNum: 3,
+        actor: 'HeroCMS Template Compiler',
+        action: 'Injeksi Blueprint Komponen & Sinkronisasi Navigasi',
+        technicalDetail: 'Template engine menyusun visual blocks awal sesuai blueprint terpilih lengkap dengan navbar terisolasi dan footer korporasi. Rute baru otomatis didaftarkan ke tautan menu navigasi navbar seluruh halaman terkait.',
+        outcome: 'Halaman baru terbentuk di memori dengan ID unik page_<timestamp> dan siap ditampilkan di kanvas.'
+      },
+      {
+        stepNum: 4,
+        actor: 'Figma Flow Engine (SVG Canvas)',
+        action: 'Kalkulasi Koordinat Pohon Horizontal & Auto-Layout Bebas Overlap',
+        technicalDetail: 'Computed property sitemapLayout memetakan kedalaman rute ke arah horizontal (kolom X = depth * 1760px). Halaman sejajar dalam kolom yang sama ditumpuk vertikal dengan memperhitungkan tinggi frame riil (~880px) dan row spacing 160px. Induk diposisikan persis di tengah rentang anak-anaknya.',
+        outcome: 'Seluruh frame artboard tersusun rapi ke arah kanan tanpa ada artboard yang saling menimpa.'
+      },
+      {
+        stepNum: 5,
+        actor: 'SVG Flow Connector Layer',
+        action: 'Rendering Kurva S Bezier Dinamis & Particle Animation',
+        technicalDetail: 'Lapisan SVG berukuran dinamis merender kurva bezier M startX startY C cp1x cp1y, cp2x cp2y, endX endY langsung dari sisi kanan frame induk ke sisi kiri frame anak. Garis alur dilengkapi animasi dash flowing, partikel pulsa sinyal, dan pill badge interaktif pada 75% lintasan.',
+        outcome: 'Alur navigasi visual terlihat jelas, profesional, dan dapat diklik untuk melompat antar-halaman.'
+      },
+      {
+        stepNum: 6,
+        actor: 'HeroCMS Studio Visual Engine',
+        action: 'Ganti Rute Langsung (Inline Route Rename)',
+        technicalDetail: 'Pengguna mengklik pill rute pada frame judul untuk mengganti path secara instan. Fungsi commitEditRoute memvalidasi slug, mencegah siklus/pemindahan ke dalam sub-rute sendiri, dan meng-cascade perubahan prefix ke seluruh sub-rute serta tautan navbar.',
+        outcome: 'Struktur URL selalu konsisten dan bebas tautan rusak (broken links).'
+      },
+      {
+        stepNum: 7,
+        actor: 'Traefik v3 Edge Ingress & Go BFF',
+        action: 'Publikasi Multi-Halaman ke Kontainer Docker Produksi',
+        technicalDetail: 'Saat tombol "Terbitkan ke Kontainer (Live)" ditekan, Go BFF mengompilasi seluruh berkas HTML halaman (/index.html, /about/index.html, /pricing/index.html) dan menyinkronkannya ke kontainer Nginx Alpine tenant via Docker Engine SDK.',
+        outcome: 'Seluruh rute publik langsung dapat diakses di browser melalui URL https://<tenant-subdomain>.stackbyte.id/<path> dengan latensi sub-milidetik.'
+      }
+    ],
+    failureModes: [
+      {
+        issue: 'Pengguna mencoba membuat sub-rute (/about/tim) sebelum halaman induk (/about) ada.',
+        detection: 'Validasi getParentPath() mendeteksi halaman induk tidak ditemukan di array multiPages.',
+        autoRecovery: 'Sistem menampilkan toast error yang informatif dan memblokir pembuatan hingga halaman induk didaftarkan.'
+      },
+      {
+        issue: 'Pill dropdown daftar halaman terpotong oleh penggaris kanvas saat dibuka.',
+        detection: 'Elemen .studio-command-bar memotong sumbu Y karena overflow-x: auto.',
+        autoRecovery: 'Selector CSS :has(.custom-floating-dropdown) otomatis mengaktifkan overflow: visible dan elevasi z-index: 200 saat dropdown aktif.'
+      }
+    ],
+    verificationCli: 'cd services/02-dashboard-cms && go test -v ./pentest/... && npm run build'
+  }
 ];
