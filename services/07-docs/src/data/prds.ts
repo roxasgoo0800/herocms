@@ -137,7 +137,7 @@ export const microservicePrds: MicroservicePrd[] = [
     title: 'Dashboard CMS (Stack Studio - Portal Pelanggan by Aether Core)',
     serviceName: '02-dashboard-cms',
     badge: 'Customer Studio & PWA',
-    version: 'v1.25.0-PROD',
+    version: 'v1.42.1-PROD',
     targetAudience: [
       'Software Engineer & Developer Portofolio',
       'Penulis Independen & Tim Media Editorial',
@@ -241,13 +241,18 @@ export const microservicePrds: MicroservicePrd[] = [
         ]
       },
       {
-        name: 'Editor Desain & Halaman Visual (Visual Page Builder)',
-        desc: 'Editor tampilan visual WYSIWYG responsif untuk merancang halaman website.',
+        name: 'Editor Desain Visual, Kanvas Alur Figma & Multi-Halaman Hierarkis (Visual Studio & Sitemap Engine)',
+        desc: 'Editor tampilan visual WYSIWYG responsif dengan kapabilitas pemodelan arsitektur website multi-halaman berbasis diagram alur Figma non-overlapping.',
         capabilities: [
-          'Kustomisasi Hero Section, Blok Konten Modular, Skema Warna Brand, dan Tipografi Global.',
-          'Simulator Responsif 3-Perangkat: Preview instan untuk Desktop, Tablet, dan Mobile.',
-          'Aksi "Terbitkan ke Kontainer (Live)" yang memicu kompilasi dist dan deploy ke Docker dalam < 4.5s.',
-          'Dukungan Hot Module Preview tanpa perlu reload browser.'
+          'Diagram Alur Figma Multi-Artboard Horizontal: Visualisasi pohon rute bergerak ke kanan secara horizontal (/ ➜ /about ➜ /about/rizal) dengan kalkulasi posisi otomatis berdasar kedalaman rute.',
+          'Tata Letak Anti-Overlap & Dynamic Spacing: Menghitung tinggi frame riil artboard (~880px) dan jarak vertikal baris 160px sehingga frame tidak saling bertumpuk dan tinggi kanvas SVG beradaptasi otomatis.',
+          'Konektor Kurva S Bezier Dinamis: Garis alur SVG mengalir mulus langsung dari frame induk ke anak dengan partikel animasi pulsa sinyal dan interactive route pill badge pada 75% lintasan kurva.',
+          'Inline Route Rename: Penggantian path langsung dari pill judul frame kanvas dengan auto-slug formatting, validasi siklus rute, dan live sync otomatis ke seluruh sub-rute & tautan navigasi navbar.',
+          'Adaptive Zoom-Proportional Floating Tools Shelf HUD: Toolbar tools mengambang dengan scaling adaptif 1:1 terhadap zoom kanvas (Math.min(1.0, Math.max(0.35, zoom))), boundary clamping 16px, dan popover kustom untuk font, animasi, pola, serta warna.',
+          'Dropdown Daftar Halaman (Sitemap Dropdown): Pemilih halaman dengan indikator cabang hierarki (tree-branch guide), ikon Lucide tematik (Home, Globe, FileCode), counter blok komponen, dan tombol cepat "Lihat Alur Figma".',
+          'Modal Tambah Halaman Rute Baru dengan 4 Blueprint Berwarna: Pilihan blueprint tematik (Halaman Konten, Paket & Harga, Halaman Kontak, Kanvas Bersih), formulir 100% full-width, prefix HTTPS berikon SSL hijau, dan telemetry live feedback rute.',
+          'Simulator Responsif 3-Perangkat: Preview instan pixel-perfect untuk Desktop, Tablet, dan Mobile.',
+          'Aksi "Terbitkan ke Kontainer (Live)" yang memicu kompilasi multi-halaman dist dan deploy ke Docker dalam < 4.5s dengan routing Traefik v3 otomatis.'
         ]
       },
       {

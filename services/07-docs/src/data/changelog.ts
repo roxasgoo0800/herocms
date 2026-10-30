@@ -2,13 +2,43 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.6.0',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '30 Oktober 2026',
+    title: 'Dokumentasi Arsitektur Sitemap Alur Figma Horizontal, Hierarki Multi-Halaman, & Blueprint Berwarna (PRD-02 & JRN-09)',
+    summary: 'Pembaruan komprehensif pada Mission Control Docs Hub menyelaraskan kapabilitas mutakhir Service 02 Dashboard CMS (v1.42.1): (1) Pembaruan PRD-02 Dashboard Studio ke v1.42.1-PROD mencakup modul arsitektur Visual Editor & Multi-Page Figma Flow, Floating Shelf HUD adaptif zoom, dan Dropdown Sitemap hierarkis; (2) Penambahan User Journey baru JRN-09: Pemodelan Multi-Halaman Hierarkis, Kanvas Alur Figma Bebas Overlap, dan Routing Dinamis Traefik Edge; (3) Sinkronisasi dataset changelog resmi per-service.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-160-1',
+        type: 'feature',
+        scope: 'Spesifikasi PRD-02 Dashboard Studio v1.42.1-PROD (prds.ts)',
+        description: 'Mendokumentasikan modul arsitektur Visual Studio & Sitemap Engine: diagram alur Figma horizontal bebas overlap, konektor kurva bezier S, inline route rename, floating shelf HUD adaptif zoom, dan modal 4 blueprint berwarna.'
+      },
+      {
+        id: 'c-07docs-160-2',
+        type: 'feature',
+        scope: 'User Journey JRN-09 Multi-Page Modeling & Ingress Routing (journeys.ts)',
+        description: 'Menambahkan panduan siklus hidup perancangan website multi-halaman dari penyusunan blueprint hingga rute Traefik v3 live.'
+      },
+      {
+        id: 'c-07docs-160-3',
+        type: 'improvement',
+        scope: 'Pemberian Versi SemVer Docs Hub v1.6.0',
+        description: 'Sinkronisasi package.json versi 1.6.0 dan pembaruan riwayat rilis Docs Hub.'
+      }
+    ]
+  },
+  {
     version: 'v1.5.8',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '26 Oktober 2026',
     title: 'Penyelarasan Domain Platform stackbyte.id & Sinkronisasi Runtime Orchestrator',
     summary: 'Pembaruan dokumentasi arsitektur dan spesifikasi operasional platform: (1) Penyelarasan Domain Resmi stackbyte.id: Mengoreksi seluruh referensi domain dari stacbyte.id menjadi stackbyte.id (dengan huruf "k") pada PRD, user journeys, dan panduan DNS routing Traefik v3; (2) Dokumentasi Integrasi Service 03 (Provision Orchestrator): Mencatat alur komunikasi RPC internal Go BFF Service 02 ke Service 03 (http://herocms_provision_orchestrator:8080) dengan autentikasi X-HeroCMS-Internal-Secret; (3) Status Kesiapan Deployment Raspberry Pi & Cloud Ingress.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
     items: [
       {
