@@ -10,6 +10,8 @@ export interface CompileTemplateOptions {
   bioIntro?: string;
   isDarkMode?: boolean;
   blocksOverride?: VisualBlock[];
+  activeRoutePath?: string;
+  sitemapPages?: Array<{ id: string; title: string; path: string }>;
 }
 
 function escapeHtml(str?: string): string {
@@ -154,11 +156,25 @@ export function compileTemplateToHTML(
         const navAlign = block.styles?.navAlign || 'split';
 
         let navLinks = '';
-        if (block.items && block.items.length > 0) {
-          navLinks = block.items
-            .map((item, i) => {
-              const activeClass = item.active || i === 0 ? ' class="active"' : '';
-              return `<a href="${escapeHtml(item.url || '#')}"${activeClass}>${escapeHtml(item.title)}</a>`;
+        const navItemsToRender = (options.sitemapPages && options.sitemapPages.length > 0)
+          ? options.sitemapPages.map(sp => ({
+              title: sp.title,
+              url: sp.path,
+              active: sp.path === (options.activeRoutePath || '/')
+            }))
+          : (block.items && block.items.length > 0)
+          ? block.items.map((item, i) => ({
+              title: item.title,
+              url: item.url || '#',
+              active: options.activeRoutePath ? item.url === options.activeRoutePath : (item.active || (i === 0 && !options.activeRoutePath))
+            }))
+          : null;
+
+        if (navItemsToRender && navItemsToRender.length > 0) {
+          navLinks = navItemsToRender
+            .map(item => {
+              const activeClass = item.active ? ' class="active"' : '';
+              return `<a href="${escapeHtml(item.url)}"${activeClass}>${escapeHtml(item.title)}</a>`;
             })
             .join('\n            ');
         } else {
@@ -753,6 +769,10 @@ export function compileTemplateToHTML(
             transition: color 0.15s ease;
         }
         .sim-nav-links-row a:hover { color: ${accentColor}; }
+        .sim-nav-links-row a.active {
+            color: ${accentColor};
+            font-weight: 700;
+        }
         .sim-btn-nav-cta {
             padding: 8px 18px;
             border-radius: 8px;

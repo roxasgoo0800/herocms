@@ -77,6 +77,7 @@ import {
   Layout,
   Mail,
   Settings,
+  ExternalLink,
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
@@ -880,6 +881,15 @@ const switchPage = (pageId: string, autoSwitchToSingle: boolean = false) => {
     selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
   }
 
+  // Update indikator active di navbar halaman yang aktif
+  const curPath = target?.path || '/';
+  const curNav = pageBlocks.value.find(b => b.type === 'navbar');
+  if (curNav && curNav.items) {
+    curNav.items.forEach(item => {
+      item.active = item.url === curPath;
+    });
+  }
+
   if (autoSwitchToSingle) {
     canvasViewMode.value = 'single';
     nextTick(() => {
@@ -1128,21 +1138,8 @@ const createNewPage = () => {
 
   multiPages.value.push(newPageItem);
 
-  // Rute utama masuk ke navbar semua halaman; sub-rute hanya ke navbar halaman induk & dirinya
-  multiPages.value.forEach(p => {
-    if (parentPathOfNew && p.path !== parentPathOfNew && p.id !== newId) return;
-    const nav = p.blocks.find(b => b.type === 'navbar');
-    if (nav) {
-      if (!nav.items) nav.items = [];
-      if (!nav.items.some(i => i.url === path)) {
-        nav.items.push({
-          id: `link_${newId}`,
-          title,
-          url: path
-        });
-      }
-    }
-  });
+  // Sinkronkan navbar seluruh halaman secara terpadu dengan Alur Figma
+  syncAllNavbarsWithSitemap();
 
   isNewPageModalOpen.value = false;
   switchPage(newId, true);
@@ -1271,6 +1268,7 @@ const saveEditRouteModal = () => {
   const active = multiPages.value.find(p => p.id === activePageId.value);
   if (active) pageBlocks.value = JSON.parse(JSON.stringify(active.blocks));
 
+  syncAllNavbarsWithSitemap();
   showToast(`Pengaturan halaman '${newTitle}' (${page.path}) berhasil disimpan!`, 'success');
   triggerAutoSaveDraft();
   closeEditRouteModal();
@@ -1296,13 +1294,8 @@ const deletePage = (pageId: string) => {
   // 2. Remove the deleted page from multiPages
   multiPages.value = multiPages.value.filter(p => p.id !== pageId);
 
-  // 3. Remove route link from all navbars
-  multiPages.value.forEach(p => {
-    const nav = p.blocks.find(b => b.type === 'navbar');
-    if (nav && nav.items) {
-      nav.items = nav.items.filter(i => i.url !== target.path);
-    }
-  });
+  // 3. Sinkronkan kembali seluruh navbar dengan daftar rute tersisa
+  syncAllNavbarsWithSitemap();
 
   // 4. Handle active page transition cleanly without overwriting!
   if (activePageId.value === pageId) {
@@ -1344,8 +1337,53 @@ const getCompiledPageHtml = (page: MultiPageItem): string => {
     fontFamily: currentFont.value,
     roleOrHeadline: page.title,
     bioIntro: page.description,
-    blocksOverride: effectiveBlocks
+    blocksOverride: effectiveBlocks,
+    activeRoutePath: page.path,
+    sitemapPages: multiPages.value.map(p => ({
+      id: p.id,
+      title: p.title,
+      path: p.path
+    }))
   });
+};
+
+
+// -----------------------------------------------------------------------------
+// Sinkronisasi Bilah Navigasi (Navbar) Terintegrasi Penuh dengan Alur Figma
+// -----------------------------------------------------------------------------
+const syncAllNavbarsWithSitemap = (notify: boolean = false) => {
+  if (!multiPages.value || multiPages.value.length === 0) return;
+
+  const sitemapNavLinks = multiPages.value.map(p => ({
+    id: `nav_route_${p.id}`,
+    title: p.title,
+    url: p.path
+  }));
+
+  // 1. Sinkronkan navbar di seluruh halaman multiPages
+  multiPages.value.forEach(p => {
+    const nav = p.blocks.find(b => b.type === 'navbar');
+    if (nav) {
+      nav.items = sitemapNavLinks.map(link => ({
+        ...link,
+        active: link.url === p.path
+      }));
+    }
+  });
+
+  // 2. Sinkronkan navbar di pageBlocks halaman yang sedang aktif di kanvas
+  const currentPath = activePage.value?.path || '/';
+  const activeNav = pageBlocks.value.find(b => b.type === 'navbar');
+  if (activeNav) {
+    activeNav.items = sitemapNavLinks.map(link => ({
+      ...link,
+      active: link.url === currentPath
+    }));
+  }
+
+  if (notify) {
+    showToast(`Bilah navigasi (Navbar) berhasil disinkronkan dengan ${multiPages.value.length} rute Alur Figma!`, 'success');
+  }
 };
 
 // Navbar Context & Interactive Canvas Helpers
@@ -1358,15 +1396,15 @@ const defaultNavItems: Array<{ id: string; title: string; url: string; active?: 
 
 const onNavItemClick = (block: VisualBlock, idx: number, e: MouseEvent) => {
   e.stopPropagation();
-  if (editorViewMode.value === 'preview') {
-    const item = block.items?.[idx] || defaultNavItems[idx];
+  const item = block.items?.[idx] || defaultNavItems[idx];
+  if (editorViewMode.value === 'preview' || e.altKey) {
     if (item && item.url) {
       switchPageByPath(item.url);
     }
     return;
   }
   selectBlock(block.id);
-  setHudContext('card', block, idx);
+  setHudContext('navbar', block, idx);
 };
 
 const addNavItem = (block: VisualBlock) => {
@@ -2215,6 +2253,17 @@ const onInlineItemTextBlur = (block: VisualBlock, itemIndex: number, field: 'tit
     } else {
       (block.items[itemIndex] as any)[field] = text;
     }
+
+    // Jika mengedit judul menu navigasi di kanvas, sinkronkan nama halaman di Alur Figma
+    if (block.type === 'navbar' && field === 'title') {
+      const itemUrl = block.items[itemIndex].url;
+      const matchedPage = multiPages.value.find(p => p.path === itemUrl);
+      if (matchedPage) {
+        matchedPage.title = text;
+        syncAllNavbarsWithSitemap();
+      }
+    }
+
     recordHistory();
     triggerAutoSaveDraft();
   }
@@ -4873,6 +4922,18 @@ const executeVsCodeReplaceAll = () => {
                       <span style="font-size: 10px; margin-left: 2px;">Ikon</span>
                     </button>
 
+                    <!-- Sync with Figma Flow Button -->
+                    <button
+                      type="button"
+                      class="shelf-btn highlight"
+                      style="background: #2563eb; color: #ffffff; border-color: #1d4ed8;"
+                      @click="syncAllNavbarsWithSitemap(true)"
+                      :title="`Sinkronkan ${multiPages.length} rute halaman dari Alur Figma ke bilah navigasi ini`"
+                    >
+                      <Workflow :size="12" />
+                      <span>Sinkron Alur Figma ({{ multiPages.length }})</span>
+                    </button>
+
                     <!-- Quick Add Nav Item Button -->
                     <button
                       type="button"
@@ -4882,6 +4943,18 @@ const executeVsCodeReplaceAll = () => {
                     >
                       <Plus :size="12" />
                       <span>+ Link</span>
+                    </button>
+
+                    <!-- Quick Jump to Connected Page -->
+                    <button
+                      v-if="hudContext.itemIndex !== undefined && selectedBlock.items?.[hudContext.itemIndex]?.url"
+                      type="button"
+                      class="shelf-btn"
+                      @click="switchPageByPath(selectedBlock.items[hudContext.itemIndex].url!)"
+                      :title="`Buka halaman '${selectedBlock.items[hudContext.itemIndex].url}' di kanvas`"
+                    >
+                      <ExternalLink :size="12" />
+                      <span>Buka Halaman</span>
                     </button>
 
                     <!-- Quick Delete Selected Nav Item Button -->
@@ -5408,6 +5481,16 @@ const executeVsCodeReplaceAll = () => {
                       </div>
 
                       <div class="nav-links-cluster" :class="{ 'is-centered': block.styles?.navAlign === 'center' }">
+                        <!-- Integrasi Alur Figma Indicator Badge -->
+                        <div
+                          v-if="multiPages.length > 1"
+                          class="nav-sitemap-sync-indicator"
+                          @click.stop="setCanvasViewMode('sitemap')"
+                          title="Menu navigasi terintegrasi langsung dengan Alur Figma (Klik untuk lihat Alur Figma)"
+                        >
+                          <Workflow :size="10" />
+                          <span>Alur Figma ({{ multiPages.length }})</span>
+                        </div>
                         <div
                           v-for="(item, idx) in (block.items && block.items.length > 0 ? block.items : defaultNavItems)"
                           :key="item.id || idx"
@@ -5417,8 +5500,8 @@ const executeVsCodeReplaceAll = () => {
                           <a
                             :href="item.url || '#'"
                             class="nav-anchor"
-                            :class="{ active: (item as any).active || (activePage && activePage.path === item.url) || idx === 0 }"
-                            :style="{ color: ((item as any).active || (activePage && activePage.path === item.url) || idx === 0) ? (block.styles?.accentColor || activeContainer.accentColor) : undefined }"
+                            :class="{ active: (activePage && activePage.path === item.url) || (item as any).active }"
+                            :style="{ color: ((activePage && activePage.path === item.url) || (item as any).active) ? (block.styles?.accentColor || activeContainer.accentColor) : undefined }"
                             @click.prevent
                           >
                             <span

@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.2',
+    version: 'v1.42.3',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.3',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Integrasi Penuh Bilah Navigasi (Navbar) dengan Alur Figma & Sinkronisasi Rute Sitemap Otomatis',
+    summary: 'Penyempurnaan arsitektur integrasi navbar: (1) Eliminasi Link Rancu/Dummy: Mengeliminasi tautan anchor statis tunggal (#hero, #products, #contact) saat website beroperasi dalam mode multi-halaman Alur Figma; (2) Otomasi Sinkronisasi Menyeluruh (syncAllNavbarsWithSitemap): Menghubungkan daftar menu navigasi secara dinamis dengan pohon rute Alur Figma di seluruh halaman saat halaman ditambah, diedit, atau dihapus; (3) Sinkronisasi Artboard Iframe & Highlight Active Route: Meneruskan sitemapPages dan activeRoutePath ke kompiler HTML sehingga navbar pada setiap frame artboard Alur Figma menampilkan rute riil dan meng-highlight halaman aktif; (4) Indikator Integrasi Visual & Aksi Cepat: Menambahkan chip indikator Alur Figma pada bilah navigasi canvas dan tombol re-sinkronisasi satu-klik di HUD toolbar.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1423-1',
+        type: 'improvement',
+        scope: 'Integrasi Bilah Navigasi dengan Alur Figma (VisualEditorModule.vue)',
+        description: 'Menerapkan sinkronisasi dua arah otomatis antara item navbar dengan multiPages saat penambahan, pengeditan rute, atau penghapusan halaman berlangsung, serta menambahkan tombol [Sinkron Alur Figma] pada floating HUD.'
+      },
+      {
+        id: 'c-02dash-1423-2',
+        type: 'bugfix',
+        scope: 'Kompiler HTML Navbar Artboard Preview (templateHtmlCompiler.ts)',
+        description: 'Menyuntikkan parameter sitemapPages dan activeRoutePath ke templateHtmlCompiler sehingga artboard preview di Alur Figma menampilkan tautan menu riil dan menyorot rute yang sedang aktif (class="active").'
+      },
+      {
+        id: 'c-02dash-1423-3',
+        type: 'improvement',
+        scope: 'Indikator Integrasi Visual Canvas & Quick Switcher',
+        description: 'Menambahkan badge .nav-sitemap-sync-indicator pada canvas navbar dan mendukung Alt+Click atau preview click untuk berpindah halaman langsung dari navbar.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.2',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '02 November 2026',
     title: 'Sinkronisasi Presisi Visual Single Design ke Alur Figma & Modal Pengaturan Edit Rute Halaman',
     summary: 'Rilis pemeliharaan dan peningkatan UX Visual Editor: (1) Penyelarasan Presisi Visual: Mengatasi disparitas tampilan antara mode Desain Tunggal (WYSIWYG) dan kanvas Alur Figma (artboard preview iframe). Kompiler template HTML kini mewarisi font kustom (Google Fonts dinamis), ikon SVG semantik berukuran proporsional, palet warna tombol (primary & secondary button styling, glow/outline/radius), badge hero, cover image katalog, serta blok carousel dan progress bar; (2) Modal Pengaturan Edit Rute & Metadata Halaman: Menyediakan antarmuka modal dedicated berstandar Bespoke Studio untuk mengubah Judul Halaman, Alamat Rute URL (dengan proteksi rute beranda / dan parent nesting quick chips), serta Deskripsi SEO Meta, yang dapat diakses langsung dari shelf artboard Alur Figma maupun Dropdown Daftar Halaman (Sitemap Dropdown); (3) Integrasi Traefik Edge: Rute yang diedit otomatis diperbarui ke seluruh tautan bilah navigasi (navbar) dan pohon rute Traefik v3.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal & Andalusia) & Paijo AI',
     items: [
       {

@@ -2204,6 +2204,30 @@
   transform: scale(1.25);
 }
 
+.nav-sitemap-sync-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-right: 6px;
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-sitemap-sync-indicator:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  transform: translateY(-1px);
+}
+
 .nav-links-cluster {
   display: flex;
   align-items: center;
