@@ -82,6 +82,38 @@ export function renderIconSvg(iconName?: string, size = 20, color = 'currentColo
       return `<svg ${stroke}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
     case 'workflow':
       return `<svg ${stroke}><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>`;
+    case 'phone':
+      return `<svg ${stroke}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+    case 'mappin':
+    case 'map-pin':
+      return `<svg ${stroke}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
+    case 'clock':
+      return `<svg ${stroke}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+    case 'calendar':
+      return `<svg ${stroke}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>`;
+    case 'user':
+      return `<svg ${stroke}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    case 'users':
+      return `<svg ${stroke}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+    case 'filetext':
+    case 'file-text':
+      return `<svg ${stroke}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>`;
+    case 'layout':
+      return `<svg ${stroke}><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`;
+    case 'tag':
+      return `<svg ${stroke}><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><circle cx="7" cy="7" r=".5" fill="${c}"/></svg>`;
+    case 'headphones':
+      return `<svg ${stroke}><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>`;
+    case 'heart':
+      return `<svg ${stroke}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
+    case 'compass':
+      return `<svg ${stroke}><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`;
+    case 'messagesquare':
+    case 'message-square':
+      return `<svg ${stroke}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+    case 'checkcircle':
+    case 'check-circle':
+      return `<svg ${stroke}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
     default:
       return `<svg ${stroke}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
   }
@@ -145,7 +177,7 @@ export function compileTemplateToHTML(
     const block = blocks[idx];
     if (block.isVisible === false) continue;
 
-    switch (block.type) {
+    switch (block.type as string) {
       case 'navbar': {
         const glyph = block.styles?.brandGlyph || (template.category === 'portfolio' ? 'R' : siteName.slice(0, 1) || 'H');
         const brandTitle = escapeHtml(block.title || siteName);
@@ -202,7 +234,9 @@ export function compileTemplateToHTML(
 
         const stickyStyle = isSticky ? 'position: sticky; top: 0; z-index: 50;' : 'position: relative;';
         const bgStyle =
-          navStyle === 'solid'
+          block.styles?.bgColor
+            ? `background: ${block.styles.bgColor} !important;`
+            : navStyle === 'solid'
             ? isDarkMode
               ? 'background: #0f172a;'
               : 'background: #ffffff;'
@@ -214,18 +248,20 @@ export function compileTemplateToHTML(
               : 'background: #ffffff; border-bottom: 2px solid #cbd5e1;'
             : '';
         const alignClass = navAlign === 'center' ? ' is-centered' : '';
+        const navFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const navTextColor = block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a');
 
         const glyphBg = block.styles?.buttonColor || block.styles?.accentColor || accentColor;
         const navBtnStyle = getBtnInlineStyle(block.styles, false, glyphBg);
 
         renderedBlocksHtml += `
         <!-- NAVBAR -->
-        <header class="sim-block-navbar${alignClass}" style="${stickyStyle} ${bgStyle}">
+        <header class="sim-block-navbar${alignClass}" style="${stickyStyle} ${bgStyle} ${navFont}">
           <div class="sim-brand-area">
             <span class="sim-brand-glyph" style="background-color: ${glyphBg}; color: #ffffff;">
               ${glyph}
             </span>
-            <span class="sim-brand-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">
+            <span class="sim-brand-title" style="color: ${navTextColor}; ${navFont}">
               ${brandTitle}
             </span>
           </div>
@@ -243,7 +279,6 @@ export function compileTemplateToHTML(
         const heroAccent = block.styles?.accentColor || accentColor;
         const badge = block.badge ? escapeHtml(block.badge) : '';
         const headline = escapeHtml(block.title || roleHeadline);
-        const subheadline = escapeHtml(block.subtitle || bioIntro);
         const btnPrimary = block.buttonText ? escapeHtml(block.buttonText) : 'Mulai Sekarang';
         const btnSecondary = block.secondaryButtonText ? escapeHtml(block.secondaryButtonText) : '';
         const targetUrl = block.buttonUrl || '#contact';
@@ -281,18 +316,26 @@ export function compileTemplateToHTML(
           </div>`;
         }
 
+        const heroBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : '';
+        const heroTextColor = block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a');
+        const heroSubColor = block.styles?.textColor ? `${block.styles.textColor}cc` : (isDarkMode ? '#94a3b8' : '#475569');
+        const heroFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const heroPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : '';
+        const heroAlign = block.styles?.align ? `text-align: ${block.styles.align} !important;` : '';
+        const fullSub = escapeHtml(block.subtitle || block.content || bioIntro);
+
         renderedBlocksHtml += `
         <!-- HERO SECTION -->
-        <section class="sim-block-hero" id="hero">
+        <section class="sim-block-hero" id="hero" style="${heroBg} ${heroFont} ${heroPadding} ${heroAlign}">
           ${badge ? `
           <div class="sim-hero-badge-pill" style="background-color: ${heroAccent}18; color: ${heroAccent}; border-color: ${heroAccent}40;">
             <span>${badge}</span>
           </div>` : ''}
-          <h1 class="sim-hero-headline" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">
+          <h1 class="sim-hero-headline" style="color: ${heroTextColor}; ${heroFont}">
             ${headline}
           </h1>
-          <p class="sim-hero-subheadline" style="color: ${isDarkMode ? '#94a3b8' : '#475569'};">
-            ${subheadline}
+          <p class="sim-hero-subheadline" style="color: ${heroSubColor}; ${heroFont}">
+            ${fullSub}
           </p>
           <div class="sim-hero-btn-group">
             <a href="${targetUrl}" class="sim-btn-primary" style="${heroPrimaryStyle}">
@@ -310,12 +353,18 @@ export function compileTemplateToHTML(
       }
 
       case 'stats': {
+        const statBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : '';
+        const statText = block.styles?.textColor ? `color: ${block.styles.textColor} !important;` : '';
+        const statFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const statPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : '';
+        const statAccent = block.styles?.accentColor || accentColor;
+
         const items = block.items || [];
         let itemsHtml = '';
         for (const item of items) {
           itemsHtml += `
           <div class="sim-stat-box">
-            <span class="sim-stat-value" style="color: ${accentColor};">
+            <span class="sim-stat-value" style="color: ${statAccent};">
               ${escapeHtml(item.title)}
             </span>
             <span class="sim-stat-desc" style="color: ${isDarkMode ? '#cbd5e1' : '#64748b'};">
@@ -326,7 +375,7 @@ export function compileTemplateToHTML(
 
         renderedBlocksHtml += `
         <!-- STATS SECTION -->
-        <section class="sim-block-stats ${isDarkMode ? 'stats-dark' : ''}" id="stats">
+        <section class="sim-block-stats ${isDarkMode ? 'stats-dark' : ''}" id="stats" style="${statBg} ${statText} ${statFont} ${statPadding}">
           <div class="sim-stats-container">
             ${itemsHtml}
           </div>
@@ -358,13 +407,20 @@ export function compileTemplateToHTML(
           </div>`;
         }
 
+        const featBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : '';
+        const featText = block.styles?.textColor ? `color: ${block.styles.textColor} !important;` : '';
+        const featFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const featPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : '';
+        const featTitleColor = block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a');
+        const featSubColor = block.styles?.textColor ? `${block.styles.textColor}cc` : (isDarkMode ? '#94a3b8' : '#64748b');
+
         renderedBlocksHtml += `
         <!-- FEATURES SECTION -->
-        <section class="sim-block-features ${isDarkMode ? 'features-dark' : ''}" id="features">
+        <section class="sim-block-features ${isDarkMode ? 'features-dark' : ''}" id="features" style="${featBg} ${featText} ${featFont} ${featPadding}">
           <div class="sim-section-header-wrap">
-            ${badge ? `<span class="sim-section-sub-badge" style="color: ${accentColor};">${badge}</span>` : ''}
-            <h2 class="sim-section-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">${title}</h2>
-            ${subtitle ? `<p class="sim-section-sub" style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">${subtitle}</p>` : ''}
+            ${badge ? `<span class="sim-section-sub-badge" style="color: ${featAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="color: ${featTitleColor}; ${featFont}">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="color: ${featSubColor}; ${featFont}">${subtitle}</p>` : ''}
           </div>
           <div class="sim-features-grid">
             ${featuresHtml}
@@ -664,6 +720,171 @@ export function compileTemplateToHTML(
         break;
       }
 
+      case 'contact': {
+        const title = escapeHtml(block.title || 'Hubungi Kami');
+        const subtitle = escapeHtml(block.subtitle || block.content || 'Kami siap membantu kebutuhan implementasi sistem & konsultasi infrastruktur digital Anda.');
+        const badge = block.badge ? escapeHtml(block.badge) : 'KONTAK LANGSUNG';
+        const btnText = escapeHtml(block.buttonText || 'Kirim Pesan');
+        const cAccent = block.styles?.accentColor || accentColor;
+        const cBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : (isDarkMode ? 'background: #090d16;' : 'background: #f8fafc;');
+        const cText = block.styles?.textColor ? `color: ${block.styles.textColor} !important;` : '';
+        const cFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const cPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : 'padding: 60px 24px;';
+        const cTitleColor = block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a');
+        const cSubColor = block.styles?.textColor ? `${block.styles.textColor}cc` : (isDarkMode ? '#94a3b8' : '#64748b');
+
+        renderedBlocksHtml += `
+        <!-- CONTACT SECTION -->
+        <section class="sim-block-contact" id="contact" style="${cBg} ${cText} ${cFont} ${cPadding}">
+          <div class="sim-section-header-wrap">
+            ${badge ? `<span class="sim-section-sub-badge" style="color: ${cAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="color: ${cTitleColor}; ${cFont}">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="color: ${cSubColor}; ${cFont}">${subtitle}</p>` : ''}
+          </div>
+          <div class="sim-contact-layout">
+            <div class="sim-contact-info-card" style="border-color: ${cAccent}33; background: ${isDarkMode ? '#0f172a' : '#ffffff'};">
+              <div class="sim-contact-info-header">
+                <span class="sim-contact-pill" style="background: ${cAccent}15; color: ${cAccent};">Respons Cepat</span>
+                <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 1.1rem; display: block; margin-top: 8px;">Koneksi Langsung Edge</strong>
+                <p style="color: ${isDarkMode ? '#94a3b8' : '#64748b'}; font-size: 0.88rem; margin: 4px 0 0;">Infrastruktur kami siap 24/7 untuk melayani komunikasi dan kebutuhan sistem Anda.</p>
+              </div>
+              <div class="sim-contact-meta-list">
+                <div class="sim-meta-item">
+                  <span class="sim-meta-icon" style="color: ${cAccent};">${renderIconSvg('mail', 18, cAccent)}</span>
+                  <div>
+                    <span class="meta-label" style="color: #94a3b8; font-size: 0.75rem; display: block;">Email Resmi</span>
+                    <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.9rem;">support@${subdomain}</strong>
+                  </div>
+                </div>
+                <div class="sim-meta-item">
+                  <span class="sim-meta-icon" style="color: ${cAccent};">${renderIconSvg('phone', 18, cAccent)}</span>
+                  <div>
+                    <span class="meta-label" style="color: #94a3b8; font-size: 0.75rem; display: block;">Saluran Siaga</span>
+                    <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.9rem;">+62 (021) 8087-STACK</strong>
+                  </div>
+                </div>
+                <div class="sim-meta-item">
+                  <span class="sim-meta-icon" style="color: ${cAccent};">${renderIconSvg('shieldcheck', 18, cAccent)}</span>
+                  <div>
+                    <span class="meta-label" style="color: #94a3b8; font-size: 0.75rem; display: block;">Keamanan Ingress</span>
+                    <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.9rem;">Traefik TLS 1.3 Terisolasi</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="sim-contact-form-card" style="background: ${isDarkMode ? '#0f172a' : '#ffffff'}; border-color: ${isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0'};">
+              <form onsubmit="event.preventDefault();" class="sim-form-grid">
+                <div class="sim-form-field">
+                  <label style="color: ${isDarkMode ? '#cbd5e1' : '#334155'}; font-size: 0.8rem; font-weight: 700;">Nama Lengkap</label>
+                  <input type="text" placeholder="Nama Anda atau Perusahaan" class="sim-form-input" style="background: ${isDarkMode ? '#1e293b' : '#ffffff'}; color: ${isDarkMode ? '#ffffff' : '#0f172a'};" />
+                </div>
+                <div class="sim-form-field">
+                  <label style="color: ${isDarkMode ? '#cbd5e1' : '#334155'}; font-size: 0.8rem; font-weight: 700;">Alamat Email</label>
+                  <input type="email" placeholder="nama@perusahaan.com" class="sim-form-input" style="background: ${isDarkMode ? '#1e293b' : '#ffffff'}; color: ${isDarkMode ? '#ffffff' : '#0f172a'};" />
+                </div>
+                <div class="sim-form-field">
+                  <label style="color: ${isDarkMode ? '#cbd5e1' : '#334155'}; font-size: 0.8rem; font-weight: 700;">Pesan atau Kebutuhan Solusi</label>
+                  <textarea rows="3" placeholder="Ceritakan kebutuhan atau pertanyaan Anda..." class="sim-form-input" style="background: ${isDarkMode ? '#1e293b' : '#ffffff'}; color: ${isDarkMode ? '#ffffff' : '#0f172a'}; resize: vertical;"></textarea>
+                </div>
+                <button type="submit" class="sim-btn-contact-submit" style="background-color: ${cAccent}; color: #ffffff;">
+                  ${btnText} &rarr;
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>`;
+        break;
+      }
+
+      case 'testimonials': {
+        const title = escapeHtml(block.title || 'Apa Kata Klien Kami');
+        const subtitle = escapeHtml(block.subtitle || 'Kepercayaan dari berbagai pelaku industri dan profesional.');
+        const badge = block.badge ? escapeHtml(block.badge) : 'TESTIMONIAL';
+        const tAccent = block.styles?.accentColor || accentColor;
+        const tBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : (isDarkMode ? 'background: #090d16;' : 'background: #ffffff;');
+        const tText = block.styles?.textColor ? `color: ${block.styles.textColor} !important;` : '';
+        const tFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const tPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : 'padding: 60px 24px;';
+        const items = block.items || [];
+        let itemsHtml = '';
+
+        for (const item of items) {
+          const author = escapeHtml(item.author || item.title || 'Pengguna Terverifikasi');
+          const role = escapeHtml(item.role || item.tag || 'Client Partner');
+          const quote = escapeHtml(item.desc || (item as any).content || 'Layanan yang sangat memuaskan dengan performa tinggi.');
+          itemsHtml += `
+          <div class="sim-testimonial-card ${isDarkMode ? 'card-dark' : ''}" style="border-top: 3px solid ${tAccent};">
+            <div class="sim-stars-row" style="color: #f59e0b;">
+              ★ ★ ★ ★ ★
+            </div>
+            <p class="sim-testi-quote" style="color: ${isDarkMode ? '#cbd5e1' : '#475569'};">"${quote}"</p>
+            <div class="sim-testi-author-row">
+              <div class="sim-author-avatar" style="background: ${tAccent}22; color: ${tAccent};">
+                ${author.slice(0, 1).toUpperCase()}
+              </div>
+              <div>
+                <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.95rem; display: block;">${author}</strong>
+                <span style="color: #94a3b8; font-size: 0.8rem;">${role}</span>
+              </div>
+            </div>
+          </div>`;
+        }
+
+        renderedBlocksHtml += `
+        <!-- TESTIMONIALS SECTION -->
+        <section class="sim-block-testimonials" id="testimonials" style="${tBg} ${tText} ${tFont} ${tPadding}">
+          <div class="sim-section-header-wrap">
+            ${badge ? `<span class="sim-section-sub-badge" style="color: ${tAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="color: ${block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a')}; ${tFont}">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">${subtitle}</p>` : ''}
+          </div>
+          <div class="sim-testimonials-grid">
+            ${itemsHtml}
+          </div>
+        </section>`;
+        break;
+      }
+
+      case 'bento':
+      case 'services': {
+        const title = escapeHtml(block.title || 'Layanan & Kapabilitas');
+        const subtitle = escapeHtml(block.subtitle || 'Modul terintegrasi untuk akselerasi solusi digital.');
+        const badge = block.badge ? escapeHtml(block.badge) : 'KAPABILITAS';
+        const sAccent = block.styles?.accentColor || accentColor;
+        const sBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : (isDarkMode ? 'background: #090d16;' : 'background: #f8fafc;');
+        const sText = block.styles?.textColor ? `color: ${block.styles.textColor} !important;` : '';
+        const sFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const sPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : 'padding: 60px 24px;';
+        const items = block.items || [];
+        let itemsHtml = '';
+
+        for (const item of items) {
+          const itemColor = item.buttonColor || sAccent;
+          itemsHtml += `
+          <div class="sim-feature-card-item ${isDarkMode ? 'card-dark' : ''}">
+            <div class="sim-feature-icon-box" style="background-color: ${itemColor}18; color: ${itemColor};">
+              ${renderIconSvg(item.icon, 22, itemColor)}
+            </div>
+            <strong style="color: ${isDarkMode ? '#f8fafc' : '#0f172a'};">${escapeHtml(item.title)}</strong>
+            <p style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">${escapeHtml(item.desc || '')}</p>
+          </div>`;
+        }
+
+        renderedBlocksHtml += `
+        <!-- BENTO / SERVICES SECTION -->
+        <section class="sim-block-features ${isDarkMode ? 'features-dark' : ''}" id="${block.type}" style="${sBg} ${sText} ${sFont} ${sPadding}">
+          <div class="sim-section-header-wrap">
+            ${badge ? `<span class="sim-section-sub-badge" style="color: ${sAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="color: ${block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a')}; ${sFont}">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">${subtitle}</p>` : ''}
+          </div>
+          <div class="sim-features-grid">
+            ${itemsHtml}
+          </div>
+        </section>`;
+        break;
+      }
+
       case 'footer': {
         const brand = escapeHtml(block.title || siteName);
         const copyright = escapeHtml(block.content || block.subtitle || `© 2026 ${siteName}. Seluruh Hak Cipta Dilindungi.`);
@@ -700,7 +921,7 @@ export function compileTemplateToHTML(
     <title>${siteName} | ${escapeHtml(template.title)}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --tpl-accent: ${accentColor};
@@ -717,6 +938,32 @@ export function compileTemplateToHTML(
             min-height: 100vh;
             overflow-x: hidden;
         }
+
+        /* Contact Section */
+        .sim-block-contact { padding: 60px 24px; }
+        .sim-contact-layout { display: grid; grid-template-columns: 1fr 1.3fr; gap: 32px; max-width: 980px; margin: 0 auto; }
+        @media (max-width: 768px) { .sim-contact-layout { grid-template-columns: 1fr; } }
+        .sim-contact-info-card { border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; }
+        .sim-contact-pill { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 9999px; align-self: flex-start; }
+        .sim-contact-meta-list { display: flex; flex-direction: column; gap: 16px; }
+        .sim-meta-item { display: flex; align-items: center; gap: 12px; }
+        .sim-meta-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .sim-contact-form-card { border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 28px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05); box-sizing: border-box; }
+        .sim-form-grid { display: flex; flex-direction: column; gap: 14px; }
+        .sim-form-field { display: flex; flex-direction: column; gap: 6px; }
+        .sim-form-input { padding: 10px 14px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; outline: none; transition: border-color 0.15s ease; box-sizing: border-box; width: 100%; }
+        .sim-btn-contact-submit { padding: 12px 20px; border-radius: 8px; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.15s ease; }
+        .sim-btn-contact-submit:hover { opacity: 0.92; transform: translateY(-1px); }
+
+        /* Testimonials Section */
+        .sim-block-testimonials { padding: 60px 24px; }
+        .sim-testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1040px; margin: 0 auto; }
+        .sim-testimonial-card { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04); box-sizing: border-box; }
+        .sim-testimonial-card.card-dark { background: #0f172a; border-color: rgba(255, 255, 255, 0.08); }
+        .sim-stars-row { font-size: 1rem; letter-spacing: 2px; }
+        .sim-testi-quote { font-size: 0.92rem; line-height: 1.6; font-style: italic; margin: 0; flex: 1; }
+        .sim-testi-author-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+        .sim-author-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; flex-shrink: 0; }
 
         /* 1. Navbar */
         .sim-block-navbar {

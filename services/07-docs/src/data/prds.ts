@@ -137,7 +137,7 @@ export const microservicePrds: MicroservicePrd[] = [
     title: 'Dashboard CMS (Stack Studio - Portal Pelanggan by Aether Core)',
     serviceName: '02-dashboard-cms',
     badge: 'Customer Studio & PWA',
-    version: 'v1.42.3-PROD',
+    version: 'v1.42.4-PROD',
     targetAudience: [
       'Software Engineer & Developer Portofolio',
       'Penulis Independen & Tim Media Editorial',

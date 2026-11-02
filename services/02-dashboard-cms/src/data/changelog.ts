@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.3',
+    version: 'v1.42.4',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.4',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Sinkronisasi Penuh Kustomisasi Blok ke Alur Figma, Perbaikan Modal Edit Rute & Tombol Aksi Cepat',
+    summary: 'Penyempurnaan arsitektur kanvas Alur Figma dan modal manajemen rute: (1) Sinkronisasi Gaya Blok Menyeluruh: Mengalirkan warna latar belakang (bgColor), warna teks, tipografi font, alignment, padding vertikal, dan ikon SVG kustom dari mode single design ke seluruh artboard iframe di Alur Figma tanpa ada data visual yang hilang; (2) Dukungan Blok Baru di Kompiler: Mengimplementasikan renderer HTML untuk blok Formulir Kontak (leads & live communication), Testimonial, Bento Grid, dan Layanan di templateHtmlCompiler; (3) Perbaikan Modal Edit Rute: Memperbaiki backdrop modal (.modal-backdrop) dan centering dialog sehingga modal edit rute muncul secara sempurna dengan efek frosted blur; (4) Tombol Aksi Edit Rute Cepat: Menambahkan tombol aksi [⚙ Edit] yang jelas dan kontras pada setiap baris halaman di dropdown switcher top bar, serta tombol [Edit Rute] pada shelf artboard Alur Figma; (5) Optimasi URL Google Fonts: Mengonversi spasi font menjadi tanda plus (+) untuk kompatibilitas mutlak Google Fonts API.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1424-1',
+        type: 'improvement',
+        scope: 'Kompiler Template HTML & Sinkronisasi Gaya Visual (templateHtmlCompiler.ts)',
+        description: 'Menerapkan pewarisan lengkap block.styles (bgColor, textColor, fontFamily, paddingY, align, accentColor) ke elemen section HTML, memperluas cakupan ikon SVG (phone, mappin, clock, calendar, users, filetext, layout, headphones, heart, compass), serta menambahkan renderer untuk blok contact, testimonials, bento, dan services.'
+      },
+      {
+        id: 'c-02dash-1424-2',
+        type: 'bugfix',
+        scope: 'Modal Edit Rute & Backdrop Centering (VisualEditorModule.vue & visual-editor.css)',
+        description: 'Menyelaraskan kelas backdrop modal Edit Rute ke .modal-backdrop standar studio dan mendefinisikan alias .modal-backdrop-bespoke dengan z-index 100000 dan backdrop-filter blur.'
+      },
+      {
+        id: 'c-02dash-1424-3',
+        type: 'improvement',
+        scope: 'Dropdown Switcher Halaman & Aksi Cepat Edit (VisualEditorModule.vue & visual-editor.css)',
+        description: 'Menyempurnakan tombol .btn-edit-page-mini dengan styling solid interaktif dan label [⚙ Edit] pada setiap item halaman di dropdown switcher sitemap.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.3',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '02 November 2026',
     title: 'Integrasi Penuh Bilah Navigasi (Navbar) dengan Alur Figma & Sinkronisasi Rute Sitemap Otomatis',
     summary: 'Penyempurnaan arsitektur integrasi navbar: (1) Eliminasi Link Rancu/Dummy: Mengeliminasi tautan anchor statis tunggal (#hero, #products, #contact) saat website beroperasi dalam mode multi-halaman Alur Figma; (2) Otomasi Sinkronisasi Menyeluruh (syncAllNavbarsWithSitemap): Menghubungkan daftar menu navigasi secara dinamis dengan pohon rute Alur Figma di seluruh halaman saat halaman ditambah, diedit, atau dihapus; (3) Sinkronisasi Artboard Iframe & Highlight Active Route: Meneruskan sitemapPages dan activeRoutePath ke kompiler HTML sehingga navbar pada setiap frame artboard Alur Figma menampilkan rute riil dan meng-highlight halaman aktif; (4) Indikator Integrasi Visual & Aksi Cepat: Menambahkan chip indikator Alur Figma pada bilah navigasi canvas dan tombol re-sinkronisasi satu-klik di HUD toolbar.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

@@ -3620,7 +3620,8 @@ const executeVsCodeReplaceAll = () => {
                         @click.stop="openEditRouteModal(p); isPageSwitcherOpen = false"
                         title="Edit Rute & Pengaturan Halaman"
                       >
-                        <Settings :size="12" />
+                        <Settings :size="11" />
+                        <span>Edit</span>
                       </button>
                       <button
                         v-if="p.path !== '/' && multiPages.length > 1"
@@ -8963,8 +8964,8 @@ const executeVsCodeReplaceAll = () => {
     </div>
 
     <!-- MODAL: EDIT RUTE & PENGATURAN HALAMAN -->
-    <div v-if="isEditRouteModalOpen && editingRouteTarget" class="modal-backdrop-bespoke" @click.self="closeEditRouteModal">
-      <div class="modal-dialog-bespoke modal-dialog-new-page" role="dialog" aria-modal="true">
+    <div v-if="isEditRouteModalOpen && editingRouteTarget" class="modal-backdrop" @click.self="closeEditRouteModal">
+      <div class="modal-dialog modal-dialog-new-page modal-dialog-bespoke" role="dialog" aria-modal="true">
         <!-- Header -->
         <div class="modal-header modal-header-bespoke">
           <div class="modal-header-leading">
