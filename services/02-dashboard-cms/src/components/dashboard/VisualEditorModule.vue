@@ -1201,6 +1201,7 @@ const saveEditRouteModal = () => {
       });
     });
     syncActivePageBlocks();
+    syncAllNavbarsWithSitemap();
     showToast('Pengaturan halaman Beranda berhasil diperbarui!', 'success');
     triggerAutoSaveDraft();
     closeEditRouteModal();
@@ -8686,7 +8687,8 @@ const executeVsCodeReplaceAll = () => {
       <!-- =================================================================== -->
       <!-- STUDIO MODAL: TAMBAH HALAMAN RUTE BARU                              -->
       <!-- =================================================================== -->
-      <div v-if="isNewPageModalOpen" class="modal-backdrop" @click.self="isNewPageModalOpen = false">
+      <Teleport to="body">
+        <div v-if="isNewPageModalOpen" class="modal-backdrop modal-backdrop-bespoke" @click.self="isNewPageModalOpen = false">
         <div class="modal-dialog modal-dialog-new-page modal-dialog-bespoke">
           <!-- Header -->
           <div class="modal-header modal-header-bespoke">
@@ -8961,10 +8963,14 @@ const executeVsCodeReplaceAll = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
+  </div>
 
-    <!-- MODAL: EDIT RUTE & PENGATURAN HALAMAN -->
-    <div v-if="isEditRouteModalOpen && editingRouteTarget" class="modal-backdrop" @click.self="closeEditRouteModal">
+    <!-- =================================================================== -->
+    <!-- MODAL: EDIT RUTE & PENGATURAN HALAMAN                               -->
+    <!-- =================================================================== -->
+    <Teleport to="body">
+      <div v-if="isEditRouteModalOpen && editingRouteTarget" class="modal-backdrop modal-backdrop-bespoke" @click.self="closeEditRouteModal">
       <div class="modal-dialog modal-dialog-new-page modal-dialog-bespoke" role="dialog" aria-modal="true">
         <!-- Header -->
         <div class="modal-header modal-header-bespoke">
@@ -9098,6 +9104,7 @@ const executeVsCodeReplaceAll = () => {
         </div>
       </div>
     </div>
+  </Teleport>
 
   </section>
 </template>

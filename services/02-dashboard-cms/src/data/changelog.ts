@@ -93,8 +93,8 @@ export const changelogReleases: ChangelogRelease[] = [
       {
         id: 'c-02dash-1424-2',
         type: 'bugfix',
-        scope: 'Modal Edit Rute & Backdrop Centering (VisualEditorModule.vue & visual-editor.css)',
-        description: 'Menyelaraskan kelas backdrop modal Edit Rute ke .modal-backdrop standar studio dan mendefinisikan alias .modal-backdrop-bespoke dengan z-index 100000 dan backdrop-filter blur.'
+        scope: 'Modal Edit Rute & Backdrop Centering Teleport (VisualEditorModule.vue & visual-editor.css)',
+        description: 'Membungkus modal Tambah Rute dan Edit Rute dengan Vue Teleport ke body (<Teleport to="body">), memperbaiki penutupan tag kontainer studio-main-frame, serta memperkuat styling .modal-backdrop-bespoke (z-index 100000000, margin auto, backdrop-filter blur 12px) sehingga modal terpusat sempurna di tengah layar tanpa terpotong batas kanvas Alur Figma.'
       },
       {
         id: 'c-02dash-1424-3',
