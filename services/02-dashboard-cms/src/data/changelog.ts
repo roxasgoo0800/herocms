@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.1',
+    version: 'v1.42.2',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '30 Oktober 2026',
+    lastUpdated: '02 November 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.2',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Sinkronisasi Presisi Visual Single Design ke Alur Figma & Modal Pengaturan Edit Rute Halaman',
+    summary: 'Rilis pemeliharaan dan peningkatan UX Visual Editor: (1) Penyelarasan Presisi Visual: Mengatasi disparitas tampilan antara mode Desain Tunggal (WYSIWYG) dan kanvas Alur Figma (artboard preview iframe). Kompiler template HTML kini mewarisi font kustom (Google Fonts dinamis), ikon SVG semantik berukuran proporsional, palet warna tombol (primary & secondary button styling, glow/outline/radius), badge hero, cover image katalog, serta blok carousel dan progress bar; (2) Modal Pengaturan Edit Rute & Metadata Halaman: Menyediakan antarmuka modal dedicated berstandar Bespoke Studio untuk mengubah Judul Halaman, Alamat Rute URL (dengan proteksi rute beranda / dan parent nesting quick chips), serta Deskripsi SEO Meta, yang dapat diakses langsung dari shelf artboard Alur Figma maupun Dropdown Daftar Halaman (Sitemap Dropdown); (3) Integrasi Traefik Edge: Rute yang diedit otomatis diperbarui ke seluruh tautan bilah navigasi (navbar) dan pohon rute Traefik v3.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal & Andalusia) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1422-1',
+        type: 'bugfix',
+        scope: 'Kompiler HTML & Penyelarasan Visual Artboard (templateHtmlCompiler.ts)',
+        description: 'Menambahkan renderIconSvg dinamis untuk ikon Lucide, injeksi Google Fonts kustom, pewarisan font fontFamily base, serta penyesuaian buttonColor, buttonRadius, buttonStyle, dan gambar cover produk pada blok navbar, hero, features, card, carousel, dan progressbar di kanvas Alur Figma.'
+      },
+      {
+        id: 'c-02dash-1422-2',
+        type: 'feature',
+        scope: 'Modal Edit Rute & Metadata Halaman (VisualEditorModule.vue)',
+        description: 'Menyediakan modal dialog berstandar Bespoke Studio untuk mengedit judul halaman, rute URL (path), dan meta deskripsi. Menyertakan proteksi rute utama (/) dengan indikator informatif Traefik Ingress Edge.'
+      },
+      {
+        id: 'c-02dash-1422-3',
+        type: 'improvement',
+        scope: 'Aksesibilitas Aksi Edit di Dropdown Sitemap & Artboard Shelf',
+        description: 'Menambahkan tombol Settings [Edit Rute] pada baris setiap halaman di Top Bar Sitemap Dropdown dan shelf atas frame artboard kanvas Alur Figma.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.1',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '30 Oktober 2026',
     title: 'Fix Perapihan Tata Letak Form Modal Tambah Halaman & Anti-Tumpang Tindih Badge Blueprint',
     summary: 'Perbaikan menyeluruh tata letak visual modal tambah halaman: (1) Form Layout & Input Restoration: Menambahkan kembali class CSS .new-page-field, .new-page-input, dan .new-page-path-prefix-wrap dengan deklarasi eksplisit display: flex; width: 100% dan height: 42px sehingga input judul dan input path tidak lagi menyusut sempit (20ch) atau sejajar liar dengan label petunjuk di sisi kanan; (2) Badge Collision Fix: Menghilangkan absolute indicator yang bertumpuk menimpa tag "Populer" pada kartu blueprint dan menggantinya dengan inline badge cluster .preset-chosen-pill [✓ Dipilih] yang rapi berdampingan; (3) Spacing & Visual Rhythm: Mengatur margin dan padding ruang modal secara proporsional agar tidak berdempetan.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo (PM & QA/QC)',
     items: [
       {

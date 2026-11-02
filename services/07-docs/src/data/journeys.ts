@@ -550,9 +550,9 @@ export const systemJourneys: SystemJourney[] = [
       {
         stepNum: 6,
         actor: 'HeroCMS Studio Visual Engine',
-        action: 'Ganti Rute Langsung (Inline Route Rename)',
-        technicalDetail: 'Pengguna mengklik pill rute pada frame judul untuk mengganti path secara instan. Fungsi commitEditRoute memvalidasi slug, mencegah siklus/pemindahan ke dalam sub-rute sendiri, dan meng-cascade perubahan prefix ke seluruh sub-rute serta tautan navbar.',
-        outcome: 'Struktur URL selalu konsisten dan bebas tautan rusak (broken links).'
+        action: 'Pengaturan Edit Rute & Presisi Sinkronisasi Visual (Dedicated Modal & Live Token Sync)',
+        technicalDetail: 'Pengguna dapat menekan tombol [Edit Rute] di artboard Alur Figma atau icon Settings di Dropdown Sitemap. Modal dialog bespoke terbuka memungkinkan pengubahan Judul Halaman, Alamat Rute URL (dengan validasi siklus rute, nesting helper, dan proteksi permanen root /), serta Meta Deskripsi. Secara simultan, getCompiledPageHtml menyinkronkan token visual aktif (Google Fonts, styling tombol glow/outline/radius, icon SVG semantik, dan media cover) ke seluruh artboard iframe kanvas.',
+        outcome: 'Struktur URL selalu konsisten, navigasi navbar otomatis terbarui, dan tampilan kanvas Alur Figma identik presisi dengan editor visual utama.'
       },
       {
         stepNum: 7,

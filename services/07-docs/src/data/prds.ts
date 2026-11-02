@@ -137,7 +137,7 @@ export const microservicePrds: MicroservicePrd[] = [
     title: 'Dashboard CMS (Stack Studio - Portal Pelanggan by Aether Core)',
     serviceName: '02-dashboard-cms',
     badge: 'Customer Studio & PWA',
-    version: 'v1.42.1-PROD',
+    version: 'v1.42.2-PROD',
     targetAudience: [
       'Software Engineer & Developer Portofolio',
       'Penulis Independen & Tim Media Editorial',
@@ -245,11 +245,12 @@ export const microservicePrds: MicroservicePrd[] = [
         desc: 'Editor tampilan visual WYSIWYG responsif dengan kapabilitas pemodelan arsitektur website multi-halaman berbasis diagram alur Figma non-overlapping.',
         capabilities: [
           'Diagram Alur Figma Multi-Artboard Horizontal: Visualisasi pohon rute bergerak ke kanan secara horizontal (/ ➜ /about ➜ /about/rizal) dengan kalkulasi posisi otomatis berdasar kedalaman rute.',
+          'Penyelarasan Visual Real-time (WYSIWYG to Figma Sync): Kompiler template HTML menyinkronkan Google Fonts terpilih, rendering SVG icon semantik, tombol kustom (primary & secondary button styling, glow/outline/radius), badge hero, cover card media, dan blok komponen dinamis (carousel & progress bar) langsung ke iframe artboard kanvas.',
           'Tata Letak Anti-Overlap & Dynamic Spacing: Menghitung tinggi frame riil artboard (~880px) dan jarak vertikal baris 160px sehingga frame tidak saling bertumpuk dan tinggi kanvas SVG beradaptasi otomatis.',
           'Konektor Kurva S Bezier Dinamis: Garis alur SVG mengalir mulus langsung dari frame induk ke anak dengan partikel animasi pulsa sinyal dan interactive route pill badge pada 75% lintasan kurva.',
-          'Inline Route Rename: Penggantian path langsung dari pill judul frame kanvas dengan auto-slug formatting, validasi siklus rute, dan live sync otomatis ke seluruh sub-rute & tautan navigasi navbar.',
+          'Modal Pengaturan Edit Rute & Metadata Halaman: Modal dialog terdedikasi berstandar Bespoke Studio untuk memodifikasi Judul Halaman, Alamat Rute URL (dengan proteksi rute beranda / dan parent nesting quick chips), serta Deskripsi SEO Meta, yang dapat diakses langsung dari shelf artboard Alur Figma maupun Dropdown Daftar Halaman.',
           'Adaptive Zoom-Proportional Floating Tools Shelf HUD: Toolbar tools mengambang dengan scaling adaptif 1:1 terhadap zoom kanvas (Math.min(1.0, Math.max(0.35, zoom))), boundary clamping 16px, dan popover kustom untuk font, animasi, pola, serta warna.',
-          'Dropdown Daftar Halaman (Sitemap Dropdown): Pemilih halaman dengan indikator cabang hierarki (tree-branch guide), ikon Lucide tematik (Home, Globe, FileCode), counter blok komponen, dan tombol cepat "Lihat Alur Figma".',
+          'Dropdown Daftar Halaman (Sitemap Dropdown): Pemilih halaman dengan indikator cabang hierarki (tree-branch guide), tombol aksi cepat Settings [Edit Rute] per-halaman, ikon Lucide tematik (Home, Globe, FileCode), counter blok komponen, dan tombol cepat "Lihat Alur Figma".',
           'Modal Tambah Halaman Rute Baru dengan 4 Blueprint Berwarna: Pilihan blueprint tematik (Halaman Konten, Paket & Harga, Halaman Kontak, Kanvas Bersih), formulir 100% full-width, prefix HTTPS berikon SSL hijau, dan telemetry live feedback rute.',
           'Simulator Responsif 3-Perangkat: Preview instan pixel-perfect untuk Desktop, Tablet, dan Mobile.',
           'Aksi "Terbitkan ke Kontainer (Live)" yang memicu kompilasi multi-halaman dist dan deploy ke Docker dalam < 4.5s dengan routing Traefik v3 otomatis.'

@@ -2,13 +2,43 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.6.1',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '02 November 2026',
+    title: 'Dokumentasi Penyelarasan Presisi Visual WYSIWYG ke Alur Figma & Modal Edit Rute (PRD-02 & JRN-09)',
+    summary: 'Pembaruan dokumentasi Mission Control Docs Hub menyelaraskan rilis Service 02 Dashboard CMS v1.42.2: (1) Pembaruan PRD-02 ke v1.42.2-PROD mencakup injeksi token visual aktif (Google Fonts dinamis, rendering icon SVG semantik, styling tombol glow/outline/radius, dan cover card) ke artboard iframe kanvas Alur Figma; (2) Pembaruan User Journey JRN-09 mendokumentasikan modal khusus Pengaturan Edit Rute & Metadata Halaman serta proteksi permanen rute beranda (/); (3) Sinkronisasi dataset changelog multi-layanan.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-161-1',
+        type: 'improvement',
+        scope: 'Spesifikasi PRD-02 Dashboard Studio v1.42.2-PROD (prds.ts)',
+        description: 'Mendokumentasikan mekanisme sinkronisasi token visual kompiler HTML dan antarmuka modal pengaturan rute pada spesifikasi resmi.'
+      },
+      {
+        id: 'c-07docs-161-2',
+        type: 'improvement',
+        scope: 'User Journey JRN-09 Multi-Page Modeling & Ingress Routing (journeys.ts)',
+        description: 'Memperbarui langkah ke-6 perjalanan pengguna mencakup antarmuka modal edit rute dan live token synchronization.'
+      },
+      {
+        id: 'c-07docs-161-3',
+        type: 'improvement',
+        scope: 'Sinkronisasi Versi SemVer Docs Hub v1.6.1',
+        description: 'Penaikan versi package.json ke 1.6.1 dan pencatatan changelog resmi Service 07.'
+      }
+    ]
+  },
+  {
     version: 'v1.6.0',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '30 Oktober 2026',
     title: 'Dokumentasi Arsitektur Sitemap Alur Figma Horizontal, Hierarki Multi-Halaman, & Blueprint Berwarna (PRD-02 & JRN-09)',
     summary: 'Pembaruan komprehensif pada Mission Control Docs Hub menyelaraskan kapabilitas mutakhir Service 02 Dashboard CMS (v1.42.1): (1) Pembaruan PRD-02 Dashboard Studio ke v1.42.1-PROD mencakup modul arsitektur Visual Editor & Multi-Page Figma Flow, Floating Shelf HUD adaptif zoom, dan Dropdown Sitemap hierarkis; (2) Penambahan User Journey baru JRN-09: Pemodelan Multi-Halaman Hierarkis, Kanvas Alur Figma Bebas Overlap, dan Routing Dinamis Traefik Edge; (3) Sinkronisasi dataset changelog resmi per-service.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
     items: [
       {

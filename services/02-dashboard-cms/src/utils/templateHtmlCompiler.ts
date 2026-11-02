@@ -5,6 +5,7 @@ export interface CompileTemplateOptions {
   siteName?: string;
   subdomain?: string;
   accentColor?: string;
+  fontFamily?: string;
   roleOrHeadline?: string;
   bioIntro?: string;
   isDarkMode?: boolean;
@@ -21,6 +22,106 @@ function escapeHtml(str?: string): string {
     .replace(/'/g, '&#039;');
 }
 
+export function renderIconSvg(iconName?: string, size = 20, color = 'currentColor'): string {
+  const norm = (iconName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const s = size;
+  const c = color;
+  const stroke = `width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+
+  switch (norm) {
+    case 'server':
+      return `<svg ${stroke}><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>`;
+    case 'cloud':
+      return `<svg ${stroke}><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`;
+    case 'database':
+      return `<svg ${stroke}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>`;
+    case 'cpu':
+      return `<svg ${stroke}><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>`;
+    case 'harddrive':
+      return `<svg ${stroke}><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg>`;
+    case 'terminal':
+      return `<svg ${stroke}><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>`;
+    case 'code2':
+    case 'code':
+      return `<svg ${stroke}><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>`;
+    case 'box':
+      return `<svg ${stroke}><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`;
+    case 'shieldcheck':
+      return `<svg ${stroke}><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`;
+    case 'shield':
+      return `<svg ${stroke}><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>`;
+    case 'lock':
+      return `<svg ${stroke}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+    case 'key':
+      return `<svg ${stroke}><path d="m21 2-2 2m-1.5 1.5L13 10m-3.5 3.5a5 5 0 1 1-7-7 5 5 0 0 1 7 7Z"/><circle cx="7.5" cy="7.5" r=".5" fill="${c}"/></svg>`;
+    case 'globe':
+      return `<svg ${stroke}><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
+    case 'trendingup':
+      return `<svg ${stroke}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`;
+    case 'zap':
+      return `<svg ${stroke}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+    case 'activity':
+      return `<svg ${stroke}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`;
+    case 'rocket':
+      return `<svg ${stroke}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>`;
+    case 'check':
+      return `<svg ${stroke}><polyline points="20 6 9 17 4 12"/></svg>`;
+    case 'sparkles':
+      return `<svg ${stroke}><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>`;
+    case 'layers':
+      return `<svg ${stroke}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`;
+    case 'award':
+      return `<svg ${stroke}><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`;
+    case 'star':
+      return `<svg ${stroke}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+    case 'sliders':
+      return `<svg ${stroke}><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>`;
+    case 'mail':
+      return `<svg ${stroke}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
+    case 'workflow':
+      return `<svg ${stroke}><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>`;
+    default:
+      return `<svg ${stroke}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+  }
+}
+
+
+export function getBtnInlineStyle(
+  styles?: VisualBlock['styles'],
+  isSecondary = false,
+  defaultAccent = '#2563eb'
+): string {
+  if (isSecondary) {
+    const bg = styles?.secondaryButtonColor || 'transparent';
+    const text = styles?.secondaryButtonTextColor || (bg === 'transparent' ? '#0f172a' : '#ffffff');
+    const rad = styles?.secondaryButtonRadius !== undefined ? `${styles.secondaryButtonRadius}px` : '8px';
+    const btnStyle = styles?.secondaryButtonStyle || 'outline';
+    let extra = '';
+    if (btnStyle === 'outline') {
+      extra = `border: 2px solid ${defaultAccent};`;
+    } else if (btnStyle === 'glow') {
+      extra = `box-shadow: 0 0 16px ${defaultAccent}55; border: none;`;
+    } else if (btnStyle === 'pill') {
+      extra = 'border-radius: 9999px;';
+    }
+    return `background-color: ${bg}; color: ${text}; border-radius: ${rad}; ${extra} text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; padding: 10px 22px; font-size: 0.95rem;`;
+  } else {
+    const bg = styles?.buttonColor || styles?.accentColor || defaultAccent;
+    const text = styles?.buttonTextColor || '#ffffff';
+    const rad = styles?.buttonRadius !== undefined ? `${styles.buttonRadius}px` : '8px';
+    const btnStyle = styles?.buttonStyle || 'solid';
+    let extra = '';
+    if (btnStyle === 'outline') {
+      extra = `border: 2px solid ${bg}; background-color: transparent !important; color: ${bg} !important;`;
+    } else if (btnStyle === 'glow') {
+      extra = `box-shadow: 0 0 20px ${bg}66; border: none;`;
+    } else if (btnStyle === 'pill') {
+      extra = 'border-radius: 9999px;';
+    }
+    return `background-color: ${bg}; color: ${text}; border-radius: ${rad}; ${extra} text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; padding: 10px 22px; font-size: 0.95rem;`;
+  }
+}
+
 export function compileTemplateToHTML(
   template: OfficialTemplateItem,
   options: CompileTemplateOptions = {}
@@ -30,7 +131,7 @@ export function compileTemplateToHTML(
   const accentColor = options.accentColor || template.accentColor || '#2563eb';
   const roleHeadline = escapeHtml(options.roleOrHeadline || template.defaultRole || template.title);
   const bioIntro = escapeHtml(options.bioIntro || template.defaultBio || template.desc);
-  const fontFamily = template.fontFamily || 'Plus Jakarta Sans';
+  const fontFamily = options.fontFamily || template.fontFamily || 'Plus Jakarta Sans';
   const isDarkMode = options.isDarkMode || false;
   const blocks: VisualBlock[] = options.blocksOverride && options.blocksOverride.length > 0
     ? options.blocksOverride
@@ -98,11 +199,14 @@ export function compileTemplateToHTML(
             : '';
         const alignClass = navAlign === 'center' ? ' is-centered' : '';
 
+        const glyphBg = block.styles?.buttonColor || block.styles?.accentColor || accentColor;
+        const navBtnStyle = getBtnInlineStyle(block.styles, false, glyphBg);
+
         renderedBlocksHtml += `
         <!-- NAVBAR -->
         <header class="sim-block-navbar${alignClass}" style="${stickyStyle} ${bgStyle}">
           <div class="sim-brand-area">
-            <span class="sim-brand-glyph" style="background-color: ${accentColor}; color: #ffffff;">
+            <span class="sim-brand-glyph" style="background-color: ${glyphBg}; color: #ffffff;">
               ${glyph}
             </span>
             <span class="sim-brand-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">
@@ -113,19 +217,22 @@ export function compileTemplateToHTML(
             ${navLinks}
           </nav>
           <div class="sim-nav-actions">
-            ${buttonText ? `<a href="${escapeHtml(buttonUrl)}" class="sim-btn-nav-cta" style="background-color: ${accentColor}; text-decoration: none;">${buttonText}</a>` : ''}
+            ${buttonText ? `<a href="${escapeHtml(buttonUrl)}" class="sim-btn-nav-cta" style="${navBtnStyle}">${buttonText}</a>` : ''}
           </div>
         </header>`;
         break;
       }
 
       case 'hero': {
+        const heroAccent = block.styles?.accentColor || accentColor;
         const badge = block.badge ? escapeHtml(block.badge) : '';
         const headline = escapeHtml(block.title || roleHeadline);
         const subheadline = escapeHtml(block.subtitle || bioIntro);
         const btnPrimary = block.buttonText ? escapeHtml(block.buttonText) : 'Mulai Sekarang';
         const btnSecondary = block.secondaryButtonText ? escapeHtml(block.secondaryButtonText) : '';
         const targetUrl = block.buttonUrl || '#contact';
+        const heroPrimaryStyle = getBtnInlineStyle(block.styles, false, heroAccent);
+        const heroSecondaryStyle = getBtnInlineStyle(block.styles, true, heroAccent);
 
         // Include terminal mockup for portfolio
         let terminalHtml = '';
@@ -162,7 +269,7 @@ export function compileTemplateToHTML(
         <!-- HERO SECTION -->
         <section class="sim-block-hero" id="hero">
           ${badge ? `
-          <div class="sim-hero-badge-pill" style="background-color: ${accentColor}18; color: ${accentColor}; border-color: ${accentColor}40;">
+          <div class="sim-hero-badge-pill" style="background-color: ${heroAccent}18; color: ${heroAccent}; border-color: ${heroAccent}40;">
             <span>${badge}</span>
           </div>` : ''}
           <h1 class="sim-hero-headline" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">
@@ -172,12 +279,12 @@ export function compileTemplateToHTML(
             ${subheadline}
           </p>
           <div class="sim-hero-btn-group">
-            <a href="${targetUrl}" class="sim-btn-primary" style="background-color: ${accentColor}; text-decoration: none;">
+            <a href="${targetUrl}" class="sim-btn-primary" style="${heroPrimaryStyle}">
               <span>${btnPrimary}</span>
               <span style="font-size: 1.1em; line-height: 1;">&rarr;</span>
             </a>
             ${btnSecondary ? `
-            <a href="#about" class="sim-btn-secondary ${isDarkMode ? 'btn-sec-dark' : ''}" style="text-decoration: none;">
+            <a href="#about" class="sim-btn-secondary ${isDarkMode ? 'btn-sec-dark' : ''}" style="${heroSecondaryStyle}">
               <span>${btnSecondary}</span>
             </a>` : ''}
           </div>
@@ -216,15 +323,19 @@ export function compileTemplateToHTML(
         const title = escapeHtml(block.title || 'Keunggulan Arsitektur');
         const subtitle = block.subtitle ? escapeHtml(block.subtitle) : '';
         const items = block.items || [];
+        const featAccent = block.styles?.accentColor || accentColor;
         let featuresHtml = '';
 
         for (let fIdx = 0; fIdx < items.length; fIdx++) {
           const item = items[fIdx];
-          const iconGlyph = fIdx % 3 === 0 ? '⚡' : fIdx % 3 === 1 ? '🛡️' : '✨';
+          const itemColor = item.buttonColor || featAccent;
+          const iconMedia = item.image
+            ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" />`
+            : renderIconSvg(item.icon, 22, itemColor);
           featuresHtml += `
           <div class="sim-feature-card-item ${isDarkMode ? 'card-dark' : ''}">
-            <div class="sim-feature-icon-box" style="background-color: ${accentColor}18; color: ${accentColor};">
-              <span>${iconGlyph}</span>
+            <div class="sim-feature-icon-box" style="background-color: ${itemColor}18; color: ${itemColor};">
+              ${iconMedia}
             </div>
             <strong style="color: ${isDarkMode ? '#f8fafc' : '#0f172a'};">${escapeHtml(item.title)}</strong>
             <p style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">${escapeHtml(item.desc)}</p>
@@ -293,25 +404,32 @@ export function compileTemplateToHTML(
         const title = escapeHtml(block.title || 'Katalog Pilihan');
         const subtitle = block.subtitle ? escapeHtml(block.subtitle) : '';
         const items = block.items || [];
+        const cardAccent = block.styles?.accentColor || accentColor;
         let cardsHtml = '';
 
         for (const item of items) {
-          const priceBadge = item.price ? `<span class="card-price-badge" style="background-color: ${accentColor};">${escapeHtml(item.price)}</span>` : '';
+          const itemAccent = item.buttonColor || cardAccent;
+          const priceBadge = item.price ? `<span class="card-price-badge" style="background-color: ${itemAccent};">${escapeHtml(item.price)}</span>` : '';
           const catBadge = !item.price && item.tag ? `<span class="card-cat-badge">${escapeHtml(item.tag)}</span>` : '';
-          const actionText = item.price ? 'Pesan via WhatsApp &rarr;' : 'Baca Selengkapnya &rarr;';
-          const actionLink = item.price
+          const actionText = (item as any).buttonText || item.label ? escapeHtml((item as any).buttonText || item.label) : (item.price ? 'Pesan via WhatsApp &rarr;' : 'Baca Selengkapnya &rarr;');
+          const actionLink = item.url || (item.price
             ? `https://wa.me/?text=Halo,%20saya%20tertarik%20dengan%20${encodeURIComponent(item.title)}`
-            : '#';
+            : '#');
+          const cardImg = item.image;
+          const thumbMedia = cardImg
+            ? `<img src="${escapeHtml(cardImg)}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover;" />`
+            : (item.icon ? `<div style="display:flex;align-items:center;justify-content:center;height:100%;">${renderIconSvg(item.icon, 36, itemAccent)}</div>` : '');
 
           cardsHtml += `
           <div class="sim-rich-content-card ${isDarkMode ? 'card-dark' : ''}">
-            <div class="card-thumb-canvas" style="background: linear-gradient(135deg, #1e293b 0%, ${accentColor}40 100%);">
+            <div class="card-thumb-canvas" style="background: linear-gradient(135deg, #1e293b 0%, ${itemAccent}40 100%); overflow: hidden; position: relative;">
+              ${thumbMedia}
               ${priceBadge || catBadge}
             </div>
             <div class="card-inner-body">
               <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">${escapeHtml(item.title)}</strong>
               <p style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">${escapeHtml(item.desc)}</p>
-              <a href="${actionLink}" target="_blank" class="sim-btn-card-action" style="background-color: ${accentColor}18; color: ${accentColor}; border-color: ${accentColor}40; text-decoration: none;">
+              <a href="${actionLink}" target="_blank" class="sim-btn-card-action" style="background-color: ${itemAccent}18; color: ${itemAccent}; border-color: ${itemAccent}40; text-decoration: none;">
                 <span>${actionText}</span>
               </a>
             </div>
@@ -398,6 +516,64 @@ export function compileTemplateToHTML(
           </div>
           <div class="sim-accordion-stack">
             ${accHtml}
+          </div>
+        </section>`;
+        break;
+      }
+
+      
+      case 'carousel': {
+        const title = escapeHtml(block.title || 'Galeri & Slider Interaktif');
+        const items = block.items || [];
+        let slidesHtml = '';
+        for (let sIdx = 0; sIdx < items.length; sIdx++) {
+          const item = items[sIdx];
+          const itemImg = item.image || '';
+          slidesHtml += `
+          <div class="sim-carousel-slide ${sIdx === 0 ? 'active' : ''}" style="background: linear-gradient(135deg, #0f172a 0%, ${accentColor}33 100%); position: relative; border-radius: 12px; overflow: hidden; height: 260px; margin-bottom: 12px;">
+            ${itemImg ? `<img src="${escapeHtml(itemImg)}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;" />` : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:2rem;color:#ffffff;">${renderIconSvg(item.icon || 'star', 36, accentColor)}</div>`}
+            <div class="sim-carousel-caption" style="position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); padding: 10px 14px; border-radius: 8px;">
+              <strong style="color: #ffffff; display: block; font-size: 0.95rem;">${escapeHtml(item.title)}</strong>
+              <p style="color: #cbd5e1; margin: 4px 0 0 0; font-size: 0.82rem;">${escapeHtml(item.desc || '')}</p>
+            </div>
+          </div>`;
+        }
+        renderedBlocksHtml += `
+        <section class="sim-block-carousel ${isDarkMode ? 'carousel-dark' : ''}" id="carousel" style="padding: 40px 24px; max-width: 900px; margin: 0 auto;">
+          <div class="sim-section-header-wrap" style="text-align: center; margin-bottom: 24px;">
+            <h2 class="sim-section-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">${title}</h2>
+          </div>
+          <div class="sim-carousel-viewport">
+            ${slidesHtml}
+          </div>
+        </section>`;
+        break;
+      }
+
+      case 'progressbar': {
+        const title = escapeHtml(block.title || 'Keahlian & Metrik Performa');
+        const items = block.items || [];
+        let barsHtml = '';
+        for (const item of items) {
+          const pct = Math.min(100, Math.max(0, item.percentage ?? 85));
+          barsHtml += `
+          <div class="sim-progress-item" style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.9rem;">${escapeHtml(item.title)}</strong>
+              <span style="color: ${accentColor}; font-weight: 700; font-size: 0.9rem;">${pct}%</span>
+            </div>
+            <div style="background: ${isDarkMode ? '#334155' : '#e2e8f0'}; height: 8px; border-radius: 9999px; overflow: hidden;">
+              <div style="background: ${accentColor}; height: 100%; width: ${pct}%; border-radius: 9999px; transition: width 0.5s ease;"></div>
+            </div>
+          </div>`;
+        }
+        renderedBlocksHtml += `
+        <section class="sim-block-progressbar ${isDarkMode ? 'progressbar-dark' : ''}" id="progressbar" style="padding: 40px 24px; max-width: 720px; margin: 0 auto;">
+          <div class="sim-section-header-wrap" style="text-align: center; margin-bottom: 24px;">
+            <h2 class="sim-section-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">${title}</h2>
+          </div>
+          <div>
+            ${barsHtml}
           </div>
         </section>`;
         break;
@@ -506,13 +682,17 @@ export function compileTemplateToHTML(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${siteName} | ${escapeHtml(template.title)}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --tpl-accent: ${accentColor};
             --primary: ${accentColor};
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: inherit; }
+        button, input, select, textarea, a { font-family: inherit; }
+        html, body { font-family: '${fontFamily}', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body {
             font-family: '${fontFamily}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: ${isDarkMode ? '#090d16' : '#ffffff'};
