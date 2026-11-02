@@ -76,6 +76,7 @@ import {
   FileText,
   Layout,
   Mail,
+  Settings,
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
@@ -1149,84 +1150,130 @@ const createNewPage = () => {
   triggerAutoSaveDraft();
 };
 
-// -----------------------------------------------------------------------------
-// Ganti alamat rute langsung dari pill judul frame di Alur Figma
-// -----------------------------------------------------------------------------
-const editingRoutePageId = ref<string | null>(null);
-const editingRouteValue = ref('');
 
-const startEditRoute = (page: MultiPageItem) => {
-  if (page.path === '/') {
-    showToast('Rute beranda (/) adalah rute utama dan tidak dapat diganti.', 'info');
-    return;
-  }
-  editingRoutePageId.value = page.id;
-  editingRouteValue.value = page.path;
-  nextTick(() => {
-    const el = document.querySelector<HTMLInputElement>('.figma-frame-route-input');
-    el?.focus();
-    el?.select();
-  });
+
+
+// -----------------------------------------------------------------------------
+// Modal Edit Rute & Metadata Halaman (Sitemap / Alur Figma)
+// -----------------------------------------------------------------------------
+const isEditRouteModalOpen = ref(false);
+const editingRouteTarget = ref<MultiPageItem | null>(null);
+const editRouteForm = reactive({
+  title: '',
+  path: '',
+  description: ''
+});
+
+const openEditRouteModal = (page: MultiPageItem) => {
+  editingRouteTarget.value = page;
+  editRouteForm.title = page.title || '';
+  editRouteForm.path = page.path || '/';
+  editRouteForm.description = page.description || '';
+  isEditRouteModalOpen.value = true;
 };
 
-const cancelEditRoute = () => {
-  editingRoutePageId.value = null;
+const closeEditRouteModal = () => {
+  isEditRouteModalOpen.value = false;
+  editingRouteTarget.value = null;
 };
 
-const commitEditRoute = () => {
-  const pageId = editingRoutePageId.value;
-  if (!pageId) return;
-  editingRoutePageId.value = null;
-  const page = multiPages.value.find(p => p.id === pageId);
+const setEditRouteParent = (parentPath: string) => {
+  const currentLeaf = editRouteForm.path.split('/').filter(Boolean).pop() || '';
+  editRouteForm.path = `${parentPath}/${currentLeaf}`;
+};
+
+const saveEditRouteModal = () => {
+  const page = editingRouteTarget.value;
   if (!page) return;
 
-  let next = editingRouteValue.value.trim().toLowerCase().replace(/\s+/g, '-');
+  const newTitle = editRouteForm.title.trim();
+  if (!newTitle) {
+    showToast('Judul halaman tidak boleh kosong.', 'error');
+    return;
+  }
+
+  page.title = newTitle;
+  page.description = editRouteForm.description.trim();
+
+  // Root page (/) cannot change its path
+  if (page.path === '/') {
+    multiPages.value.forEach(p => {
+      const nav = p.blocks.find(b => b.type === 'navbar');
+      nav?.items?.forEach(item => {
+        if (item.url === '/') item.title = newTitle;
+      });
+    });
+    syncActivePageBlocks();
+    showToast('Pengaturan halaman Beranda berhasil diperbarui!', 'success');
+    triggerAutoSaveDraft();
+    closeEditRouteModal();
+    return;
+  }
+
+  // Non-root page
+  let next = editRouteForm.path.trim().toLowerCase().replace(/\s+/g, '-');
   if (!next.startsWith('/')) next = '/' + next;
   next = next.replace(/\/{2,}/g, '/').replace(/(.)\/+$/, '$1');
   const oldPath = page.path;
-  if (next === oldPath) return;
 
-  if (next === '/' || !/^\/[a-z0-9\-_/]+$/.test(next)) {
-    showToast('Rute hanya boleh berisi huruf kecil, angka, tanda - dan _.', 'error');
-    return;
-  }
-  if (next.startsWith(oldPath + '/')) {
-    showToast('Rute tidak boleh dipindah ke dalam sub-rutenya sendiri.', 'error');
-    return;
-  }
-  const parent = getParentPath(next);
-  if (parent && !multiPages.value.some(p => p.path === parent)) {
-    showToast(`Halaman induk '${parent}' belum ada.`, 'error');
-    return;
-  }
-
-  // Halaman ini beserta seluruh sub-rutenya ikut berpindah prefix
-  const renames = new Map<string, string>();
-  multiPages.value.forEach(p => {
-    if (p.path === oldPath || p.path.startsWith(oldPath + '/')) {
-      renames.set(p.path, next + p.path.slice(oldPath.length));
+  if (next !== oldPath) {
+    if (next === '/' || !/^\/[a-z0-9\-_/]+$/.test(next)) {
+      showToast('Rute hanya boleh berisi huruf kecil, angka, tanda - dan _.', 'error');
+      return;
     }
-  });
-  const renamedTargets = new Set(renames.values());
-  if (multiPages.value.some(p => !renames.has(p.path) && renamedTargets.has(p.path))) {
-    showToast(`Rute '${next}' sudah dipakai halaman lain.`, 'error');
-    return;
+    if (next.startsWith(oldPath + '/')) {
+      showToast('Rute tidak boleh dipindah ke dalam sub-rutenya sendiri.', 'error');
+      return;
+    }
+    const parent = getParentPath(next);
+    if (parent && !multiPages.value.some(p => p.path === parent)) {
+      showToast(`Halaman induk '${parent}' belum ada.`, 'error');
+      return;
+    }
+
+    const renames = new Map<string, string>();
+    multiPages.value.forEach(p => {
+      if (p.path === oldPath || p.path.startsWith(oldPath + '/')) {
+        renames.set(p.path, next + p.path.slice(oldPath.length));
+      }
+    });
+    const renamedTargets = new Set(renames.values());
+    if (multiPages.value.some(p => !renames.has(p.path) && renamedTargets.has(p.path))) {
+      showToast(`Rute '${next}' sudah dipakai halaman lain.`, 'error');
+      return;
+    }
+
+    syncActivePageBlocks();
+    multiPages.value.forEach(p => {
+      const np = renames.get(p.path);
+      if (np) p.path = np;
+      const nav = p.blocks.find(b => b.type === 'navbar');
+      nav?.items?.forEach(item => {
+        if (item.url && renames.has(item.url)) {
+          item.url = renames.get(item.url)!;
+          if (p.path === next) item.title = newTitle;
+        } else if (item.url === oldPath) {
+          item.url = next;
+          item.title = newTitle;
+        }
+      });
+    });
+  } else {
+    multiPages.value.forEach(p => {
+      const nav = p.blocks.find(b => b.type === 'navbar');
+      nav?.items?.forEach(item => {
+        if (item.url === oldPath) item.title = newTitle;
+      });
+    });
+    syncActivePageBlocks();
   }
 
-  syncActivePageBlocks();
-  multiPages.value.forEach(p => {
-    const np = renames.get(p.path);
-    if (np) p.path = np;
-    const nav = p.blocks.find(b => b.type === 'navbar');
-    nav?.items?.forEach(item => {
-      if (item.url && renames.has(item.url)) item.url = renames.get(item.url)!;
-    });
-  });
   const active = multiPages.value.find(p => p.id === activePageId.value);
   if (active) pageBlocks.value = JSON.parse(JSON.stringify(active.blocks));
 
-  showToast(`Rute diganti: ${oldPath} → ${next}${renames.size > 1 ? ` (+${renames.size - 1} sub-rute)` : ''}`, 'success');
+  showToast(`Pengaturan halaman '${newTitle}' (${page.path}) berhasil disimpan!`, 'success');
   triggerAutoSaveDraft();
+  closeEditRouteModal();
 };
 
 const deletePage = (pageId: string) => {
@@ -1286,13 +1333,18 @@ const getCompiledPageHtml = (page: MultiPageItem): string => {
   ) || officialTemplates.value[0];
 
   if (!matchedTpl) return '';
+  const effectiveBlocks = (page.id === activePageId.value && pageBlocks.value && pageBlocks.value.length > 0)
+    ? pageBlocks.value
+    : page.blocks;
+
   return compileTemplateToHTML(matchedTpl, {
     siteName: activeContainer.value?.name || 'Situs Utama',
     subdomain: activeContainer.value?.subdomain || 'stackbyte.id',
     accentColor: activeContainer.value?.accentColor || '#2563eb',
+    fontFamily: currentFont.value,
     roleOrHeadline: page.title,
     bioIntro: page.description,
-    blocksOverride: page.blocks
+    blocksOverride: effectiveBlocks
   });
 };
 
@@ -3514,6 +3566,14 @@ const executeVsCodeReplaceAll = () => {
                         {{ p.blocks?.length || 0 }} blok
                       </span>
                       <button
+                        type="button"
+                        class="btn-edit-page-mini"
+                        @click.stop="openEditRouteModal(p); isPageSwitcherOpen = false"
+                        title="Edit Rute & Pengaturan Halaman"
+                      >
+                        <Settings :size="12" />
+                      </button>
+                      <button
                         v-if="p.path !== '/' && multiPages.length > 1"
                         type="button"
                         class="btn-delete-page-mini"
@@ -5127,32 +5187,29 @@ const executeVsCodeReplaceAll = () => {
               <div class="sitemap-frame-title-shelf">
                 <div class="title-shelf-left">
                   <span class="figma-frame-hash">#</span>
-                  <span class="figma-frame-name">{{ page.title }}</span>
-                  <input
-                    v-if="editingRoutePageId === page.id"
-                    v-model="editingRouteValue"
-                    class="figma-frame-route-pill figma-frame-route-input"
-                    spellcheck="false"
-                    @keydown.enter.prevent="commitEditRoute"
-                    @keydown.esc.prevent="cancelEditRoute"
-                    @blur="commitEditRoute"
-                    @mousedown.stop
-                  />
+                  <span class="figma-frame-name" @click.stop="openEditRouteModal(page)" title="Klik untuk edit rute & judul">{{ page.title }}</span>
                   <button
-                    v-else
                     type="button"
-                    class="figma-frame-route-pill"
-                    :class="{ 'is-editable': page.path !== '/' }"
-                    :title="page.path === '/' ? 'Rute beranda' : 'Klik untuk ganti alamat rute'"
-                    @click.stop="startEditRoute(page)"
+                    class="figma-frame-route-pill is-editable"
+                    :title="`Klik untuk edit rute: ${page.path}`"
+                    @click.stop="openEditRouteModal(page)"
                   >
                     {{ page.path }}
-                    <Edit3 v-if="page.path !== '/'" :size="10" />
+                    <Edit3 :size="10" />
                   </button>
                   <span v-if="page.id === activePageId" class="figma-frame-badge-active">Aktif</span>
                 </div>
                 <div class="title-shelf-right">
                   <span class="figma-frame-blocks-count">{{ page.blocks.length }} Blok</span>
+                  <button
+                    type="button"
+                    class="btn-figma-edit-route"
+                    @click.stop="openEditRouteModal(page)"
+                    title="Edit Rute & Metadata Halaman"
+                  >
+                    <Settings :size="11" />
+                    <span>Edit Rute</span>
+                  </button>
                   <button
                     type="button"
                     class="btn-figma-focus-page"
@@ -8821,5 +8878,142 @@ const executeVsCodeReplaceAll = () => {
         </div>
       </div>
     </div>
+
+    <!-- MODAL: EDIT RUTE & PENGATURAN HALAMAN -->
+    <div v-if="isEditRouteModalOpen && editingRouteTarget" class="modal-backdrop-bespoke" @click.self="closeEditRouteModal">
+      <div class="modal-dialog-bespoke modal-dialog-new-page" role="dialog" aria-modal="true">
+        <!-- Header -->
+        <div class="modal-header modal-header-bespoke">
+          <div class="modal-header-leading">
+            <div class="modal-header-icon-box modal-icon-gradient">
+              <Workflow :size="20" />
+            </div>
+            <div>
+              <div class="modal-title-row">
+                <h3 class="modal-heading">Edit Rute & Metadata Halaman</h3>
+                <span class="modal-tag-badge">Traefik Ingress Edge</span>
+              </div>
+              <p class="modal-subheading">Sesuaikan alamat URL, judul navigasi, dan deskripsi SEO halaman ini.</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close-button" @click="closeEditRouteModal" title="Tutup">
+            <X :size="16" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="new-page-modal-body">
+          <div class="new-page-form-grid">
+            <!-- Judul Halaman -->
+            <div class="new-page-field">
+              <div class="field-label-row">
+                <label class="new-page-label">Judul Halaman <span class="req-star">*</span></label>
+                <span class="field-hint">Nama tampilan di navigasi & tab browser</span>
+              </div>
+              <div class="input-with-leading-icon">
+                <Type :size="14" class="input-leading-icon" />
+                <input
+                  v-model="editRouteForm.title"
+                  type="text"
+                  placeholder="Contoh: Paket & Harga, Layanan Kami, Portofolio..."
+                  class="new-page-input has-icon"
+                  @keyup.enter="saveEditRouteModal"
+                />
+              </div>
+            </div>
+
+            <!-- Rute URL (Path) -->
+            <div class="new-page-field">
+              <div class="field-label-row">
+                <label class="new-page-label">Rute URL (Path) <span class="req-star">*</span></label>
+                <span class="field-hint">Alamat akses web di browser</span>
+              </div>
+              <div class="new-page-path-prefix-wrap">
+                <span class="path-prefix">
+                  <ShieldCheck :size="12" class="prefix-lock-icon" />
+                  https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}
+                </span>
+                <input
+                  v-if="editingRouteTarget.path !== '/'"
+                  v-model="editRouteForm.path"
+                  type="text"
+                  placeholder="/pricing"
+                  class="new-page-input path-input"
+                  @keyup.enter="saveEditRouteModal"
+                />
+                <input
+                  v-else
+                  type="text"
+                  value="/"
+                  disabled
+                  class="new-page-input path-input is-disabled-root"
+                  title="Rute beranda (/) adalah root utama website dan bersifat permanen."
+                />
+              </div>
+
+              <!-- Sub-route quick helper chips (if existing parent pages exist and not root) -->
+              <div v-if="editingRouteTarget.path !== '/' && existingParentPages.length > 0" class="parent-nesting-strip">
+                <span class="parent-nesting-label">↳ Jadikan Sub-Rute dari:</span>
+                <button
+                  v-for="parentPg in existingParentPages"
+                  :key="parentPg.id"
+                  type="button"
+                  class="parent-nesting-chip"
+                  @click="setEditRouteParent(parentPg.path)"
+                  :title="`Klik untuk ubah sub-rute di bawah ${parentPg.path}`"
+                >
+                  <span>{{ parentPg.path }}/...</span>
+                </button>
+              </div>
+
+              <div v-if="editingRouteTarget.path === '/'" class="root-route-notice">
+                <Home :size="12" />
+                <span>Rute Beranda (<strong>/</strong>) adalah gerbang utama website yang dilayani otomatis oleh Traefik Edge Router.</span>
+              </div>
+            </div>
+
+            <!-- Deskripsi Halaman (SEO Meta / Lead) -->
+            <div class="new-page-field">
+              <div class="field-label-row">
+                <label class="new-page-label">Deskripsi Halaman</label>
+                <span class="field-hint">Meta ringkasan halaman untuk SEO & preview canvas</span>
+              </div>
+              <textarea
+                v-model="editRouteForm.description"
+                rows="2"
+                placeholder="Tulis ringkasan singkat isi atau tujuan halaman ini..."
+                class="new-page-input new-page-textarea"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer modal-footer-bespoke">
+          <div class="footer-help-note">
+            <Workflow :size="13" class="note-icon" />
+            <span>Perubahan rute otomatis sinkron dengan bilah navigasi & kanvas Alur Figma.</span>
+          </div>
+          <div class="footer-actions-group">
+            <button
+              type="button"
+              class="btn-modal-ghost"
+              @click="closeEditRouteModal"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              class="btn-modal-confirm"
+              @click="saveEditRouteModal"
+            >
+              <Check :size="14" />
+              <span>Simpan Perubahan</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </section>
 </template>
