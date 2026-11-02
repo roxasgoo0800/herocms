@@ -113,6 +113,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Footer Brand Consistency (templateHtmlCompiler.ts)',
         description: 'Menambahkan lambang glyph ◆ pada brand logo footer untuk menyelaraskan identitas visual situs tenant.'
+      },
+      {
+        id: 'c-02dash-1425-6',
+        type: 'improvement',
+        scope: 'Top Bar Action Button Label Hygiene (VisualEditorModule.vue)',
+        description: 'Menghilangkan simbol plus ganda trailing pada tombol katalog blok di bilah alat atas (dari "+ Konten +" menjadi "+ Konten") agar konsisten dan bersih.'
       }
     ]
   },

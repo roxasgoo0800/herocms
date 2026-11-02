@@ -3500,7 +3500,7 @@ const executeVsCodeReplaceAll = () => {
             :title="isKatalogOpen ? 'Tutup Katalog Blok Website' : 'Buka Katalog Blok Website'"
           >
             <Plus :size="13" />
-            <span>Konten +</span>
+            <span>Konten</span>
           </button>
 
           <div class="v-divider"></div>
