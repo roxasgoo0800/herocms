@@ -113,6 +113,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Pembersihan Badge Floating Pod Kontainer (templateHtmlCompiler.ts)',
         description: 'Menghapus elemen floating badge "Pod Kontainer Aktif" beserta animasi dan stylesheet terkait dari output templateHtmlCompiler agar tampilan pratinjau kanvas Alur Figma dan live preview bersih tanpa elemen overlay yang menutupi konten.'
+      },
+      {
+        id: 'c-02dash-1424-6',
+        type: 'improvement',
+        scope: 'Integrasi Reaktif Dinamis Navbar dengan Alur Figma (VisualEditorModule.vue & templateHtmlCompiler.ts)',
+        description: 'Menjadikan tautan bilah navigasi sepenuhnya reaktif mengikuti daftar rute Alur Figma: jika situs hanya memiliki halaman Beranda (/), navbar hanya menampilkan tautan Beranda; jika halaman rute baru ditambahkan di Alur Figma, navbar otomatis bertambah dan menampilkan rute baru tersebut secara konsisten di kanvas WYSIWYG dan pratinjau HTML.'
       }
     ]
   },

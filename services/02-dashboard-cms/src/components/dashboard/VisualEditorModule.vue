@@ -1353,13 +1353,33 @@ const getCompiledPageHtml = (page: MultiPageItem): string => {
 // -----------------------------------------------------------------------------
 // Sinkronisasi Bilah Navigasi (Navbar) Terintegrasi Penuh dengan Alur Figma
 // -----------------------------------------------------------------------------
+const defaultNavItems: Array<{ id: string; title: string; url: string; active?: boolean }> = [
+  { id: 'nav_1', title: 'Beranda', url: '/', active: true }
+];
+
+// Helper untuk selalu mendapatkan daftar menu navigasi langsung dari rute Alur Figma
+const getRenderedNavItems = (_block?: VisualBlock) => {
+  if (multiPages.value && multiPages.value.length > 0) {
+    const currentPath = activePage.value?.path || '/';
+    return multiPages.value.map(p => ({
+      id: `nav_route_${p.id}`,
+      title: p.title,
+      url: p.path,
+      active: p.path === currentPath
+    }));
+  }
+  return defaultNavItems;
+};
+
 const syncAllNavbarsWithSitemap = (notify: boolean = false) => {
   if (!multiPages.value || multiPages.value.length === 0) return;
 
+  const currentPath = activePage.value?.path || '/';
   const sitemapNavLinks = multiPages.value.map(p => ({
     id: `nav_route_${p.id}`,
     title: p.title,
-    url: p.path
+    url: p.path,
+    active: p.path === currentPath
   }));
 
   // 1. Sinkronkan navbar di seluruh halaman multiPages
@@ -1374,7 +1394,6 @@ const syncAllNavbarsWithSitemap = (notify: boolean = false) => {
   });
 
   // 2. Sinkronkan navbar di pageBlocks halaman yang sedang aktif di kanvas
-  const currentPath = activePage.value?.path || '/';
   const activeNav = pageBlocks.value.find(b => b.type === 'navbar');
   if (activeNav) {
     activeNav.items = sitemapNavLinks.map(link => ({
@@ -1388,17 +1407,19 @@ const syncAllNavbarsWithSitemap = (notify: boolean = false) => {
   }
 };
 
-// Navbar Context & Interactive Canvas Helpers
-const defaultNavItems: Array<{ id: string; title: string; url: string; active?: boolean }> = [
-  { id: 'nav_1', title: 'Beranda', url: '/', active: true },
-  { id: 'nav_2', title: 'Tentang Kami', url: '/about', active: false },
-  { id: 'nav_3', title: 'Layanan', url: '/services', active: false },
-  { id: 'nav_4', title: 'Kontak', url: '/contact', active: false }
-];
+// Reaktif: Otomatis sinkronkan navbar setiap kali daftar rute Alur Figma bertambah, berkurang, atau diedit
+watch(
+  () => multiPages.value.map(p => `${p.id}:${p.title}:${p.path}`).join('|'),
+  () => {
+    syncAllNavbarsWithSitemap();
+  },
+  { immediate: true }
+);
 
 const onNavItemClick = (block: VisualBlock, idx: number, e: MouseEvent) => {
   e.stopPropagation();
-  const item = block.items?.[idx] || defaultNavItems[idx];
+  const items = getRenderedNavItems(block);
+  const item = items[idx] || defaultNavItems[0];
   if (editorViewMode.value === 'preview' || e.altKey) {
     if (item && item.url) {
       switchPageByPath(item.url);
@@ -1409,29 +1430,24 @@ const onNavItemClick = (block: VisualBlock, idx: number, e: MouseEvent) => {
   setHudContext('navbar', block, idx);
 };
 
-const addNavItem = (block: VisualBlock) => {
-  if (!block.items) {
-    block.items = [...defaultNavItems];
-  }
-  const nextNum = block.items.length + 1;
-  block.items.push({
-    id: `nav_${Date.now() % 10000}`,
-    title: `Menu ${nextNum}`,
-    url: `#section_${nextNum}`
-  });
-  recordHistory();
-  triggerAutoSaveDraft();
+const addNavItem = (_block: VisualBlock) => {
+  // Tambah link baru di navigasi langsung membuka modal pendaftaran rute Alur Figma
+  showToast('Daftarkan halaman baru untuk menambah menu di bilah navigasi.', 'info');
+  isNewPageModalOpen.value = true;
 };
 
 const removeNavItem = (block: VisualBlock, idx: number) => {
-  if (!block.items) return;
-  if (block.items.length <= 1) {
-    showToast('Navigasi minimal harus memiliki satu menu tautan.', 'info');
+  const items = getRenderedNavItems(block);
+  const item = items[idx];
+  if (!item) return;
+  if (item.url === '/') {
+    showToast('Halaman Beranda (/) adalah rute utama website dan tidak dapat dihapus.', 'error');
     return;
   }
-  block.items.splice(idx, 1);
-  recordHistory();
-  triggerAutoSaveDraft();
+  const targetPage = multiPages.value.find(p => p.path === item.url);
+  if (targetPage) {
+    deletePage(targetPage.id);
+  }
 };
 
 const cycleNavbarBrandGlyph = (block: VisualBlock) => {
@@ -1557,6 +1573,7 @@ const loadBlocksForActiveContainer = () => {
   if (pageBlocks.value.length > 0) {
     selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
   }
+  syncAllNavbarsWithSitemap();
 };
 
 const restoreDraftForActiveContainer = async (containerId: string) => {
@@ -1638,6 +1655,7 @@ const restoreDraftForActiveContainer = async (containerId: string) => {
       const dateObj = new Date(draftData.updatedAt || Date.now());
       lastSavedDraftAt.value = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
       isDraftRestored.value = true;
+      syncAllNavbarsWithSitemap();
     } else {
       loadBlocksForActiveContainer();
     }
@@ -5495,7 +5513,7 @@ const executeVsCodeReplaceAll = () => {
                           <span>Alur Figma ({{ multiPages.length }})</span>
                         </div>
                         <div
-                          v-for="(item, idx) in (block.items && block.items.length > 0 ? block.items : defaultNavItems)"
+                          v-for="(item, idx) in getRenderedNavItems(block)"
                           :key="item.id || idx"
                           class="nav-link-item-wrapper"
                           @click="onNavItemClick(block, idx, $event)"
@@ -5503,8 +5521,8 @@ const executeVsCodeReplaceAll = () => {
                           <a
                             :href="item.url || '#'"
                             class="nav-anchor"
-                            :class="{ active: (activePage && activePage.path === item.url) || (item as any).active }"
-                            :style="{ color: ((activePage && activePage.path === item.url) || (item as any).active) ? (block.styles?.accentColor || activeContainer.accentColor) : undefined }"
+                            :class="{ active: (activePage && activePage.path === item.url) || item.active }"
+                            :style="{ color: ((activePage && activePage.path === item.url) || item.active) ? (block.styles?.accentColor || activeContainer.accentColor) : undefined }"
                             @click.prevent
                           >
                             <span
@@ -5516,11 +5534,11 @@ const executeVsCodeReplaceAll = () => {
                             >{{ item.title }}</span>
                           </a>
                           <button
-                            v-if="selectedBlockId === block.id && (block.items?.length || 0) > 1"
+                            v-if="selectedBlockId === block.id && getRenderedNavItems(block).length > 1"
                             type="button"
                             class="btn-nav-link-delete"
                             @click.stop="removeNavItem(block, idx)"
-                            title="Hapus tautan ini"
+                            title="Hapus rute halaman ini dari Alur Figma & navigasi"
                           >
                             ×
                           </button>

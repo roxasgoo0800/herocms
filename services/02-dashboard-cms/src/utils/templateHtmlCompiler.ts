@@ -210,26 +210,7 @@ export function compileTemplateToHTML(
             })
             .join('\n            ');
         } else {
-          navLinks = template.category === 'business'
-            ? `
-            <a href="#hero">Beranda</a>
-            <a href="#products">Katalog Produk</a>
-            <a href="#features">Keunggulan</a>
-            <a href="#contact">WhatsApp Toko</a>
-          `
-            : template.category === 'education'
-            ? `
-            <a href="#hero">Beranda</a>
-            <a href="#courses">Katalog Kursus</a>
-            <a href="#syllabus">Silabus Modul</a>
-            <a href="#pricing">Biaya Belajar</a>
-          `
-            : `
-            <a href="#hero">Beranda</a>
-            <a href="#showcase">Karya & Proyek</a>
-            <a href="#features">Teknologi</a>
-            <a href="#contact">Hubungi Saya</a>
-          `;
+          navLinks = '<a href="/" class="active">Beranda</a>';
         }
 
         const stickyStyle = isSticky ? 'position: sticky; top: 0; z-index: 50;' : 'position: relative;';
