@@ -179,7 +179,7 @@ export function compileTemplateToHTML(
 
     switch (block.type as string) {
       case 'navbar': {
-        const glyph = block.styles?.brandGlyph || (template.category === 'portfolio' ? 'R' : siteName.slice(0, 1) || 'H');
+        const glyph = block.styles?.brandGlyph || '◆';
         const brandTitle = escapeHtml(block.title || siteName);
         const buttonText = block.buttonText ? escapeHtml(block.buttonText) : '';
         const buttonUrl = block.buttonUrl || '#contact';
@@ -232,14 +232,14 @@ export function compileTemplateToHTML(
         const navFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
         const navTextColor = block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a');
 
-        const glyphBg = block.styles?.buttonColor || block.styles?.accentColor || accentColor;
-        const navBtnStyle = getBtnInlineStyle(block.styles, false, glyphBg);
+        const glyphColor = block.styles?.accentColor || accentColor;
+        const navBtnStyle = getBtnInlineStyle(block.styles, false, glyphColor);
 
         renderedBlocksHtml += `
         <!-- NAVBAR -->
         <header class="sim-block-navbar${alignClass}" style="${stickyStyle} ${bgStyle} ${navFont}">
           <div class="sim-brand-area">
-            <span class="sim-brand-glyph" style="background-color: ${glyphBg}; color: #ffffff;">
+            <span class="sim-brand-glyph" style="color: ${glyphColor}; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center;">
               ${glyph}
             </span>
             <span class="sim-brand-title" style="color: ${navTextColor}; ${navFont}">
@@ -308,17 +308,19 @@ export function compileTemplateToHTML(
         renderedBlocksHtml += `
         <!-- HERO SECTION -->
         <section class="sim-block-hero" id="hero" style="${heroBg} ${heroFont} ${heroPadding} ${heroAlign}">
+          <!-- Glowing Ambient Blur Mesh matching Design View -->
+          <div class="sim-ambient-glow" style="position: absolute; top: -15%; left: 15%; width: 70%; height: 130%; background: radial-gradient(circle, ${heroAccent}33 0%, transparent 70%); filter: blur(50px); pointer-events: none; z-index: 0;"></div>
           ${badge ? `
-          <div class="sim-hero-badge-pill" style="background-color: ${heroAccent}18; color: ${heroAccent}; border-color: ${heroAccent}40;">
+          <div class="sim-hero-badge-pill" style="position: relative; z-index: 1; background-color: ${heroAccent}18; color: ${heroAccent}; border-color: ${heroAccent}40;">
             <span>${badge}</span>
           </div>` : ''}
-          <h1 class="sim-hero-headline" style="color: ${heroTextColor}; ${heroFont}">
+          <h1 class="sim-hero-headline" style="position: relative; z-index: 1; color: ${heroTextColor}; ${heroFont}">
             ${headline}
           </h1>
-          <p class="sim-hero-subheadline" style="color: ${heroSubColor}; ${heroFont}">
+          <p class="sim-hero-subheadline" style="position: relative; z-index: 1; color: ${heroSubColor}; ${heroFont}">
             ${fullSub}
           </p>
-          <div class="sim-hero-btn-group">
+          <div class="sim-hero-btn-group" style="position: relative; z-index: 1;">
             <a href="${targetUrl}" class="sim-btn-primary" style="${heroPrimaryStyle}">
               <span>${btnPrimary}</span>
               <span style="font-size: 1.1em; line-height: 1;">&rarr;</span>
@@ -328,7 +330,7 @@ export function compileTemplateToHTML(
               <span>${btnSecondary}</span>
             </a>` : ''}
           </div>
-          ${terminalHtml}
+          ${terminalHtml ? `<div style="position: relative; z-index: 1; width: 100%; max-width: 680px; margin-top: 24px;">${terminalHtml}</div>` : ''}
         </section>`;
         break;
       }
@@ -576,57 +578,92 @@ export function compileTemplateToHTML(
 
       
       case 'carousel': {
-        const title = escapeHtml(block.title || 'Galeri & Slider Interaktif');
+        const title = escapeHtml(block.title || 'Sorotan Portofolio & Pelanggan');
+        const badge = block.badge ? escapeHtml(block.badge) : '';
+        const subtitle = block.subtitle ? escapeHtml(block.subtitle) : '';
         const items = block.items || [];
+        const crAccent = block.styles?.accentColor || accentColor;
+        const crAlign = block.styles?.align || 'center';
+        const crPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : '';
+        const crBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : '';
+        const crFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+
         let slidesHtml = '';
         for (let sIdx = 0; sIdx < items.length; sIdx++) {
           const item = items[sIdx];
-          const itemImg = item.image || '';
+          const isAct = sIdx === (block.activeItemIndex || 0);
           slidesHtml += `
-          <div class="sim-carousel-slide ${sIdx === 0 ? 'active' : ''}" style="background: linear-gradient(135deg, #0f172a 0%, ${accentColor}33 100%); position: relative; border-radius: 12px; overflow: hidden; height: 260px; margin-bottom: 12px;">
-            ${itemImg ? `<img src="${escapeHtml(itemImg)}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;" />` : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:2rem;color:#ffffff;">${renderIconSvg(item.icon || 'star', 36, accentColor)}</div>`}
-            <div class="sim-carousel-caption" style="position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); padding: 10px 14px; border-radius: 8px;">
-              <strong style="color: #ffffff; display: block; font-size: 0.95rem;">${escapeHtml(item.title)}</strong>
-              <p style="color: #cbd5e1; margin: 4px 0 0 0; font-size: 0.82rem;">${escapeHtml(item.desc || '')}</p>
-            </div>
+          <div class="sim-carousel-slide ${isAct ? 'active' : ''}" data-index="${sIdx}" style="display: ${isAct ? 'flex' : 'none'}; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+            ${item.image ? `
+            <div class="sim-carousel-img-wrap" style="width: 100%; max-width: 680px; height: 220px; border-radius: 12px; overflow: hidden; margin-bottom: 8px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08); border: 1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}; background: ${isDarkMode ? '#0f172a' : '#f8fafc'};">
+              <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+            </div>` : ''}
+            ${item.tag ? `<span class="sim-carousel-tag" style="background: ${crAccent}; color: #ffffff; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 12px; border-radius: 20px;">${escapeHtml(item.tag)}</span>` : ''}
+            <h3 class="sim-carousel-headline" style="font-size: 1.35rem; font-weight: 800; color: ${isDarkMode ? '#ffffff' : '#0f172a'}; margin: 0;">${escapeHtml(item.title)}</h3>
+            <p class="sim-carousel-desc" style="font-size: 0.92rem; color: ${isDarkMode ? '#94a3b8' : '#475569'}; max-width: 600px; line-height: 1.6; margin: 0;">${escapeHtml(item.desc || '')}</p>
+            ${item.author ? `<span class="sim-carousel-author" style="font-size: 0.8rem; font-weight: 600; color: #94a3b8;">— ${escapeHtml(item.author)}</span>` : ''}
           </div>`;
         }
+
         renderedBlocksHtml += `
-        <section class="sim-block-carousel ${isDarkMode ? 'carousel-dark' : ''}" id="carousel" style="padding: 40px 24px; max-width: 900px; margin: 0 auto;">
-          <div class="sim-section-header-wrap" style="text-align: center; margin-bottom: 24px;">
-            <h2 class="sim-section-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">${title}</h2>
+        <!-- CAROUSEL / SHOWCASE BANNER -->
+        <section class="sim-block-carousel ${isDarkMode ? 'carousel-dark' : ''}" id="carousel" style="${crPadding} ${crBg} ${crFont}">
+          <div class="sim-section-header-wrap" style="text-align: ${crAlign}; margin-bottom: 24px;">
+            ${badge ? `<span class="sim-badge-mini-caps" style="color: ${crAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="font-size: 1.85rem; font-weight: 850; color: ${isDarkMode ? '#ffffff' : '#0f172a'}; letter-spacing: -0.02em; margin: 4px 0 8px 0;">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="font-size: 0.95rem; color: ${isDarkMode ? '#94a3b8' : '#64748b'}; margin: 0;">${subtitle}</p>` : ''}
           </div>
-          <div class="sim-carousel-viewport">
-            ${slidesHtml}
+          <div class="sim-carousel-stage-container ${isDarkMode ? 'stage-dark' : ''}">
+            <div class="sim-carousel-slides-wrap">
+              ${slidesHtml}
+            </div>
+            ${items.length > 1 ? `
+            <div class="sim-carousel-nav-arrows">
+              <button type="button" class="sim-carousel-arrow-btn" onclick="stepCarousel(this, -1)" title="Slide Sebelumnya">&larr;</button>
+              <button type="button" class="sim-carousel-arrow-btn" onclick="stepCarousel(this, 1)" title="Slide Berikutnya">&rarr;</button>
+            </div>` : ''}
           </div>
         </section>`;
         break;
       }
 
       case 'progressbar': {
-        const title = escapeHtml(block.title || 'Keahlian & Metrik Performa');
+        const title = escapeHtml(block.title || 'Pencapaian Kapasitas & Performa');
+        const badge = block.badge ? escapeHtml(block.badge) : '';
+        const subtitle = block.subtitle ? escapeHtml(block.subtitle) : '';
         const items = block.items || [];
-        let barsHtml = '';
+        const pbAccent = block.styles?.accentColor || accentColor;
+        const pbAlign = block.styles?.align || 'left';
+        const pbPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : '';
+        const pbBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : '';
+        const pbFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+
+        let cardsHtml = '';
         for (const item of items) {
           const pct = Math.min(100, Math.max(0, item.percentage ?? 85));
-          barsHtml += `
-          <div class="sim-progress-item" style="margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-              <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.9rem;">${escapeHtml(item.title)}</strong>
-              <span style="color: ${accentColor}; font-weight: 700; font-size: 0.9rem;">${pct}%</span>
+          cardsHtml += `
+          <div class="sim-progress-meter-card ${isDarkMode ? 'card-dark' : ''}">
+            <div class="sim-pm-head">
+              <strong class="sim-pm-title">${escapeHtml(item.title)}</strong>
+              <span class="sim-pm-val" style="color: ${pbAccent};">${pct}%</span>
             </div>
-            <div style="background: ${isDarkMode ? '#334155' : '#e2e8f0'}; height: 8px; border-radius: 9999px; overflow: hidden;">
-              <div style="background: ${accentColor}; height: 100%; width: ${pct}%; border-radius: 9999px; transition: width 0.5s ease;"></div>
+            <div class="sim-pm-track">
+              <div class="sim-pm-fill" style="width: ${pct}%; background: linear-gradient(90deg, ${pbAccent}, #38bdf8);"></div>
             </div>
+            ${item.desc ? `<p class="sim-pm-desc">${escapeHtml(item.desc)}</p>` : ''}
           </div>`;
         }
+
         renderedBlocksHtml += `
-        <section class="sim-block-progressbar ${isDarkMode ? 'progressbar-dark' : ''}" id="progressbar" style="padding: 40px 24px; max-width: 720px; margin: 0 auto;">
-          <div class="sim-section-header-wrap" style="text-align: center; margin-bottom: 24px;">
-            <h2 class="sim-section-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">${title}</h2>
+        <!-- PROGRESS / TELEMETRI SECTION -->
+        <section class="sim-block-progressbar ${isDarkMode ? 'progressbar-dark' : ''}" id="progressbar" style="${pbPadding} ${pbBg} ${pbFont}">
+          <div class="sim-section-header-wrap" style="text-align: ${pbAlign}; margin-bottom: 24px;">
+            ${badge ? `<span class="sim-badge-mini-caps" style="color: ${pbAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="font-size: 1.85rem; font-weight: 850; color: ${isDarkMode ? '#ffffff' : '#0f172a'}; letter-spacing: -0.02em; margin: 4px 0 8px 0;">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="font-size: 0.95rem; color: ${isDarkMode ? '#94a3b8' : '#64748b'}; margin: 0;">${subtitle}</p>` : ''}
           </div>
-          <div>
-            ${barsHtml}
+          <div class="sim-progress-meters-grid">
+            ${cardsHtml}
           </div>
         </section>`;
         break;
