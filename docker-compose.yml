@@ -99,8 +99,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - tenant_storage:/var/lib/herocms/tenants
-    expose:
-      - "8080" # Strict Local-Only (Direct hit internal dari CMS, zero open port)
+    ports:
+      - "${ORCHESTRATOR_PORT:-8083}:8080" # Exposed to host on dedicated port 8083 to prevent port collision with Traefik 8080
     networks:
       - herocms_internal_net
       - herocms_edge_net

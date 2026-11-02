@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.5',
+    version: 'v1.42.6',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -24,11 +24,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '03-provision-orchestrator',
     name: 'Service 03: Container Provision Orchestrator',
-    version: 'v1.2.2',
+    version: 'v1.2.3',
     serviceFolder: 'services/03-provision-orchestrator',
     badge: 'Stable',
     stack: 'Golang • Docker Engine SDK • cgroups v2',
-    lastUpdated: '26 Oktober 2026',
+    lastUpdated: '02 November 2026',
     leadPic: 'Andalusia & Rizal'
   },
   {
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.6',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Dekonflik Port Host Orchestrator (:8083) & Integrasi Konektivitas Go BFF Studio',
+    summary: 'Resolusi tabrakan port host antara Traefik (:8080) dan Provision Orchestrator (:8083): Menghubungkan Go backend BFF Studio ke Service 03 melalui port 8083 pada konfigurasi lokal host, memperbarui client HTTP internal orchestrator, dan menyelaraskan matriks versi independen microservices.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1426-1',
+        type: 'bugfix',
+        scope: 'Orchestrator Client & Config URL (config.go, client.go)',
+        description: 'Mengalihkan default ORCHESTRATOR_URL dari port 8080 (yang digunakan oleh konsol Traefik) ke port 8083 untuk mencegah kesalahan respons 404 saat melakukan operasi kontainer dari backend Go host.'
+      },
+      {
+        id: 'c-02dash-1426-2',
+        type: 'improvement',
+        scope: 'Microservices Version Matrix Status (changelog.ts)',
+        description: 'Memperbarui versi Service 03 (Provision Orchestrator) ke v1.2.3 dan Service 02 ke v1.42.6 pada tabel matriks versi independen platform HeroCMS.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.5',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '02 November 2026',
     title: 'Paritas Visual Mutlak Alur Figma & Desain: Brand Glyph Bersih, Hero Ambient Glow, Kartu Telemetri 4 Kolom & Slide Showcase Interaktif',
     summary: 'Penyelarasan visual 100% presisi piksel antara Mode Desain (WYSIWYG) dan Mode Alur Figma (artboard iframe kompiler HTML): (1) Brand Glyph Navbar Bersih: Menghilangkan kotak persegi berhuruf inisial ([t]) dan menggantinya dengan lambang glyph murni (default ◆ atau ikon terpilih) berwarna aksen dengan teks judul dark slate (#0f172a) identik dengan kanvas desain; (2) Ambient Blur Mesh Glow pada Hero: Menambahkan lapisan gradasi ambient glow (radial-gradient) lembut di belakang headline dan badge pill hero section; (3) Restrukturisasi Blok Telemetri / Progress Bar: Menggantikan render list vertikal polos dengan grid responsif kartu telemetri berbingkai halus (#e2e8f0, radius 12px), lengkap dengan badge kickers (TELEMETRI SISTEM), persentase di pojok kanan atas, progress bar gradasi cyan-sky, dan deskripsi performa sistem (Lighthouse Score 99/100, 184MB/256MB cgroups limit, dll.); (4) Kartu Showcase & Slide Carousel: Menampilkan kartu panggung carousel bersudut membulat 16px dengan banner gambar, badge tag rilis, judul sorotan, deskripsi lead, kredit author, dan tombol navigasi slide interaktif (&larr; / &rarr;) berbasis JavaScript vanilla; (5) Konsistensi Footer Brand: Menyematkan lambang glyph ◆ pada brand footer untuk keselarasan desain enterprise.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

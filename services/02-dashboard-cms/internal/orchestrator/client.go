@@ -87,7 +87,7 @@ type Client struct {
 func NewClient(cfg *config.Config) *Client {
 	baseURL := strings.TrimRight(cfg.OrchestratorURL, "/")
 	if baseURL == "" {
-		baseURL = "http://127.0.0.1:8080"
+		baseURL = "http://127.0.0.1:8083"
 	}
 
 	return &Client{

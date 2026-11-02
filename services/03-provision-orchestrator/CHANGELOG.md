@@ -6,6 +6,22 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.2.3] - 02 November 2026
+**Tipe Rilis**: Bugfix & Host Port Deconfliction (`:8083` for Orchestrator & Storage Fallback)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (DevOps & Security), Andalusia (Full Stack Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Resolusi Tabrakan Port Host Traefik 8080 vs Orchestrator**:
+   - Memetakan port Orchestrator ke port host `8083:8080` pada `docker-compose.yml` (`${ORCHESTRATOR_PORT:-8083}:8080`), sehingga Traefik tetap bebas melayani web UI dashboard di port `8080` tanpa tabrakan socket (`bind: address already in use`).
+   - Memperbarui default `PORT_03_API` di `run-dev.sh` ke `8083` agar eksekusi `./run-dev.sh` atau `go run ./cmd/api` di lingkungan host berjalan mulus.
+2. **Fallback Otomatis Direktori Tenant Storage Non-Root (`TENANT_STORAGE_BASE`)**:
+   - Menambahkan mekanisme fallback otomatis pada `config.LoadConfig()`. Jika path standar kontainer `/var/lib/herocms/tenants` tidak memiliki izin tulis di host (seperti pada macOS non-root dev), sistem otomatis mengalihkan base storage ke `./data/tenants` tanpa memicu error `permission denied`.
+3. **Penyelarasan Pentest Suite**:
+   - Mengarahkan default target live black-box pentest ke `http://127.0.0.1:8083`. Seluruh pengujian pentest lulus 100% PASS.
+
+---
+
 ### [03-orchestrator-v1.2.2] - 26 Oktober 2026
 **Tipe Rilis**: Bugfix & Traefik Routing Middleware Alignment (`security-headers@file,gzip-compress@file`)  
 **Status**: Production Ready & Stable  
