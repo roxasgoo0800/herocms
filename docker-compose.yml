@@ -98,7 +98,7 @@ services:
       REQUIRE_INTERNAL_AUTH: "true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - tenant_storage:/var/lib/herocms/tenants
+      - /var/lib/herocms/tenants:/var/lib/herocms/tenants
     ports:
       - "${ORCHESTRATOR_PORT:-8083}:8080" # Exposed to host on dedicated port 8083 to prevent port collision with Traefik 8080
     networks:
