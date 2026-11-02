@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.4',
+    version: 'v1.42.5',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,55 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.5',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Paritas Visual Mutlak Alur Figma & Desain: Brand Glyph Bersih, Hero Ambient Glow, Kartu Telemetri 4 Kolom & Slide Showcase Interaktif',
+    summary: 'Penyelarasan visual 100% presisi piksel antara Mode Desain (WYSIWYG) dan Mode Alur Figma (artboard iframe kompiler HTML): (1) Brand Glyph Navbar Bersih: Menghilangkan kotak persegi berhuruf inisial ([t]) dan menggantinya dengan lambang glyph murni (default ◆ atau ikon terpilih) berwarna aksen dengan teks judul dark slate (#0f172a) identik dengan kanvas desain; (2) Ambient Blur Mesh Glow pada Hero: Menambahkan lapisan gradasi ambient glow (radial-gradient) lembut di belakang headline dan badge pill hero section; (3) Restrukturisasi Blok Telemetri / Progress Bar: Menggantikan render list vertikal polos dengan grid responsif kartu telemetri berbingkai halus (#e2e8f0, radius 12px), lengkap dengan badge kickers (TELEMETRI SISTEM), persentase di pojok kanan atas, progress bar gradasi cyan-sky, dan deskripsi performa sistem (Lighthouse Score 99/100, 184MB/256MB cgroups limit, dll.); (4) Kartu Showcase & Slide Carousel: Menampilkan kartu panggung carousel bersudut membulat 16px dengan banner gambar, badge tag rilis, judul sorotan, deskripsi lead, kredit author, dan tombol navigasi slide interaktif (&larr; / &rarr;) berbasis JavaScript vanilla; (5) Konsistensi Footer Brand: Menyematkan lambang glyph ◆ pada brand footer untuk keselarasan desain enterprise.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1425-1',
+        type: 'bugfix',
+        scope: 'Navbar Brand Glyph Visual Parity (templateHtmlCompiler.ts)',
+        description: 'Menghapus pembuatan kotak inisial statis [t] dan merestrukturisasi .sim-brand-area serta .sim-brand-glyph agar merender lambang brand glyph ◆ bersih tanpa border box latar belakang, konsisten 1-to-1 dengan kanvas Mode Desain.'
+      },
+      {
+        id: 'c-02dash-1425-2',
+        type: 'improvement',
+        scope: 'Hero Ambient Mesh Glow Layer (templateHtmlCompiler.ts)',
+        description: 'Menambahkan lapisan div .sim-ambient-glow dengan radial-gradient warna aksen dan filter blur 50px di belakang judul dan badge hero section pada output templateHtmlCompiler.'
+      },
+      {
+        id: 'c-02dash-1425-3',
+        type: 'bugfix',
+        scope: 'Blok Progress Bar & Telemetri Sistem (templateHtmlCompiler.ts)',
+        description: 'Memperbaiki kompiler blok progressbar agar merender badge mini caps, judul, subjudul, dan 4 kartu metrik mandiri (.sim-progress-meter-card) dengan indikator persentase, progress fill bar, dan info deskripsi kuota server/Lighthouse.'
+      },
+      {
+        id: 'c-02dash-1425-4',
+        type: 'improvement',
+        scope: 'Showcase Carousel Stage Card & Navigasi Slide (templateHtmlCompiler.ts)',
+        description: 'Mengimplementasikan tata letak .sim-carousel-stage-container modern dengan gambar banner, tag kategori, headline, deskripsi fitur, serta fungsi navigasi panah interaktif stepCarousel.'
+      },
+      {
+        id: 'c-02dash-1425-5',
+        type: 'improvement',
+        scope: 'Footer Brand Consistency (templateHtmlCompiler.ts)',
+        description: 'Menambahkan lambang glyph ◆ pada brand logo footer untuk menyelaraskan identitas visual situs tenant.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.4',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '02 November 2026',
     title: 'Sinkronisasi Penuh Kustomisasi Blok ke Alur Figma, Perbaikan Modal Edit Rute & Tombol Aksi Cepat',
     summary: 'Penyempurnaan arsitektur kanvas Alur Figma dan modal manajemen rute: (1) Sinkronisasi Gaya Blok Menyeluruh: Mengalirkan warna latar belakang (bgColor), warna teks, tipografi font, alignment, padding vertikal, dan ikon SVG kustom dari mode single design ke seluruh artboard iframe di Alur Figma tanpa ada data visual yang hilang; (2) Dukungan Blok Baru di Kompiler: Mengimplementasikan renderer HTML untuk blok Formulir Kontak (leads & live communication), Testimonial, Bento Grid, dan Layanan di templateHtmlCompiler; (3) Perbaikan Modal Edit Rute: Memperbaiki backdrop modal (.modal-backdrop) dan centering dialog sehingga modal edit rute muncul secara sempurna dengan efek frosted blur; (4) Tombol Aksi Edit Rute Cepat: Menambahkan tombol aksi [⚙ Edit] yang jelas dan kontras pada setiap baris halaman di dropdown switcher top bar, serta tombol [Edit Rute] pada shelf artboard Alur Figma; (5) Optimasi URL Google Fonts: Mengonversi spasi font menjadi tanda plus (+) untuk kompatibilitas mutlak Google Fonts API.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

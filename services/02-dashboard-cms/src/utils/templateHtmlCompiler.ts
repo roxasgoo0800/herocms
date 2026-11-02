@@ -875,8 +875,9 @@ export function compileTemplateToHTML(
         <footer class="sim-block-footer ${isDarkMode ? 'footer-dark' : ''}">
           <div class="sim-footer-inner">
             <div class="footer-left">
-              <div class="footer-brand" style="color: ${accentColor};">
-                ${brand}
+              <div class="footer-brand" style="color: ${accentColor}; display: flex; align-items: center; gap: 6px;">
+                <span>◆</span>
+                <span>${brand}</span>
               </div>
               <p style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">
                 ${copyright}
@@ -967,17 +968,15 @@ export function compileTemplateToHTML(
         .sim-brand-area {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         .sim-brand-glyph {
-            width: 34px;
-            height: 34px;
-            border-radius: 9px;
-            display: flex;
+            font-size: 1.05rem;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.05rem;
-            font-weight: 800;
+            user-select: none;
+            line-height: 1;
         }
         .sim-brand-title {
             font-size: 1.15rem;
@@ -1021,6 +1020,7 @@ export function compileTemplateToHTML(
             flex-direction: column;
             align-items: center;
             position: relative;
+            overflow: hidden;
         }
         .sim-hero-badge-pill {
             display: inline-flex;
@@ -1293,6 +1293,137 @@ export function compileTemplateToHTML(
         .sim-acc-arrow.rotated { transform: rotate(180deg); }
         .sim-accordion-body { padding: 0 20px 16px; font-size: 0.88rem; line-height: 1.55; }
 
+        /* Progress Bar / Telemetry */
+        .sim-block-progressbar {
+            padding: 56px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .sim-badge-mini-caps {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+        .sim-progress-meters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .sim-progress-meter-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.03);
+            box-sizing: border-box;
+        }
+        .sim-progress-meter-card.card-dark {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        .sim-pm-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sim-pm-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .card-dark .sim-pm-title {
+            color: #f8fafc;
+        }
+        .sim-pm-val {
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .sim-pm-track {
+            width: 100%;
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .card-dark .sim-pm-track {
+            background: #334155;
+        }
+        .sim-pm-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+        .sim-pm-desc {
+            font-size: 0.78rem;
+            color: #64748b;
+            margin: 0;
+        }
+        .card-dark .sim-pm-desc {
+            color: #94a3b8;
+        }
+
+        /* Carousel Component */
+        .sim-block-carousel {
+            padding: 56px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .sim-carousel-stage-container {
+            max-width: 860px;
+            margin: 24px auto 0;
+            position: relative;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 36px 40px;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+            box-sizing: border-box;
+        }
+        .sim-carousel-stage-container.stage-dark {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        .sim-carousel-nav-arrows {
+            display: flex;
+            justify-content: space-between;
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            right: 12px;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        .sim-carousel-arrow-btn {
+            pointer-events: auto;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1);
+            transition: all 0.15s ease;
+            font-size: 1rem;
+        }
+        .sim-carousel-arrow-btn:hover {
+            background: var(--tpl-accent, #2563eb);
+            color: #ffffff;
+            border-color: var(--tpl-accent, #2563eb);
+        }
+
         /* 9. Pricing */
         .sim-block-pricing { padding: 60px 24px; background: #f8fafc; }
         .sim-block-pricing.pricing-dark { background: #090d16; }
@@ -1421,6 +1552,20 @@ export function compileTemplateToHTML(
             period.forEach(el => {
                 el.innerText = isAnnual ? '/ thn' : '/ bln';
             });
+        }
+
+        function stepCarousel(btn, delta) {
+            const stage = btn.closest('.sim-carousel-stage-container');
+            if (!stage) return;
+            const slides = stage.querySelectorAll('.sim-carousel-slide');
+            if (slides.length <= 1) return;
+            let activeIdx = 0;
+            slides.forEach((s, idx) => {
+                if (s.style.display !== 'none') activeIdx = idx;
+            });
+            slides[activeIdx].style.display = 'none';
+            let nextIdx = (activeIdx + delta + slides.length) % slides.length;
+            slides[nextIdx].style.display = 'flex';
         }
     </script>
 </body>
