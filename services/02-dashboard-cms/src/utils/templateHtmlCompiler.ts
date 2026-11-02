@@ -239,18 +239,18 @@ export function compileTemplateToHTML(
         <!-- NAVBAR -->
         <header class="sim-block-navbar${alignClass}" style="${stickyStyle} ${bgStyle} ${navFont}">
           <div class="sim-brand-area">
-            <span class="sim-brand-glyph" style="color: ${glyphColor}; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center;">
+            <span class="sim-brand-glyph" style="color: ${glyphColor}; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center;">
               ${glyph}
             </span>
             <span class="sim-brand-title" style="color: ${navTextColor}; ${navFont}">
               ${brandTitle}
             </span>
           </div>
-          <nav class="sim-nav-links-row">
-            ${navLinks}
-          </nav>
-          <div class="sim-nav-actions">
-            ${buttonText ? `<a href="${escapeHtml(buttonUrl)}" class="sim-btn-nav-cta" style="${navBtnStyle}">${buttonText}</a>` : ''}
+          <div class="sim-nav-cluster${alignClass}">
+            <nav class="sim-nav-links-row">
+              ${navLinks}
+            </nav>
+            ${buttonText ? `<div class="sim-nav-actions"><a href="${escapeHtml(buttonUrl)}" class="sim-btn-nav-cta" style="${navBtnStyle}">${buttonText}</a></div>` : ''}
           </div>
         </header>`;
         break;
@@ -989,13 +989,14 @@ export function compileTemplateToHTML(
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 28px;
+            padding: 16px 32px;
             background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
             position: sticky;
             top: 0;
             z-index: 50;
+            box-sizing: border-box;
         }
         ${isDarkMode ? `
         .sim-block-navbar {
@@ -1008,7 +1009,7 @@ export function compileTemplateToHTML(
             gap: 8px;
         }
         .sim-brand-glyph {
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -1016,35 +1017,48 @@ export function compileTemplateToHTML(
             line-height: 1;
         }
         .sim-brand-title {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 800;
             letter-spacing: -0.02em;
+        }
+        .sim-nav-cluster {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .sim-nav-cluster.is-centered {
+            flex: 1;
+            justify-content: center;
         }
         .sim-nav-links-row {
             display: flex;
             align-items: center;
-            gap: 22px;
+            gap: 20px;
         }
         .sim-nav-links-row a {
-            color: #64748b;
+            color: #475569;
             text-decoration: none;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             font-weight: 600;
             transition: color 0.15s ease;
         }
-        .sim-nav-links-row a:hover { color: ${accentColor}; }
+        .sim-nav-links-row a:hover { color: #0f172a; }
         .sim-nav-links-row a.active {
             color: ${accentColor};
             font-weight: 700;
         }
         .sim-btn-nav-cta {
-            padding: 8px 18px;
+            padding: 8px 16px;
             border-radius: 8px;
             color: #ffffff;
             font-size: 0.82rem;
             font-weight: 700;
             border: none;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             transition: opacity 0.15s ease;
         }
         .sim-btn-nav-cta:hover { opacity: 0.9; }
