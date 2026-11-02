@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.6',
+    version: 'v1.42.7',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -24,7 +24,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '03-provision-orchestrator',
     name: 'Service 03: Container Provision Orchestrator',
-    version: 'v1.2.3',
+    version: 'v1.2.4',
     serviceFolder: 'services/03-provision-orchestrator',
     badge: 'Stable',
     stack: 'Golang • Docker Engine SDK • cgroups v2',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.7',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Sinkronisasi Blueprint Template & Aksen Warna Baru ke Visual Editor, Isolasi Root Home Index & Dukungan Routing Multi-Halaman Nginx',
+    summary: 'Perbaikan fundamental siklus hidup kontainer baru dan editor visual: (1) Penyerapan Blueprint & Aksen Warna Instan: Memperbaiki pencocokan template di VisualEditorModule dan memperbarui watcher activeContainerId agar editor langsung memuat template serta warna aksen yang dipilih saat membuat situs baru; (2) Isolasi Kompilasi Root Home: Memastikan berkas root index.html selalu dikompilasi dari halaman Beranda (/) tanpa tertimpa konten sub-halaman saat menerbitkan perubahan dari rute sub-halaman (/about); (3) Kompilasi & Penyemaian Sub-Halaman Multi-Page: Mengompilasi seluruh sub-halaman (multiPagesHtml) dan menyinkronkannya melalui Go BFF ke Service 03 Orchestrator untuk penulisan <page>.html dan <page>/index.html di Nginx kontainer tenant.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1427-1',
+        type: 'bugfix',
+        scope: 'Visual Editor Template & Accent Hydration (VisualEditorModule.vue, useDashboardData.ts)',
+        description: 'Memperbaiki pemetaan template title pencocokan resmi, menyuntikkan accentColor ke blok dan multi-page canvas, serta memperbarui watcher activeContainerId agar draf kontainer baru langsung di-hydrate saat editor dibuka.'
+      },
+      {
+        id: 'c-02dash-1427-2',
+        type: 'bugfix',
+        scope: 'Root Home Page Isolation during Publish (useDashboardData.ts)',
+        description: 'Memastikan proses handlePublishChanges selalu mengompilasi root index.html dari halaman Beranda (path: / atau page_home) terlepas dari posisi rute aktif yang sedang diedit pengguna di kanvas.'
+      },
+      {
+        id: 'c-02dash-1427-3',
+        type: 'feature',
+        scope: 'Multi-Page Sub-Routes Compiler & Nginx Delivery (templateHtmlCompiler.ts, service.go, client.go)',
+        description: 'Menyusun berkas HTML terpisah untuk setiap sub-halaman rute dan mengirimkannya ke Provision Orchestrator untuk ditulis ke public/<page>/index.html sehingga navigasi navbar Nginx live berjalan mulus tanpa 404.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.6',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '02 November 2026',
     title: 'Dekonflik Port Host Orchestrator (:8083) & Integrasi Konektivitas Go BFF Studio',
     summary: 'Resolusi tabrakan port host antara Traefik (:8080) dan Provision Orchestrator (:8083): Menghubungkan Go backend BFF Studio ke Service 03 melalui port 8083 pada konfigurasi lokal host, memperbarui client HTTP internal orchestrator, dan menyelaraskan matriks versi independen microservices.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

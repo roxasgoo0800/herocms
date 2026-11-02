@@ -6,6 +6,21 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.2.4] - 02 November 2026
+**Tipe Rilis**: Feature Hardening & Multi-Page Storage Seeding (`public/<page>.html` & `public/<page>/index.html`)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (DevOps & Security), Andalusia (Full Stack Lead), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Penyemaian Storage Multi-Halaman Tenant (`manager.SeedTenantWebsite`)**:
+   - Menambahkan field `Pages map[string]string` ke dalam `TemplateSeedParams` dan `TenantDeployParams`.
+   - Menulis setiap sub-halaman situs ke file statis `public/<page>.html` sekaligus membuat folder `public/<page>/index.html` di direktori persistent storage tenant.
+   - Menyelesaikan kendala 404 pada Nginx runtime tenant saat pengunjung mengeklik link navigasi sub-rute (seperti `/about`, `/services`, `/contact`).
+2. **Dukungan Payload Multi-Halaman di API Router (`router.go`)**:
+   - Menerima `pages` pada endpoint `POST /api/v1/containers/deploy` dan `POST /api/v1/containers/:id/template`, meneruskannya secara transparan ke modul penyimpanan.
+
+---
+
 ### [03-orchestrator-v1.2.3] - 02 November 2026
 **Tipe Rilis**: Bugfix & Host Port Deconfliction (`:8083` for Orchestrator & Storage Fallback)  
 **Status**: Production Ready & Stable  

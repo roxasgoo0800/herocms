@@ -376,14 +376,15 @@ func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, e
 }
 
 type CreateContainerInput struct {
-	Name         string `json:"name"`
-	Subdomain    string `json:"subdomain"`
-	Category     string `json:"category"`
-	Role         string `json:"role"`
-	TemplateName string `json:"templateName"`
-	AccentColor  string `json:"accentColor"`
-	BioIntro     string `json:"bioIntro"`
-	CustomHTML   string `json:"customHTML"`
+	Name         string            `json:"name"`
+	Subdomain    string            `json:"subdomain"`
+	Category     string            `json:"category"`
+	Role         string            `json:"role"`
+	TemplateName string            `json:"templateName"`
+	AccentColor  string            `json:"accentColor"`
+	BioIntro     string            `json:"bioIntro"`
+	CustomHTML   string            `json:"customHTML"`
+	Pages        map[string]string `json:"pages,omitempty"`
 }
 
 func (s *Services) CreateContainer(ctx context.Context, tenantID string, input CreateContainerInput) (gin.H, error) {
@@ -500,6 +501,7 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 			BioIntro:     bioIntro,
 			AccentColor:  accentColor,
 			CustomHTML:   input.CustomHTML,
+			Pages:        input.Pages,
 		})
 		if err != nil {
 			log.Printf("[ORCHESTRATOR NOTICE] Provision warning for %s (%s): %v", siteUUID, input.Subdomain, err)
@@ -783,7 +785,24 @@ func (s *Services) SaveSiteDesign(ctx context.Context, tenantID, id string, payl
 			customHTML, _ = payload["custom_html"].(string)
 		}
 
-		if tplName != "" || cat != "" || role != "" || bio != "" || accent != "" || customHTML != "" {
+		var pagesMap map[string]string
+		if rawPages, ok := payload["pages"].(map[string]interface{}); ok {
+			pagesMap = make(map[string]string)
+			for k, v := range rawPages {
+				if sVal, ok := v.(string); ok {
+					pagesMap[k] = sVal
+				}
+			}
+		} else if rawPages, ok := payload["multiPagesHtml"].(map[string]interface{}); ok {
+			pagesMap = make(map[string]string)
+			for k, v := range rawPages {
+				if sVal, ok := v.(string); ok {
+					pagesMap[k] = sVal
+				}
+			}
+		}
+
+		if tplName != "" || cat != "" || role != "" || bio != "" || accent != "" || customHTML != "" || len(pagesMap) > 0 {
 			_ = s.Orchestrator.ApplyTemplate(ctx, orchestrator.ApplyTemplatePayload{
 				TenantID:     tenantID,
 				SiteID:       id,
@@ -795,6 +814,7 @@ func (s *Services) SaveSiteDesign(ctx context.Context, tenantID, id string, payl
 				BioIntro:     bio,
 				AccentColor:  accent,
 				CustomHTML:   customHTML,
+				Pages:        pagesMap,
 			})
 
 			nowStr := time.Now().Format("15:04:05")

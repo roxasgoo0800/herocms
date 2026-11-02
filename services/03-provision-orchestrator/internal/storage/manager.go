@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 )
@@ -383,7 +384,28 @@ func (m *Manager) SeedTenantWebsite(tenantID string, p TemplateSeedParams) error
 	}
 	_ = os.WriteFile(backupPath, []byte(htmlContent), 0644)
 
-	log.Printf("[STORAGE SEEDED] Website template '%s' (category: %s, site: %s) seeded for tenant %s", p.TemplateName, p.Category, p.SiteName, cleanID)
+	// Seed multi-pages if provided (e.g. "/about" -> "about.html" and "about/index.html")
+	for pagePath, pageHTML := range p.Pages {
+		cleanPage := strings.TrimPrefix(pagePath, "/")
+		if cleanPage == "" || cleanPage == "index.html" || cleanPage == "index" {
+			continue
+		}
+
+		// Ensure .html extension
+		htmlFilename := cleanPage
+		if !strings.HasSuffix(htmlFilename, ".html") {
+			htmlFilename += ".html"
+		}
+		_ = os.WriteFile(filepath.Join(publicPath, htmlFilename), []byte(pageHTML), 0644)
+
+		// Also create subdirectory /<page>/index.html for clean URL support
+		pageDir := filepath.Join(publicPath, strings.TrimSuffix(cleanPage, ".html"))
+		if err := os.MkdirAll(pageDir, 0775); err == nil {
+			_ = os.WriteFile(filepath.Join(pageDir, "index.html"), []byte(pageHTML), 0644)
+		}
+	}
+
+	log.Printf("[STORAGE SEEDED] Website template '%s' (category: %s, site: %s, sub-pages: %d) seeded for tenant %s", p.TemplateName, p.Category, p.SiteName, len(p.Pages), cleanID)
 	return nil
 }
 

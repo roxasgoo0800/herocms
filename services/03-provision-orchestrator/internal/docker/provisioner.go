@@ -26,18 +26,19 @@ import (
 
 // TenantDeployParams encapsulates parameters for spawning a new tenant website container
 type TenantDeployParams struct {
-	TenantID     string `json:"tenant_id"`
-	SiteID       string `json:"site_id"`
-	Subdomain    string `json:"subdomain"`
-	CustomDomain string `json:"custom_domain,omitempty"`
-	VersionHash  string `json:"version_hash"`
-	SiteName     string `json:"site_name,omitempty"`
-	TemplateName string `json:"template_name,omitempty"`
-	Category     string `json:"category,omitempty"`
-	RoleHeadline string `json:"role_headline,omitempty"`
-	BioIntro     string `json:"bio_intro,omitempty"`
-	AccentColor  string `json:"accent_color,omitempty"`
-	CustomHTML   string `json:"custom_html,omitempty"`
+	TenantID     string            `json:"tenant_id"`
+	SiteID       string            `json:"site_id"`
+	Subdomain    string            `json:"subdomain"`
+	CustomDomain string            `json:"custom_domain,omitempty"`
+	VersionHash  string            `json:"version_hash"`
+	SiteName     string            `json:"site_name,omitempty"`
+	TemplateName string            `json:"template_name,omitempty"`
+	Category     string            `json:"category,omitempty"`
+	RoleHeadline string            `json:"role_headline,omitempty"`
+	BioIntro     string            `json:"bio_intro,omitempty"`
+	AccentColor  string            `json:"accent_color,omitempty"`
+	CustomHTML   string            `json:"custom_html,omitempty"`
+	Pages        map[string]string `json:"pages,omitempty"`
 }
 
 // ContainerSummary holds tenant container overview
@@ -213,6 +214,7 @@ func (p *Provisioner) DeployTenantContainer(ctx context.Context, params TenantDe
 			BioIntro:     params.BioIntro,
 			AccentColor:  params.AccentColor,
 			CustomHTML:   params.CustomHTML,
+			Pages:        params.Pages,
 		})
 	}
 

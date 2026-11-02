@@ -26,9 +26,10 @@ type DeployPayload struct {
 	TemplateName string `json:"template_name,omitempty"`
 	Category     string `json:"category,omitempty"`
 	RoleHeadline string `json:"role_headline,omitempty"`
-	BioIntro     string `json:"bio_intro,omitempty"`
-	AccentColor  string `json:"accent_color,omitempty"`
-	CustomHTML   string `json:"custom_html,omitempty"`
+	BioIntro     string            `json:"bio_intro,omitempty"`
+	AccentColor  string            `json:"accent_color,omitempty"`
+	CustomHTML   string            `json:"custom_html,omitempty"`
+	Pages        map[string]string `json:"pages,omitempty"`
 }
 
 // DeployResponse represents the response from Service 03 deploy endpoint
@@ -465,8 +466,9 @@ type ApplyTemplatePayload struct {
 	Category     string `json:"category"`
 	RoleHeadline string `json:"role_headline"`
 	BioIntro     string `json:"bio_intro"`
-	AccentColor  string `json:"accent_color"`
-	CustomHTML   string `json:"custom_html,omitempty"`
+	AccentColor  string            `json:"accent_color"`
+	CustomHTML   string            `json:"custom_html,omitempty"`
+	Pages        map[string]string `json:"pages,omitempty"`
 }
 
 // ApplyTemplate re-seeds and redeploys website template HTML to container storage

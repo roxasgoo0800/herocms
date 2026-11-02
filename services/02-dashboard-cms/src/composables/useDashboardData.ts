@@ -469,21 +469,37 @@ const handleCreateContainer = async () => {
   const cleanSubdomain = newSiteForm.value.subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '');
   const tempId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
 
-  let tplName = 'Portofolio Teknis Engineer';
   let matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_portfolio_pro') || officialTemplates.value[0];
   if (newSiteForm.value.category === 'business') {
-    tplName = 'Toko Online & Penjualan Retail';
     matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_ecommerce_store') || matchedTpl;
   } else if (newSiteForm.value.category === 'blog') {
-    tplName = 'Editorial Media & Blog';
     matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_blog_editorial') || matchedTpl;
   } else if (newSiteForm.value.category === 'education') {
-    tplName = 'Pusat Edukasi LMS';
     matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_edu_lms') || matchedTpl;
   }
+  const tplName = matchedTpl?.title || 'Portofolio Teknis Engineer';
 
   const chosenAccent = newSiteForm.value.accentColor || matchedTpl?.accentColor || '#2563eb';
   const clonedBlocks = matchedTpl ? JSON.parse(JSON.stringify(matchedTpl.blocks)) : [];
+  if (chosenAccent && Array.isArray(clonedBlocks)) {
+    clonedBlocks.forEach((b: any) => {
+      if (!b.styles) b.styles = {};
+      b.styles.accentColor = chosenAccent;
+    });
+  }
+
+  const clonedPages = (matchedTpl?.pages && Array.isArray(matchedTpl.pages))
+    ? JSON.parse(JSON.stringify(matchedTpl.pages)).map((pg: any) => {
+        if (chosenAccent && Array.isArray(pg.blocks)) {
+          pg.blocks.forEach((b: any) => {
+            if (!b.styles) b.styles = {};
+            b.styles.accentColor = chosenAccent;
+          });
+        }
+        return pg;
+      })
+    : undefined;
+
   const fullHTML = matchedTpl ? compileTemplateToHTML(matchedTpl, {
     siteName: newSiteForm.value.name,
     subdomain: `${cleanSubdomain}.stackbyte.id`,
@@ -514,16 +530,25 @@ const handleCreateContainer = async () => {
     bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
     accentColor: chosenAccent,
     lastDeployed: 'Baru saja',
-    themeConfig: matchedTpl ? { ...matchedTpl.themeConfig, accentColor: chosenAccent, blocks: clonedBlocks } : { blocks: clonedBlocks }
+    themeConfig: matchedTpl ? {
+      ...matchedTpl.themeConfig,
+      templateId: matchedTpl.id,
+      accentColor: chosenAccent,
+      blocks: clonedBlocks,
+      pages: clonedPages,
+      isMultiPage: matchedTpl.isMultiPage || (clonedPages && clonedPages.length > 1) || false
+    } : { blocks: clonedBlocks, accentColor: chosenAccent }
   });
 
   if (typeof localStorage !== 'undefined') {
     const editorDraftPayload = {
       blocks: clonedBlocks,
+      pages: clonedPages,
+      activePageId: clonedPages?.[0]?.id || 'page_home',
       roleOrHeadline: newContainerObj.roleOrHeadline,
       bioIntro: newContainerObj.bioIntro,
-      accentColor: newContainerObj.accentColor,
-      fontFamily: matchedTpl?.fontFamily || 'Inter',
+      accentColor: chosenAccent,
+      fontFamily: matchedTpl?.fontFamily || 'Plus Jakarta Sans',
       selectedBlockId: clonedBlocks[1]?.id || clonedBlocks[0]?.id || null,
       zoom: 100,
       currentDevice: 'desktop',
@@ -552,6 +577,17 @@ const handleCreateContainer = async () => {
     containers.value = [...containers.value];
   };
 
+  // Compile multi-page HTML if template is multi-page
+  const multiPagesHtml: Record<string, string> = (matchedTpl && clonedPages && clonedPages.length > 0)
+    ? compileMultiPageSiteToHTML(matchedTpl, {
+        siteName: newSiteForm.value.name,
+        subdomain: cleanSubdomain,
+        accentColor: chosenAccent,
+        sitemapPages: clonedPages,
+        pages: clonedPages
+      })
+    : {};
+
   // Trigger backend API creation concurrently
   const createPromise = studioApi.createContainer({
     name: newSiteForm.value.name,
@@ -561,7 +597,8 @@ const handleCreateContainer = async () => {
     templateName: tplName,
     accentColor: chosenAccent,
     bioIntro: newContainerObj.bioIntro,
-    customHTML: fullHTML
+    customHTML: fullHTML,
+    pages: multiPagesHtml
   });
 
   try {
@@ -758,6 +795,7 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
     activeContainer.value.themeConfig = {
       ...activeContainer.value.themeConfig,
       ...tpl.themeConfig,
+      templateId: tpl.id,
       accentColor: chosenAccent,
       blocks: clonedBlocks,
       pages: clonedPages,
@@ -798,6 +836,16 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
       blocksOverride: clonedBlocks
     });
 
+    const multiPagesHtml: Record<string, string> = (tpl && clonedPages && clonedPages.length > 0)
+      ? compileMultiPageSiteToHTML(tpl, {
+          siteName: activeContainer.value.name,
+          subdomain: activeContainer.value.subdomain,
+          accentColor: chosenAccent,
+          sitemapPages: clonedPages,
+          pages: clonedPages
+        })
+      : {};
+
     // Trigger API backend persist & re-seeding concurrently
     const savePromise = studioApi.saveSiteDesign(targetId, {
       name: activeContainer.value.name,
@@ -808,6 +856,8 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
       bioIntro: tpl.defaultBio,
       accentColor: chosenAccent,
       customHTML: fullHTML,
+      pages: multiPagesHtml,
+      multiPagesHtml: multiPagesHtml,
       themeConfig: activeContainer.value.themeConfig
     }).catch(err => console.warn('[API] saveSiteDesign warning:', err));
 
@@ -909,7 +959,7 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     bioIntro: tpl?.defaultBio || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
     accentColor: tpl?.accentColor || '#2563eb',
     lastDeployed: 'Sedang deploy...',
-    themeConfig: tpl ? { ...tpl.themeConfig, blocks: clonedBlocks, pages: clonedPages, isMultiPage: tpl.isMultiPage || false } : { blocks: clonedBlocks }
+    themeConfig: tpl ? { ...tpl.themeConfig, templateId: tpl.id, blocks: clonedBlocks, pages: clonedPages, isMultiPage: tpl.isMultiPage || false } : { blocks: clonedBlocks }
   });
 
   containers.value.push(newContainerObj);
@@ -955,6 +1005,16 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     blocksOverride: clonedBlocks
   }) : '';
 
+  const multiPagesHtml: Record<string, string> = (tpl && clonedPages && clonedPages.length > 0)
+    ? compileMultiPageSiteToHTML(tpl, {
+        siteName: payload.name.trim(),
+        subdomain: `${cleanSubdomain}.stackbyte.id`,
+        accentColor: newContainerObj.accentColor,
+        sitemapPages: clonedPages,
+        pages: clonedPages
+      })
+    : {};
+
   const createPromise = studioApi.createContainer({
     name: payload.name.trim(),
     subdomain: cleanSubdomain,
@@ -963,7 +1023,8 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     templateName: newContainerObj.templateName,
     accentColor: newContainerObj.accentColor,
     bioIntro: newContainerObj.bioIntro,
-    customHTML: fullHTML
+    customHTML: fullHTML,
+    pages: multiPagesHtml
   });
 
   try {
@@ -1074,29 +1135,39 @@ const handlePublishChanges = async () => {
   try {
     const matchedTpl = officialTemplates.value.find(t =>
       t.title === activeContainer.value?.templateName ||
+      t.id === (activeContainer.value?.themeConfig as any)?.templateId ||
       t.category === activeContainer.value?.category
     ) || officialTemplates.value[0];
 
-    const currentBlocks = activeContainer.value.themeConfig?.blocks || matchedTpl?.blocks || [];
+    const pages = (activeContainer.value.themeConfig?.pages as any[]) || [];
+    const hasPages = Array.isArray(pages) && pages.length > 0;
+
+    // ROOT index.html MUST ALWAYS be compiled from the Home page ('/' or 'page_home')
+    const homePage = hasPages
+      ? (pages.find(p => p.path === '/' || p.id === 'page_home') || pages[0])
+      : null;
+    const homeBlocks = homePage?.blocks || activeContainer.value.themeConfig?.blocks || matchedTpl?.blocks || [];
+
     const fullHTML = matchedTpl ? compileTemplateToHTML(matchedTpl, {
       siteName: activeContainer.value.name,
       subdomain: activeContainer.value.subdomain,
       accentColor: activeContainer.value.accentColor,
       roleOrHeadline: activeContainer.value.roleOrHeadline,
       bioIntro: activeContainer.value.bioIntro,
-      blocksOverride: currentBlocks
+      sitemapPages: hasPages ? pages : undefined,
+      activeRoutePath: '/',
+      blocksOverride: homeBlocks
     }) : '';
 
-    const pages = activeContainer.value.themeConfig?.pages;
-    const isMulti = activeContainer.value.themeConfig?.isMultiPage && pages && pages.length > 0;
-    const multiPagesHtml = (matchedTpl && isMulti) ? compileMultiPageSiteToHTML(matchedTpl, {
+    const multiPagesHtml: Record<string, string> = (matchedTpl && hasPages) ? compileMultiPageSiteToHTML(matchedTpl, {
       siteName: activeContainer.value.name,
       subdomain: activeContainer.value.subdomain,
       accentColor: activeContainer.value.accentColor,
+      sitemapPages: pages,
       pages: pages
-    }) : undefined;
+    }) : {};
 
-    if (multiPagesHtml && activeContainer.value.themeConfig) {
+    if (activeContainer.value.themeConfig) {
       (activeContainer.value.themeConfig as any).multiPagesHtml = multiPagesHtml;
     }
 
@@ -1109,6 +1180,8 @@ const handlePublishChanges = async () => {
       bioIntro: activeContainer.value.bioIntro,
       accentColor: activeContainer.value.accentColor,
       customHTML: fullHTML,
+      pages: multiPagesHtml,
+      multiPagesHtml: multiPagesHtml,
       themeConfig: activeContainer.value.themeConfig || {}
     };
     await studioApi.saveSiteDesign(activeContainer.value.id, payload);

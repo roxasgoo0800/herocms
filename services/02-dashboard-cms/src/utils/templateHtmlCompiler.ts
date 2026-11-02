@@ -1637,12 +1637,20 @@ export function compileMultiPageSiteToHTML(
   const result: Record<string, string> = {};
   for (const page of pages) {
     const filename = page.path === '/' ? 'index.html' : `${page.path.replace(/^\//, '')}.html`;
-    result[filename] = compileTemplateToHTML(template, {
+    const cleanRoute = page.path === '/' ? '/' : `/${page.path.replace(/^\//, '')}`;
+    const pageHtml = compileTemplateToHTML(template, {
       ...options,
-      roleOrHeadline: page.title,
-      bioIntro: page.description,
+      roleOrHeadline: page.title || options.roleOrHeadline,
+      bioIntro: page.description || options.bioIntro,
+      activeRoutePath: cleanRoute,
+      sitemapPages: options.sitemapPages || pages,
       blocksOverride: page.blocks
     });
+    result[filename] = pageHtml;
+    // Also include clean path key without .html for orchestrator directory creation
+    if (page.path !== '/') {
+      result[page.path.replace(/^\//, '')] = pageHtml;
+    }
   }
   return result;
 }

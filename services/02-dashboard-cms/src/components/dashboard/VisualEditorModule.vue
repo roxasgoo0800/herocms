@@ -1485,15 +1485,27 @@ const loadBlocksForActiveContainer = () => {
   const container = activeContainer.value;
   if (!container) return;
 
+  const applyAccentColor = (blocks: VisualBlock[]) => {
+    if (!container.accentColor || !Array.isArray(blocks)) return;
+    blocks.forEach(b => {
+      if (!b.styles) b.styles = {};
+      b.styles.accentColor = container.accentColor;
+    });
+  };
+
   // 1. HIGHEST PRIORITY: Container's own saved pages (never overwrite user's pages with template)
   if (container.themeConfig?.pages && Array.isArray(container.themeConfig.pages) && container.themeConfig.pages.length > 0) {
-    multiPages.value = JSON.parse(JSON.stringify(container.themeConfig.pages)).map((p: any, idx: number) => ({
-      ...p,
-      canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
-      canvasY: p.canvasY || 0
-    }));
+    multiPages.value = JSON.parse(JSON.stringify(container.themeConfig.pages)).map((p: any, idx: number) => {
+      applyAccentColor(p.blocks || []);
+      return {
+        ...p,
+        canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
+        canvasY: p.canvasY || 0
+      };
+    });
     activePageId.value = multiPages.value[0]?.id || 'page_home';
     pageBlocks.value = JSON.parse(JSON.stringify(multiPages.value[0]?.blocks || []));
+    applyAccentColor(pageBlocks.value);
     if (pageBlocks.value.length > 0) {
       selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
     }
@@ -1503,6 +1515,7 @@ const loadBlocksForActiveContainer = () => {
   // 2. SECOND PRIORITY: Container's own saved blocks
   if (container.themeConfig?.blocks && Array.isArray(container.themeConfig.blocks) && container.themeConfig.blocks.length > 0) {
     pageBlocks.value = JSON.parse(JSON.stringify(container.themeConfig.blocks));
+    applyAccentColor(pageBlocks.value);
     multiPages.value = [
       {
         id: 'page_home',
@@ -1525,19 +1538,29 @@ const loadBlocksForActiveContainer = () => {
   const templateId = (container.themeConfig as any)?.templateId || '';
   const matchedTemplate = officialTemplatesData.find(t =>
     (templateId && t.id === templateId) ||
-    (container.templateName && t.title === container.templateName)
+    (container.templateName && (
+      t.title === container.templateName ||
+      t.title.toLowerCase().includes(container.templateName.toLowerCase()) ||
+      container.templateName.toLowerCase().includes(t.title.toLowerCase())
+    )) ||
+    (container.category && t.category === container.category)
   );
 
   if (matchedTemplate?.isMultiPage && matchedTemplate.pages && matchedTemplate.pages.length > 0) {
-    multiPages.value = JSON.parse(JSON.stringify(matchedTemplate.pages)).map((p: any, idx: number) => ({
-      ...p,
-      canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
-      canvasY: p.canvasY || 0
-    }));
+    multiPages.value = JSON.parse(JSON.stringify(matchedTemplate.pages)).map((p: any, idx: number) => {
+      applyAccentColor(p.blocks || []);
+      return {
+        ...p,
+        canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
+        canvasY: p.canvasY || 0
+      };
+    });
     activePageId.value = multiPages.value[0]?.id || 'page_home';
     pageBlocks.value = JSON.parse(JSON.stringify(multiPages.value[0]?.blocks || []));
+    applyAccentColor(pageBlocks.value);
   } else if (matchedTemplate?.blocks && Array.isArray(matchedTemplate.blocks) && matchedTemplate.blocks.length > 0) {
     pageBlocks.value = JSON.parse(JSON.stringify(matchedTemplate.blocks));
+    applyAccentColor(pageBlocks.value);
     multiPages.value = [
       {
         id: 'page_home',
@@ -1556,6 +1579,7 @@ const loadBlocksForActiveContainer = () => {
     const role = container.roleOrHeadline || 'Portofolio Teknis Engineer';
     const bio = container.bioIntro || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.';
     pageBlocks.value = createDefaultBlocks(siteName, role, bio);
+    applyAccentColor(pageBlocks.value);
     multiPages.value = [
       {
         id: 'page_home',
@@ -1735,7 +1759,7 @@ const resetDraftToDefault = () => {
 watch(
   () => activeContainerId.value,
   async (newId, oldId) => {
-    if (newId && oldId) {
+    if (newId && newId !== oldId) {
       isEditorBooting.value = true;
       bootProgress.value = 35;
       bootStatusText.value = 'Memuat draf situs...';
