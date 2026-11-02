@@ -1405,37 +1405,10 @@ export function compileTemplateToHTML(
         .footer-left p { font-size: 0.8rem; margin: 4px 0 0; }
         .edge-status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.74rem; color: #64748b; font-weight: 600; font-family: monospace; }
         .edge-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; }
-
-        /* Floating Pod Badge */
-        .pod-floating-badge {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(15, 23, 42, 0.92);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(16, 185, 129, 0.45);
-            border-radius: 9999px;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.78rem;
-            color: #10b981;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            font-weight: 600;
-        }
-        .pod-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
     </style>
 </head>
 <body>
     ${renderedBlocksHtml}
-
-    <div class="pod-floating-badge">
-        <span class="pod-dot"></span>
-        <span>Pod Kontainer Aktif (${subdomain})</span>
-    </div>
 
     <script>
         function toggleAcc(el) {

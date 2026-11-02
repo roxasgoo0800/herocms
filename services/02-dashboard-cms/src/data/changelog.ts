@@ -107,6 +107,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Penyempurnaan Visual & Tipografi Modal Edit Rute (VisualEditorModule.vue & visual-editor.css)',
         description: 'Menyempurnakan proporsi modal Edit Rute ke ukuran proporsional 530px, mereset tipografi input dan textarea dari monospace kaku ke font sans modern HeroCMS, menghadirkan kartu ingress terpadu untuk rute beranda (/) dengan badge Root Tetap, menambahkan pratinjau live navigasi web, counter karakter SEO, dan tombol simpan Obsidian bergradasi.'
+      },
+      {
+        id: 'c-02dash-1424-5',
+        type: 'improvement',
+        scope: 'Pembersihan Badge Floating Pod Kontainer (templateHtmlCompiler.ts)',
+        description: 'Menghapus elemen floating badge "Pod Kontainer Aktif" beserta animasi dan stylesheet terkait dari output templateHtmlCompiler agar tampilan pratinjau kanvas Alur Figma dan live preview bersih tanpa elemen overlay yang menutupi konten.'
       }
     ]
   },
