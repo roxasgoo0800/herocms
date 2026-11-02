@@ -78,6 +78,7 @@ import {
   Mail,
   Settings,
   ExternalLink,
+  Info,
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
@@ -8971,140 +8972,162 @@ const executeVsCodeReplaceAll = () => {
     <!-- =================================================================== -->
     <Teleport to="body">
       <div v-if="isEditRouteModalOpen && editingRouteTarget" class="modal-backdrop modal-backdrop-bespoke" @click.self="closeEditRouteModal">
-      <div class="modal-dialog modal-dialog-new-page modal-dialog-bespoke" role="dialog" aria-modal="true">
-        <!-- Header -->
-        <div class="modal-header modal-header-bespoke">
-          <div class="modal-header-leading">
-            <div class="modal-header-icon-box modal-icon-gradient">
-              <Workflow :size="20" />
-            </div>
-            <div>
-              <div class="modal-title-row">
-                <h3 class="modal-heading">Edit Rute & Metadata Halaman</h3>
-                <span class="modal-tag-badge">Traefik Ingress Edge</span>
+        <div class="modal-dialog modal-dialog-edit-route modal-dialog-bespoke" role="dialog" aria-modal="true">
+          <!-- Header -->
+          <div class="modal-header modal-header-bespoke">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box modal-icon-gradient" :class="{ 'is-root-icon': editingRouteTarget.path === '/' }">
+                <Home v-if="editingRouteTarget.path === '/'" :size="18" />
+                <Workflow v-else :size="18" />
               </div>
-              <p class="modal-subheading">Sesuaikan alamat URL, judul navigasi, dan deskripsi SEO halaman ini.</p>
-            </div>
-          </div>
-          <button type="button" class="modal-close-button" @click="closeEditRouteModal" title="Tutup">
-            <X :size="16" />
-          </button>
-        </div>
-
-        <!-- Body -->
-        <div class="new-page-modal-body">
-          <div class="new-page-form-grid">
-            <!-- Judul Halaman -->
-            <div class="new-page-field">
-              <div class="field-label-row">
-                <label class="new-page-label">Judul Halaman <span class="req-star">*</span></label>
-                <span class="field-hint">Nama tampilan di navigasi & tab browser</span>
-              </div>
-              <div class="input-with-leading-icon">
-                <Type :size="14" class="input-leading-icon" />
-                <input
-                  v-model="editRouteForm.title"
-                  type="text"
-                  placeholder="Contoh: Paket & Harga, Layanan Kami, Portofolio..."
-                  class="new-page-input has-icon"
-                  @keyup.enter="saveEditRouteModal"
-                />
+              <div>
+                <div class="modal-title-row">
+                  <h3 class="modal-heading">Edit Rute & Metadata Halaman</h3>
+                  <span v-if="editingRouteTarget.path === '/'" class="modal-tag-badge badge-root">Beranda (Root)</span>
+                  <span v-else class="modal-tag-badge">Traefik Ingress Edge</span>
+                </div>
+                <p class="modal-subheading">Sesuaikan judul navigasi, alamat URL, dan deskripsi SEO halaman ini.</p>
               </div>
             </div>
-
-            <!-- Rute URL (Path) -->
-            <div class="new-page-field">
-              <div class="field-label-row">
-                <label class="new-page-label">Rute URL (Path) <span class="req-star">*</span></label>
-                <span class="field-hint">Alamat akses web di browser</span>
-              </div>
-              <div class="new-page-path-prefix-wrap">
-                <span class="path-prefix">
-                  <ShieldCheck :size="12" class="prefix-lock-icon" />
-                  https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}
-                </span>
-                <input
-                  v-if="editingRouteTarget.path !== '/'"
-                  v-model="editRouteForm.path"
-                  type="text"
-                  placeholder="/pricing"
-                  class="new-page-input path-input"
-                  @keyup.enter="saveEditRouteModal"
-                />
-                <input
-                  v-else
-                  type="text"
-                  value="/"
-                  disabled
-                  class="new-page-input path-input is-disabled-root"
-                  title="Rute beranda (/) adalah root utama website dan bersifat permanen."
-                />
-              </div>
-
-              <!-- Sub-route quick helper chips (if existing parent pages exist and not root) -->
-              <div v-if="editingRouteTarget.path !== '/' && existingParentPages.length > 0" class="parent-nesting-strip">
-                <span class="parent-nesting-label">↳ Jadikan Sub-Rute dari:</span>
-                <button
-                  v-for="parentPg in existingParentPages"
-                  :key="parentPg.id"
-                  type="button"
-                  class="parent-nesting-chip"
-                  @click="setEditRouteParent(parentPg.path)"
-                  :title="`Klik untuk ubah sub-rute di bawah ${parentPg.path}`"
-                >
-                  <span>{{ parentPg.path }}/...</span>
-                </button>
-              </div>
-
-              <div v-if="editingRouteTarget.path === '/'" class="root-route-notice">
-                <Home :size="12" />
-                <span>Rute Beranda (<strong>/</strong>) adalah gerbang utama website yang dilayani otomatis oleh Traefik Edge Router.</span>
-              </div>
-            </div>
-
-            <!-- Deskripsi Halaman (SEO Meta / Lead) -->
-            <div class="new-page-field">
-              <div class="field-label-row">
-                <label class="new-page-label">Deskripsi Halaman</label>
-                <span class="field-hint">Meta ringkasan halaman untuk SEO & preview canvas</span>
-              </div>
-              <textarea
-                v-model="editRouteForm.description"
-                rows="2"
-                placeholder="Tulis ringkasan singkat isi atau tujuan halaman ini..."
-                class="new-page-input new-page-textarea"
-              ></textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="modal-footer modal-footer-bespoke">
-          <div class="footer-help-note">
-            <Workflow :size="13" class="note-icon" />
-            <span>Perubahan rute otomatis sinkron dengan bilah navigasi & kanvas Alur Figma.</span>
-          </div>
-          <div class="footer-actions-group">
-            <button
-              type="button"
-              class="btn-modal-ghost"
-              @click="closeEditRouteModal"
-            >
-              Batal
+            <button type="button" class="modal-close-button" @click="closeEditRouteModal" title="Tutup">
+              <X :size="16" />
             </button>
-            <button
-              type="button"
-              class="btn-modal-confirm"
-              @click="saveEditRouteModal"
-            >
-              <Check :size="14" />
-              <span>Simpan Perubahan</span>
-            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="new-page-modal-body modal-body-edit-route">
+            <div class="new-page-form-grid">
+              <!-- Judul Halaman -->
+              <div class="new-page-field">
+                <div class="field-label-row">
+                  <label class="new-page-label">Judul Halaman <span class="req-star">*</span></label>
+                  <span class="field-hint">Label tampilan navigasi & tab browser</span>
+                </div>
+                <div class="input-with-leading-icon">
+                  <Type :size="14" class="input-leading-icon" />
+                  <input
+                    v-model="editRouteForm.title"
+                    type="text"
+                    placeholder="Contoh: Paket & Harga, Layanan Kami, Portofolio..."
+                    class="new-page-input has-icon text-sans-input"
+                    @keyup.enter="saveEditRouteModal"
+                  />
+                </div>
+                <!-- Live Navigation Pill Preview -->
+                <div class="live-nav-preview-pill">
+                  <span class="preview-pill-label">Pratinjau Navigasi:</span>
+                  <div class="preview-pill-bubble">
+                    <Globe :size="11" class="preview-globe-icon" />
+                    <span class="preview-text-name">{{ editRouteForm.title || 'Nama Halaman' }}</span>
+                    <span class="preview-sep">·</span>
+                    <span class="preview-text-sub">{{ activeContainer?.subdomain || 'site.stackbyte.id' }}{{ editingRouteTarget.path === '/' ? '' : (editRouteForm.path || '') }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rute URL (Path) -->
+              <div class="new-page-field">
+                <div class="field-label-row">
+                  <label class="new-page-label">Rute URL (Path) <span class="req-star">*</span></label>
+                  <span class="field-hint">Alamat akses web di browser</span>
+                </div>
+
+                <!-- JIKA BERANDA (ROOT /) -->
+                <div v-if="editingRouteTarget.path === '/'" class="root-route-card-bespoke">
+                  <div class="root-route-display-bar">
+                    <div class="root-url-group">
+                      <ShieldCheck :size="13" class="prefix-lock-icon" />
+                      <span class="root-domain-text">https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}</span>
+                      <span class="root-slash-badge">/</span>
+                    </div>
+                    <span class="root-fixed-badge">
+                      <Lock :size="10" /> Root Tetap
+                    </span>
+                  </div>
+                  <div class="root-route-notice-bespoke">
+                    <Info :size="13" class="notice-info-icon" />
+                    <span>Rute Beranda (<code>/</code>) adalah gerbang utama website yang dilayani otomatis oleh Traefik Edge Router.</span>
+                  </div>
+                </div>
+
+                <!-- JIKA BUKAN ROOT (DYNAMIC ROUTE) -->
+                <div v-else class="dynamic-route-wrap">
+                  <div class="new-page-path-prefix-wrap">
+                    <span class="path-prefix">
+                      <ShieldCheck :size="12" class="prefix-lock-icon" />
+                      https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}
+                    </span>
+                    <input
+                      v-model="editRouteForm.path"
+                      type="text"
+                      placeholder="/pricing"
+                      class="new-page-input path-input"
+                      @keyup.enter="saveEditRouteModal"
+                    />
+                  </div>
+
+                  <!-- Sub-route quick helper chips (if existing parent pages exist) -->
+                  <div v-if="existingParentPages.length > 0" class="parent-nesting-strip">
+                    <span class="parent-nesting-label">↳ Jadikan Sub-Rute dari:</span>
+                    <button
+                      v-for="parentPg in existingParentPages"
+                      :key="parentPg.id"
+                      type="button"
+                      class="parent-nesting-chip"
+                      @click="setEditRouteParent(parentPg.path)"
+                      :title="`Klik untuk ubah sub-rute di bawah ${parentPg.path}`"
+                    >
+                      <span>{{ parentPg.path }}/...</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Deskripsi Halaman (SEO Meta / Lead) -->
+              <div class="new-page-field">
+                <div class="field-label-row">
+                  <label class="new-page-label">Deskripsi Halaman (SEO)</label>
+                  <span class="field-hint">{{ editRouteForm.description?.length || 0 }} / 160 karakter</span>
+                </div>
+                <textarea
+                  v-model="editRouteForm.description"
+                  rows="3"
+                  maxlength="200"
+                  placeholder="Tulis ringkasan singkat isi atau tujuan halaman ini untuk mesin pencari & kanvas..."
+                  class="new-page-input new-page-textarea"
+                ></textarea>
+                <span class="field-subtext-help">Ringkasan ini otomatis disematkan pada tag meta halaman & preview diagram kanvas.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer modal-footer-bespoke">
+            <div class="footer-help-note">
+              <Workflow :size="13" class="note-icon" />
+              <span>Otomatis sinkron dengan bilah navigasi & kanvas Alur Figma.</span>
+            </div>
+            <div class="footer-actions-group">
+              <button
+                type="button"
+                class="btn-modal-ghost"
+                @click="closeEditRouteModal"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                class="btn-modal-confirm btn-modal-save-route"
+                @click="saveEditRouteModal"
+              >
+                <Check :size="14" />
+                <span>Simpan Perubahan</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </Teleport>
+    </Teleport>
 
   </section>
 </template>
