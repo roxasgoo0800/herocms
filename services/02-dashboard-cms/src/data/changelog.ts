@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.7',
+    version: 'v1.42.8',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '02 November 2026',
+    lastUpdated: '03 November 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.8',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '03 November 2026',
+    title: 'Akses Tautan Langsung "Buka Web" di Header Editor & Fitur Duplikasi Halaman Alur Figma',
+    summary: 'Peningkatan alur kerja pengeditan visual di HeroCMS Studio: (1) Tombol Buka Web Langsung di Header Editor: Memungkinkan pengguna membuka situs live di tab baru browser sesuai dengan rute halaman yang sedang aktif di kanvas editor secara instan; (2) Fitur Duplikasi Halaman (Duplicate Page): Memungkinkan penduplikasi halaman rute secara utuh dari artboard Alur Figma maupun dropdown switcher dengan penamaan rute otomatis unik, kloning blok independen, penempatan kanvas rapi, dan sinkronisasi navigasi sitemap.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1428-1',
+        type: 'feature',
+        scope: 'Visual Editor Header Quick Action (VisualEditorModule.vue, visual-editor.css)',
+        description: 'Menambahkan tombol "Buka Web" (ExternalLink) di bilah navigasi atas Visual Editor yang secara otomatis membentuk URL subdomain kontainer aktif beserta rute halaman yang sedang dibuka untuk verifikasi instan.'
+      },
+      {
+        id: 'c-02dash-1428-2',
+        type: 'feature',
+        scope: 'Figma Flow Multi-Page Duplication (VisualEditorModule.vue, visual-editor.css)',
+        description: 'Menambahkan aksi "Duplikat Halaman" pada header artboard kanvas Alur Figma dan dropdown menu pemilih halaman yang menduplikasi seluruh blok dengan ID baru, menghasilkan rute unik, memposisikan artboard baru secara otomatis, dan menyinkronkan seluruh navbar.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.7',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '02 November 2026',
     title: 'Sinkronisasi Blueprint Template & Aksen Warna Baru ke Visual Editor, Isolasi Root Home Index & Dukungan Routing Multi-Halaman Nginx',
     summary: 'Perbaikan fundamental siklus hidup kontainer baru dan editor visual: (1) Penyerapan Blueprint & Aksen Warna Instan: Memperbaiki pencocokan template di VisualEditorModule dan memperbarui watcher activeContainerId agar editor langsung memuat template serta warna aksen yang dipilih saat membuat situs baru; (2) Isolasi Kompilasi Root Home: Memastikan berkas root index.html selalu dikompilasi dari halaman Beranda (/) tanpa tertimpa konten sub-halaman saat menerbitkan perubahan dari rute sub-halaman (/about); (3) Kompilasi & Penyemaian Sub-Halaman Multi-Page: Mengompilasi seluruh sub-halaman (multiPagesHtml) dan menyinkronkannya melalui Go BFF ke Service 03 Orchestrator untuk penulisan <page>.html dan <page>/index.html di Nginx kontainer tenant.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

@@ -716,6 +716,20 @@ const activePage = computed<MultiPageItem | null>(() => {
   return multiPages.value.find(p => p.id === activePageId.value) || multiPages.value[0];
 });
 
+const liveSiteUrl = computed(() => {
+  if (!activeContainer.value?.subdomain) return '#';
+  let sub = activeContainer.value.subdomain;
+  if (!sub.startsWith('http://') && !sub.startsWith('https://')) {
+    sub = `https://${sub}`;
+  }
+  const currentPath = activePage.value?.path;
+  if (currentPath && currentPath !== '/') {
+    const cleanPath = currentPath.startsWith('/') ? currentPath : `/${currentPath}`;
+    return `${sub}${cleanPath}`;
+  }
+  return sub;
+});
+
 const ARTBOARD_GAP = 420; // jarak horizontal antar kolom kedalaman rute
 const ARTBOARD_ROW_GAP = 160; // jarak vertikal antar halaman sejajar dalam satu kolom
 const SITEMAP_FRAME_H = 880; // shelf judul + window bar + preview 780px
@@ -1319,6 +1333,61 @@ const deletePage = (pageId: string) => {
   showToast(`Halaman '${target.title}' (${target.path}) telah dihapus.`, 'info');
   recordHistory();
   triggerAutoSaveDraft();
+};
+
+const duplicatePage = (pageId: string) => {
+  const target = multiPages.value.find(p => p.id === pageId);
+  if (!target) return;
+
+  // 1. Jika halaman yang diduplikasi adalah halaman aktif, sinkronkan blok terkini
+  if (activePageId.value === pageId) {
+    syncActivePageBlocks();
+  }
+
+  // 2. Tentukan rute unik untuk hasil salinan
+  let basePath = target.path === '/' ? '/halaman-salinan' : `${target.path}-copy`;
+  let candidatePath = basePath;
+  let counter = 2;
+  while (multiPages.value.some(p => p.path === candidatePath)) {
+    candidatePath = `${basePath}-${counter}`;
+    counter++;
+  }
+
+  // 3. Buat identifier dan judul halaman salinan baru
+  const newId = `page_copy_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  const newTitle = target.path === '/' ? 'Beranda (Salinan)' : `${target.title} (Salinan)`;
+
+  // 4. Kloning blok secara mendalam dan beri ID baru agar tidak bentrok di DOM
+  const clonedBlocks: VisualBlock[] = JSON.parse(JSON.stringify(target.blocks || [])).map((b: VisualBlock, idx: number) => ({
+    ...b,
+    id: `${b.type || 'block'}_copy_${Date.now()}_${idx}`
+  }));
+
+  // 5. Hitung koordinat kanvas agar artboard baru berada di samping kanan artboard paling kanan
+  const maxCanvasX = multiPages.value.reduce((max, p) => Math.max(max, p.canvasX || 0), 0);
+  const duplicatedPage: MultiPageItem = {
+    id: newId,
+    path: candidatePath,
+    title: newTitle,
+    description: target.description ? `${target.description} (Salinan)` : `Halaman salinan dari ${target.title}`,
+    canvasX: maxCanvasX + 1800,
+    canvasY: target.canvasY || 0,
+    blocks: clonedBlocks
+  };
+
+  multiPages.value.push(duplicatedPage);
+
+  // 6. Sinkronkan navigasi di seluruh halaman dengan sitemap baru
+  syncAllNavbarsWithSitemap();
+
+  // 7. Beralih ke halaman yang baru diduplikasi
+  switchPage(newId, false);
+
+  // 8. Simpan histori dan simpan draf otomatis
+  recordHistory();
+  triggerAutoSaveDraft();
+
+  showToast(`Halaman '${newTitle}' (${candidatePath}) berhasil diduplikasi!`, 'success');
 };
 
 const getCompiledPageHtml = (page: MultiPageItem): string => {
@@ -3682,6 +3751,15 @@ const executeVsCodeReplaceAll = () => {
                         <span>Edit</span>
                       </button>
                       <button
+                        type="button"
+                        class="btn-duplicate-page-mini"
+                        @click.stop="duplicatePage(p.id); isPageSwitcherOpen = false"
+                        title="Duplikat Halaman Ini"
+                      >
+                        <Copy :size="11" />
+                        <span>Duplikat</span>
+                      </button>
+                      <button
                         v-if="p.path !== '/' && multiPages.length > 1"
                         type="button"
                         class="btn-delete-page-mini"
@@ -3965,6 +4043,18 @@ const executeVsCodeReplaceAll = () => {
           </button>
 
           <div class="v-divider"></div>
+
+          <!-- Open Live Website Button -->
+          <a
+            :href="liveSiteUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-open-live-web"
+            title="Buka website langsung di tab baru (sesuai rute aktif)"
+          >
+            <ExternalLink :size="13" />
+            <span>Buka Web</span>
+          </a>
 
           <!-- Publish Button -->
           <button
@@ -5341,6 +5431,15 @@ const executeVsCodeReplaceAll = () => {
                   >
                     <Settings :size="11" />
                     <span>Edit Rute</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-figma-duplicate-page"
+                    @click.stop="duplicatePage(page.id)"
+                    title="Duplikat Halaman Ini"
+                  >
+                    <Copy :size="11" />
+                    <span>Duplikat</span>
                   </button>
                   <button
                     type="button"
