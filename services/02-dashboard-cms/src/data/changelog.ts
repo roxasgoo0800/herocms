@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.9',
+    version: 'v1.42.10',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.10',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '03 November 2026',
+    title: 'Redesain UI/UX MinIO S3 Media Picker Modal: Studio DAM 2-Column Split & Live Inspector',
+    summary: 'Peningkatan menyeluruh desain UI/UX pada dialog Pemilih Gambar MinIO S3 di Visual Editor: Mengubah tampilan modal menjadi layout Digital Asset Management (DAM) 2 kolom profesional. Menghadirkan unified top toolbar (pencarian instan + filter segmen Semua/Foto/SVG + tombol upload cepat tanpa wrapping), dropzone strip drag-and-drop, kartu galeri dengan checkerboard background transparan dan badge status pilihan, serta panel inspektur berkas di sisi kanan lengkap dengan pratinjau resolusi tinggi, spesifikasi metadata (Nama, Dimensi, Ukuran, Format), dan aksi komit "Gunakan Gambar Terpilih".',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14210-1',
+        type: 'improvement',
+        scope: 'Visual Editor DAM Media Picker Modal (VisualEditorModule.vue, visual-editor.css)',
+        description: 'Merombak arsitektur layout modal pemilih media S3 dari kartu sederhana menjadi 2-column split stage (galeri kiri dan inspektur detail kanan) dengan pola checkerboard transparan standar industri DAM.'
+      },
+      {
+        id: 'c-02dash-14210-2',
+        type: 'improvement',
+        scope: 'Unified Top Filter Toolbar & Quick Ingest Strip',
+        description: 'Menata ulang kontrol filter atas agar rapi tanpa tombol wrapping canggung, serta menambahkan dropzone banner cepat di atas galeri untuk pengalaman unggah berkas instan.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.9',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '03 November 2026',
     title: 'Integrasi Pemilih Gambar MinIO S3, Pengaturan Favicon & Social Share Preview (Open Graph)',
     summary: 'Penyempurnaan manajemen aset media dan identitas pemasaran di Visual Editor: (1) MinIO S3 Media Library Picker: Memungkinkan pengguna memilih foto atau ilustrasi langsung dari bucket MinIO tenant dengan pencarian instan, filter kategori, dan tombol upload cepat dari dalam editor; (2) Pengaturan Favicon & Meta Open Graph: Menambahkan modal SEO & Sosmed terpadu lengkap dengan input favicon kustom, meta description, gambar share sosmed (OG image), kartu simulasi pratinjau sosial interaktif, dan injeksi otomatis ke berkas HTML saat penerbitan.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

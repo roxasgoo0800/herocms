@@ -2725,6 +2725,7 @@ const mediaPickerTarget = ref<{
 const mediaPickerSearch = ref('');
 const mediaPickerCategory = ref<'all' | 'photo' | 'vector'>('all');
 const pickerUploadInputRef = ref<HTMLInputElement | null>(null);
+const selectedPickerAsset = ref<MediaAssetItem | null>(null);
 
 const filteredPickerMedia = computed(() => {
   const assets = mediaAssets.value || [];
@@ -2749,6 +2750,7 @@ const openMediaPickerForBlock = (blockId: string, itemIndex?: number) => {
   mediaPickerTarget.value = { blockId, itemIndex, field: 'blockImage' };
   mediaPickerSearch.value = '';
   mediaPickerCategory.value = 'all';
+  selectedPickerAsset.value = filteredPickerMedia.value[0] || null;
   isMediaPickerOpen.value = true;
 };
 
@@ -2756,12 +2758,14 @@ const openMediaPickerForSeo = (field: 'favicon' | 'ogImage') => {
   mediaPickerTarget.value = { field };
   mediaPickerSearch.value = '';
   mediaPickerCategory.value = 'all';
+  selectedPickerAsset.value = filteredPickerMedia.value[0] || null;
   isMediaPickerOpen.value = true;
 };
 
 const closeMediaPicker = () => {
   isMediaPickerOpen.value = false;
   mediaPickerTarget.value = null;
+  selectedPickerAsset.value = null;
 };
 
 const selectMediaAsset = (asset: MediaAssetItem) => {
@@ -2782,6 +2786,12 @@ const selectMediaAsset = (asset: MediaAssetItem) => {
   closeMediaPicker();
 };
 
+const confirmUseSelectedAsset = () => {
+  if (selectedPickerAsset.value) {
+    selectMediaAsset(selectedPickerAsset.value);
+  }
+};
+
 const triggerPickerQuickUpload = () => {
   pickerUploadInputRef.value?.click();
 };
@@ -2792,7 +2802,7 @@ const handlePickerFileUpload = async (e: Event) => {
   if (!files || files.length === 0) return;
   await uploadMediaFiles(files);
   if (mediaAssets.value && mediaAssets.value.length > 0) {
-    selectMediaAsset(mediaAssets.value[0]);
+    selectedPickerAsset.value = mediaAssets.value[0];
   }
 };
 
@@ -9537,16 +9547,16 @@ const executeVsCodeReplaceAll = () => {
         class="modal-backdrop modal-backdrop-bespoke"
         @click.self="closeMediaPicker"
       >
-        <div class="modal-dialog modal-dialog-bespoke" style="max-width: 760px; max-height: 88vh; display: flex; flex-direction: column;" role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-dialog-bespoke" style="max-width: 980px; width: 94vw; height: 84vh; max-height: 800px; display: flex; flex-direction: column; overflow: hidden;" role="dialog" aria-modal="true">
           <!-- Header -->
-          <div class="modal-header modal-header-bespoke">
+          <div class="modal-header modal-header-bespoke" style="padding: 16px 24px; border-bottom: 1px solid #e2e8f0;">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">
                 <Database :size="18" />
               </div>
               <div>
                 <h3 class="modal-heading">Pustaka Media MinIO S3</h3>
-                <p class="modal-subheading">Pilih gambar atau unggah file baru langsung ke penyimpanan tenant.</p>
+                <p class="modal-subheading">Pusat aset gambar & vektor terisolasi untuk kontainer tenant.</p>
               </div>
             </div>
             <button
@@ -9559,110 +9569,188 @@ const executeVsCodeReplaceAll = () => {
             </button>
           </div>
 
-          <!-- Body -->
-          <div class="modal-body-bespoke" style="padding: 16px 24px; overflow-y: auto; flex: 1;">
-            <!-- Controls Bar: Search & Quick Upload -->
-            <div class="media-picker-controls-bar">
-              <div class="picker-search-input-wrap">
-                <Search :size="14" class="picker-search-icon" />
-                <input
-                  v-model="mediaPickerSearch"
-                  type="text"
-                  placeholder="Cari aset gambar di MinIO S3..."
-                  class="picker-search-field"
-                />
-                <button v-if="mediaPickerSearch" type="button" class="btn-clear-search-mini" @click="mediaPickerSearch = ''">
-                  <X :size="12" />
-                </button>
-              </div>
+          <!-- Top Unified Filter Toolbar -->
+          <div class="picker-top-toolbar">
+            <!-- Search -->
+            <div class="picker-search-shell">
+              <Search :size="14" class="picker-search-glyph" />
+              <input
+                v-model="mediaPickerSearch"
+                type="text"
+                placeholder="Cari nama gambar atau format..."
+                class="picker-search-input"
+              />
+              <button v-if="mediaPickerSearch" type="button" class="btn-clear-search-mini" @click="mediaPickerSearch = ''">
+                <X :size="12" />
+              </button>
+            </div>
 
-              <div class="picker-filter-chips">
-                <button
-                  type="button"
-                  class="picker-chip"
-                  :class="{ active: mediaPickerCategory === 'all' }"
-                  @click="mediaPickerCategory = 'all'"
-                >
-                  Semua
-                </button>
-                <button
-                  type="button"
-                  class="picker-chip"
-                  :class="{ active: mediaPickerCategory === 'photo' }"
-                  @click="mediaPickerCategory = 'photo'"
-                >
-                  Foto (JPG/PNG/WEBP)
-                </button>
-                <button
-                  type="button"
-                  class="picker-chip"
-                  :class="{ active: mediaPickerCategory === 'vector' }"
-                  @click="mediaPickerCategory = 'vector'"
-                >
-                  Vektor SVG
-                </button>
-              </div>
-
-              <!-- Quick Upload CTA -->
+            <!-- Segmented Category Filter -->
+            <div class="picker-category-segmented">
               <button
                 type="button"
-                class="btn-picker-quick-upload"
-                :disabled="isUploadingMedia"
-                @click="triggerPickerQuickUpload"
-                title="Unggah berkas baru langsung ke bucket MinIO S3"
+                class="picker-seg-btn"
+                :class="{ active: mediaPickerCategory === 'all' }"
+                @click="mediaPickerCategory = 'all'"
               >
-                <UploadCloud v-if="!isUploadingMedia" :size="13" />
-                <span v-else class="spin-ring-sm" style="border-color: #2563eb; border-top-color: transparent;"></span>
-                <span>{{ isUploadingMedia ? 'Mengunggah...' : '+ Upload ke MinIO' }}</span>
+                Semua ({{ mediaAssets.length }})
               </button>
-              <input
-                ref="pickerUploadInputRef"
-                type="file"
-                accept="image/*"
-                multiple
-                style="display: none;"
-                @change="handlePickerFileUpload"
-              />
-            </div>
-
-            <!-- Uploading indicator -->
-            <div v-if="isUploadingMedia" class="picker-uploading-banner">
-              <div class="spin-ring-sm" style="border-color: #2563eb; border-top-color: transparent;"></div>
-              <span>Sedang mengunggah dan memproses aset ke MinIO S3...</span>
-            </div>
-
-            <!-- Media Grid -->
-            <div v-if="filteredPickerMedia.length > 0" class="picker-assets-grid">
-              <div
-                v-for="asset in filteredPickerMedia"
-                :key="asset.id"
-                class="picker-asset-card"
-                @click="selectMediaAsset(asset)"
-                :title="`Klik untuk memilih: ${asset.name} (${asset.dimensions || asset.size})`"
+              <button
+                type="button"
+                class="picker-seg-btn"
+                :class="{ active: mediaPickerCategory === 'photo' }"
+                @click="mediaPickerCategory = 'photo'"
               >
-                <div class="picker-asset-thumb">
-                  <img :src="asset.url" :alt="asset.name" loading="lazy" />
-                  <span class="picker-type-badge">{{ (asset.type || 'IMG').toUpperCase() }}</span>
+                Foto
+              </button>
+              <button
+                type="button"
+                class="picker-seg-btn"
+                :class="{ active: mediaPickerCategory === 'vector' }"
+                @click="mediaPickerCategory = 'vector'"
+              >
+                Vektor SVG
+              </button>
+            </div>
+
+            <!-- Quick Upload CTA -->
+            <button
+              type="button"
+              class="btn-picker-primary-upload"
+              :disabled="isUploadingMedia"
+              @click="triggerPickerQuickUpload"
+              title="Unggah berkas baru langsung ke bucket MinIO S3"
+            >
+              <UploadCloud v-if="!isUploadingMedia" :size="14" />
+              <span v-else class="spin-ring-sm" style="border-color: #ffffff; border-top-color: transparent;"></span>
+              <span>{{ isUploadingMedia ? 'Mengunggah...' : '+ Unggah Gambar' }}</span>
+            </button>
+            <input
+              ref="pickerUploadInputRef"
+              type="file"
+              accept="image/*"
+              multiple
+              style="display: none;"
+              @change="handlePickerFileUpload"
+            />
+          </div>
+
+          <!-- Body Split Stage: Gallery (Left) | Inspector (Right) -->
+          <div class="picker-split-stage">
+            <!-- Left: Gallery Stage -->
+            <div class="picker-gallery-pane">
+              <!-- Compact Dropzone Strip -->
+              <div class="picker-dropzone-strip" @click="triggerPickerQuickUpload">
+                <div class="dropzone-icon-box">
+                  <UploadCloud :size="16" />
                 </div>
-                <div class="picker-asset-meta">
-                  <span class="picker-asset-name">{{ asset.name }}</span>
-                  <span class="picker-asset-sub">{{ asset.dimensions || asset.size }}</span>
+                <div class="dropzone-text-group">
+                  <span class="dropzone-main-text">Tarik gambar ke sini atau klik untuk unggah ke MinIO S3</span>
+                  <span class="dropzone-sub-text">Mendukung format JPG, PNG, WEBP, GIF, dan SVG (Maks. 50MB)</span>
                 </div>
+              </div>
+
+              <!-- Uploading progress banner -->
+              <div v-if="isUploadingMedia" class="picker-uploading-banner">
+                <div class="spin-ring-sm" style="border-color: #2563eb; border-top-color: transparent;"></div>
+                <span>Sedang mengunggah dan memproses aset ke bucket MinIO S3...</span>
+              </div>
+
+              <!-- Media Grid -->
+              <div v-if="filteredPickerMedia.length > 0" class="picker-gallery-grid">
+                <div
+                  v-for="asset in filteredPickerMedia"
+                  :key="asset.id"
+                  class="picker-asset-card"
+                  :class="{ 'is-selected': selectedPickerAsset?.id === asset.id }"
+                  @click="selectedPickerAsset = asset"
+                  @dblclick="confirmUseSelectedAsset"
+                  :title="`Klik untuk memilih atau klik dua kali untuk langsung gunakan: ${asset.name}`"
+                >
+                  <div class="picker-asset-thumb checkerboard-pattern">
+                    <img :src="asset.url" :alt="asset.name" loading="lazy" />
+                    <span class="picker-type-badge">{{ (asset.type || 'IMG').toUpperCase() }}</span>
+                    <div v-if="selectedPickerAsset?.id === asset.id" class="picker-selected-check">
+                      <Check :size="12" />
+                    </div>
+                  </div>
+                  <div class="picker-asset-meta">
+                    <span class="picker-asset-name">{{ asset.name }}</span>
+                    <span class="picker-asset-sub">{{ asset.dimensions || asset.size }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div v-else class="picker-empty-state">
+                <ImageIcon :size="40" style="color: #cbd5e1; margin-bottom: 8px;" />
+                <p class="empty-title">Tidak ada aset gambar ditemukan</p>
+                <p class="empty-subtitle">Silakan unggah gambar dari komputer Anda menggunakan tombol di atas.</p>
               </div>
             </div>
 
-            <!-- Empty State -->
-            <div v-else class="picker-empty-state">
-              <ImageIcon :size="36" style="color: #cbd5e1; margin-bottom: 8px;" />
-              <p class="empty-title">Tidak ada aset gambar ditemukan</p>
-              <p class="empty-subtitle">Silakan unggah gambar dari komputer Anda menggunakan tombol di atas.</p>
-            </div>
+            <!-- Right: Asset Inspector & Live Preview -->
+            <aside class="picker-inspector-panel">
+              <div v-if="selectedPickerAsset" class="inspector-detail-wrap">
+                <div class="inspector-head-row">
+                  <span class="inspector-section-label">DETAIL BERKAS</span>
+                  <span class="inspector-status-badge">
+                    <span class="pulse-dot"></span> S3 Active
+                  </span>
+                </div>
+
+                <!-- Big Preview Hero Canvas -->
+                <div class="inspector-preview-hero checkerboard-pattern">
+                  <img :src="selectedPickerAsset.url" :alt="selectedPickerAsset.name" />
+                </div>
+
+                <!-- Metadata List -->
+                <div class="inspector-meta-specs">
+                  <div class="spec-row">
+                    <span class="spec-label">Nama Berkas</span>
+                    <span class="spec-value is-break" :title="selectedPickerAsset.name">{{ selectedPickerAsset.name }}</span>
+                  </div>
+                  <div class="spec-row">
+                    <span class="spec-label">Dimensi</span>
+                    <span class="spec-value">{{ selectedPickerAsset.dimensions || 'N/A' }}</span>
+                  </div>
+                  <div class="spec-row">
+                    <span class="spec-label">Ukuran</span>
+                    <span class="spec-value">{{ selectedPickerAsset.size }}</span>
+                  </div>
+                  <div class="spec-row">
+                    <span class="spec-label">Format</span>
+                    <span class="spec-value font-mono">{{ selectedPickerAsset.type.toUpperCase() }}</span>
+                  </div>
+                </div>
+
+                <!-- Primary CTA -->
+                <button
+                  type="button"
+                  class="btn-picker-use-now"
+                  @click="confirmUseSelectedAsset"
+                  title="Terapkan gambar ini ke elemen kanvas"
+                >
+                  <Check :size="15" />
+                  <span>Gunakan Gambar Ini</span>
+                </button>
+              </div>
+
+              <!-- Empty Inspector State -->
+              <div v-else class="inspector-empty-wrap">
+                <div class="empty-icon-circle">
+                  <ImageIcon :size="24" style="color: #94a3b8;" />
+                </div>
+                <p class="empty-hint-text">Pilih salah satu gambar dari galeri di samping untuk melihat pratinjau dan detailnya.</p>
+              </div>
+            </aside>
           </div>
 
           <!-- Footer Actions -->
-          <div class="modal-footer modal-footer-bespoke">
-            <div style="font-size: 0.76rem; color: #64748b;">
-              Menampilkan {{ filteredPickerMedia.length }} dari {{ mediaAssets.length }} aset media
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 24px; border-top: 1px solid #e2e8f0; background: #ffffff;">
+            <div style="font-size: 0.76rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
+              <span class="pulse-mini-dot"></span>
+              <span>MinIO S3 Object Storage • {{ filteredPickerMedia.length }} dari {{ mediaAssets.length }} Aset Ditampilkan</span>
             </div>
             <div class="footer-actions-group">
               <button
@@ -9670,7 +9758,16 @@ const executeVsCodeReplaceAll = () => {
                 class="btn-modal-ghost"
                 @click="closeMediaPicker"
               >
-                Tutup
+                Batal
+              </button>
+              <button
+                type="button"
+                class="btn-modal-confirm"
+                :disabled="!selectedPickerAsset"
+                @click="confirmUseSelectedAsset"
+              >
+                <Check :size="14" />
+                <span>Gunakan Gambar Terpilih</span>
               </button>
             </div>
           </div>
