@@ -107,6 +107,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'improvement',
         scope: 'Light Studio Master Theme Terminal Modal (DashboardView.vue, studio-master.css)',
         description: 'Menyelaraskan tema modal log pod kontainer dengan arsitektur CSS HeroCMS Studio (Pure White #ffffff, Slate Canvas #f8fafc, border halus #e2e8f0), mengintegrasikan toolbar, search bar, status bar, badge semantik pastel, dan tombol aksi tanpa wrapper bingkai putih berlebih.'
+      },
+      {
+        id: 'c-02dash-1427-5',
+        type: 'improvement',
+        scope: 'Bespoke Studio Confirmation Dialog for Reset Draft (VisualEditorModule.vue)',
+        description: 'Mengganti alert konfirmasi native browser (localhost:5173 says) pada tombol reset draf dengan modal dialog konfirmasi in-app bertema HeroCMS Studio yang elegan, lengkap dengan pesan informasi situs live dan tombol aksi Batal / Buang Draf.'
       }
     ]
   },

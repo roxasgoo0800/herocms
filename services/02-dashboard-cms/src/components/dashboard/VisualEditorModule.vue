@@ -1745,15 +1745,29 @@ const triggerAutoSaveDraft = () => {
   }, 750);
 };
 
-const resetDraftToDefault = () => {
-  if (!confirm('Apakah Anda yakin ingin membuang draf yang belum terbit dan kembali ke versi awal kontainer?')) return;
+const isResetDraftModalOpen = ref(false);
+
+const openResetDraftModal = () => {
+  isResetDraftModalOpen.value = true;
+};
+
+const closeResetDraftModal = () => {
+  isResetDraftModalOpen.value = false;
+};
+
+const confirmResetDraft = () => {
   if (activeContainerId.value) {
     localStorage.removeItem(getDraftStorageKey(activeContainerId.value));
   }
   loadBlocksForActiveContainer();
   lastSavedDraftAt.value = '';
-  showToast('Draf telah direset ke versi awal kontainer.', 'info');
+  isResetDraftModalOpen.value = false;
+  showToast('Draf telah dibuang dan kembali ke versi awal kontainer.', 'info');
   triggerAutoSaveDraft();
+};
+
+const resetDraftToDefault = () => {
+  openResetDraftModal();
 };
 
 watch(
@@ -9164,6 +9178,78 @@ const executeVsCodeReplaceAll = () => {
               >
                 <Check :size="14" />
                 <span>Simpan Perubahan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: KONFIRMASI RESET / BUANG DRAF KE VERSI AWAL                   -->
+    <!-- =================================================================== -->
+    <Teleport to="body">
+      <div
+        v-if="isResetDraftModalOpen"
+        class="modal-backdrop modal-backdrop-bespoke"
+        @click.self="closeResetDraftModal"
+      >
+        <div class="modal-dialog modal-dialog-bespoke" style="max-width: 480px;" role="dialog" aria-modal="true">
+          <!-- Header -->
+          <div class="modal-header modal-header-bespoke">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">
+                <RotateCcw :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Buang Draf & Kembali ke Versi Awal?</h3>
+                <p class="modal-subheading">Kembalikan kanvas situs ke blueprint kontainer yang tersimpan.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="modal-close-button-ghost"
+              @click="closeResetDraftModal"
+              title="Tutup dialog"
+            >
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-bespoke" style="padding: 20px 24px; font-size: 0.84rem; color: #475569; line-height: 1.6;">
+            <p style="margin: 0 0 14px 0;">
+              Semua perubahan layout, teks, dan blok yang baru saja Anda edit <strong>tetapi belum diterbitkan</strong> akan dibuang dari memori draf browser.
+            </p>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px;">
+              <Info :size="16" style="color: #0284c7; flex-shrink: 0; margin-top: 2px;" />
+              <div style="font-size: 0.77rem; color: #334155;">
+                Situs live yang sedang berjalan tidak akan terpengaruh. Kanvas editor akan kembali ke versi kontainer <strong>{{ activeContainer?.name || 'Situs Utama' }}</strong> saat terakhir diterbitkan.
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="modal-footer modal-footer-bespoke">
+            <div style="font-size: 0.74rem; color: #94a3b8;">
+              Tindakan ini tidak dapat dibatalkan.
+            </div>
+            <div class="footer-actions-group">
+              <button
+                type="button"
+                class="btn-modal-ghost"
+                @click="closeResetDraftModal"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                class="btn-modal-confirm"
+                style="background: #ef4444; border: 1px solid #dc2626; color: #ffffff;"
+                @click="confirmResetDraft"
+              >
+                <RotateCcw :size="13" />
+                <span>Buang Draf</span>
               </button>
             </div>
           </div>
