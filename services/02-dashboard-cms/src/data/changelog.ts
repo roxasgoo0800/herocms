@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.8',
+    version: 'v1.42.9',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.9',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '03 November 2026',
+    title: 'Integrasi Pemilih Gambar MinIO S3, Pengaturan Favicon & Social Share Preview (Open Graph)',
+    summary: 'Penyempurnaan manajemen aset media dan identitas pemasaran di Visual Editor: (1) MinIO S3 Media Library Picker: Memungkinkan pengguna memilih foto atau ilustrasi langsung dari bucket MinIO tenant dengan pencarian instan, filter kategori, dan tombol upload cepat dari dalam editor; (2) Pengaturan Favicon & Meta Open Graph: Menambahkan modal SEO & Sosmed terpadu lengkap dengan input favicon kustom, meta description, gambar share sosmed (OG image), kartu simulasi pratinjau sosial interaktif, dan injeksi otomatis ke berkas HTML saat penerbitan.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1429-1',
+        type: 'feature',
+        scope: 'MinIO S3 Media Picker Modal (VisualEditorModule.vue, visual-editor.css)',
+        description: 'Menyediakan antarmuka modal pemilihan aset media MinIO S3 terintegrasi di floating shelf HUD dan hover overlay kartu, lengkap dengan pencarian nama file, tab filter foto/vektor, dan unggah langsung ke MinIO S3.'
+      },
+      {
+        id: 'c-02dash-1429-2',
+        type: 'feature',
+        scope: 'SEO, Favicon & Social Open Graph Preview (VisualEditorModule.vue, templateHtmlCompiler.ts)',
+        description: 'Menghadirkan panel konfigurasi SEO & Favicon dengan kartu simulasi live social share preview (WhatsApp/Twitter/LinkedIn) dan menginjeksi tag <link rel="icon">, meta SEO, og:image, dan twitter:card ke seluruh halaman yang dikompilasi.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.8',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '03 November 2026',
     title: 'Akses Tautan Langsung "Buka Web" di Header Editor & Fitur Duplikasi Halaman Alur Figma',
     summary: 'Peningkatan alur kerja pengeditan visual di HeroCMS Studio: (1) Tombol Buka Web Langsung di Header Editor: Memungkinkan pengguna membuka situs live di tab baru browser sesuai dengan rute halaman yang sedang aktif di kanvas editor secara instan; (2) Fitur Duplikasi Halaman (Duplicate Page): Memungkinkan penduplikasi halaman rute secara utuh dari artboard Alur Figma maupun dropdown switcher dengan penamaan rute otomatis unik, kloning blok independen, penempatan kanvas rapi, dan sinkronisasi navigasi sitemap.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

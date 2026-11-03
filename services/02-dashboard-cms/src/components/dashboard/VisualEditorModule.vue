@@ -79,11 +79,12 @@ import {
   Settings,
   ExternalLink,
   Info,
+  Share2,
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
 import { compileTemplateToHTML } from '../../utils/templateHtmlCompiler';
-import type { VisualBlock, MultiPageItem } from '../../types/dashboard';
+import type { VisualBlock, MultiPageItem, MediaAssetItem } from '../../types/dashboard';
 import { officialTemplatesData } from '../../data/templates-data';
 import {
   zoomPresets,
@@ -119,7 +120,10 @@ const {
   aiPromptInput,
   isGeneratingAI,
   handleAiGenerateContent,
-  showToast
+  showToast,
+  mediaAssets,
+  isUploadingMedia,
+  uploadMediaFiles
 } = useDashboardData();
 
 // -----------------------------------------------------------------------------
@@ -1401,6 +1405,8 @@ const getCompiledPageHtml = (page: MultiPageItem): string => {
     ? pageBlocks.value
     : page.blocks;
 
+  const seo = (activeContainer.value?.themeConfig as any)?.seo || {};
+
   return compileTemplateToHTML(matchedTpl, {
     siteName: activeContainer.value?.name || 'Situs Utama',
     subdomain: activeContainer.value?.subdomain || 'stackbyte.id',
@@ -1410,6 +1416,10 @@ const getCompiledPageHtml = (page: MultiPageItem): string => {
     bioIntro: page.description,
     blocksOverride: effectiveBlocks,
     activeRoutePath: page.path,
+    faviconUrl: (page as any).faviconUrl || seo.faviconUrl,
+    metaTitle: (page as any).metaTitle || seo.metaTitle || page.title,
+    metaDescription: (page as any).metaDescription || seo.metaDescription || page.description,
+    ogImageUrl: (page as any).ogImageUrl || seo.ogImageUrl,
     sitemapPages: multiPages.value.map(p => ({
       id: p.id,
       title: p.title,
@@ -2700,6 +2710,132 @@ const commitImageChange = (blockId: string, itemIndex: number | undefined, image
     triggerAutoSaveDraft();
     showToast('Gambar berhasil diperbarui!', 'success');
   }
+};
+
+// -----------------------------------------------------------------------------
+// MinIO S3 Media Picker Modal (Asset Library Integration)
+// -----------------------------------------------------------------------------
+const isMediaPickerOpen = ref(false);
+const mediaPickerTarget = ref<{
+  blockId?: string;
+  itemIndex?: number;
+  field?: 'blockImage' | 'favicon' | 'ogImage';
+} | null>(null);
+
+const mediaPickerSearch = ref('');
+const mediaPickerCategory = ref<'all' | 'photo' | 'vector'>('all');
+const pickerUploadInputRef = ref<HTMLInputElement | null>(null);
+
+const filteredPickerMedia = computed(() => {
+  const assets = mediaAssets.value || [];
+  return assets.filter(item => {
+    const type = (item.type || '').toUpperCase();
+    const isImg = ['JPG', 'JPEG', 'PNG', 'WEBP', 'GIF', 'AVIF'].includes(type);
+    const isVec = type === 'SVG';
+    if (!isImg && !isVec) return false;
+
+    if (mediaPickerCategory.value === 'photo' && !isImg) return false;
+    if (mediaPickerCategory.value === 'vector' && !isVec) return false;
+
+    if (mediaPickerSearch.value.trim()) {
+      const q = mediaPickerSearch.value.toLowerCase();
+      return item.name.toLowerCase().includes(q) || type.toLowerCase().includes(q);
+    }
+    return true;
+  });
+});
+
+const openMediaPickerForBlock = (blockId: string, itemIndex?: number) => {
+  mediaPickerTarget.value = { blockId, itemIndex, field: 'blockImage' };
+  mediaPickerSearch.value = '';
+  mediaPickerCategory.value = 'all';
+  isMediaPickerOpen.value = true;
+};
+
+const openMediaPickerForSeo = (field: 'favicon' | 'ogImage') => {
+  mediaPickerTarget.value = { field };
+  mediaPickerSearch.value = '';
+  mediaPickerCategory.value = 'all';
+  isMediaPickerOpen.value = true;
+};
+
+const closeMediaPicker = () => {
+  isMediaPickerOpen.value = false;
+  mediaPickerTarget.value = null;
+};
+
+const selectMediaAsset = (asset: MediaAssetItem) => {
+  if (!mediaPickerTarget.value) return;
+  const { blockId, itemIndex, field } = mediaPickerTarget.value;
+
+  if (field === 'favicon') {
+    seoForm.faviconUrl = asset.url;
+    showToast(`Favicon dipilih dari MinIO S3: ${asset.name}`, 'success');
+  } else if (field === 'ogImage') {
+    seoForm.ogImageUrl = asset.url;
+    showToast(`Gambar OG Share dipilih dari MinIO S3: ${asset.name}`, 'success');
+  } else if (blockId) {
+    commitImageChange(blockId, itemIndex, asset.url);
+    showToast(`Gambar dipilih dari MinIO S3: ${asset.name}`, 'success');
+  }
+
+  closeMediaPicker();
+};
+
+const triggerPickerQuickUpload = () => {
+  pickerUploadInputRef.value?.click();
+};
+
+const handlePickerFileUpload = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const files = target.files;
+  if (!files || files.length === 0) return;
+  await uploadMediaFiles(files);
+  if (mediaAssets.value && mediaAssets.value.length > 0) {
+    selectMediaAsset(mediaAssets.value[0]);
+  }
+};
+
+// -----------------------------------------------------------------------------
+// Pengaturan SEO, Favicon & Social Share Preview (Open Graph)
+// -----------------------------------------------------------------------------
+const isSeoModalOpen = ref(false);
+const activeSeoTab = ref<'settings' | 'preview'>('settings');
+const seoForm = reactive({
+  faviconUrl: '',
+  metaTitle: '',
+  metaDescription: '',
+  ogImageUrl: ''
+});
+
+const openSeoModal = () => {
+  const savedSeo = (activeContainer.value?.themeConfig as any)?.seo || {};
+  seoForm.faviconUrl = savedSeo.faviconUrl || '';
+  seoForm.metaTitle = savedSeo.metaTitle || activeContainer.value?.name || '';
+  seoForm.metaDescription = savedSeo.metaDescription || activeContainer.value?.bioIntro || '';
+  seoForm.ogImageUrl = savedSeo.ogImageUrl || '';
+  activeSeoTab.value = 'settings';
+  isSeoModalOpen.value = true;
+};
+
+const closeSeoModal = () => {
+  isSeoModalOpen.value = false;
+};
+
+const saveSeoConfig = () => {
+  if (!activeContainer.value) return;
+  if (!activeContainer.value.themeConfig) activeContainer.value.themeConfig = {};
+  (activeContainer.value.themeConfig as any).seo = {
+    faviconUrl: seoForm.faviconUrl,
+    metaTitle: seoForm.metaTitle,
+    metaDescription: seoForm.metaDescription,
+    ogImageUrl: seoForm.ogImageUrl
+  };
+
+  recordHistory();
+  triggerAutoSaveDraft();
+  showToast('Pengaturan SEO & Favicon berhasil disimpan ke draf!', 'success');
+  closeSeoModal();
 };
 
 const moveBlockUp = (id: string) => {
@@ -4044,6 +4180,17 @@ const executeVsCodeReplaceAll = () => {
 
           <div class="v-divider"></div>
 
+          <!-- SEO, Favicon & Social Share Button -->
+          <button
+            type="button"
+            class="btn-header-seo"
+            @click="openSeoModal"
+            title="Pengaturan SEO, Favicon & Social Share (Open Graph)"
+          >
+            <Share2 :size="13" />
+            <span>SEO & Sosmed</span>
+          </button>
+
           <!-- Open Live Website Button -->
           <a
             :href="liveSiteUrl"
@@ -4877,12 +5024,21 @@ const executeVsCodeReplaceAll = () => {
                       <span>Ganti Ikon</span>
                     </button>
 
-                    <!-- Add / Change Card Photo -->
+                    <!-- Add / Change Card Photo with Media Picker -->
+                    <button
+                      type="button"
+                      class="shelf-btn highlight"
+                      @click="openMediaPickerForBlock(selectedBlock.id, hudContext.itemIndex || 0)"
+                      title="Pilih Foto Cover dari Pustaka MinIO S3"
+                    >
+                      <Database :size="12" />
+                      <span>Pustaka</span>
+                    </button>
                     <button
                       type="button"
                       class="shelf-btn"
                       @click="triggerImageUpload(selectedBlock.id, hudContext.itemIndex || 0)"
-                      title="Pasang / Ganti Foto Cover Kartu"
+                      title="Pasang / Ganti Foto Cover dari Komputer"
                     >
                       <ImageIcon :size="12" />
                       <span>{{ selectedBlock.items?.[hudContext.itemIndex || 0]?.image ? 'Ganti Foto' : '+ Foto' }}</span>
@@ -4969,9 +5125,18 @@ const executeVsCodeReplaceAll = () => {
 
                   <!-- E. Context: IMAGE -->
                   <div v-else-if="hudContext.type === 'image'" class="shelf-controls-group">
-                    <button type="button" class="shelf-btn highlight" @click="triggerImageUpload(selectedBlock.id, hudContext.itemIndex)" title="Unggah Foto dari Komputer">
+                    <button
+                      type="button"
+                      class="shelf-btn highlight"
+                      @click="openMediaPickerForBlock(selectedBlock.id, hudContext.itemIndex)"
+                      title="Pilih Gambar dari Pustaka MinIO S3"
+                    >
+                      <Database :size="12" />
+                      <span>Pustaka Media</span>
+                    </button>
+                    <button type="button" class="shelf-btn" @click="triggerImageUpload(selectedBlock.id, hudContext.itemIndex)" title="Unggah Foto dari Komputer">
                       <UploadCloud :size="12" />
-                      <span>Upload Foto</span>
+                      <span>Upload Lokal</span>
                     </button>
                     <div class="shelf-btn-group" title="Preset Gambar Siap Pakai">
                       <button
@@ -6579,10 +6744,14 @@ const executeVsCodeReplaceAll = () => {
                               class="card-cover-image"
                             />
                             <!-- Hover Overlay: Ganti Foto Langsung -->
-                            <div class="card-cover-hover-overlay" @click.stop="triggerImageUpload(block.id, idx)">
-                              <span class="btn-card-change-photo">
+                            <div class="card-cover-hover-overlay">
+                              <span class="btn-card-change-photo" @click.stop="openMediaPickerForBlock(block.id, idx)" title="Pilih dari Pustaka MinIO S3">
+                                <Database :size="12" />
+                                <span>Pustaka</span>
+                              </span>
+                              <span class="btn-card-change-photo secondary" @click.stop="triggerImageUpload(block.id, idx)" title="Upload dari Komputer">
                                 <UploadCloud :size="12" />
-                                <span>{{ item.image ? 'Ganti Foto' : '+ Pasang Foto' }}</span>
+                                <span>Upload</span>
                               </span>
                             </div>
                             <span
@@ -9349,6 +9518,371 @@ const executeVsCodeReplaceAll = () => {
               >
                 <RotateCcw :size="13" />
                 <span>Buang Draf</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: PEMILIH GAMBAR DARI PUSTAKA MEDIA (MinIO S3)                 -->
+    <!-- =================================================================== -->
+    <Teleport to="body">
+      <div
+        v-if="isMediaPickerOpen"
+        class="modal-backdrop modal-backdrop-bespoke"
+        @click.self="closeMediaPicker"
+      >
+        <div class="modal-dialog modal-dialog-bespoke" style="max-width: 760px; max-height: 88vh; display: flex; flex-direction: column;" role="dialog" aria-modal="true">
+          <!-- Header -->
+          <div class="modal-header modal-header-bespoke">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">
+                <Database :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">Pustaka Media MinIO S3</h3>
+                <p class="modal-subheading">Pilih gambar atau unggah file baru langsung ke penyimpanan tenant.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="modal-close-button-ghost"
+              @click="closeMediaPicker"
+              title="Tutup dialog"
+            >
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-bespoke" style="padding: 16px 24px; overflow-y: auto; flex: 1;">
+            <!-- Controls Bar: Search & Quick Upload -->
+            <div class="media-picker-controls-bar">
+              <div class="picker-search-input-wrap">
+                <Search :size="14" class="picker-search-icon" />
+                <input
+                  v-model="mediaPickerSearch"
+                  type="text"
+                  placeholder="Cari aset gambar di MinIO S3..."
+                  class="picker-search-field"
+                />
+                <button v-if="mediaPickerSearch" type="button" class="btn-clear-search-mini" @click="mediaPickerSearch = ''">
+                  <X :size="12" />
+                </button>
+              </div>
+
+              <div class="picker-filter-chips">
+                <button
+                  type="button"
+                  class="picker-chip"
+                  :class="{ active: mediaPickerCategory === 'all' }"
+                  @click="mediaPickerCategory = 'all'"
+                >
+                  Semua
+                </button>
+                <button
+                  type="button"
+                  class="picker-chip"
+                  :class="{ active: mediaPickerCategory === 'photo' }"
+                  @click="mediaPickerCategory = 'photo'"
+                >
+                  Foto (JPG/PNG/WEBP)
+                </button>
+                <button
+                  type="button"
+                  class="picker-chip"
+                  :class="{ active: mediaPickerCategory === 'vector' }"
+                  @click="mediaPickerCategory = 'vector'"
+                >
+                  Vektor SVG
+                </button>
+              </div>
+
+              <!-- Quick Upload CTA -->
+              <button
+                type="button"
+                class="btn-picker-quick-upload"
+                :disabled="isUploadingMedia"
+                @click="triggerPickerQuickUpload"
+                title="Unggah berkas baru langsung ke bucket MinIO S3"
+              >
+                <UploadCloud v-if="!isUploadingMedia" :size="13" />
+                <span v-else class="spin-ring-sm" style="border-color: #2563eb; border-top-color: transparent;"></span>
+                <span>{{ isUploadingMedia ? 'Mengunggah...' : '+ Upload ke MinIO' }}</span>
+              </button>
+              <input
+                ref="pickerUploadInputRef"
+                type="file"
+                accept="image/*"
+                multiple
+                style="display: none;"
+                @change="handlePickerFileUpload"
+              />
+            </div>
+
+            <!-- Uploading indicator -->
+            <div v-if="isUploadingMedia" class="picker-uploading-banner">
+              <div class="spin-ring-sm" style="border-color: #2563eb; border-top-color: transparent;"></div>
+              <span>Sedang mengunggah dan memproses aset ke MinIO S3...</span>
+            </div>
+
+            <!-- Media Grid -->
+            <div v-if="filteredPickerMedia.length > 0" class="picker-assets-grid">
+              <div
+                v-for="asset in filteredPickerMedia"
+                :key="asset.id"
+                class="picker-asset-card"
+                @click="selectMediaAsset(asset)"
+                :title="`Klik untuk memilih: ${asset.name} (${asset.dimensions || asset.size})`"
+              >
+                <div class="picker-asset-thumb">
+                  <img :src="asset.url" :alt="asset.name" loading="lazy" />
+                  <span class="picker-type-badge">{{ (asset.type || 'IMG').toUpperCase() }}</span>
+                </div>
+                <div class="picker-asset-meta">
+                  <span class="picker-asset-name">{{ asset.name }}</span>
+                  <span class="picker-asset-sub">{{ asset.dimensions || asset.size }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else class="picker-empty-state">
+              <ImageIcon :size="36" style="color: #cbd5e1; margin-bottom: 8px;" />
+              <p class="empty-title">Tidak ada aset gambar ditemukan</p>
+              <p class="empty-subtitle">Silakan unggah gambar dari komputer Anda menggunakan tombol di atas.</p>
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="modal-footer modal-footer-bespoke">
+            <div style="font-size: 0.76rem; color: #64748b;">
+              Menampilkan {{ filteredPickerMedia.length }} dari {{ mediaAssets.length }} aset media
+            </div>
+            <div class="footer-actions-group">
+              <button
+                type="button"
+                class="btn-modal-ghost"
+                @click="closeMediaPicker"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: PENGATURAN SEO, FAVICON & SOCIAL SHARE (OPEN GRAPH)          -->
+    <!-- =================================================================== -->
+    <Teleport to="body">
+      <div
+        v-if="isSeoModalOpen"
+        class="modal-backdrop modal-backdrop-bespoke"
+        @click.self="closeSeoModal"
+      >
+        <div class="modal-dialog modal-dialog-bespoke" style="max-width: 680px; max-height: 90vh; display: flex; flex-direction: column;" role="dialog" aria-modal="true">
+          <!-- Header -->
+          <div class="modal-header modal-header-bespoke">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">
+                <Share2 :size="18" />
+              </div>
+              <div>
+                <h3 class="modal-heading">SEO, Favicon & Social Share</h3>
+                <p class="modal-subheading">Kelola identitas tab browser dan kartu pratinjau saat situs dibagikan ke WhatsApp, LinkedIn, atau Twitter.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="modal-close-button-ghost"
+              @click="closeSeoModal"
+              title="Tutup dialog"
+            >
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Tabs Segment -->
+          <div class="seo-modal-tabs">
+            <button
+              type="button"
+              class="seo-tab-btn"
+              :class="{ active: activeSeoTab === 'settings' }"
+              @click="activeSeoTab = 'settings'"
+            >
+              <Settings :size="13" />
+              <span>Formulir Meta & Favicon</span>
+            </button>
+            <button
+              type="button"
+              class="seo-tab-btn"
+              :class="{ active: activeSeoTab === 'preview' }"
+              @click="activeSeoTab = 'preview'"
+            >
+              <Eye :size="13" />
+              <span>Simulasi Pratinjau Sosmed</span>
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-bespoke" style="padding: 20px 24px; overflow-y: auto; flex: 1;">
+            <!-- TAB 1: FORMULIR -->
+            <div v-if="activeSeoTab === 'settings'" class="seo-form-container">
+              <!-- Favicon Field -->
+              <div class="seo-field-group">
+                <label class="seo-field-label">
+                  <span>Favicon Situs (Ikon Tab Browser)</span>
+                  <span class="seo-field-hint">Format .ico, .png, .svg (rekomendasi 32×32 / 64×64)</span>
+                </label>
+                <div class="seo-input-with-preview">
+                  <div class="favicon-thumb-preview">
+                    <img v-if="seoForm.faviconUrl" :src="seoForm.faviconUrl" alt="Favicon" />
+                    <Globe v-else :size="18" style="color: #94a3b8;" />
+                  </div>
+                  <input
+                    v-model="seoForm.faviconUrl"
+                    type="text"
+                    placeholder="https://.../favicon.png atau pilih dari MinIO"
+                    class="seo-text-input"
+                  />
+                  <button
+                    type="button"
+                    class="btn-seo-choose-media"
+                    @click="openMediaPickerForSeo('favicon')"
+                    title="Pilih ikon dari Pustaka MinIO S3"
+                  >
+                    <Database :size="12" />
+                    <span>Pustaka</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Meta Title Field -->
+              <div class="seo-field-group">
+                <div class="seo-field-label-row">
+                  <label class="seo-field-label">Judul SEO (Meta Title)</label>
+                  <span class="seo-char-counter" :class="{ 'is-limit': seoForm.metaTitle.length > 60 }">
+                    {{ seoForm.metaTitle.length }}/60
+                  </span>
+                </div>
+                <input
+                  v-model="seoForm.metaTitle"
+                  type="text"
+                  placeholder="Contoh: StackByte Cloud - Platform CMS & Container Hosting"
+                  class="seo-text-input"
+                />
+              </div>
+
+              <!-- Meta Description Field -->
+              <div class="seo-field-group">
+                <div class="seo-field-label-row">
+                  <label class="seo-field-label">Deskripsi Meta (SEO & Social Snippet)</label>
+                  <span class="seo-char-counter" :class="{ 'is-limit': seoForm.metaDescription.length > 160 }">
+                    {{ seoForm.metaDescription.length }}/160
+                  </span>
+                </div>
+                <textarea
+                  v-model="seoForm.metaDescription"
+                  rows="3"
+                  placeholder="Deskripsikan situs Anda secara ringkas dan menarik untuk mesin pencari Google dan media sosial..."
+                  class="seo-textarea-input"
+                ></textarea>
+              </div>
+
+              <!-- OG Image Field -->
+              <div class="seo-field-group">
+                <label class="seo-field-label">
+                  <span>Gambar Pratinjau Sosial (Open Graph Image)</span>
+                  <span class="seo-field-hint">Rekomendasi ukuran 1200×630px untuk rasio 1.91:1</span>
+                </label>
+                <div class="seo-input-with-preview">
+                  <div class="og-thumb-preview">
+                    <img v-if="seoForm.ogImageUrl" :src="seoForm.ogImageUrl" alt="OG Preview" />
+                    <ImageIcon v-else :size="18" style="color: #94a3b8;" />
+                  </div>
+                  <input
+                    v-model="seoForm.ogImageUrl"
+                    type="text"
+                    placeholder="https://.../og-cover.png atau pilih dari MinIO"
+                    class="seo-text-input"
+                  />
+                  <button
+                    type="button"
+                    class="btn-seo-choose-media"
+                    @click="openMediaPickerForSeo('ogImage')"
+                    title="Pilih gambar cover share dari Pustaka MinIO S3"
+                  >
+                    <Database :size="12" />
+                    <span>Pustaka</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: SIMULASI PRATINJAU SOSIAL -->
+            <div v-else class="seo-preview-container">
+              <div class="social-preview-notice">
+                <Info :size="14" style="color: #0284c7; flex-shrink: 0;" />
+                <span>Simulasi nyata tampilan tautan saat dibagikan ke WhatsApp, Telegram, Twitter (X), atau LinkedIn:</span>
+              </div>
+
+              <!-- Mockup Card -->
+              <div class="social-mockup-card">
+                <!-- Large Image Stage -->
+                <div class="social-mockup-cover">
+                  <img
+                    v-if="seoForm.ogImageUrl"
+                    :src="seoForm.ogImageUrl"
+                    alt="Social Card Banner"
+                  />
+                  <div v-else class="social-mockup-cover-placeholder">
+                    <ImageIcon :size="32" style="color: #94a3b8; margin-bottom: 6px;" />
+                    <span>Belum ada gambar Open Graph. Pasang gambar 1200×630px di tab formulir.</span>
+                  </div>
+                </div>
+
+                <!-- Text Stage -->
+                <div class="social-mockup-content">
+                  <div class="social-mockup-domain">
+                    <img v-if="seoForm.faviconUrl" :src="seoForm.faviconUrl" class="domain-fav-icon" />
+                    <Globe v-else :size="11" />
+                    <span>{{ activeContainer?.subdomain || 'site.stackbyte.id' }}</span>
+                  </div>
+                  <h4 class="social-mockup-title">
+                    {{ seoForm.metaTitle || activeContainer?.name || 'Judul Halaman Belum Diisi' }}
+                  </h4>
+                  <p class="social-mockup-desc">
+                    {{ seoForm.metaDescription || activeContainer?.bioIntro || 'Deskripsi ringkas situs Anda akan tampil di sini saat dibagikan.' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="modal-footer modal-footer-bespoke">
+            <div style="font-size: 0.74rem; color: #64748b;">
+              Tersimpan langsung di draf konfigurasi kontainer
+            </div>
+            <div class="footer-actions-group">
+              <button
+                type="button"
+                class="btn-modal-ghost"
+                @click="closeSeoModal"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                class="btn-modal-confirm"
+                @click="saveSeoConfig"
+              >
+                <Check :size="14" />
+                <span>Simpan Pengaturan</span>
               </button>
             </div>
           </div>

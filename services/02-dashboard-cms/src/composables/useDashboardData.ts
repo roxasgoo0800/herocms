@@ -1148,6 +1148,8 @@ const handlePublishChanges = async () => {
       : null;
     const homeBlocks = homePage?.blocks || activeContainer.value.themeConfig?.blocks || matchedTpl?.blocks || [];
 
+    const seo = (activeContainer.value.themeConfig as any)?.seo || {};
+
     const fullHTML = matchedTpl ? compileTemplateToHTML(matchedTpl, {
       siteName: activeContainer.value.name,
       subdomain: activeContainer.value.subdomain,
@@ -1156,7 +1158,11 @@ const handlePublishChanges = async () => {
       bioIntro: activeContainer.value.bioIntro,
       sitemapPages: hasPages ? pages : undefined,
       activeRoutePath: '/',
-      blocksOverride: homeBlocks
+      blocksOverride: homeBlocks,
+      faviconUrl: seo.faviconUrl,
+      metaTitle: seo.metaTitle || homePage?.title || activeContainer.value.name,
+      metaDescription: seo.metaDescription || homePage?.description || activeContainer.value.bioIntro,
+      ogImageUrl: seo.ogImageUrl
     }) : '';
 
     const multiPagesHtml: Record<string, string> = (matchedTpl && hasPages) ? compileMultiPageSiteToHTML(matchedTpl, {
@@ -1164,7 +1170,11 @@ const handlePublishChanges = async () => {
       subdomain: activeContainer.value.subdomain,
       accentColor: activeContainer.value.accentColor,
       sitemapPages: pages,
-      pages: pages
+      pages: pages,
+      faviconUrl: seo.faviconUrl,
+      metaTitle: seo.metaTitle,
+      metaDescription: seo.metaDescription,
+      ogImageUrl: seo.ogImageUrl
     }) : {};
 
     if (activeContainer.value.themeConfig) {

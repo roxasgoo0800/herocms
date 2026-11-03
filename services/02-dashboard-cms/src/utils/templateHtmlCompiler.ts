@@ -12,6 +12,10 @@ export interface CompileTemplateOptions {
   blocksOverride?: VisualBlock[];
   activeRoutePath?: string;
   sitemapPages?: Array<{ id: string; title: string; path: string }>;
+  faviconUrl?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  ogImageUrl?: string;
 }
 
 function escapeHtml(str?: string): string {
@@ -932,12 +936,32 @@ export function compileTemplateToHTML(
     }
   }
 
+  const favicon = options.faviconUrl;
+  const metaTitle = options.metaTitle || roleHeadline || siteName;
+  const metaDesc = options.metaDescription || bioIntro;
+  const ogImg = options.ogImageUrl;
+  const currentUrl = `https://${subdomain}${options.activeRoutePath && options.activeRoutePath !== '/' ? options.activeRoutePath : ''}`;
+
   return `<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${siteName} | ${escapeHtml(template.title)}</title>
+    <title>${siteName} | ${escapeHtml(metaTitle)}</title>
+    ${favicon ? `<link rel="icon" href="${escapeHtml(favicon)}" type="image/x-icon">` : '<link rel="icon" href="/favicon.ico" type="image/x-icon">'}
+    ${metaDesc ? `<meta name="description" content="${escapeHtml(metaDesc)}">` : ''}
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${currentUrl}">
+    <meta property="og:title" content="${escapeHtml(metaTitle)}">
+    <meta property="og:description" content="${escapeHtml(metaDesc)}">
+    ${ogImg ? `<meta property="og:image" content="${escapeHtml(ogImg)}">` : ''}
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="${currentUrl}">
+    <meta name="twitter:title" content="${escapeHtml(metaTitle)}">
+    <meta name="twitter:description" content="${escapeHtml(metaDesc)}">
+    ${ogImg ? `<meta name="twitter:image" content="${escapeHtml(ogImg)}">` : ''}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
@@ -1644,7 +1668,11 @@ export function compileMultiPageSiteToHTML(
       bioIntro: page.description || options.bioIntro,
       activeRoutePath: cleanRoute,
       sitemapPages: options.sitemapPages || pages,
-      blocksOverride: page.blocks
+      blocksOverride: page.blocks,
+      faviconUrl: (page as any).faviconUrl || options.faviconUrl,
+      metaTitle: (page as any).metaTitle || page.title || options.metaTitle,
+      metaDescription: (page as any).metaDescription || page.description || options.metaDescription,
+      ogImageUrl: (page as any).ogImageUrl || options.ogImageUrl
     });
     result[filename] = pageHtml;
     // Also include clean path key without .html for orchestrator directory creation
