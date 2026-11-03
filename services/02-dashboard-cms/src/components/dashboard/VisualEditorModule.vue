@@ -3851,11 +3851,11 @@ const executeVsCodeReplaceAll = () => {
                   >
                     <!-- Indent branch guide for nested child route -->
                     <div v-if="getParentPath(p.path)" class="tree-branch-guide" title="Sub-rute dari induk">
-                      <CornerDownRight :size="11" class="branch-icon" />
+                      <CornerDownRight :size="12" class="branch-icon" />
                     </div>
 
-                    <!-- Page Icon -->
-                    <div class="page-item-leading-icon">
+                    <!-- Page Leading Icon -->
+                    <div class="page-item-leading-icon" :class="{ 'is-active-icon': p.id === activePageId }">
                       <Home v-if="p.path === '/'" :size="13" class="icon-home" />
                       <FileText v-else-if="!getParentPath(p.path)" :size="13" class="icon-page" />
                       <FileCode v-else :size="13" class="icon-subpage" />
@@ -3864,32 +3864,34 @@ const executeVsCodeReplaceAll = () => {
                     <!-- Page Info -->
                     <div class="page-item-info">
                       <div class="page-item-title-row">
-                        <span class="page-item-title">{{ p.title }}</span>
+                        <span class="page-item-title" :title="p.title">
+                          {{ p.title || (p.path === '/' ? 'Beranda' : p.path) }}
+                        </span>
                         <span v-if="p.path === '/'" class="badge-root-tag">Utama</span>
                         <span v-else-if="getParentPath(p.path)" class="badge-nested-tag">Sub-Rute</span>
                       </div>
-                      <span class="page-item-path">{{ p.path }}</span>
+                      <div class="page-item-meta-row">
+                        <span class="page-item-path-pill">{{ p.path }}</span>
+                        <span class="meta-dot-divider">•</span>
+                        <span class="page-item-blocks-count">{{ p.blocks?.length || 0 }} blok</span>
+                      </div>
                     </div>
 
-                    <!-- Actions & Metadata -->
-                    <div class="page-item-actions-cluster">
-                      <span class="page-item-blocks-pill">
-                        <Layers :size="10" />
-                        {{ p.blocks?.length || 0 }} blok
-                      </span>
+                    <!-- Actions & Active Status -->
+                    <div class="page-item-actions-cluster" @click.stop>
                       <button
                         type="button"
-                        class="btn-edit-page-mini"
-                        @click.stop="openEditRouteModal(p); isPageSwitcherOpen = false"
-                        title="Edit Rute & Pengaturan Halaman"
+                        class="btn-page-action-pill"
+                        @click="openEditRouteModal(p); isPageSwitcherOpen = false"
+                        title="Edit Rute & Judul Halaman"
                       >
                         <Settings :size="11" />
                         <span>Edit</span>
                       </button>
                       <button
                         type="button"
-                        class="btn-duplicate-page-mini"
-                        @click.stop="duplicatePage(p.id); isPageSwitcherOpen = false"
+                        class="btn-page-action-pill"
+                        @click="duplicatePage(p.id); isPageSwitcherOpen = false"
                         title="Duplikat Halaman Ini"
                       >
                         <Copy :size="11" />
@@ -3898,14 +3900,15 @@ const executeVsCodeReplaceAll = () => {
                       <button
                         v-if="p.path !== '/' && multiPages.length > 1"
                         type="button"
-                        class="btn-delete-page-mini"
-                        @click.stop="deletePage(p.id)"
+                        class="btn-page-action-icon is-danger"
+                        @click="deletePage(p.id)"
                         title="Hapus Halaman Ini"
                       >
-                        <Trash2 :size="12" />
+                        <Trash2 :size="11" />
                       </button>
-                      <div v-if="p.id === activePageId" class="active-dot-badge" title="Halaman Aktif">
+                      <div v-if="p.id === activePageId" class="page-active-tag" title="Halaman Aktif">
                         <Check :size="10" />
+                        <span>Aktif</span>
                       </div>
                     </div>
                   </div>
