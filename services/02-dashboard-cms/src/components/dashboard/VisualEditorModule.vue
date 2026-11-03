@@ -9547,16 +9547,16 @@ const executeVsCodeReplaceAll = () => {
         class="modal-backdrop modal-backdrop-bespoke"
         @click.self="closeMediaPicker"
       >
-        <div class="modal-dialog modal-dialog-bespoke" style="max-width: 840px; width: 92vw; height: 510px; max-height: 82vh; display: flex; flex-direction: column; overflow: hidden;" role="dialog" aria-modal="true">
-          <!-- Header -->
-          <div class="modal-header modal-header-bespoke" style="padding: 10px 18px; border-bottom: 1px solid #e2e8f0;">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-media-picker" style="max-width: 1040px; width: 92vw; height: 82vh; max-height: 780px; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important;" role="dialog" aria-modal="true">
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box" style="width: 32px; height: 32px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                <Database :size="16" />
+              <div class="modal-header-icon-box" style="width: 34px; height: 34px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+                <Database :size="17" />
               </div>
               <div>
-                <h3 class="modal-heading" style="font-size: 0.92rem; font-weight: 700; margin: 0;">Pustaka Media MinIO S3</h3>
-                <p class="modal-subheading" style="font-size: 0.72rem; margin: 2px 0 0 0; color: #64748b;">Pusat aset gambar & vektor terisolasi untuk kontainer tenant.</p>
+                <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">Pustaka Media MinIO S3</h3>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Pusat aset gambar & vektor terisolasi untuk kontainer tenant.</p>
               </div>
             </div>
             <button
@@ -9573,7 +9573,7 @@ const executeVsCodeReplaceAll = () => {
           <div class="picker-top-toolbar">
             <!-- Search -->
             <div class="picker-search-shell">
-              <Search :size="13" class="picker-search-glyph" />
+              <Search :size="14" class="picker-search-glyph" />
               <input
                 v-model="mediaPickerSearch"
                 type="text"
@@ -9621,7 +9621,7 @@ const executeVsCodeReplaceAll = () => {
               @click="triggerPickerQuickUpload"
               title="Unggah berkas baru langsung ke bucket MinIO S3"
             >
-              <UploadCloud v-if="!isUploadingMedia" :size="13" />
+              <UploadCloud v-if="!isUploadingMedia" :size="14" />
               <span v-else class="spin-ring-sm" style="border-color: #ffffff; border-top-color: transparent;"></span>
               <span>{{ isUploadingMedia ? 'Mengunggah...' : '+ Unggah Gambar' }}</span>
             </button>
@@ -9642,7 +9642,7 @@ const executeVsCodeReplaceAll = () => {
               <!-- Compact Dropzone Strip -->
               <div class="picker-dropzone-strip" @click="triggerPickerQuickUpload">
                 <div class="dropzone-icon-box">
-                  <UploadCloud :size="14" />
+                  <UploadCloud :size="15" />
                 </div>
                 <div class="dropzone-text-group">
                   <span class="dropzone-main-text">Tarik gambar ke sini atau klik untuk unggah ke MinIO S3</span>
@@ -9671,7 +9671,7 @@ const executeVsCodeReplaceAll = () => {
                     <img :src="asset.url" :alt="asset.name" loading="lazy" />
                     <span class="picker-type-badge">{{ (asset.type || 'IMG').toUpperCase() }}</span>
                     <div v-if="selectedPickerAsset?.id === asset.id" class="picker-selected-check">
-                      <Check :size="11" />
+                      <Check :size="12" />
                     </div>
                   </div>
                   <div class="picker-asset-meta">
@@ -9683,7 +9683,7 @@ const executeVsCodeReplaceAll = () => {
 
               <!-- Empty State -->
               <div v-else class="picker-empty-state">
-                <ImageIcon :size="36" style="color: #cbd5e1; margin-bottom: 6px;" />
+                <ImageIcon :size="44" style="color: #cbd5e1; margin-bottom: 8px;" />
                 <p class="empty-title">Tidak ada aset gambar ditemukan</p>
                 <p class="empty-subtitle">Silakan unggah gambar dari komputer Anda menggunakan tombol di atas.</p>
               </div>
@@ -9732,20 +9732,20 @@ const executeVsCodeReplaceAll = () => {
               <!-- Empty Inspector State -->
               <div v-else class="inspector-empty-wrap">
                 <div class="empty-icon-circle">
-                  <ImageIcon :size="22" style="color: #94a3b8;" />
+                  <ImageIcon :size="26" style="color: #94a3b8;" />
                 </div>
                 <p class="empty-hint-text">Pilih salah satu gambar dari galeri di samping untuk melihat pratinjau dan detailnya.</p>
               </div>
             </aside>
           </div>
 
-          <!-- Footer Actions -->
-          <div class="modal-footer modal-footer-bespoke" style="padding: 9px 18px; border-top: 1px solid #e2e8f0; background: #ffffff;">
-            <div style="font-size: 0.72rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
+          <!-- Footer Actions (Flush to Bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0;">
+            <div style="font-size: 0.74rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
               <span class="pulse-mini-dot"></span>
               <span>MinIO S3 • {{ filteredPickerMedia.length }} dari {{ mediaAssets.length }} Aset Ditampilkan</span>
             </div>
-            <div class="footer-actions-group" style="gap: 8px;">
+            <div class="footer-actions-group" style="gap: 10px;">
               <button
                 type="button"
                 class="btn-picker-footer-ghost"
@@ -9759,7 +9759,7 @@ const executeVsCodeReplaceAll = () => {
                 :disabled="!selectedPickerAsset"
                 @click="confirmUseSelectedAsset"
               >
-                <Check :size="13" />
+                <Check :size="14" />
                 <span>Gunakan Gambar Terpilih</span>
               </button>
             </div>
