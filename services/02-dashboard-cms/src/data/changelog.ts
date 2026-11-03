@@ -101,6 +101,12 @@ export const changelogReleases: ChangelogRelease[] = [
         type: 'feature',
         scope: 'Multi-Page Sub-Routes Compiler & Nginx Delivery (templateHtmlCompiler.ts, service.go, client.go)',
         description: 'Menyusun berkas HTML terpisah untuk setiap sub-halaman rute dan mengirimkannya ke Provision Orchestrator untuk ditulis ke public/<page>/index.html sehingga navigasi navbar Nginx live berjalan mulus tanpa 404.'
+      },
+      {
+        id: 'c-02dash-1427-4',
+        type: 'improvement',
+        scope: 'Pure Dark Terminal Window Modal (DashboardView.vue, studio-master.css)',
+        description: 'Menghilangkan container wrapper putih (.modal-dialog) pada modal log kontainer, mengintegrasikan action bar dan status memori langsung ke footer internal jendela terminal (#121215), sehingga konsol log hadir sebagai jendela terminal gelap murni bergaya macOS tanpa bingkai putih.'
       }
     ]
   },

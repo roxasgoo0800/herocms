@@ -1470,34 +1470,35 @@ const handleLogout = async () => {
                 <span class="log-cursor-beacon"></span>
               </div>
             </div>
-          </div>
 
-          <!-- 5. Modal Footer Actions -->
-          <div class="modal-footer-row" style="margin-top: 12px;">
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.73rem; color: #64748b;">
-              <span>Memori: <strong>{{ activeLogContainer.ramUsage }} MB</strong></span>
-              <span>•</span>
-              <span>Menampilkan <strong>{{ filteredLogs.length }}</strong> baris log aktif</span>
-            </div>
+            <!-- 5. Integrated Terminal Window Bottom Status Bar -->
+            <div class="terminal-window-footer">
+              <div class="terminal-footer-info">
+                <span class="pulse-mini-dot" style="background-color: #10b981;"></span>
+                <span>Memori: <strong style="color: #f4f4f5;">{{ activeLogContainer.ramUsage }} MB</strong></span>
+                <span style="color: #52525b;">•</span>
+                <span>Menampilkan <strong style="color: #f4f4f5;">{{ filteredLogs.length }}</strong> baris log aktif</span>
+              </div>
 
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <button
-                type="button"
-                class="btn-modal-ghost"
-                :disabled="isTerminalRestarting"
-                title="Restart Kontainer Langsung"
-                @click="handleTerminalRestart"
-              >
-                <RotateCw :size="13" :class="{ 'spin-anim': isTerminalRestarting }" />
-                <span>{{ isTerminalRestarting ? 'Me-reboot kontainer...' : 'Restart Kontainer' }}</span>
-              </button>
-              <button type="button" class="btn-modal-ghost" title="Salin seluruh log ke clipboard" @click="copyContainerLogs">
-                <Copy :size="13" />
-                <span>Salin Log</span>
-              </button>
-              <button type="button" class="btn-modal-confirm" @click="isLogsModalOpen = false">
-                Tutup Konsol
-              </button>
+              <div class="terminal-footer-actions">
+                <button
+                  type="button"
+                  class="terminal-footer-btn"
+                  :disabled="isTerminalRestarting"
+                  title="Restart Kontainer Langsung"
+                  @click="handleTerminalRestart"
+                >
+                  <RotateCw :size="13" :class="{ 'spin-anim': isTerminalRestarting }" />
+                  <span>{{ isTerminalRestarting ? 'Me-reboot kontainer...' : 'Restart Kontainer' }}</span>
+                </button>
+                <button type="button" class="terminal-footer-btn" title="Salin seluruh log ke clipboard" @click="copyContainerLogs">
+                  <Copy :size="13" />
+                  <span>Salin Log</span>
+                </button>
+                <button type="button" class="terminal-footer-btn-primary" @click="isLogsModalOpen = false">
+                  Tutup Konsol
+                </button>
+              </div>
             </div>
           </div>
         </div>
