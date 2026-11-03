@@ -105,8 +105,8 @@ export const changelogReleases: ChangelogRelease[] = [
       {
         id: 'c-02dash-1427-4',
         type: 'improvement',
-        scope: 'Pure Dark Terminal Window Modal (DashboardView.vue, studio-master.css)',
-        description: 'Menghilangkan container wrapper putih (.modal-dialog) pada modal log kontainer, mengintegrasikan action bar dan status memori langsung ke footer internal jendela terminal (#121215), sehingga konsol log hadir sebagai jendela terminal gelap murni bergaya macOS tanpa bingkai putih.'
+        scope: 'Light Studio Master Theme Terminal Modal (DashboardView.vue, studio-master.css)',
+        description: 'Menyelaraskan tema modal log pod kontainer dengan arsitektur CSS HeroCMS Studio (Pure White #ffffff, Slate Canvas #f8fafc, border halus #e2e8f0), mengintegrasikan toolbar, search bar, status bar, badge semantik pastel, dan tombol aksi tanpa wrapper bingkai putih berlebih.'
       }
     ]
   },
