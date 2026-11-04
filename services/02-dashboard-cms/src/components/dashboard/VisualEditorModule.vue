@@ -9785,16 +9785,21 @@ const executeVsCodeReplaceAll = () => {
         class="modal-backdrop modal-backdrop-bespoke"
         @click.self="closeSeoModal"
       >
-        <div class="modal-dialog modal-dialog-bespoke" style="max-width: 680px; max-height: 90vh; display: flex; flex-direction: column;" role="dialog" aria-modal="true">
-          <!-- Header -->
-          <div class="modal-header modal-header-bespoke">
+        <div
+          class="modal-dialog modal-dialog-seamless modal-dialog-seo"
+          style="max-width: 680px; width: 92vw; max-height: 86vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important;"
+          role="dialog"
+          aria-modal="true"
+        >
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">
-                <Share2 :size="18" />
+              <div class="modal-header-icon-box" style="width: 34px; height: 34px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+                <Share2 :size="17" />
               </div>
               <div>
-                <h3 class="modal-heading">SEO, Favicon & Social Share</h3>
-                <p class="modal-subheading">Kelola identitas tab browser dan kartu pratinjau saat situs dibagikan ke WhatsApp, LinkedIn, atau Twitter.</p>
+                <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">SEO, Favicon & Social Share</h3>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Kelola identitas tab browser dan kartu pratinjau saat situs dibagikan ke WhatsApp, LinkedIn, atau Twitter.</p>
               </div>
             </div>
             <button
@@ -9807,7 +9812,7 @@ const executeVsCodeReplaceAll = () => {
             </button>
           </div>
 
-          <!-- Tabs Segment -->
+          <!-- Tabs Segment (Flush edge-to-edge) -->
           <div class="seo-modal-tabs">
             <button
               type="button"
@@ -9830,7 +9835,7 @@ const executeVsCodeReplaceAll = () => {
           </div>
 
           <!-- Body -->
-          <div class="modal-body-bespoke" style="padding: 20px 24px; overflow-y: auto; flex: 1;">
+          <div class="modal-body-bespoke" style="padding: 22px 24px; overflow-y: auto; flex: 1; background: #ffffff;">
             <!-- TAB 1: FORMULIR -->
             <div v-if="activeSeoTab === 'settings'" class="seo-form-container">
               <!-- Favicon Field -->
@@ -9840,7 +9845,7 @@ const executeVsCodeReplaceAll = () => {
                   <span class="seo-field-hint">Format .ico, .png, .svg (rekomendasi 32×32 / 64×64)</span>
                 </label>
                 <div class="seo-input-with-preview">
-                  <div class="favicon-thumb-preview">
+                  <div class="favicon-thumb-preview checkerboard-pattern">
                     <img v-if="seoForm.faviconUrl" :src="seoForm.faviconUrl" alt="Favicon" />
                     <Globe v-else :size="18" style="color: #94a3b8;" />
                   </div>
@@ -9856,7 +9861,7 @@ const executeVsCodeReplaceAll = () => {
                     @click="openMediaPickerForSeo('favicon')"
                     title="Pilih ikon dari Pustaka MinIO S3"
                   >
-                    <Database :size="12" />
+                    <Database :size="13" />
                     <span>Pustaka</span>
                   </button>
                 </div>
@@ -9901,7 +9906,7 @@ const executeVsCodeReplaceAll = () => {
                   <span class="seo-field-hint">Rekomendasi ukuran 1200×630px untuk rasio 1.91:1</span>
                 </label>
                 <div class="seo-input-with-preview">
-                  <div class="og-thumb-preview">
+                  <div class="og-thumb-preview checkerboard-pattern">
                     <img v-if="seoForm.ogImageUrl" :src="seoForm.ogImageUrl" alt="OG Preview" />
                     <ImageIcon v-else :size="18" style="color: #94a3b8;" />
                   </div>
@@ -9917,7 +9922,7 @@ const executeVsCodeReplaceAll = () => {
                     @click="openMediaPickerForSeo('ogImage')"
                     title="Pilih gambar cover share dari Pustaka MinIO S3"
                   >
-                    <Database :size="12" />
+                    <Database :size="13" />
                     <span>Pustaka</span>
                   </button>
                 </div>
@@ -9934,7 +9939,7 @@ const executeVsCodeReplaceAll = () => {
               <!-- Mockup Card -->
               <div class="social-mockup-card">
                 <!-- Large Image Stage -->
-                <div class="social-mockup-cover">
+                <div class="social-mockup-cover checkerboard-pattern">
                   <img
                     v-if="seoForm.ogImageUrl"
                     :src="seoForm.ogImageUrl"
@@ -9964,22 +9969,23 @@ const executeVsCodeReplaceAll = () => {
             </div>
           </div>
 
-          <!-- Footer Actions -->
-          <div class="modal-footer modal-footer-bespoke">
-            <div style="font-size: 0.74rem; color: #64748b;">
-              Tersimpan langsung di draf konfigurasi kontainer
+          <!-- Footer Actions (Flush to Bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0;">
+            <div style="font-size: 0.74rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
+              <span class="pulse-mini-dot"></span>
+              <span>Tersimpan langsung di draf konfigurasi kontainer</span>
             </div>
-            <div class="footer-actions-group">
+            <div class="footer-actions-group" style="gap: 10px;">
               <button
                 type="button"
-                class="btn-modal-ghost"
+                class="btn-picker-footer-ghost"
                 @click="closeSeoModal"
               >
                 Batal
               </button>
               <button
                 type="button"
-                class="btn-modal-confirm"
+                class="btn-picker-footer-confirm"
                 @click="saveSeoConfig"
               >
                 <Check :size="14" />
