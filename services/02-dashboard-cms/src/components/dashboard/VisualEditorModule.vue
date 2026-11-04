@@ -9571,68 +9571,76 @@ const executeVsCodeReplaceAll = () => {
 
           <!-- Top Unified Filter Toolbar -->
           <div class="picker-top-toolbar">
-            <!-- Search -->
-            <div class="picker-search-shell">
-              <Search :size="14" class="picker-search-glyph" />
+            <div class="picker-toolbar-controls-cluster">
+              <!-- Search -->
+              <div class="picker-search-shell">
+                <Search :size="14" class="picker-search-glyph" />
+                <input
+                  v-model="mediaPickerSearch"
+                  type="text"
+                  placeholder="Cari nama gambar atau format..."
+                  class="picker-search-input"
+                />
+                <button v-if="mediaPickerSearch" type="button" class="btn-clear-search-mini" @click="mediaPickerSearch = ''">
+                  <X :size="12" />
+                </button>
+              </div>
+
+              <!-- Segmented Category Filter -->
+              <div class="picker-category-segmented">
+                <button
+                  type="button"
+                  class="picker-seg-btn"
+                  :class="{ active: mediaPickerCategory === 'all' }"
+                  @click="mediaPickerCategory = 'all'"
+                >
+                  Semua ({{ mediaAssets.length }})
+                </button>
+                <button
+                  type="button"
+                  class="picker-seg-btn"
+                  :class="{ active: mediaPickerCategory === 'photo' }"
+                  @click="mediaPickerCategory = 'photo'"
+                >
+                  Foto
+                </button>
+                <button
+                  type="button"
+                  class="picker-seg-btn"
+                  :class="{ active: mediaPickerCategory === 'vector' }"
+                  @click="mediaPickerCategory = 'vector'"
+                >
+                  Vektor SVG
+                </button>
+              </div>
+
+              <!-- Quick Upload CTA -->
+              <button
+                type="button"
+                class="btn-picker-primary-upload"
+                :disabled="isUploadingMedia"
+                @click="triggerPickerQuickUpload"
+                title="Unggah berkas baru langsung ke bucket MinIO S3"
+              >
+                <UploadCloud v-if="!isUploadingMedia" :size="14" />
+                <span v-else class="spin-ring-sm" style="border-color: #ffffff; border-top-color: transparent;"></span>
+                <span>{{ isUploadingMedia ? 'Mengunggah...' : '+ Unggah Gambar' }}</span>
+              </button>
               <input
-                v-model="mediaPickerSearch"
-                type="text"
-                placeholder="Cari nama gambar atau format..."
-                class="picker-search-input"
+                ref="pickerUploadInputRef"
+                type="file"
+                accept="image/*"
+                multiple
+                style="display: none;"
+                @change="handlePickerFileUpload"
               />
-              <button v-if="mediaPickerSearch" type="button" class="btn-clear-search-mini" @click="mediaPickerSearch = ''">
-                <X :size="12" />
-              </button>
             </div>
 
-            <!-- Segmented Category Filter -->
-            <div class="picker-category-segmented">
-              <button
-                type="button"
-                class="picker-seg-btn"
-                :class="{ active: mediaPickerCategory === 'all' }"
-                @click="mediaPickerCategory = 'all'"
-              >
-                Semua ({{ mediaAssets.length }})
-              </button>
-              <button
-                type="button"
-                class="picker-seg-btn"
-                :class="{ active: mediaPickerCategory === 'photo' }"
-                @click="mediaPickerCategory = 'photo'"
-              >
-                Foto
-              </button>
-              <button
-                type="button"
-                class="picker-seg-btn"
-                :class="{ active: mediaPickerCategory === 'vector' }"
-                @click="mediaPickerCategory = 'vector'"
-              >
-                Vektor SVG
-              </button>
+            <!-- Right Status Badge (S3 Object Storage) -->
+            <div class="picker-toolbar-status-badge">
+              <span class="pulse-mini-dot"></span>
+              <span>MinIO S3 Bucket</span>
             </div>
-
-            <!-- Quick Upload CTA -->
-            <button
-              type="button"
-              class="btn-picker-primary-upload"
-              :disabled="isUploadingMedia"
-              @click="triggerPickerQuickUpload"
-              title="Unggah berkas baru langsung ke bucket MinIO S3"
-            >
-              <UploadCloud v-if="!isUploadingMedia" :size="14" />
-              <span v-else class="spin-ring-sm" style="border-color: #ffffff; border-top-color: transparent;"></span>
-              <span>{{ isUploadingMedia ? 'Mengunggah...' : '+ Unggah Gambar' }}</span>
-            </button>
-            <input
-              ref="pickerUploadInputRef"
-              type="file"
-              accept="image/*"
-              multiple
-              style="display: none;"
-              @change="handlePickerFileUpload"
-            />
           </div>
 
           <!-- Body Split Stage: Gallery (Left) | Inspector (Right) -->

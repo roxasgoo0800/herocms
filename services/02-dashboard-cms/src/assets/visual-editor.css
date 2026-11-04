@@ -12157,18 +12157,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 16px;
   padding: 10px 22px;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
+.picker-toolbar-controls-cluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
 .picker-search-shell {
   position: relative;
-  flex: 1;
-  min-width: 200px;
-  max-width: 340px;
+  width: 250px;
+  flex-shrink: 0;
 }
 
 .picker-search-glyph {
@@ -12206,6 +12212,7 @@
   border-radius: 8px;
   padding: 2px;
   gap: 2px;
+  flex-shrink: 0;
 }
 
 .picker-seg-btn {
@@ -12254,6 +12261,20 @@
   background: #1d4ed8;
   transform: translateY(-0.5px);
   box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
+}
+
+.picker-toolbar-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  flex-shrink: 0;
 }
 
 .picker-split-stage {
