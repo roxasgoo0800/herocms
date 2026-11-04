@@ -9027,28 +9027,28 @@ const executeVsCodeReplaceAll = () => {
       <!-- =================================================================== -->
       <Teleport to="body">
         <div v-if="isNewPageModalOpen" class="modal-backdrop modal-backdrop-bespoke" @click.self="isNewPageModalOpen = false">
-        <div class="modal-dialog modal-dialog-new-page modal-dialog-bespoke">
-          <!-- Header -->
-          <div class="modal-header modal-header-bespoke">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-new-page modal-dialog-bespoke" style="padding: 0 !important; overflow: hidden !important;" role="dialog" aria-modal="true">
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box modal-icon-gradient">
-                <Workflow :size="20" />
+              <div class="modal-header-icon-box modal-icon-gradient" style="width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+                <Workflow :size="18" />
               </div>
               <div>
                 <div class="modal-title-row">
-                  <h3 class="modal-heading">Tambah Halaman Rute Baru</h3>
+                  <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">Tambah Halaman Rute Baru</h3>
                   <span class="modal-tag-badge">Traefik Ingress Edge</span>
                 </div>
-                <p class="modal-subheading">Perluas website dengan rute multi-halaman & blueprint layout terintegrasi.</p>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Perluas website dengan rute multi-halaman & blueprint layout terintegrasi.</p>
               </div>
             </div>
-            <button type="button" class="modal-close-button" @click="isNewPageModalOpen = false" title="Tutup">
+            <button type="button" class="modal-close-button-ghost" @click="isNewPageModalOpen = false" title="Tutup">
               <X :size="16" />
             </button>
           </div>
 
           <!-- Body -->
-          <div class="new-page-modal-body">
+          <div class="new-page-modal-body" style="padding: 20px 24px;">
             <!-- 1. Quick Presets Chips Strip -->
             <div class="quick-presets-strip">
               <span class="quick-presets-label">Pintasan Cepat:</span>
@@ -9275,26 +9275,26 @@ const executeVsCodeReplaceAll = () => {
             </div>
           </div>
 
-          <!-- Footer -->
-          <div class="modal-footer modal-footer-bespoke">
+          <!-- Footer (Flush to Bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0;">
             <div class="footer-help-note">
               <Workflow :size="13" class="note-icon" />
               <span>Rute & tata letak dapat dikustomisasi visual kapan saja di Alur Figma.</span>
             </div>
-            <div class="footer-actions-group">
+            <div class="footer-actions-group" style="display: flex; gap: 8px;">
               <button
                 type="button"
-                class="btn-modal-ghost"
+                class="btn-picker-footer-ghost"
                 @click="isNewPageModalOpen = false"
               >
                 Batal
               </button>
               <button
                 type="button"
-                class="btn-modal-confirm btn-modal-create-page"
+                class="btn-picker-footer-confirm"
                 @click="createNewPage"
               >
-                <Plus :size="13" />
+                <Plus :size="14" />
                 <span>Buat Halaman & Buka di Kanvas</span>
               </button>
             </div>
@@ -9309,30 +9309,30 @@ const executeVsCodeReplaceAll = () => {
     <!-- =================================================================== -->
     <Teleport to="body">
       <div v-if="isEditRouteModalOpen && editingRouteTarget" class="modal-backdrop modal-backdrop-bespoke" @click.self="closeEditRouteModal">
-        <div class="modal-dialog modal-dialog-edit-route modal-dialog-bespoke" role="dialog" aria-modal="true">
-          <!-- Header -->
-          <div class="modal-header modal-header-bespoke">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-edit-route modal-dialog-bespoke" style="padding: 0 !important; overflow: hidden !important;" role="dialog" aria-modal="true">
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box modal-icon-gradient" :class="{ 'is-root-icon': editingRouteTarget.path === '/' }">
+              <div class="modal-header-icon-box modal-icon-gradient" :class="{ 'is-root-icon': editingRouteTarget.path === '/' }" style="width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
                 <Home v-if="editingRouteTarget.path === '/'" :size="18" />
                 <Workflow v-else :size="18" />
               </div>
               <div>
                 <div class="modal-title-row">
-                  <h3 class="modal-heading">Edit Rute & Metadata Halaman</h3>
+                  <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">Edit Rute & Metadata Halaman</h3>
                   <span v-if="editingRouteTarget.path === '/'" class="modal-tag-badge badge-root">Beranda (Root)</span>
                   <span v-else class="modal-tag-badge">Traefik Ingress Edge</span>
                 </div>
-                <p class="modal-subheading">Sesuaikan judul navigasi, alamat URL, dan deskripsi SEO halaman ini.</p>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Sesuaikan judul navigasi, alamat URL, dan deskripsi SEO halaman ini.</p>
               </div>
             </div>
-            <button type="button" class="modal-close-button" @click="closeEditRouteModal" title="Tutup">
+            <button type="button" class="modal-close-button-ghost" @click="closeEditRouteModal" title="Tutup">
               <X :size="16" />
             </button>
           </div>
 
           <!-- Body -->
-          <div class="new-page-modal-body modal-body-edit-route">
+          <div class="new-page-modal-body modal-body-edit-route" style="padding: 20px 24px;">
             <div class="new-page-form-grid">
               <!-- Judul Halaman -->
               <div class="new-page-field">
@@ -9438,23 +9438,23 @@ const executeVsCodeReplaceAll = () => {
             </div>
           </div>
 
-          <!-- Footer -->
-          <div class="modal-footer modal-footer-bespoke">
+          <!-- Footer (Flush to Bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0;">
             <div class="footer-help-note">
               <Workflow :size="13" class="note-icon" />
               <span>Otomatis sinkron dengan bilah navigasi & kanvas Alur Figma.</span>
             </div>
-            <div class="footer-actions-group">
+            <div class="footer-actions-group" style="display: flex; gap: 8px;">
               <button
                 type="button"
-                class="btn-modal-ghost"
+                class="btn-picker-footer-ghost"
                 @click="closeEditRouteModal"
               >
                 Batal
               </button>
               <button
                 type="button"
-                class="btn-modal-confirm btn-modal-save-route"
+                class="btn-picker-footer-confirm"
                 @click="saveEditRouteModal"
               >
                 <Check :size="14" />
@@ -9475,16 +9475,16 @@ const executeVsCodeReplaceAll = () => {
         class="modal-backdrop modal-backdrop-bespoke"
         @click.self="closeResetDraftModal"
       >
-        <div class="modal-dialog modal-dialog-bespoke" style="max-width: 480px;" role="dialog" aria-modal="true">
-          <!-- Header -->
-          <div class="modal-header modal-header-bespoke">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-reset-draft" style="max-width: 480px; width: 92vw; padding: 0 !important; border-radius: 16px !important; overflow: hidden !important; display: flex; flex-direction: column;" role="dialog" aria-modal="true">
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">
-                <RotateCcw :size="18" />
+              <div class="modal-header-icon-box" style="width: 34px; height: 34px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+                <RotateCcw :size="17" />
               </div>
               <div>
-                <h3 class="modal-heading">Buang Draf & Kembali ke Versi Awal?</h3>
-                <p class="modal-subheading">Kembalikan kanvas situs ke blueprint kontainer yang tersimpan.</p>
+                <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">Buang Draf & Kembali ke Versi Awal?</h3>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Kembalikan kanvas situs ke blueprint kontainer yang tersimpan.</p>
               </div>
             </div>
             <button
@@ -9498,7 +9498,7 @@ const executeVsCodeReplaceAll = () => {
           </div>
 
           <!-- Body -->
-          <div class="modal-body-bespoke" style="padding: 20px 24px; font-size: 0.84rem; color: #475569; line-height: 1.6;">
+          <div class="modal-body-bespoke" style="padding: 20px 24px; font-size: 0.84rem; color: #475569; line-height: 1.6; background: #ffffff;">
             <p style="margin: 0 0 14px 0;">
               Semua perubahan layout, teks, dan blok yang baru saja Anda edit <strong>tetapi belum diterbitkan</strong> akan dibuang dari memori draf browser.
             </p>
@@ -9510,22 +9510,22 @@ const executeVsCodeReplaceAll = () => {
             </div>
           </div>
 
-          <!-- Footer Actions -->
-          <div class="modal-footer modal-footer-bespoke">
+          <!-- Footer Actions (Flush to Bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0;">
             <div style="font-size: 0.74rem; color: #94a3b8;">
               Tindakan ini tidak dapat dibatalkan.
             </div>
-            <div class="footer-actions-group">
+            <div class="footer-actions-group" style="display: flex; gap: 8px;">
               <button
                 type="button"
-                class="btn-modal-ghost"
+                class="btn-picker-footer-ghost"
                 @click="closeResetDraftModal"
               >
                 Batal
               </button>
               <button
                 type="button"
-                class="btn-modal-confirm"
+                class="btn-picker-footer-confirm"
                 style="background: #ef4444; border: 1px solid #dc2626; color: #ffffff;"
                 @click="confirmResetDraft"
               >

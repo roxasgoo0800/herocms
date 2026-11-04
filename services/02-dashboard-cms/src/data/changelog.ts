@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.10',
+    version: 'v1.42.11',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '03 November 2026',
+    lastUpdated: '04 November 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.11',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '04 November 2026',
+    title: 'Standarisasi Arsitektur Seamless Studio pada Seluruh Modal Dialog & Redesain Dropdown Arsitektur Rute Halaman',
+    summary: 'Penyelarasan visual UI/UX menyeluruh di Visual Editor sesuai standar HeroCMS Studio (Zero-Margin Seamless Dialog): (1) Menghilangkan blank moat padding 28px default dan merefaktor seluruh modal dialog tersisa (Modal Tambah Halaman Baru, Modal Edit Rute & Metadata Halaman, dan Modal Konfirmasi Reset Draf) ke arsitektur modal seamless dengan header flush, rounded corners 16px, container zero-padding, dan footer tombol aksi solid studio; (2) Merombak popover dropdown Arsitektur Rute & Navigasi (.page-switcher-dropdown) dengan header putih murni, tipografi presisi, indikator status rute terstruktur, kartu item halaman dengan hover lembut, dan tombol pintasan penambahan halaman baru.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14211-1',
+        type: 'improvement',
+        scope: 'Visual Editor Seamless Modals Architecture (VisualEditorModule.vue, visual-editor.css)',
+        description: 'Menerapkan kelas .modal-dialog-seamless dengan padding 0 !important, border-radius 16px, header flush 14px 22px bergaris batas tipis #e2e8f0, serta footer terpadu (.btn-picker-footer-ghost & .btn-picker-footer-confirm) pada Modal Tambah Halaman, Modal Edit Rute, dan Modal Reset Draf.'
+      },
+      {
+        id: 'c-02dash-14211-2',
+        type: 'improvement',
+        scope: 'Page Switcher Route Architecture Popover (.page-switcher-dropdown)',
+        description: 'Mempercantik antarmuka popover pemilihan dan pengelolaan rute halaman dengan container 500px berbayang halus, kartu rute dengan status aktif yang jelas, tombol edit & duplikat ringkas, serta tombol tambah halaman bergaya studio.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.10',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '03 November 2026',
     title: 'Redesain UI/UX MinIO S3 Media Picker Modal: Studio DAM 2-Column Split & Live Inspector',
     summary: 'Peningkatan menyeluruh desain UI/UX pada dialog Pemilih Gambar MinIO S3 di Visual Editor: Mengubah tampilan modal menjadi layout Digital Asset Management (DAM) 2 kolom profesional. Menghadirkan unified top toolbar (pencarian instan + filter segmen Semua/Foto/SVG + tombol upload cepat tanpa wrapping), dropzone strip drag-and-drop, kartu galeri dengan checkerboard background transparan dan badge status pilihan, serta panel inspektur berkas di sisi kanan lengkap dengan pratinjau resolusi tinggi, spesifikasi metadata (Nama, Dimensi, Ukuran, Format), dan aksi komit "Gunakan Gambar Terpilih".',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {
