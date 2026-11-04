@@ -1803,7 +1803,8 @@ onUnmounted(() => {
         </div>
 
         <form class="editor-modal-form" @submit.prevent="handleSaveContent">
-          <!-- Row 1: Title & Slug/Path -->
+          <div class="modal-body">
+            <!-- Row 1: Title & Slug/Path -->
           <div class="form-row-2col">
             <div class="form-field-group">
               <label class="form-field-label">Judul {{ editorContentType === 'article' ? 'Artikel' : 'Halaman' }} *</label>
@@ -1945,6 +1946,7 @@ onUnmounted(() => {
               rows="9"
               placeholder="Tuliskan konten Anda di sini..."
             ></textarea>
+          </div>
           </div>
 
           <div class="modal-footer">

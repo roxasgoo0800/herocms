@@ -546,7 +546,7 @@ ${dom.domain}.        3600    IN    A        ${a}`;
           </button>
         </div>
 
-        <div class="modal-body" style="padding-top: 14px;">
+        <div class="modal-body">
           <!-- Node Summary Banner -->
           <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 9px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -622,7 +622,7 @@ ${dom.domain}.        3600    IN    A        ${a}`;
           </button>
         </div>
 
-        <div class="modal-body" style="padding-top: 14px;">
+        <div class="modal-body">
           <div class="cert-details-grid">
             <div class="cert-detail-row">
               <span class="cert-detail-label">Common Name (CN)</span>

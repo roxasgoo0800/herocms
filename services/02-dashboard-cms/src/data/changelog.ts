@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.11',
+    version: 'v1.42.12',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.12',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '04 November 2026',
+    title: 'Standarisasi Arsitektur Modal Dialog Terpusat (Unified Seamless Studio Modal) di Seluruh Menu Aplikasi',
+    summary: 'Penyatuan dan standarisasi fundamental arsitektur sistem modal dialog di seluruh dashboard (studio-master.css): (1) Menghilangkan padding 28px default dari kelas induk .modal-dialog dan menetapkan standar Seamless Studio (padding: 0, border-radius 16px, edge-to-edge flush layout); (2) Menstandarkan .modal-header, .modal-seamless-header, dan .modal-header-bespoke agar menempel rata atas (flush) dengan garis pembatas halus #e2e8f0; (3) Menstandarkan scrollable body (.modal-body, .modal-form-body, .blueprint-modal-body) dengan padding teratur 22px 24px; (4) Menstandarkan .modal-footer, .modal-footer-row, dan .modal-footer-bespoke menempel rata bawah (flush) dengan tombol aksi terpadu (.btn-modal-ghost & .btn-modal-confirm), sehingga penambahan modal baru di masa depan dijamin otomatis seragam tanpa perlu custom CSS.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14212-1',
+        type: 'improvement',
+        scope: 'Master Studio CSS Central Modal Architecture (studio-master.css)',
+        description: 'Merefaktor kelas master .modal-dialog menjadi zero outer padding dengan flex-column layout, header flush, body scrollable, dan footer sticky/flush untuk seluruh dialog di Custom Domains, Billing Checkout, Webhooks API, Content Studio, Templates Catalog, dan Dashboard View.'
+      },
+      {
+        id: 'c-02dash-14212-2',
+        type: 'improvement',
+        scope: 'Zero-CSS Duplication for Future Modals (DESIGN.md & AGENTS.md Rule 3)',
+        description: 'Memastikan developer dan AI agent dapat membuat modal dialog baru hanya dengan kelas standar (.modal-backdrop > .modal-dialog > .modal-header, .modal-body, .modal-footer) dengan tampilan yang konsisten dan elegan secara otomatis.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.11',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '04 November 2026',
     title: 'Standarisasi Arsitektur Seamless Studio pada Seluruh Modal Dialog & Redesain Dropdown Arsitektur Rute Halaman',
     summary: 'Penyelarasan visual UI/UX menyeluruh di Visual Editor sesuai standar HeroCMS Studio (Zero-Margin Seamless Dialog): (1) Menghilangkan blank moat padding 28px default dan merefaktor seluruh modal dialog tersisa (Modal Tambah Halaman Baru, Modal Edit Rute & Metadata Halaman, dan Modal Konfirmasi Reset Draf) ke arsitektur modal seamless dengan header flush, rounded corners 16px, container zero-padding, dan footer tombol aksi solid studio; (2) Merombak popover dropdown Arsitektur Rute & Navigasi (.page-switcher-dropdown) dengan header putih murni, tipografi presisi, indikator status rute terstruktur, kartu item halaman dengan hover lembut, dan tombol pintasan penambahan halaman baru.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {
