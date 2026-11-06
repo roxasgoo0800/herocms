@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.19',
+    version: 'v1.42.20',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.20',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Transformasi Kartu Telemetri Monokrom Murni (Hitam, Putih, Slate) & Micro-Segment Bar',
+    summary: 'Menghapus seluruh gradien warna pastel pelangi pada kartu telemetri dan menggantinya dengan estetika monokrom murni (Pure White #ffffff, Deep Slate #0f172a, dan border hairline #e2e8f0). Mengadopsi ikon kompak minimalis (14px) dalam wadah rounded 28px dengan efek hover invert hitam-putih, menyematkan indikator visual 3-slot segment bar yang presisi, serta badge pil monokrom dengan LED dot hijau indikator aktif.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14220-1',
+        type: 'improvement',
+        scope: 'Monochrome Card Surface & Elimination of Pastel Radients (studio-master.css)',
+        description: 'Menghapus seluruh radial-gradient warna (biru, zamrud, ungu, sky) sehingga permukaan kartu 100% pure white dengan garis batas tipis halus 1px dan bayangan lembut profesional.'
+      },
+      {
+        id: 'c-02dash-14220-2',
+        type: 'improvement',
+        scope: 'Refined Micro-Glyph (14px Icon in 28px Container with Hover Invert)',
+        description: 'Mengubah ukuran ikon telemetri menjadi 14px di dalam wadah 28x28px dengan transisi hover pembalikan warna (inverted) menjadi latar Deep Slate #0f172a dan ikon putih bersih.'
+      },
+      {
+        id: 'c-02dash-14220-3',
+        type: 'feature',
+        scope: '3-Slot Segment Quota Indicator (.slot-segments)',
+        description: 'Menggantikan progress bar kontinu dengan 3 segmen slot horizontal independen (tinggi 3px) yang terisi warna Deep Slate sesuai jumlah kontainer yang sedang aktif.'
+      },
+      {
+        id: 'c-02dash-14220-4',
+        type: 'improvement',
+        scope: 'Minimalist Monochrome Pill Badges (.badge-mono)',
+        description: 'Menerapkan badge status minimalis monokrom abu-abu/slate dengan indikator LED dot 5px hijau ketika status bernilai aktif.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.19',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Penyelarasan Kartu Telemetri Metrik ke Standar Desain HeroCMS Studio (telemetry-glyph & quota-progress-track)',
     summary: 'Menyelaraskan 4 kartu metrik telemetri di menu Situs & Kontainer agar 100% konsisten dengan standar tema HeroCMS Studio (studio-master.css). Menggantikan watermark latar belakang samar dengan komponen resmi telemetry-glyph pada header, menambahkan visualisasi garis progres kuota (quota-progress-track), serta mengaktifkan badge status kondisional dinamis (.badge-online vs .badge-standby).',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

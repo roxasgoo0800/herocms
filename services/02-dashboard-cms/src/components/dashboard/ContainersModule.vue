@@ -275,62 +275,69 @@ const navigateToAnalytics = (c: ContainerSite) => {
 
     <!-- 2. Bespoke Telemetry Metric Cards (4 Sleek Strips) -->
     <div class="stats-overview-grid">
-      <div class="telemetry-card accent-blue">
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">KUOTA KONTAINER</span>
-          <div class="telemetry-glyph blue"><Server :size="18" /></div>
+          <div class="telemetry-glyph"><Server :size="14" /></div>
         </div>
         <div class="telemetry-val">
           {{ usedContainersCount }} <span class="telemetry-denom">/ {{ userPlan.maxContainers }} Aktif</span>
         </div>
-        <div class="quota-progress-track" style="margin: 8px 0 6px;">
-          <div class="quota-progress-fill" :style="{ width: `${Math.min(100, Math.round((usedContainersCount / (userPlan.maxContainers || 3)) * 100))}%` }"></div>
+        <div class="slot-segments">
+          <span v-for="i in (userPlan.maxContainers || 3)" :key="i"
+                class="slot-segment" 
+                :class="{ filled: i <= usedContainersCount }">
+          </span>
         </div>
-        <div class="telemetry-sub ready-state">
-          <span class="pulse-mini-dot"></span>
-          <span>{{ Math.max(0, userPlan.maxContainers - usedContainersCount) }} slot siap dideploy (cgroups v2)</span>
+        <div class="telemetry-sub">
+          <span class="dot-lead" :class="usedContainersCount > 0 ? 'live' : 'idle'"></span>
+          <span>{{ Math.max(0, userPlan.maxContainers - usedContainersCount) }} slot tersedia (cgroups v2)</span>
         </div>
       </div>
 
-      <div class="telemetry-card accent-emerald">
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">EDGE ROUTING TRAEFIK</span>
-          <div class="telemetry-glyph emerald"><Globe :size="18" /></div>
+          <div class="telemetry-glyph"><Globe :size="14" /></div>
         </div>
         <div class="telemetry-val">
           {{ routedSubdomainsCount }} 
-          <span :class="routedSubdomainsCount > 0 ? 'badge-online' : 'badge-standby'">
+          <span class="badge-mono" :class="{ active: routedSubdomainsCount > 0 }">
             {{ routedSubdomainsCount > 0 ? 'Aktif Teroute' : 'Standby' }}
           </span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead" :class="routedSubdomainsCount > 0 ? 'live' : 'idle'"></span>
           <span>Traefik v3.1 Ingress (Zero-Downtime)</span>
         </div>
       </div>
 
-      <div class="telemetry-card accent-purple">
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">TRAFIK PENGUNJUNG</span>
-          <div class="telemetry-glyph purple"><Activity :size="18" /></div>
+          <div class="telemetry-glyph"><Activity :size="14" /></div>
         </div>
         <div class="telemetry-val">
           {{ totalVisitsCount.toLocaleString('id-ID') }} 
-          <span :class="totalVisitsCount > 0 ? 'badge-growth-pill' : 'badge-standby'">Hits</span>
+          <span class="badge-mono" :class="{ active: totalVisitsCount > 0 }">Hits</span>
         </div>
         <div class="telemetry-sub">
-          <span>Data dicatat via Redis ZSET & Kafka stream</span>
+          <span class="dot-lead" :class="totalVisitsCount > 0 ? 'live' : 'idle'"></span>
+          <span>Redis ZSET & Kafka stream</span>
         </div>
       </div>
 
-      <div class="telemetry-card accent-sky">
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">KEAMANAN TLS / SSL</span>
-          <div class="telemetry-glyph sky"><ShieldCheck :size="18" /></div>
+          <div class="telemetry-glyph"><ShieldCheck :size="14" /></div>
         </div>
         <div class="telemetry-val">
-          {{ sslActivePct }}% <span class="badge-online">Tervalidasi</span>
+          {{ sslActivePct }}% 
+          <span class="badge-mono active">TLS 1.3</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Let's Encrypt Wildcard Auto-Renew</span>
         </div>
       </div>

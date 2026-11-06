@@ -1593,11 +1593,11 @@ a[class*="btn-"] svg,
 .telemetry-card {
   position: relative;
   background: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 14px;
-  padding: 20px 22px 18px;
-  min-height: 122px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 4px 12px -2px rgba(15, 23, 42, 0.02);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 18px 14px;
+  min-height: 112px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1605,59 +1605,18 @@ a[class*="btn-"] svg,
   overflow: hidden;
 }
 
-.telemetry-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: transparent;
-  transition: opacity 0.2s ease;
-}
-
-.telemetry-card.accent-blue {
-  background: radial-gradient(circle at 92% 18%, rgba(37, 99, 235, 0.09) 0%, transparent 60%), #ffffff;
-}
-.telemetry-card.accent-emerald {
-  background: radial-gradient(circle at 92% 18%, rgba(16, 185, 129, 0.09) 0%, transparent 60%), #ffffff;
-}
-.telemetry-card.accent-purple {
-  background: radial-gradient(circle at 92% 18%, rgba(139, 92, 246, 0.09) 0%, transparent 60%), #ffffff;
-}
-.telemetry-card.accent-amber {
-  background: radial-gradient(circle at 92% 18%, rgba(245, 158, 11, 0.09) 0%, transparent 60%), #ffffff;
-}
+.telemetry-card.accent-blue,
+.telemetry-card.accent-emerald,
+.telemetry-card.accent-purple,
+.telemetry-card.accent-amber,
 .telemetry-card.accent-sky {
-  background: radial-gradient(circle at 92% 18%, rgba(2, 132, 199, 0.09) 0%, transparent 60%), #ffffff;
+  background: #ffffff;
 }
 
 .telemetry-card:hover {
   border-color: #cbd5e1;
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.09), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-}
-
-/* Single Translucent Colored Icon at Top Right Corner */
-.telemetry-corner-watermark {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  pointer-events: none;
-  opacity: 0.20;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 1;
-}
-
-.telemetry-corner-watermark.blue { color: #2563eb; }
-.telemetry-corner-watermark.emerald { color: #059669; }
-.telemetry-corner-watermark.purple { color: #7c3aed; }
-.telemetry-corner-watermark.amber { color: #d97706; }
-.telemetry-corner-watermark.sky { color: #0284c7; }
-
-.telemetry-card:hover .telemetry-corner-watermark {
-  opacity: 0.38;
-  transform: scale(1.1) rotate(-4deg);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.02);
 }
 
 .telemetry-top {
@@ -1670,86 +1629,140 @@ a[class*="btn-"] svg,
 }
 
 .telemetry-label {
-  font-size: 0.68rem;
+  font-size: 0.67rem;
   font-weight: 700;
   color: #64748b;
   letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-/* Modern Translucent & Colorful Glyph */
+/* Minimalist Bespoke Monochrome Glyph (Hitam, Putih, Slate) */
 .telemetry-glyph {
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
 }
 
 .telemetry-card:hover .telemetry-glyph {
-  transform: scale(1.08) translateY(-1px);
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+  transform: translateY(-1px);
 }
 
-.telemetry-glyph.blue {
-  background: rgba(37, 99, 235, 0.11);
-  color: #2563eb;
-  border: 1px solid rgba(37, 99, 235, 0.24);
-}
-
-.telemetry-glyph.emerald {
-  background: rgba(16, 185, 129, 0.11);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.24);
-}
-
-.telemetry-glyph.purple {
-  background: rgba(139, 92, 246, 0.11);
-  color: #7c3aed;
-  border: 1px solid rgba(139, 92, 246, 0.24);
-}
-
-.telemetry-glyph.amber {
-  background: rgba(245, 158, 11, 0.11);
-  color: #d97706;
-  border: 1px solid rgba(245, 158, 11, 0.24);
-}
-
+.telemetry-glyph.blue,
+.telemetry-glyph.emerald,
+.telemetry-glyph.purple,
+.telemetry-glyph.amber,
 .telemetry-glyph.sky {
-  background: rgba(2, 132, 199, 0.11);
-  color: #0284c7;
-  border: 1px solid rgba(2, 132, 199, 0.24);
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
 }
 
 .telemetry-val {
-  font-size: 1.75rem;
+  font-size: 1.65rem;
   font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.025em;
+  color: #09090b;
+  letter-spacing: -0.03em;
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin: 6px 0 4px;
+  margin: 4px 0 2px;
   position: relative;
   z-index: 2;
+  line-height: 1.15;
 }
 
 .telemetry-denom {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 500;
   color: #64748b;
+  letter-spacing: normal;
+}
+
+/* Bespoke 3-Slot Segment Quota Bar */
+.slot-segments {
+  display: flex;
+  gap: 4px;
+  margin: 6px 0 4px;
+  width: 100%;
+}
+
+.slot-segment {
+  flex: 1;
+  height: 3px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  transition: all 0.25s ease;
+}
+
+.slot-segment.filled {
+  background: #0f172a;
+}
+
+/* Minimalist Monochrome Pill Badge */
+.badge-mono {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.67rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 1px 7px;
+  border-radius: 5px;
+  letter-spacing: 0.01em;
+  white-space: nowrap !important;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.badge-mono.active {
+  color: #0f172a;
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.badge-mono.active::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  flex-shrink: 0;
 }
 
 .telemetry-sub {
-  font-size: 0.74rem;
+  font-size: 0.71rem;
   color: #64748b;
-  margin-top: 6px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   position: relative;
   z-index: 2;
+}
+
+.telemetry-sub .dot-lead {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #94a3b8;
+  flex-shrink: 0;
+}
+
+.telemetry-sub .dot-lead.live {
+  background: #10b981;
 }
 
 .ready-state {
