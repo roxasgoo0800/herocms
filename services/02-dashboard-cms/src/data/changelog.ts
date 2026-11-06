@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.21',
+    version: 'v1.42.22',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.22',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Transformasi Kartu Telemetri 100% Penuh (Tactile 38px Glyph, Ingress Mesh Track, 7-Bar Sparkline & Security Meter)',
+    summary: 'Meningkatkan estetika kartu telemetri dari tampilan datar (sterile default) ke level enterprise berkelas tinggi (setara Vercel & Linear). Menghilangkan kekosongan di area tengah kartu dengan menyematkan visualizer grafis dinamis (Traefik Ingress Mesh Track, 7-Bar Sparkline Histogram, dan Security Gauge Meter), memperbesar glyph box menjadi 38×38px radius 10px dengan inner bevel & shadow bertingkat, serta mempertajam kontras tipografi angka nilai.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14222-1',
+        type: 'improvement',
+        scope: 'Visualizers Grafis Tengah Kartu (.ingress-mesh-track, .sparkline-histogram, .security-meter-track)',
+        description: 'Menyematkan elemen grafis presisi di tengah kartu: 5-node ingress router track, 7-bar histogram sparkline ritme trafik mingguan, dan hairline security gauge 100% agar kartu padat dan hidup.'
+      },
+      {
+        id: 'c-02dash-14222-2',
+        type: 'improvement',
+        scope: 'Tactile Glyph Box 38×38px & Ambient Depth (studio-master.css)',
+        description: 'Meningkatkan wadah glyph ke 38×38px radius 10px dengan efek inner tactile highlight, multi-layer shadow, dan transisi hover Deep Slate #0f172a.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.21',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Standarisasi Universal Kartu Telemetri Master CSS (Glyph 18px / 36px) & Penyelarasan Seluruh 9 Modul Studio',
     summary: 'Menstandarisasi arsitektur kartu metrik telemetri secara universal ke CSS induk tunggal (studio-master.css) di seluruh 9 modul dashboard (Containers, Analytics, Billing, Media Assets, Changelog, Articles/Pages, Custom Domains, Support Ticketing, Invoices). Mengeliminasi duplikasi CSS lama dan watermark raksasa, memperbesar proporsi glyph ke rasio emas seimbang (ikon 18px dalam wadah kontainer 36×36px radius 9px) dengan efek hover tactile invert (#0f172a), serta menyelaraskan badge monokrom (.badge-mono) sehingga seluruh menu konsisten dan satu perubahan CSS otomatis berdampak ke seluruh platform.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

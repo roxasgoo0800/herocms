@@ -1596,12 +1596,12 @@ a[class*="btn-"] svg,
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 16px 18px 14px;
-  min-height: 112px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  min-height: 120px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px -2px rgba(15, 23, 42, 0.02);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
 
@@ -1615,8 +1615,9 @@ a[class*="btn-"] svg,
 
 .telemetry-card:hover {
   border-color: #cbd5e1;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.02);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.07), 0 3px 8px -2px rgba(15, 23, 42, 0.03);
+  background: radial-gradient(circle at 92% 14%, rgba(15, 23, 42, 0.025) 0%, transparent 60%), #ffffff;
 }
 
 .telemetry-top {
@@ -1629,38 +1630,40 @@ a[class*="btn-"] svg,
 }
 
 .telemetry-label {
-  font-size: 0.67rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: #64748b;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.065em;
   text-transform: uppercase;
 }
 
-/* Minimalist Bespoke Monochrome Glyph (Hitam, Putih, Slate - 36px Proportional) */
+/* Minimalist Bespoke Monochrome Glyph (38px High-Craft Tactile Button) */
 .telemetry-glyph {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f8fafc;
   color: #0f172a;
   border: 1px solid #e2e8f0;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9), 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
 }
 
 .telemetry-glyph svg {
   stroke-width: 2px;
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .telemetry-card:hover .telemetry-glyph {
   background: #0f172a;
   color: #ffffff;
   border-color: #0f172a;
-  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+  transform: translateY(-1px) scale(1.02);
 }
 
 .telemetry-card:hover .telemetry-glyph svg {
@@ -1682,10 +1685,10 @@ a[class*="btn-"] svg,
 }
 
 .telemetry-val {
-  font-size: 1.65rem;
+  font-size: 1.75rem;
   font-weight: 800;
   color: #09090b;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
   display: flex;
   align-items: baseline;
   gap: 8px;
@@ -1693,6 +1696,7 @@ a[class*="btn-"] svg,
   position: relative;
   z-index: 2;
   line-height: 1.15;
+  font-feature-settings: 'tnum';
 }
 
 .telemetry-denom {
@@ -1702,7 +1706,15 @@ a[class*="btn-"] svg,
   letter-spacing: normal;
 }
 
-/* Bespoke 3-Slot Segment Quota Bar */
+/* Hairline Graphic Divider */
+.telemetry-divider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 65%, transparent 100%);
+  margin: 6px 0 4px;
+}
+
+/* 1. Bespoke 3-Slot Segment Quota Bar */
 .slot-segments {
   display: flex;
   gap: 4px;
@@ -1712,7 +1724,7 @@ a[class*="btn-"] svg,
 
 .slot-segment {
   flex: 1;
-  height: 3px;
+  height: 3.5px;
   background: #e2e8f0;
   border-radius: 999px;
   transition: all 0.25s ease;
@@ -1720,6 +1732,71 @@ a[class*="btn-"] svg,
 
 .slot-segment.filled {
   background: #0f172a;
+}
+
+/* 2. Bespoke Traefik Ingress Mesh Track */
+.ingress-mesh-track {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 7px 0 4px;
+  width: 100%;
+}
+
+.ingress-node {
+  flex: 1;
+  height: 3.5px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  transition: all 0.25s ease;
+}
+
+.ingress-node.active {
+  background: #0f172a;
+}
+
+/* 3. Bespoke 7-Day Sparkline Histogram (Live Activity Rhythm) */
+.sparkline-histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 4.5px;
+  height: 14px;
+  margin: 4px 0 2px;
+  width: 100%;
+}
+
+.spark-bar {
+  flex: 1;
+  background: #cbd5e1;
+  border-radius: 2px;
+  min-height: 3px;
+  transition: all 0.2s ease;
+}
+
+.spark-bar.active {
+  background: #0f172a;
+}
+
+.telemetry-card:hover .spark-bar.active {
+  background: #2563eb;
+}
+
+/* 4. Bespoke 100% Security Meter Gauge */
+.security-meter-track {
+  width: 100%;
+  height: 3.5px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 7px 0 4px;
+  display: flex;
+}
+
+.security-meter-fill {
+  height: 100%;
+  background: #0f172a;
+  border-radius: 999px;
+  transition: width 0.3s ease;
 }
 
 /* Minimalist Monochrome Pill Badge */

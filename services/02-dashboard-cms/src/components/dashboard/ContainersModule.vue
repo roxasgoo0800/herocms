@@ -306,6 +306,13 @@ const navigateToAnalytics = (c: ContainerSite) => {
             {{ routedSubdomainsCount > 0 ? 'Aktif Teroute' : 'Standby' }}
           </span>
         </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node" :class="{ active: routedSubdomainsCount > 0 }"></span>
+          <span class="ingress-node" :class="{ active: routedSubdomainsCount > 1 }"></span>
+          <span class="ingress-node" :class="{ active: routedSubdomainsCount > 2 }"></span>
+          <span class="ingress-node" :class="{ active: routedSubdomainsCount > 3 }"></span>
+          <span class="ingress-node" :class="{ active: routedSubdomainsCount > 4 }"></span>
+        </div>
         <div class="telemetry-sub">
           <span class="dot-lead" :class="routedSubdomainsCount > 0 ? 'live' : 'idle'"></span>
           <span>Traefik v3.1 Ingress (Zero-Downtime)</span>
@@ -321,6 +328,15 @@ const navigateToAnalytics = (c: ContainerSite) => {
           {{ totalVisitsCount.toLocaleString('id-ID') }} 
           <span class="badge-mono" :class="{ active: totalVisitsCount > 0 }">Hits</span>
         </div>
+        <div class="sparkline-histogram">
+          <span class="spark-bar" style="height: 35%"></span>
+          <span class="spark-bar" style="height: 55%"></span>
+          <span class="spark-bar" style="height: 40%"></span>
+          <span class="spark-bar" style="height: 70%"></span>
+          <span class="spark-bar" style="height: 50%"></span>
+          <span class="spark-bar" style="height: 85%"></span>
+          <span class="spark-bar active" :style="{ height: totalVisitsCount > 0 ? '100%' : '30%' }"></span>
+        </div>
         <div class="telemetry-sub">
           <span class="dot-lead" :class="totalVisitsCount > 0 ? 'live' : 'idle'"></span>
           <span>Redis ZSET & Kafka stream</span>
@@ -335,6 +351,9 @@ const navigateToAnalytics = (c: ContainerSite) => {
         <div class="telemetry-val">
           {{ sslActivePct }}% 
           <span class="badge-mono active">TLS 1.3</span>
+        </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" :style="{ width: `${sslActivePct}%` }"></div>
         </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
