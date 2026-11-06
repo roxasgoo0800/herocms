@@ -192,6 +192,13 @@ const pollRunningContainersTelemetry = async () => {
   for (const c of activeList) {
     try {
       const stats = await studioApi.getContainerStats(c.id);
+      if (stats?.status === 'stopped') {
+        c.status = 'stopped';
+        c.uptime = 'Kontainer Mati (Offline)';
+        c.cpuUsage = 0;
+        c.ramUsage = 0;
+        continue;
+      }
       if (stats) {
         const cpu = typeof stats.cpu_percentage === 'number' ? stats.cpu_percentage : stats.cpu_percent;
         const ram = typeof stats.memory_usage_mb === 'number' ? stats.memory_usage_mb : stats.memory_mb;

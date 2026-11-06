@@ -2637,6 +2637,19 @@ const hydrateFromCache = (overrideEmail?: string) => {
           c.id !== '99420000-0000-0000-0000-000000000002' &&
           c.name !== 'Portal Informasi'
         ).map((c: any) => {
+          // Default seed containers must reflect true offline/stopped status until explicitly started in Docker
+          if (c.id === 'site_main_corporate' || c.id === 'site_portal_edu' || c.id === 'site_toko_digital') {
+            return {
+              ...c,
+              status: 'stopped',
+              uptime: 'Kontainer Mati (Offline)',
+              cpuUsage: 0,
+              ramUsage: 0,
+              deployPhase: undefined,
+              deployStep: undefined,
+              deployStepMessage: undefined
+            };
+          }
           if (c.status === 'running' && c.deployPhase === 'running') {
             return { ...c, deployPhase: undefined, deployStep: undefined, deployStepMessage: undefined };
           }

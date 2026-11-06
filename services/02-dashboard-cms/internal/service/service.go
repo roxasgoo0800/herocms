@@ -339,6 +339,12 @@ func (s *Services) GetContainers(ctx context.Context, tenantID string) (gin.H, e
 							sites[i]["ramLimit"] = int(stats.MemoryLimitMB)
 						}
 					}
+				} else {
+					// Container is NOT present in Docker Engine! Mark as stopped
+					sites[i]["status"] = "stopped"
+					sites[i]["uptime"] = "Kontainer Mati (Offline)"
+					sites[i]["cpuUsage"] = 0
+					sites[i]["ramUsage"] = 0
 				}
 			}
 		}
@@ -686,7 +692,26 @@ func (s *Services) GetContainerStats(ctx context.Context, tenantID, id string) (
 			}
 			return telemetry, nil
 		}
-		if err != nil && !strings.Contains(err.Error(), "404") && !strings.Contains(err.Error(), "No such container") && !strings.Contains(err.Error(), "not found") {
+		if err != nil {
+			if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "No such container") || strings.Contains(err.Error(), "not found") {
+				return gin.H{
+					"container_id":    id,
+					"status":          "stopped",
+					"cpu_percentage":  0,
+					"cpu_percent":     0,
+					"memory_usage_mb": 0,
+					"memory_mb":       0,
+					"memory_limit_mb": 256.0,
+					"memory_limit":    256.0,
+					"memory_percent":  0,
+					"network_rx_mb":   0,
+					"network_tx_mb":   0,
+					"pids_current":    0,
+					"timestamp":       time.Now().UTC().Format(time.RFC3339),
+					"uptime":          "Kontainer Mati (Offline)",
+					"source":          "orchestrator_not_found",
+				}, nil
+			}
 			log.Printf("[ORCHESTRATOR NOTICE] Live stats unavailable for %s (%v), attempting Redis lookup", id, err)
 		}
 	}
