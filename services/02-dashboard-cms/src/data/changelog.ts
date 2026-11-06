@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.17',
+    version: 'v1.42.18',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.18',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Pembersihan Total Seed Statis Kontainer Backend & Integrasi Modern Web GUI DbGate',
+    summary: 'Menghapus 100% data seed statis kontainer di backend Go (EnsureSchemaAndSeeds di repository.go dan hardcoded switch di resolveSiteForDeploy service.go) serta frontend dashboard-seeds.ts sehingga platform siap produksi secara murni dari database PostgreSQL. Mengganti web GUI Adminer dengan DbGate pada port 8088 dengan antarmuka modern layaknya TablePlus dan Dark Mode.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14218-1',
+        type: 'improvement',
+        scope: 'Eliminasi Auto-Seed Kontainer Startup (repository.go)',
+        description: 'Menghapus query INSERT INTO sites di EnsureSchemaAndSeeds() sehingga kontainer yang telah dihapus pengguna tidak akan pernah dihidupkan kembali secara otomatis saat server Go di-restart.'
+      },
+      {
+        id: 'c-02dash-14218-2',
+        type: 'improvement',
+        scope: 'Pure PostgreSQL Dynamic Deploy Resolution (service.go)',
+        description: 'Menghapus hardcoded switch case untuk pod bawaan di resolveSiteForDeploy(). Semua permintaan start dan provisioning kontainer wajib divalidasi ke tabel sites PostgreSQL.'
+      },
+      {
+        id: 'c-02dash-14218-3',
+        type: 'feature',
+        scope: 'Modern Database Web GUI: DbGate (docker-compose.yml)',
+        description: 'Menggantikan web GUI Adminer dengan DbGate di http://localhost:8088. Dilengkapi tampilan grid modern bergaya spreadsheet/TablePlus, Dark Mode bawaan, dan koneksi otomatis ke database PostgreSQL cloudcms_db.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.17',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Sinkronisasi Seketika (Real-Time Synchronous) LocalStorage & Invalidation Atomik Redis pada Operasi Hapus Data',
     summary: 'Mengatasi kendala desinkronisasi data ("tidak on-time") saat pengguna menghapus atau memutasi entitas (kontainer, artikel, halaman, aset media, domain, dan webhook). Menghadirkan fungsi persistDashboardState() yang langsung memperbarui localStorage secara instan pada milidetik yang sama saat tombol hapus dikonfirmasi, memperbaiki hydrateFromCache() agar menghormati array kosong tanpa membangkitkan ulang mock seeds zombie, serta mengoptimalkan DeleteKeysByPrefix di Redis backend dengan Keys + Del batching untuk pembersihan cache tenant seketika.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

@@ -532,7 +532,7 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 	return newContainer, nil
 }
 
-func (s *Services) resolveSiteForDeploy(ctx context.Context, tenantID, id string) orchestrator.DeployPayload {
+func (s *Services) resolveSiteForDeploy(ctx context.Context, tenantID, id string) (orchestrator.DeployPayload, error) {
 	if s != nil && s.Repo != nil {
 		sites, _ := s.Repo.GetSites(ctx, tenantID)
 		for _, site := range sites {
@@ -571,65 +571,12 @@ func (s *Services) resolveSiteForDeploy(ctx context.Context, tenantID, id string
 					RoleHeadline: role,
 					BioIntro:     bio,
 					AccentColor:  accent,
-				}
+				}, nil
 			}
 		}
 	}
 
-	switch id {
-	case "site_portal_edu":
-		return orchestrator.DeployPayload{
-			TenantID:     tenantID,
-			SiteID:       "site_portal_edu",
-			Subdomain:    "portal",
-			VersionHash:  "v100prod01",
-			SiteName:     "Portal Edukasi LMS",
-			TemplateName: "Akademi Digital Edu",
-			Category:     "education",
-			RoleHeadline: "Pusat Pembelajaran & Silabus Teknologi",
-			BioIntro:     "Platform edukasi daring terdistribusi dengan modul pembelajaran interaktif.",
-			AccentColor:  "#059669",
-		}
-	case "site_main_corporate":
-		return orchestrator.DeployPayload{
-			TenantID:     tenantID,
-			SiteID:       "site_main_corporate",
-			Subdomain:    "site",
-			VersionHash:  "v100prod01",
-			SiteName:     "Situs Utama Corporate",
-			TemplateName: "Nova Corporate",
-			Category:     "business",
-			RoleHeadline: "Portofolio Teknis & Bisnis Studio",
-			BioIntro:     "Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.",
-			AccentColor:  "#2563eb",
-		}
-	case "site_toko_digital":
-		return orchestrator.DeployPayload{
-			TenantID:     tenantID,
-			SiteID:       "site_toko_digital",
-			Subdomain:    "toko",
-			VersionHash:  "v100prod01",
-			SiteName:     "Etalase Toko Digital",
-			TemplateName: "E-Commerce Retail Store",
-			Category:     "business",
-			RoleHeadline: "Etalase Produk Komersial & Checkout WhatsApp",
-			BioIntro:     "Katalog produk digital dengan integrasi pesanan instan dan pelacakan paket.",
-			AccentColor:  "#7c3aed",
-		}
-	default:
-		cleanSub := strings.TrimPrefix(id, "site_")
-		cleanSub = strings.ReplaceAll(cleanSub, "_", "-")
-		return orchestrator.DeployPayload{
-			TenantID:     tenantID,
-			SiteID:       id,
-			Subdomain:    cleanSub,
-			VersionHash:  "v100prod01",
-			SiteName:     id,
-			TemplateName: "Portofolio Teknis Engineer",
-			Category:     "business",
-			AccentColor:  "#2563eb",
-		}
-	}
+	return orchestrator.DeployPayload{}, fmt.Errorf("kontainer/situs '%s' tidak ditemukan di database", id)
 }
 
 func (s *Services) StartContainer(ctx context.Context, tenantID, id string) (bool, error) {
@@ -646,7 +593,15 @@ func (s *Services) StartContainer(ctx context.Context, tenantID, id string) (boo
 					nowStr := time.Now().Format("15:04:05")
 					_ = s.Redis.PushContainerLog(ctx, tenantID, id, fmt.Sprintf("[%s] ⚙️ [AUTO-PROVISION] Kontainer belum ada di Docker. Membangun kontainer otomatis...", nowStr))
 				}
-				deployPayload := s.resolveSiteForDeploy(ctx, tenantID, id)
+				deployPayload, resolveErr := s.resolveSiteForDeploy(ctx, tenantID, id)
+				if resolveErr != nil {
+					log.Printf("[ORCHESTRATOR ERROR] %v", resolveErr)
+					if s.Redis != nil {
+						nowStr := time.Now().Format("15:04:05")
+						_ = s.Redis.PushContainerLog(ctx, tenantID, id, fmt.Sprintf("[%s] ❌ [DEPLOY_FAILED] %v", nowStr, resolveErr))
+					}
+					return false, resolveErr
+				}
 				deployRes, deployErr := s.Orchestrator.DeployContainer(ctx, deployPayload)
 				if deployErr != nil {
 					log.Printf("[ORCHESTRATOR ERROR] Auto-provision failed for %s: %v", id, deployErr)

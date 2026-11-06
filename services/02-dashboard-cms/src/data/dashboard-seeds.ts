@@ -96,68 +96,7 @@ export const subscriptionPlansCatalog: SubscriptionPlanCatalogItem[] = [
   }
 ];
 
-export const initialContainers: ContainerSite[] = [
-  {
-    id: 'site_main_corporate',
-    name: 'Situs Utama Corporate',
-    category: 'business',
-    templateName: 'Nova Corporate',
-    subdomain: 'site.stackbyte.id',
-    customDomain: 'rizalpratama.cloud',
-    status: 'stopped',
-    cpuUsage: 0,
-    ramUsage: 0,
-    ramLimit: 256,
-    cpuLimit: '0.5 vCPU',
-    uptime: 'Kontainer Mati (Offline)',
-    visitsThisWeek: 4892,
-    ssl: true,
-    accentColor: '#2563eb',
-    roleOrHeadline: 'Portofolio Teknis & Bisnis Studio',
-    bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.',
-    lastDeployed: '12 menit lalu'
-  },
-  {
-    id: 'site_portal_edu',
-    name: 'Portal Edukasi LMS',
-    category: 'education',
-    templateName: 'Akademi Digital Edu',
-    subdomain: 'portal.stackbyte.id',
-    customDomain: 'portal.perusahaan.com',
-    status: 'stopped',
-    cpuUsage: 0,
-    ramUsage: 0,
-    ramLimit: 256,
-    cpuLimit: '0.5 vCPU',
-    uptime: 'Kontainer Mati (Offline)',
-    visitsThisWeek: 2140,
-    ssl: true,
-    accentColor: '#059669',
-    roleOrHeadline: 'Pusat Pembelajaran & Silabus Teknologi',
-    bioIntro: 'Platform edukasi daring terdistribusi dengan modul pembelajaran interaktif.',
-    lastDeployed: '2 jam lalu'
-  },
-  {
-    id: 'site_toko_digital',
-    name: 'Etalase Toko Digital',
-    category: 'business',
-    templateName: 'E-Commerce Retail Store',
-    subdomain: 'toko.stackbyte.id',
-    customDomain: '',
-    status: 'stopped',
-    cpuUsage: 0,
-    ramUsage: 0,
-    ramLimit: 256,
-    cpuLimit: '0.5 vCPU',
-    uptime: 'Kontainer Mati (Offline)',
-    visitsThisWeek: 1320,
-    ssl: true,
-    accentColor: '#7c3aed',
-    roleOrHeadline: 'Etalase Produk Komersial & Checkout WhatsApp',
-    bioIntro: 'Katalog produk digital dengan integrasi pesanan instan dan pelacakan paket.',
-    lastDeployed: '1 hari lalu'
-  }
-];
+export const initialContainers: ContainerSite[] = [];
 
 export const officialTemplates: OfficialTemplateItem[] = officialTemplatesData;
 

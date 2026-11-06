@@ -300,47 +300,6 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 
 	-- Purge outdated legacy dummy subdomains
 	DELETE FROM sites WHERE subdomain IN ('rizal', 'wedak', 'rizal.stackbyte.id', 'wedak.stackbyte.id', 'rizal.cloudcms.app', 'wedak.cloudcms.app');
-
-	-- Seed default sites for tenant Rizal Pratama if not exist
-	INSERT INTO sites (
-		tenant_id, name, category, template_name, subdomain, custom_domain, status,
-		cpu_usage, ram_usage, ram_limit, cpu_limit, uptime, visits_this_week,
-		accent_color, role_headline, bio_intro
-	) VALUES 
-	(
-		'99420000-0000-0000-0000-000000009942',
-		'Situs Utama Corporate',
-		'business',
-		'Nova Corporate',
-		'site',
-		'rizalpratama.cloud',
-		'stopped',
-		0, 0, 256, '0.5 vCPU', 'Kontainer Mati (Offline)', 4892,
-		'#2563eb', 'Portofolio Teknis & Bisnis Studio', 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.'
-	),
-	(
-		'99420000-0000-0000-0000-000000009942',
-		'Portal Edukasi LMS',
-		'education',
-		'Akademi Digital Edu',
-		'portal',
-		'portal.perusahaan.com',
-		'stopped',
-		0, 0, 256, '0.5 vCPU', 'Kontainer Mati (Offline)', 2140,
-		'#059669', 'Pusat Pembelajaran & Silabus Teknologi', 'Platform edukasi daring terdistribusi dengan modul pembelajaran interaktif.'
-	),
-	(
-		'99420000-0000-0000-0000-000000009942',
-		'Etalase Toko Digital',
-		'business',
-		'E-Commerce Retail Store',
-		'toko',
-		'',
-		'stopped',
-		0, 0, 256, '0.5 vCPU', 'Kontainer Mati (Offline)', 1320,
-		'#7c3aed', 'Etalase Produk Komersial & Checkout WhatsApp', 'Katalog produk digital dengan integrasi pesanan instan dan pelacakan paket.'
-	)
-	ON CONFLICT (subdomain) DO NOTHING;
 	DELETE FROM custom_domains WHERE domain = 'rizalpratama.cloud';
 	DELETE FROM content_items WHERE slug IN ('arsitektur-multi-tenant-aether-core-stack-rls', 'strategi-caching-traefik-v3-tls', 'pengamanan-linux-kernel-cgroups-seccomp');
 	DELETE FROM ticket_messages WHERE ticket_id IN ('99420000-0000-0000-0000-000000000401', '99420000-0000-0000-0000-000000000402');

@@ -330,18 +330,23 @@ services:
       - herocms_internal_net
 
   # ---------------------------------------------------------------------------
-  # 12. Visual Database Web GUI (Adminer - Visual Database Manager like phpMyAdmin)
+  # 12. Visual Database Web GUI (DbGate - Modern TablePlus/VSCode Style Database Manager)
   # ---------------------------------------------------------------------------
-  adminer:
-    image: adminer:latest
-    container_name: herocms_adminer
+  dbgate:
+    image: dbgate/dbgate:latest
+    container_name: herocms_dbgate
     restart: unless-stopped
     ports:
-      - "8088:8080"
+      - "8088:3000"
     environment:
-      ADMINER_DEFAULT_SERVER: postgres
-    volumes:
-      - ./deploy/adminer/index.php:/var/www/html/index.php:ro
+      - CONNECTIONS=postgres
+      - LABEL_postgres=HeroCMS PostgreSQL (cloudcms_db)
+      - SERVER_postgres=postgres
+      - USER_postgres=cloudcms_user
+      - PASSWORD_postgres=cloudcms_secret
+      - PORT_postgres=5432
+      - ENGINE_postgres=postgres@dbgate-plugin-postgres
+      - DATABASE_postgres=cloudcms_db
     networks:
       - herocms_internal_net
     depends_on:
