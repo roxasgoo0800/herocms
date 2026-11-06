@@ -67,3 +67,4 @@ namespace {
 
 	require('adminer.php');
 }
+

@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.15',
+    version: 'v1.42.16',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.16',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Audit Komprehensif SQL Query Seluruh Menu, Penyertaan Kolom Custom Domain, dan Resolusi Relasi Site ID',
+    summary: 'Melakukan audit menyeluruh terhadap seluruh kueri database (PostgreSQL 16 RLS) di semua menu platform (Situs & Kontainer, Artikel & Konten, Halaman Web, Media Assets S3, Custom Domain, Support Tickets, Invoices, Webhooks, Billing Quota, dan Autentikasi Pengguna). Menambahkan kolom custom_domain yang sebelumnya belum ter-scan pada GetSites dan InsertSite, serta menyempurnakan resolver otomatis pemetaan subdomain/slug ke UUID site_id saat pembuatan artikel dan halaman.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14216-1',
+        type: 'improvement',
+        scope: 'SQL Query Verification Across All 10 Menus (repository.go)',
+        description: 'Memverifikasi dan mengeksekusi langsung seluruh sintaks kueri database SQL di 10 modul menu platform, memastikan kompatibilitas tipe data, indeks, dan pemfilteran tenant_id 100% bebas error.'
+      },
+      {
+        id: 'c-02dash-14216-2',
+        type: 'bugfix',
+        scope: 'Custom Domain Retrieval & Storage in Sites Query (repository.go)',
+        description: 'Menambahkan kolom COALESCE(custom_domain, \'\') pada query SELECT dan INSERT tabel sites sehingga domain kustom (seperti rizalpratama.cloud) terambil dan tersimpan secara akurat ke objek frontend.'
+      },
+      {
+        id: 'c-02dash-14216-3',
+        type: 'improvement',
+        scope: 'Smart Site UUID Resolver for Articles & Pages (repository.go)',
+        description: 'Menyediakan resolusi otomatis jika input containerId berupa subdomain (misal site, portal, toko) agar otomatis dipetakan ke UUID sites terkait di database PostgreSQL.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.15',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Integrasi Visual Database Web GUI (Adminer), Sinkronisasi PostgreSQL SSOT, dan Solusi Inkonsistensi Pod',
     summary: 'Menyediakan web UI visual database Adminer pada port 8088 yang berfungsi seperti phpMyAdmin untuk PostgreSQL, menyinkronkan 3 kontainer default dan data artikel langsung ke dalam tabel PostgreSQL sites dan content_items sehingga database menjadi Single Source of Truth (SSOT), serta menghilangkan masalah tampilan yang sebelumnya melompat antara 1 pod dan 3 pod.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {
