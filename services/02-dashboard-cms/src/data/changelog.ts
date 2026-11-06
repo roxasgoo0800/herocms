@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.16',
+    version: 'v1.42.17',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.17',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Sinkronisasi Seketika (Real-Time Synchronous) LocalStorage & Invalidation Atomik Redis pada Operasi Hapus Data',
+    summary: 'Mengatasi kendala desinkronisasi data ("tidak on-time") saat pengguna menghapus atau memutasi entitas (kontainer, artikel, halaman, aset media, domain, dan webhook). Menghadirkan fungsi persistDashboardState() yang langsung memperbarui localStorage secara instan pada milidetik yang sama saat tombol hapus dikonfirmasi, memperbaiki hydrateFromCache() agar menghormati array kosong tanpa membangkitkan ulang mock seeds zombie, serta mengoptimalkan DeleteKeysByPrefix di Redis backend dengan Keys + Del batching untuk pembersihan cache tenant seketika.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14217-1',
+        type: 'improvement',
+        scope: 'Real-Time Synchronous LocalStorage Persistence (persistDashboardState in useDashboardData.ts)',
+        description: 'Menjamin pembaruan localStorage berjalan sinkron dan seketika pada setiap operasi penghapusan item (kontainer, artikel, halaman web, media S3, domain, webhook), sehingga tidak ada jeda tunggu ataupun data basi yang tertinggal saat halaman di-reload.'
+      },
+      {
+        id: 'c-02dash-14217-2',
+        type: 'bugfix',
+        scope: 'Eliminasi Resureksi Data Zombie pada hydrateFromCache() (useDashboardData.ts)',
+        description: 'Memperbaiki logika hidrasi cache agar menghormati array kosong ([]) pengguna yang tersimpan di localStorage, serta membatasi fallback mock seeds hanya saat cold start pertama kali (ketika belum ada data cache pengguna tersimpan).'
+      },
+      {
+        id: 'c-02dash-14217-3',
+        type: 'improvement',
+        scope: 'Pembersihan Atomik Multi-Key Redis Backend (redis.go & service.go)',
+        description: 'Mengganti traversal Scan lambat dengan Keys + batch Del sehingga seluruh cache menu dan bundle tenant langsung terhapus bersih dan sinkron ke PostgreSQL seketika saat terjadi mutasi data.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.16',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Audit Komprehensif SQL Query Seluruh Menu, Penyertaan Kolom Custom Domain, dan Resolusi Relasi Site ID',
     summary: 'Melakukan audit menyeluruh terhadap seluruh kueri database (PostgreSQL 16 RLS) di semua menu platform (Situs & Kontainer, Artikel & Konten, Halaman Web, Media Assets S3, Custom Domain, Support Tickets, Invoices, Webhooks, Billing Quota, dan Autentikasi Pengguna). Menambahkan kolom custom_domain yang sebelumnya belum ter-scan pada GetSites dan InsertSite, serta menyempurnakan resolver otomatis pemetaan subdomain/slug ke UUID site_id saat pembuatan artikel dan halaman.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

@@ -340,9 +340,9 @@ func (c *Client) DeleteKeysByPrefix(ctx context.Context, prefix string) error {
 		return nil
 	}
 	if c.Rdb != nil {
-		iter := c.Rdb.Scan(ctx, 0, prefix+"*", 0).Iterator()
-		for iter.Next(ctx) {
-			c.Rdb.Del(ctx, iter.Val())
+		keys, err := c.Rdb.Keys(ctx, prefix+"*").Result()
+		if err == nil && len(keys) > 0 {
+			c.Rdb.Del(ctx, keys...)
 		}
 	}
 

@@ -1323,10 +1323,7 @@ func (s *Services) UploadAsset(ctx context.Context, tenantID string, fileHeader 
 		}
 	}
 
-	if s.Redis != nil {
-		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:assets", tenantID))
-		_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
-	}
+	s.InvalidateTenantCache(ctx, tenantID)
 
 	return asset, nil
 }
@@ -1345,8 +1342,7 @@ func (s *Services) DeleteAsset(ctx context.Context, tenantID, assetID string) er
 		_ = s.S3.DeleteFile(ctx, tenantID, s3Key)
 	}
 
-	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:assets", tenantID))
-	_ = s.Redis.DeleteKey(ctx, fmt.Sprintf("tenant:%s:menu:bundle", tenantID))
+	s.InvalidateTenantCache(ctx, tenantID)
 
 	return nil
 }

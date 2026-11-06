@@ -441,12 +441,14 @@ const confirmDeleteContainer = async () => {
     const idx = containers.value.findIndex(c => c.id === deletedId);
     if (idx !== -1) {
       containers.value.splice(idx, 1);
+      persistDashboardState();
     }
     showToast(`Kontainer '${deletedName}' (${deletedId}) berhasil dihapus. Slot kuota kini ${containers.value.length}/${userPlan.value.maxContainers}.`, 'info');
     if (containers.value.length > 0) {
       activeContainerId.value = containers.value[0].id;
     }
-    await syncWithBackend().catch(() => {});
+    await syncWithBackend({ forceWarmRedis: true }).catch(() => {});
+    persistDashboardState();
   } catch (err: any) {
     console.error('[Container] Delete failed:', err);
     showToast(`Gagal menghapus kontainer: ${err?.message || 'Koneksi ke backend gagal'}`, 'error');
@@ -1373,10 +1375,12 @@ const handleAddDomain = () => {
   };
   customDomains.value.push(newDomObj);
   newDomainInput.value = '';
+  persistDashboardState();
   showToast(`Domain ${cleanDom} didaftarkan! Menguji propagasi DNS Traefik...`, 'info');
   setTimeout(() => {
     newDomObj.status = 'active';
     newDomObj.sslStatus = 'issued';
+    persistDashboardState();
     showToast(`Domain ${cleanDom} terverifikasi & SSL TLS 1.3 Let's Encrypt aktif!`, 'success');
   }, 1600);
 };
@@ -1386,6 +1390,7 @@ const deleteDomain = (dom: CustomDomainItem) => {
     const idx = customDomains.value.findIndex(d => d.id === dom.id);
     if (idx !== -1) {
       customDomains.value.splice(idx, 1);
+      persistDashboardState();
       showToast(`Domain ${dom.domain} telah dilepas dari routing Traefik.`, 'info');
     }
   }
@@ -1447,6 +1452,7 @@ const saveArticle = async (art: ContentArticle) => {
     articles.value.unshift({ ...art });
     showToast(`Artikel '${art.title}' berhasil ditambahkan!`, 'success');
   }
+  persistDashboardState();
 
   try {
     if (isNew) {
@@ -1455,9 +1461,11 @@ const saveArticle = async (art: ContentArticle) => {
         art.id = res.article.id;
         const freshIdx = articles.value.findIndex(a => a.id === art.id || a.slug === art.slug);
         if (freshIdx !== -1) articles.value[freshIdx].id = res.article.id;
+        persistDashboardState();
       }
     } else {
       await studioApi.updateArticle(art.id, art);
+      persistDashboardState();
     }
   } catch (err) {
     console.warn('[API] Save article notice:', err);
@@ -1469,10 +1477,13 @@ const deleteArticle = async (art: ContentArticle) => {
     const idx = articles.value.findIndex(a => a.id === art.id);
     if (idx !== -1) {
       articles.value.splice(idx, 1);
+      persistDashboardState();
       showToast(`Artikel '${art.title}' berhasil dihapus.`, 'info');
     }
     try {
       await studioApi.deleteArticle(art.id);
+      await syncWithBackend({ forceWarmRedis: true }).catch(() => {});
+      persistDashboardState();
     } catch (err) {
       console.warn('[API] Delete article notice:', err);
     }
@@ -1489,6 +1500,7 @@ const saveCmsPage = async (page: CmsPage) => {
     cmsPages.value.unshift({ ...page });
     showToast(`Halaman baru '${page.title}' berhasil ditambahkan!`, 'success');
   }
+  persistDashboardState();
 
   try {
     if (isNew) {
@@ -1497,9 +1509,11 @@ const saveCmsPage = async (page: CmsPage) => {
         page.id = res.page.id;
         const freshIdx = cmsPages.value.findIndex(p => p.id === page.id || p.path === page.path);
         if (freshIdx !== -1) cmsPages.value[freshIdx].id = res.page.id;
+        persistDashboardState();
       }
     } else {
       await studioApi.updatePage(page.id, page);
+      persistDashboardState();
     }
   } catch (err) {
     console.warn('[API] Save page notice:', err);
@@ -1511,10 +1525,13 @@ const deleteCmsPage = async (page: CmsPage) => {
     const idx = cmsPages.value.findIndex(p => p.id === page.id);
     if (idx !== -1) {
       cmsPages.value.splice(idx, 1);
+      persistDashboardState();
       showToast(`Halaman '${page.title}' telah dihapus.`, 'info');
     }
     try {
       await studioApi.deletePage(page.id);
+      await syncWithBackend({ forceWarmRedis: true }).catch(() => {});
+      persistDashboardState();
     } catch (err) {
       console.warn('[API] Delete page notice:', err);
     }
@@ -1646,6 +1663,7 @@ const deleteMedia = async (med: MediaAssetItem) => {
     if (!serverStorageUpdated) {
       recalculateStorage();
     }
+    persistDashboardState();
     showToast(`Media ${med.name} dihapus dari S3 bucket.`, 'info');
   }
 };
@@ -1720,6 +1738,7 @@ const addWebhook = (name: string, url: string, events: string[], secretKey?: str
     lastTriggered: 'Belum pernah dipicu'
   };
   webhooks.value.push(newWh);
+  persistDashboardState();
   showToast(`Webhook '${name}' berhasil didaftarkan!`, 'success');
   return newWh;
 };
@@ -1729,6 +1748,7 @@ const deleteWebhook = (id: string) => {
   if (idx !== -1) {
     const name = webhooks.value[idx].name;
     webhooks.value.splice(idx, 1);
+    persistDashboardState();
     showToast(`Webhook '${name}' telah dihapus.`, 'info');
   }
 };
@@ -1737,6 +1757,7 @@ const toggleWebhookStatus = (id: string) => {
   const wh = webhooks.value.find(w => w.id === id);
   if (wh) {
     wh.status = wh.status === 'active' ? 'paused' : 'active';
+    persistDashboardState();
     showToast(`Webhook '${wh.name}' kini ${wh.status === 'active' ? 'Aktif' : 'Dijeda'}.`, 'info');
   }
 };
@@ -2313,10 +2334,34 @@ const resolveTicket = async (ticket: SupportTicketItem) => {
 };
 
 // User-scoped LocalStorage Cache Key Helper
-const getCacheKey = (email?: string) => {
+function getCacheKey(email?: string): string {
   const user = (email || userEmail.value || '').toLowerCase().trim();
   return user ? `herocms_dashboard_cache_${user}` : 'herocms_dashboard_cache';
-};
+}
+
+function persistDashboardState(targetEmail?: string): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const key = getCacheKey(targetEmail);
+    localStorage.setItem(key, JSON.stringify({
+      timestamp: Date.now(),
+      user: targetEmail || userEmail.value,
+      containers: containers.value,
+      articles: articles.value,
+      cmsPages: cmsPages.value,
+      mediaAssets: mediaAssets.value,
+      mediaStorage: mediaStorage.value,
+      mediaBucketName: mediaBucketName.value,
+      customDomains: customDomains.value,
+      supportTickets: supportTickets.value,
+      invoices: invoices.value,
+      webhooks: webhooks.value,
+      userPlan: userPlan.value
+    }));
+  } catch (e) {
+    console.warn('[LOCAL STORAGE PERSIST ERROR]', e);
+  }
+}
 
 // Backend API Synchronization & Redis Warmup
 const isBackendSyncing = ref(false);
@@ -2588,31 +2633,34 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
   } catch (err) {
     isBackendOffline.value = true;
     console.warn('[SYNC NOTICE] Backend sync deferred (running in offline resilient mode):', err);
-    if (!containers.value || containers.value.length === 0) {
-      containers.value = [...initialContainers];
-      activeContainerId.value = initialContainers[0]?.id || defaultFallbackContainer.id;
-    }
-    if (!articles.value || articles.value.length === 0) {
-      articles.value = [...initialArticles];
-    }
-    if (!cmsPages.value || cmsPages.value.length === 0) {
-      cmsPages.value = [...initialCmsPages];
-    }
-    if (!mediaAssets.value || mediaAssets.value.length === 0) {
-      mediaAssets.value = [...initialMediaAssets];
-      recalculateStorage();
-    }
-    if (!customDomains.value || customDomains.value.length === 0) {
-      customDomains.value = [...initialCustomDomains];
-    }
-    if (!invoices.value || invoices.value.length === 0) {
-      invoices.value = [...initialInvoices];
-    }
-    if (!supportTickets.value || supportTickets.value.length === 0) {
-      supportTickets.value = [...initialSupportTickets];
-    }
-    if (!webhooks.value || webhooks.value.length === 0) {
-      webhooks.value = [...initialWebhooks];
+    const hasCachedState = typeof localStorage !== 'undefined' && !!localStorage.getItem(getCacheKey());
+    if (!hasCachedState) {
+      if (!containers.value || containers.value.length === 0) {
+        containers.value = [...initialContainers];
+        activeContainerId.value = initialContainers[0]?.id || defaultFallbackContainer.id;
+      }
+      if (!articles.value || articles.value.length === 0) {
+        articles.value = [...initialArticles];
+      }
+      if (!cmsPages.value || cmsPages.value.length === 0) {
+        cmsPages.value = [...initialCmsPages];
+      }
+      if (!mediaAssets.value || mediaAssets.value.length === 0) {
+        mediaAssets.value = [...initialMediaAssets];
+        recalculateStorage();
+      }
+      if (!customDomains.value || customDomains.value.length === 0) {
+        customDomains.value = [...initialCustomDomains];
+      }
+      if (!invoices.value || invoices.value.length === 0) {
+        invoices.value = [...initialInvoices];
+      }
+      if (!supportTickets.value || supportTickets.value.length === 0) {
+        supportTickets.value = [...initialSupportTickets];
+      }
+      if (!webhooks.value || webhooks.value.length === 0) {
+        webhooks.value = [...initialWebhooks];
+      }
     }
   } finally {
     isBackendSyncing.value = false;
@@ -2623,13 +2671,13 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
 const hydrateFromCache = (overrideEmail?: string) => {
   try {
     const targetEmail = (overrideEmail || userEmail.value || '').toLowerCase().trim();
-    const raw = localStorage.getItem(getCacheKey(targetEmail));
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(getCacheKey(targetEmail)) : null;
     if (raw) {
       const data = JSON.parse(raw);
       if (data.user && targetEmail && data.user.toLowerCase().trim() !== targetEmail) {
         return;
       }
-      if (Array.isArray(data.containers) && data.containers.length > 0) {
+      if (Array.isArray(data.containers)) {
         containers.value = data.containers.filter((c: any) => 
           c.id !== 'hero_tenant_9942' && 
           c.id !== 'hero_tenant_2002' && 
@@ -2659,13 +2707,13 @@ const hydrateFromCache = (overrideEmail?: string) => {
           activeContainerId.value = containers.value[0].id;
         }
       }
-      if (Array.isArray(data.articles) && data.articles.length > 0) {
+      if (Array.isArray(data.articles)) {
         articles.value = data.articles;
       }
-      if (Array.isArray(data.cmsPages) && data.cmsPages.length > 0) {
+      if (Array.isArray(data.cmsPages)) {
         cmsPages.value = data.cmsPages;
       }
-      if (Array.isArray(data.mediaAssets) && data.mediaAssets.length > 0) {
+      if (Array.isArray(data.mediaAssets)) {
         mediaAssets.value = data.mediaAssets;
         if (data.mediaStorage) {
           mediaStorage.value = data.mediaStorage;
@@ -2676,42 +2724,42 @@ const hydrateFromCache = (overrideEmail?: string) => {
           mediaBucketName.value = data.mediaBucketName;
         }
       }
-      if (Array.isArray(data.customDomains) && data.customDomains.length > 0) customDomains.value = data.customDomains.map(normalizeCustomDomain);
-      if (Array.isArray(data.supportTickets) && data.supportTickets.length > 0) supportTickets.value = data.supportTickets.map((t: any) => normalizeTicket(t));
-      if (Array.isArray(data.invoices) && data.invoices.length > 0) invoices.value = data.invoices;
-      if (Array.isArray(data.webhooks) && data.webhooks.length > 0) webhooks.value = data.webhooks;
+      if (Array.isArray(data.customDomains)) customDomains.value = data.customDomains.map(normalizeCustomDomain);
+      if (Array.isArray(data.supportTickets)) supportTickets.value = data.supportTickets.map((t: any) => normalizeTicket(t));
+      if (Array.isArray(data.invoices)) invoices.value = data.invoices;
+      if (Array.isArray(data.webhooks)) webhooks.value = data.webhooks;
       if (data.userPlan?.name) userPlan.value = data.userPlan;
+    } else {
+      // ONLY on fresh cold start (when NO localStorage entry exists for this user)
+      if (!containers.value || containers.value.length === 0) {
+        containers.value = [...initialContainers];
+        activeContainerId.value = initialContainers[0]?.id || defaultFallbackContainer.id;
+      }
+      if (!articles.value || articles.value.length === 0) {
+        articles.value = [...initialArticles];
+      }
+      if (!cmsPages.value || cmsPages.value.length === 0) {
+        cmsPages.value = [...initialCmsPages];
+      }
+      if (!mediaAssets.value || mediaAssets.value.length === 0) {
+        mediaAssets.value = [...initialMediaAssets];
+        recalculateStorage();
+      }
+      if (!customDomains.value || customDomains.value.length === 0) {
+        customDomains.value = [...initialCustomDomains];
+      }
+      if (!invoices.value || invoices.value.length === 0) {
+        invoices.value = [...initialInvoices];
+      }
+      if (!supportTickets.value || supportTickets.value.length === 0) {
+        supportTickets.value = [...initialSupportTickets];
+      }
+      if (!webhooks.value || webhooks.value.length === 0) {
+        webhooks.value = [...initialWebhooks];
+      }
     }
-
-    // Resilience check: if any collection is empty (e.g. cold start or fresh browser), ensure seeds are available
-    if (!containers.value || containers.value.length === 0) {
-      containers.value = [...initialContainers];
-      activeContainerId.value = initialContainers[0]?.id || defaultFallbackContainer.id;
-    }
-    if (!articles.value || articles.value.length === 0) {
-      articles.value = [...initialArticles];
-    }
-    if (!cmsPages.value || cmsPages.value.length === 0) {
-      cmsPages.value = [...initialCmsPages];
-    }
-    if (!mediaAssets.value || mediaAssets.value.length === 0) {
-      mediaAssets.value = [...initialMediaAssets];
-      recalculateStorage();
-    }
-    if (!customDomains.value || customDomains.value.length === 0) {
-      customDomains.value = [...initialCustomDomains];
-    }
-    if (!invoices.value || invoices.value.length === 0) {
-      invoices.value = [...initialInvoices];
-    }
-    if (!supportTickets.value || supportTickets.value.length === 0) {
-      supportTickets.value = [...initialSupportTickets];
-    }
-    if (!webhooks.value || webhooks.value.length === 0) {
-      webhooks.value = [...initialWebhooks];
-    }
-  } catch (e) {
-    // Graceful fallback to default values
+  } catch (err) {
+    console.warn('[CACHE HYDRATION ERROR]', err);
   }
 };
 
@@ -2921,6 +2969,7 @@ export function useDashboardData() {
     resetDashboardState,
     updateUserEmail,
     getCacheKey,
+    persistDashboardState,
     hydrateFromCache,
     isBackendOffline,
     selectedContainerForDetail
