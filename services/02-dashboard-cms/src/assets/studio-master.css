@@ -18898,22 +18898,30 @@ a[class*="btn-"] svg,
 .stage-pdf-container {
   width: 100%;
   height: 100%;
+  min-height: 480px;
+  flex: 1;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
 }
 
 .stage-pdf-frame-shell {
   width: 100%;
   height: 100%;
+  min-height: 480px;
+  flex: 1;
   border-radius: 8px;
   overflow: hidden;
   background: #ffffff;
+  display: flex;
+  flex-direction: column;
 }
 
 .stage-pdf-frame {
   width: 100%;
   height: 100%;
+  min-height: 480px;
+  flex: 1;
   border: none;
 }
 
@@ -28839,6 +28847,13 @@ a[class*="btn-"] svg,
 .history-segment,
 .device-switcher-dock,
 .slot-stepper-row {
+  flex-wrap: nowrap !important;
+}
+
+.header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
   flex-wrap: nowrap !important;
 }
 

@@ -1429,20 +1429,21 @@ const copyActiveSnippet = () => {
         class="modal-backdrop"
         @click.self="isCreatePatModalOpen = false"
       >
-        <div class="modal-dialog modal-dialog-pat">
-          <!-- Modal Header -->
-          <div class="modal-header">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-pat" style="max-width: 900px; width: 92vw; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important;">
+          <!-- Modal Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
-                <Key :size="18" />
+              <div class="modal-header-icon-box" style="width: 34px; height: 34px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+                <Key :size="17" />
               </div>
               <div>
-                <h3 class="modal-heading">Generate Personal Access Token (PAT)</h3>
-                <p class="modal-subheading">Konfigurasikan nama, masa berlaku, dan cakupan izin akses (scopes) granular.</p>
+                <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">Generate Personal Access Token (PAT)</h3>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Konfigurasikan nama, masa berlaku, dan cakupan izin akses (scopes) granular.</p>
               </div>
             </div>
             <button
-              class="modal-close-button"
+              type="button"
+              class="modal-close-button-ghost"
               @click="isCreatePatModalOpen = false"
               title="Tutup"
             >
@@ -1450,7 +1451,8 @@ const copyActiveSnippet = () => {
             </button>
           </div>
 
-          <form @submit.prevent="handleCreatePat" class="modal-form-body">
+          <form @submit.prevent="handleCreatePat" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; margin: 0;">
+            <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
             <!-- 1. Top Settings: Token Name & Expiration (Responsive 2-Col Grid) -->
             <div class="pat-modal-settings-grid">
               <div class="form-group-block" style="margin-bottom: 0;">
@@ -1602,17 +1604,18 @@ const copyActiveSnippet = () => {
                 </span>
               </div>
             </div>
+            </div>
 
-            <!-- 5. Modal Footer Actions (Guaranteed Side-by-Side) -->
-            <div class="modal-footer-row">
+            <!-- 5. Modal Footer Actions (Flush to Bottom) -->
+            <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
               <button
                 type="button"
-                class="btn-modal-ghost"
+                class="btn-picker-footer-ghost"
                 @click="isCreatePatModalOpen = false"
               >
                 Batal
               </button>
-              <button type="submit" class="btn-modal-confirm">
+              <button type="submit" class="btn-picker-footer-confirm">
                 <Key :size="14" />
                 <span>Generate Token PAT</span>
               </button>
@@ -1631,8 +1634,8 @@ const copyActiveSnippet = () => {
         class="modal-backdrop"
         @click.self="isOneTimeModalOpen = false"
       >
-        <div class="modal-dialog modal-dialog-onetime">
-          <div class="modal-header">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-onetime" style="padding: 0 !important; overflow: hidden !important; border-radius: 16px !important; display: flex !important; flex-direction: column !important; max-width: 580px; width: 92vw;">
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; background: #ffffff;">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #fef3c7; color: #b45309;">
                 <Lock :size="18" />
@@ -1651,7 +1654,7 @@ const copyActiveSnippet = () => {
             </button>
           </div>
 
-          <div class="modal-form-body">
+          <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px 24px;">
             <!-- Warning Banner -->
             <div class="one-time-warning-box">
               <AlertTriangle :size="20" class="one-time-warning-icon" />
@@ -1680,17 +1683,17 @@ const copyActiveSnippet = () => {
                 </button>
               </div>
             </div>
+          </div>
 
-            <div class="modal-footer-row">
-              <button
-                type="button"
-                class="btn-modal-confirm"
-                @click="isOneTimeModalOpen = false"
-              >
-                <CheckCircle2 :size="14" />
-                <span>Saya Sudah Menyimpan Token Ini</span>
-              </button>
-            </div>
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+            <button
+              type="button"
+              class="btn-picker-footer-confirm"
+              @click="isOneTimeModalOpen = false"
+            >
+              <CheckCircle2 :size="14" />
+              <span>Saya Sudah Menyimpan Token Ini</span>
+            </button>
           </div>
         </div>
       </div>
@@ -1705,9 +1708,9 @@ const copyActiveSnippet = () => {
         class="modal-backdrop"
         @click.self="isAddWebhookModalOpen = false"
       >
-        <div class="modal-dialog" style="max-width: 720px;">
+        <div class="modal-dialog modal-dialog-seamless" style="max-width: 760px; width: 92vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; border-radius: 16px !important;">
           <!-- Modal Header -->
-          <div class="modal-header">
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; background: #ffffff;">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
                 <Webhook :size="18" />
@@ -1726,7 +1729,8 @@ const copyActiveSnippet = () => {
             </button>
           </div>
 
-          <form @submit.prevent="handleAddWebhookSubmit" class="modal-form-body">
+          <form @submit.prevent="handleAddWebhookSubmit" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; margin: 0;">
+            <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px 24px;">
             <!-- 1. Platform Presets Selector -->
             <div class="form-group-block">
               <label class="input-label-row">
@@ -1926,16 +1930,18 @@ const copyActiveSnippet = () => {
               </div>
             </div>
 
-            <!-- Modal Footer Actions (Guaranteed Side-by-Side) -->
-            <div class="modal-footer-row">
+            </div>
+
+            <!-- Modal Footer Actions (Flush to bottom) -->
+            <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
               <button
                 type="button"
-                class="btn-modal-ghost"
+                class="btn-picker-footer-ghost"
                 @click="isAddWebhookModalOpen = false"
               >
                 Batal
               </button>
-              <button type="submit" class="btn-modal-confirm">
+              <button type="submit" class="btn-picker-footer-confirm">
                 <Plus :size="14" />
                 <span>Simpan Webhook Endpoint</span>
               </button>
@@ -1952,9 +1958,9 @@ const copyActiveSnippet = () => {
         class="modal-backdrop"
         @click.self="isDeliveryInspectorOpen = false"
       >
-        <div class="modal-dialog modal-dialog-inspector">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-inspector" style="max-width: 780px; width: 92vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; border-radius: 16px !important;">
           <!-- Modal Header -->
-          <div class="modal-header">
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; background: #ffffff;">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #0284c7;">
                 <Activity :size="18" />
@@ -1976,7 +1982,7 @@ const copyActiveSnippet = () => {
           </div>
 
           <!-- Modal Body -->
-          <div class="modal-form-body">
+          <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px 24px;">
             <!-- 1. Metadata Strip -->
             <div class="inspector-meta-strip">
               <div class="inspector-meta-item">
@@ -2101,25 +2107,25 @@ const copyActiveSnippet = () => {
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Modal Footer Actions (Guaranteed Side-by-Side) -->
-            <div class="modal-footer-row" style="margin-top: 18px;">
-              <button
-                type="button"
-                class="btn-modal-ghost"
-                @click="isDeliveryInspectorOpen = false"
-              >
-                Tutup
-              </button>
-              <button
-                type="button"
-                class="btn-modal-confirm"
-                @click="handleRedeliverFromInspector"
-              >
-                <RefreshCw :size="13" />
-                <span>Kirim Ulang Event (Redeliver)</span>
-              </button>
-            </div>
+          <!-- Modal Footer Actions (Flush to bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+            <button
+              type="button"
+              class="btn-picker-footer-ghost"
+              @click="isDeliveryInspectorOpen = false"
+            >
+              Tutup
+            </button>
+            <button
+              type="button"
+              class="btn-picker-footer-confirm"
+              @click="handleRedeliverFromInspector"
+            >
+              <RefreshCw :size="13" />
+              <span>Kirim Ulang Event (Redeliver)</span>
+            </button>
           </div>
         </div>
       </div>

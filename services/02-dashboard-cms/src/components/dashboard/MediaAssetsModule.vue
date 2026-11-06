@@ -473,7 +473,7 @@ const getAssetCmsUsage = (item: MediaAssetItem): { count: number; places: string
 
 const openPreviewModal = (item: MediaAssetItem) => {
   selectedMediaForPreview.value = item;
-  showPdfPreview.value = false;
+  showPdfPreview.value = item.type.toUpperCase() === 'PDF';
   canvasBgMode.value = item.type.toUpperCase() === 'SVG' ? 'light' : 'checker';
   isPreviewModalOpen.value = true;
 };
@@ -1296,21 +1296,36 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                   </div>
                 </div>
 
-                <!-- If PDF: Interactive Viewer or Adobe Doc Sheet -->
+                <!-- If PDF: Interactive Viewer with Embedded Object & Iframe Fallback -->
                 <div v-else-if="selectedMediaForPreview.type === 'PDF'" class="stage-pdf-container">
-                  <div v-if="showPdfPreview" class="stage-pdf-frame-shell">
-                    <iframe :src="selectedMediaForPreview.url" class="stage-pdf-frame"></iframe>
-                  </div>
-                  <div v-else class="stage-doc-card doc-pdf">
-                    <div class="stage-doc-art">
-                      <FileText :size="48" style="color: #ef4444;" />
-                    </div>
-                    <h4>Dokumen Portable Document Format (PDF)</h4>
-                    <p>{{ selectedMediaForPreview.dimensions }} • {{ selectedMediaForPreview.size }}</p>
-                    <button type="button" class="btn-canvas-action" @click="showPdfPreview = true" style="margin-top: 10px;">
-                      <Eye :size="13" />
-                      <span>Buka Pratinjau Interaktif Lembar PDF</span>
-                    </button>
+                  <div class="stage-pdf-frame-shell">
+                    <object
+                      :data="selectedMediaForPreview.url"
+                      type="application/pdf"
+                      class="stage-pdf-frame"
+                    >
+                      <iframe
+                        :src="selectedMediaForPreview.url"
+                        class="stage-pdf-frame"
+                      >
+                        <div class="stage-doc-card doc-pdf">
+                          <div class="stage-doc-art">
+                            <FileText :size="48" style="color: #ef4444;" />
+                          </div>
+                          <h4>Dokumen Portable Document Format (PDF)</h4>
+                          <p>{{ selectedMediaForPreview.dimensions }} • {{ selectedMediaForPreview.size }}</p>
+                          <a
+                            :href="selectedMediaForPreview.url"
+                            target="_blank"
+                            class="btn-canvas-action"
+                            style="margin-top: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;"
+                          >
+                            <ExternalLink :size="13" />
+                            <span>Buka Dokumen PDF di Tab Baru</span>
+                          </a>
+                        </div>
+                      </iframe>
+                    </object>
                   </div>
                 </div>
 

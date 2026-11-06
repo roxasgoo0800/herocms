@@ -435,7 +435,7 @@ onUnmounted(() => {
           Dokumen penagihan sah ber-NPWP PT Hero Digital Multitek untuk rekonsiliasi akuntansi perusahaan, audit PPN 11%, dan bukti potong fiskal elektronik DJP.
         </p>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" style="display: flex; align-items: center; gap: 10px;">
         <button class="btn-outline-action" @click="handleExportCSV" title="Unduh format tabel CSV">
           <FileSpreadsheet :size="14" />
           <span>Ekspor CSV</span>
@@ -943,8 +943,8 @@ onUnmounted(() => {
         class="modal-backdrop"
         @click.self="isInvoiceDetailModalOpen = false"
       >
-        <div class="modal-dialog modal-dialog-invoice">
-          <div class="modal-header">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-invoice" style="max-width: 900px; width: 92vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; border-radius: 16px !important;">
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; background: #ffffff;">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
                 <Receipt :size="18" />
@@ -959,7 +959,7 @@ onUnmounted(() => {
             </button>
           </div>
 
-          <div class="invoice-doc-body">
+          <div class="invoice-doc-body" style="flex: 1; overflow-y: auto; padding: 20px 24px;">
             <div class="invoice-paper" id="printable-invoice">
               <!-- Paper Top Header -->
               <div class="inv-paper-top">
@@ -1151,20 +1151,20 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Modal Footer Actions (Guaranteed Side-by-Side) -->
-          <div class="modal-footer-row">
-            <button type="button" class="btn-modal-ghost" @click="isInvoiceDetailModalOpen = false">
+          <!-- Modal Footer Actions (Flush to bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+            <button type="button" class="btn-picker-footer-ghost" @click="isInvoiceDetailModalOpen = false">
               <span>Tutup</span>
             </button>
-            <button type="button" class="btn-modal-ghost" @click="copyInvoiceId(selectedInvoice.id)">
+            <button type="button" class="btn-picker-footer-ghost" @click="copyInvoiceId(selectedInvoice.id)">
               <Copy :size="14" />
               <span>Salin No. Faktur</span>
             </button>
-            <button type="button" class="btn-modal-ghost" @click="handlePrintInvoice">
+            <button type="button" class="btn-picker-footer-ghost" @click="handlePrintInvoice">
               <Printer :size="14" />
               <span>Cetak / Simpan PDF</span>
             </button>
-            <button type="button" class="btn-modal-confirm" @click="downloadInvoiceReceipt(selectedInvoice)">
+            <button type="button" class="btn-picker-footer-confirm" @click="downloadInvoiceReceipt(selectedInvoice)">
               <Download :size="14" />
               <span>Unduh Dokumen Faktur</span>
             </button>

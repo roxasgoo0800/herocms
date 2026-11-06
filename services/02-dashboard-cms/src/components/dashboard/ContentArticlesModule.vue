@@ -1781,29 +1781,30 @@ onUnmounted(() => {
     <!-- ============================================================= -->
     <Teleport to="body">
       <div v-if="isEditorModalOpen" class="modal-backdrop" @click.self="closeEditorModal">
-        <div class="modal-dialog modal-dialog-lg content-editor-dialog">
-        <div class="modal-header">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-lg content-editor-dialog" style="max-width: 860px; width: 92vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important;">
+        <!-- Header (Flush to Top) -->
+        <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
           <div class="modal-header-leading">
-            <div class="modal-icon-badge">
-              <BookOpen v-if="editorContentType === 'article'" :size="18" />
-              <Layers v-else :size="18" />
+            <div class="modal-header-icon-box" style="width: 34px; height: 34px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+              <BookOpen v-if="editorContentType === 'article'" :size="17" />
+              <Layers v-else :size="17" />
             </div>
             <div>
-              <h3 class="modal-title">
+              <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">
                 {{ editingId ? 'Edit ' + (editorContentType === 'article' ? 'Artikel Editorial' : 'Halaman Web') : 'Buat ' + (editorContentType === 'article' ? 'Artikel Baru' : 'Halaman Web Baru') }}
               </h3>
-              <p class="modal-subtitle">
+              <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">
                 {{ editorContentType === 'article' ? 'Kelola publikasi konten berkala, slug URL, dan metadata SEO.' : 'Atur halaman website tenant, layout template, dan tautan navigasi.' }}
               </p>
             </div>
           </div>
-          <button class="btn-modal-close" @click="closeEditorModal">
-            <X :size="18" />
+          <button type="button" class="modal-close-button-ghost" @click="closeEditorModal" title="Tutup">
+            <X :size="16" />
           </button>
         </div>
 
-        <form class="editor-modal-form" @submit.prevent="handleSaveContent">
-          <div class="modal-body">
+        <form class="editor-modal-form" @submit.prevent="handleSaveContent" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; margin: 0;">
+          <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
             <!-- Row 1: Title & Slug/Path -->
           <div class="form-row-2col">
             <div class="form-field-group">
@@ -1947,20 +1948,21 @@ onUnmounted(() => {
               placeholder="Tuliskan konten Anda di sini..."
             ></textarea>
           </div>
-          </div>
+        </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn-modal-ghost" @click="closeEditorModal">
-              Batal
-            </button>
-            <button type="submit" class="btn-modal-confirm">
-              <Check :size="15" />
-              <span>Simpan {{ editorContentType === 'article' ? 'Artikel' : 'Halaman' }}</span>
-            </button>
-          </div>
-        </form>
-      </div>
+        <!-- Footer (Flush to Bottom) -->
+        <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+          <button type="button" class="btn-picker-footer-ghost" @click="closeEditorModal">
+            Batal
+          </button>
+          <button type="submit" class="btn-picker-footer-confirm">
+            <Check :size="14" />
+            <span>Simpan {{ editorContentType === 'article' ? 'Artikel' : 'Halaman' }}</span>
+          </button>
+        </div>
+      </form>
     </div>
-    </Teleport>
+  </div>
+</Teleport>
   </section>
 </template>

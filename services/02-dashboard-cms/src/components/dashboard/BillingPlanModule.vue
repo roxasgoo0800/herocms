@@ -810,9 +810,9 @@ const openCustomClusterCheckout = () => {
         class="modal-backdrop"
         @click.self="isCheckoutModalOpen = false"
       >
-        <div class="modal-dialog modal-dialog-checkout">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-checkout" style="max-width: 620px; width: 92vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; border-radius: 16px !important;">
           <!-- Modal Header -->
-          <div class="modal-header">
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; background: #ffffff;">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
                 <CreditCard :size="18" />
@@ -827,7 +827,7 @@ const openCustomClusterCheckout = () => {
             </button>
           </div>
 
-          <div class="modal-form-body">
+          <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px 24px;">
             <!-- 1. Order Summary Box -->
             <div class="checkout-summary-box">
               <div class="checkout-item-title">{{ checkoutData.title }}</div>
@@ -957,28 +957,28 @@ const openCustomClusterCheckout = () => {
                 </p>
               </div>
             </div>
+          </div>
 
-            <!-- Modal Footer (Guaranteed Side-by-Side) -->
-            <div class="modal-footer-row">
-              <button
-                type="button"
-                class="btn-modal-ghost"
-                :disabled="isProcessingPayment"
-                @click="isCheckoutModalOpen = false"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                class="btn-modal-confirm"
-                :disabled="isProcessingPayment"
-                @click="processCheckoutPayment"
-              >
-                <RefreshCw v-if="isProcessingPayment" :size="14" class="spin-anim" />
-                <Check v-else :size="14" />
-                <span>{{ isProcessingPayment ? 'Memproses Kliring Bank...' : `Bayar Rp ${checkoutData.total.toLocaleString('id-ID')} & Terbitkan Faktur` }}</span>
-              </button>
-            </div>
+          <!-- Modal Footer (Flush to bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+            <button
+              type="button"
+              class="btn-picker-footer-ghost"
+              :disabled="isProcessingPayment"
+              @click="isCheckoutModalOpen = false"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              class="btn-picker-footer-confirm"
+              :disabled="isProcessingPayment"
+              @click="processCheckoutPayment"
+            >
+              <RefreshCw v-if="isProcessingPayment" :size="14" class="spin-anim" />
+              <Check v-else :size="14" />
+              <span>{{ isProcessingPayment ? 'Memproses Kliring Bank...' : `Bayar Rp ${checkoutData.total.toLocaleString('id-ID')} & Terbitkan Faktur` }}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -993,8 +993,8 @@ const openCustomClusterCheckout = () => {
         class="modal-backdrop"
         @click.self="isPaymentModalOpen = false"
       >
-        <div class="modal-dialog modal-dialog-onetime">
-          <div class="modal-header">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-onetime" style="max-width: 520px; width: 92vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; border-radius: 16px !important;">
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; background: #ffffff;">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
                 <CreditCard :size="18" />
@@ -1009,7 +1009,7 @@ const openCustomClusterCheckout = () => {
             </button>
           </div>
 
-          <div class="modal-form-body">
+          <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px 24px;">
             <div class="form-group-block">
               <label class="input-label-row">
                 <span class="label-text">Pilih Kartu / Metode Pembayaran Aktif</span>
@@ -1021,25 +1021,25 @@ const openCustomClusterCheckout = () => {
                 <option value="Mandiri Bill Payment">Mandiri Bill Payment</option>
               </select>
             </div>
+          </div>
 
-            <!-- Modal Footer Actions (Guaranteed Side-by-Side) -->
-            <div class="modal-footer-row">
-              <button
-                type="button"
-                class="btn-modal-ghost"
-                @click="isPaymentModalOpen = false"
-              >
-                Tutup
-              </button>
-              <button
-                type="button"
-                class="btn-modal-confirm"
-                @click="savePaymentMethod"
-              >
-                <Check :size="14" />
-                <span>Simpan Perubahan</span>
-              </button>
-            </div>
+          <!-- Modal Footer Actions (Flush to bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+            <button
+              type="button"
+              class="btn-picker-footer-ghost"
+              @click="isPaymentModalOpen = false"
+            >
+              Tutup
+            </button>
+            <button
+              type="button"
+              class="btn-picker-footer-confirm"
+              @click="savePaymentMethod"
+            >
+              <Check :size="14" />
+              <span>Simpan Perubahan</span>
+            </button>
           </div>
         </div>
       </div>

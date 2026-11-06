@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.12',
+    version: 'v1.42.13',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '04 November 2026',
+    lastUpdated: '06 November 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,13 +75,55 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.13',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Standarisasi Menyeluruh Modal Dialog Studio, Pratinjau PDF Otomatis, dan Perapihan Tombol Aksi Ekspor',
+    summary: 'Penyelesaian tuntas standarisasi modal dialog seamless di seluruh modul dashboard (Content Articles, Webhooks & PAT, Billing Checkout & Payment, serta Invoices E-Faktur), perbaikan pratinjau dokumen PDF di Media Assets Library dengan rendering objek interaktif instan, dan penataan jarak tombol ekspor header faktur.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14213-1',
+        type: 'improvement',
+        scope: 'Content Studio & Articles Dialog (ContentArticlesModule.vue)',
+        description: 'Menstandarkan Modal "Buat Artikel Baru" ke arsitektur Seamless Studio: kontainer max-width 860px tanpa blank moat padding, header rata atas 14px 22px dengan ikon glif berlatar #eff6ff, formulir terbagi rapi dalam scrollable body, dan footer terpadu rata bawah (#e2e8f0 border-top) dengan tombol Batal dan Simpan Artikel.'
+      },
+      {
+        id: 'c-02dash-14213-2',
+        type: 'feature',
+        scope: 'Media Assets PDF Interactive Auto-Preview (MediaAssetsModule.vue, studio-master.css)',
+        description: 'Mengaktifkan pratinjau lembar PDF secara otomatis saat berkas PDF diklik tanpa memerlukan tombol manual terpisah, menggunakan sematan elemen object dan iframe interaktif dengan tinggi penuh panggung (min-height 480px) serta fallback tautan unduh/buka.'
+      },
+      {
+        id: 'c-02dash-14213-3',
+        type: 'improvement',
+        scope: 'Webhooks & Personal Access Token Dialogs (WebhooksApiModule.vue)',
+        description: 'Menyelaraskan seluruh 4 dialog di modul Webhooks (Modal Generate PAT, Modal One-Time Reveal Token, Modal Tambah Endpoint Webhook, dan Modal Delivery Inspector) dengan arsitektur modal seamless, header bergaris halus, dan footer bar flush edge-to-edge.'
+      },
+      {
+        id: 'c-02dash-14213-4',
+        type: 'improvement',
+        scope: 'Billing Checkout & Payment Dialogs (BillingPlanModule.vue)',
+        description: 'Mengeluarkan tombol aksi footer dari padding formulir ke dedicated modal-footer-bespoke rata bawah dengan garis pemisah tipis (#e2e8f0) pada Modal Checkout Layanan Instan dan Modal Kelola Pembayaran.'
+      },
+      {
+        id: 'c-02dash-14213-5',
+        type: 'bugfix',
+        scope: 'Invoices History Header Buttons & E-Faktur Modal (InvoicesHistoryModule.vue, studio-master.css)',
+        description: 'Memperbaiki tombol aksi header faktur ("Ekspor CSV" dan "Unduh Semua Faktur") yang sebelumnya menempel rapat (gandeng) dengan menambahkan display: flex dan gap: 10px pada .header-actions, serta menstandarkan modal E-Faktur DJP 3.0 ke modal-dialog-seamless.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.12',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '04 November 2026',
     title: 'Standarisasi Arsitektur Modal Dialog Terpusat (Unified Seamless Studio Modal) di Seluruh Menu Aplikasi',
     summary: 'Penyatuan dan standarisasi fundamental arsitektur sistem modal dialog di seluruh dashboard (studio-master.css): (1) Menghilangkan padding 28px default dari kelas induk .modal-dialog dan menetapkan standar Seamless Studio (padding: 0, border-radius 16px, edge-to-edge flush layout); (2) Menstandarkan .modal-header, .modal-seamless-header, dan .modal-header-bespoke agar menempel rata atas (flush) dengan garis pembatas halus #e2e8f0; (3) Menstandarkan scrollable body (.modal-body, .modal-form-body, .blueprint-modal-body) dengan padding teratur 22px 24px; (4) Menstandarkan .modal-footer, .modal-footer-row, dan .modal-footer-bespoke menempel rata bawah (flush) dengan tombol aksi terpadu (.btn-modal-ghost & .btn-modal-confirm), sehingga penambahan modal baru di masa depan dijamin otomatis seragam tanpa perlu custom CSS.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {
