@@ -342,8 +342,8 @@ services:
       - CONNECTIONS=postgres
       - LABEL_postgres=HeroCMS PostgreSQL (cloudcms_db)
       - SERVER_postgres=postgres
-      - USER_postgres=cloudcms_user
-      - PASSWORD_postgres=cloudcms_secret
+      - USER_postgres=${DB_USERNAME:-cloudcms_user}
+      - PASSWORD_postgres=${DB_PASSWORD:-secret_postgres_password}
       - PORT_postgres=5432
       - ENGINE_postgres=postgres@dbgate-plugin-postgres
       - DATABASE_postgres=cloudcms_db
