@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.14',
+    version: 'v1.42.15',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.15',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Integrasi Visual Database Web GUI (Adminer), Sinkronisasi PostgreSQL SSOT, dan Solusi Inkonsistensi Pod',
+    summary: 'Menyediakan web UI visual database Adminer pada port 8088 yang berfungsi seperti phpMyAdmin untuk PostgreSQL, menyinkronkan 3 kontainer default dan data artikel langsung ke dalam tabel PostgreSQL sites dan content_items sehingga database menjadi Single Source of Truth (SSOT), serta menghilangkan masalah tampilan yang sebelumnya melompat antara 1 pod dan 3 pod.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14215-1',
+        type: 'feature',
+        scope: 'Visual Database Web Manager (Adminer on Port 8088)',
+        description: 'Menambahkan service herocms_adminer di docker-compose.yml pada port 8088 sehingga pengguna dapat menginspeksi, mengedit, dan memonitor data tabel PostgreSQL secara visual lewat web browser layaknya phpMyAdmin.'
+      },
+      {
+        id: 'c-02dash-14215-2',
+        type: 'improvement',
+        scope: 'Single Source of Truth Database Seeding (repository.go, 01_schema_and_rls.sql)',
+        description: 'Menyinkronkan data kontainer bawaan (site, portal, toko) dan artikel ke tabel PostgreSQL sites dan content_items untuk tenant Rizal Pratama, memastikan jumlah pod konsisten sama saat backend online maupun offline.'
+      },
+      {
+        id: 'c-02dash-14215-3',
+        type: 'improvement',
+        scope: 'Docker Volume Persistence & State Reliability',
+        description: 'Memverifikasi persistensi named volume herocms_postgres_data sehingga database tetap utuh dan aman saat Orbstack atau daemon Docker dimatikan dan dihidupkan kembali.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.14',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Redesain Elegan Modal Buat Artikel Studio, Pratinjau Interaktif Lembar Dokumen PDF, dan Ketahanan Data Draf Offline',
     summary: 'Penyempurnaan visual modal Buat Artikel Baru dengan navigasi sub-tab editorial (Formulir, Pratinjau Reader, SEO & Sosmed), markdown toolbar, counter karakter, perbaikan tautan ganda S3 MinIO dan penambahan Interactive Document Sheet PDF yang berfungsi 100% tanpa MinIO, serta pengisian dataset benih offline (containers, articles, media) sehingga aplikasi tetap terisi penuh saat backend/database/Orbstack offline.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {
