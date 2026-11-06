@@ -1448,13 +1448,8 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                       <iframe
                         :src="sanitizeMediaUrl(selectedMediaForPreview.url)"
                         class="stage-pdf-frame"
-                      >
-                        <div class="stage-doc-card doc-pdf">
-                          <FileText :size="48" style="color: #ef4444;" />
-                          <h4>Pratinjau Browser Plugin Tidak Tersedia</h4>
-                          <p>Silakan gunakan mode "Lembar Dokumen" di atas atau buka langsung di tab baru.</p>
-                        </div>
-                      </iframe>
+                        title="Pratinjau Dokumen PDF"
+                      ></iframe>
                     </object>
                   </div>
                 </div>
