@@ -2163,9 +2163,13 @@ a[class*="btn-"] svg,
 }
 
 .radar-status-pill.status-stopped {
-  background: #f1f5f9;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+}
+
+.radar-status-pill.status-stopped .radar-dot {
+  background: #ef4444;
 }
 
 .radar-status-pill.status-provisioning {
@@ -2756,6 +2760,42 @@ a[class*="btn-"] svg,
 .btn-action-primary:hover {
   background: #1e293b;
   border-color: #1e293b;
+}
+
+.btn-action-up {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff !important;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  white-space: nowrap !important;
+  flex-shrink: 0;
+}
+
+.btn-action-up:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+}
+
+.btn-action-primary.btn-action-subtle {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.btn-action-primary.btn-action-subtle:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
 }
 
 .runtime-btn-group {

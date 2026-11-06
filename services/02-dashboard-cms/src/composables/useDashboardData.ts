@@ -272,10 +272,15 @@ const filteredContainers = computed(() => {
 // Container Operations
 const startContainer = async (container: ContainerSite) => {
   container.status = 'provisioning';
-  showToast(`Menjalankan kontainer ${container.id}...`, 'info');
+  container.deployPhase = 'deploying';
+  container.deployStep = 2;
+  container.deployStepMessage = '2/3 Menjalankan container di Docker Engine...';
+  showToast(`Menjalankan kontainer ${container.name || container.id}...`, 'info');
   try {
     await studioApi.startContainer(container.id);
     container.status = 'running';
+    container.deployPhase = undefined;
+    container.uptime = 'Baru saja aktif';
     const stats = await studioApi.getContainerStats(container.id).catch(() => null);
     if (stats?.cpu_percent != null) {
       container.cpuUsage = Math.round(stats.cpu_percent);
@@ -284,8 +289,32 @@ const startContainer = async (container: ContainerSite) => {
     showToast(`Kontainer ${container.name} aktif melayani trafik!`, 'success');
   } catch (err) {
     console.warn('[API] Start container notice:', err);
-    container.status = 'running';
-    showToast(`Kontainer ${container.name} aktif melayani trafik!`, 'success');
+    // If container hasn't been created in Docker yet, deploy it
+    try {
+      showToast(`Membangun kontainer ${container.name} di Docker Engine...`, 'info');
+      const sub = container.subdomain.split('.')[0] || container.id;
+      const res = await studioApi.createContainer({
+        name: container.name,
+        subdomain: sub,
+        category: container.category,
+        templateName: container.templateName,
+        role: container.roleOrHeadline,
+        bioIntro: container.bioIntro,
+        accentColor: container.accentColor
+      });
+      if (res?.id) {
+        container.id = res.id;
+      }
+      container.status = 'running';
+      container.deployPhase = undefined;
+      container.uptime = 'Baru saja aktif';
+      showToast(`Kontainer ${container.name} berhasil di-up dan melayani trafik!`, 'success');
+    } catch (deployErr) {
+      container.status = 'stopped';
+      container.deployPhase = undefined;
+      container.uptime = 'Kontainer Mati (Offline)';
+      showToast(`Gagal menyalakan kontainer: ${deployErr}`, 'error');
+    }
   }
 };
 

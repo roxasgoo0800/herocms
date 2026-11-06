@@ -367,6 +367,10 @@ func SetupRouter(
 			id := c.Param("id")
 			stats, err := prov.GetContainerStats(c.Request.Context(), id)
 			if err != nil {
+				if strings.Contains(err.Error(), "No such container") || strings.Contains(err.Error(), "not found") {
+					c.JSON(http.StatusNotFound, gin.H{"error": "container not found in docker engine", "status": "stopped"})
+					return
+				}
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}

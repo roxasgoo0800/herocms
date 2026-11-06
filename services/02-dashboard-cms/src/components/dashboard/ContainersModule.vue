@@ -207,8 +207,15 @@ const pollRunningContainersTelemetry = async () => {
           c.ramLimit = Math.round(ramLimit);
         }
       }
-    } catch {
-      // Keep existing stats on poll hiccup
+    } catch (err: any) {
+      // If container is not running or doesn't exist in docker daemon, mark as stopped to halt poll loop
+      const errMsg = String(err?.message || err || '');
+      if (errMsg.includes('404') || errMsg.includes('No such container') || errMsg.includes('500') || errMsg.includes('not found')) {
+        c.status = 'stopped';
+        c.uptime = 'Kontainer Mati (Offline)';
+        c.cpuUsage = 0;
+        c.ramUsage = 0;
+      }
     }
   }
 };
@@ -484,7 +491,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <span v-else-if="c.deployPhase === 'running'">4/4 Running...</span>
             <span v-else-if="c.status === 'running'">Running</span>
             <span v-else-if="c.status === 'maintenance'">Maintenance</span>
-            <span v-else-if="c.status === 'stopped'">Standby</span>
+            <span v-else-if="c.status === 'stopped'">Kontainer Mati</span>
             <span v-else>Deploying...</span>
           </div>
         </div>
@@ -707,9 +714,19 @@ const navigateToAnalytics = (c: ContainerSite) => {
 
         <!-- Card Action Buttons Footer -->
         <div class="card-action-bar">
-          <div class="card-action-left">
+          <div class="card-action-left" style="display: flex; align-items: center; gap: 8px;">
+            <button
+              v-if="c.status === 'stopped'"
+              class="btn-action-up"
+              @click="startContainer(c)"
+              title="Nyalakan Kontainer Docker (Up Container)"
+            >
+              <Play :size="13" />
+              <span>Up Kontainer</span>
+            </button>
             <button
               class="btn-action-primary"
+              :class="{ 'btn-action-subtle': c.status === 'stopped' }"
               @click="selectForEditor(c.id)"
               title="Buka Website di Visual Editor"
             >
@@ -898,7 +915,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
                     <span v-else-if="c.deployPhase === 'running'">4/4 Running...</span>
                     <span v-else-if="c.status === 'running'">Running</span>
                     <span v-else-if="c.status === 'maintenance'">Maintenance</span>
-                    <span v-else-if="c.status === 'stopped'">Standby</span>
+                    <span v-else-if="c.status === 'stopped'">Kontainer Mati</span>
                     <span v-else>Deploying...</span>
                   </div>
                   <span style="font-size: 0.68rem; color: #94a3b8; font-family: monospace;">{{ c.uptime }}</span>
@@ -948,9 +965,20 @@ const navigateToAnalytics = (c: ContainerSite) => {
 
               <!-- Actions -->
               <td>
-                <div class="table-actions-cell">
+                <div class="table-actions-cell" style="display: flex; align-items: center; gap: 6px;">
+                  <button
+                    v-if="c.status === 'stopped'"
+                    class="btn-action-up"
+                    style="padding: 4px 10px; font-size: 0.72rem;"
+                    @click="startContainer(c)"
+                    title="Nyalakan Kontainer Docker (Up Container)"
+                  >
+                    <Play :size="11" />
+                    <span>Up</span>
+                  </button>
                   <button
                     class="btn-action-primary"
+                    :class="{ 'btn-action-subtle': c.status === 'stopped' }"
                     style="padding: 5px 11px; font-size: 0.74rem;"
                     @click="selectForEditor(c.id)"
                   >

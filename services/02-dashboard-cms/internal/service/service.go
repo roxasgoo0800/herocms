@@ -686,7 +686,9 @@ func (s *Services) GetContainerStats(ctx context.Context, tenantID, id string) (
 			}
 			return telemetry, nil
 		}
-		log.Printf("[ORCHESTRATOR NOTICE] Live stats unavailable for %s (%v), attempting Redis lookup", id, err)
+		if err != nil && !strings.Contains(err.Error(), "404") && !strings.Contains(err.Error(), "No such container") && !strings.Contains(err.Error(), "not found") {
+			log.Printf("[ORCHESTRATOR NOTICE] Live stats unavailable for %s (%v), attempting Redis lookup", id, err)
+		}
 	}
 
 	// Try reading dynamic snapshot from Redis (never database)
