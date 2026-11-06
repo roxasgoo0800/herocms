@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.18',
+    version: 'v1.42.19',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.19',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Penyelarasan Kartu Telemetri Metrik ke Standar Desain HeroCMS Studio (telemetry-glyph & quota-progress-track)',
+    summary: 'Menyelaraskan 4 kartu metrik telemetri di menu Situs & Kontainer agar 100% konsisten dengan standar tema HeroCMS Studio (studio-master.css). Menggantikan watermark latar belakang samar dengan komponen resmi telemetry-glyph pada header, menambahkan visualisasi garis progres kuota (quota-progress-track), serta mengaktifkan badge status kondisional dinamis (.badge-online vs .badge-standby).',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14219-1',
+        type: 'improvement',
+        scope: 'Penyelarasan Header Ikon Telemetri (ContainersModule.vue)',
+        description: 'Menempatkan ikon Server, Globe, Activity, dan ShieldCheck ke dalam container .telemetry-glyph di sudut kanan header .telemetry-top sehingga tampilan kartu tajam, rapi, dan seragam dengan modul studio lainnya.'
+      },
+      {
+        id: 'c-02dash-14219-2',
+        type: 'improvement',
+        scope: 'Visual Progress Bar Kuota Kontainer (ContainersModule.vue)',
+        description: 'Menyematkan elemen tema .quota-progress-track dan .quota-progress-fill setinggi 5px di bawah angka kuota kontainer untuk visualisasi persentase kapasitas slot aktif secara langsung.'
+      },
+      {
+        id: 'c-02dash-14219-3',
+        type: 'improvement',
+        scope: 'Badge Status Dinamis & Standby Token (studio-master.css)',
+        description: 'Menambahkan class badge standar .badge-standby untuk nilai nol/idle pada routing dan trafik, mencegah status terlihat aktif saat kontainer belum terpasang.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.18',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Pembersihan Total Seed Statis Kontainer Backend & Integrasi Modern Web GUI DbGate',
     summary: 'Menghapus 100% data seed statis kontainer di backend Go (EnsureSchemaAndSeeds di repository.go dan hardcoded switch di resolveSiteForDeploy service.go) serta frontend dashboard-seeds.ts sehingga platform siap produksi secara murni dari database PostgreSQL. Mengganti web GUI Adminer dengan DbGate pada port 8088 dengan antarmuka modern layaknya TablePlus dan Dark Mode.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

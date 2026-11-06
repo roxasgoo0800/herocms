@@ -1774,6 +1774,16 @@ a[class*="btn-"] svg,
   border-radius: 999px;
 }
 
+.badge-standby {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
 .badge-growth-pill {
   font-size: 0.7rem;
   font-weight: 700;

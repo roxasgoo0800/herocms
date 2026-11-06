@@ -276,26 +276,32 @@ const navigateToAnalytics = (c: ContainerSite) => {
     <!-- 2. Bespoke Telemetry Metric Cards (4 Sleek Strips) -->
     <div class="stats-overview-grid">
       <div class="telemetry-card accent-blue">
-        <div class="telemetry-corner-watermark blue"><Server :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">KUOTA KONTAINER</span>
+          <div class="telemetry-glyph blue"><Server :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ usedContainersCount }} <span class="telemetry-denom">/ {{ userPlan.maxContainers }} Aktif</span>
         </div>
+        <div class="quota-progress-track" style="margin: 8px 0 6px;">
+          <div class="quota-progress-fill" :style="{ width: `${Math.min(100, Math.round((usedContainersCount / (userPlan.maxContainers || 3)) * 100))}%` }"></div>
+        </div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
-          <span>{{ userPlan.maxContainers - usedContainersCount }} slot siap dideploy (cgroups v2)</span>
+          <span>{{ Math.max(0, userPlan.maxContainers - usedContainersCount) }} slot siap dideploy (cgroups v2)</span>
         </div>
       </div>
 
       <div class="telemetry-card accent-emerald">
-        <div class="telemetry-corner-watermark emerald"><Globe :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">EDGE ROUTING TRAEFIK</span>
+          <div class="telemetry-glyph emerald"><Globe :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          {{ routedSubdomainsCount }} <span class="badge-online">Aktif Teroute</span>
+          {{ routedSubdomainsCount }} 
+          <span :class="routedSubdomainsCount > 0 ? 'badge-online' : 'badge-standby'">
+            {{ routedSubdomainsCount > 0 ? 'Aktif Teroute' : 'Standby' }}
+          </span>
         </div>
         <div class="telemetry-sub">
           <span>Traefik v3.1 Ingress (Zero-Downtime)</span>
@@ -303,12 +309,13 @@ const navigateToAnalytics = (c: ContainerSite) => {
       </div>
 
       <div class="telemetry-card accent-purple">
-        <div class="telemetry-corner-watermark purple"><Activity :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">TRAFIK PENGUNJUNG</span>
+          <div class="telemetry-glyph purple"><Activity :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          {{ totalVisitsCount.toLocaleString('id-ID') }} <span class="badge-growth-pill">Hits</span>
+          {{ totalVisitsCount.toLocaleString('id-ID') }} 
+          <span :class="totalVisitsCount > 0 ? 'badge-growth-pill' : 'badge-standby'">Hits</span>
         </div>
         <div class="telemetry-sub">
           <span>Data dicatat via Redis ZSET & Kafka stream</span>
@@ -316,9 +323,9 @@ const navigateToAnalytics = (c: ContainerSite) => {
       </div>
 
       <div class="telemetry-card accent-sky">
-        <div class="telemetry-corner-watermark sky"><ShieldCheck :size="58" /></div>
         <div class="telemetry-top">
           <span class="telemetry-label">KEAMANAN TLS / SSL</span>
+          <div class="telemetry-glyph sky"><ShieldCheck :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ sslActivePct }}% <span class="badge-online">Tervalidasi</span>
