@@ -532,6 +532,106 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 	return newContainer, nil
 }
 
+func (s *Services) resolveSiteForDeploy(ctx context.Context, tenantID, id string) orchestrator.DeployPayload {
+	if s != nil && s.Repo != nil {
+		sites, _ := s.Repo.GetSites(ctx, tenantID)
+		for _, site := range sites {
+			siteID := fmt.Sprintf("%v", site["id"])
+			subdomain := fmt.Sprintf("%v", site["subdomain"])
+			if siteID == id || strings.Contains(subdomain, id) || strings.EqualFold(fmt.Sprintf("%v", site["name"]), id) {
+				cleanSub := strings.TrimSuffix(strings.TrimSuffix(subdomain, ".stackbyte.id"), ".cloudcms.app")
+				tpl := "Portofolio Teknis Engineer"
+				if t, ok := site["templateName"].(string); ok && t != "" {
+					tpl = t
+				}
+				cat := "business"
+				if c, ok := site["category"].(string); ok && c != "" {
+					cat = c
+				}
+				role := ""
+				if r, ok := site["roleOrHeadline"].(string); ok {
+					role = r
+				}
+				bio := ""
+				if b, ok := site["bioIntro"].(string); ok {
+					bio = b
+				}
+				accent := "#2563eb"
+				if a, ok := site["accentColor"].(string); ok && a != "" {
+					accent = a
+				}
+				return orchestrator.DeployPayload{
+					TenantID:     tenantID,
+					SiteID:       siteID,
+					Subdomain:    cleanSub,
+					VersionHash:  "v100prod01",
+					SiteName:     fmt.Sprintf("%v", site["name"]),
+					TemplateName: tpl,
+					Category:     cat,
+					RoleHeadline: role,
+					BioIntro:     bio,
+					AccentColor:  accent,
+				}
+			}
+		}
+	}
+
+	switch id {
+	case "site_portal_edu":
+		return orchestrator.DeployPayload{
+			TenantID:     tenantID,
+			SiteID:       "site_portal_edu",
+			Subdomain:    "portal",
+			VersionHash:  "v100prod01",
+			SiteName:     "Portal Edukasi LMS",
+			TemplateName: "Akademi Digital Edu",
+			Category:     "education",
+			RoleHeadline: "Pusat Pembelajaran & Silabus Teknologi",
+			BioIntro:     "Platform edukasi daring terdistribusi dengan modul pembelajaran interaktif.",
+			AccentColor:  "#059669",
+		}
+	case "site_main_corporate":
+		return orchestrator.DeployPayload{
+			TenantID:     tenantID,
+			SiteID:       "site_main_corporate",
+			Subdomain:    "site",
+			VersionHash:  "v100prod01",
+			SiteName:     "Situs Utama Corporate",
+			TemplateName: "Nova Corporate",
+			Category:     "business",
+			RoleHeadline: "Portofolio Teknis & Bisnis Studio",
+			BioIntro:     "Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.",
+			AccentColor:  "#2563eb",
+		}
+	case "site_toko_digital":
+		return orchestrator.DeployPayload{
+			TenantID:     tenantID,
+			SiteID:       "site_toko_digital",
+			Subdomain:    "toko",
+			VersionHash:  "v100prod01",
+			SiteName:     "Etalase Toko Digital",
+			TemplateName: "E-Commerce Retail Store",
+			Category:     "business",
+			RoleHeadline: "Etalase Produk Komersial & Checkout WhatsApp",
+			BioIntro:     "Katalog produk digital dengan integrasi pesanan instan dan pelacakan paket.",
+			AccentColor:  "#7c3aed",
+		}
+	default:
+		cleanSub := strings.TrimPrefix(id, "site_")
+		cleanSub = strings.ReplaceAll(cleanSub, "_", "-")
+		return orchestrator.DeployPayload{
+			TenantID:     tenantID,
+			SiteID:       id,
+			Subdomain:    cleanSub,
+			VersionHash:  "v100prod01",
+			SiteName:     id,
+			TemplateName: "Portofolio Teknis Engineer",
+			Category:     "business",
+			AccentColor:  "#2563eb",
+		}
+	}
+}
+
 func (s *Services) StartContainer(ctx context.Context, tenantID, id string) (bool, error) {
 	t1 := time.Now().UTC().Format("15:04:05")
 	if s != nil && s.Redis != nil {
@@ -539,11 +639,33 @@ func (s *Services) StartContainer(ctx context.Context, tenantID, id string) (boo
 	}
 	if s != nil && s.Orchestrator != nil {
 		if err := s.Orchestrator.StartContainer(ctx, id); err != nil {
-			log.Printf("[ORCHESTRATOR NOTICE] Start container %s: %v", id, err)
-			if s.Redis != nil {
-				_ = s.Redis.PushContainerLog(ctx, tenantID, id, fmt.Sprintf("[%s] ❌ [START_FAILED] Gagal menjalankan container: %v", time.Now().UTC().Format("15:04:05"), err))
+			errStr := err.Error()
+			if strings.Contains(errStr, "404") || strings.Contains(errStr, "ERR_CONTAINER_NOT_FOUND") || strings.Contains(errStr, "not found") {
+				log.Printf("[ORCHESTRATOR] Container %s not found in Docker Engine. Auto-provisioning via DeployContainer...", id)
+				if s.Redis != nil {
+					nowStr := time.Now().Format("15:04:05")
+					_ = s.Redis.PushContainerLog(ctx, tenantID, id, fmt.Sprintf("[%s] ⚙️ [AUTO-PROVISION] Kontainer belum ada di Docker. Membangun kontainer otomatis...", nowStr))
+				}
+				deployPayload := s.resolveSiteForDeploy(ctx, tenantID, id)
+				deployRes, deployErr := s.Orchestrator.DeployContainer(ctx, deployPayload)
+				if deployErr != nil {
+					log.Printf("[ORCHESTRATOR ERROR] Auto-provision failed for %s: %v", id, deployErr)
+					if s.Redis != nil {
+						nowStr := time.Now().Format("15:04:05")
+						_ = s.Redis.PushContainerLog(ctx, tenantID, id, fmt.Sprintf("[%s] ❌ [DEPLOY_FAILED] Gagal auto-provision: %v", nowStr, deployErr))
+					}
+					return false, deployErr
+				}
+				if deployRes != nil && deployRes.ContainerID != "" {
+					log.Printf("[ORCHESTRATOR SUCCESS] Auto-provisioned container %s (route: %s)", deployRes.ContainerID, deployRes.Subdomain)
+				}
+			} else {
+				log.Printf("[ORCHESTRATOR NOTICE] Start container %s: %v", id, err)
+				if s.Redis != nil {
+					_ = s.Redis.PushContainerLog(ctx, tenantID, id, fmt.Sprintf("[%s] ❌ [START_FAILED] Gagal menjalankan container: %v", time.Now().UTC().Format("15:04:05"), err))
+				}
+				return false, err
 			}
-			return false, err
 		}
 	}
 	t2 := time.Now().UTC().Format("15:04:05")
