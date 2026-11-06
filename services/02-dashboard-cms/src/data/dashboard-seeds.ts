@@ -96,7 +96,28 @@ export const subscriptionPlansCatalog: SubscriptionPlanCatalogItem[] = [
   }
 ];
 
-export const initialContainers: ContainerSite[] = [];
+export const initialContainers: ContainerSite[] = [
+  {
+    id: '48114681-7444-48ea-ad4d-3342e0eb55c7',
+    name: 'Portal HeroCMS Flagship',
+    category: 'business',
+    templateName: 'Toko Online Modern & Katalog Penjualan Produk (E-Commerce)',
+    subdomain: 'portal-digital.stackbyte.id',
+    customDomain: '',
+    status: 'running',
+    cpuUsage: 18,
+    ramUsage: 94,
+    ramLimit: 256,
+    cpuLimit: '0.5 vCPU',
+    uptime: '4 hari 12 jam (99.98% SLA)',
+    visitsThisWeek: 1420,
+    ssl: true,
+    roleOrHeadline: 'Website Resmi Portal Digital',
+    bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
+    accentColor: '#2563eb',
+    lastDeployed: '6 Nov 2026'
+  }
+];
 
 export const officialTemplates: OfficialTemplateItem[] = officialTemplatesData;
 

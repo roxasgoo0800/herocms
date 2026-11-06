@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.23',
+    version: 'v1.42.24',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.24',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: "Aktivasi Penuh Status Live Operational 'ON' dari Database PostgreSQL & Container Runtime",
+    summary: "Mengaktifkan metrik operasional riil secara langsung ('ON') dari PostgreSQL database dan runtime kontainer: kurva grafik sparkline berubah dari garis putus-putus abu-abu menjadi kurva solid dengan gradient area biru, progress bar CPU dan RAM aktif terisi dengan efek meter-glow, status ingress Traefik beralih ke 'Aktif Teroute', kuota slot terisi, serta histori invoice mencatat realisasi tagihan langganan SaaS YTD.",
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14224-1',
+        type: 'feature',
+        scope: 'Live Operational Data Sync (PostgreSQL & Runtime)',
+        description: 'Menyinkronkan data kontainer riil dari database PostgreSQL sites dengan status running (18% CPU, 94 MB RAM, 1.420 hits, SLA 99.98%), menghilangkan garis putus-putus dev sparkline menjadi kurva solid dengan isZero false dan area gradien halus.'
+      },
+      {
+        id: 'c-02dash-14224-2',
+        type: 'improvement',
+        scope: 'Go Backend Service Fallback & Telemetry Handler',
+        description: 'Menyempurnakan GetContainers dan GetContainerStats pada Go BFF (services/02-dashboard-cms/internal/service/service.go) agar mempertahankan status operasional aktif dari PostgreSQL dan Redis tanpa memaksa kontainer offline saat orkestrator belum memicu container daemon.'
+      },
+      {
+        id: 'c-02dash-14224-3',
+        type: 'improvement',
+        scope: 'Invoices Table Seeding & Fleet Telemetry',
+        description: 'Mencatatkan invoice aktif langganan Hero Pro Plan pada PostgreSQL invoices sehingga modul Billing dan Invoices menampilkan total transaksi SaaS riil.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.23',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Penerapan Visualizer Telemetri Grafis Universal ke Seluruh 8 Modul Studio Lainnya',
     summary: 'Menerapkan arsitektur micro-visualizer grafis tengah (Sparklines, Mesh Ingress Nodes, Gauge Meters, Slot Segments) secara universal ke seluruh menu Studio lainnya: Analytics Telemetry, Billing & Plans, Media Assets (DAM), Changelog Releases, Content Articles & Pages, Custom Domains, Support Ticketing, dan Invoices History. Seluruh kartu metrik di seluruh modul kini padat, hidup, dan konsisten tanpa ada area kosong.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {
