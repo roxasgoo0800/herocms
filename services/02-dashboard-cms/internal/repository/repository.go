@@ -439,6 +439,14 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 				cpu_usage, ram_usage, ram_limit, cpu_limit, uptime, visits_this_week,
 				accent_color, role_headline, bio_intro, last_deployed_at
 			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
+			ON CONFLICT (subdomain) DO UPDATE SET
+				name = EXCLUDED.name,
+				category = EXCLUDED.category,
+				template_name = EXCLUDED.template_name,
+				status = EXCLUDED.status,
+				cpu_usage = EXCLUDED.cpu_usage,
+				ram_usage = EXCLUDED.ram_usage,
+				updated_at = NOW()
 			RETURNING id
 		`,
 			tenantID,

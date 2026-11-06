@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.24',
+    version: 'v1.42.25',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.25',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Resolusi Duplikasi Subdomain (Unique Constraint 23505) & Perbaikan Lifecycle Start/Deploy Kontainer',
+    summary: 'Memperbaiki alur start/nyalakan kontainer dan query database: (1) Menambahkan klausul ON CONFLICT (subdomain) DO UPDATE SET pada InsertSite repository Go untuk mencegah pelanggaran unique constraint sites_subdomain_key; (2) Menghilangkan redundansi pemanggilan createContainer dalam blok penanganan kesalahan startContainer di useDashboardData.ts; (3) Menghentikan proses orphaned host API pada port 8083 sehingga komunikasi Go BFF terhubung langsung ke kontainer orkestrator Docker Engine.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14225-1',
+        type: 'bugfix',
+        scope: 'PostgreSQL InsertSite Upsert (ON CONFLICT)',
+        description: 'Menyematkan ON CONFLICT (subdomain) DO UPDATE SET pada fungsi InsertSite di repository.go agar pemanggilan insert tidak menyebabkan fatal crash 23505 duplicate key value violates unique constraint.'
+      },
+      {
+        id: 'c-02dash-14225-2',
+        type: 'bugfix',
+        scope: 'Frontend Container Lifecycle Flow (useDashboardData.ts)',
+        description: 'Memperbaiki alur startContainer agar tidak memanggil createContainer yang mencoba membuat situs baru dengan subdomain yang telah ada.'
+      },
+      {
+        id: 'c-02dash-14225-3',
+        type: 'improvement',
+        scope: 'Orchestrator Port 8083 Resolution',
+        description: 'Menonaktifkan proses host lokal yang menaungi port 8083 dan mengarahkan seluruh routing RPC ke kontainer herocms_provision_orchestrator yang memiliki akses Docker Socket dan volume berizin penuh.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.24',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: "Aktivasi Penuh Status Live Operational 'ON' dari Database PostgreSQL & Container Runtime",
     summary: "Mengaktifkan metrik operasional riil secara langsung ('ON') dari PostgreSQL database dan runtime kontainer: kurva grafik sparkline berubah dari garis putus-putus abu-abu menjadi kurva solid dengan gradient area biru, progress bar CPU dan RAM aktif terisi dengan efek meter-glow, status ingress Traefik beralih ke 'Aktif Teroute', kuota slot terisi, serta histori invoice mencatat realisasi tagihan langganan SaaS YTD.",
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

@@ -287,34 +287,13 @@ const startContainer = async (container: ContainerSite) => {
       container.ramUsage = Math.round(stats.memory_mb);
     }
     showToast(`Kontainer ${container.name} aktif melayani trafik!`, 'success');
-  } catch (err) {
+  } catch (err: any) {
     console.warn('[API] Start container notice:', err);
-    // If container hasn't been created in Docker yet, deploy it
-    try {
-      showToast(`Membangun kontainer ${container.name} di Docker Engine...`, 'info');
-      const sub = container.subdomain.split('.')[0] || container.id;
-      const res = await studioApi.createContainer({
-        name: container.name,
-        subdomain: sub,
-        category: container.category,
-        templateName: container.templateName,
-        role: container.roleOrHeadline,
-        bioIntro: container.bioIntro,
-        accentColor: container.accentColor
-      });
-      if (res?.id) {
-        container.id = res.id;
-      }
-      container.status = 'running';
-      container.deployPhase = undefined;
-      container.uptime = 'Baru saja aktif';
-      showToast(`Kontainer ${container.name} berhasil di-up dan melayani trafik!`, 'success');
-    } catch (deployErr) {
-      container.status = 'stopped';
-      container.deployPhase = undefined;
-      container.uptime = 'Kontainer Mati (Offline)';
-      showToast(`Gagal menyalakan kontainer: ${deployErr}`, 'error');
-    }
+    container.status = 'stopped';
+    container.deployPhase = undefined;
+    container.uptime = 'Kontainer Mati (Offline)';
+    const errMsg = err?.message || String(err);
+    showToast(`Gagal menyalakan kontainer: ${errMsg}`, 'error');
   }
 };
 

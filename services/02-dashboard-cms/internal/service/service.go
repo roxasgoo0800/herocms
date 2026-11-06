@@ -436,6 +436,14 @@ func (s *Services) CreateContainer(ctx context.Context, tenantID string, input C
 		return nil, fmt.Errorf("kuota kontainer penuh (%d/%d). Harap upgrade paket.", len(sites), maxQuota)
 	}
 
+	for _, site := range sites {
+		sub := fmt.Sprintf("%v", site["subdomain"])
+		cleanExisting := strings.TrimSuffix(strings.TrimSuffix(sub, ".stackbyte.id"), ".cloudcms.app")
+		if strings.EqualFold(cleanExisting, input.Subdomain) {
+			return nil, fmt.Errorf("subdomain '%s' sudah digunakan. Harap pilih nama subdomain yang lain", input.Subdomain)
+		}
+	}
+
 	newID := fmt.Sprintf("hero_tenant_%d", time.Now().Unix()%9000+1000)
 	tplName := "Portofolio Teknis Engineer"
 	if input.TemplateName != "" {
