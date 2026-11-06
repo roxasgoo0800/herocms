@@ -944,6 +944,12 @@ onUnmounted(() => {
             <div class="telemetry-glyph"><FileText :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ articles.length }} <span class="telemetry-denom">Artikel</span></div>
+          <div class="slot-segments">
+            <span class="slot-segment" :class="{ filled: articles.length > 0 }"></span>
+            <span class="slot-segment" :class="{ filled: articles.length > 2 }"></span>
+            <span class="slot-segment" :class="{ filled: articles.length > 5 }"></span>
+            <span class="slot-segment" :class="{ filled: articles.length > 10 }"></span>
+          </div>
           <div class="telemetry-sub"><span class="dot-lead live"></span><span>8,450 kata terindeks di Edge CDN</span></div>
         </div>
 
@@ -953,6 +959,9 @@ onUnmounted(() => {
             <div class="telemetry-glyph"><Check :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ articles.filter(a => a.status === 'published').length }} <span class="badge-mono active">Live CDN</span></div>
+          <div class="security-meter-track">
+            <div class="security-meter-fill" :style="{ width: articles.length ? `${(articles.filter(a => a.status === 'published').length / articles.length) * 100}%` : '100%' }"></div>
+          </div>
           <div class="telemetry-sub"><span class="dot-lead live"></span><span>Lighthouse 100/100 SEO ready</span></div>
         </div>
 
@@ -962,6 +971,12 @@ onUnmounted(() => {
             <div class="telemetry-glyph"><Edit3 :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ articles.filter(a => a.status === 'draft').length }} <span class="badge-mono">WIP</span></div>
+          <div class="ingress-mesh-track">
+            <span class="ingress-node" :class="{ active: articles.some(a => a.status === 'draft') }"></span>
+            <span class="ingress-node"></span>
+            <span class="ingress-node"></span>
+            <span class="ingress-node"></span>
+          </div>
           <div class="telemetry-sub"><span class="dot-lead idle"></span><span>Belum dipublikasikan ke publik</span></div>
         </div>
 
@@ -975,6 +990,15 @@ onUnmounted(() => {
             <span v-if="articles.reduce((acc, a) => acc + a.views, 0) > 0" class="badge-mono active">+24%</span>
             <span v-else class="badge-mono">0%</span>
           </div>
+          <div class="sparkline-histogram">
+            <span class="spark-bar" style="height: 30%"></span>
+            <span class="spark-bar" style="height: 50%"></span>
+            <span class="spark-bar" style="height: 35%"></span>
+            <span class="spark-bar" style="height: 70%"></span>
+            <span class="spark-bar" style="height: 55%"></span>
+            <span class="spark-bar" style="height: 80%"></span>
+            <span class="spark-bar active" :style="{ height: articles.reduce((acc, a) => acc + a.views, 0) > 0 ? '100%' : '30%' }"></span>
+          </div>
           <div class="telemetry-sub"><span class="dot-lead live"></span><span>Dihitung non-blocking via Redis ZSET</span></div>
         </div>
       </div>
@@ -986,6 +1010,11 @@ onUnmounted(() => {
             <div class="telemetry-glyph"><Layers :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ cmsPages.length }} <span class="telemetry-denom">Halaman</span></div>
+          <div class="slot-segments">
+            <span class="slot-segment" :class="{ filled: cmsPages.length > 0 }"></span>
+            <span class="slot-segment" :class="{ filled: cmsPages.length > 2 }"></span>
+            <span class="slot-segment" :class="{ filled: cmsPages.length > 4 }"></span>
+          </div>
           <div class="telemetry-sub"><span class="dot-lead live"></span><span>Rute web terisolasi di Nginx tenant</span></div>
         </div>
 
@@ -995,6 +1024,9 @@ onUnmounted(() => {
             <div class="telemetry-glyph"><Check :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ cmsPages.filter(p => p.status === 'published').length }} <span class="badge-mono active">Live Route</span></div>
+          <div class="security-meter-track">
+            <div class="security-meter-fill" :style="{ width: cmsPages.length ? `${(cmsPages.filter(p => p.status === 'published').length / cmsPages.length) * 100}%` : '100%' }"></div>
+          </div>
           <div class="telemetry-sub"><span class="dot-lead live"></span><span>Tersedia untuk traffic publik</span></div>
         </div>
 
@@ -1004,6 +1036,12 @@ onUnmounted(() => {
             <div class="telemetry-glyph"><Compass :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ cmsPages.filter(p => p.isInNavbar).length }} <span class="badge-mono active">Header Nav</span></div>
+          <div class="ingress-mesh-track">
+            <span class="ingress-node active"></span>
+            <span class="ingress-node active"></span>
+            <span class="ingress-node" :class="{ active: cmsPages.filter(p => p.isInNavbar).length > 2 }"></span>
+            <span class="ingress-node" :class="{ active: cmsPages.filter(p => p.isInNavbar).length > 3 }"></span>
+          </div>
           <div class="telemetry-sub"><span class="dot-lead live"></span><span>Tautkan otomatis pada navbar website</span></div>
         </div>
 
@@ -1013,6 +1051,12 @@ onUnmounted(() => {
             <div class="telemetry-glyph"><Globe :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ cmsPages.filter(p => p.isInFooter).length }} <span class="badge-mono active">Footer Nav</span></div>
+          <div class="ingress-mesh-track">
+            <span class="ingress-node active"></span>
+            <span class="ingress-node active"></span>
+            <span class="ingress-node" :class="{ active: cmsPages.filter(p => p.isInFooter).length > 2 }"></span>
+            <span class="ingress-node" :class="{ active: cmsPages.filter(p => p.isInFooter).length > 3 }"></span>
+          </div>
           <div class="telemetry-sub"><span class="dot-lead live"></span><span>Kebijakan, kontak, dan tautan sekunder</span></div>
         </div>
       </div>

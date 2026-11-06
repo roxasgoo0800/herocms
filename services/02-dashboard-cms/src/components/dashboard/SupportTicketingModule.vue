@@ -612,6 +612,9 @@ watch(
           <div class="telemetry-glyph"><Clock :size="18" /></div>
         </div>
         <div class="telemetry-val">&lt; 5 Menit <span class="badge-mono active">Live Chat SLA</span></div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 98%;"></div>
+        </div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
           <span>Langsung terhubung ke divisi spesialis</span>
@@ -626,6 +629,12 @@ watch(
         <div class="telemetry-val">
           {{ activeTicketsCount }} Tiket
           <span class="badge-mono active">Aktif</span>
+        </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node" :class="{ active: openTicketsCount > 0 }"></span>
+          <span class="ingress-node" :class="{ active: inProgressTicketsCount > 0 }"></span>
+          <span class="ingress-node"></span>
+          <span class="ingress-node"></span>
         </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
@@ -642,6 +651,9 @@ watch(
           {{ resolvedTicketsCount + 12 }} Selesai
           <span class="badge-mono active">99.8% CSAT</span>
         </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 99.8%;"></div>
+        </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
           <span>Riwayat solusi & tindak lanjut tuntas</span>
@@ -654,6 +666,12 @@ watch(
           <div class="telemetry-glyph"><Headphones :size="18" /></div>
         </div>
         <div class="telemetry-val">4 Divisi <span class="badge-mono active">Media & Emot</span></div>
+        <div class="slot-segments">
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+        </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
           <span>DevOps • Customer Care • Billing • SSL</span>

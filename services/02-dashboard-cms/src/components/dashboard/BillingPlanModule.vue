@@ -292,6 +292,12 @@ const openCustomClusterCheckout = () => {
             {{ userPlan.maxContainers - usedContainersCount }} Slot Tersedia
           </span>
         </div>
+        <div class="slot-segments">
+          <span v-for="i in (userPlan.maxContainers || 3)" :key="i"
+                class="slot-segment" 
+                :class="{ filled: i <= usedContainersCount }">
+          </span>
+        </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
           <span>Runtime mandiri per tenant dengan isolasi cgroups v2</span>
@@ -307,6 +313,13 @@ const openCustomClusterCheckout = () => {
         <div class="telemetry-val">
           {{ userPlan.cpuPerContainer }}
           <span class="badge-mono active">Zero Noisy Neighbor</span>
+        </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
         </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
@@ -324,6 +337,9 @@ const openCustomClusterCheckout = () => {
           {{ userPlan.ramPerContainer }}
           <span class="badge-mono active">OOM Protection</span>
         </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 50%;"></div>
+        </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
           <span>cgroups v2 hard limit mencegah server overload</span>
@@ -339,6 +355,9 @@ const openCustomClusterCheckout = () => {
         <div class="telemetry-val">
           120 MB <span class="telemetry-denom">/ {{ userPlan.storageQuota }}</span>
           <span class="badge-mono">6% Terpakai</span>
+        </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 6%;"></div>
         </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>

@@ -738,6 +738,15 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             <div class="telemetry-val">
               {{ mediaAssets.length }} <span class="telemetry-denom">File</span>
             </div>
+            <div class="sparkline-histogram">
+              <span class="spark-bar" style="height: 45%"></span>
+              <span class="spark-bar" style="height: 65%"></span>
+              <span class="spark-bar" style="height: 50%"></span>
+              <span class="spark-bar" style="height: 75%"></span>
+              <span class="spark-bar" style="height: 60%"></span>
+              <span class="spark-bar" style="height: 85%"></span>
+              <span class="spark-bar active" :style="{ height: mediaAssets.length > 0 ? '100%' : '35%' }"></span>
+            </div>
             <div class="telemetry-sub ready-state">
               <span class="pulse-mini-dot"></span>
               <span>S3 Object Storage Active</span>
@@ -751,6 +760,9 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             </div>
             <div class="telemetry-val">
               99.4% <span class="badge-mono active">Optimal</span>
+            </div>
+            <div class="security-meter-track">
+              <div class="security-meter-fill" style="width: 99.4%;"></div>
             </div>
             <div class="telemetry-sub">
               <span class="dot-lead live"></span>
@@ -766,6 +778,13 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             <div class="telemetry-val">
               1.2ms <span class="badge-mono active">TTFB</span>
             </div>
+            <div class="ingress-mesh-track">
+              <span class="ingress-node active"></span>
+              <span class="ingress-node active"></span>
+              <span class="ingress-node active"></span>
+              <span class="ingress-node active"></span>
+              <span class="ingress-node active"></span>
+            </div>
             <div class="telemetry-sub">
               <span class="dot-lead live"></span>
               <span>Anycast PoP Global Edge</span>
@@ -779,6 +798,9 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             </div>
             <div class="telemetry-val">
               MinIO <span class="badge-mono active">Isolated</span>
+            </div>
+            <div class="security-meter-track">
+              <div class="security-meter-fill" style="width: 8%;"></div>
             </div>
             <div class="telemetry-sub">
               <span class="dot-lead live"></span>

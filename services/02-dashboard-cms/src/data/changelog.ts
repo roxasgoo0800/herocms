@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.22',
+    version: 'v1.42.23',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,31 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.23',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Penerapan Visualizer Telemetri Grafis Universal ke Seluruh 8 Modul Studio Lainnya',
+    summary: 'Menerapkan arsitektur micro-visualizer grafis tengah (Sparklines, Mesh Ingress Nodes, Gauge Meters, Slot Segments) secara universal ke seluruh menu Studio lainnya: Analytics Telemetry, Billing & Plans, Media Assets (DAM), Changelog Releases, Content Articles & Pages, Custom Domains, Support Ticketing, dan Invoices History. Seluruh kartu metrik di seluruh modul kini padat, hidup, dan konsisten tanpa ada area kosong.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14223-1',
+        type: 'feature',
+        scope: 'Universal Cross-Module Micro-Visualizers (All Studio Menus)',
+        description: 'Menyematkan visualizer grafis dinamis yang kontekstual pada setiap kartu di 8 modul lainnya sehingga seluruh dashboard HeroCMS Studio tampil setara standar kelas dunia (Vercel & Linear).'
+      }
+    ]
+  },
+  {
     version: 'v1.42.22',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Transformasi Kartu Telemetri 100% Penuh (Tactile 38px Glyph, Ingress Mesh Track, 7-Bar Sparkline & Security Meter)',
     summary: 'Meningkatkan estetika kartu telemetri dari tampilan datar (sterile default) ke level enterprise berkelas tinggi (setara Vercel & Linear). Menghilangkan kekosongan di area tengah kartu dengan menyematkan visualizer grafis dinamis (Traefik Ingress Mesh Track, 7-Bar Sparkline Histogram, dan Security Gauge Meter), memperbesar glyph box menjadi 38×38px radius 10px dengan inner bevel & shadow bertingkat, serta mempertajam kontras tipografi angka nilai.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

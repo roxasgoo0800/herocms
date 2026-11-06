@@ -139,6 +139,13 @@ const getTypeIcon = (type: ChangelogType) => {
         <div class="telemetry-val">
           {{ dashboardCmsVersion }} <span class="badge-mono active">Produksi Stabil</span>
         </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+        </div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
           <span>Zero Stale Cache • Instant Reload</span>
@@ -152,6 +159,15 @@ const getTypeIcon = (type: ChangelogType) => {
         </div>
         <div class="telemetry-val">
           {{ totalReleasesCount }} <span class="telemetry-denom">Versi Dirilis</span>
+        </div>
+        <div class="sparkline-histogram">
+          <span class="spark-bar" style="height: 35%"></span>
+          <span class="spark-bar" style="height: 55%"></span>
+          <span class="spark-bar" style="height: 40%"></span>
+          <span class="spark-bar" style="height: 70%"></span>
+          <span class="spark-bar" style="height: 60%"></span>
+          <span class="spark-bar" style="height: 85%"></span>
+          <span class="spark-bar active" style="height: 100%"></span>
         </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
@@ -167,6 +183,12 @@ const getTypeIcon = (type: ChangelogType) => {
         <div class="telemetry-val">
           {{ totalItemsCount }} <span class="telemetry-denom">Catatan Log</span>
         </div>
+        <div class="slot-segments">
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+        </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
           <span>Terdokumentasi otomatis dan transparan</span>
@@ -180,6 +202,9 @@ const getTypeIcon = (type: ChangelogType) => {
         </div>
         <div class="telemetry-val">
           100% <span class="badge-mono active">Terverifikasi</span>
+        </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 100%;"></div>
         </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>

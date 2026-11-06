@@ -293,6 +293,15 @@ const exportAuditReport = () => {
           <div class="telemetry-val">
             {{ report.sla.peakRps }} <span class="telemetry-denom">req/detik</span>
           </div>
+          <div class="sparkline-histogram">
+            <span class="spark-bar" style="height: 35%"></span>
+            <span class="spark-bar" style="height: 60%"></span>
+            <span class="spark-bar" style="height: 45%"></span>
+            <span class="spark-bar" style="height: 80%"></span>
+            <span class="spark-bar" style="height: 55%"></span>
+            <span class="spark-bar" style="height: 90%"></span>
+            <span class="spark-bar active" :style="{ height: report.sla.peakRps > 0 ? '100%' : '30%' }"></span>
+          </div>
           <div class="telemetry-sub ready-state">
             <span class="pulse-mini-dot"></span>
             <span>Peak: {{ report.sla.peakTimestamp }}</span>
@@ -307,6 +316,9 @@ const exportAuditReport = () => {
           </div>
           <div class="telemetry-val">
             {{ report.sla.uptimeSla }}% <span class="badge-mono active">Lulus SLA</span>
+          </div>
+          <div class="security-meter-track">
+            <div class="security-meter-fill" :style="{ width: `${report.sla.uptimeSla}%` }"></div>
           </div>
           <div class="telemetry-sub">
             <span class="dot-lead live"></span>
@@ -323,6 +335,13 @@ const exportAuditReport = () => {
           <div class="telemetry-val">
             {{ report.sla.latencyP95 }} ms <span class="badge-mono active">Edge v3</span>
           </div>
+          <div class="ingress-mesh-track">
+            <span class="ingress-node active"></span>
+            <span class="ingress-node active"></span>
+            <span class="ingress-node active"></span>
+            <span class="ingress-node" :class="{ active: report.sla.latencyP95 < 50 }"></span>
+            <span class="ingress-node" :class="{ active: report.sla.latencyP95 < 20 }"></span>
+          </div>
           <div class="telemetry-sub">
             <span class="dot-lead live"></span>
             <span>p50: {{ report.sla.latencyP50 }}ms • p99: {{ report.sla.latencyP99 }}ms</span>
@@ -337,6 +356,9 @@ const exportAuditReport = () => {
           </div>
           <div class="telemetry-val">
             {{ report.sla.cacheHitRatio }}% <span class="badge-mono active">Hit Ratio</span>
+          </div>
+          <div class="security-meter-track">
+            <div class="security-meter-fill" :style="{ width: `${report.sla.cacheHitRatio}%` }"></div>
           </div>
           <div class="telemetry-sub">
             <span class="dot-lead live"></span>

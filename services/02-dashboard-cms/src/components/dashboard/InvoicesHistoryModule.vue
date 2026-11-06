@@ -491,6 +491,13 @@ onUnmounted(() => {
         <div class="telemetry-val">
           Rp 149.000 <span class="badge-mono active">15 Nov 2026</span>
         </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node"></span>
+        </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
           <span>Perpanjangan otomatis via BCA VA (Auto-Debit)</span>
@@ -506,6 +513,15 @@ onUnmounted(() => {
         <div class="telemetry-val">
           Rp {{ totalSpendYtd.toLocaleString('id-ID') }}
           <span class="badge-mono active">{{ invoices.length }} Lunas</span>
+        </div>
+        <div class="sparkline-histogram">
+          <span class="spark-bar" style="height: 30%"></span>
+          <span class="spark-bar" style="height: 45%"></span>
+          <span class="spark-bar" style="height: 60%"></span>
+          <span class="spark-bar" style="height: 40%"></span>
+          <span class="spark-bar" style="height: 80%"></span>
+          <span class="spark-bar" style="height: 65%"></span>
+          <span class="spark-bar active" style="height: 100%"></span>
         </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
@@ -523,6 +539,9 @@ onUnmounted(() => {
           Rp {{ totalTaxYtd.toLocaleString('id-ID') }}
           <span class="badge-mono active">DJP Valid</span>
         </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 100%;"></div>
+        </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
           <span>Dipungut & disetor sesuai PMK-60/PMK.03/2022</span>
@@ -537,6 +556,12 @@ onUnmounted(() => {
         </div>
         <div class="telemetry-val">
           E-Faktur <span class="badge-mono active">Terverifikasi</span>
+        </div>
+        <div class="slot-segments">
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
         </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>

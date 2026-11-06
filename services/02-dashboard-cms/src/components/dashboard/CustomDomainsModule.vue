@@ -168,6 +168,12 @@ ${dom.domain}.        3600    IN    A        ${a}`;
         <div class="telemetry-val">
           {{ customDomains.length }} <span class="telemetry-denom">/ 10 Kuota</span>
         </div>
+        <div class="slot-segments">
+          <span class="slot-segment" :class="{ filled: customDomains.length > 0 }"></span>
+          <span class="slot-segment" :class="{ filled: customDomains.length > 2 }"></span>
+          <span class="slot-segment" :class="{ filled: customDomains.length > 5 }"></span>
+          <span class="slot-segment" :class="{ filled: customDomains.length > 8 }"></span>
+        </div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
           <span>Traefik Ingress Router v3.1 siap</span>
@@ -182,6 +188,9 @@ ${dom.domain}.        3600    IN    A        ${a}`;
         </div>
         <div class="telemetry-val">
           100% <span class="badge-mono active">Aktif</span>
+        </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 100%;"></div>
         </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
@@ -198,6 +207,13 @@ ${dom.domain}.        3600    IN    A        ${a}`;
         <div class="telemetry-val">
           14 PoP <span class="badge-mono active">Anycast</span>
         </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+        </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
           <span>Port 80 / 443 (HTTP/2 & HTTP/3)</span>
@@ -212,6 +228,15 @@ ${dom.domain}.        3600    IN    A        ${a}`;
         </div>
         <div class="telemetry-val">
           1.8ms <span class="badge-mono active">Optimal</span>
+        </div>
+        <div class="sparkline-histogram">
+          <span class="spark-bar" style="height: 40%"></span>
+          <span class="spark-bar" style="height: 60%"></span>
+          <span class="spark-bar" style="height: 35%"></span>
+          <span class="spark-bar" style="height: 75%"></span>
+          <span class="spark-bar" style="height: 50%"></span>
+          <span class="spark-bar" style="height: 85%"></span>
+          <span class="spark-bar active" style="height: 100%"></span>
         </div>
         <div class="telemetry-sub">
           <span class="dot-lead live"></span>
