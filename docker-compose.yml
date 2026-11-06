@@ -330,23 +330,21 @@ services:
       - herocms_internal_net
 
   # ---------------------------------------------------------------------------
-  # 12. Visual Database Web GUI (DbGate - Modern TablePlus/VSCode Style Database Manager)
+  # 12. Visual Database Web GUI (pgAdmin 4 - Official Enterprise PostgreSQL Web Manager)
   # ---------------------------------------------------------------------------
-  dbgate:
-    image: dbgate/dbgate:latest
-    container_name: herocms_dbgate
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: herocms_pgadmin
     restart: unless-stopped
     ports:
-      - "8088:3000"
+      - "8088:80"
     environment:
-      - CONNECTIONS=postgres
-      - LABEL_postgres=HeroCMS PostgreSQL (cloudcms_db)
-      - SERVER_postgres=postgres
-      - USER_postgres=${DB_USERNAME:-cloudcms_user}
-      - PASSWORD_postgres=${DB_PASSWORD:-secret_postgres_password}
-      - PORT_postgres=5432
-      - ENGINE_postgres=postgres@dbgate-plugin-postgres
-      - DATABASE_postgres=cloudcms_db
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@rizalpratama.cloud}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    volumes:
+      - ./deploy/pgadmin/servers.json:/pgadmin4/servers.json:ro
     networks:
       - herocms_internal_net
     depends_on:

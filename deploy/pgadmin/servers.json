@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "HeroCMS PostgreSQL (cloudcms_db)",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "cloudcms_db",
+      "Username": "cloudcms_user",
+      "SSLMode": "prefer"
+    }
+  }
+}
