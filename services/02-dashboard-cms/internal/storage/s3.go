@@ -132,9 +132,13 @@ func (s *S3Client) UploadFile(ctx context.Context, tenantID, originalFilename st
 	client := s.Client
 	s.mu.RUnlock()
 
+	baseURL := strings.TrimRight(s.PublicURL, "/")
+	baseURL = strings.TrimSuffix(baseURL, "/"+bucketName)
+	baseURL = strings.TrimSuffix(baseURL, "/herocms-media")
+
 	if client == nil {
 		// Mock storage URL fallback when S3 is completely offline
-		mockURL := fmt.Sprintf("%s/%s/%s", s.PublicURL, bucketName, s3Key)
+		mockURL := fmt.Sprintf("%s/%s/%s", baseURL, bucketName, s3Key)
 		return mockURL, s3Key, bucketName, nil
 	}
 
@@ -152,11 +156,11 @@ func (s *S3Client) UploadFile(ctx context.Context, tenantID, originalFilename st
 	})
 	if err != nil {
 		log.Printf("[S3 ERROR] PutObject failed for %s/%s: %v", bucketName, s3Key, err)
-		mockURL := fmt.Sprintf("%s/%s/%s", s.PublicURL, bucketName, s3Key)
+		mockURL := fmt.Sprintf("%s/%s/%s", baseURL, bucketName, s3Key)
 		return mockURL, s3Key, bucketName, nil
 	}
 
-	storageURL := fmt.Sprintf("%s/%s/%s", s.PublicURL, bucketName, s3Key)
+	storageURL := fmt.Sprintf("%s/%s/%s", baseURL, bucketName, s3Key)
 	return storageURL, s3Key, bucketName, nil
 }
 

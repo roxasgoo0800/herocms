@@ -29886,3 +29886,330 @@ a[class*="btn-"] svg,
     justify-content: flex-end;
   }
 }
+
+/* ==========================================================================
+   INTERACTIVE PDF DOCUMENT SHEET & VIEWER (MediaAssetsModule)
+   ========================================================================== */
+.pdf-viewer-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.pdf-mode-tabs {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  gap: 3px;
+}
+
+.btn-pdf-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #64748b;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-pdf-mode:hover {
+  color: #0f172a;
+}
+
+.btn-pdf-mode.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.pdf-mode-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-pdf-mode-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-pdf-mode-action:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+/* PDF Paper Sheet Simulation */
+.pdf-sheet-scroll-canvas {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 16px;
+  background: #334155;
+  display: flex;
+  justify-content: center;
+}
+
+.pdf-sheet-paper {
+  width: 100%;
+  max-width: 620px;
+  min-height: 580px;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  padding: 36px 40px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.pdf-paper-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+}
+
+.pdf-paper-brand-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pdf-paper-glyph {
+  width: 34px;
+  height: 34px;
+  background: #fef2f2;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #fee2e2;
+}
+
+.pdf-paper-brand-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #0f172a;
+}
+
+.pdf-paper-doc-type {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ef4444;
+  letter-spacing: 0.5px;
+}
+
+.pdf-paper-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  color: #059669;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 6px;
+}
+
+.pdf-paper-title-section {
+  margin-bottom: 20px;
+}
+
+.pdf-paper-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+  word-break: break-word;
+  margin-bottom: 8px;
+}
+
+.pdf-paper-meta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.pdf-paper-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.pdf-paper-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.pdf-info-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pdf-info-cell .cell-label {
+  font-size: 0.66rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.pdf-info-cell .cell-value {
+  font-size: 0.76rem;
+  color: #0f172a;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.pdf-paper-paragraphs {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.pdf-paper-wireframe-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.wire-line {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+}
+
+.wire-line.line-full { width: 100%; }
+.wire-line.line-90 { width: 90%; }
+.wire-line.line-75 { width: 75%; }
+.wire-line.line-60 { width: 60%; }
+
+.pdf-paper-seal-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.pdf-stamp-circle {
+  width: 90px;
+  height: 90px;
+  border: 2px dashed #059669;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px;
+  transform: rotate(-6deg);
+  background: rgba(236, 253, 245, 0.4);
+  flex-shrink: 0;
+}
+
+.pdf-stamp-circle .stamp-text {
+  font-size: 0.52rem;
+  font-weight: 800;
+  color: #059669;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+.pdf-stamp-circle .stamp-sub {
+  font-size: 0.45rem;
+  color: #10b981;
+  font-weight: 700;
+}
+
+.pdf-seal-desc {
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+/* ==========================================================================
+   MARKDOWN QUICK TOOLBAR & BESPOKE EDITOR HELPERS
+   ========================================================================== */
+.markdown-quick-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  flex-wrap: wrap;
+}
+
+.btn-md-tool {
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  min-width: 26px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-md-tool:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+

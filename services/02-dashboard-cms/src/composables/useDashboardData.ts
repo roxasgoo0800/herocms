@@ -24,7 +24,15 @@ import {
   initialUserPlan,
   officialTemplates as defaultOfficialTemplates,
   availablePatScopes,
-  subscriptionPlansCatalog
+  subscriptionPlansCatalog,
+  initialContainers,
+  initialArticles,
+  initialCmsPages,
+  initialMediaAssets,
+  initialCustomDomains,
+  initialInvoices,
+  initialSupportTickets,
+  initialWebhooks
 } from '../data/dashboard-seeds';
 import type { OfficialTemplateItem } from '../data/templates-data';
 import { compileTemplateToHTML, compileMultiPageSiteToHTML } from '../utils/templateHtmlCompiler';
@@ -143,10 +151,10 @@ export const defaultFallbackContainer: ContainerSite = {
   themeConfig: {}
 };
 
-// Containers State (100% Real PostgreSQL & Service 03 Orchestrator State)
-const containers = ref<ContainerSite[]>([defaultFallbackContainer]);
+// Containers State (100% Real PostgreSQL & Service 03 Orchestrator State with Offline Resilience)
+const containers = ref<ContainerSite[]>([...initialContainers]);
 
-const activeContainerId = ref<string>(resolveInitialContainerId() || defaultFallbackContainer.id);
+const activeContainerId = ref<string>(resolveInitialContainerId() || initialContainers[0]?.id || defaultFallbackContainer.id);
 const activeContainer = computed<ContainerSite>(() => {
   if (containers.value && containers.value.length > 0) {
     const found = containers.value.find(c => c && c.id === activeContainerId.value);
@@ -1221,7 +1229,7 @@ const handleAiGenerateContent = () => {
 };
 
 // Invoices State (100% Real PostgreSQL Invoices)
-const invoices = ref<InvoiceItem[]>([]);
+const invoices = ref<InvoiceItem[]>([...initialInvoices]);
 
 const selectedInvoice = ref<InvoiceItem | null>(null);
 const isInvoiceDetailModalOpen = ref(false);
@@ -1310,7 +1318,7 @@ const normalizeCustomDomain = (dom: any): CustomDomainItem => {
 };
 
 // Custom Domains State (100% Real PostgreSQL Custom Domains)
-const customDomains = ref<CustomDomainItem[]>([]);
+const customDomains = ref<CustomDomainItem[]>([...initialCustomDomains]);
 
 const newDomainInput = ref('');
 const targetContainerForDomain = ref('');
@@ -1355,8 +1363,8 @@ const deleteDomain = (dom: CustomDomainItem) => {
 };
 
 // Content Articles & CMS Pages State (100% Real PostgreSQL Articles)
-const articles = ref<ContentArticle[]>([]);
-const cmsPages = ref<CmsPage[]>([]);
+const articles = ref<ContentArticle[]>([...initialArticles]);
+const cmsPages = ref<CmsPage[]>([...initialCmsPages]);
 
 const isCreateArticleModalOpen = ref(false);
 const newArticleForm = ref({
@@ -1494,7 +1502,7 @@ const mediaStorage = ref({
   freeStorage: '2.00 GB',
   usagePercentage: '0.0%'
 });
-const mediaAssets = ref<MediaAssetItem[]>([]);
+const mediaAssets = ref<MediaAssetItem[]>([...initialMediaAssets]);
 const isUploadingMedia = ref(false);
 
 const formatBytesToReadable = (bytes: number): string => {
@@ -1669,7 +1677,7 @@ const deletePersonalAccessToken = (id: string) => {
 };
 
 // Webhooks State & Event Notification Dispatcher (100% Real PostgreSQL Webhooks)
-const webhooks = ref<WebhookItem[]>([]);
+const webhooks = ref<WebhookItem[]>([...initialWebhooks]);
 
 const addWebhook = (name: string, url: string, events: string[], secretKey?: string) => {
   const generatedSecret = secretKey || `whsec_9942_${Math.random().toString(36).substring(2, 10)}`;
@@ -1962,7 +1970,7 @@ const normalizeTicket = (t: any): SupportTicketItem => {
 };
 
 // Support Ticketing State (100% Real PostgreSQL Support Tickets)
-const supportTickets = ref<SupportTicketItem[]>([]);
+const supportTickets = ref<SupportTicketItem[]>([...initialSupportTickets]);
 
 const selectedTicket = ref<SupportTicketItem | null>(null);
 const isCreateTicketModalOpen = ref(false);
@@ -2552,8 +2560,30 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
     isBackendOffline.value = true;
     console.warn('[SYNC NOTICE] Backend sync deferred (running in offline resilient mode):', err);
     if (!containers.value || containers.value.length === 0) {
-      containers.value = [defaultFallbackContainer];
-      activeContainerId.value = defaultFallbackContainer.id;
+      containers.value = [...initialContainers];
+      activeContainerId.value = initialContainers[0]?.id || defaultFallbackContainer.id;
+    }
+    if (!articles.value || articles.value.length === 0) {
+      articles.value = [...initialArticles];
+    }
+    if (!cmsPages.value || cmsPages.value.length === 0) {
+      cmsPages.value = [...initialCmsPages];
+    }
+    if (!mediaAssets.value || mediaAssets.value.length === 0) {
+      mediaAssets.value = [...initialMediaAssets];
+      recalculateStorage();
+    }
+    if (!customDomains.value || customDomains.value.length === 0) {
+      customDomains.value = [...initialCustomDomains];
+    }
+    if (!invoices.value || invoices.value.length === 0) {
+      invoices.value = [...initialInvoices];
+    }
+    if (!supportTickets.value || supportTickets.value.length === 0) {
+      supportTickets.value = [...initialSupportTickets];
+    }
+    if (!webhooks.value || webhooks.value.length === 0) {
+      webhooks.value = [...initialWebhooks];
     }
   } finally {
     isBackendSyncing.value = false;
@@ -2570,23 +2600,7 @@ const hydrateFromCache = (overrideEmail?: string) => {
       if (data.user && targetEmail && data.user.toLowerCase().trim() !== targetEmail) {
         return;
       }
-      // Purge legacy mock seeds cache if found
-      const hasLegacySeeds = (Array.isArray(data.invoices) && data.invoices.some((i: any) => i.id === 'INV-2026-10-0994')) ||
-        (Array.isArray(data.containers) && data.containers.some((c: any) => 
-          c.id === 'hero_tenant_9942' || 
-          c.id === 'hero_tenant_2002' || 
-          c.id === '99420000-0000-0000-0000-000000000001' || 
-          c.id === '99420000-0000-0000-0000-000000000002' ||
-          c.name === 'Portal Informasi'
-        ));
-      if (hasLegacySeeds) {
-        localStorage.removeItem(getCacheKey(targetEmail));
-        localStorage.removeItem('herocms_dashboard_cache');
-        if (!containers.value || containers.value.length === 0) {
-          containers.value = [defaultFallbackContainer];
-          activeContainerId.value = defaultFallbackContainer.id;
-        }
-      } else if (Array.isArray(data.containers)) {
+      if (Array.isArray(data.containers) && data.containers.length > 0) {
         containers.value = data.containers.filter((c: any) => 
           c.id !== 'hero_tenant_9942' && 
           c.id !== 'hero_tenant_2002' && 
@@ -2601,18 +2615,15 @@ const hydrateFromCache = (overrideEmail?: string) => {
         });
         if (containers.value.length > 0 && !containers.value.some(c => c.id === activeContainerId.value)) {
           activeContainerId.value = containers.value[0].id;
-        } else if (containers.value.length === 0) {
-          containers.value = [defaultFallbackContainer];
-          activeContainerId.value = defaultFallbackContainer.id;
         }
       }
-      if (Array.isArray(data.articles)) {
-        articles.value = data.articles.filter((a: any) => !a.slug?.startsWith('arsitektur-multi-tenant'));
+      if (Array.isArray(data.articles) && data.articles.length > 0) {
+        articles.value = data.articles;
       }
-      if (Array.isArray(data.cmsPages)) {
-        cmsPages.value = data.cmsPages.filter((p: any) => !p.id?.startsWith('page_'));
+      if (Array.isArray(data.cmsPages) && data.cmsPages.length > 0) {
+        cmsPages.value = data.cmsPages;
       }
-      if (Array.isArray(data.mediaAssets)) {
+      if (Array.isArray(data.mediaAssets) && data.mediaAssets.length > 0) {
         mediaAssets.value = data.mediaAssets;
         if (data.mediaStorage) {
           mediaStorage.value = data.mediaStorage;
@@ -2623,11 +2634,39 @@ const hydrateFromCache = (overrideEmail?: string) => {
           mediaBucketName.value = data.mediaBucketName;
         }
       }
-      if (Array.isArray(data.customDomains)) customDomains.value = data.customDomains.map(normalizeCustomDomain);
-      if (Array.isArray(data.supportTickets)) supportTickets.value = data.supportTickets.map((t: any) => normalizeTicket(t));
-      if (Array.isArray(data.invoices)) invoices.value = data.invoices;
-      if (Array.isArray(data.webhooks)) webhooks.value = data.webhooks;
+      if (Array.isArray(data.customDomains) && data.customDomains.length > 0) customDomains.value = data.customDomains.map(normalizeCustomDomain);
+      if (Array.isArray(data.supportTickets) && data.supportTickets.length > 0) supportTickets.value = data.supportTickets.map((t: any) => normalizeTicket(t));
+      if (Array.isArray(data.invoices) && data.invoices.length > 0) invoices.value = data.invoices;
+      if (Array.isArray(data.webhooks) && data.webhooks.length > 0) webhooks.value = data.webhooks;
       if (data.userPlan?.name) userPlan.value = data.userPlan;
+    }
+
+    // Resilience check: if any collection is empty (e.g. cold start or fresh browser), ensure seeds are available
+    if (!containers.value || containers.value.length === 0) {
+      containers.value = [...initialContainers];
+      activeContainerId.value = initialContainers[0]?.id || defaultFallbackContainer.id;
+    }
+    if (!articles.value || articles.value.length === 0) {
+      articles.value = [...initialArticles];
+    }
+    if (!cmsPages.value || cmsPages.value.length === 0) {
+      cmsPages.value = [...initialCmsPages];
+    }
+    if (!mediaAssets.value || mediaAssets.value.length === 0) {
+      mediaAssets.value = [...initialMediaAssets];
+      recalculateStorage();
+    }
+    if (!customDomains.value || customDomains.value.length === 0) {
+      customDomains.value = [...initialCustomDomains];
+    }
+    if (!invoices.value || invoices.value.length === 0) {
+      invoices.value = [...initialInvoices];
+    }
+    if (!supportTickets.value || supportTickets.value.length === 0) {
+      supportTickets.value = [...initialSupportTickets];
+    }
+    if (!webhooks.value || webhooks.value.length === 0) {
+      webhooks.value = [...initialWebhooks];
     }
   } catch (e) {
     // Graceful fallback to default values

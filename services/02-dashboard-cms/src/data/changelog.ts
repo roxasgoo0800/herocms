@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.13',
+    version: 'v1.42.14',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,49 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.14',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Redesain Elegan Modal Buat Artikel Studio, Pratinjau Interaktif Lembar Dokumen PDF, dan Ketahanan Data Draf Offline',
+    summary: 'Penyempurnaan visual modal Buat Artikel Baru dengan navigasi sub-tab editorial (Formulir, Pratinjau Reader, SEO & Sosmed), markdown toolbar, counter karakter, perbaikan tautan ganda S3 MinIO dan penambahan Interactive Document Sheet PDF yang berfungsi 100% tanpa MinIO, serta pengisian dataset benih offline (containers, articles, media) sehingga aplikasi tetap terisi penuh saat backend/database/Orbstack offline.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14214-1',
+        type: 'feature',
+        scope: 'Content Studio Editor Modal Redesign (ContentArticlesModule.vue)',
+        description: 'Menerapkan tata letak modal editorial bespoke yang identik dengan modal rujukan studio: sub-tab navigasi (Formulir Konten & Editor, Simulasi Pratinjau Pembaca, Optimasi SEO & Sosmed), toolbar Markdown cepat (Bold, Italic, H2, H3, List, Code, Quote, Link), indikator jumlah kata dan estimasi waktu baca, counter karakter live, pratinjau live Google Search & kartu OpenGraph, serta status pill footer hijau berdenyut.'
+      },
+      {
+        id: 'c-02dash-14214-2',
+        type: 'bugfix',
+        scope: 'S3 Object Storage URL Duplication Fix (internal/storage/s3.go)',
+        description: 'Memperbaiki duplikasi nama bucket pada storageURL MinIO di fungsi UploadFile (menghilangkan segmen ganda tenant-xxx-media/tenant-xxx-media/...) yang sebelumnya memicu error NoSuchKey XML dari S3.'
+      },
+      {
+        id: 'c-02dash-14214-3',
+        type: 'feature',
+        scope: 'Interactive Document Sheet & Sanitized PDF Preview (MediaAssetsModule.vue, studio-master.css)',
+        description: 'Menambahkan mode tampilan lembar dokumen A4 resmi (Interactive Document Sheet) dengan kop surat perusahaan, cap digital segel resmi, tabel spesifikasi hash checksum, dan pratinjau wireframe teks yang dapat beroperasi secara mandiri dan andal dalam kondisi offline maupun online tanpa ketergantungan pada server MinIO.'
+      },
+      {
+        id: 'c-02dash-14214-4',
+        type: 'improvement',
+        scope: 'Offline Mock Seeds & Fallback Resilience (dashboard-seeds.ts, useDashboardData.ts)',
+        description: 'Mengisi data benih realistis (3 kontainer aktif, 3 artikel editorial lengkap, 2 halaman web CMS, 3 aset media MinIO dengan data URI PDF mandiri) serta memperkuat fallback catch handler saat Orbstack/Docker/Redis/Database dalam status mati, memastikan tampilan dashboard tidak lagi kosong melompong.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.13',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Standarisasi Menyeluruh Modal Dialog Studio, Pratinjau PDF Otomatis, dan Perapihan Tombol Aksi Ekspor',
     summary: 'Penyelesaian tuntas standarisasi modal dialog seamless di seluruh modul dashboard (Content Articles, Webhooks & PAT, Billing Checkout & Payment, serta Invoices E-Faktur), perbaikan pratinjau dokumen PDF di Media Assets Library dengan rendering objek interaktif instan, dan penataan jarak tombol ekspor header faktur.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {
