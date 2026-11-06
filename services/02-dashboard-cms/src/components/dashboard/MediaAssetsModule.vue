@@ -730,10 +730,10 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
       <main class="dam-main-stage">
         <!-- Top Metrics Strip (4 Prominent Telemetry Cards) -->
         <div class="stats-overview-grid">
-          <div class="telemetry-card accent-blue">
-            <div class="telemetry-corner-watermark blue"><Layers :size="58" /></div>
+          <div class="telemetry-card">
             <div class="telemetry-top">
               <span class="telemetry-label">TOTAL OBJEK BERKAS</span>
+              <div class="telemetry-glyph"><Layers :size="18" /></div>
             </div>
             <div class="telemetry-val">
               {{ mediaAssets.length }} <span class="telemetry-denom">File</span>
@@ -744,41 +744,44 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             </div>
           </div>
 
-          <div class="telemetry-card accent-emerald">
-            <div class="telemetry-corner-watermark emerald"><Zap :size="58" /></div>
+          <div class="telemetry-card">
             <div class="telemetry-top">
               <span class="telemetry-label">CDN EDGE HIT RATIO</span>
+              <div class="telemetry-glyph"><Zap :size="18" /></div>
             </div>
             <div class="telemetry-val">
-              99.4% <span class="badge-online">Optimal</span>
+              99.4% <span class="badge-mono active">Optimal</span>
             </div>
             <div class="telemetry-sub">
+              <span class="dot-lead live"></span>
               <span>Cache Zero-Miss Edge Traefik</span>
             </div>
           </div>
 
-          <div class="telemetry-card accent-purple">
-            <div class="telemetry-corner-watermark purple"><Globe :size="58" /></div>
+          <div class="telemetry-card">
             <div class="telemetry-top">
               <span class="telemetry-label">SERVING LATENCY</span>
+              <div class="telemetry-glyph"><Globe :size="18" /></div>
             </div>
             <div class="telemetry-val">
-              1.2ms <span class="badge-growth-pill" style="color: #7c3aed; background: #faf5ff; border-color: #e9d5ff;">TTFB</span>
+              1.2ms <span class="badge-mono active">TTFB</span>
             </div>
             <div class="telemetry-sub">
+              <span class="dot-lead live"></span>
               <span>Anycast PoP Global Edge</span>
             </div>
           </div>
 
-          <div class="telemetry-card accent-sky">
-            <div class="telemetry-corner-watermark sky"><Server :size="58" /></div>
+          <div class="telemetry-card">
             <div class="telemetry-top">
               <span class="telemetry-label">DEDICATED S3 STORAGE</span>
+              <div class="telemetry-glyph"><Server :size="18" /></div>
             </div>
             <div class="telemetry-val">
-              MinIO <span class="badge-online" style="color: #0284c7; background: #f0f9ff; border-color: #bae6fd;">Isolated</span>
+              MinIO <span class="badge-mono active">Isolated</span>
             </div>
             <div class="telemetry-sub">
+              <span class="dot-lead live"></span>
               <span>Tenant Bucket S3 ID-JKT-1</span>
             </div>
           </div>

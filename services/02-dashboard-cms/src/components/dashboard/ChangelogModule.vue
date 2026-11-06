@@ -131,13 +131,13 @@ const getTypeIcon = (type: ChangelogType) => {
 
     <!-- Row 2: Telemetry Metrics Cards -->
     <div class="stats-overview-grid">
-      <div class="telemetry-card accent-blue">
-        <div class="telemetry-corner-watermark blue"><Tag :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">VERSI DASHBOARD CMS</span>
+          <div class="telemetry-glyph"><Tag :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          {{ dashboardCmsVersion }} <span class="badge-online">Produksi Stabil</span>
+          {{ dashboardCmsVersion }} <span class="badge-mono active">Produksi Stabil</span>
         </div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
@@ -145,41 +145,44 @@ const getTypeIcon = (type: ChangelogType) => {
         </div>
       </div>
 
-      <div class="telemetry-card accent-emerald">
-        <div class="telemetry-corner-watermark emerald"><History :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">TOTAL RILIS STUDIO</span>
+          <div class="telemetry-glyph"><History :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ totalReleasesCount }} <span class="telemetry-denom">Versi Dirilis</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Riwayat rilis resmi terverifikasi</span>
         </div>
       </div>
 
-      <div class="telemetry-card accent-purple">
-        <div class="telemetry-corner-watermark purple"><GitCommit :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">TOTAL CATATAN PERUBAHAN</span>
+          <div class="telemetry-glyph"><GitCommit :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ totalItemsCount }} <span class="telemetry-denom">Catatan Log</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Terdokumentasi otomatis dan transparan</span>
         </div>
       </div>
 
-      <div class="telemetry-card accent-sky">
-        <div class="telemetry-corner-watermark sky"><CheckCircle2 :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">INTEGRITAS SERVICE</span>
+          <div class="telemetry-glyph"><CheckCircle2 :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          100% <span class="badge-growth-pill">Terverifikasi</span>
+          100% <span class="badge-mono active">Terverifikasi</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Service 02 Mandiri</span>
         </div>
       </div>

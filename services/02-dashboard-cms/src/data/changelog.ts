@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.20',
+    version: 'v1.42.21',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.21',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Standarisasi Universal Kartu Telemetri Master CSS (Glyph 18px / 36px) & Penyelarasan Seluruh 9 Modul Studio',
+    summary: 'Menstandarisasi arsitektur kartu metrik telemetri secara universal ke CSS induk tunggal (studio-master.css) di seluruh 9 modul dashboard (Containers, Analytics, Billing, Media Assets, Changelog, Articles/Pages, Custom Domains, Support Ticketing, Invoices). Mengeliminasi duplikasi CSS lama dan watermark raksasa, memperbesar proporsi glyph ke rasio emas seimbang (ikon 18px dalam wadah kontainer 36×36px radius 9px) dengan efek hover tactile invert (#0f172a), serta menyelaraskan badge monokrom (.badge-mono) sehingga seluruh menu konsisten dan satu perubahan CSS otomatis berdampak ke seluruh platform.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14221-1',
+        type: 'improvement',
+        scope: 'Master CSS Single Source of Truth (.telemetry-card & .telemetry-glyph)',
+        description: 'Menghapus blok override duplikat di baris 13811 dan 16832 serta menetralisir radial gradient pastel pada DAM stat card. Seluruh kartu kini diatur oleh satu sumber CSS master terpadu.'
+      },
+      {
+        id: 'c-02dash-14221-2',
+        type: 'improvement',
+        scope: 'Balanced Golden Ratio Glyph (18px Icon in 36×36px Box)',
+        description: 'Meningkatkan proporsi ikon dari 14px ke 18px stroke 2px dalam container 36×36px radius 9px dengan efek hover pembalikan warna (invert) ke Deep Slate #0f172a dan ikon putih bersih.'
+      },
+      {
+        id: 'c-02dash-14221-3',
+        type: 'improvement',
+        scope: 'Universal Cross-Module Refactor (All 9 Dashboard Modules)',
+        description: 'Memutakhirkan struktur HTML seluruh kartu pada Containers, Analytics, Billing, Media Assets, Changelog, Content Articles, Custom Domains, Support Ticketing, dan Invoices History ke komponen resmi .telemetry-top, .telemetry-glyph, dan .badge-mono.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.20',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Transformasi Kartu Telemetri Monokrom Murni (Hitam, Putih, Slate) & Micro-Segment Bar',
     summary: 'Menghapus seluruh gradien warna pastel pelangi pada kartu telemetri dan menggantinya dengan estetika monokrom murni (Pure White #ffffff, Deep Slate #0f172a, dan border hairline #e2e8f0). Mengadopsi ikon kompak minimalis (14px) dalam wadah rounded 28px dengan efek hover invert hitam-putih, menyematkan indikator visual 3-slot segment bar yang presisi, serta badge pil monokrom dengan LED dot hijau indikator aktif.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

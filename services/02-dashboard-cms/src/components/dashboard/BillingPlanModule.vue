@@ -281,63 +281,67 @@ const openCustomClusterCheckout = () => {
     <!-- 4 Commercial & Telemetry Cards Cluster (Always Eye-Catching) -->
     <div class="stats-overview-grid" style="margin-bottom: 22px;">
       <!-- Card 1: Slot Kontainer -->
-      <div class="telemetry-card accent-blue">
-        <div class="telemetry-corner-watermark blue"><Layers :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">KUOTA SLOT KONTAINER</span>
+          <div class="telemetry-glyph"><Layers :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ usedContainersCount }} / {{ userPlan.maxContainers }} Pods
-          <span class="badge-online">
+          <span class="badge-mono active">
             {{ userPlan.maxContainers - usedContainersCount }} Slot Tersedia
           </span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Runtime mandiri per tenant dengan isolasi cgroups v2</span>
         </div>
       </div>
 
       <!-- Card 2: Dedicated CPU -->
-      <div class="telemetry-card accent-emerald">
-        <div class="telemetry-corner-watermark emerald"><Cpu :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">ALOKASI CPU TERDEDIKASI</span>
+          <div class="telemetry-glyph"><Cpu :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ userPlan.cpuPerContainer }}
-          <span class="badge-online">Zero Noisy Neighbor</span>
+          <span class="badge-mono active">Zero Noisy Neighbor</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Dedicated CFS Scheduler hard quota per kontainer</span>
         </div>
       </div>
 
       <!-- Card 3: RAM Memory -->
-      <div class="telemetry-card accent-purple">
-        <div class="telemetry-corner-watermark purple"><Zap :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">BATAS MEMORI RAM CGROUPS V2</span>
+          <div class="telemetry-glyph"><Zap :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ userPlan.ramPerContainer }}
-          <span class="badge-online">OOM Protection</span>
+          <span class="badge-mono active">OOM Protection</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>cgroups v2 hard limit mencegah server overload</span>
         </div>
       </div>
 
       <!-- Card 4: S3 NVMe Storage -->
-      <div class="telemetry-card accent-amber">
-        <div class="telemetry-corner-watermark amber"><HardDrive :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">NVME S3 MEDIA STORAGE</span>
+          <div class="telemetry-glyph"><HardDrive :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          120 MB <span style="font-size: 13px; color: #64748b; font-weight: 600;">/ {{ userPlan.storageQuota }}</span>
-          <span class="badge-online">6% Terpakai</span>
+          120 MB <span class="telemetry-denom">/ {{ userPlan.storageQuota }}</span>
+          <span class="badge-mono">6% Terpakai</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>SSD Multi-Region Jakarta (MinIO Object Store)</span>
         </div>
       </div>

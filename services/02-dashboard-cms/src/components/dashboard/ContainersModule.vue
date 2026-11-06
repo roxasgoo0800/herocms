@@ -278,7 +278,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
       <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">KUOTA KONTAINER</span>
-          <div class="telemetry-glyph"><Server :size="14" /></div>
+          <div class="telemetry-glyph"><Server :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ usedContainersCount }} <span class="telemetry-denom">/ {{ userPlan.maxContainers }} Aktif</span>
@@ -298,7 +298,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
       <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">EDGE ROUTING TRAEFIK</span>
-          <div class="telemetry-glyph"><Globe :size="14" /></div>
+          <div class="telemetry-glyph"><Globe :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ routedSubdomainsCount }} 
@@ -315,7 +315,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
       <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">TRAFIK PENGUNJUNG</span>
-          <div class="telemetry-glyph"><Activity :size="14" /></div>
+          <div class="telemetry-glyph"><Activity :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ totalVisitsCount.toLocaleString('id-ID') }} 
@@ -330,7 +330,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
       <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">KEAMANAN TLS / SSL</span>
-          <div class="telemetry-glyph"><ShieldCheck :size="14" /></div>
+          <div class="telemetry-glyph"><ShieldCheck :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ sslActivePct }}% 

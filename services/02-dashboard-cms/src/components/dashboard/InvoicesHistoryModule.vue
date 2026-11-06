@@ -483,59 +483,63 @@ onUnmounted(() => {
     <!-- 4 Commercial & Tax Telemetry Summary Cards -->
     <div class="stats-overview-grid">
       <!-- Card 1: Next Billing -->
-      <div class="telemetry-card accent-blue">
-        <div class="telemetry-corner-watermark blue"><Clock :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">TAGIHAN PERIODE BERIKUTNYA</span>
+          <div class="telemetry-glyph"><Clock :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          Rp 149.000 <span class="badge-online">15 Nov 2026</span>
+          Rp 149.000 <span class="badge-mono active">15 Nov 2026</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Perpanjangan otomatis via BCA VA (Auto-Debit)</span>
         </div>
       </div>
 
       <!-- Card 2: Total Spend YTD -->
-      <div class="telemetry-card accent-emerald">
-        <div class="telemetry-corner-watermark emerald"><CheckCircle2 :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">TOTAL BELANJA SAAS YTD 2026</span>
+          <div class="telemetry-glyph"><CheckCircle2 :size="18" /></div>
         </div>
         <div class="telemetry-val">
           Rp {{ totalSpendYtd.toLocaleString('id-ID') }}
-          <span class="badge-online">{{ invoices.length }} Lunas</span>
+          <span class="badge-mono active">{{ invoices.length }} Lunas</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>DPP: Rp {{ totalDppYtd.toLocaleString('id-ID') }} • 100% lunas terverifikasi</span>
         </div>
       </div>
 
       <!-- Card 3: Tax PPN 11% -->
-      <div class="telemetry-card accent-purple">
-        <div class="telemetry-corner-watermark purple"><ShieldCheck :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">AKUMULASI PPN 11% DISETOR</span>
+          <div class="telemetry-glyph"><ShieldCheck :size="18" /></div>
         </div>
         <div class="telemetry-val">
           Rp {{ totalTaxYtd.toLocaleString('id-ID') }}
-          <span class="badge-growth-pill">DJP Valid</span>
+          <span class="badge-mono active">DJP Valid</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Dipungut & disetor sesuai PMK-60/PMK.03/2022</span>
         </div>
       </div>
 
       <!-- Card 4: Legal & NPWP Entity -->
-      <div class="telemetry-card accent-sky">
-        <div class="telemetry-corner-watermark sky"><Building2 :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">BADAN USAHA & NPWP PENERBIT</span>
+          <div class="telemetry-glyph"><Building2 :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          E-Faktur <span class="badge-online">Terverifikasi</span>
+          E-Faktur <span class="badge-mono active">Terverifikasi</span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>PT Hero Digital Multitek • Cyber 2 Tower Jkt</span>
         </div>
       </div>

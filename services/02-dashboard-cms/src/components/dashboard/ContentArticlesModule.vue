@@ -938,82 +938,82 @@ onUnmounted(() => {
 
       <!-- 4 Telemetry Cards (Adaptive per Tab) -->
       <div v-if="activeContentTab === 'articles'" class="stats-overview-grid">
-        <div class="telemetry-card accent-blue">
-          <div class="telemetry-corner-watermark blue"><FileText :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL ARTIKEL</span>
+            <div class="telemetry-glyph"><FileText :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ articles.length }} <span class="telemetry-denom">Artikel</span></div>
-          <div class="telemetry-sub"><span>8,450 kata terindeks di Edge CDN</span></div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>8,450 kata terindeks di Edge CDN</span></div>
         </div>
 
-        <div class="telemetry-card accent-emerald">
-          <div class="telemetry-corner-watermark emerald"><Check :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">TERPUBLIKASI (LIVE)</span>
+            <div class="telemetry-glyph"><Check :size="18" /></div>
           </div>
-          <div class="telemetry-val">{{ articles.filter(a => a.status === 'published').length }} <span class="badge-online">Live CDN</span></div>
-          <div class="telemetry-sub"><span>Lighthouse 100/100 SEO ready</span></div>
+          <div class="telemetry-val">{{ articles.filter(a => a.status === 'published').length }} <span class="badge-mono active">Live CDN</span></div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Lighthouse 100/100 SEO ready</span></div>
         </div>
 
-        <div class="telemetry-card accent-purple">
-          <div class="telemetry-corner-watermark purple"><Edit3 :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">DRAFT PENULISAN</span>
+            <div class="telemetry-glyph"><Edit3 :size="18" /></div>
           </div>
-          <div class="telemetry-val">{{ articles.filter(a => a.status === 'draft').length }} <span class="badge-growth-pill">WIP</span></div>
-          <div class="telemetry-sub"><span>Belum dipublikasikan ke publik</span></div>
+          <div class="telemetry-val">{{ articles.filter(a => a.status === 'draft').length }} <span class="badge-mono">WIP</span></div>
+          <div class="telemetry-sub"><span class="dot-lead idle"></span><span>Belum dipublikasikan ke publik</span></div>
         </div>
 
-        <div class="telemetry-card accent-sky">
-          <div class="telemetry-corner-watermark sky"><Activity :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL PEMBACA (VIEWS)</span>
+            <div class="telemetry-glyph"><Activity :size="18" /></div>
           </div>
           <div class="telemetry-val">
             {{ articles.reduce((acc, a) => acc + a.views, 0).toLocaleString('id-ID') }}
-            <span v-if="articles.reduce((acc, a) => acc + a.views, 0) > 0" class="badge-online">+24%</span>
-            <span v-else class="badge-standby">0%</span>
+            <span v-if="articles.reduce((acc, a) => acc + a.views, 0) > 0" class="badge-mono active">+24%</span>
+            <span v-else class="badge-mono">0%</span>
           </div>
-          <div class="telemetry-sub"><span>Dihitung non-blocking via Redis ZSET</span></div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Dihitung non-blocking via Redis ZSET</span></div>
         </div>
       </div>
 
       <div v-else class="stats-overview-grid">
-        <div class="telemetry-card accent-blue">
-          <div class="telemetry-corner-watermark blue"><Layers :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL HALAMAN WEB</span>
+            <div class="telemetry-glyph"><Layers :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ cmsPages.length }} <span class="telemetry-denom">Halaman</span></div>
-          <div class="telemetry-sub"><span>Rute web terisolasi di Nginx tenant</span></div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Rute web terisolasi di Nginx tenant</span></div>
         </div>
 
-        <div class="telemetry-card accent-emerald">
-          <div class="telemetry-corner-watermark emerald"><Check :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">HALAMAN LIVE</span>
+            <div class="telemetry-glyph"><Check :size="18" /></div>
           </div>
-          <div class="telemetry-val">{{ cmsPages.filter(p => p.status === 'published').length }} <span class="badge-online">Live Route</span></div>
-          <div class="telemetry-sub"><span>Tersedia untuk traffic publik</span></div>
+          <div class="telemetry-val">{{ cmsPages.filter(p => p.status === 'published').length }} <span class="badge-mono active">Live Route</span></div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Tersedia untuk traffic publik</span></div>
         </div>
 
-        <div class="telemetry-card accent-purple">
-          <div class="telemetry-corner-watermark purple"><Compass :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">NAVBAR MENU UTAMA</span>
+            <div class="telemetry-glyph"><Compass :size="18" /></div>
           </div>
-          <div class="telemetry-val">{{ cmsPages.filter(p => p.isInNavbar).length }} <span class="badge-growth-pill">Header Nav</span></div>
-          <div class="telemetry-sub"><span>Tautkan otomatis pada navbar website</span></div>
+          <div class="telemetry-val">{{ cmsPages.filter(p => p.isInNavbar).length }} <span class="badge-mono active">Header Nav</span></div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Tautkan otomatis pada navbar website</span></div>
         </div>
 
-        <div class="telemetry-card accent-sky">
-          <div class="telemetry-corner-watermark sky"><Globe :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">FOOTER LINKS</span>
+            <div class="telemetry-glyph"><Globe :size="18" /></div>
           </div>
-          <div class="telemetry-val">{{ cmsPages.filter(p => p.isInFooter).length }} <span class="badge-growth-pill">Footer Nav</span></div>
-          <div class="telemetry-sub"><span>Kebijakan, kontak, dan tautan sekunder</span></div>
+          <div class="telemetry-val">{{ cmsPages.filter(p => p.isInFooter).length }} <span class="badge-mono active">Footer Nav</span></div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Kebijakan, kontak, dan tautan sekunder</span></div>
         </div>
       </div>
 
