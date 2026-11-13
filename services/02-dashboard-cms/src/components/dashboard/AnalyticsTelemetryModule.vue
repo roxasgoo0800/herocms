@@ -285,13 +285,22 @@ const exportAuditReport = () => {
       <!-- 1. Executive SLA & Peak Telemetry Strip (4 High-Tech Cards) -->
       <div class="stats-overview-grid">
         <!-- Card 1: Peak RPS & Load -->
-        <div class="telemetry-card accent-blue">
-          <div class="telemetry-corner-watermark blue"><TrendingUp :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">BEBAN PUNCAK & TRAFIK (PEAK RPS)</span>
+            <div class="telemetry-glyph"><TrendingUp :size="18" /></div>
           </div>
           <div class="telemetry-val">
             {{ report.sla.peakRps }} <span class="telemetry-denom">req/detik</span>
+          </div>
+          <div class="sparkline-histogram">
+            <span class="spark-bar" style="height: 35%"></span>
+            <span class="spark-bar" style="height: 60%"></span>
+            <span class="spark-bar" style="height: 45%"></span>
+            <span class="spark-bar" style="height: 80%"></span>
+            <span class="spark-bar" style="height: 55%"></span>
+            <span class="spark-bar" style="height: 90%"></span>
+            <span class="spark-bar active" :style="{ height: report.sla.peakRps > 0 ? '100%' : '30%' }"></span>
           </div>
           <div class="telemetry-sub ready-state">
             <span class="pulse-mini-dot"></span>
@@ -300,43 +309,59 @@ const exportAuditReport = () => {
         </div>
 
         <!-- Card 2: SLA & Error Budget -->
-        <div class="telemetry-card accent-emerald">
-          <div class="telemetry-corner-watermark emerald"><CheckCircle2 :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">KEPATUHAN UPTIME & SLA</span>
+            <div class="telemetry-glyph"><CheckCircle2 :size="18" /></div>
           </div>
           <div class="telemetry-val">
-            {{ report.sla.uptimeSla }}% <span class="badge-online">Lulus SLA</span>
+            {{ report.sla.uptimeSla }}% <span class="badge-mono active">Lulus SLA</span>
+          </div>
+          <div class="security-meter-track">
+            <div class="security-meter-fill" :style="{ width: `${report.sla.uptimeSla}%` }"></div>
           </div>
           <div class="telemetry-sub">
+            <span class="dot-lead live"></span>
             <span>Error rate: {{ report.sla.errorRatePct }}% (Target &lt; 0.10%)</span>
           </div>
         </div>
 
         <!-- Card 3: Persentil Latensi p95 -->
-        <div class="telemetry-card accent-purple">
-          <div class="telemetry-corner-watermark purple"><Zap :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">LATENSI EDGE PERSENTIL (p95)</span>
+            <div class="telemetry-glyph"><Zap :size="18" /></div>
           </div>
           <div class="telemetry-val">
-            {{ report.sla.latencyP95 }} ms <span class="badge-online">Edge v3</span>
+            {{ report.sla.latencyP95 }} ms <span class="badge-mono active">Edge v3</span>
+          </div>
+          <div class="ingress-mesh-track">
+            <span class="ingress-node active"></span>
+            <span class="ingress-node active"></span>
+            <span class="ingress-node active"></span>
+            <span class="ingress-node" :class="{ active: report.sla.latencyP95 < 50 }"></span>
+            <span class="ingress-node" :class="{ active: report.sla.latencyP95 < 20 }"></span>
           </div>
           <div class="telemetry-sub">
+            <span class="dot-lead live"></span>
             <span>p50: {{ report.sla.latencyP50 }}ms • p99: {{ report.sla.latencyP99 }}ms</span>
           </div>
         </div>
 
         <!-- Card 4: Cache Ratio & Bandwidth Savings -->
-        <div class="telemetry-card accent-sky">
-          <div class="telemetry-corner-watermark sky"><Globe :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">EFISIENSI CACHE & BANDWIDTH</span>
+            <div class="telemetry-glyph"><Globe :size="18" /></div>
           </div>
           <div class="telemetry-val">
-            {{ report.sla.cacheHitRatio }}% <span class="badge-growth-pill">Hit Ratio</span>
+            {{ report.sla.cacheHitRatio }}% <span class="badge-mono active">Hit Ratio</span>
+          </div>
+          <div class="security-meter-track">
+            <div class="security-meter-fill" :style="{ width: `${report.sla.cacheHitRatio}%` }"></div>
           </div>
           <div class="telemetry-sub">
+            <span class="dot-lead live"></span>
             <span>{{ report.sla.bandwidthSaved }}</span>
           </div>
         </div>

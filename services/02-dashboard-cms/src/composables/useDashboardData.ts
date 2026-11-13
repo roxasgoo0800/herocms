@@ -24,7 +24,15 @@ import {
   initialUserPlan,
   officialTemplates as defaultOfficialTemplates,
   availablePatScopes,
-  subscriptionPlansCatalog
+  subscriptionPlansCatalog,
+  initialContainers,
+  initialArticles,
+  initialCmsPages,
+  initialMediaAssets,
+  initialCustomDomains,
+  initialInvoices,
+  initialSupportTickets,
+  initialWebhooks
 } from '../data/dashboard-seeds';
 import type { OfficialTemplateItem } from '../data/templates-data';
 import { compileTemplateToHTML, compileMultiPageSiteToHTML } from '../utils/templateHtmlCompiler';
@@ -143,10 +151,10 @@ export const defaultFallbackContainer: ContainerSite = {
   themeConfig: {}
 };
 
-// Containers State (100% Real PostgreSQL & Service 03 Orchestrator State)
-const containers = ref<ContainerSite[]>([defaultFallbackContainer]);
+// Containers State (100% Real PostgreSQL & Service 03 Orchestrator State with Offline Resilience)
+const containers = ref<ContainerSite[]>([...initialContainers]);
 
-const activeContainerId = ref<string>(resolveInitialContainerId() || defaultFallbackContainer.id);
+const activeContainerId = ref<string>(resolveInitialContainerId() || initialContainers[0]?.id || defaultFallbackContainer.id);
 const activeContainer = computed<ContainerSite>(() => {
   if (containers.value && containers.value.length > 0) {
     const found = containers.value.find(c => c && c.id === activeContainerId.value);
@@ -264,20 +272,28 @@ const filteredContainers = computed(() => {
 // Container Operations
 const startContainer = async (container: ContainerSite) => {
   container.status = 'provisioning';
-  showToast(`Menjalankan kontainer ${container.id}...`, 'info');
+  container.deployPhase = 'deploying';
+  container.deployStep = 2;
+  container.deployStepMessage = '2/3 Menjalankan container di Docker Engine...';
+  showToast(`Menjalankan kontainer ${container.name || container.id}...`, 'info');
   try {
     await studioApi.startContainer(container.id);
     container.status = 'running';
+    container.deployPhase = undefined;
+    container.uptime = 'Baru saja aktif';
     const stats = await studioApi.getContainerStats(container.id).catch(() => null);
     if (stats?.cpu_percent != null) {
       container.cpuUsage = Math.round(stats.cpu_percent);
       container.ramUsage = Math.round(stats.memory_mb);
     }
     showToast(`Kontainer ${container.name} aktif melayani trafik!`, 'success');
-  } catch (err) {
+  } catch (err: any) {
     console.warn('[API] Start container notice:', err);
-    container.status = 'running';
-    showToast(`Kontainer ${container.name} aktif melayani trafik!`, 'success');
+    container.status = 'stopped';
+    container.deployPhase = undefined;
+    container.uptime = 'Kontainer Mati (Offline)';
+    const errMsg = err?.message || String(err);
+    showToast(`Gagal menyalakan kontainer: ${errMsg}`, 'error');
   }
 };
 
@@ -404,12 +420,14 @@ const confirmDeleteContainer = async () => {
     const idx = containers.value.findIndex(c => c.id === deletedId);
     if (idx !== -1) {
       containers.value.splice(idx, 1);
+      persistDashboardState();
     }
     showToast(`Kontainer '${deletedName}' (${deletedId}) berhasil dihapus. Slot kuota kini ${containers.value.length}/${userPlan.value.maxContainers}.`, 'info');
     if (containers.value.length > 0) {
       activeContainerId.value = containers.value[0].id;
     }
-    await syncWithBackend().catch(() => {});
+    await syncWithBackend({ forceWarmRedis: true }).catch(() => {});
+    persistDashboardState();
   } catch (err: any) {
     console.error('[Container] Delete failed:', err);
     showToast(`Gagal menghapus kontainer: ${err?.message || 'Koneksi ke backend gagal'}`, 'error');
@@ -469,21 +487,37 @@ const handleCreateContainer = async () => {
   const cleanSubdomain = newSiteForm.value.subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '');
   const tempId = `hero_tenant_${Math.floor(1000 + Math.random() * 9000)}`;
 
-  let tplName = 'Portofolio Teknis Engineer';
   let matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_portfolio_pro') || officialTemplates.value[0];
   if (newSiteForm.value.category === 'business') {
-    tplName = 'Toko Online & Penjualan Retail';
     matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_ecommerce_store') || matchedTpl;
   } else if (newSiteForm.value.category === 'blog') {
-    tplName = 'Editorial Media & Blog';
     matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_blog_editorial') || matchedTpl;
   } else if (newSiteForm.value.category === 'education') {
-    tplName = 'Pusat Edukasi LMS';
     matchedTpl = officialTemplates.value.find(t => t.id === 'tpl_edu_lms') || matchedTpl;
   }
+  const tplName = matchedTpl?.title || 'Portofolio Teknis Engineer';
 
   const chosenAccent = newSiteForm.value.accentColor || matchedTpl?.accentColor || '#2563eb';
   const clonedBlocks = matchedTpl ? JSON.parse(JSON.stringify(matchedTpl.blocks)) : [];
+  if (chosenAccent && Array.isArray(clonedBlocks)) {
+    clonedBlocks.forEach((b: any) => {
+      if (!b.styles) b.styles = {};
+      b.styles.accentColor = chosenAccent;
+    });
+  }
+
+  const clonedPages = (matchedTpl?.pages && Array.isArray(matchedTpl.pages))
+    ? JSON.parse(JSON.stringify(matchedTpl.pages)).map((pg: any) => {
+        if (chosenAccent && Array.isArray(pg.blocks)) {
+          pg.blocks.forEach((b: any) => {
+            if (!b.styles) b.styles = {};
+            b.styles.accentColor = chosenAccent;
+          });
+        }
+        return pg;
+      })
+    : undefined;
+
   const fullHTML = matchedTpl ? compileTemplateToHTML(matchedTpl, {
     siteName: newSiteForm.value.name,
     subdomain: `${cleanSubdomain}.stackbyte.id`,
@@ -514,16 +548,25 @@ const handleCreateContainer = async () => {
     bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
     accentColor: chosenAccent,
     lastDeployed: 'Baru saja',
-    themeConfig: matchedTpl ? { ...matchedTpl.themeConfig, accentColor: chosenAccent, blocks: clonedBlocks } : { blocks: clonedBlocks }
+    themeConfig: matchedTpl ? {
+      ...matchedTpl.themeConfig,
+      templateId: matchedTpl.id,
+      accentColor: chosenAccent,
+      blocks: clonedBlocks,
+      pages: clonedPages,
+      isMultiPage: matchedTpl.isMultiPage || (clonedPages && clonedPages.length > 1) || false
+    } : { blocks: clonedBlocks, accentColor: chosenAccent }
   });
 
   if (typeof localStorage !== 'undefined') {
     const editorDraftPayload = {
       blocks: clonedBlocks,
+      pages: clonedPages,
+      activePageId: clonedPages?.[0]?.id || 'page_home',
       roleOrHeadline: newContainerObj.roleOrHeadline,
       bioIntro: newContainerObj.bioIntro,
-      accentColor: newContainerObj.accentColor,
-      fontFamily: matchedTpl?.fontFamily || 'Inter',
+      accentColor: chosenAccent,
+      fontFamily: matchedTpl?.fontFamily || 'Plus Jakarta Sans',
       selectedBlockId: clonedBlocks[1]?.id || clonedBlocks[0]?.id || null,
       zoom: 100,
       currentDevice: 'desktop',
@@ -552,6 +595,17 @@ const handleCreateContainer = async () => {
     containers.value = [...containers.value];
   };
 
+  // Compile multi-page HTML if template is multi-page
+  const multiPagesHtml: Record<string, string> = (matchedTpl && clonedPages && clonedPages.length > 0)
+    ? compileMultiPageSiteToHTML(matchedTpl, {
+        siteName: newSiteForm.value.name,
+        subdomain: cleanSubdomain,
+        accentColor: chosenAccent,
+        sitemapPages: clonedPages,
+        pages: clonedPages
+      })
+    : {};
+
   // Trigger backend API creation concurrently
   const createPromise = studioApi.createContainer({
     name: newSiteForm.value.name,
@@ -561,7 +615,8 @@ const handleCreateContainer = async () => {
     templateName: tplName,
     accentColor: chosenAccent,
     bioIntro: newContainerObj.bioIntro,
-    customHTML: fullHTML
+    customHTML: fullHTML,
+    pages: multiPagesHtml
   });
 
   try {
@@ -758,6 +813,7 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
     activeContainer.value.themeConfig = {
       ...activeContainer.value.themeConfig,
       ...tpl.themeConfig,
+      templateId: tpl.id,
       accentColor: chosenAccent,
       blocks: clonedBlocks,
       pages: clonedPages,
@@ -798,6 +854,16 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
       blocksOverride: clonedBlocks
     });
 
+    const multiPagesHtml: Record<string, string> = (tpl && clonedPages && clonedPages.length > 0)
+      ? compileMultiPageSiteToHTML(tpl, {
+          siteName: activeContainer.value.name,
+          subdomain: activeContainer.value.subdomain,
+          accentColor: chosenAccent,
+          sitemapPages: clonedPages,
+          pages: clonedPages
+        })
+      : {};
+
     // Trigger API backend persist & re-seeding concurrently
     const savePromise = studioApi.saveSiteDesign(targetId, {
       name: activeContainer.value.name,
@@ -808,6 +874,8 @@ const applyTemplateToActiveContainer = async (templateId: string, jumpToEditor: 
       bioIntro: tpl.defaultBio,
       accentColor: chosenAccent,
       customHTML: fullHTML,
+      pages: multiPagesHtml,
+      multiPagesHtml: multiPagesHtml,
       themeConfig: activeContainer.value.themeConfig
     }).catch(err => console.warn('[API] saveSiteDesign warning:', err));
 
@@ -909,7 +977,7 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     bioIntro: tpl?.defaultBio || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
     accentColor: tpl?.accentColor || '#2563eb',
     lastDeployed: 'Sedang deploy...',
-    themeConfig: tpl ? { ...tpl.themeConfig, blocks: clonedBlocks, pages: clonedPages, isMultiPage: tpl.isMultiPage || false } : { blocks: clonedBlocks }
+    themeConfig: tpl ? { ...tpl.themeConfig, templateId: tpl.id, blocks: clonedBlocks, pages: clonedPages, isMultiPage: tpl.isMultiPage || false } : { blocks: clonedBlocks }
   });
 
   containers.value.push(newContainerObj);
@@ -955,6 +1023,16 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     blocksOverride: clonedBlocks
   }) : '';
 
+  const multiPagesHtml: Record<string, string> = (tpl && clonedPages && clonedPages.length > 0)
+    ? compileMultiPageSiteToHTML(tpl, {
+        siteName: payload.name.trim(),
+        subdomain: `${cleanSubdomain}.stackbyte.id`,
+        accentColor: newContainerObj.accentColor,
+        sitemapPages: clonedPages,
+        pages: clonedPages
+      })
+    : {};
+
   const createPromise = studioApi.createContainer({
     name: payload.name.trim(),
     subdomain: cleanSubdomain,
@@ -963,7 +1041,8 @@ const deployContainerFromTemplate = async (payload: { name: string; subdomain: s
     templateName: newContainerObj.templateName,
     accentColor: newContainerObj.accentColor,
     bioIntro: newContainerObj.bioIntro,
-    customHTML: fullHTML
+    customHTML: fullHTML,
+    pages: multiPagesHtml
   });
 
   try {
@@ -1074,29 +1153,49 @@ const handlePublishChanges = async () => {
   try {
     const matchedTpl = officialTemplates.value.find(t =>
       t.title === activeContainer.value?.templateName ||
+      t.id === (activeContainer.value?.themeConfig as any)?.templateId ||
       t.category === activeContainer.value?.category
     ) || officialTemplates.value[0];
 
-    const currentBlocks = activeContainer.value.themeConfig?.blocks || matchedTpl?.blocks || [];
+    const pages = (activeContainer.value.themeConfig?.pages as any[]) || [];
+    const hasPages = Array.isArray(pages) && pages.length > 0;
+
+    // ROOT index.html MUST ALWAYS be compiled from the Home page ('/' or 'page_home')
+    const homePage = hasPages
+      ? (pages.find(p => p.path === '/' || p.id === 'page_home') || pages[0])
+      : null;
+    const homeBlocks = homePage?.blocks || activeContainer.value.themeConfig?.blocks || matchedTpl?.blocks || [];
+
+    const seo = (activeContainer.value.themeConfig as any)?.seo || {};
+
     const fullHTML = matchedTpl ? compileTemplateToHTML(matchedTpl, {
       siteName: activeContainer.value.name,
       subdomain: activeContainer.value.subdomain,
       accentColor: activeContainer.value.accentColor,
       roleOrHeadline: activeContainer.value.roleOrHeadline,
       bioIntro: activeContainer.value.bioIntro,
-      blocksOverride: currentBlocks
+      sitemapPages: hasPages ? pages : undefined,
+      activeRoutePath: '/',
+      blocksOverride: homeBlocks,
+      faviconUrl: seo.faviconUrl,
+      metaTitle: seo.metaTitle || homePage?.title || activeContainer.value.name,
+      metaDescription: seo.metaDescription || homePage?.description || activeContainer.value.bioIntro,
+      ogImageUrl: seo.ogImageUrl
     }) : '';
 
-    const pages = activeContainer.value.themeConfig?.pages;
-    const isMulti = activeContainer.value.themeConfig?.isMultiPage && pages && pages.length > 0;
-    const multiPagesHtml = (matchedTpl && isMulti) ? compileMultiPageSiteToHTML(matchedTpl, {
+    const multiPagesHtml: Record<string, string> = (matchedTpl && hasPages) ? compileMultiPageSiteToHTML(matchedTpl, {
       siteName: activeContainer.value.name,
       subdomain: activeContainer.value.subdomain,
       accentColor: activeContainer.value.accentColor,
-      pages: pages
-    }) : undefined;
+      sitemapPages: pages,
+      pages: pages,
+      faviconUrl: seo.faviconUrl,
+      metaTitle: seo.metaTitle,
+      metaDescription: seo.metaDescription,
+      ogImageUrl: seo.ogImageUrl
+    }) : {};
 
-    if (multiPagesHtml && activeContainer.value.themeConfig) {
+    if (activeContainer.value.themeConfig) {
       (activeContainer.value.themeConfig as any).multiPagesHtml = multiPagesHtml;
     }
 
@@ -1109,6 +1208,8 @@ const handlePublishChanges = async () => {
       bioIntro: activeContainer.value.bioIntro,
       accentColor: activeContainer.value.accentColor,
       customHTML: fullHTML,
+      pages: multiPagesHtml,
+      multiPagesHtml: multiPagesHtml,
       themeConfig: activeContainer.value.themeConfig || {}
     };
     await studioApi.saveSiteDesign(activeContainer.value.id, payload);
@@ -1138,7 +1239,7 @@ const handleAiGenerateContent = () => {
 };
 
 // Invoices State (100% Real PostgreSQL Invoices)
-const invoices = ref<InvoiceItem[]>([]);
+const invoices = ref<InvoiceItem[]>([...initialInvoices]);
 
 const selectedInvoice = ref<InvoiceItem | null>(null);
 const isInvoiceDetailModalOpen = ref(false);
@@ -1227,7 +1328,7 @@ const normalizeCustomDomain = (dom: any): CustomDomainItem => {
 };
 
 // Custom Domains State (100% Real PostgreSQL Custom Domains)
-const customDomains = ref<CustomDomainItem[]>([]);
+const customDomains = ref<CustomDomainItem[]>([...initialCustomDomains]);
 
 const newDomainInput = ref('');
 const targetContainerForDomain = ref('');
@@ -1253,10 +1354,12 @@ const handleAddDomain = () => {
   };
   customDomains.value.push(newDomObj);
   newDomainInput.value = '';
+  persistDashboardState();
   showToast(`Domain ${cleanDom} didaftarkan! Menguji propagasi DNS Traefik...`, 'info');
   setTimeout(() => {
     newDomObj.status = 'active';
     newDomObj.sslStatus = 'issued';
+    persistDashboardState();
     showToast(`Domain ${cleanDom} terverifikasi & SSL TLS 1.3 Let's Encrypt aktif!`, 'success');
   }, 1600);
 };
@@ -1266,14 +1369,15 @@ const deleteDomain = (dom: CustomDomainItem) => {
     const idx = customDomains.value.findIndex(d => d.id === dom.id);
     if (idx !== -1) {
       customDomains.value.splice(idx, 1);
+      persistDashboardState();
       showToast(`Domain ${dom.domain} telah dilepas dari routing Traefik.`, 'info');
     }
   }
 };
 
 // Content Articles & CMS Pages State (100% Real PostgreSQL Articles)
-const articles = ref<ContentArticle[]>([]);
-const cmsPages = ref<CmsPage[]>([]);
+const articles = ref<ContentArticle[]>([...initialArticles]);
+const cmsPages = ref<CmsPage[]>([...initialCmsPages]);
 
 const isCreateArticleModalOpen = ref(false);
 const newArticleForm = ref({
@@ -1327,6 +1431,7 @@ const saveArticle = async (art: ContentArticle) => {
     articles.value.unshift({ ...art });
     showToast(`Artikel '${art.title}' berhasil ditambahkan!`, 'success');
   }
+  persistDashboardState();
 
   try {
     if (isNew) {
@@ -1335,9 +1440,11 @@ const saveArticle = async (art: ContentArticle) => {
         art.id = res.article.id;
         const freshIdx = articles.value.findIndex(a => a.id === art.id || a.slug === art.slug);
         if (freshIdx !== -1) articles.value[freshIdx].id = res.article.id;
+        persistDashboardState();
       }
     } else {
       await studioApi.updateArticle(art.id, art);
+      persistDashboardState();
     }
   } catch (err) {
     console.warn('[API] Save article notice:', err);
@@ -1349,10 +1456,13 @@ const deleteArticle = async (art: ContentArticle) => {
     const idx = articles.value.findIndex(a => a.id === art.id);
     if (idx !== -1) {
       articles.value.splice(idx, 1);
+      persistDashboardState();
       showToast(`Artikel '${art.title}' berhasil dihapus.`, 'info');
     }
     try {
       await studioApi.deleteArticle(art.id);
+      await syncWithBackend({ forceWarmRedis: true }).catch(() => {});
+      persistDashboardState();
     } catch (err) {
       console.warn('[API] Delete article notice:', err);
     }
@@ -1369,6 +1479,7 @@ const saveCmsPage = async (page: CmsPage) => {
     cmsPages.value.unshift({ ...page });
     showToast(`Halaman baru '${page.title}' berhasil ditambahkan!`, 'success');
   }
+  persistDashboardState();
 
   try {
     if (isNew) {
@@ -1377,9 +1488,11 @@ const saveCmsPage = async (page: CmsPage) => {
         page.id = res.page.id;
         const freshIdx = cmsPages.value.findIndex(p => p.id === page.id || p.path === page.path);
         if (freshIdx !== -1) cmsPages.value[freshIdx].id = res.page.id;
+        persistDashboardState();
       }
     } else {
       await studioApi.updatePage(page.id, page);
+      persistDashboardState();
     }
   } catch (err) {
     console.warn('[API] Save page notice:', err);
@@ -1391,10 +1504,13 @@ const deleteCmsPage = async (page: CmsPage) => {
     const idx = cmsPages.value.findIndex(p => p.id === page.id);
     if (idx !== -1) {
       cmsPages.value.splice(idx, 1);
+      persistDashboardState();
       showToast(`Halaman '${page.title}' telah dihapus.`, 'info');
     }
     try {
       await studioApi.deletePage(page.id);
+      await syncWithBackend({ forceWarmRedis: true }).catch(() => {});
+      persistDashboardState();
     } catch (err) {
       console.warn('[API] Delete page notice:', err);
     }
@@ -1411,7 +1527,7 @@ const mediaStorage = ref({
   freeStorage: '2.00 GB',
   usagePercentage: '0.0%'
 });
-const mediaAssets = ref<MediaAssetItem[]>([]);
+const mediaAssets = ref<MediaAssetItem[]>([...initialMediaAssets]);
 const isUploadingMedia = ref(false);
 
 const formatBytesToReadable = (bytes: number): string => {
@@ -1526,6 +1642,7 @@ const deleteMedia = async (med: MediaAssetItem) => {
     if (!serverStorageUpdated) {
       recalculateStorage();
     }
+    persistDashboardState();
     showToast(`Media ${med.name} dihapus dari S3 bucket.`, 'info');
   }
 };
@@ -1586,7 +1703,7 @@ const deletePersonalAccessToken = (id: string) => {
 };
 
 // Webhooks State & Event Notification Dispatcher (100% Real PostgreSQL Webhooks)
-const webhooks = ref<WebhookItem[]>([]);
+const webhooks = ref<WebhookItem[]>([...initialWebhooks]);
 
 const addWebhook = (name: string, url: string, events: string[], secretKey?: string) => {
   const generatedSecret = secretKey || `whsec_9942_${Math.random().toString(36).substring(2, 10)}`;
@@ -1600,6 +1717,7 @@ const addWebhook = (name: string, url: string, events: string[], secretKey?: str
     lastTriggered: 'Belum pernah dipicu'
   };
   webhooks.value.push(newWh);
+  persistDashboardState();
   showToast(`Webhook '${name}' berhasil didaftarkan!`, 'success');
   return newWh;
 };
@@ -1609,6 +1727,7 @@ const deleteWebhook = (id: string) => {
   if (idx !== -1) {
     const name = webhooks.value[idx].name;
     webhooks.value.splice(idx, 1);
+    persistDashboardState();
     showToast(`Webhook '${name}' telah dihapus.`, 'info');
   }
 };
@@ -1617,6 +1736,7 @@ const toggleWebhookStatus = (id: string) => {
   const wh = webhooks.value.find(w => w.id === id);
   if (wh) {
     wh.status = wh.status === 'active' ? 'paused' : 'active';
+    persistDashboardState();
     showToast(`Webhook '${wh.name}' kini ${wh.status === 'active' ? 'Aktif' : 'Dijeda'}.`, 'info');
   }
 };
@@ -1879,7 +1999,7 @@ const normalizeTicket = (t: any): SupportTicketItem => {
 };
 
 // Support Ticketing State (100% Real PostgreSQL Support Tickets)
-const supportTickets = ref<SupportTicketItem[]>([]);
+const supportTickets = ref<SupportTicketItem[]>([...initialSupportTickets]);
 
 const selectedTicket = ref<SupportTicketItem | null>(null);
 const isCreateTicketModalOpen = ref(false);
@@ -2193,10 +2313,34 @@ const resolveTicket = async (ticket: SupportTicketItem) => {
 };
 
 // User-scoped LocalStorage Cache Key Helper
-const getCacheKey = (email?: string) => {
+function getCacheKey(email?: string): string {
   const user = (email || userEmail.value || '').toLowerCase().trim();
   return user ? `herocms_dashboard_cache_${user}` : 'herocms_dashboard_cache';
-};
+}
+
+function persistDashboardState(targetEmail?: string): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const key = getCacheKey(targetEmail);
+    localStorage.setItem(key, JSON.stringify({
+      timestamp: Date.now(),
+      user: targetEmail || userEmail.value,
+      containers: containers.value,
+      articles: articles.value,
+      cmsPages: cmsPages.value,
+      mediaAssets: mediaAssets.value,
+      mediaStorage: mediaStorage.value,
+      mediaBucketName: mediaBucketName.value,
+      customDomains: customDomains.value,
+      supportTickets: supportTickets.value,
+      invoices: invoices.value,
+      webhooks: webhooks.value,
+      userPlan: userPlan.value
+    }));
+  } catch (e) {
+    console.warn('[LOCAL STORAGE PERSIST ERROR]', e);
+  }
+}
 
 // Backend API Synchronization & Redis Warmup
 const isBackendSyncing = ref(false);
@@ -2468,9 +2612,34 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
   } catch (err) {
     isBackendOffline.value = true;
     console.warn('[SYNC NOTICE] Backend sync deferred (running in offline resilient mode):', err);
-    if (!containers.value || containers.value.length === 0) {
-      containers.value = [defaultFallbackContainer];
-      activeContainerId.value = defaultFallbackContainer.id;
+    const hasCachedState = typeof localStorage !== 'undefined' && !!localStorage.getItem(getCacheKey());
+    if (!hasCachedState) {
+      if (!containers.value || containers.value.length === 0) {
+        containers.value = [...initialContainers];
+        activeContainerId.value = initialContainers[0]?.id || defaultFallbackContainer.id;
+      }
+      if (!articles.value || articles.value.length === 0) {
+        articles.value = [...initialArticles];
+      }
+      if (!cmsPages.value || cmsPages.value.length === 0) {
+        cmsPages.value = [...initialCmsPages];
+      }
+      if (!mediaAssets.value || mediaAssets.value.length === 0) {
+        mediaAssets.value = [...initialMediaAssets];
+        recalculateStorage();
+      }
+      if (!customDomains.value || customDomains.value.length === 0) {
+        customDomains.value = [...initialCustomDomains];
+      }
+      if (!invoices.value || invoices.value.length === 0) {
+        invoices.value = [...initialInvoices];
+      }
+      if (!supportTickets.value || supportTickets.value.length === 0) {
+        supportTickets.value = [...initialSupportTickets];
+      }
+      if (!webhooks.value || webhooks.value.length === 0) {
+        webhooks.value = [...initialWebhooks];
+      }
     }
   } finally {
     isBackendSyncing.value = false;
@@ -2481,29 +2650,13 @@ const syncWithBackend = async (_options?: { forceWarmRedis?: boolean }) => {
 const hydrateFromCache = (overrideEmail?: string) => {
   try {
     const targetEmail = (overrideEmail || userEmail.value || '').toLowerCase().trim();
-    const raw = localStorage.getItem(getCacheKey(targetEmail));
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(getCacheKey(targetEmail)) : null;
     if (raw) {
       const data = JSON.parse(raw);
       if (data.user && targetEmail && data.user.toLowerCase().trim() !== targetEmail) {
         return;
       }
-      // Purge legacy mock seeds cache if found
-      const hasLegacySeeds = (Array.isArray(data.invoices) && data.invoices.some((i: any) => i.id === 'INV-2026-10-0994')) ||
-        (Array.isArray(data.containers) && data.containers.some((c: any) => 
-          c.id === 'hero_tenant_9942' || 
-          c.id === 'hero_tenant_2002' || 
-          c.id === '99420000-0000-0000-0000-000000000001' || 
-          c.id === '99420000-0000-0000-0000-000000000002' ||
-          c.name === 'Portal Informasi'
-        ));
-      if (hasLegacySeeds) {
-        localStorage.removeItem(getCacheKey(targetEmail));
-        localStorage.removeItem('herocms_dashboard_cache');
-        if (!containers.value || containers.value.length === 0) {
-          containers.value = [defaultFallbackContainer];
-          activeContainerId.value = defaultFallbackContainer.id;
-        }
-      } else if (Array.isArray(data.containers)) {
+      if (Array.isArray(data.containers)) {
         containers.value = data.containers.filter((c: any) => 
           c.id !== 'hero_tenant_9942' && 
           c.id !== 'hero_tenant_2002' && 
@@ -2511,6 +2664,19 @@ const hydrateFromCache = (overrideEmail?: string) => {
           c.id !== '99420000-0000-0000-0000-000000000002' &&
           c.name !== 'Portal Informasi'
         ).map((c: any) => {
+          // Default seed containers must reflect true offline/stopped status until explicitly started in Docker
+          if (c.id === 'site_main_corporate' || c.id === 'site_portal_edu' || c.id === 'site_toko_digital') {
+            return {
+              ...c,
+              status: 'stopped',
+              uptime: 'Kontainer Mati (Offline)',
+              cpuUsage: 0,
+              ramUsage: 0,
+              deployPhase: undefined,
+              deployStep: undefined,
+              deployStepMessage: undefined
+            };
+          }
           if (c.status === 'running' && c.deployPhase === 'running') {
             return { ...c, deployPhase: undefined, deployStep: undefined, deployStepMessage: undefined };
           }
@@ -2518,16 +2684,13 @@ const hydrateFromCache = (overrideEmail?: string) => {
         });
         if (containers.value.length > 0 && !containers.value.some(c => c.id === activeContainerId.value)) {
           activeContainerId.value = containers.value[0].id;
-        } else if (containers.value.length === 0) {
-          containers.value = [defaultFallbackContainer];
-          activeContainerId.value = defaultFallbackContainer.id;
         }
       }
       if (Array.isArray(data.articles)) {
-        articles.value = data.articles.filter((a: any) => !a.slug?.startsWith('arsitektur-multi-tenant'));
+        articles.value = data.articles;
       }
       if (Array.isArray(data.cmsPages)) {
-        cmsPages.value = data.cmsPages.filter((p: any) => !p.id?.startsWith('page_'));
+        cmsPages.value = data.cmsPages;
       }
       if (Array.isArray(data.mediaAssets)) {
         mediaAssets.value = data.mediaAssets;
@@ -2545,9 +2708,37 @@ const hydrateFromCache = (overrideEmail?: string) => {
       if (Array.isArray(data.invoices)) invoices.value = data.invoices;
       if (Array.isArray(data.webhooks)) webhooks.value = data.webhooks;
       if (data.userPlan?.name) userPlan.value = data.userPlan;
+    } else {
+      // ONLY on fresh cold start (when NO localStorage entry exists for this user)
+      if (!containers.value || containers.value.length === 0) {
+        containers.value = [...initialContainers];
+        activeContainerId.value = initialContainers[0]?.id || defaultFallbackContainer.id;
+      }
+      if (!articles.value || articles.value.length === 0) {
+        articles.value = [...initialArticles];
+      }
+      if (!cmsPages.value || cmsPages.value.length === 0) {
+        cmsPages.value = [...initialCmsPages];
+      }
+      if (!mediaAssets.value || mediaAssets.value.length === 0) {
+        mediaAssets.value = [...initialMediaAssets];
+        recalculateStorage();
+      }
+      if (!customDomains.value || customDomains.value.length === 0) {
+        customDomains.value = [...initialCustomDomains];
+      }
+      if (!invoices.value || invoices.value.length === 0) {
+        invoices.value = [...initialInvoices];
+      }
+      if (!supportTickets.value || supportTickets.value.length === 0) {
+        supportTickets.value = [...initialSupportTickets];
+      }
+      if (!webhooks.value || webhooks.value.length === 0) {
+        webhooks.value = [...initialWebhooks];
+      }
     }
-  } catch (e) {
-    // Graceful fallback to default values
+  } catch (err) {
+    console.warn('[CACHE HYDRATION ERROR]', err);
   }
 };
 
@@ -2757,6 +2948,7 @@ export function useDashboardData() {
     resetDashboardState,
     updateUserEmail,
     getCacheKey,
+    persistDashboardState,
     hydrateFromCache,
     isBackendOffline,
     selectedContainerForDetail

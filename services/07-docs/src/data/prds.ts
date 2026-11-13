@@ -137,7 +137,7 @@ export const microservicePrds: MicroservicePrd[] = [
     title: 'Dashboard CMS (Stack Studio - Portal Pelanggan by Aether Core)',
     serviceName: '02-dashboard-cms',
     badge: 'Customer Studio & PWA',
-    version: 'v1.42.2-PROD',
+    version: 'v1.42.4-PROD',
     targetAudience: [
       'Software Engineer & Developer Portofolio',
       'Penulis Independen & Tim Media Editorial',
@@ -246,6 +246,7 @@ export const microservicePrds: MicroservicePrd[] = [
         capabilities: [
           'Diagram Alur Figma Multi-Artboard Horizontal: Visualisasi pohon rute bergerak ke kanan secara horizontal (/ ➜ /about ➜ /about/rizal) dengan kalkulasi posisi otomatis berdasar kedalaman rute.',
           'Penyelarasan Visual Real-time (WYSIWYG to Figma Sync): Kompiler template HTML menyinkronkan Google Fonts terpilih, rendering SVG icon semantik, tombol kustom (primary & secondary button styling, glow/outline/radius), badge hero, cover card media, dan blok komponen dinamis (carousel & progress bar) langsung ke iframe artboard kanvas.',
+          'Integrasi Penuh Bilah Navigasi (Navbar-Sitemap Sync): Menghubungkan daftar menu navigasi secara dinamis dengan pohon rute Alur Figma di seluruh halaman. Mengeliminasi tautan dummy (#hero, #products) saat multi-halaman aktif, meng-highlight rute aktif per artboard, serta menyediakan chip indikator Alur Figma dan tombol re-sinkronisasi di HUD toolbar.',
           'Tata Letak Anti-Overlap & Dynamic Spacing: Menghitung tinggi frame riil artboard (~880px) dan jarak vertikal baris 160px sehingga frame tidak saling bertumpuk dan tinggi kanvas SVG beradaptasi otomatis.',
           'Konektor Kurva S Bezier Dinamis: Garis alur SVG mengalir mulus langsung dari frame induk ke anak dengan partikel animasi pulsa sinyal dan interactive route pill badge pada 75% lintasan kurva.',
           'Modal Pengaturan Edit Rute & Metadata Halaman: Modal dialog terdedikasi berstandar Bespoke Studio untuk memodifikasi Judul Halaman, Alamat Rute URL (dengan proteksi rute beranda / dan parent nesting quick chips), serta Deskripsi SEO Meta, yang dapat diakses langsung dari shelf artboard Alur Figma maupun Dropdown Daftar Halaman.',

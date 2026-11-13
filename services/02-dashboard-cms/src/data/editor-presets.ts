@@ -261,10 +261,7 @@ export const createDefaultBlocks = (siteName: string, role: string, bio: string)
       isVisible: true,
       isLocked: false,
       items: [
-        { id: 'nav_itm_1', title: 'Beranda', url: '#hero' },
-        { id: 'nav_itm_2', title: 'Keunggulan', url: '#features' },
-        { id: 'nav_itm_3', title: 'Layanan', url: '#pricing' },
-        { id: 'nav_itm_4', title: 'Kontak', url: '#cta' }
+        { id: 'nav_itm_1', title: 'Beranda', url: '/', active: true }
       ],
       styles: {
         bgMode: 'glass',

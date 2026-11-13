@@ -606,51 +606,76 @@ watch(
 
     <!-- 2. TELEMETRY OVERVIEW CARDS -->
     <div class="stats-overview-grid">
-      <div class="telemetry-card accent-emerald">
-        <div class="telemetry-corner-watermark emerald"><Clock :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">WAKTU RESPONS RATA-RATA</span>
+          <div class="telemetry-glyph"><Clock :size="18" /></div>
         </div>
-        <div class="telemetry-val">&lt; 5 Menit <span class="badge-online">Live Chat SLA</span></div>
+        <div class="telemetry-val">&lt; 5 Menit <span class="badge-mono active">Live Chat SLA</span></div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 98%;"></div>
+        </div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
           <span>Langsung terhubung ke divisi spesialis</span>
         </div>
       </div>
 
-      <div class="telemetry-card accent-blue">
-        <div class="telemetry-corner-watermark blue"><MessageSquare :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">PENGADUAN SEDANG AKTIF</span>
+          <div class="telemetry-glyph"><MessageSquare :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ activeTicketsCount }} Tiket
-          <span class="badge-growth-pill">Aktif</span>
+          <span class="badge-mono active">Aktif</span>
+        </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node" :class="{ active: openTicketsCount > 0 }"></span>
+          <span class="ingress-node" :class="{ active: inProgressTicketsCount > 0 }"></span>
+          <span class="ingress-node"></span>
+          <span class="ingress-node"></span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>{{ openTicketsCount }} Menunggu CS • {{ inProgressTicketsCount }} Sedang Ditangani</span>
         </div>
       </div>
 
-      <div class="telemetry-card accent-emerald">
-        <div class="telemetry-corner-watermark emerald"><CheckCircle2 :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">PENGADUAN TERATASI</span>
+          <div class="telemetry-glyph"><CheckCircle2 :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ resolvedTicketsCount + 12 }} Selesai
-          <span class="badge-online">99.8% CSAT</span>
+          <span class="badge-mono active">99.8% CSAT</span>
         </div>
-        <div class="telemetry-sub"><span>Riwayat solusi & tindak lanjut tuntas</span></div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 99.8%;"></div>
+        </div>
+        <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
+          <span>Riwayat solusi & tindak lanjut tuntas</span>
+        </div>
       </div>
 
-      <div class="telemetry-card accent-purple">
-        <div class="telemetry-corner-watermark purple"><Headphones :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">DIVISI BANTUAN TERSEDIA</span>
+          <div class="telemetry-glyph"><Headphones :size="18" /></div>
         </div>
-        <div class="telemetry-val">4 Divisi <span class="badge-growth-pill">Media & Emot</span></div>
-        <div class="telemetry-sub"><span>DevOps • Customer Care • Billing • SSL</span></div>
+        <div class="telemetry-val">4 Divisi <span class="badge-mono active">Media & Emot</span></div>
+        <div class="slot-segments">
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+        </div>
+        <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
+          <span>DevOps • Customer Care • Billing • SSL</span>
+        </div>
       </div>
     </div>
 

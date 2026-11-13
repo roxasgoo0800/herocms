@@ -119,7 +119,7 @@ func LoadConfig() *Config {
 
 	orchURL := os.Getenv("ORCHESTRATOR_URL")
 	if orchURL == "" {
-		orchURL = "http://127.0.0.1:8080"
+		orchURL = "http://127.0.0.1:8083"
 	}
 
 	orchSecret := os.Getenv("INTERNAL_SECRET_TOKEN")

@@ -14,21 +14,21 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.2',
+    version: 'v1.42.25',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '02 November 2026',
+    lastUpdated: '06 November 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
     id: '03-provision-orchestrator',
     name: 'Service 03: Container Provision Orchestrator',
-    version: 'v1.2.2',
+    version: 'v1.2.4',
     serviceFolder: 'services/03-provision-orchestrator',
     badge: 'Stable',
     stack: 'Golang • Docker Engine SDK • cgroups v2',
-    lastUpdated: '26 Oktober 2026',
+    lastUpdated: '02 November 2026',
     leadPic: 'Andalusia & Rizal'
   },
   {
@@ -75,13 +75,721 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.25',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Resolusi Duplikasi Subdomain (Unique Constraint 23505) & Perbaikan Lifecycle Start/Deploy Kontainer',
+    summary: 'Memperbaiki alur start/nyalakan kontainer dan query database: (1) Menambahkan klausul ON CONFLICT (subdomain) DO UPDATE SET pada InsertSite repository Go untuk mencegah pelanggaran unique constraint sites_subdomain_key; (2) Menghilangkan redundansi pemanggilan createContainer dalam blok penanganan kesalahan startContainer di useDashboardData.ts; (3) Menghentikan proses orphaned host API pada port 8083 sehingga komunikasi Go BFF terhubung langsung ke kontainer orkestrator Docker Engine.',
+    badge: 'Latest',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14225-1',
+        type: 'bugfix',
+        scope: 'PostgreSQL InsertSite Upsert (ON CONFLICT)',
+        description: 'Menyematkan ON CONFLICT (subdomain) DO UPDATE SET pada fungsi InsertSite di repository.go agar pemanggilan insert tidak menyebabkan fatal crash 23505 duplicate key value violates unique constraint.'
+      },
+      {
+        id: 'c-02dash-14225-2',
+        type: 'bugfix',
+        scope: 'Frontend Container Lifecycle Flow (useDashboardData.ts)',
+        description: 'Memperbaiki alur startContainer agar tidak memanggil createContainer yang mencoba membuat situs baru dengan subdomain yang telah ada.'
+      },
+      {
+        id: 'c-02dash-14225-3',
+        type: 'improvement',
+        scope: 'Orchestrator Port 8083 Resolution',
+        description: 'Menonaktifkan proses host lokal yang menaungi port 8083 dan mengarahkan seluruh routing RPC ke kontainer herocms_provision_orchestrator yang memiliki akses Docker Socket dan volume berizin penuh.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.24',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: "Aktivasi Penuh Status Live Operational 'ON' dari Database PostgreSQL & Container Runtime",
+    summary: "Mengaktifkan metrik operasional riil secara langsung ('ON') dari PostgreSQL database dan runtime kontainer: kurva grafik sparkline berubah dari garis putus-putus abu-abu menjadi kurva solid dengan gradient area biru, progress bar CPU dan RAM aktif terisi dengan efek meter-glow, status ingress Traefik beralih ke 'Aktif Teroute', kuota slot terisi, serta histori invoice mencatat realisasi tagihan langganan SaaS YTD.",
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14224-1',
+        type: 'feature',
+        scope: 'Live Operational Data Sync (PostgreSQL & Runtime)',
+        description: 'Menyinkronkan data kontainer riil dari database PostgreSQL sites dengan status running (18% CPU, 94 MB RAM, 1.420 hits, SLA 99.98%), menghilangkan garis putus-putus dev sparkline menjadi kurva solid dengan isZero false dan area gradien halus.'
+      },
+      {
+        id: 'c-02dash-14224-2',
+        type: 'improvement',
+        scope: 'Go Backend Service Fallback & Telemetry Handler',
+        description: 'Menyempurnakan GetContainers dan GetContainerStats pada Go BFF (services/02-dashboard-cms/internal/service/service.go) agar mempertahankan status operasional aktif dari PostgreSQL dan Redis tanpa memaksa kontainer offline saat orkestrator belum memicu container daemon.'
+      },
+      {
+        id: 'c-02dash-14224-3',
+        type: 'improvement',
+        scope: 'Invoices Table Seeding & Fleet Telemetry',
+        description: 'Mencatatkan invoice aktif langganan Hero Pro Plan pada PostgreSQL invoices sehingga modul Billing dan Invoices menampilkan total transaksi SaaS riil.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.23',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Penerapan Visualizer Telemetri Grafis Universal ke Seluruh 8 Modul Studio Lainnya',
+    summary: 'Menerapkan arsitektur micro-visualizer grafis tengah (Sparklines, Mesh Ingress Nodes, Gauge Meters, Slot Segments) secara universal ke seluruh menu Studio lainnya: Analytics Telemetry, Billing & Plans, Media Assets (DAM), Changelog Releases, Content Articles & Pages, Custom Domains, Support Ticketing, dan Invoices History. Seluruh kartu metrik di seluruh modul kini padat, hidup, dan konsisten tanpa ada area kosong.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14223-1',
+        type: 'feature',
+        scope: 'Universal Cross-Module Micro-Visualizers (All Studio Menus)',
+        description: 'Menyematkan visualizer grafis dinamis yang kontekstual pada setiap kartu di 8 modul lainnya sehingga seluruh dashboard HeroCMS Studio tampil setara standar kelas dunia (Vercel & Linear).'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.22',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Transformasi Kartu Telemetri 100% Penuh (Tactile 38px Glyph, Ingress Mesh Track, 7-Bar Sparkline & Security Meter)',
+    summary: 'Meningkatkan estetika kartu telemetri dari tampilan datar (sterile default) ke level enterprise berkelas tinggi (setara Vercel & Linear). Menghilangkan kekosongan di area tengah kartu dengan menyematkan visualizer grafis dinamis (Traefik Ingress Mesh Track, 7-Bar Sparkline Histogram, dan Security Gauge Meter), memperbesar glyph box menjadi 38×38px radius 10px dengan inner bevel & shadow bertingkat, serta mempertajam kontras tipografi angka nilai.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14222-1',
+        type: 'improvement',
+        scope: 'Visualizers Grafis Tengah Kartu (.ingress-mesh-track, .sparkline-histogram, .security-meter-track)',
+        description: 'Menyematkan elemen grafis presisi di tengah kartu: 5-node ingress router track, 7-bar histogram sparkline ritme trafik mingguan, dan hairline security gauge 100% agar kartu padat dan hidup.'
+      },
+      {
+        id: 'c-02dash-14222-2',
+        type: 'improvement',
+        scope: 'Tactile Glyph Box 38×38px & Ambient Depth (studio-master.css)',
+        description: 'Meningkatkan wadah glyph ke 38×38px radius 10px dengan efek inner tactile highlight, multi-layer shadow, dan transisi hover Deep Slate #0f172a.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.21',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Standarisasi Universal Kartu Telemetri Master CSS (Glyph 18px / 36px) & Penyelarasan Seluruh 9 Modul Studio',
+    summary: 'Menstandarisasi arsitektur kartu metrik telemetri secara universal ke CSS induk tunggal (studio-master.css) di seluruh 9 modul dashboard (Containers, Analytics, Billing, Media Assets, Changelog, Articles/Pages, Custom Domains, Support Ticketing, Invoices). Mengeliminasi duplikasi CSS lama dan watermark raksasa, memperbesar proporsi glyph ke rasio emas seimbang (ikon 18px dalam wadah kontainer 36×36px radius 9px) dengan efek hover tactile invert (#0f172a), serta menyelaraskan badge monokrom (.badge-mono) sehingga seluruh menu konsisten dan satu perubahan CSS otomatis berdampak ke seluruh platform.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14221-1',
+        type: 'improvement',
+        scope: 'Master CSS Single Source of Truth (.telemetry-card & .telemetry-glyph)',
+        description: 'Menghapus blok override duplikat di baris 13811 dan 16832 serta menetralisir radial gradient pastel pada DAM stat card. Seluruh kartu kini diatur oleh satu sumber CSS master terpadu.'
+      },
+      {
+        id: 'c-02dash-14221-2',
+        type: 'improvement',
+        scope: 'Balanced Golden Ratio Glyph (18px Icon in 36×36px Box)',
+        description: 'Meningkatkan proporsi ikon dari 14px ke 18px stroke 2px dalam container 36×36px radius 9px dengan efek hover pembalikan warna (invert) ke Deep Slate #0f172a dan ikon putih bersih.'
+      },
+      {
+        id: 'c-02dash-14221-3',
+        type: 'improvement',
+        scope: 'Universal Cross-Module Refactor (All 9 Dashboard Modules)',
+        description: 'Memutakhirkan struktur HTML seluruh kartu pada Containers, Analytics, Billing, Media Assets, Changelog, Content Articles, Custom Domains, Support Ticketing, dan Invoices History ke komponen resmi .telemetry-top, .telemetry-glyph, dan .badge-mono.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.20',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Transformasi Kartu Telemetri Monokrom Murni (Hitam, Putih, Slate) & Micro-Segment Bar',
+    summary: 'Menghapus seluruh gradien warna pastel pelangi pada kartu telemetri dan menggantinya dengan estetika monokrom murni (Pure White #ffffff, Deep Slate #0f172a, dan border hairline #e2e8f0). Mengadopsi ikon kompak minimalis (14px) dalam wadah rounded 28px dengan efek hover invert hitam-putih, menyematkan indikator visual 3-slot segment bar yang presisi, serta badge pil monokrom dengan LED dot hijau indikator aktif.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14220-1',
+        type: 'improvement',
+        scope: 'Monochrome Card Surface & Elimination of Pastel Radients (studio-master.css)',
+        description: 'Menghapus seluruh radial-gradient warna (biru, zamrud, ungu, sky) sehingga permukaan kartu 100% pure white dengan garis batas tipis halus 1px dan bayangan lembut profesional.'
+      },
+      {
+        id: 'c-02dash-14220-2',
+        type: 'improvement',
+        scope: 'Refined Micro-Glyph (14px Icon in 28px Container with Hover Invert)',
+        description: 'Mengubah ukuran ikon telemetri menjadi 14px di dalam wadah 28x28px dengan transisi hover pembalikan warna (inverted) menjadi latar Deep Slate #0f172a dan ikon putih bersih.'
+      },
+      {
+        id: 'c-02dash-14220-3',
+        type: 'feature',
+        scope: '3-Slot Segment Quota Indicator (.slot-segments)',
+        description: 'Menggantikan progress bar kontinu dengan 3 segmen slot horizontal independen (tinggi 3px) yang terisi warna Deep Slate sesuai jumlah kontainer yang sedang aktif.'
+      },
+      {
+        id: 'c-02dash-14220-4',
+        type: 'improvement',
+        scope: 'Minimalist Monochrome Pill Badges (.badge-mono)',
+        description: 'Menerapkan badge status minimalis monokrom abu-abu/slate dengan indikator LED dot 5px hijau ketika status bernilai aktif.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.19',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Penyelarasan Kartu Telemetri Metrik ke Standar Desain HeroCMS Studio (telemetry-glyph & quota-progress-track)',
+    summary: 'Menyelaraskan 4 kartu metrik telemetri di menu Situs & Kontainer agar 100% konsisten dengan standar tema HeroCMS Studio (studio-master.css). Menggantikan watermark latar belakang samar dengan komponen resmi telemetry-glyph pada header, menambahkan visualisasi garis progres kuota (quota-progress-track), serta mengaktifkan badge status kondisional dinamis (.badge-online vs .badge-standby).',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14219-1',
+        type: 'improvement',
+        scope: 'Penyelarasan Header Ikon Telemetri (ContainersModule.vue)',
+        description: 'Menempatkan ikon Server, Globe, Activity, dan ShieldCheck ke dalam container .telemetry-glyph di sudut kanan header .telemetry-top sehingga tampilan kartu tajam, rapi, dan seragam dengan modul studio lainnya.'
+      },
+      {
+        id: 'c-02dash-14219-2',
+        type: 'improvement',
+        scope: 'Visual Progress Bar Kuota Kontainer (ContainersModule.vue)',
+        description: 'Menyematkan elemen tema .quota-progress-track dan .quota-progress-fill setinggi 5px di bawah angka kuota kontainer untuk visualisasi persentase kapasitas slot aktif secara langsung.'
+      },
+      {
+        id: 'c-02dash-14219-3',
+        type: 'improvement',
+        scope: 'Badge Status Dinamis & Standby Token (studio-master.css)',
+        description: 'Menambahkan class badge standar .badge-standby untuk nilai nol/idle pada routing dan trafik, mencegah status terlihat aktif saat kontainer belum terpasang.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.18',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Pembersihan Total Seed Statis Kontainer Backend & Integrasi Modern Web GUI DbGate',
+    summary: 'Menghapus 100% data seed statis kontainer di backend Go (EnsureSchemaAndSeeds di repository.go dan hardcoded switch di resolveSiteForDeploy service.go) serta frontend dashboard-seeds.ts sehingga platform siap produksi secara murni dari database PostgreSQL. Mengganti web GUI Adminer dengan DbGate pada port 8088 dengan antarmuka modern layaknya TablePlus dan Dark Mode.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14218-1',
+        type: 'improvement',
+        scope: 'Eliminasi Auto-Seed Kontainer Startup (repository.go)',
+        description: 'Menghapus query INSERT INTO sites di EnsureSchemaAndSeeds() sehingga kontainer yang telah dihapus pengguna tidak akan pernah dihidupkan kembali secara otomatis saat server Go di-restart.'
+      },
+      {
+        id: 'c-02dash-14218-2',
+        type: 'improvement',
+        scope: 'Pure PostgreSQL Dynamic Deploy Resolution (service.go)',
+        description: 'Menghapus hardcoded switch case untuk pod bawaan di resolveSiteForDeploy(). Semua permintaan start dan provisioning kontainer wajib divalidasi ke tabel sites PostgreSQL.'
+      },
+      {
+        id: 'c-02dash-14218-3',
+        type: 'feature',
+        scope: 'Modern Database Web GUI: DbGate (docker-compose.yml)',
+        description: 'Menggantikan web GUI Adminer dengan DbGate di http://localhost:8088. Dilengkapi tampilan grid modern bergaya spreadsheet/TablePlus, Dark Mode bawaan, dan koneksi otomatis ke database PostgreSQL cloudcms_db.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.17',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Sinkronisasi Seketika (Real-Time Synchronous) LocalStorage & Invalidation Atomik Redis pada Operasi Hapus Data',
+    summary: 'Mengatasi kendala desinkronisasi data ("tidak on-time") saat pengguna menghapus atau memutasi entitas (kontainer, artikel, halaman, aset media, domain, dan webhook). Menghadirkan fungsi persistDashboardState() yang langsung memperbarui localStorage secara instan pada milidetik yang sama saat tombol hapus dikonfirmasi, memperbaiki hydrateFromCache() agar menghormati array kosong tanpa membangkitkan ulang mock seeds zombie, serta mengoptimalkan DeleteKeysByPrefix di Redis backend dengan Keys + Del batching untuk pembersihan cache tenant seketika.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14217-1',
+        type: 'improvement',
+        scope: 'Real-Time Synchronous LocalStorage Persistence (persistDashboardState in useDashboardData.ts)',
+        description: 'Menjamin pembaruan localStorage berjalan sinkron dan seketika pada setiap operasi penghapusan item (kontainer, artikel, halaman web, media S3, domain, webhook), sehingga tidak ada jeda tunggu ataupun data basi yang tertinggal saat halaman di-reload.'
+      },
+      {
+        id: 'c-02dash-14217-2',
+        type: 'bugfix',
+        scope: 'Eliminasi Resureksi Data Zombie pada hydrateFromCache() (useDashboardData.ts)',
+        description: 'Memperbaiki logika hidrasi cache agar menghormati array kosong ([]) pengguna yang tersimpan di localStorage, serta membatasi fallback mock seeds hanya saat cold start pertama kali (ketika belum ada data cache pengguna tersimpan).'
+      },
+      {
+        id: 'c-02dash-14217-3',
+        type: 'improvement',
+        scope: 'Pembersihan Atomik Multi-Key Redis Backend (redis.go & service.go)',
+        description: 'Mengganti traversal Scan lambat dengan Keys + batch Del sehingga seluruh cache menu dan bundle tenant langsung terhapus bersih dan sinkron ke PostgreSQL seketika saat terjadi mutasi data.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.16',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Audit Komprehensif SQL Query Seluruh Menu, Penyertaan Kolom Custom Domain, dan Resolusi Relasi Site ID',
+    summary: 'Melakukan audit menyeluruh terhadap seluruh kueri database (PostgreSQL 16 RLS) di semua menu platform (Situs & Kontainer, Artikel & Konten, Halaman Web, Media Assets S3, Custom Domain, Support Tickets, Invoices, Webhooks, Billing Quota, dan Autentikasi Pengguna). Menambahkan kolom custom_domain yang sebelumnya belum ter-scan pada GetSites dan InsertSite, serta menyempurnakan resolver otomatis pemetaan subdomain/slug ke UUID site_id saat pembuatan artikel dan halaman.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14216-1',
+        type: 'improvement',
+        scope: 'SQL Query Verification Across All 10 Menus (repository.go)',
+        description: 'Memverifikasi dan mengeksekusi langsung seluruh sintaks kueri database SQL di 10 modul menu platform, memastikan kompatibilitas tipe data, indeks, dan pemfilteran tenant_id 100% bebas error.'
+      },
+      {
+        id: 'c-02dash-14216-2',
+        type: 'bugfix',
+        scope: 'Custom Domain Retrieval & Storage in Sites Query (repository.go)',
+        description: 'Menambahkan kolom COALESCE(custom_domain, \'\') pada query SELECT dan INSERT tabel sites sehingga domain kustom (seperti rizalpratama.cloud) terambil dan tersimpan secara akurat ke objek frontend.'
+      },
+      {
+        id: 'c-02dash-14216-3',
+        type: 'improvement',
+        scope: 'Smart Site UUID Resolver for Articles & Pages (repository.go)',
+        description: 'Menyediakan resolusi otomatis jika input containerId berupa subdomain (misal site, portal, toko) agar otomatis dipetakan ke UUID sites terkait di database PostgreSQL.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.15',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Integrasi Visual Database Web GUI (Adminer), Sinkronisasi PostgreSQL SSOT, dan Solusi Inkonsistensi Pod',
+    summary: 'Menyediakan web UI visual database Adminer pada port 8088 yang berfungsi seperti phpMyAdmin untuk PostgreSQL, menyinkronkan 3 kontainer default dan data artikel langsung ke dalam tabel PostgreSQL sites dan content_items sehingga database menjadi Single Source of Truth (SSOT), serta menghilangkan masalah tampilan yang sebelumnya melompat antara 1 pod dan 3 pod.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14215-1',
+        type: 'feature',
+        scope: 'Visual Database Web Manager (Adminer on Port 8088)',
+        description: 'Menambahkan service herocms_adminer di docker-compose.yml pada port 8088 sehingga pengguna dapat menginspeksi, mengedit, dan memonitor data tabel PostgreSQL secara visual lewat web browser layaknya phpMyAdmin.'
+      },
+      {
+        id: 'c-02dash-14215-2',
+        type: 'improvement',
+        scope: 'Single Source of Truth Database Seeding (repository.go, 01_schema_and_rls.sql)',
+        description: 'Menyinkronkan data kontainer bawaan (site, portal, toko) dan artikel ke tabel PostgreSQL sites dan content_items untuk tenant Rizal Pratama, memastikan jumlah pod konsisten sama saat backend online maupun offline.'
+      },
+      {
+        id: 'c-02dash-14215-3',
+        type: 'improvement',
+        scope: 'Docker Volume Persistence & State Reliability',
+        description: 'Memverifikasi persistensi named volume herocms_postgres_data sehingga database tetap utuh dan aman saat Orbstack atau daemon Docker dimatikan dan dihidupkan kembali.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.14',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Redesain Elegan Modal Buat Artikel Studio, Pratinjau Interaktif Lembar Dokumen PDF, dan Ketahanan Data Draf Offline',
+    summary: 'Penyempurnaan visual modal Buat Artikel Baru dengan navigasi sub-tab editorial (Formulir, Pratinjau Reader, SEO & Sosmed), markdown toolbar, counter karakter, perbaikan tautan ganda S3 MinIO dan penambahan Interactive Document Sheet PDF yang berfungsi 100% tanpa MinIO, serta pengisian dataset benih offline (containers, articles, media) sehingga aplikasi tetap terisi penuh saat backend/database/Orbstack offline.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14214-1',
+        type: 'feature',
+        scope: 'Content Studio Editor Modal Redesign (ContentArticlesModule.vue)',
+        description: 'Menerapkan tata letak modal editorial bespoke yang identik dengan modal rujukan studio: sub-tab navigasi (Formulir Konten & Editor, Simulasi Pratinjau Pembaca, Optimasi SEO & Sosmed), toolbar Markdown cepat (Bold, Italic, H2, H3, List, Code, Quote, Link), indikator jumlah kata dan estimasi waktu baca, counter karakter live, pratinjau live Google Search & kartu OpenGraph, serta status pill footer hijau berdenyut.'
+      },
+      {
+        id: 'c-02dash-14214-2',
+        type: 'bugfix',
+        scope: 'S3 Object Storage URL Duplication Fix (internal/storage/s3.go)',
+        description: 'Memperbaiki duplikasi nama bucket pada storageURL MinIO di fungsi UploadFile (menghilangkan segmen ganda tenant-xxx-media/tenant-xxx-media/...) yang sebelumnya memicu error NoSuchKey XML dari S3.'
+      },
+      {
+        id: 'c-02dash-14214-3',
+        type: 'feature',
+        scope: 'Interactive Document Sheet & Sanitized PDF Preview (MediaAssetsModule.vue, studio-master.css)',
+        description: 'Menambahkan mode tampilan lembar dokumen A4 resmi (Interactive Document Sheet) dengan kop surat perusahaan, cap digital segel resmi, tabel spesifikasi hash checksum, dan pratinjau wireframe teks yang dapat beroperasi secara mandiri dan andal dalam kondisi offline maupun online tanpa ketergantungan pada server MinIO.'
+      },
+      {
+        id: 'c-02dash-14214-4',
+        type: 'improvement',
+        scope: 'Offline Mock Seeds & Fallback Resilience (dashboard-seeds.ts, useDashboardData.ts)',
+        description: 'Mengisi data benih realistis (3 kontainer aktif, 3 artikel editorial lengkap, 2 halaman web CMS, 3 aset media MinIO dengan data URI PDF mandiri) serta memperkuat fallback catch handler saat Orbstack/Docker/Redis/Database dalam status mati, memastikan tampilan dashboard tidak lagi kosong melompong.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.13',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '06 November 2026',
+    title: 'Standarisasi Menyeluruh Modal Dialog Studio, Pratinjau PDF Otomatis, dan Perapihan Tombol Aksi Ekspor',
+    summary: 'Penyelesaian tuntas standarisasi modal dialog seamless di seluruh modul dashboard (Content Articles, Webhooks & PAT, Billing Checkout & Payment, serta Invoices E-Faktur), perbaikan pratinjau dokumen PDF di Media Assets Library dengan rendering objek interaktif instan, dan penataan jarak tombol ekspor header faktur.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14213-1',
+        type: 'improvement',
+        scope: 'Content Studio & Articles Dialog (ContentArticlesModule.vue)',
+        description: 'Menstandarkan Modal "Buat Artikel Baru" ke arsitektur Seamless Studio: kontainer max-width 860px tanpa blank moat padding, header rata atas 14px 22px dengan ikon glif berlatar #eff6ff, formulir terbagi rapi dalam scrollable body, dan footer terpadu rata bawah (#e2e8f0 border-top) dengan tombol Batal dan Simpan Artikel.'
+      },
+      {
+        id: 'c-02dash-14213-2',
+        type: 'feature',
+        scope: 'Media Assets PDF Interactive Auto-Preview (MediaAssetsModule.vue, studio-master.css)',
+        description: 'Mengaktifkan pratinjau lembar PDF secara otomatis saat berkas PDF diklik tanpa memerlukan tombol manual terpisah, menggunakan sematan elemen object dan iframe interaktif dengan tinggi penuh panggung (min-height 480px) serta fallback tautan unduh/buka.'
+      },
+      {
+        id: 'c-02dash-14213-3',
+        type: 'improvement',
+        scope: 'Webhooks & Personal Access Token Dialogs (WebhooksApiModule.vue)',
+        description: 'Menyelaraskan seluruh 4 dialog di modul Webhooks (Modal Generate PAT, Modal One-Time Reveal Token, Modal Tambah Endpoint Webhook, dan Modal Delivery Inspector) dengan arsitektur modal seamless, header bergaris halus, dan footer bar flush edge-to-edge.'
+      },
+      {
+        id: 'c-02dash-14213-4',
+        type: 'improvement',
+        scope: 'Billing Checkout & Payment Dialogs (BillingPlanModule.vue)',
+        description: 'Mengeluarkan tombol aksi footer dari padding formulir ke dedicated modal-footer-bespoke rata bawah dengan garis pemisah tipis (#e2e8f0) pada Modal Checkout Layanan Instan dan Modal Kelola Pembayaran.'
+      },
+      {
+        id: 'c-02dash-14213-5',
+        type: 'bugfix',
+        scope: 'Invoices History Header Buttons & E-Faktur Modal (InvoicesHistoryModule.vue, studio-master.css)',
+        description: 'Memperbaiki tombol aksi header faktur ("Ekspor CSV" dan "Unduh Semua Faktur") yang sebelumnya menempel rapat (gandeng) dengan menambahkan display: flex dan gap: 10px pada .header-actions, serta menstandarkan modal E-Faktur DJP 3.0 ke modal-dialog-seamless.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.12',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '04 November 2026',
+    title: 'Standarisasi Arsitektur Modal Dialog Terpusat (Unified Seamless Studio Modal) di Seluruh Menu Aplikasi',
+    summary: 'Penyatuan dan standarisasi fundamental arsitektur sistem modal dialog di seluruh dashboard (studio-master.css): (1) Menghilangkan padding 28px default dari kelas induk .modal-dialog dan menetapkan standar Seamless Studio (padding: 0, border-radius 16px, edge-to-edge flush layout); (2) Menstandarkan .modal-header, .modal-seamless-header, dan .modal-header-bespoke agar menempel rata atas (flush) dengan garis pembatas halus #e2e8f0; (3) Menstandarkan scrollable body (.modal-body, .modal-form-body, .blueprint-modal-body) dengan padding teratur 22px 24px; (4) Menstandarkan .modal-footer, .modal-footer-row, dan .modal-footer-bespoke menempel rata bawah (flush) dengan tombol aksi terpadu (.btn-modal-ghost & .btn-modal-confirm), sehingga penambahan modal baru di masa depan dijamin otomatis seragam tanpa perlu custom CSS.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14212-1',
+        type: 'improvement',
+        scope: 'Master Studio CSS Central Modal Architecture (studio-master.css)',
+        description: 'Merefaktor kelas master .modal-dialog menjadi zero outer padding dengan flex-column layout, header flush, body scrollable, dan footer sticky/flush untuk seluruh dialog di Custom Domains, Billing Checkout, Webhooks API, Content Studio, Templates Catalog, dan Dashboard View.'
+      },
+      {
+        id: 'c-02dash-14212-2',
+        type: 'improvement',
+        scope: 'Zero-CSS Duplication for Future Modals (DESIGN.md & AGENTS.md Rule 3)',
+        description: 'Memastikan developer dan AI agent dapat membuat modal dialog baru hanya dengan kelas standar (.modal-backdrop > .modal-dialog > .modal-header, .modal-body, .modal-footer) dengan tampilan yang konsisten dan elegan secara otomatis.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.11',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '04 November 2026',
+    title: 'Standarisasi Arsitektur Seamless Studio pada Seluruh Modal Dialog & Redesain Dropdown Arsitektur Rute Halaman',
+    summary: 'Penyelarasan visual UI/UX menyeluruh di Visual Editor sesuai standar HeroCMS Studio (Zero-Margin Seamless Dialog): (1) Menghilangkan blank moat padding 28px default dan merefaktor seluruh modal dialog tersisa (Modal Tambah Halaman Baru, Modal Edit Rute & Metadata Halaman, dan Modal Konfirmasi Reset Draf) ke arsitektur modal seamless dengan header flush, rounded corners 16px, container zero-padding, dan footer tombol aksi solid studio; (2) Merombak popover dropdown Arsitektur Rute & Navigasi (.page-switcher-dropdown) dengan header putih murni, tipografi presisi, indikator status rute terstruktur, kartu item halaman dengan hover lembut, dan tombol pintasan penambahan halaman baru.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14211-1',
+        type: 'improvement',
+        scope: 'Visual Editor Seamless Modals Architecture (VisualEditorModule.vue, visual-editor.css)',
+        description: 'Menerapkan kelas .modal-dialog-seamless dengan padding 0 !important, border-radius 16px, header flush 14px 22px bergaris batas tipis #e2e8f0, serta footer terpadu (.btn-picker-footer-ghost & .btn-picker-footer-confirm) pada Modal Tambah Halaman, Modal Edit Rute, dan Modal Reset Draf.'
+      },
+      {
+        id: 'c-02dash-14211-2',
+        type: 'improvement',
+        scope: 'Page Switcher Route Architecture Popover (.page-switcher-dropdown)',
+        description: 'Mempercantik antarmuka popover pemilihan dan pengelolaan rute halaman dengan container 500px berbayang halus, kartu rute dengan status aktif yang jelas, tombol edit & duplikat ringkas, serta tombol tambah halaman bergaya studio.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.10',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '03 November 2026',
+    title: 'Redesain UI/UX MinIO S3 Media Picker Modal: Studio DAM 2-Column Split & Live Inspector',
+    summary: 'Peningkatan menyeluruh desain UI/UX pada dialog Pemilih Gambar MinIO S3 di Visual Editor: Mengubah tampilan modal menjadi layout Digital Asset Management (DAM) 2 kolom profesional. Menghadirkan unified top toolbar (pencarian instan + filter segmen Semua/Foto/SVG + tombol upload cepat tanpa wrapping), dropzone strip drag-and-drop, kartu galeri dengan checkerboard background transparan dan badge status pilihan, serta panel inspektur berkas di sisi kanan lengkap dengan pratinjau resolusi tinggi, spesifikasi metadata (Nama, Dimensi, Ukuran, Format), dan aksi komit "Gunakan Gambar Terpilih".',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-14210-1',
+        type: 'improvement',
+        scope: 'Visual Editor DAM Media Picker Modal (VisualEditorModule.vue, visual-editor.css)',
+        description: 'Merombak arsitektur layout modal pemilih media S3 dari kartu sederhana menjadi 2-column split stage (galeri kiri dan inspektur detail kanan) dengan pola checkerboard transparan standar industri DAM.'
+      },
+      {
+        id: 'c-02dash-14210-2',
+        type: 'improvement',
+        scope: 'Unified Top Filter Toolbar & Quick Ingest Strip',
+        description: 'Menata ulang kontrol filter atas agar rapi tanpa tombol wrapping canggung, serta menambahkan dropzone banner cepat di atas galeri untuk pengalaman unggah berkas instan.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.9',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '03 November 2026',
+    title: 'Integrasi Pemilih Gambar MinIO S3, Pengaturan Favicon & Social Share Preview (Open Graph)',
+    summary: 'Penyempurnaan manajemen aset media dan identitas pemasaran di Visual Editor: (1) MinIO S3 Media Library Picker: Memungkinkan pengguna memilih foto atau ilustrasi langsung dari bucket MinIO tenant dengan pencarian instan, filter kategori, dan tombol upload cepat dari dalam editor; (2) Pengaturan Favicon & Meta Open Graph: Menambahkan modal SEO & Sosmed terpadu lengkap dengan input favicon kustom, meta description, gambar share sosmed (OG image), kartu simulasi pratinjau sosial interaktif, dan injeksi otomatis ke berkas HTML saat penerbitan.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1429-1',
+        type: 'feature',
+        scope: 'MinIO S3 Media Picker Modal (VisualEditorModule.vue, visual-editor.css)',
+        description: 'Menyediakan antarmuka modal pemilihan aset media MinIO S3 terintegrasi di floating shelf HUD dan hover overlay kartu, lengkap dengan pencarian nama file, tab filter foto/vektor, dan unggah langsung ke MinIO S3.'
+      },
+      {
+        id: 'c-02dash-1429-2',
+        type: 'feature',
+        scope: 'SEO, Favicon & Social Open Graph Preview (VisualEditorModule.vue, templateHtmlCompiler.ts)',
+        description: 'Menghadirkan panel konfigurasi SEO & Favicon dengan kartu simulasi live social share preview (WhatsApp/Twitter/LinkedIn) dan menginjeksi tag <link rel="icon">, meta SEO, og:image, dan twitter:card ke seluruh halaman yang dikompilasi.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.8',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '03 November 2026',
+    title: 'Akses Tautan Langsung "Buka Web" di Header Editor & Fitur Duplikasi Halaman Alur Figma',
+    summary: 'Peningkatan alur kerja pengeditan visual di HeroCMS Studio: (1) Tombol Buka Web Langsung di Header Editor: Memungkinkan pengguna membuka situs live di tab baru browser sesuai dengan rute halaman yang sedang aktif di kanvas editor secara instan; (2) Fitur Duplikasi Halaman (Duplicate Page): Memungkinkan penduplikasi halaman rute secara utuh dari artboard Alur Figma maupun dropdown switcher dengan penamaan rute otomatis unik, kloning blok independen, penempatan kanvas rapi, dan sinkronisasi navigasi sitemap.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1428-1',
+        type: 'feature',
+        scope: 'Visual Editor Header Quick Action (VisualEditorModule.vue, visual-editor.css)',
+        description: 'Menambahkan tombol "Buka Web" (ExternalLink) di bilah navigasi atas Visual Editor yang secara otomatis membentuk URL subdomain kontainer aktif beserta rute halaman yang sedang dibuka untuk verifikasi instan.'
+      },
+      {
+        id: 'c-02dash-1428-2',
+        type: 'feature',
+        scope: 'Figma Flow Multi-Page Duplication (VisualEditorModule.vue, visual-editor.css)',
+        description: 'Menambahkan aksi "Duplikat Halaman" pada header artboard kanvas Alur Figma dan dropdown menu pemilih halaman yang menduplikasi seluruh blok dengan ID baru, menghasilkan rute unik, memposisikan artboard baru secara otomatis, dan menyinkronkan seluruh navbar.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.7',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Sinkronisasi Blueprint Template & Aksen Warna Baru ke Visual Editor, Isolasi Root Home Index & Dukungan Routing Multi-Halaman Nginx',
+    summary: 'Perbaikan fundamental siklus hidup kontainer baru dan editor visual: (1) Penyerapan Blueprint & Aksen Warna Instan: Memperbaiki pencocokan template di VisualEditorModule dan memperbarui watcher activeContainerId agar editor langsung memuat template serta warna aksen yang dipilih saat membuat situs baru; (2) Isolasi Kompilasi Root Home: Memastikan berkas root index.html selalu dikompilasi dari halaman Beranda (/) tanpa tertimpa konten sub-halaman saat menerbitkan perubahan dari rute sub-halaman (/about); (3) Kompilasi & Penyemaian Sub-Halaman Multi-Page: Mengompilasi seluruh sub-halaman (multiPagesHtml) dan menyinkronkannya melalui Go BFF ke Service 03 Orchestrator untuk penulisan <page>.html dan <page>/index.html di Nginx kontainer tenant.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1427-1',
+        type: 'bugfix',
+        scope: 'Visual Editor Template & Accent Hydration (VisualEditorModule.vue, useDashboardData.ts)',
+        description: 'Memperbaiki pemetaan template title pencocokan resmi, menyuntikkan accentColor ke blok dan multi-page canvas, serta memperbarui watcher activeContainerId agar draf kontainer baru langsung di-hydrate saat editor dibuka.'
+      },
+      {
+        id: 'c-02dash-1427-2',
+        type: 'bugfix',
+        scope: 'Root Home Page Isolation during Publish (useDashboardData.ts)',
+        description: 'Memastikan proses handlePublishChanges selalu mengompilasi root index.html dari halaman Beranda (path: / atau page_home) terlepas dari posisi rute aktif yang sedang diedit pengguna di kanvas.'
+      },
+      {
+        id: 'c-02dash-1427-3',
+        type: 'feature',
+        scope: 'Multi-Page Sub-Routes Compiler & Nginx Delivery (templateHtmlCompiler.ts, service.go, client.go)',
+        description: 'Menyusun berkas HTML terpisah untuk setiap sub-halaman rute dan mengirimkannya ke Provision Orchestrator untuk ditulis ke public/<page>/index.html sehingga navigasi navbar Nginx live berjalan mulus tanpa 404.'
+      },
+      {
+        id: 'c-02dash-1427-4',
+        type: 'improvement',
+        scope: 'Light Studio Master Theme Terminal Modal (DashboardView.vue, studio-master.css)',
+        description: 'Menyelaraskan tema modal log pod kontainer dengan arsitektur CSS HeroCMS Studio (Pure White #ffffff, Slate Canvas #f8fafc, border halus #e2e8f0), mengintegrasikan toolbar, search bar, status bar, badge semantik pastel, dan tombol aksi tanpa wrapper bingkai putih berlebih.'
+      },
+      {
+        id: 'c-02dash-1427-5',
+        type: 'improvement',
+        scope: 'Bespoke Studio Confirmation Dialog for Reset Draft (VisualEditorModule.vue)',
+        description: 'Mengganti alert konfirmasi native browser (localhost:5173 says) pada tombol reset draf dengan modal dialog konfirmasi in-app bertema HeroCMS Studio yang elegan, lengkap dengan pesan informasi situs live dan tombol aksi Batal / Buang Draf.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.6',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Dekonflik Port Host Orchestrator (:8083) & Integrasi Konektivitas Go BFF Studio',
+    summary: 'Resolusi tabrakan port host antara Traefik (:8080) dan Provision Orchestrator (:8083): Menghubungkan Go backend BFF Studio ke Service 03 melalui port 8083 pada konfigurasi lokal host, memperbarui client HTTP internal orchestrator, dan menyelaraskan matriks versi independen microservices.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1426-1',
+        type: 'bugfix',
+        scope: 'Orchestrator Client & Config URL (config.go, client.go)',
+        description: 'Mengalihkan default ORCHESTRATOR_URL dari port 8080 (yang digunakan oleh konsol Traefik) ke port 8083 untuk mencegah kesalahan respons 404 saat melakukan operasi kontainer dari backend Go host.'
+      },
+      {
+        id: 'c-02dash-1426-2',
+        type: 'improvement',
+        scope: 'Microservices Version Matrix Status (changelog.ts)',
+        description: 'Memperbarui versi Service 03 (Provision Orchestrator) ke v1.2.3 dan Service 02 ke v1.42.6 pada tabel matriks versi independen platform HeroCMS.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.5',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Paritas Visual Mutlak Alur Figma & Desain: Brand Glyph Bersih, Hero Ambient Glow, Kartu Telemetri 4 Kolom & Slide Showcase Interaktif',
+    summary: 'Penyelarasan visual 100% presisi piksel antara Mode Desain (WYSIWYG) dan Mode Alur Figma (artboard iframe kompiler HTML): (1) Brand Glyph Navbar Bersih: Menghilangkan kotak persegi berhuruf inisial ([t]) dan menggantinya dengan lambang glyph murni (default ◆ atau ikon terpilih) berwarna aksen dengan teks judul dark slate (#0f172a) identik dengan kanvas desain; (2) Ambient Blur Mesh Glow pada Hero: Menambahkan lapisan gradasi ambient glow (radial-gradient) lembut di belakang headline dan badge pill hero section; (3) Restrukturisasi Blok Telemetri / Progress Bar: Menggantikan render list vertikal polos dengan grid responsif kartu telemetri berbingkai halus (#e2e8f0, radius 12px), lengkap dengan badge kickers (TELEMETRI SISTEM), persentase di pojok kanan atas, progress bar gradasi cyan-sky, dan deskripsi performa sistem (Lighthouse Score 99/100, 184MB/256MB cgroups limit, dll.); (4) Kartu Showcase & Slide Carousel: Menampilkan kartu panggung carousel bersudut membulat 16px dengan banner gambar, badge tag rilis, judul sorotan, deskripsi lead, kredit author, dan tombol navigasi slide interaktif (&larr; / &rarr;) berbasis JavaScript vanilla; (5) Konsistensi Footer Brand: Menyematkan lambang glyph ◆ pada brand footer untuk keselarasan desain enterprise.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1425-1',
+        type: 'bugfix',
+        scope: 'Navbar Brand Glyph Visual Parity (templateHtmlCompiler.ts)',
+        description: 'Menghapus pembuatan kotak inisial statis [t] dan merestrukturisasi .sim-brand-area serta .sim-brand-glyph agar merender lambang brand glyph ◆ bersih tanpa border box latar belakang, konsisten 1-to-1 dengan kanvas Mode Desain.'
+      },
+      {
+        id: 'c-02dash-1425-2',
+        type: 'improvement',
+        scope: 'Hero Ambient Mesh Glow Layer (templateHtmlCompiler.ts)',
+        description: 'Menambahkan lapisan div .sim-ambient-glow dengan radial-gradient warna aksen dan filter blur 50px di belakang judul dan badge hero section pada output templateHtmlCompiler.'
+      },
+      {
+        id: 'c-02dash-1425-3',
+        type: 'bugfix',
+        scope: 'Blok Progress Bar & Telemetri Sistem (templateHtmlCompiler.ts)',
+        description: 'Memperbaiki kompiler blok progressbar agar merender badge mini caps, judul, subjudul, dan 4 kartu metrik mandiri (.sim-progress-meter-card) dengan indikator persentase, progress fill bar, dan info deskripsi kuota server/Lighthouse.'
+      },
+      {
+        id: 'c-02dash-1425-4',
+        type: 'improvement',
+        scope: 'Showcase Carousel Stage Card & Navigasi Slide (templateHtmlCompiler.ts)',
+        description: 'Mengimplementasikan tata letak .sim-carousel-stage-container modern dengan gambar banner, tag kategori, headline, deskripsi fitur, serta fungsi navigasi panah interaktif stepCarousel.'
+      },
+      {
+        id: 'c-02dash-1425-5',
+        type: 'improvement',
+        scope: 'Footer Brand Consistency (templateHtmlCompiler.ts)',
+        description: 'Menambahkan lambang glyph ◆ pada brand logo footer untuk menyelaraskan identitas visual situs tenant.'
+      },
+      {
+        id: 'c-02dash-1425-6',
+        type: 'improvement',
+        scope: 'Top Bar Action Button Label Hygiene (VisualEditorModule.vue)',
+        description: 'Menghilangkan simbol plus ganda trailing pada tombol katalog blok di bilah alat atas (dari "+ Konten +" menjadi "+ Konten") agar konsisten dan bersih.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.4',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Sinkronisasi Penuh Kustomisasi Blok ke Alur Figma, Perbaikan Modal Edit Rute & Tombol Aksi Cepat',
+    summary: 'Penyempurnaan arsitektur kanvas Alur Figma dan modal manajemen rute: (1) Sinkronisasi Gaya Blok Menyeluruh: Mengalirkan warna latar belakang (bgColor), warna teks, tipografi font, alignment, padding vertikal, dan ikon SVG kustom dari mode single design ke seluruh artboard iframe di Alur Figma tanpa ada data visual yang hilang; (2) Dukungan Blok Baru di Kompiler: Mengimplementasikan renderer HTML untuk blok Formulir Kontak (leads & live communication), Testimonial, Bento Grid, dan Layanan di templateHtmlCompiler; (3) Perbaikan Modal Edit Rute: Memperbaiki backdrop modal (.modal-backdrop) dan centering dialog sehingga modal edit rute muncul secara sempurna dengan efek frosted blur; (4) Tombol Aksi Edit Rute Cepat: Menambahkan tombol aksi [⚙ Edit] yang jelas dan kontras pada setiap baris halaman di dropdown switcher top bar, serta tombol [Edit Rute] pada shelf artboard Alur Figma; (5) Optimasi URL Google Fonts: Mengonversi spasi font menjadi tanda plus (+) untuk kompatibilitas mutlak Google Fonts API.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1424-1',
+        type: 'improvement',
+        scope: 'Kompiler Template HTML & Sinkronisasi Gaya Visual (templateHtmlCompiler.ts)',
+        description: 'Menerapkan pewarisan lengkap block.styles (bgColor, textColor, fontFamily, paddingY, align, accentColor) ke elemen section HTML, memperluas cakupan ikon SVG (phone, mappin, clock, calendar, users, filetext, layout, headphones, heart, compass), serta menambahkan renderer untuk blok contact, testimonials, bento, dan services.'
+      },
+      {
+        id: 'c-02dash-1424-2',
+        type: 'bugfix',
+        scope: 'Modal Edit Rute & Backdrop Centering Teleport (VisualEditorModule.vue & visual-editor.css)',
+        description: 'Membungkus modal Tambah Rute dan Edit Rute dengan Vue Teleport ke body (<Teleport to="body">), memperbaiki penutupan tag kontainer studio-main-frame, serta memperkuat styling .modal-backdrop-bespoke (z-index 100000000, margin auto, backdrop-filter blur 12px) sehingga modal terpusat sempurna di tengah layar tanpa terpotong batas kanvas Alur Figma.'
+      },
+      {
+        id: 'c-02dash-1424-3',
+        type: 'improvement',
+        scope: 'Dropdown Switcher Halaman & Aksi Cepat Edit (VisualEditorModule.vue & visual-editor.css)',
+        description: 'Menyempurnakan tombol .btn-edit-page-mini dengan styling solid interaktif dan label [⚙ Edit] pada setiap item halaman di dropdown switcher sitemap.'
+      },
+      {
+        id: 'c-02dash-1424-4',
+        type: 'improvement',
+        scope: 'Penyempurnaan Visual & Tipografi Modal Edit Rute (VisualEditorModule.vue & visual-editor.css)',
+        description: 'Menyempurnakan proporsi modal Edit Rute ke ukuran proporsional 530px, mereset tipografi input dan textarea dari monospace kaku ke font sans modern HeroCMS, menghadirkan kartu ingress terpadu untuk rute beranda (/) dengan badge Root Tetap, menambahkan pratinjau live navigasi web, counter karakter SEO, dan tombol simpan Obsidian bergradasi.'
+      },
+      {
+        id: 'c-02dash-1424-5',
+        type: 'improvement',
+        scope: 'Pembersihan Badge Floating Pod Kontainer (templateHtmlCompiler.ts)',
+        description: 'Menghapus elemen floating badge "Pod Kontainer Aktif" beserta animasi dan stylesheet terkait dari output templateHtmlCompiler agar tampilan pratinjau kanvas Alur Figma dan live preview bersih tanpa elemen overlay yang menutupi konten.'
+      },
+      {
+        id: 'c-02dash-1424-6',
+        type: 'improvement',
+        scope: 'Integrasi Reaktif Dinamis Navbar dengan Alur Figma (VisualEditorModule.vue & templateHtmlCompiler.ts)',
+        description: 'Menjadikan tautan bilah navigasi sepenuhnya reaktif mengikuti daftar rute Alur Figma: jika situs hanya memiliki halaman Beranda (/), navbar hanya menampilkan tautan Beranda; jika halaman rute baru ditambahkan di Alur Figma, navbar otomatis bertambah dan menampilkan rute baru tersebut secara konsisten di kanvas WYSIWYG dan pratinjau HTML.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.3',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '02 November 2026',
+    title: 'Integrasi Penuh Bilah Navigasi (Navbar) dengan Alur Figma & Sinkronisasi Rute Sitemap Otomatis',
+    summary: 'Penyempurnaan arsitektur integrasi navbar: (1) Eliminasi Link Rancu/Dummy: Mengeliminasi tautan anchor statis tunggal (#hero, #products, #contact) saat website beroperasi dalam mode multi-halaman Alur Figma; (2) Otomasi Sinkronisasi Menyeluruh (syncAllNavbarsWithSitemap): Menghubungkan daftar menu navigasi secara dinamis dengan pohon rute Alur Figma di seluruh halaman saat halaman ditambah, diedit, atau dihapus; (3) Sinkronisasi Artboard Iframe & Highlight Active Route: Meneruskan sitemapPages dan activeRoutePath ke kompiler HTML sehingga navbar pada setiap frame artboard Alur Figma menampilkan rute riil dan meng-highlight halaman aktif; (4) Indikator Integrasi Visual & Aksi Cepat: Menambahkan chip indikator Alur Figma pada bilah navigasi canvas dan tombol re-sinkronisasi satu-klik di HUD toolbar.',
+    badge: 'Stable',
+    author: 'Aether Core Dev (Rizal) & Paijo AI',
+    items: [
+      {
+        id: 'c-02dash-1423-1',
+        type: 'improvement',
+        scope: 'Integrasi Bilah Navigasi dengan Alur Figma (VisualEditorModule.vue)',
+        description: 'Menerapkan sinkronisasi dua arah otomatis antara item navbar dengan multiPages saat penambahan, pengeditan rute, atau penghapusan halaman berlangsung, serta menambahkan tombol [Sinkron Alur Figma] pada floating HUD.'
+      },
+      {
+        id: 'c-02dash-1423-2',
+        type: 'bugfix',
+        scope: 'Kompiler HTML Navbar Artboard Preview (templateHtmlCompiler.ts)',
+        description: 'Menyuntikkan parameter sitemapPages dan activeRoutePath ke templateHtmlCompiler sehingga artboard preview di Alur Figma menampilkan tautan menu riil dan menyorot rute yang sedang aktif (class="active").'
+      },
+      {
+        id: 'c-02dash-1423-3',
+        type: 'improvement',
+        scope: 'Indikator Integrasi Visual Canvas & Quick Switcher',
+        description: 'Menambahkan badge .nav-sitemap-sync-indicator pada canvas navbar dan mendukung Alt+Click atau preview click untuk berpindah halaman langsung dari navbar.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.2',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '02 November 2026',
     title: 'Sinkronisasi Presisi Visual Single Design ke Alur Figma & Modal Pengaturan Edit Rute Halaman',
     summary: 'Rilis pemeliharaan dan peningkatan UX Visual Editor: (1) Penyelarasan Presisi Visual: Mengatasi disparitas tampilan antara mode Desain Tunggal (WYSIWYG) dan kanvas Alur Figma (artboard preview iframe). Kompiler template HTML kini mewarisi font kustom (Google Fonts dinamis), ikon SVG semantik berukuran proporsional, palet warna tombol (primary & secondary button styling, glow/outline/radius), badge hero, cover image katalog, serta blok carousel dan progress bar; (2) Modal Pengaturan Edit Rute & Metadata Halaman: Menyediakan antarmuka modal dedicated berstandar Bespoke Studio untuk mengubah Judul Halaman, Alamat Rute URL (dengan proteksi rute beranda / dan parent nesting quick chips), serta Deskripsi SEO Meta, yang dapat diakses langsung dari shelf artboard Alur Figma maupun Dropdown Daftar Halaman (Sitemap Dropdown); (3) Integrasi Traefik Edge: Rute yang diedit otomatis diperbarui ke seluruh tautan bilah navigasi (navbar) dan pohon rute Traefik v3.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal & Andalusia) & Paijo AI',
     items: [
       {

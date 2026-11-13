@@ -2,13 +2,61 @@ import type { ChangelogRelease } from '../types/docs';
 
 export const docsChangelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.6.3',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '02 November 2026',
+    title: 'Dokumentasi Sinkronisasi Kustomisasi Visual ke Alur Figma & Perbaikan Modal Edit Rute (PRD-02)',
+    summary: 'Pembaruan dokumentasi Mission Control Docs Hub menyelaraskan rilis Service 02 Dashboard CMS v1.42.4: (1) Pembaruan spesifikasi PRD-02 ke v1.42.4-PROD mencakup sinkronisasi menyeluruh block.styles (warna latar, warna teks, tipografi font, alignment, padding) dan renderer blok baru (Contact leads, Testimonials, Bento, Services) pada templateHtmlCompiler; (2) Standarisasi modal backdrop dan centering dialog modal Edit Rute; (3) Sinkronisasi dataset changelog multi-layanan.',
+    badge: 'Latest',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-163-1',
+        type: 'improvement',
+        scope: 'Spesifikasi PRD-02 Dashboard Studio v1.42.4-PROD (prds.ts)',
+        description: 'Mendokumentasikan kapabilitas pewarisan menyeluruh gaya blok kustom ke artboard preview Alur Figma dan perbaikan antarmuka modal edit rute.'
+      },
+      {
+        id: 'c-07docs-163-2',
+        type: 'improvement',
+        scope: 'Pemberian Versi SemVer Docs Hub v1.6.3',
+        description: 'Sinkronisasi package.json versi 1.6.3 dan pencatatan riwayat rilis Docs Hub.'
+      }
+    ]
+  },
+  {
+    version: 'v1.6.2',
+    service: '07-docs',
+    serviceName: 'Service 07: Docs & Mission Control',
+    releaseDate: '02 November 2026',
+    title: 'Dokumentasi Integrasi Penuh Bilah Navigasi (Navbar) dengan Pohon Rute Alur Figma (PRD-02)',
+    summary: 'Pembaruan dokumentasi Mission Control Docs Hub menyelaraskan rilis Service 02 Dashboard CMS v1.42.3: (1) Pembaruan spesifikasi PRD-02 ke v1.42.3-PROD mencakup mekanisme syncAllNavbarsWithSitemap, eliminasi tautan anchor dummy (#hero, #products) saat multi-halaman aktif, dan penyuntikan sitemapPages ke kompiler HTML; (2) Sinkronisasi dataset changelog multi-layanan.',
+    badge: 'Stable',
+    author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
+    items: [
+      {
+        id: 'c-07docs-162-1',
+        type: 'improvement',
+        scope: 'Spesifikasi PRD-02 Dashboard Studio v1.42.3-PROD (prds.ts)',
+        description: 'Mendokumentasikan kapabilitas integrasi penuh bilah navigasi dengan pohon rute Alur Figma, penyorotan rute aktif per artboard, dan kontrol sinkronisasi di HUD.'
+      },
+      {
+        id: 'c-07docs-162-2',
+        type: 'improvement',
+        scope: 'Pemberian Versi SemVer Docs Hub v1.6.2',
+        description: 'Sinkronisasi package.json versi 1.6.2 dan pencatatan riwayat rilis Docs Hub.'
+      }
+    ]
+  },
+  {
     version: 'v1.6.1',
     service: '07-docs',
     serviceName: 'Service 07: Docs & Mission Control',
     releaseDate: '02 November 2026',
     title: 'Dokumentasi Penyelarasan Presisi Visual WYSIWYG ke Alur Figma & Modal Edit Rute (PRD-02 & JRN-09)',
     summary: 'Pembaruan dokumentasi Mission Control Docs Hub menyelaraskan rilis Service 02 Dashboard CMS v1.42.2: (1) Pembaruan PRD-02 ke v1.42.2-PROD mencakup injeksi token visual aktif (Google Fonts dinamis, rendering icon SVG semantik, styling tombol glow/outline/radius, dan cover card) ke artboard iframe kanvas Alur Figma; (2) Pembaruan User Journey JRN-09 mendokumentasikan modal khusus Pengaturan Edit Rute & Metadata Halaman serta proteksi permanen rute beranda (/); (3) Sinkronisasi dataset changelog multi-layanan.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Paijo (PM & QA/QC Lead) & Aether Core Dev (Rizal)',
     items: [
       {

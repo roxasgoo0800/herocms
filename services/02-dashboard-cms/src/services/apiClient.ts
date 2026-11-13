@@ -90,6 +90,7 @@ export const studioApi = {
     accentColor?: string;
     bioIntro?: string;
     customHTML?: string;
+    pages?: Record<string, string>;
   }) => apiFetch('/containers', { method: 'POST', body: JSON.stringify(payload) }),
   saveSiteDesign: (id: string, payload: any) =>
     apiFetch(`/containers/${id}/design`, { method: 'PUT', body: JSON.stringify(payload) }),

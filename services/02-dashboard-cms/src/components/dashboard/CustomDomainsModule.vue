@@ -157,16 +157,22 @@ ${dom.domain}.        3600    IN    A        ${a}`;
       </div>
     </div>
 
-    <!-- 1. Top Telemetry Metrics Grid (Modern Single Corner Watermark Standard) -->
+    <!-- 1. Top Telemetry Metrics Grid (Modern Bespoke Standard) -->
     <div class="stats-overview-grid">
       <!-- Card 1: Domain Kustom Terhubung -->
-      <div class="telemetry-card accent-blue">
-        <div class="telemetry-corner-watermark blue"><Globe :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">DOMAIN KUSTOM TERHUBUNG</span>
+          <div class="telemetry-glyph"><Globe :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ customDomains.length }} <span class="telemetry-denom">/ 10 Kuota</span>
+        </div>
+        <div class="slot-segments">
+          <span class="slot-segment" :class="{ filled: customDomains.length > 0 }"></span>
+          <span class="slot-segment" :class="{ filled: customDomains.length > 2 }"></span>
+          <span class="slot-segment" :class="{ filled: customDomains.length > 5 }"></span>
+          <span class="slot-segment" :class="{ filled: customDomains.length > 8 }"></span>
         </div>
         <div class="telemetry-sub ready-state">
           <span class="pulse-mini-dot"></span>
@@ -175,43 +181,65 @@ ${dom.domain}.        3600    IN    A        ${a}`;
       </div>
 
       <!-- Card 2: Status Sertifikat SSL / TLS -->
-      <div class="telemetry-card accent-emerald">
-        <div class="telemetry-corner-watermark emerald"><ShieldCheck :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">SERTIFIKAT TLS / SSL</span>
+          <div class="telemetry-glyph"><ShieldCheck :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          100% <span class="badge-online">Aktif</span>
+          100% <span class="badge-mono active">Aktif</span>
+        </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 100%;"></div>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Auto-Renew ACME TLS-ALPN-01</span>
         </div>
       </div>
 
       <!-- Card 3: Anycast Ingress Cluster -->
-      <div class="telemetry-card accent-purple">
-        <div class="telemetry-corner-watermark purple"><Network :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">EDGE ROUTING CLUSTER</span>
+          <div class="telemetry-glyph"><Network :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          14 PoP <span class="badge-growth-pill" style="color: #7c3aed; background: #faf5ff; border-color: #e9d5ff;">Anycast</span>
+          14 PoP <span class="badge-mono active">Anycast</span>
+        </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Port 80 / 443 (HTTP/2 & HTTP/3)</span>
         </div>
       </div>
 
       <!-- Card 4: Latensi Edge & DNS TTFB -->
-      <div class="telemetry-card accent-sky">
-        <div class="telemetry-corner-watermark sky"><Zap :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">LATENSI EDGE TTFB</span>
+          <div class="telemetry-glyph"><Zap :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          1.8ms <span class="badge-online">Optimal</span>
+          1.8ms <span class="badge-mono active">Optimal</span>
+        </div>
+        <div class="sparkline-histogram">
+          <span class="spark-bar" style="height: 40%"></span>
+          <span class="spark-bar" style="height: 60%"></span>
+          <span class="spark-bar" style="height: 35%"></span>
+          <span class="spark-bar" style="height: 75%"></span>
+          <span class="spark-bar" style="height: 50%"></span>
+          <span class="spark-bar" style="height: 85%"></span>
+          <span class="spark-bar active" style="height: 100%"></span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Global DNS health check normal</span>
         </div>
       </div>
@@ -546,7 +574,7 @@ ${dom.domain}.        3600    IN    A        ${a}`;
           </button>
         </div>
 
-        <div class="modal-body" style="padding-top: 14px;">
+        <div class="modal-body">
           <!-- Node Summary Banner -->
           <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 9px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -622,7 +650,7 @@ ${dom.domain}.        3600    IN    A        ${a}`;
           </button>
         </div>
 
-        <div class="modal-body" style="padding-top: 14px;">
+        <div class="modal-body">
           <div class="cert-details-grid">
             <div class="cert-detail-row">
               <span class="cert-detail-label">Common Name (CN)</span>

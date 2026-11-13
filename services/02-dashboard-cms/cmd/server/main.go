@@ -121,9 +121,9 @@ func SetupRouter(cfg *config.Config, repo *repository.Repository, rdb *redis.Cli
 			auth.POST("/register", h.Register)
 		}
 
-		// Authenticated Routes (Protected with Session/JWT & standard 120 req/min limiter)
+		// Authenticated Routes (Protected with Session/JWT & resilient 600 req/min limiter)
 		protected := api.Group("")
-		protected.Use(middleware.RateLimiter(rdb, 120, time.Minute))
+		protected.Use(middleware.RateLimiter(rdb, 600, time.Minute))
 		protected.Use(middleware.SessionOrJWTAuth(cfg, rdb))
 		{
 			// Session & State Persistence (Redis)

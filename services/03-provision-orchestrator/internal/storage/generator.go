@@ -8,14 +8,15 @@ import (
 
 // TemplateSeedParams encapsulates template parameters for initial tenant site generation
 type TemplateSeedParams struct {
-	SiteName     string `json:"site_name"`
-	Subdomain    string `json:"subdomain"`
-	TemplateName string `json:"template_name"`
-	Category     string `json:"category"`
-	RoleHeadline string `json:"role_headline"`
-	BioIntro     string `json:"bio_intro"`
-	AccentColor  string `json:"accent_color"`
-	CustomHTML   string `json:"custom_html,omitempty"`
+	SiteName     string            `json:"site_name"`
+	Subdomain    string            `json:"subdomain"`
+	TemplateName string            `json:"template_name"`
+	Category     string            `json:"category"`
+	RoleHeadline string            `json:"role_headline"`
+	BioIntro     string            `json:"bio_intro"`
+	AccentColor  string            `json:"accent_color"`
+	CustomHTML   string            `json:"custom_html,omitempty"`
+	Pages        map[string]string `json:"pages,omitempty"`
 }
 
 // GenerateWebsiteHTML renders a complete, responsive, modern website based on the chosen template & parameters

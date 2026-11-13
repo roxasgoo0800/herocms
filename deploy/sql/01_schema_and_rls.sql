@@ -282,3 +282,48 @@ VALUES (
     'active'
 ) ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
+-- Default Sites (Konsistensi Single Source of Truth dengan Frontend & Orchestrator)
+INSERT INTO sites (
+    id, tenant_id, name, category, template_name, subdomain, custom_domain, status,
+    cpu_usage, ram_usage, ram_limit, cpu_limit, uptime, visits_this_week,
+    accent_color, role_headline, bio_intro
+) VALUES 
+(
+    '99420000-0000-0000-0000-000000000001',
+    '99420000-0000-0000-0000-000000009942',
+    'Situs Utama Corporate',
+    'business',
+    'Nova Corporate',
+    'site',
+    'rizalpratama.cloud',
+    'stopped',
+    0, 0, 256, '0.5 vCPU', 'Kontainer Mati (Offline)', 4892,
+    '#2563eb', 'Portofolio Teknis & Bisnis Studio', 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.'
+),
+(
+    '99420000-0000-0000-0000-000000000002',
+    '99420000-0000-0000-0000-000000009942',
+    'Portal Edukasi LMS',
+    'education',
+    'Akademi Digital Edu',
+    'portal',
+    'portal.perusahaan.com',
+    'stopped',
+    0, 0, 256, '0.5 vCPU', 'Kontainer Mati (Offline)', 2140,
+    '#059669', 'Pusat Pembelajaran & Silabus Teknologi', 'Platform edukasi daring terdistribusi dengan modul pembelajaran interaktif.'
+),
+(
+    '99420000-0000-0000-0000-000000000003',
+    '99420000-0000-0000-0000-000000009942',
+    'Etalase Toko Digital',
+    'business',
+    'E-Commerce Retail Store',
+    'toko',
+    '',
+    'stopped',
+    0, 0, 256, '0.5 vCPU', 'Kontainer Mati (Offline)', 1320,
+    '#7c3aed', 'Etalase Produk Komersial & Checkout WhatsApp', 'Katalog produk digital dengan integrasi pesanan instan dan pelacakan paket.'
+)
+ON CONFLICT (subdomain) DO NOTHING;
+
+

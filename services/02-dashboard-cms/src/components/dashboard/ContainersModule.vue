@@ -192,6 +192,13 @@ const pollRunningContainersTelemetry = async () => {
   for (const c of activeList) {
     try {
       const stats = await studioApi.getContainerStats(c.id);
+      if (stats?.status === 'stopped') {
+        c.status = 'stopped';
+        c.uptime = 'Kontainer Mati (Offline)';
+        c.cpuUsage = 0;
+        c.ramUsage = 0;
+        continue;
+      }
       if (stats) {
         const cpu = typeof stats.cpu_percentage === 'number' ? stats.cpu_percentage : stats.cpu_percent;
         const ram = typeof stats.memory_usage_mb === 'number' ? stats.memory_usage_mb : stats.memory_mb;
@@ -207,8 +214,15 @@ const pollRunningContainersTelemetry = async () => {
           c.ramLimit = Math.round(ramLimit);
         }
       }
-    } catch {
-      // Keep existing stats on poll hiccup
+    } catch (err: any) {
+      // If container is not running or doesn't exist in docker daemon, mark as stopped to halt poll loop
+      const errMsg = String(err?.message || err || '');
+      if (errMsg.includes('404') || errMsg.includes('No such container') || errMsg.includes('500') || errMsg.includes('not found')) {
+        c.status = 'stopped';
+        c.uptime = 'Kontainer Mati (Offline)';
+        c.cpuUsage = 0;
+        c.ramUsage = 0;
+      }
     }
   }
 };
@@ -261,55 +275,88 @@ const navigateToAnalytics = (c: ContainerSite) => {
 
     <!-- 2. Bespoke Telemetry Metric Cards (4 Sleek Strips) -->
     <div class="stats-overview-grid">
-      <div class="telemetry-card accent-blue">
-        <div class="telemetry-corner-watermark blue"><Server :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">KUOTA KONTAINER</span>
+          <div class="telemetry-glyph"><Server :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ usedContainersCount }} <span class="telemetry-denom">/ {{ userPlan.maxContainers }} Aktif</span>
         </div>
-        <div class="telemetry-sub ready-state">
-          <span class="pulse-mini-dot"></span>
-          <span>{{ userPlan.maxContainers - usedContainersCount }} slot siap dideploy (cgroups v2)</span>
+        <div class="slot-segments">
+          <span v-for="i in (userPlan.maxContainers || 3)" :key="i"
+                class="slot-segment" 
+                :class="{ filled: i <= usedContainersCount }">
+          </span>
+        </div>
+        <div class="telemetry-sub">
+          <span class="dot-lead" :class="usedContainersCount > 0 ? 'live' : 'idle'"></span>
+          <span>{{ Math.max(0, userPlan.maxContainers - usedContainersCount) }} slot tersedia (cgroups v2)</span>
         </div>
       </div>
 
-      <div class="telemetry-card accent-emerald">
-        <div class="telemetry-corner-watermark emerald"><Globe :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">EDGE ROUTING TRAEFIK</span>
+          <div class="telemetry-glyph"><Globe :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          {{ routedSubdomainsCount }} <span class="badge-online">Aktif Teroute</span>
+          {{ routedSubdomainsCount }} 
+          <span class="badge-mono" :class="{ active: routedSubdomainsCount > 0 }">
+            {{ routedSubdomainsCount > 0 ? 'Aktif Teroute' : 'Standby' }}
+          </span>
+        </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node" :class="{ active: routedSubdomainsCount > 0 }"></span>
+          <span class="ingress-node" :class="{ active: routedSubdomainsCount > 1 }"></span>
+          <span class="ingress-node" :class="{ active: routedSubdomainsCount > 2 }"></span>
+          <span class="ingress-node" :class="{ active: routedSubdomainsCount > 3 }"></span>
+          <span class="ingress-node" :class="{ active: routedSubdomainsCount > 4 }"></span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead" :class="routedSubdomainsCount > 0 ? 'live' : 'idle'"></span>
           <span>Traefik v3.1 Ingress (Zero-Downtime)</span>
         </div>
       </div>
 
-      <div class="telemetry-card accent-purple">
-        <div class="telemetry-corner-watermark purple"><Activity :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">TRAFIK PENGUNJUNG</span>
+          <div class="telemetry-glyph"><Activity :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          {{ totalVisitsCount.toLocaleString('id-ID') }} <span class="badge-growth-pill">Hits</span>
+          {{ totalVisitsCount.toLocaleString('id-ID') }} 
+          <span class="badge-mono" :class="{ active: totalVisitsCount > 0 }">Hits</span>
+        </div>
+        <div class="sparkline-histogram">
+          <span class="spark-bar" style="height: 35%"></span>
+          <span class="spark-bar" style="height: 55%"></span>
+          <span class="spark-bar" style="height: 40%"></span>
+          <span class="spark-bar" style="height: 70%"></span>
+          <span class="spark-bar" style="height: 50%"></span>
+          <span class="spark-bar" style="height: 85%"></span>
+          <span class="spark-bar active" :style="{ height: totalVisitsCount > 0 ? '100%' : '30%' }"></span>
         </div>
         <div class="telemetry-sub">
-          <span>Data dicatat via Redis ZSET & Kafka stream</span>
+          <span class="dot-lead" :class="totalVisitsCount > 0 ? 'live' : 'idle'"></span>
+          <span>Redis ZSET & Kafka stream</span>
         </div>
       </div>
 
-      <div class="telemetry-card accent-sky">
-        <div class="telemetry-corner-watermark sky"><ShieldCheck :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">KEAMANAN TLS / SSL</span>
+          <div class="telemetry-glyph"><ShieldCheck :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          {{ sslActivePct }}% <span class="badge-online">Tervalidasi</span>
+          {{ sslActivePct }}% 
+          <span class="badge-mono active">TLS 1.3</span>
+        </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" :style="{ width: `${sslActivePct}%` }"></div>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Let's Encrypt Wildcard Auto-Renew</span>
         </div>
       </div>
@@ -484,7 +531,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
             <span v-else-if="c.deployPhase === 'running'">4/4 Running...</span>
             <span v-else-if="c.status === 'running'">Running</span>
             <span v-else-if="c.status === 'maintenance'">Maintenance</span>
-            <span v-else-if="c.status === 'stopped'">Standby</span>
+            <span v-else-if="c.status === 'stopped'">Kontainer Mati</span>
             <span v-else>Deploying...</span>
           </div>
         </div>
@@ -707,9 +754,19 @@ const navigateToAnalytics = (c: ContainerSite) => {
 
         <!-- Card Action Buttons Footer -->
         <div class="card-action-bar">
-          <div class="card-action-left">
+          <div class="card-action-left" style="display: flex; align-items: center; gap: 8px;">
+            <button
+              v-if="c.status === 'stopped'"
+              class="btn-action-up"
+              @click="startContainer(c)"
+              title="Nyalakan Kontainer Docker (Up Container)"
+            >
+              <Play :size="13" />
+              <span>Up Kontainer</span>
+            </button>
             <button
               class="btn-action-primary"
+              :class="{ 'btn-action-subtle': c.status === 'stopped' }"
               @click="selectForEditor(c.id)"
               title="Buka Website di Visual Editor"
             >
@@ -898,7 +955,7 @@ const navigateToAnalytics = (c: ContainerSite) => {
                     <span v-else-if="c.deployPhase === 'running'">4/4 Running...</span>
                     <span v-else-if="c.status === 'running'">Running</span>
                     <span v-else-if="c.status === 'maintenance'">Maintenance</span>
-                    <span v-else-if="c.status === 'stopped'">Standby</span>
+                    <span v-else-if="c.status === 'stopped'">Kontainer Mati</span>
                     <span v-else>Deploying...</span>
                   </div>
                   <span style="font-size: 0.68rem; color: #94a3b8; font-family: monospace;">{{ c.uptime }}</span>
@@ -948,9 +1005,20 @@ const navigateToAnalytics = (c: ContainerSite) => {
 
               <!-- Actions -->
               <td>
-                <div class="table-actions-cell">
+                <div class="table-actions-cell" style="display: flex; align-items: center; gap: 6px;">
+                  <button
+                    v-if="c.status === 'stopped'"
+                    class="btn-action-up"
+                    style="padding: 4px 10px; font-size: 0.72rem;"
+                    @click="startContainer(c)"
+                    title="Nyalakan Kontainer Docker (Up Container)"
+                  >
+                    <Play :size="11" />
+                    <span>Up</span>
+                  </button>
                   <button
                     class="btn-action-primary"
+                    :class="{ 'btn-action-subtle': c.status === 'stopped' }"
                     style="padding: 5px 11px; font-size: 0.74rem;"
                     @click="selectForEditor(c.id)"
                   >

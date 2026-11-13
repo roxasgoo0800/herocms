@@ -281,63 +281,86 @@ const openCustomClusterCheckout = () => {
     <!-- 4 Commercial & Telemetry Cards Cluster (Always Eye-Catching) -->
     <div class="stats-overview-grid" style="margin-bottom: 22px;">
       <!-- Card 1: Slot Kontainer -->
-      <div class="telemetry-card accent-blue">
-        <div class="telemetry-corner-watermark blue"><Layers :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">KUOTA SLOT KONTAINER</span>
+          <div class="telemetry-glyph"><Layers :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ usedContainersCount }} / {{ userPlan.maxContainers }} Pods
-          <span class="badge-online">
+          <span class="badge-mono active">
             {{ userPlan.maxContainers - usedContainersCount }} Slot Tersedia
           </span>
         </div>
+        <div class="slot-segments">
+          <span v-for="i in (userPlan.maxContainers || 3)" :key="i"
+                class="slot-segment" 
+                :class="{ filled: i <= usedContainersCount }">
+          </span>
+        </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Runtime mandiri per tenant dengan isolasi cgroups v2</span>
         </div>
       </div>
 
       <!-- Card 2: Dedicated CPU -->
-      <div class="telemetry-card accent-emerald">
-        <div class="telemetry-corner-watermark emerald"><Cpu :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">ALOKASI CPU TERDEDIKASI</span>
+          <div class="telemetry-glyph"><Cpu :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ userPlan.cpuPerContainer }}
-          <span class="badge-online">Zero Noisy Neighbor</span>
+          <span class="badge-mono active">Zero Noisy Neighbor</span>
+        </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Dedicated CFS Scheduler hard quota per kontainer</span>
         </div>
       </div>
 
       <!-- Card 3: RAM Memory -->
-      <div class="telemetry-card accent-purple">
-        <div class="telemetry-corner-watermark purple"><Zap :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">BATAS MEMORI RAM CGROUPS V2</span>
+          <div class="telemetry-glyph"><Zap :size="18" /></div>
         </div>
         <div class="telemetry-val">
           {{ userPlan.ramPerContainer }}
-          <span class="badge-online">OOM Protection</span>
+          <span class="badge-mono active">OOM Protection</span>
+        </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 50%;"></div>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>cgroups v2 hard limit mencegah server overload</span>
         </div>
       </div>
 
       <!-- Card 4: S3 NVMe Storage -->
-      <div class="telemetry-card accent-amber">
-        <div class="telemetry-corner-watermark amber"><HardDrive :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">NVME S3 MEDIA STORAGE</span>
+          <div class="telemetry-glyph"><HardDrive :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          120 MB <span style="font-size: 13px; color: #64748b; font-weight: 600;">/ {{ userPlan.storageQuota }}</span>
-          <span class="badge-online">6% Terpakai</span>
+          120 MB <span class="telemetry-denom">/ {{ userPlan.storageQuota }}</span>
+          <span class="badge-mono">6% Terpakai</span>
+        </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 6%;"></div>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>SSD Multi-Region Jakarta (MinIO Object Store)</span>
         </div>
       </div>
@@ -810,9 +833,9 @@ const openCustomClusterCheckout = () => {
         class="modal-backdrop"
         @click.self="isCheckoutModalOpen = false"
       >
-        <div class="modal-dialog modal-dialog-checkout">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-checkout" style="max-width: 620px; width: 92vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; border-radius: 16px !important;">
           <!-- Modal Header -->
-          <div class="modal-header">
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; background: #ffffff;">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
                 <CreditCard :size="18" />
@@ -827,7 +850,7 @@ const openCustomClusterCheckout = () => {
             </button>
           </div>
 
-          <div class="modal-form-body">
+          <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px 24px;">
             <!-- 1. Order Summary Box -->
             <div class="checkout-summary-box">
               <div class="checkout-item-title">{{ checkoutData.title }}</div>
@@ -957,28 +980,28 @@ const openCustomClusterCheckout = () => {
                 </p>
               </div>
             </div>
+          </div>
 
-            <!-- Modal Footer (Guaranteed Side-by-Side) -->
-            <div class="modal-footer-row">
-              <button
-                type="button"
-                class="btn-modal-ghost"
-                :disabled="isProcessingPayment"
-                @click="isCheckoutModalOpen = false"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                class="btn-modal-confirm"
-                :disabled="isProcessingPayment"
-                @click="processCheckoutPayment"
-              >
-                <RefreshCw v-if="isProcessingPayment" :size="14" class="spin-anim" />
-                <Check v-else :size="14" />
-                <span>{{ isProcessingPayment ? 'Memproses Kliring Bank...' : `Bayar Rp ${checkoutData.total.toLocaleString('id-ID')} & Terbitkan Faktur` }}</span>
-              </button>
-            </div>
+          <!-- Modal Footer (Flush to bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+            <button
+              type="button"
+              class="btn-picker-footer-ghost"
+              :disabled="isProcessingPayment"
+              @click="isCheckoutModalOpen = false"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              class="btn-picker-footer-confirm"
+              :disabled="isProcessingPayment"
+              @click="processCheckoutPayment"
+            >
+              <RefreshCw v-if="isProcessingPayment" :size="14" class="spin-anim" />
+              <Check v-else :size="14" />
+              <span>{{ isProcessingPayment ? 'Memproses Kliring Bank...' : `Bayar Rp ${checkoutData.total.toLocaleString('id-ID')} & Terbitkan Faktur` }}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -993,8 +1016,8 @@ const openCustomClusterCheckout = () => {
         class="modal-backdrop"
         @click.self="isPaymentModalOpen = false"
       >
-        <div class="modal-dialog modal-dialog-onetime">
-          <div class="modal-header">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-onetime" style="max-width: 520px; width: 92vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; border-radius: 16px !important;">
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; background: #ffffff;">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
                 <CreditCard :size="18" />
@@ -1009,7 +1032,7 @@ const openCustomClusterCheckout = () => {
             </button>
           </div>
 
-          <div class="modal-form-body">
+          <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 20px 24px;">
             <div class="form-group-block">
               <label class="input-label-row">
                 <span class="label-text">Pilih Kartu / Metode Pembayaran Aktif</span>
@@ -1021,25 +1044,25 @@ const openCustomClusterCheckout = () => {
                 <option value="Mandiri Bill Payment">Mandiri Bill Payment</option>
               </select>
             </div>
+          </div>
 
-            <!-- Modal Footer Actions (Guaranteed Side-by-Side) -->
-            <div class="modal-footer-row">
-              <button
-                type="button"
-                class="btn-modal-ghost"
-                @click="isPaymentModalOpen = false"
-              >
-                Tutup
-              </button>
-              <button
-                type="button"
-                class="btn-modal-confirm"
-                @click="savePaymentMethod"
-              >
-                <Check :size="14" />
-                <span>Simpan Perubahan</span>
-              </button>
-            </div>
+          <!-- Modal Footer Actions (Flush to bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+            <button
+              type="button"
+              class="btn-picker-footer-ghost"
+              @click="isPaymentModalOpen = false"
+            >
+              Tutup
+            </button>
+            <button
+              type="button"
+              class="btn-picker-footer-confirm"
+              @click="savePaymentMethod"
+            >
+              <Check :size="14" />
+              <span>Simpan Perubahan</span>
+            </button>
           </div>
         </div>
       </div>

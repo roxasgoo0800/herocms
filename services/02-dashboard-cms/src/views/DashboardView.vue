@@ -1233,11 +1233,11 @@ const handleLogout = async () => {
 
                 <!-- Pod Identity Trail -->
                 <div class="terminal-target-title">
-                  <Terminal :size="14" style="color: #60a5fa;" />
-                  <span style="font-weight: 700; color: #f4f4f5;">Console Log Pod:</span>
+                  <Terminal :size="14" style="color: #2563eb;" />
+                  <span style="font-weight: 700; color: #0f172a;">Console Log Pod:</span>
                   <span class="terminal-pod-badge">#pod-{{ activeLogContainer.id.slice(0, 8) }}</span>
-                  <span style="color: #71717a;">•</span>
-                  <span style="display: flex; align-items: center; gap: 4px; color: #34d399; font-size: 0.73rem;">
+                  <span style="color: #94a3b8;">•</span>
+                  <span style="display: flex; align-items: center; gap: 4px; color: #059669; font-size: 0.73rem; font-weight: 600;">
                     <Lock :size="11" />
                     <span>https://{{ activeLogContainer.subdomain }}</span>
                   </span>
@@ -1295,8 +1295,8 @@ const handleLogout = async () => {
                 </div>
               </div>
 
-              <div style="font-size: 0.7rem; color: #71717a;">
-                TCP Socket: <strong>Active</strong> • Linux Namespace Isolated
+              <div style="font-size: 0.7rem; color: #64748b;">
+                TCP Socket: <strong style="color: #0f172a;">Active</strong> • Linux Namespace Isolated
               </div>
             </div>
 
@@ -1454,50 +1454,51 @@ const handleLogout = async () => {
               </div>
 
               <!-- Empty State if Filter doesn't match -->
-              <div v-if="filteredLogs.length === 0" style="padding: 40px 20px; text-align: center; color: #71717a;">
-                <Search :size="20" style="margin-bottom: 6px; color: #52525b;" />
-                <div style="font-weight: 600; color: #a1a1aa; font-size: 0.8rem;">
+              <div v-if="filteredLogs.length === 0" style="padding: 40px 20px; text-align: center; color: #64748b;">
+                <Search :size="20" style="margin-bottom: 6px; color: #94a3b8;" />
+                <div style="font-weight: 600; color: #0f172a; font-size: 0.8rem;">
                   {{ terminalCleared ? 'Layar konsol telah dibersihkan' : 'Tidak ada baris log yang cocok' }}
                 </div>
-                <div style="font-size: 0.72rem; margin-top: 3px;">
+                <div style="font-size: 0.72rem; margin-top: 3px; color: #64748b;">
                   {{ terminalCleared ? 'Klik tombol "Restore" di toolbar untuk menampilkan kembali riwayat log.' : `Kriteria pencarian "${logSearchQuery}" tidak ditemukan pada kategori ini.` }}
                 </div>
               </div>
 
               <!-- Live Blinking Terminal Cursor -->
-              <div v-if="!isStreamPaused && filteredLogs.length > 0" style="padding: 4px 0 4px 40px; color: #52525b; font-size: 0.72rem;">
-                <span style="color: #34d399;">●</span> Menunggu event berikutnya di socket Traefik/cgroups...
+              <div v-if="!isStreamPaused && filteredLogs.length > 0" style="padding: 4px 0 4px 40px; color: #64748b; font-size: 0.72rem;">
+                <span style="color: #059669;">●</span> Menunggu event berikutnya di socket Traefik/cgroups...
                 <span class="log-cursor-beacon"></span>
               </div>
             </div>
-          </div>
 
-          <!-- 5. Modal Footer Actions -->
-          <div class="modal-footer-row" style="margin-top: 12px;">
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.73rem; color: #64748b;">
-              <span>Memori: <strong>{{ activeLogContainer.ramUsage }} MB</strong></span>
-              <span>•</span>
-              <span>Menampilkan <strong>{{ filteredLogs.length }}</strong> baris log aktif</span>
-            </div>
+            <!-- 5. Integrated Terminal Window Bottom Status Bar -->
+            <div class="terminal-window-footer">
+              <div class="terminal-footer-info">
+                <span class="pulse-mini-dot" style="background-color: #10b981;"></span>
+                <span>Memori: <strong style="color: #0f172a;">{{ activeLogContainer.ramUsage }} MB</strong></span>
+                <span style="color: #94a3b8;">•</span>
+                <span>Menampilkan <strong style="color: #0f172a;">{{ filteredLogs.length }}</strong> baris log aktif</span>
+              </div>
 
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <button
-                type="button"
-                class="btn-modal-ghost"
-                :disabled="isTerminalRestarting"
-                title="Restart Kontainer Langsung"
-                @click="handleTerminalRestart"
-              >
-                <RotateCw :size="13" :class="{ 'spin-anim': isTerminalRestarting }" />
-                <span>{{ isTerminalRestarting ? 'Me-reboot kontainer...' : 'Restart Kontainer' }}</span>
-              </button>
-              <button type="button" class="btn-modal-ghost" title="Salin seluruh log ke clipboard" @click="copyContainerLogs">
-                <Copy :size="13" />
-                <span>Salin Log</span>
-              </button>
-              <button type="button" class="btn-modal-confirm" @click="isLogsModalOpen = false">
-                Tutup Konsol
-              </button>
+              <div class="terminal-footer-actions">
+                <button
+                  type="button"
+                  class="terminal-footer-btn"
+                  :disabled="isTerminalRestarting"
+                  title="Restart Kontainer Langsung"
+                  @click="handleTerminalRestart"
+                >
+                  <RotateCw :size="13" :class="{ 'spin-anim': isTerminalRestarting }" />
+                  <span>{{ isTerminalRestarting ? 'Me-reboot kontainer...' : 'Restart Kontainer' }}</span>
+                </button>
+                <button type="button" class="terminal-footer-btn" title="Salin seluruh log ke clipboard" @click="copyContainerLogs">
+                  <Copy :size="13" />
+                  <span>Salin Log</span>
+                </button>
+                <button type="button" class="terminal-footer-btn-primary" @click="isLogsModalOpen = false">
+                  Tutup Konsol
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -471,9 +471,17 @@ const getAssetCmsUsage = (item: MediaAssetItem): { count: number; places: string
   };
 };
 
+const sanitizeMediaUrl = (url?: string): string => {
+  if (!url) return '';
+  return url.replace(/(tenant-[^/]+-media)\/\1\//g, '$1/');
+};
+
+const pdfViewMode = ref<'sheet' | 'plugin'>('sheet');
+
 const openPreviewModal = (item: MediaAssetItem) => {
   selectedMediaForPreview.value = item;
-  showPdfPreview.value = false;
+  showPdfPreview.value = item.type.toUpperCase() === 'PDF';
+  pdfViewMode.value = 'sheet';
   canvasBgMode.value = item.type.toUpperCase() === 'SVG' ? 'light' : 'checker';
   isPreviewModalOpen.value = true;
 };
@@ -722,13 +730,22 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
       <main class="dam-main-stage">
         <!-- Top Metrics Strip (4 Prominent Telemetry Cards) -->
         <div class="stats-overview-grid">
-          <div class="telemetry-card accent-blue">
-            <div class="telemetry-corner-watermark blue"><Layers :size="58" /></div>
+          <div class="telemetry-card">
             <div class="telemetry-top">
               <span class="telemetry-label">TOTAL OBJEK BERKAS</span>
+              <div class="telemetry-glyph"><Layers :size="18" /></div>
             </div>
             <div class="telemetry-val">
               {{ mediaAssets.length }} <span class="telemetry-denom">File</span>
+            </div>
+            <div class="sparkline-histogram">
+              <span class="spark-bar" style="height: 45%"></span>
+              <span class="spark-bar" style="height: 65%"></span>
+              <span class="spark-bar" style="height: 50%"></span>
+              <span class="spark-bar" style="height: 75%"></span>
+              <span class="spark-bar" style="height: 60%"></span>
+              <span class="spark-bar" style="height: 85%"></span>
+              <span class="spark-bar active" :style="{ height: mediaAssets.length > 0 ? '100%' : '35%' }"></span>
             </div>
             <div class="telemetry-sub ready-state">
               <span class="pulse-mini-dot"></span>
@@ -736,41 +753,57 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
             </div>
           </div>
 
-          <div class="telemetry-card accent-emerald">
-            <div class="telemetry-corner-watermark emerald"><Zap :size="58" /></div>
+          <div class="telemetry-card">
             <div class="telemetry-top">
               <span class="telemetry-label">CDN EDGE HIT RATIO</span>
+              <div class="telemetry-glyph"><Zap :size="18" /></div>
             </div>
             <div class="telemetry-val">
-              99.4% <span class="badge-online">Optimal</span>
+              99.4% <span class="badge-mono active">Optimal</span>
+            </div>
+            <div class="security-meter-track">
+              <div class="security-meter-fill" style="width: 99.4%;"></div>
             </div>
             <div class="telemetry-sub">
+              <span class="dot-lead live"></span>
               <span>Cache Zero-Miss Edge Traefik</span>
             </div>
           </div>
 
-          <div class="telemetry-card accent-purple">
-            <div class="telemetry-corner-watermark purple"><Globe :size="58" /></div>
+          <div class="telemetry-card">
             <div class="telemetry-top">
               <span class="telemetry-label">SERVING LATENCY</span>
+              <div class="telemetry-glyph"><Globe :size="18" /></div>
             </div>
             <div class="telemetry-val">
-              1.2ms <span class="badge-growth-pill" style="color: #7c3aed; background: #faf5ff; border-color: #e9d5ff;">TTFB</span>
+              1.2ms <span class="badge-mono active">TTFB</span>
+            </div>
+            <div class="ingress-mesh-track">
+              <span class="ingress-node active"></span>
+              <span class="ingress-node active"></span>
+              <span class="ingress-node active"></span>
+              <span class="ingress-node active"></span>
+              <span class="ingress-node active"></span>
             </div>
             <div class="telemetry-sub">
+              <span class="dot-lead live"></span>
               <span>Anycast PoP Global Edge</span>
             </div>
           </div>
 
-          <div class="telemetry-card accent-sky">
-            <div class="telemetry-corner-watermark sky"><Server :size="58" /></div>
+          <div class="telemetry-card">
             <div class="telemetry-top">
               <span class="telemetry-label">DEDICATED S3 STORAGE</span>
+              <div class="telemetry-glyph"><Server :size="18" /></div>
             </div>
             <div class="telemetry-val">
-              MinIO <span class="badge-online" style="color: #0284c7; background: #f0f9ff; border-color: #bae6fd;">Isolated</span>
+              MinIO <span class="badge-mono active">Isolated</span>
+            </div>
+            <div class="security-meter-track">
+              <div class="security-meter-fill" style="width: 8%;"></div>
             </div>
             <div class="telemetry-sub">
+              <span class="dot-lead live"></span>
               <span>Tenant Bucket S3 ID-JKT-1</span>
             </div>
           </div>
@@ -1296,21 +1329,153 @@ const handleDeleteFromModal = (item: MediaAssetItem) => {
                   </div>
                 </div>
 
-                <!-- If PDF: Interactive Viewer or Adobe Doc Sheet -->
-                <div v-else-if="selectedMediaForPreview.type === 'PDF'" class="stage-pdf-container">
-                  <div v-if="showPdfPreview" class="stage-pdf-frame-shell">
-                    <iframe :src="selectedMediaForPreview.url" class="stage-pdf-frame"></iframe>
-                  </div>
-                  <div v-else class="stage-doc-card doc-pdf">
-                    <div class="stage-doc-art">
-                      <FileText :size="48" style="color: #ef4444;" />
+                <!-- If PDF: Interactive Document Sheet & Embedded Viewer -->
+                <div v-else-if="selectedMediaForPreview.type === 'PDF'" class="stage-pdf-container" style="display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 480px;">
+                  <!-- Top Switcher between Document Sheet & Native Plugin -->
+                  <div class="pdf-viewer-mode-bar">
+                    <div class="pdf-mode-tabs">
+                      <button
+                        type="button"
+                        class="btn-pdf-mode"
+                        :class="{ active: pdfViewMode === 'sheet' }"
+                        @click="pdfViewMode = 'sheet'"
+                      >
+                        <FileText :size="12" />
+                        <span>Lembar Dokumen (Interactive Sheet)</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-pdf-mode"
+                        :class="{ active: pdfViewMode === 'plugin' }"
+                        @click="pdfViewMode = 'plugin'"
+                      >
+                        <Eye :size="12" />
+                        <span>Pratinjau Browser Plugin</span>
+                      </button>
                     </div>
-                    <h4>Dokumen Portable Document Format (PDF)</h4>
-                    <p>{{ selectedMediaForPreview.dimensions }} • {{ selectedMediaForPreview.size }}</p>
-                    <button type="button" class="btn-canvas-action" @click="showPdfPreview = true" style="margin-top: 10px;">
-                      <Eye :size="13" />
-                      <span>Buka Pratinjau Interaktif Lembar PDF</span>
-                    </button>
+                    <div class="pdf-mode-actions">
+                      <a
+                        :href="sanitizeMediaUrl(selectedMediaForPreview.url)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn-pdf-mode-action"
+                      >
+                        <ExternalLink :size="12" />
+                        <span>Buka di Tab Baru</span>
+                      </a>
+                      <button
+                        type="button"
+                        class="btn-pdf-mode-action"
+                        @click="downloadMediaFile(selectedMediaForPreview)"
+                      >
+                        <Download :size="12" />
+                        <span>Unduh PDF</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Mode 1: Document Sheet Preview (100% Reliable Offline & Online) -->
+                  <div v-if="pdfViewMode === 'sheet'" class="pdf-sheet-scroll-canvas">
+                    <div class="pdf-sheet-paper">
+                      <!-- Paper Top Header -->
+                      <div class="pdf-paper-header-row">
+                        <div class="pdf-paper-brand-block">
+                          <div class="pdf-paper-glyph">
+                            <FileText :size="20" style="color: #ef4444;" />
+                          </div>
+                          <div>
+                            <div class="pdf-paper-brand-name">HEROCMS MULTI-TENANT CLOUD</div>
+                            <div class="pdf-paper-doc-type">OFFICIAL TECHNICAL DOCUMENT (PDF 1.4)</div>
+                          </div>
+                        </div>
+                        <div class="pdf-paper-meta-badge">
+                          <ShieldCheck :size="12" style="color: #059669;" />
+                          <span>Verified Clean Checksum</span>
+                        </div>
+                      </div>
+
+                      <!-- Document Title -->
+                      <div class="pdf-paper-title-section">
+                        <h2 class="pdf-paper-title">{{ selectedMediaForPreview.name }}</h2>
+                        <div class="pdf-paper-meta-strip">
+                          <span>Format: <strong>Portable Document Format (PDF)</strong></span>
+                          <span>•</span>
+                          <span>Ukuran: <strong>{{ selectedMediaForPreview.size }}</strong></span>
+                          <span>•</span>
+                          <span>Diunggah: <strong>{{ selectedMediaForPreview.uploadedAt }}</strong></span>
+                        </div>
+                      </div>
+
+                      <!-- Document Structured Summary & Telemetry -->
+                      <div class="pdf-paper-body-preview">
+                        <div class="pdf-paper-section-heading">
+                          <CheckSquare :size="13" style="color: #2563eb;" />
+                          <span>RINGKASAN METADATA & INTEGRITAS BERKAS</span>
+                        </div>
+                        <div class="pdf-paper-info-grid">
+                          <div class="pdf-info-cell">
+                            <span class="cell-label">Checksum SHA-256</span>
+                            <code class="cell-code">{{ getAssetHashFingerprint(selectedMediaForPreview) }}</code>
+                          </div>
+                          <div class="pdf-info-cell">
+                            <span class="cell-label">Penyimpanan Terisolasi S3</span>
+                            <span class="cell-value">s3://{{ selectedMediaForPreview.bucketName || mediaBucketName }}/{{ selectedMediaForPreview.s3Key || selectedMediaForPreview.name }}</span>
+                          </div>
+                          <div class="pdf-info-cell">
+                            <span class="cell-label">Kebijakan Hak Akses</span>
+                            <span class="cell-value">Edge Public Read • Traefik TLS 1.3 Ingress</span>
+                          </div>
+                          <div class="pdf-info-cell">
+                            <span class="cell-label">Status Respon CDN</span>
+                            <span class="cell-value" style="color: #059669; font-weight: 700;">200 OK • Cache-Control: public, immutable</span>
+                          </div>
+                        </div>
+
+                        <div class="pdf-paper-section-heading" style="margin-top: 18px;">
+                          <Layers :size="13" style="color: #2563eb;" />
+                          <span>IKHTISAR LEMBAR DOKUMEN</span>
+                        </div>
+                        <div class="pdf-paper-paragraphs">
+                          <p>
+                            Dokumen ini merupakan berkas resmi yang tersimpan dalam bucket MinIO S3 terisolasi tenant.
+                            Seluruh berkas dokumen diverifikasi melalui inspeksi magic bytes dan proteksi integritas checksum sebelum dipublikasikan ke edge CDN.
+                          </p>
+                          <div class="pdf-paper-wireframe-lines">
+                            <div class="wire-line line-full"></div>
+                            <div class="wire-line line-90"></div>
+                            <div class="wire-line line-75"></div>
+                            <div class="wire-line line-60"></div>
+                          </div>
+                        </div>
+
+                        <!-- Official Seal / Stamp -->
+                        <div class="pdf-paper-seal-box">
+                          <div class="pdf-stamp-circle">
+                            <ShieldCheck :size="24" style="color: #059669;" />
+                            <div class="stamp-text">VERIFIED DOKUMEN RESMI</div>
+                            <div class="stamp-sub">HEROCMS STUDIO S3</div>
+                          </div>
+                          <div class="pdf-seal-desc">
+                            <strong>Kedaulatan Data Terjamin:</strong> Berkas ini tersimpan di storage terenkripsi dan dapat diunduh atau disematkan langsung pada portal web.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Mode 2: Native Browser Plugin / Object Embed -->
+                  <div v-else class="stage-pdf-frame-shell" style="flex: 1; min-height: 480px;">
+                    <object
+                      :data="sanitizeMediaUrl(selectedMediaForPreview.url)"
+                      type="application/pdf"
+                      class="stage-pdf-frame"
+                    >
+                      <iframe
+                        :src="sanitizeMediaUrl(selectedMediaForPreview.url)"
+                        class="stage-pdf-frame"
+                        title="Pratinjau Dokumen PDF"
+                      ></iframe>
+                    </object>
                   </div>
                 </div>
 

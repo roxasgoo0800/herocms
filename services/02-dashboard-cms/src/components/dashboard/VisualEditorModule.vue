@@ -77,11 +77,14 @@ import {
   Layout,
   Mail,
   Settings,
+  ExternalLink,
+  Info,
+  Share2,
 } from 'lucide-vue-next';
 import { studioApi } from '../../services/apiClient';
 import { useDashboardData } from '../../composables/useDashboardData';
 import { compileTemplateToHTML } from '../../utils/templateHtmlCompiler';
-import type { VisualBlock, MultiPageItem } from '../../types/dashboard';
+import type { VisualBlock, MultiPageItem, MediaAssetItem } from '../../types/dashboard';
 import { officialTemplatesData } from '../../data/templates-data';
 import {
   zoomPresets,
@@ -117,7 +120,10 @@ const {
   aiPromptInput,
   isGeneratingAI,
   handleAiGenerateContent,
-  showToast
+  showToast,
+  mediaAssets,
+  isUploadingMedia,
+  uploadMediaFiles
 } = useDashboardData();
 
 // -----------------------------------------------------------------------------
@@ -714,6 +720,20 @@ const activePage = computed<MultiPageItem | null>(() => {
   return multiPages.value.find(p => p.id === activePageId.value) || multiPages.value[0];
 });
 
+const liveSiteUrl = computed(() => {
+  if (!activeContainer.value?.subdomain) return '#';
+  let sub = activeContainer.value.subdomain;
+  if (!sub.startsWith('http://') && !sub.startsWith('https://')) {
+    sub = `https://${sub}`;
+  }
+  const currentPath = activePage.value?.path;
+  if (currentPath && currentPath !== '/') {
+    const cleanPath = currentPath.startsWith('/') ? currentPath : `/${currentPath}`;
+    return `${sub}${cleanPath}`;
+  }
+  return sub;
+});
+
 const ARTBOARD_GAP = 420; // jarak horizontal antar kolom kedalaman rute
 const ARTBOARD_ROW_GAP = 160; // jarak vertikal antar halaman sejajar dalam satu kolom
 const SITEMAP_FRAME_H = 880; // shelf judul + window bar + preview 780px
@@ -878,6 +898,15 @@ const switchPage = (pageId: string, autoSwitchToSingle: boolean = false) => {
   if (target) {
     pageBlocks.value = JSON.parse(JSON.stringify(target.blocks));
     selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
+  }
+
+  // Update indikator active di navbar halaman yang aktif
+  const curPath = target?.path || '/';
+  const curNav = pageBlocks.value.find(b => b.type === 'navbar');
+  if (curNav && curNav.items) {
+    curNav.items.forEach(item => {
+      item.active = item.url === curPath;
+    });
   }
 
   if (autoSwitchToSingle) {
@@ -1128,21 +1157,8 @@ const createNewPage = () => {
 
   multiPages.value.push(newPageItem);
 
-  // Rute utama masuk ke navbar semua halaman; sub-rute hanya ke navbar halaman induk & dirinya
-  multiPages.value.forEach(p => {
-    if (parentPathOfNew && p.path !== parentPathOfNew && p.id !== newId) return;
-    const nav = p.blocks.find(b => b.type === 'navbar');
-    if (nav) {
-      if (!nav.items) nav.items = [];
-      if (!nav.items.some(i => i.url === path)) {
-        nav.items.push({
-          id: `link_${newId}`,
-          title,
-          url: path
-        });
-      }
-    }
-  });
+  // Sinkronkan navbar seluruh halaman secara terpadu dengan Alur Figma
+  syncAllNavbarsWithSitemap();
 
   isNewPageModalOpen.value = false;
   switchPage(newId, true);
@@ -1204,6 +1220,7 @@ const saveEditRouteModal = () => {
       });
     });
     syncActivePageBlocks();
+    syncAllNavbarsWithSitemap();
     showToast('Pengaturan halaman Beranda berhasil diperbarui!', 'success');
     triggerAutoSaveDraft();
     closeEditRouteModal();
@@ -1271,6 +1288,7 @@ const saveEditRouteModal = () => {
   const active = multiPages.value.find(p => p.id === activePageId.value);
   if (active) pageBlocks.value = JSON.parse(JSON.stringify(active.blocks));
 
+  syncAllNavbarsWithSitemap();
   showToast(`Pengaturan halaman '${newTitle}' (${page.path}) berhasil disimpan!`, 'success');
   triggerAutoSaveDraft();
   closeEditRouteModal();
@@ -1296,13 +1314,8 @@ const deletePage = (pageId: string) => {
   // 2. Remove the deleted page from multiPages
   multiPages.value = multiPages.value.filter(p => p.id !== pageId);
 
-  // 3. Remove route link from all navbars
-  multiPages.value.forEach(p => {
-    const nav = p.blocks.find(b => b.type === 'navbar');
-    if (nav && nav.items) {
-      nav.items = nav.items.filter(i => i.url !== target.path);
-    }
-  });
+  // 3. Sinkronkan kembali seluruh navbar dengan daftar rute tersisa
+  syncAllNavbarsWithSitemap();
 
   // 4. Handle active page transition cleanly without overwriting!
   if (activePageId.value === pageId) {
@@ -1326,6 +1339,61 @@ const deletePage = (pageId: string) => {
   triggerAutoSaveDraft();
 };
 
+const duplicatePage = (pageId: string) => {
+  const target = multiPages.value.find(p => p.id === pageId);
+  if (!target) return;
+
+  // 1. Jika halaman yang diduplikasi adalah halaman aktif, sinkronkan blok terkini
+  if (activePageId.value === pageId) {
+    syncActivePageBlocks();
+  }
+
+  // 2. Tentukan rute unik untuk hasil salinan
+  let basePath = target.path === '/' ? '/halaman-salinan' : `${target.path}-copy`;
+  let candidatePath = basePath;
+  let counter = 2;
+  while (multiPages.value.some(p => p.path === candidatePath)) {
+    candidatePath = `${basePath}-${counter}`;
+    counter++;
+  }
+
+  // 3. Buat identifier dan judul halaman salinan baru
+  const newId = `page_copy_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  const newTitle = target.path === '/' ? 'Beranda (Salinan)' : `${target.title} (Salinan)`;
+
+  // 4. Kloning blok secara mendalam dan beri ID baru agar tidak bentrok di DOM
+  const clonedBlocks: VisualBlock[] = JSON.parse(JSON.stringify(target.blocks || [])).map((b: VisualBlock, idx: number) => ({
+    ...b,
+    id: `${b.type || 'block'}_copy_${Date.now()}_${idx}`
+  }));
+
+  // 5. Hitung koordinat kanvas agar artboard baru berada di samping kanan artboard paling kanan
+  const maxCanvasX = multiPages.value.reduce((max, p) => Math.max(max, p.canvasX || 0), 0);
+  const duplicatedPage: MultiPageItem = {
+    id: newId,
+    path: candidatePath,
+    title: newTitle,
+    description: target.description ? `${target.description} (Salinan)` : `Halaman salinan dari ${target.title}`,
+    canvasX: maxCanvasX + 1800,
+    canvasY: target.canvasY || 0,
+    blocks: clonedBlocks
+  };
+
+  multiPages.value.push(duplicatedPage);
+
+  // 6. Sinkronkan navigasi di seluruh halaman dengan sitemap baru
+  syncAllNavbarsWithSitemap();
+
+  // 7. Beralih ke halaman yang baru diduplikasi
+  switchPage(newId, false);
+
+  // 8. Simpan histori dan simpan draf otomatis
+  recordHistory();
+  triggerAutoSaveDraft();
+
+  showToast(`Halaman '${newTitle}' (${candidatePath}) berhasil diduplikasi!`, 'success');
+};
+
 const getCompiledPageHtml = (page: MultiPageItem): string => {
   const matchedTpl = officialTemplates.value.find(t =>
     t.title === activeContainer.value?.templateName ||
@@ -1337,6 +1405,8 @@ const getCompiledPageHtml = (page: MultiPageItem): string => {
     ? pageBlocks.value
     : page.blocks;
 
+  const seo = (activeContainer.value?.themeConfig as any)?.seo || {};
+
   return compileTemplateToHTML(matchedTpl, {
     siteName: activeContainer.value?.name || 'Situs Utama',
     subdomain: activeContainer.value?.subdomain || 'stackbyte.id',
@@ -1344,54 +1414,119 @@ const getCompiledPageHtml = (page: MultiPageItem): string => {
     fontFamily: currentFont.value,
     roleOrHeadline: page.title,
     bioIntro: page.description,
-    blocksOverride: effectiveBlocks
+    blocksOverride: effectiveBlocks,
+    activeRoutePath: page.path,
+    faviconUrl: (page as any).faviconUrl || seo.faviconUrl,
+    metaTitle: (page as any).metaTitle || seo.metaTitle || page.title,
+    metaDescription: (page as any).metaDescription || seo.metaDescription || page.description,
+    ogImageUrl: (page as any).ogImageUrl || seo.ogImageUrl,
+    sitemapPages: multiPages.value.map(p => ({
+      id: p.id,
+      title: p.title,
+      path: p.path
+    }))
   });
 };
 
-// Navbar Context & Interactive Canvas Helpers
+
+// -----------------------------------------------------------------------------
+// Sinkronisasi Bilah Navigasi (Navbar) Terintegrasi Penuh dengan Alur Figma
+// -----------------------------------------------------------------------------
 const defaultNavItems: Array<{ id: string; title: string; url: string; active?: boolean }> = [
-  { id: 'nav_1', title: 'Beranda', url: '/', active: true },
-  { id: 'nav_2', title: 'Tentang Kami', url: '/about', active: false },
-  { id: 'nav_3', title: 'Layanan', url: '/services', active: false },
-  { id: 'nav_4', title: 'Kontak', url: '/contact', active: false }
+  { id: 'nav_1', title: 'Beranda', url: '/', active: true }
 ];
+
+// Helper untuk selalu mendapatkan daftar menu navigasi langsung dari rute Alur Figma
+const getRenderedNavItems = (_block?: VisualBlock) => {
+  if (multiPages.value && multiPages.value.length > 0) {
+    const currentPath = activePage.value?.path || '/';
+    return multiPages.value.map(p => ({
+      id: `nav_route_${p.id}`,
+      title: p.title,
+      url: p.path,
+      active: p.path === currentPath
+    }));
+  }
+  return defaultNavItems;
+};
+
+const syncAllNavbarsWithSitemap = (notify: boolean = false) => {
+  if (!multiPages.value || multiPages.value.length === 0) return;
+
+  const currentPath = activePage.value?.path || '/';
+  const sitemapNavLinks = multiPages.value.map(p => ({
+    id: `nav_route_${p.id}`,
+    title: p.title,
+    url: p.path,
+    active: p.path === currentPath
+  }));
+
+  // 1. Sinkronkan navbar di seluruh halaman multiPages
+  multiPages.value.forEach(p => {
+    const nav = p.blocks.find(b => b.type === 'navbar');
+    if (nav) {
+      nav.items = sitemapNavLinks.map(link => ({
+        ...link,
+        active: link.url === p.path
+      }));
+    }
+  });
+
+  // 2. Sinkronkan navbar di pageBlocks halaman yang sedang aktif di kanvas
+  const activeNav = pageBlocks.value.find(b => b.type === 'navbar');
+  if (activeNav) {
+    activeNav.items = sitemapNavLinks.map(link => ({
+      ...link,
+      active: link.url === currentPath
+    }));
+  }
+
+  if (notify) {
+    showToast(`Bilah navigasi (Navbar) berhasil disinkronkan dengan ${multiPages.value.length} rute Alur Figma!`, 'success');
+  }
+};
+
+// Reaktif: Otomatis sinkronkan navbar setiap kali daftar rute Alur Figma bertambah, berkurang, atau diedit
+watch(
+  () => multiPages.value.map(p => `${p.id}:${p.title}:${p.path}`).join('|'),
+  () => {
+    syncAllNavbarsWithSitemap();
+  },
+  { immediate: true }
+);
 
 const onNavItemClick = (block: VisualBlock, idx: number, e: MouseEvent) => {
   e.stopPropagation();
-  if (editorViewMode.value === 'preview') {
-    const item = block.items?.[idx] || defaultNavItems[idx];
+  const items = getRenderedNavItems(block);
+  const item = items[idx] || defaultNavItems[0];
+  if (editorViewMode.value === 'preview' || e.altKey) {
     if (item && item.url) {
       switchPageByPath(item.url);
     }
     return;
   }
   selectBlock(block.id);
-  setHudContext('card', block, idx);
+  setHudContext('navbar', block, idx);
 };
 
-const addNavItem = (block: VisualBlock) => {
-  if (!block.items) {
-    block.items = [...defaultNavItems];
-  }
-  const nextNum = block.items.length + 1;
-  block.items.push({
-    id: `nav_${Date.now() % 10000}`,
-    title: `Menu ${nextNum}`,
-    url: `#section_${nextNum}`
-  });
-  recordHistory();
-  triggerAutoSaveDraft();
+const addNavItem = (_block: VisualBlock) => {
+  // Tambah link baru di navigasi langsung membuka modal pendaftaran rute Alur Figma
+  showToast('Daftarkan halaman baru untuk menambah menu di bilah navigasi.', 'info');
+  isNewPageModalOpen.value = true;
 };
 
 const removeNavItem = (block: VisualBlock, idx: number) => {
-  if (!block.items) return;
-  if (block.items.length <= 1) {
-    showToast('Navigasi minimal harus memiliki satu menu tautan.', 'info');
+  const items = getRenderedNavItems(block);
+  const item = items[idx];
+  if (!item) return;
+  if (item.url === '/') {
+    showToast('Halaman Beranda (/) adalah rute utama website dan tidak dapat dihapus.', 'error');
     return;
   }
-  block.items.splice(idx, 1);
-  recordHistory();
-  triggerAutoSaveDraft();
+  const targetPage = multiPages.value.find(p => p.path === item.url);
+  if (targetPage) {
+    deletePage(targetPage.id);
+  }
 };
 
 const cycleNavbarBrandGlyph = (block: VisualBlock) => {
@@ -1429,15 +1564,27 @@ const loadBlocksForActiveContainer = () => {
   const container = activeContainer.value;
   if (!container) return;
 
+  const applyAccentColor = (blocks: VisualBlock[]) => {
+    if (!container.accentColor || !Array.isArray(blocks)) return;
+    blocks.forEach(b => {
+      if (!b.styles) b.styles = {};
+      b.styles.accentColor = container.accentColor;
+    });
+  };
+
   // 1. HIGHEST PRIORITY: Container's own saved pages (never overwrite user's pages with template)
   if (container.themeConfig?.pages && Array.isArray(container.themeConfig.pages) && container.themeConfig.pages.length > 0) {
-    multiPages.value = JSON.parse(JSON.stringify(container.themeConfig.pages)).map((p: any, idx: number) => ({
-      ...p,
-      canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
-      canvasY: p.canvasY || 0
-    }));
+    multiPages.value = JSON.parse(JSON.stringify(container.themeConfig.pages)).map((p: any, idx: number) => {
+      applyAccentColor(p.blocks || []);
+      return {
+        ...p,
+        canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
+        canvasY: p.canvasY || 0
+      };
+    });
     activePageId.value = multiPages.value[0]?.id || 'page_home';
     pageBlocks.value = JSON.parse(JSON.stringify(multiPages.value[0]?.blocks || []));
+    applyAccentColor(pageBlocks.value);
     if (pageBlocks.value.length > 0) {
       selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
     }
@@ -1447,6 +1594,7 @@ const loadBlocksForActiveContainer = () => {
   // 2. SECOND PRIORITY: Container's own saved blocks
   if (container.themeConfig?.blocks && Array.isArray(container.themeConfig.blocks) && container.themeConfig.blocks.length > 0) {
     pageBlocks.value = JSON.parse(JSON.stringify(container.themeConfig.blocks));
+    applyAccentColor(pageBlocks.value);
     multiPages.value = [
       {
         id: 'page_home',
@@ -1469,19 +1617,29 @@ const loadBlocksForActiveContainer = () => {
   const templateId = (container.themeConfig as any)?.templateId || '';
   const matchedTemplate = officialTemplatesData.find(t =>
     (templateId && t.id === templateId) ||
-    (container.templateName && t.title === container.templateName)
+    (container.templateName && (
+      t.title === container.templateName ||
+      t.title.toLowerCase().includes(container.templateName.toLowerCase()) ||
+      container.templateName.toLowerCase().includes(t.title.toLowerCase())
+    )) ||
+    (container.category && t.category === container.category)
   );
 
   if (matchedTemplate?.isMultiPage && matchedTemplate.pages && matchedTemplate.pages.length > 0) {
-    multiPages.value = JSON.parse(JSON.stringify(matchedTemplate.pages)).map((p: any, idx: number) => ({
-      ...p,
-      canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
-      canvasY: p.canvasY || 0
-    }));
+    multiPages.value = JSON.parse(JSON.stringify(matchedTemplate.pages)).map((p: any, idx: number) => {
+      applyAccentColor(p.blocks || []);
+      return {
+        ...p,
+        canvasX: p.canvasX !== undefined && p.canvasX >= idx * 1800 ? p.canvasX : getPageCanvasX(idx),
+        canvasY: p.canvasY || 0
+      };
+    });
     activePageId.value = multiPages.value[0]?.id || 'page_home';
     pageBlocks.value = JSON.parse(JSON.stringify(multiPages.value[0]?.blocks || []));
+    applyAccentColor(pageBlocks.value);
   } else if (matchedTemplate?.blocks && Array.isArray(matchedTemplate.blocks) && matchedTemplate.blocks.length > 0) {
     pageBlocks.value = JSON.parse(JSON.stringify(matchedTemplate.blocks));
+    applyAccentColor(pageBlocks.value);
     multiPages.value = [
       {
         id: 'page_home',
@@ -1500,6 +1658,7 @@ const loadBlocksForActiveContainer = () => {
     const role = container.roleOrHeadline || 'Portofolio Teknis Engineer';
     const bio = container.bioIntro || 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom Stack Studio.';
     pageBlocks.value = createDefaultBlocks(siteName, role, bio);
+    applyAccentColor(pageBlocks.value);
     multiPages.value = [
       {
         id: 'page_home',
@@ -1517,6 +1676,7 @@ const loadBlocksForActiveContainer = () => {
   if (pageBlocks.value.length > 0) {
     selectedBlockId.value = pageBlocks.value[1]?.id || pageBlocks.value[0]?.id || null;
   }
+  syncAllNavbarsWithSitemap();
 };
 
 const restoreDraftForActiveContainer = async (containerId: string) => {
@@ -1598,6 +1758,7 @@ const restoreDraftForActiveContainer = async (containerId: string) => {
       const dateObj = new Date(draftData.updatedAt || Date.now());
       lastSavedDraftAt.value = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
       isDraftRestored.value = true;
+      syncAllNavbarsWithSitemap();
     } else {
       loadBlocksForActiveContainer();
     }
@@ -1663,21 +1824,35 @@ const triggerAutoSaveDraft = () => {
   }, 750);
 };
 
-const resetDraftToDefault = () => {
-  if (!confirm('Apakah Anda yakin ingin membuang draf yang belum terbit dan kembali ke versi awal kontainer?')) return;
+const isResetDraftModalOpen = ref(false);
+
+const openResetDraftModal = () => {
+  isResetDraftModalOpen.value = true;
+};
+
+const closeResetDraftModal = () => {
+  isResetDraftModalOpen.value = false;
+};
+
+const confirmResetDraft = () => {
   if (activeContainerId.value) {
     localStorage.removeItem(getDraftStorageKey(activeContainerId.value));
   }
   loadBlocksForActiveContainer();
   lastSavedDraftAt.value = '';
-  showToast('Draf telah direset ke versi awal kontainer.', 'info');
+  isResetDraftModalOpen.value = false;
+  showToast('Draf telah dibuang dan kembali ke versi awal kontainer.', 'info');
   triggerAutoSaveDraft();
+};
+
+const resetDraftToDefault = () => {
+  openResetDraftModal();
 };
 
 watch(
   () => activeContainerId.value,
   async (newId, oldId) => {
-    if (newId && oldId) {
+    if (newId && newId !== oldId) {
       isEditorBooting.value = true;
       bootProgress.value = 35;
       bootStatusText.value = 'Memuat draf situs...';
@@ -2215,6 +2390,17 @@ const onInlineItemTextBlur = (block: VisualBlock, itemIndex: number, field: 'tit
     } else {
       (block.items[itemIndex] as any)[field] = text;
     }
+
+    // Jika mengedit judul menu navigasi di kanvas, sinkronkan nama halaman di Alur Figma
+    if (block.type === 'navbar' && field === 'title') {
+      const itemUrl = block.items[itemIndex].url;
+      const matchedPage = multiPages.value.find(p => p.path === itemUrl);
+      if (matchedPage) {
+        matchedPage.title = text;
+        syncAllNavbarsWithSitemap();
+      }
+    }
+
     recordHistory();
     triggerAutoSaveDraft();
   }
@@ -2524,6 +2710,142 @@ const commitImageChange = (blockId: string, itemIndex: number | undefined, image
     triggerAutoSaveDraft();
     showToast('Gambar berhasil diperbarui!', 'success');
   }
+};
+
+// -----------------------------------------------------------------------------
+// MinIO S3 Media Picker Modal (Asset Library Integration)
+// -----------------------------------------------------------------------------
+const isMediaPickerOpen = ref(false);
+const mediaPickerTarget = ref<{
+  blockId?: string;
+  itemIndex?: number;
+  field?: 'blockImage' | 'favicon' | 'ogImage';
+} | null>(null);
+
+const mediaPickerSearch = ref('');
+const mediaPickerCategory = ref<'all' | 'photo' | 'vector'>('all');
+const pickerUploadInputRef = ref<HTMLInputElement | null>(null);
+const selectedPickerAsset = ref<MediaAssetItem | null>(null);
+
+const filteredPickerMedia = computed(() => {
+  const assets = mediaAssets.value || [];
+  return assets.filter(item => {
+    const type = (item.type || '').toUpperCase();
+    const isImg = ['JPG', 'JPEG', 'PNG', 'WEBP', 'GIF', 'AVIF'].includes(type);
+    const isVec = type === 'SVG';
+    if (!isImg && !isVec) return false;
+
+    if (mediaPickerCategory.value === 'photo' && !isImg) return false;
+    if (mediaPickerCategory.value === 'vector' && !isVec) return false;
+
+    if (mediaPickerSearch.value.trim()) {
+      const q = mediaPickerSearch.value.toLowerCase();
+      return item.name.toLowerCase().includes(q) || type.toLowerCase().includes(q);
+    }
+    return true;
+  });
+});
+
+const openMediaPickerForBlock = (blockId: string, itemIndex?: number) => {
+  mediaPickerTarget.value = { blockId, itemIndex, field: 'blockImage' };
+  mediaPickerSearch.value = '';
+  mediaPickerCategory.value = 'all';
+  selectedPickerAsset.value = filteredPickerMedia.value[0] || null;
+  isMediaPickerOpen.value = true;
+};
+
+const openMediaPickerForSeo = (field: 'favicon' | 'ogImage') => {
+  mediaPickerTarget.value = { field };
+  mediaPickerSearch.value = '';
+  mediaPickerCategory.value = 'all';
+  selectedPickerAsset.value = filteredPickerMedia.value[0] || null;
+  isMediaPickerOpen.value = true;
+};
+
+const closeMediaPicker = () => {
+  isMediaPickerOpen.value = false;
+  mediaPickerTarget.value = null;
+  selectedPickerAsset.value = null;
+};
+
+const selectMediaAsset = (asset: MediaAssetItem) => {
+  if (!mediaPickerTarget.value) return;
+  const { blockId, itemIndex, field } = mediaPickerTarget.value;
+
+  if (field === 'favicon') {
+    seoForm.faviconUrl = asset.url;
+    showToast(`Favicon dipilih dari MinIO S3: ${asset.name}`, 'success');
+  } else if (field === 'ogImage') {
+    seoForm.ogImageUrl = asset.url;
+    showToast(`Gambar OG Share dipilih dari MinIO S3: ${asset.name}`, 'success');
+  } else if (blockId) {
+    commitImageChange(blockId, itemIndex, asset.url);
+    showToast(`Gambar dipilih dari MinIO S3: ${asset.name}`, 'success');
+  }
+
+  closeMediaPicker();
+};
+
+const confirmUseSelectedAsset = () => {
+  if (selectedPickerAsset.value) {
+    selectMediaAsset(selectedPickerAsset.value);
+  }
+};
+
+const triggerPickerQuickUpload = () => {
+  pickerUploadInputRef.value?.click();
+};
+
+const handlePickerFileUpload = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const files = target.files;
+  if (!files || files.length === 0) return;
+  await uploadMediaFiles(files);
+  if (mediaAssets.value && mediaAssets.value.length > 0) {
+    selectedPickerAsset.value = mediaAssets.value[0];
+  }
+};
+
+// -----------------------------------------------------------------------------
+// Pengaturan SEO, Favicon & Social Share Preview (Open Graph)
+// -----------------------------------------------------------------------------
+const isSeoModalOpen = ref(false);
+const activeSeoTab = ref<'settings' | 'preview'>('settings');
+const seoForm = reactive({
+  faviconUrl: '',
+  metaTitle: '',
+  metaDescription: '',
+  ogImageUrl: ''
+});
+
+const openSeoModal = () => {
+  const savedSeo = (activeContainer.value?.themeConfig as any)?.seo || {};
+  seoForm.faviconUrl = savedSeo.faviconUrl || '';
+  seoForm.metaTitle = savedSeo.metaTitle || activeContainer.value?.name || '';
+  seoForm.metaDescription = savedSeo.metaDescription || activeContainer.value?.bioIntro || '';
+  seoForm.ogImageUrl = savedSeo.ogImageUrl || '';
+  activeSeoTab.value = 'settings';
+  isSeoModalOpen.value = true;
+};
+
+const closeSeoModal = () => {
+  isSeoModalOpen.value = false;
+};
+
+const saveSeoConfig = () => {
+  if (!activeContainer.value) return;
+  if (!activeContainer.value.themeConfig) activeContainer.value.themeConfig = {};
+  (activeContainer.value.themeConfig as any).seo = {
+    faviconUrl: seoForm.faviconUrl,
+    metaTitle: seoForm.metaTitle,
+    metaDescription: seoForm.metaDescription,
+    ogImageUrl: seoForm.ogImageUrl
+  };
+
+  recordHistory();
+  triggerAutoSaveDraft();
+  showToast('Pengaturan SEO & Favicon berhasil disimpan ke draf!', 'success');
+  closeSeoModal();
 };
 
 const moveBlockUp = (id: string) => {
@@ -3431,7 +3753,7 @@ const executeVsCodeReplaceAll = () => {
             :title="isKatalogOpen ? 'Tutup Katalog Blok Website' : 'Buka Katalog Blok Website'"
           >
             <Plus :size="13" />
-            <span>Konten +</span>
+            <span>Konten</span>
           </button>
 
           <div class="v-divider"></div>
@@ -3539,11 +3861,11 @@ const executeVsCodeReplaceAll = () => {
                   >
                     <!-- Indent branch guide for nested child route -->
                     <div v-if="getParentPath(p.path)" class="tree-branch-guide" title="Sub-rute dari induk">
-                      <CornerDownRight :size="11" class="branch-icon" />
+                      <CornerDownRight :size="12" class="branch-icon" />
                     </div>
 
-                    <!-- Page Icon -->
-                    <div class="page-item-leading-icon">
+                    <!-- Page Leading Icon -->
+                    <div class="page-item-leading-icon" :class="{ 'is-active-icon': p.id === activePageId }">
                       <Home v-if="p.path === '/'" :size="13" class="icon-home" />
                       <FileText v-else-if="!getParentPath(p.path)" :size="13" class="icon-page" />
                       <FileCode v-else :size="13" class="icon-subpage" />
@@ -3552,38 +3874,51 @@ const executeVsCodeReplaceAll = () => {
                     <!-- Page Info -->
                     <div class="page-item-info">
                       <div class="page-item-title-row">
-                        <span class="page-item-title">{{ p.title }}</span>
+                        <span class="page-item-title" :title="p.title">
+                          {{ p.title || (p.path === '/' ? 'Beranda' : p.path) }}
+                        </span>
                         <span v-if="p.path === '/'" class="badge-root-tag">Utama</span>
                         <span v-else-if="getParentPath(p.path)" class="badge-nested-tag">Sub-Rute</span>
                       </div>
-                      <span class="page-item-path">{{ p.path }}</span>
+                      <div class="page-item-meta-row">
+                        <span class="page-item-path-pill">{{ p.path }}</span>
+                        <span class="meta-dot-divider">•</span>
+                        <span class="page-item-blocks-count">{{ p.blocks?.length || 0 }} blok</span>
+                      </div>
                     </div>
 
-                    <!-- Actions & Metadata -->
-                    <div class="page-item-actions-cluster">
-                      <span class="page-item-blocks-pill">
-                        <Layers :size="10" />
-                        {{ p.blocks?.length || 0 }} blok
-                      </span>
+                    <!-- Actions & Active Status -->
+                    <div class="page-item-actions-cluster" @click.stop>
                       <button
                         type="button"
-                        class="btn-edit-page-mini"
-                        @click.stop="openEditRouteModal(p); isPageSwitcherOpen = false"
-                        title="Edit Rute & Pengaturan Halaman"
+                        class="btn-page-action-pill"
+                        @click="openEditRouteModal(p); isPageSwitcherOpen = false"
+                        title="Edit Rute & Judul Halaman"
                       >
-                        <Settings :size="12" />
+                        <Settings :size="11" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-page-action-pill"
+                        @click="duplicatePage(p.id); isPageSwitcherOpen = false"
+                        title="Duplikat Halaman Ini"
+                      >
+                        <Copy :size="11" />
+                        <span>Duplikat</span>
                       </button>
                       <button
                         v-if="p.path !== '/' && multiPages.length > 1"
                         type="button"
-                        class="btn-delete-page-mini"
-                        @click.stop="deletePage(p.id)"
+                        class="btn-page-action-icon is-danger"
+                        @click="deletePage(p.id)"
                         title="Hapus Halaman Ini"
                       >
-                        <Trash2 :size="12" />
+                        <Trash2 :size="11" />
                       </button>
-                      <div v-if="p.id === activePageId" class="active-dot-badge" title="Halaman Aktif">
+                      <div v-if="p.id === activePageId" class="page-active-tag" title="Halaman Aktif">
                         <Check :size="10" />
+                        <span>Aktif</span>
                       </div>
                     </div>
                   </div>
@@ -3857,6 +4192,29 @@ const executeVsCodeReplaceAll = () => {
           </button>
 
           <div class="v-divider"></div>
+
+          <!-- SEO, Favicon & Social Share Button -->
+          <button
+            type="button"
+            class="btn-header-seo"
+            @click="openSeoModal"
+            title="Pengaturan SEO, Favicon & Social Share (Open Graph)"
+          >
+            <Share2 :size="13" />
+            <span>SEO & Sosmed</span>
+          </button>
+
+          <!-- Open Live Website Button -->
+          <a
+            :href="liveSiteUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-open-live-web"
+            title="Buka website langsung di tab baru (sesuai rute aktif)"
+          >
+            <ExternalLink :size="13" />
+            <span>Buka Web</span>
+          </a>
 
           <!-- Publish Button -->
           <button
@@ -4679,12 +5037,21 @@ const executeVsCodeReplaceAll = () => {
                       <span>Ganti Ikon</span>
                     </button>
 
-                    <!-- Add / Change Card Photo -->
+                    <!-- Add / Change Card Photo with Media Picker -->
+                    <button
+                      type="button"
+                      class="shelf-btn highlight"
+                      @click="openMediaPickerForBlock(selectedBlock.id, hudContext.itemIndex || 0)"
+                      title="Pilih Foto Cover dari Pustaka MinIO S3"
+                    >
+                      <Database :size="12" />
+                      <span>Pustaka</span>
+                    </button>
                     <button
                       type="button"
                       class="shelf-btn"
                       @click="triggerImageUpload(selectedBlock.id, hudContext.itemIndex || 0)"
-                      title="Pasang / Ganti Foto Cover Kartu"
+                      title="Pasang / Ganti Foto Cover dari Komputer"
                     >
                       <ImageIcon :size="12" />
                       <span>{{ selectedBlock.items?.[hudContext.itemIndex || 0]?.image ? 'Ganti Foto' : '+ Foto' }}</span>
@@ -4771,9 +5138,18 @@ const executeVsCodeReplaceAll = () => {
 
                   <!-- E. Context: IMAGE -->
                   <div v-else-if="hudContext.type === 'image'" class="shelf-controls-group">
-                    <button type="button" class="shelf-btn highlight" @click="triggerImageUpload(selectedBlock.id, hudContext.itemIndex)" title="Unggah Foto dari Komputer">
+                    <button
+                      type="button"
+                      class="shelf-btn highlight"
+                      @click="openMediaPickerForBlock(selectedBlock.id, hudContext.itemIndex)"
+                      title="Pilih Gambar dari Pustaka MinIO S3"
+                    >
+                      <Database :size="12" />
+                      <span>Pustaka Media</span>
+                    </button>
+                    <button type="button" class="shelf-btn" @click="triggerImageUpload(selectedBlock.id, hudContext.itemIndex)" title="Unggah Foto dari Komputer">
                       <UploadCloud :size="12" />
-                      <span>Upload Foto</span>
+                      <span>Upload Lokal</span>
                     </button>
                     <div class="shelf-btn-group" title="Preset Gambar Siap Pakai">
                       <button
@@ -4873,6 +5249,18 @@ const executeVsCodeReplaceAll = () => {
                       <span style="font-size: 10px; margin-left: 2px;">Ikon</span>
                     </button>
 
+                    <!-- Sync with Figma Flow Button -->
+                    <button
+                      type="button"
+                      class="shelf-btn highlight"
+                      style="background: #2563eb; color: #ffffff; border-color: #1d4ed8;"
+                      @click="syncAllNavbarsWithSitemap(true)"
+                      :title="`Sinkronkan ${multiPages.length} rute halaman dari Alur Figma ke bilah navigasi ini`"
+                    >
+                      <Workflow :size="12" />
+                      <span>Sinkron Alur Figma ({{ multiPages.length }})</span>
+                    </button>
+
                     <!-- Quick Add Nav Item Button -->
                     <button
                       type="button"
@@ -4882,6 +5270,18 @@ const executeVsCodeReplaceAll = () => {
                     >
                       <Plus :size="12" />
                       <span>+ Link</span>
+                    </button>
+
+                    <!-- Quick Jump to Connected Page -->
+                    <button
+                      v-if="hudContext.itemIndex !== undefined && selectedBlock.items?.[hudContext.itemIndex]?.url"
+                      type="button"
+                      class="shelf-btn"
+                      @click="switchPageByPath(selectedBlock.items[hudContext.itemIndex].url!)"
+                      :title="`Buka halaman '${selectedBlock.items[hudContext.itemIndex].url}' di kanvas`"
+                    >
+                      <ExternalLink :size="12" />
+                      <span>Buka Halaman</span>
                     </button>
 
                     <!-- Quick Delete Selected Nav Item Button -->
@@ -5212,6 +5612,15 @@ const executeVsCodeReplaceAll = () => {
                   </button>
                   <button
                     type="button"
+                    class="btn-figma-duplicate-page"
+                    @click.stop="duplicatePage(page.id)"
+                    title="Duplikat Halaman Ini"
+                  >
+                    <Copy :size="11" />
+                    <span>Duplikat</span>
+                  </button>
+                  <button
+                    type="button"
                     class="btn-figma-focus-page"
                     @click.stop="switchPage(page.id, true)"
                     title="Fokus Edit Halaman Ini (Single WYSIWYG Mode)"
@@ -5408,8 +5817,18 @@ const executeVsCodeReplaceAll = () => {
                       </div>
 
                       <div class="nav-links-cluster" :class="{ 'is-centered': block.styles?.navAlign === 'center' }">
+                        <!-- Integrasi Alur Figma Indicator Badge -->
                         <div
-                          v-for="(item, idx) in (block.items && block.items.length > 0 ? block.items : defaultNavItems)"
+                          v-if="multiPages.length > 1"
+                          class="nav-sitemap-sync-indicator"
+                          @click.stop="setCanvasViewMode('sitemap')"
+                          title="Menu navigasi terintegrasi langsung dengan Alur Figma (Klik untuk lihat Alur Figma)"
+                        >
+                          <Workflow :size="10" />
+                          <span>Alur Figma ({{ multiPages.length }})</span>
+                        </div>
+                        <div
+                          v-for="(item, idx) in getRenderedNavItems(block)"
                           :key="item.id || idx"
                           class="nav-link-item-wrapper"
                           @click="onNavItemClick(block, idx, $event)"
@@ -5417,8 +5836,8 @@ const executeVsCodeReplaceAll = () => {
                           <a
                             :href="item.url || '#'"
                             class="nav-anchor"
-                            :class="{ active: (item as any).active || (activePage && activePage.path === item.url) || idx === 0 }"
-                            :style="{ color: ((item as any).active || (activePage && activePage.path === item.url) || idx === 0) ? (block.styles?.accentColor || activeContainer.accentColor) : undefined }"
+                            :class="{ active: (activePage && activePage.path === item.url) || item.active }"
+                            :style="{ color: ((activePage && activePage.path === item.url) || item.active) ? (block.styles?.accentColor || activeContainer.accentColor) : undefined }"
                             @click.prevent
                           >
                             <span
@@ -5430,11 +5849,11 @@ const executeVsCodeReplaceAll = () => {
                             >{{ item.title }}</span>
                           </a>
                           <button
-                            v-if="selectedBlockId === block.id && (block.items?.length || 0) > 1"
+                            v-if="selectedBlockId === block.id && getRenderedNavItems(block).length > 1"
                             type="button"
                             class="btn-nav-link-delete"
                             @click.stop="removeNavItem(block, idx)"
-                            title="Hapus tautan ini"
+                            title="Hapus rute halaman ini dari Alur Figma & navigasi"
                           >
                             ×
                           </button>
@@ -6338,10 +6757,14 @@ const executeVsCodeReplaceAll = () => {
                               class="card-cover-image"
                             />
                             <!-- Hover Overlay: Ganti Foto Langsung -->
-                            <div class="card-cover-hover-overlay" @click.stop="triggerImageUpload(block.id, idx)">
-                              <span class="btn-card-change-photo">
+                            <div class="card-cover-hover-overlay">
+                              <span class="btn-card-change-photo" @click.stop="openMediaPickerForBlock(block.id, idx)" title="Pilih dari Pustaka MinIO S3">
+                                <Database :size="12" />
+                                <span>Pustaka</span>
+                              </span>
+                              <span class="btn-card-change-photo secondary" @click.stop="triggerImageUpload(block.id, idx)" title="Upload dari Komputer">
                                 <UploadCloud :size="12" />
-                                <span>{{ item.image ? 'Ganti Foto' : '+ Pasang Foto' }}</span>
+                                <span>Upload</span>
                               </span>
                             </div>
                             <span
@@ -8602,29 +9025,30 @@ const executeVsCodeReplaceAll = () => {
       <!-- =================================================================== -->
       <!-- STUDIO MODAL: TAMBAH HALAMAN RUTE BARU                              -->
       <!-- =================================================================== -->
-      <div v-if="isNewPageModalOpen" class="modal-backdrop" @click.self="isNewPageModalOpen = false">
-        <div class="modal-dialog modal-dialog-new-page modal-dialog-bespoke">
-          <!-- Header -->
-          <div class="modal-header modal-header-bespoke">
+      <Teleport to="body">
+        <div v-if="isNewPageModalOpen" class="modal-backdrop modal-backdrop-bespoke" @click.self="isNewPageModalOpen = false">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-new-page modal-dialog-bespoke" style="padding: 0 !important; overflow: hidden !important;" role="dialog" aria-modal="true">
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
             <div class="modal-header-leading">
-              <div class="modal-header-icon-box modal-icon-gradient">
-                <Workflow :size="20" />
+              <div class="modal-header-icon-box modal-icon-gradient" style="width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+                <Workflow :size="18" />
               </div>
               <div>
                 <div class="modal-title-row">
-                  <h3 class="modal-heading">Tambah Halaman Rute Baru</h3>
+                  <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">Tambah Halaman Rute Baru</h3>
                   <span class="modal-tag-badge">Traefik Ingress Edge</span>
                 </div>
-                <p class="modal-subheading">Perluas website dengan rute multi-halaman & blueprint layout terintegrasi.</p>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Perluas website dengan rute multi-halaman & blueprint layout terintegrasi.</p>
               </div>
             </div>
-            <button type="button" class="modal-close-button" @click="isNewPageModalOpen = false" title="Tutup">
+            <button type="button" class="modal-close-button-ghost" @click="isNewPageModalOpen = false" title="Tutup">
               <X :size="16" />
             </button>
           </div>
 
           <!-- Body -->
-          <div class="new-page-modal-body">
+          <div class="new-page-modal-body" style="padding: 20px 24px;">
             <!-- 1. Quick Presets Chips Strip -->
             <div class="quick-presets-strip">
               <span class="quick-presets-label">Pintasan Cepat:</span>
@@ -8851,169 +9275,727 @@ const executeVsCodeReplaceAll = () => {
             </div>
           </div>
 
-          <!-- Footer -->
-          <div class="modal-footer modal-footer-bespoke">
+          <!-- Footer (Flush to Bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0;">
             <div class="footer-help-note">
               <Workflow :size="13" class="note-icon" />
               <span>Rute & tata letak dapat dikustomisasi visual kapan saja di Alur Figma.</span>
             </div>
-            <div class="footer-actions-group">
+            <div class="footer-actions-group" style="display: flex; gap: 8px;">
               <button
                 type="button"
-                class="btn-modal-ghost"
+                class="btn-picker-footer-ghost"
                 @click="isNewPageModalOpen = false"
               >
                 Batal
               </button>
               <button
                 type="button"
-                class="btn-modal-confirm btn-modal-create-page"
+                class="btn-picker-footer-confirm"
                 @click="createNewPage"
               >
-                <Plus :size="13" />
+                <Plus :size="14" />
                 <span>Buat Halaman & Buka di Kanvas</span>
               </button>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
+  </div>
 
-    <!-- MODAL: EDIT RUTE & PENGATURAN HALAMAN -->
-    <div v-if="isEditRouteModalOpen && editingRouteTarget" class="modal-backdrop-bespoke" @click.self="closeEditRouteModal">
-      <div class="modal-dialog-bespoke modal-dialog-new-page" role="dialog" aria-modal="true">
-        <!-- Header -->
-        <div class="modal-header modal-header-bespoke">
-          <div class="modal-header-leading">
-            <div class="modal-header-icon-box modal-icon-gradient">
-              <Workflow :size="20" />
-            </div>
-            <div>
-              <div class="modal-title-row">
-                <h3 class="modal-heading">Edit Rute & Metadata Halaman</h3>
-                <span class="modal-tag-badge">Traefik Ingress Edge</span>
+    <!-- =================================================================== -->
+    <!-- MODAL: EDIT RUTE & PENGATURAN HALAMAN                               -->
+    <!-- =================================================================== -->
+    <Teleport to="body">
+      <div v-if="isEditRouteModalOpen && editingRouteTarget" class="modal-backdrop modal-backdrop-bespoke" @click.self="closeEditRouteModal">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-edit-route modal-dialog-bespoke" style="padding: 0 !important; overflow: hidden !important;" role="dialog" aria-modal="true">
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box modal-icon-gradient" :class="{ 'is-root-icon': editingRouteTarget.path === '/' }" style="width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+                <Home v-if="editingRouteTarget.path === '/'" :size="18" />
+                <Workflow v-else :size="18" />
               </div>
-              <p class="modal-subheading">Sesuaikan alamat URL, judul navigasi, dan deskripsi SEO halaman ini.</p>
-            </div>
-          </div>
-          <button type="button" class="modal-close-button" @click="closeEditRouteModal" title="Tutup">
-            <X :size="16" />
-          </button>
-        </div>
-
-        <!-- Body -->
-        <div class="new-page-modal-body">
-          <div class="new-page-form-grid">
-            <!-- Judul Halaman -->
-            <div class="new-page-field">
-              <div class="field-label-row">
-                <label class="new-page-label">Judul Halaman <span class="req-star">*</span></label>
-                <span class="field-hint">Nama tampilan di navigasi & tab browser</span>
-              </div>
-              <div class="input-with-leading-icon">
-                <Type :size="14" class="input-leading-icon" />
-                <input
-                  v-model="editRouteForm.title"
-                  type="text"
-                  placeholder="Contoh: Paket & Harga, Layanan Kami, Portofolio..."
-                  class="new-page-input has-icon"
-                  @keyup.enter="saveEditRouteModal"
-                />
+              <div>
+                <div class="modal-title-row">
+                  <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">Edit Rute & Metadata Halaman</h3>
+                  <span v-if="editingRouteTarget.path === '/'" class="modal-tag-badge badge-root">Beranda (Root)</span>
+                  <span v-else class="modal-tag-badge">Traefik Ingress Edge</span>
+                </div>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Sesuaikan judul navigasi, alamat URL, dan deskripsi SEO halaman ini.</p>
               </div>
             </div>
-
-            <!-- Rute URL (Path) -->
-            <div class="new-page-field">
-              <div class="field-label-row">
-                <label class="new-page-label">Rute URL (Path) <span class="req-star">*</span></label>
-                <span class="field-hint">Alamat akses web di browser</span>
-              </div>
-              <div class="new-page-path-prefix-wrap">
-                <span class="path-prefix">
-                  <ShieldCheck :size="12" class="prefix-lock-icon" />
-                  https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}
-                </span>
-                <input
-                  v-if="editingRouteTarget.path !== '/'"
-                  v-model="editRouteForm.path"
-                  type="text"
-                  placeholder="/pricing"
-                  class="new-page-input path-input"
-                  @keyup.enter="saveEditRouteModal"
-                />
-                <input
-                  v-else
-                  type="text"
-                  value="/"
-                  disabled
-                  class="new-page-input path-input is-disabled-root"
-                  title="Rute beranda (/) adalah root utama website dan bersifat permanen."
-                />
-              </div>
-
-              <!-- Sub-route quick helper chips (if existing parent pages exist and not root) -->
-              <div v-if="editingRouteTarget.path !== '/' && existingParentPages.length > 0" class="parent-nesting-strip">
-                <span class="parent-nesting-label">↳ Jadikan Sub-Rute dari:</span>
-                <button
-                  v-for="parentPg in existingParentPages"
-                  :key="parentPg.id"
-                  type="button"
-                  class="parent-nesting-chip"
-                  @click="setEditRouteParent(parentPg.path)"
-                  :title="`Klik untuk ubah sub-rute di bawah ${parentPg.path}`"
-                >
-                  <span>{{ parentPg.path }}/...</span>
-                </button>
-              </div>
-
-              <div v-if="editingRouteTarget.path === '/'" class="root-route-notice">
-                <Home :size="12" />
-                <span>Rute Beranda (<strong>/</strong>) adalah gerbang utama website yang dilayani otomatis oleh Traefik Edge Router.</span>
-              </div>
-            </div>
-
-            <!-- Deskripsi Halaman (SEO Meta / Lead) -->
-            <div class="new-page-field">
-              <div class="field-label-row">
-                <label class="new-page-label">Deskripsi Halaman</label>
-                <span class="field-hint">Meta ringkasan halaman untuk SEO & preview canvas</span>
-              </div>
-              <textarea
-                v-model="editRouteForm.description"
-                rows="2"
-                placeholder="Tulis ringkasan singkat isi atau tujuan halaman ini..."
-                class="new-page-input new-page-textarea"
-              ></textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="modal-footer modal-footer-bespoke">
-          <div class="footer-help-note">
-            <Workflow :size="13" class="note-icon" />
-            <span>Perubahan rute otomatis sinkron dengan bilah navigasi & kanvas Alur Figma.</span>
-          </div>
-          <div class="footer-actions-group">
-            <button
-              type="button"
-              class="btn-modal-ghost"
-              @click="closeEditRouteModal"
-            >
-              Batal
+            <button type="button" class="modal-close-button-ghost" @click="closeEditRouteModal" title="Tutup">
+              <X :size="16" />
             </button>
-            <button
-              type="button"
-              class="btn-modal-confirm"
-              @click="saveEditRouteModal"
-            >
-              <Check :size="14" />
-              <span>Simpan Perubahan</span>
-            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="new-page-modal-body modal-body-edit-route" style="padding: 20px 24px;">
+            <div class="new-page-form-grid">
+              <!-- Judul Halaman -->
+              <div class="new-page-field">
+                <div class="field-label-row">
+                  <label class="new-page-label">Judul Halaman <span class="req-star">*</span></label>
+                  <span class="field-hint">Label tampilan navigasi & tab browser</span>
+                </div>
+                <div class="input-with-leading-icon">
+                  <Type :size="14" class="input-leading-icon" />
+                  <input
+                    v-model="editRouteForm.title"
+                    type="text"
+                    placeholder="Contoh: Paket & Harga, Layanan Kami, Portofolio..."
+                    class="new-page-input has-icon text-sans-input"
+                    @keyup.enter="saveEditRouteModal"
+                  />
+                </div>
+                <!-- Live Navigation Pill Preview -->
+                <div class="live-nav-preview-pill">
+                  <span class="preview-pill-label">Pratinjau Navigasi:</span>
+                  <div class="preview-pill-bubble">
+                    <Globe :size="11" class="preview-globe-icon" />
+                    <span class="preview-text-name">{{ editRouteForm.title || 'Nama Halaman' }}</span>
+                    <span class="preview-sep">·</span>
+                    <span class="preview-text-sub">{{ activeContainer?.subdomain || 'site.stackbyte.id' }}{{ editingRouteTarget.path === '/' ? '' : (editRouteForm.path || '') }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rute URL (Path) -->
+              <div class="new-page-field">
+                <div class="field-label-row">
+                  <label class="new-page-label">Rute URL (Path) <span class="req-star">*</span></label>
+                  <span class="field-hint">Alamat akses web di browser</span>
+                </div>
+
+                <!-- JIKA BERANDA (ROOT /) -->
+                <div v-if="editingRouteTarget.path === '/'" class="root-route-card-bespoke">
+                  <div class="root-route-display-bar">
+                    <div class="root-url-group">
+                      <ShieldCheck :size="13" class="prefix-lock-icon" />
+                      <span class="root-domain-text">https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}</span>
+                      <span class="root-slash-badge">/</span>
+                    </div>
+                    <span class="root-fixed-badge">
+                      <Lock :size="10" /> Root Tetap
+                    </span>
+                  </div>
+                  <div class="root-route-notice-bespoke">
+                    <Info :size="13" class="notice-info-icon" />
+                    <span>Rute Beranda (<code>/</code>) adalah gerbang utama website yang dilayani otomatis oleh Traefik Edge Router.</span>
+                  </div>
+                </div>
+
+                <!-- JIKA BUKAN ROOT (DYNAMIC ROUTE) -->
+                <div v-else class="dynamic-route-wrap">
+                  <div class="new-page-path-prefix-wrap">
+                    <span class="path-prefix">
+                      <ShieldCheck :size="12" class="prefix-lock-icon" />
+                      https://{{ activeContainer?.subdomain || 'site.stackbyte.id' }}
+                    </span>
+                    <input
+                      v-model="editRouteForm.path"
+                      type="text"
+                      placeholder="/pricing"
+                      class="new-page-input path-input"
+                      @keyup.enter="saveEditRouteModal"
+                    />
+                  </div>
+
+                  <!-- Sub-route quick helper chips (if existing parent pages exist) -->
+                  <div v-if="existingParentPages.length > 0" class="parent-nesting-strip">
+                    <span class="parent-nesting-label">↳ Jadikan Sub-Rute dari:</span>
+                    <button
+                      v-for="parentPg in existingParentPages"
+                      :key="parentPg.id"
+                      type="button"
+                      class="parent-nesting-chip"
+                      @click="setEditRouteParent(parentPg.path)"
+                      :title="`Klik untuk ubah sub-rute di bawah ${parentPg.path}`"
+                    >
+                      <span>{{ parentPg.path }}/...</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Deskripsi Halaman (SEO Meta / Lead) -->
+              <div class="new-page-field">
+                <div class="field-label-row">
+                  <label class="new-page-label">Deskripsi Halaman (SEO)</label>
+                  <span class="field-hint">{{ editRouteForm.description?.length || 0 }} / 160 karakter</span>
+                </div>
+                <textarea
+                  v-model="editRouteForm.description"
+                  rows="3"
+                  maxlength="200"
+                  placeholder="Tulis ringkasan singkat isi atau tujuan halaman ini untuk mesin pencari & kanvas..."
+                  class="new-page-input new-page-textarea"
+                ></textarea>
+                <span class="field-subtext-help">Ringkasan ini otomatis disematkan pada tag meta halaman & preview diagram kanvas.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer (Flush to Bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0;">
+            <div class="footer-help-note">
+              <Workflow :size="13" class="note-icon" />
+              <span>Otomatis sinkron dengan bilah navigasi & kanvas Alur Figma.</span>
+            </div>
+            <div class="footer-actions-group" style="display: flex; gap: 8px;">
+              <button
+                type="button"
+                class="btn-picker-footer-ghost"
+                @click="closeEditRouteModal"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                class="btn-picker-footer-confirm"
+                @click="saveEditRouteModal"
+              >
+                <Check :size="14" />
+                <span>Simpan Perubahan</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: KONFIRMASI RESET / BUANG DRAF KE VERSI AWAL                   -->
+    <!-- =================================================================== -->
+    <Teleport to="body">
+      <div
+        v-if="isResetDraftModalOpen"
+        class="modal-backdrop modal-backdrop-bespoke"
+        @click.self="closeResetDraftModal"
+      >
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-reset-draft" style="max-width: 480px; width: 92vw; padding: 0 !important; border-radius: 16px !important; overflow: hidden !important; display: flex; flex-direction: column;" role="dialog" aria-modal="true">
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box" style="width: 34px; height: 34px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+                <RotateCcw :size="17" />
+              </div>
+              <div>
+                <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">Buang Draf & Kembali ke Versi Awal?</h3>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Kembalikan kanvas situs ke blueprint kontainer yang tersimpan.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="modal-close-button-ghost"
+              @click="closeResetDraftModal"
+              title="Tutup dialog"
+            >
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-bespoke" style="padding: 20px 24px; font-size: 0.84rem; color: #475569; line-height: 1.6; background: #ffffff;">
+            <p style="margin: 0 0 14px 0;">
+              Semua perubahan layout, teks, dan blok yang baru saja Anda edit <strong>tetapi belum diterbitkan</strong> akan dibuang dari memori draf browser.
+            </p>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px;">
+              <Info :size="16" style="color: #0284c7; flex-shrink: 0; margin-top: 2px;" />
+              <div style="font-size: 0.77rem; color: #334155;">
+                Situs live yang sedang berjalan tidak akan terpengaruh. Kanvas editor akan kembali ke versi kontainer <strong>{{ activeContainer?.name || 'Situs Utama' }}</strong> saat terakhir diterbitkan.
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer Actions (Flush to Bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0;">
+            <div style="font-size: 0.74rem; color: #94a3b8;">
+              Tindakan ini tidak dapat dibatalkan.
+            </div>
+            <div class="footer-actions-group" style="display: flex; gap: 8px;">
+              <button
+                type="button"
+                class="btn-picker-footer-ghost"
+                @click="closeResetDraftModal"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                class="btn-picker-footer-confirm"
+                style="background: #ef4444; border: 1px solid #dc2626; color: #ffffff;"
+                @click="confirmResetDraft"
+              >
+                <RotateCcw :size="13" />
+                <span>Buang Draf</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: PEMILIH GAMBAR DARI PUSTAKA MEDIA (MinIO S3)                 -->
+    <!-- =================================================================== -->
+    <Teleport to="body">
+      <div
+        v-if="isMediaPickerOpen"
+        class="modal-backdrop modal-backdrop-bespoke"
+        @click.self="closeMediaPicker"
+      >
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-media-picker" style="max-width: 1040px; width: 92vw; height: 82vh; max-height: 780px; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important;" role="dialog" aria-modal="true">
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box" style="width: 34px; height: 34px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+                <Database :size="17" />
+              </div>
+              <div>
+                <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">Pustaka Media MinIO S3</h3>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Pusat aset gambar & vektor terisolasi untuk kontainer tenant.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="modal-close-button-ghost"
+              @click="closeMediaPicker"
+              title="Tutup dialog"
+            >
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Top Unified Filter Toolbar -->
+          <div class="picker-top-toolbar">
+            <div class="picker-toolbar-controls-cluster">
+              <!-- Search -->
+              <div class="picker-search-shell">
+                <Search :size="14" class="picker-search-glyph" />
+                <input
+                  v-model="mediaPickerSearch"
+                  type="text"
+                  placeholder="Cari nama gambar atau format..."
+                  class="picker-search-input"
+                />
+                <button v-if="mediaPickerSearch" type="button" class="btn-clear-search-mini" @click="mediaPickerSearch = ''">
+                  <X :size="12" />
+                </button>
+              </div>
+
+              <!-- Segmented Category Filter -->
+              <div class="picker-category-segmented">
+                <button
+                  type="button"
+                  class="picker-seg-btn"
+                  :class="{ active: mediaPickerCategory === 'all' }"
+                  @click="mediaPickerCategory = 'all'"
+                >
+                  Semua ({{ mediaAssets.length }})
+                </button>
+                <button
+                  type="button"
+                  class="picker-seg-btn"
+                  :class="{ active: mediaPickerCategory === 'photo' }"
+                  @click="mediaPickerCategory = 'photo'"
+                >
+                  Foto
+                </button>
+                <button
+                  type="button"
+                  class="picker-seg-btn"
+                  :class="{ active: mediaPickerCategory === 'vector' }"
+                  @click="mediaPickerCategory = 'vector'"
+                >
+                  Vektor SVG
+                </button>
+              </div>
+
+              <!-- Quick Upload CTA -->
+              <button
+                type="button"
+                class="btn-picker-primary-upload"
+                :disabled="isUploadingMedia"
+                @click="triggerPickerQuickUpload"
+                title="Unggah berkas baru langsung ke bucket MinIO S3"
+              >
+                <UploadCloud v-if="!isUploadingMedia" :size="14" />
+                <span v-else class="spin-ring-sm" style="border-color: #ffffff; border-top-color: transparent;"></span>
+                <span>{{ isUploadingMedia ? 'Mengunggah...' : '+ Unggah Gambar' }}</span>
+              </button>
+              <input
+                ref="pickerUploadInputRef"
+                type="file"
+                accept="image/*"
+                multiple
+                style="display: none;"
+                @change="handlePickerFileUpload"
+              />
+            </div>
+
+            <!-- Right Status Badge (S3 Object Storage) -->
+            <div class="picker-toolbar-status-badge">
+              <span class="pulse-mini-dot"></span>
+              <span>MinIO S3 Bucket</span>
+            </div>
+          </div>
+
+          <!-- Body Split Stage: Gallery (Left) | Inspector (Right) -->
+          <div class="picker-split-stage">
+            <!-- Left: Gallery Stage -->
+            <div class="picker-gallery-pane">
+              <!-- Compact Dropzone Strip -->
+              <div class="picker-dropzone-strip" @click="triggerPickerQuickUpload">
+                <div class="dropzone-icon-box">
+                  <UploadCloud :size="15" />
+                </div>
+                <div class="dropzone-text-group">
+                  <span class="dropzone-main-text">Tarik gambar ke sini atau klik untuk unggah ke MinIO S3</span>
+                  <span class="dropzone-sub-text">Mendukung format JPG, PNG, WEBP, GIF, dan SVG (Maks. 50MB)</span>
+                </div>
+              </div>
+
+              <!-- Uploading progress banner -->
+              <div v-if="isUploadingMedia" class="picker-uploading-banner">
+                <div class="spin-ring-sm" style="border-color: #2563eb; border-top-color: transparent;"></div>
+                <span>Sedang mengunggah dan memproses aset ke bucket MinIO S3...</span>
+              </div>
+
+              <!-- Media Grid -->
+              <div v-if="filteredPickerMedia.length > 0" class="picker-gallery-grid">
+                <div
+                  v-for="asset in filteredPickerMedia"
+                  :key="asset.id"
+                  class="picker-asset-card"
+                  :class="{ 'is-selected': selectedPickerAsset?.id === asset.id }"
+                  @click="selectedPickerAsset = asset"
+                  @dblclick="confirmUseSelectedAsset"
+                  :title="`Klik untuk memilih atau klik dua kali untuk langsung gunakan: ${asset.name}`"
+                >
+                  <div class="picker-asset-thumb checkerboard-pattern">
+                    <img :src="asset.url" :alt="asset.name" loading="lazy" />
+                    <span class="picker-type-badge">{{ (asset.type || 'IMG').toUpperCase() }}</span>
+                    <div v-if="selectedPickerAsset?.id === asset.id" class="picker-selected-check">
+                      <Check :size="12" />
+                    </div>
+                  </div>
+                  <div class="picker-asset-meta">
+                    <span class="picker-asset-name">{{ asset.name }}</span>
+                    <span class="picker-asset-sub">{{ asset.dimensions || asset.size }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div v-else class="picker-empty-state">
+                <ImageIcon :size="44" style="color: #cbd5e1; margin-bottom: 8px;" />
+                <p class="empty-title">Tidak ada aset gambar ditemukan</p>
+                <p class="empty-subtitle">Silakan unggah gambar dari komputer Anda menggunakan tombol di atas.</p>
+              </div>
+            </div>
+
+            <!-- Right: Asset Inspector & Live Preview -->
+            <aside class="picker-inspector-panel">
+              <div v-if="selectedPickerAsset" class="inspector-detail-wrap">
+                <div class="inspector-head-row">
+                  <span class="inspector-section-label">DETAIL BERKAS</span>
+                  <span class="inspector-status-badge">
+                    <span class="pulse-dot"></span> S3 Active
+                  </span>
+                </div>
+
+                <!-- Big Preview Hero Canvas -->
+                <div class="inspector-preview-hero checkerboard-pattern">
+                  <img :src="selectedPickerAsset.url" :alt="selectedPickerAsset.name" />
+                </div>
+
+                <!-- Metadata List -->
+                <div class="inspector-meta-specs">
+                  <div class="spec-row">
+                    <span class="spec-label">Nama</span>
+                    <span class="spec-value is-break" :title="selectedPickerAsset.name">{{ selectedPickerAsset.name }}</span>
+                  </div>
+                  <div class="spec-row">
+                    <span class="spec-label">Dimensi</span>
+                    <span class="spec-value">{{ selectedPickerAsset.dimensions || 'N/A' }}</span>
+                  </div>
+                  <div class="spec-row">
+                    <span class="spec-label">Ukuran</span>
+                    <span class="spec-value">{{ selectedPickerAsset.size }}</span>
+                  </div>
+                  <div class="spec-row">
+                    <span class="spec-label">Format</span>
+                    <span class="spec-value font-mono">{{ selectedPickerAsset.type.toUpperCase() }}</span>
+                  </div>
+                </div>
+
+                <p class="inspector-tip-note">
+                  💡 Klik dua kali pada kartu galeri untuk langsung menggunakan gambar.
+                </p>
+              </div>
+
+              <!-- Empty Inspector State -->
+              <div v-else class="inspector-empty-wrap">
+                <div class="empty-icon-circle">
+                  <ImageIcon :size="26" style="color: #94a3b8;" />
+                </div>
+                <p class="empty-hint-text">Pilih salah satu gambar dari galeri di samping untuk melihat pratinjau dan detailnya.</p>
+              </div>
+            </aside>
+          </div>
+
+          <!-- Footer Actions (Flush to Bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0;">
+            <div style="font-size: 0.74rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
+              <span class="pulse-mini-dot"></span>
+              <span>MinIO S3 • {{ filteredPickerMedia.length }} dari {{ mediaAssets.length }} Aset Ditampilkan</span>
+            </div>
+            <div class="footer-actions-group" style="gap: 10px;">
+              <button
+                type="button"
+                class="btn-picker-footer-ghost"
+                @click="closeMediaPicker"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                class="btn-picker-footer-confirm"
+                :disabled="!selectedPickerAsset"
+                @click="confirmUseSelectedAsset"
+              >
+                <Check :size="14" />
+                <span>Gunakan Gambar Terpilih</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: PENGATURAN SEO, FAVICON & SOCIAL SHARE (OPEN GRAPH)          -->
+    <!-- =================================================================== -->
+    <Teleport to="body">
+      <div
+        v-if="isSeoModalOpen"
+        class="modal-backdrop modal-backdrop-bespoke"
+        @click.self="closeSeoModal"
+      >
+        <div
+          class="modal-dialog modal-dialog-seamless modal-dialog-seo"
+          style="max-width: 680px; width: 92vw; max-height: 86vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important;"
+          role="dialog"
+          aria-modal="true"
+        >
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0;">
+            <div class="modal-header-leading">
+              <div class="modal-header-icon-box" style="width: 34px; height: 34px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 9px; display: flex; align-items: center; justify-content: center;">
+                <Share2 :size="17" />
+              </div>
+              <div>
+                <h3 class="modal-heading" style="font-size: 0.95rem; font-weight: 700; margin: 0; color: #0f172a;">SEO, Favicon & Social Share</h3>
+                <p class="modal-subheading" style="font-size: 0.74rem; margin: 2px 0 0 0; color: #64748b;">Kelola identitas tab browser dan kartu pratinjau saat situs dibagikan ke WhatsApp, LinkedIn, atau Twitter.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="modal-close-button-ghost"
+              @click="closeSeoModal"
+              title="Tutup dialog"
+            >
+              <X :size="16" />
+            </button>
+          </div>
+
+          <!-- Tabs Segment (Flush edge-to-edge) -->
+          <div class="seo-modal-tabs">
+            <button
+              type="button"
+              class="seo-tab-btn"
+              :class="{ active: activeSeoTab === 'settings' }"
+              @click="activeSeoTab = 'settings'"
+            >
+              <Settings :size="13" />
+              <span>Formulir Meta & Favicon</span>
+            </button>
+            <button
+              type="button"
+              class="seo-tab-btn"
+              :class="{ active: activeSeoTab === 'preview' }"
+              @click="activeSeoTab = 'preview'"
+            >
+              <Eye :size="13" />
+              <span>Simulasi Pratinjau Sosmed</span>
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body-bespoke" style="padding: 22px 24px; overflow-y: auto; flex: 1; background: #ffffff;">
+            <!-- TAB 1: FORMULIR -->
+            <div v-if="activeSeoTab === 'settings'" class="seo-form-container">
+              <!-- Favicon Field -->
+              <div class="seo-field-group">
+                <label class="seo-field-label">
+                  <span>Favicon Situs (Ikon Tab Browser)</span>
+                  <span class="seo-field-hint">Format .ico, .png, .svg (rekomendasi 32×32 / 64×64)</span>
+                </label>
+                <div class="seo-input-with-preview">
+                  <div class="favicon-thumb-preview checkerboard-pattern">
+                    <img v-if="seoForm.faviconUrl" :src="seoForm.faviconUrl" alt="Favicon" />
+                    <Globe v-else :size="18" style="color: #94a3b8;" />
+                  </div>
+                  <input
+                    v-model="seoForm.faviconUrl"
+                    type="text"
+                    placeholder="https://.../favicon.png atau pilih dari MinIO"
+                    class="seo-text-input"
+                  />
+                  <button
+                    type="button"
+                    class="btn-seo-choose-media"
+                    @click="openMediaPickerForSeo('favicon')"
+                    title="Pilih ikon dari Pustaka MinIO S3"
+                  >
+                    <Database :size="13" />
+                    <span>Pustaka</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Meta Title Field -->
+              <div class="seo-field-group">
+                <div class="seo-field-label-row">
+                  <label class="seo-field-label">Judul SEO (Meta Title)</label>
+                  <span class="seo-char-counter" :class="{ 'is-limit': seoForm.metaTitle.length > 60 }">
+                    {{ seoForm.metaTitle.length }}/60
+                  </span>
+                </div>
+                <input
+                  v-model="seoForm.metaTitle"
+                  type="text"
+                  placeholder="Contoh: StackByte Cloud - Platform CMS & Container Hosting"
+                  class="seo-text-input"
+                />
+              </div>
+
+              <!-- Meta Description Field -->
+              <div class="seo-field-group">
+                <div class="seo-field-label-row">
+                  <label class="seo-field-label">Deskripsi Meta (SEO & Social Snippet)</label>
+                  <span class="seo-char-counter" :class="{ 'is-limit': seoForm.metaDescription.length > 160 }">
+                    {{ seoForm.metaDescription.length }}/160
+                  </span>
+                </div>
+                <textarea
+                  v-model="seoForm.metaDescription"
+                  rows="3"
+                  placeholder="Deskripsikan situs Anda secara ringkas dan menarik untuk mesin pencari Google dan media sosial..."
+                  class="seo-textarea-input"
+                ></textarea>
+              </div>
+
+              <!-- OG Image Field -->
+              <div class="seo-field-group">
+                <label class="seo-field-label">
+                  <span>Gambar Pratinjau Sosial (Open Graph Image)</span>
+                  <span class="seo-field-hint">Rekomendasi ukuran 1200×630px untuk rasio 1.91:1</span>
+                </label>
+                <div class="seo-input-with-preview">
+                  <div class="og-thumb-preview checkerboard-pattern">
+                    <img v-if="seoForm.ogImageUrl" :src="seoForm.ogImageUrl" alt="OG Preview" />
+                    <ImageIcon v-else :size="18" style="color: #94a3b8;" />
+                  </div>
+                  <input
+                    v-model="seoForm.ogImageUrl"
+                    type="text"
+                    placeholder="https://.../og-cover.png atau pilih dari MinIO"
+                    class="seo-text-input"
+                  />
+                  <button
+                    type="button"
+                    class="btn-seo-choose-media"
+                    @click="openMediaPickerForSeo('ogImage')"
+                    title="Pilih gambar cover share dari Pustaka MinIO S3"
+                  >
+                    <Database :size="13" />
+                    <span>Pustaka</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: SIMULASI PRATINJAU SOSIAL -->
+            <div v-else class="seo-preview-container">
+              <div class="social-preview-notice">
+                <Info :size="14" style="color: #0284c7; flex-shrink: 0;" />
+                <span>Simulasi nyata tampilan tautan saat dibagikan ke WhatsApp, Telegram, Twitter (X), atau LinkedIn:</span>
+              </div>
+
+              <!-- Mockup Card -->
+              <div class="social-mockup-card">
+                <!-- Large Image Stage -->
+                <div class="social-mockup-cover checkerboard-pattern">
+                  <img
+                    v-if="seoForm.ogImageUrl"
+                    :src="seoForm.ogImageUrl"
+                    alt="Social Card Banner"
+                  />
+                  <div v-else class="social-mockup-cover-placeholder">
+                    <ImageIcon :size="32" style="color: #94a3b8; margin-bottom: 6px;" />
+                    <span>Belum ada gambar Open Graph. Pasang gambar 1200×630px di tab formulir.</span>
+                  </div>
+                </div>
+
+                <!-- Text Stage -->
+                <div class="social-mockup-content">
+                  <div class="social-mockup-domain">
+                    <img v-if="seoForm.faviconUrl" :src="seoForm.faviconUrl" class="domain-fav-icon" />
+                    <Globe v-else :size="11" />
+                    <span>{{ activeContainer?.subdomain || 'site.stackbyte.id' }}</span>
+                  </div>
+                  <h4 class="social-mockup-title">
+                    {{ seoForm.metaTitle || activeContainer?.name || 'Judul Halaman Belum Diisi' }}
+                  </h4>
+                  <p class="social-mockup-desc">
+                    {{ seoForm.metaDescription || activeContainer?.bioIntro || 'Deskripsi ringkas situs Anda akan tampil di sini saat dibagikan.' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer Actions (Flush to Bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0;">
+            <div style="font-size: 0.74rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
+              <span class="pulse-mini-dot"></span>
+              <span>Tersimpan langsung di draf konfigurasi kontainer</span>
+            </div>
+            <div class="footer-actions-group" style="gap: 10px;">
+              <button
+                type="button"
+                class="btn-picker-footer-ghost"
+                @click="closeSeoModal"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                class="btn-picker-footer-confirm"
+                @click="saveSeoConfig"
+              >
+                <Check :size="14" />
+                <span>Simpan Pengaturan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
   </section>
 </template>

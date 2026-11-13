@@ -316,6 +316,7 @@ const nextArticle = computed(() => {
 const isEditorModalOpen = ref(false);
 const editorContentType = ref<'article' | 'page'>('article');
 const editingId = ref<string | null>(null);
+const editorActiveTab = ref<'form' | 'preview' | 'seo'>('form');
 
 // Form Fields
 const formTitle = ref('');
@@ -333,6 +334,19 @@ const formIsInFooter = ref(false);
 const formMetaTitle = ref('');
 const formMetaDesc = ref('');
 const formContent = ref('');
+
+const wordCount = computed(() => {
+  if (!formContent.value) return 0;
+  return formContent.value.trim().split(/\s+/).filter(Boolean).length;
+});
+
+const estimatedReadTime = computed(() => {
+  return Math.max(1, Math.ceil(wordCount.value / 200));
+});
+
+const insertMarkdown = (prefix: string, suffix = '') => {
+  formContent.value = (formContent.value || '') + '\n' + prefix + suffix;
+};
 
 // Auto Slugify Helper
 const slugify = (text: string) => {
@@ -924,82 +938,126 @@ onUnmounted(() => {
 
       <!-- 4 Telemetry Cards (Adaptive per Tab) -->
       <div v-if="activeContentTab === 'articles'" class="stats-overview-grid">
-        <div class="telemetry-card accent-blue">
-          <div class="telemetry-corner-watermark blue"><FileText :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL ARTIKEL</span>
+            <div class="telemetry-glyph"><FileText :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ articles.length }} <span class="telemetry-denom">Artikel</span></div>
-          <div class="telemetry-sub"><span>8,450 kata terindeks di Edge CDN</span></div>
+          <div class="slot-segments">
+            <span class="slot-segment" :class="{ filled: articles.length > 0 }"></span>
+            <span class="slot-segment" :class="{ filled: articles.length > 2 }"></span>
+            <span class="slot-segment" :class="{ filled: articles.length > 5 }"></span>
+            <span class="slot-segment" :class="{ filled: articles.length > 10 }"></span>
+          </div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>8,450 kata terindeks di Edge CDN</span></div>
         </div>
 
-        <div class="telemetry-card accent-emerald">
-          <div class="telemetry-corner-watermark emerald"><Check :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">TERPUBLIKASI (LIVE)</span>
+            <div class="telemetry-glyph"><Check :size="18" /></div>
           </div>
-          <div class="telemetry-val">{{ articles.filter(a => a.status === 'published').length }} <span class="badge-online">Live CDN</span></div>
-          <div class="telemetry-sub"><span>Lighthouse 100/100 SEO ready</span></div>
+          <div class="telemetry-val">{{ articles.filter(a => a.status === 'published').length }} <span class="badge-mono active">Live CDN</span></div>
+          <div class="security-meter-track">
+            <div class="security-meter-fill" :style="{ width: articles.length ? `${(articles.filter(a => a.status === 'published').length / articles.length) * 100}%` : '100%' }"></div>
+          </div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Lighthouse 100/100 SEO ready</span></div>
         </div>
 
-        <div class="telemetry-card accent-purple">
-          <div class="telemetry-corner-watermark purple"><Edit3 :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">DRAFT PENULISAN</span>
+            <div class="telemetry-glyph"><Edit3 :size="18" /></div>
           </div>
-          <div class="telemetry-val">{{ articles.filter(a => a.status === 'draft').length }} <span class="badge-growth-pill">WIP</span></div>
-          <div class="telemetry-sub"><span>Belum dipublikasikan ke publik</span></div>
+          <div class="telemetry-val">{{ articles.filter(a => a.status === 'draft').length }} <span class="badge-mono">WIP</span></div>
+          <div class="ingress-mesh-track">
+            <span class="ingress-node" :class="{ active: articles.some(a => a.status === 'draft') }"></span>
+            <span class="ingress-node"></span>
+            <span class="ingress-node"></span>
+            <span class="ingress-node"></span>
+          </div>
+          <div class="telemetry-sub"><span class="dot-lead idle"></span><span>Belum dipublikasikan ke publik</span></div>
         </div>
 
-        <div class="telemetry-card accent-sky">
-          <div class="telemetry-corner-watermark sky"><Activity :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL PEMBACA (VIEWS)</span>
+            <div class="telemetry-glyph"><Activity :size="18" /></div>
           </div>
           <div class="telemetry-val">
             {{ articles.reduce((acc, a) => acc + a.views, 0).toLocaleString('id-ID') }}
-            <span v-if="articles.reduce((acc, a) => acc + a.views, 0) > 0" class="badge-online">+24%</span>
-            <span v-else class="badge-standby">0%</span>
+            <span v-if="articles.reduce((acc, a) => acc + a.views, 0) > 0" class="badge-mono active">+24%</span>
+            <span v-else class="badge-mono">0%</span>
           </div>
-          <div class="telemetry-sub"><span>Dihitung non-blocking via Redis ZSET</span></div>
+          <div class="sparkline-histogram">
+            <span class="spark-bar" style="height: 30%"></span>
+            <span class="spark-bar" style="height: 50%"></span>
+            <span class="spark-bar" style="height: 35%"></span>
+            <span class="spark-bar" style="height: 70%"></span>
+            <span class="spark-bar" style="height: 55%"></span>
+            <span class="spark-bar" style="height: 80%"></span>
+            <span class="spark-bar active" :style="{ height: articles.reduce((acc, a) => acc + a.views, 0) > 0 ? '100%' : '30%' }"></span>
+          </div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Dihitung non-blocking via Redis ZSET</span></div>
         </div>
       </div>
 
       <div v-else class="stats-overview-grid">
-        <div class="telemetry-card accent-blue">
-          <div class="telemetry-corner-watermark blue"><Layers :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">TOTAL HALAMAN WEB</span>
+            <div class="telemetry-glyph"><Layers :size="18" /></div>
           </div>
           <div class="telemetry-val">{{ cmsPages.length }} <span class="telemetry-denom">Halaman</span></div>
-          <div class="telemetry-sub"><span>Rute web terisolasi di Nginx tenant</span></div>
+          <div class="slot-segments">
+            <span class="slot-segment" :class="{ filled: cmsPages.length > 0 }"></span>
+            <span class="slot-segment" :class="{ filled: cmsPages.length > 2 }"></span>
+            <span class="slot-segment" :class="{ filled: cmsPages.length > 4 }"></span>
+          </div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Rute web terisolasi di Nginx tenant</span></div>
         </div>
 
-        <div class="telemetry-card accent-emerald">
-          <div class="telemetry-corner-watermark emerald"><Check :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">HALAMAN LIVE</span>
+            <div class="telemetry-glyph"><Check :size="18" /></div>
           </div>
-          <div class="telemetry-val">{{ cmsPages.filter(p => p.status === 'published').length }} <span class="badge-online">Live Route</span></div>
-          <div class="telemetry-sub"><span>Tersedia untuk traffic publik</span></div>
+          <div class="telemetry-val">{{ cmsPages.filter(p => p.status === 'published').length }} <span class="badge-mono active">Live Route</span></div>
+          <div class="security-meter-track">
+            <div class="security-meter-fill" :style="{ width: cmsPages.length ? `${(cmsPages.filter(p => p.status === 'published').length / cmsPages.length) * 100}%` : '100%' }"></div>
+          </div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Tersedia untuk traffic publik</span></div>
         </div>
 
-        <div class="telemetry-card accent-purple">
-          <div class="telemetry-corner-watermark purple"><Compass :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">NAVBAR MENU UTAMA</span>
+            <div class="telemetry-glyph"><Compass :size="18" /></div>
           </div>
-          <div class="telemetry-val">{{ cmsPages.filter(p => p.isInNavbar).length }} <span class="badge-growth-pill">Header Nav</span></div>
-          <div class="telemetry-sub"><span>Tautkan otomatis pada navbar website</span></div>
+          <div class="telemetry-val">{{ cmsPages.filter(p => p.isInNavbar).length }} <span class="badge-mono active">Header Nav</span></div>
+          <div class="ingress-mesh-track">
+            <span class="ingress-node active"></span>
+            <span class="ingress-node active"></span>
+            <span class="ingress-node" :class="{ active: cmsPages.filter(p => p.isInNavbar).length > 2 }"></span>
+            <span class="ingress-node" :class="{ active: cmsPages.filter(p => p.isInNavbar).length > 3 }"></span>
+          </div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Tautkan otomatis pada navbar website</span></div>
         </div>
 
-        <div class="telemetry-card accent-sky">
-          <div class="telemetry-corner-watermark sky"><Globe :size="58" /></div>
+        <div class="telemetry-card">
           <div class="telemetry-top">
             <span class="telemetry-label">FOOTER LINKS</span>
+            <div class="telemetry-glyph"><Globe :size="18" /></div>
           </div>
-          <div class="telemetry-val">{{ cmsPages.filter(p => p.isInFooter).length }} <span class="badge-growth-pill">Footer Nav</span></div>
-          <div class="telemetry-sub"><span>Kebijakan, kontak, dan tautan sekunder</span></div>
+          <div class="telemetry-val">{{ cmsPages.filter(p => p.isInFooter).length }} <span class="badge-mono active">Footer Nav</span></div>
+          <div class="ingress-mesh-track">
+            <span class="ingress-node active"></span>
+            <span class="ingress-node active"></span>
+            <span class="ingress-node" :class="{ active: cmsPages.filter(p => p.isInFooter).length > 2 }"></span>
+            <span class="ingress-node" :class="{ active: cmsPages.filter(p => p.isInFooter).length > 3 }"></span>
+          </div>
+          <div class="telemetry-sub"><span class="dot-lead live"></span><span>Kebijakan, kontak, dan tautan sekunder</span></div>
         </div>
       </div>
 
@@ -1781,29 +1839,63 @@ onUnmounted(() => {
     <!-- ============================================================= -->
     <Teleport to="body">
       <div v-if="isEditorModalOpen" class="modal-backdrop" @click.self="closeEditorModal">
-        <div class="modal-dialog modal-dialog-lg content-editor-dialog">
-        <div class="modal-header">
-          <div class="modal-header-leading">
-            <div class="modal-icon-badge">
-              <BookOpen v-if="editorContentType === 'article'" :size="18" />
-              <Layers v-else :size="18" />
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-seo modal-dialog-lg content-editor-dialog" style="max-width: 880px; width: 92vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; border-radius: 16px !important; background: #ffffff;">
+          <!-- Header (Flush to Top) -->
+          <div class="modal-header modal-header-bespoke" style="padding: 16px 24px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; background: #ffffff; display: flex; align-items: center; justify-content: space-between;">
+            <div class="modal-header-leading" style="display: flex; align-items: center; gap: 12px;">
+              <div class="modal-header-icon-box" style="width: 38px; height: 38px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <BookOpen v-if="editorContentType === 'article'" :size="19" />
+                <Layers v-else :size="19" />
+              </div>
+              <div>
+                <h3 class="modal-heading" style="font-size: 1rem; font-weight: 700; margin: 0; color: #0f172a;">
+                  {{ editingId ? 'Edit ' + (editorContentType === 'article' ? 'Artikel Editorial' : 'Halaman Web') : 'Buat ' + (editorContentType === 'article' ? 'Artikel Baru' : 'Halaman Web Baru') }}
+                </h3>
+                <p class="modal-subheading" style="font-size: 0.76rem; margin: 2px 0 0 0; color: #64748b;">
+                  {{ editorContentType === 'article' ? 'Kelola publikasi konten berkala, slug URL, dan metadata SEO.' : 'Atur halaman website tenant, layout template, dan tautan navigasi.' }}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 class="modal-title">
-                {{ editingId ? 'Edit ' + (editorContentType === 'article' ? 'Artikel Editorial' : 'Halaman Web') : 'Buat ' + (editorContentType === 'article' ? 'Artikel Baru' : 'Halaman Web Baru') }}
-              </h3>
-              <p class="modal-subtitle">
-                {{ editorContentType === 'article' ? 'Kelola publikasi konten berkala, slug URL, dan metadata SEO.' : 'Atur halaman website tenant, layout template, dan tautan navigasi.' }}
-              </p>
-            </div>
+            <button type="button" class="modal-close-button-ghost" @click="closeEditorModal" title="Tutup">
+              <X :size="16" />
+            </button>
           </div>
-          <button class="btn-modal-close" @click="closeEditorModal">
-            <X :size="18" />
-          </button>
-        </div>
 
-        <form class="editor-modal-form" @submit.prevent="handleSaveContent">
-          <!-- Row 1: Title & Slug/Path -->
+          <!-- Subtabs Navigation Bar (Harmonized with Studio Design Standard) -->
+          <div class="seo-modal-tabs">
+            <button
+              type="button"
+              class="seo-tab-btn"
+              :class="{ active: editorActiveTab === 'form' }"
+              @click="editorActiveTab = 'form'"
+            >
+              <FileText :size="14" />
+              <span>Formulir Konten & Editor</span>
+            </button>
+            <button
+              type="button"
+              class="seo-tab-btn"
+              :class="{ active: editorActiveTab === 'preview' }"
+              @click="editorActiveTab = 'preview'"
+            >
+              <Eye :size="14" />
+              <span>Simulasi Pratinjau Pembaca</span>
+            </button>
+            <button
+              type="button"
+              class="seo-tab-btn"
+              :class="{ active: editorActiveTab === 'seo' }"
+              @click="editorActiveTab = 'seo'"
+            >
+              <Globe :size="14" />
+              <span>Optimasi SEO & Social Share</span>
+            </button>
+          </div>
+
+          <form class="editor-modal-form" @submit.prevent="handleSaveContent" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; margin: 0;">
+            <!-- Tab 1: Formulir Konten & Editor -->
+            <div v-show="editorActiveTab === 'form'" class="modal-body" style="flex: 1; overflow-y: auto; padding: 22px 24px; display: flex; flex-direction: column; gap: 18px;">
+            <!-- Row 1: Title & Slug/Path -->
           <div class="form-row-2col">
             <div class="form-field-group">
               <label class="form-field-label">Judul {{ editorContentType === 'article' ? 'Artikel' : 'Halaman' }} *</label>
@@ -1914,51 +2006,163 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Excerpt / Meta Description -->
-          <div class="form-field-group">
-            <label class="form-field-label">Ringkasan Singkat / Meta Description (SEO)</label>
-            <input
-              v-if="editorContentType === 'article'"
-              v-model="formExcerpt"
-              type="text"
-              class="studio-input"
-              placeholder="Deskripsi singkat konten untuk tampilan kartu dan snippet Google..."
-            />
-            <input
-              v-else
-              v-model="formMetaDesc"
-              type="text"
-              class="studio-input"
-              placeholder="Deskripsi ringkas halaman untuk OpenGraph dan mesin pencari..."
-            />
-          </div>
+              <!-- Excerpt / Meta Description -->
+              <div class="form-field-group">
+                <div class="seo-field-label-row">
+                  <label class="form-field-label">Ringkasan Singkat / Meta Description (SEO)</label>
+                  <span class="seo-char-counter">{{ (editorContentType === 'article' ? formExcerpt : formMetaDesc).length }}/160</span>
+                </div>
+                <input
+                  v-if="editorContentType === 'article'"
+                  v-model="formExcerpt"
+                  type="text"
+                  class="studio-input"
+                  placeholder="Deskripsi singkat konten untuk tampilan kartu dan snippet Google..."
+                />
+                <input
+                  v-else
+                  v-model="formMetaDesc"
+                  type="text"
+                  class="studio-input"
+                  placeholder="Deskripsi ringkas halaman untuk OpenGraph dan mesin pencari..."
+                />
+              </div>
 
-          <!-- Content Markdown Textarea -->
-          <div class="form-field-group">
-            <div class="label-with-hint">
-              <label class="form-field-label">Konten Dokumen (Markdown)</label>
-              <span class="field-hint">Mendukung heading (#), bold, list, dan link</span>
+              <!-- Content Markdown Textarea with Professional Formatting Toolbar -->
+              <div class="form-field-group">
+                <div class="label-with-hint" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                  <label class="form-field-label">Konten Dokumen (Markdown)</label>
+                  <span class="field-hint" style="font-size: 11.5px; color: #64748b; font-weight: 600;">
+                    {{ wordCount }} kata • ~{{ estimatedReadTime }} menit baca
+                  </span>
+                </div>
+
+                <!-- Markdown Helper Toolbar -->
+                <div class="markdown-quick-toolbar" style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-bottom: none; border-radius: 8px 8px 0 0; flex-wrap: wrap;">
+                  <button type="button" class="btn-md-tool" @click="insertMarkdown('**Teks Tebal**')" title="Tebal">
+                    <strong>B</strong>
+                  </button>
+                  <button type="button" class="btn-md-tool" @click="insertMarkdown('*Teks Miring*')" title="Miring">
+                    <em>I</em>
+                  </button>
+                  <button type="button" class="btn-md-tool" @click="insertMarkdown('## Sub-Judul Utama\n\n')" title="Heading 2">
+                    H2
+                  </button>
+                  <button type="button" class="btn-md-tool" @click="insertMarkdown('### Sub-Topik Bahasan\n\n')" title="Heading 3">
+                    H3
+                  </button>
+                  <button type="button" class="btn-md-tool" @click="insertMarkdown('- Poin catatan pertama\n- Poin catatan kedua\n\n')" title="Daftar Bullet">
+                    List
+                  </button>
+                  <button type="button" class="btn-md-tool" @click="insertMarkdown('```go\n// Kode implementasi\n```\n\n')" title="Blok Kode">
+                    Code
+                  </button>
+                  <button type="button" class="btn-md-tool" @click="insertMarkdown('> Catatan penting arsitektur sistem\n\n')" title="Kutipan">
+                    Quote
+                  </button>
+                  <button type="button" class="btn-md-tool" @click="insertMarkdown('[Teks Tautan](https://perusahaan.com)')" title="Tautan Link">
+                    Link
+                  </button>
+                </div>
+
+                <textarea
+                  v-model="formContent"
+                  class="studio-textarea content-markdown-area"
+                  rows="9"
+                  style="border-radius: 0 0 8px 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12.5px; line-height: 1.6;"
+                  placeholder="Tuliskan konten artikel teknis atau halaman web Anda di sini menggunakan format Markdown yang bersih..."
+                ></textarea>
+              </div>
             </div>
-            <textarea
-              v-model="formContent"
-              class="studio-textarea content-markdown-area"
-              rows="9"
-              placeholder="Tuliskan konten Anda di sini..."
-            ></textarea>
-          </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn-modal-ghost" @click="closeEditorModal">
-              Batal
-            </button>
-            <button type="submit" class="btn-modal-confirm">
-              <Check :size="15" />
-              <span>Simpan {{ editorContentType === 'article' ? 'Artikel' : 'Halaman' }}</span>
-            </button>
-          </div>
-        </form>
-      </div>
+            <!-- Tab 2: Simulasi Pratinjau Pembaca (Live Reader View) -->
+            <div v-show="editorActiveTab === 'preview'" class="modal-body" style="flex: 1; overflow-y: auto; padding: 24px; background: #f8fafc;">
+              <div class="reader-live-paper" style="max-width: 720px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px 36px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);">
+                <div class="reader-meta-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+                  <span class="badge-category-pill" style="font-size: 11px; padding: 3px 10px; background: #eff6ff; color: #2563eb; font-weight: 700; border-radius: 12px;">
+                    {{ formCategory || 'General' }}
+                  </span>
+                  <span style="font-size: 11.5px; color: #64748b;">
+                    {{ estimatedReadTime }} menit baca • Ditulis oleh {{ formAuthor || 'Penulis' }}
+                  </span>
+                </div>
+
+                <h1 style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 14px 0; line-height: 1.3;">
+                  {{ formTitle || 'Judul Artikel Anda Akan Tampil Di Sini' }}
+                </h1>
+
+                <p v-if="formExcerpt" style="font-size: 14px; color: #475569; font-style: italic; border-left: 3px solid #2563eb; padding-left: 12px; margin-bottom: 24px;">
+                  {{ formExcerpt }}
+                </p>
+
+                <div class="rendered-preview-content" style="font-size: 13.5px; line-height: 1.7; color: #334155;">
+                  <div style="white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                    {{ formContent || 'Tulis konten pada tab pertama untuk melihat pratinjau langsung di sini.' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 3: Optimasi SEO & Social Share Preview -->
+            <div v-show="editorActiveTab === 'seo'" class="modal-body" style="flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+              <!-- Google Search Snippet Preview -->
+              <div class="seo-card-preview-block" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px;">
+                <div style="font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                  <Search :size="13" style="color: #2563eb;" />
+                  <span>SIMULASI PRATINJAU HASIL PENCARIAN GOOGLE</span>
+                </div>
+                <div class="google-snippet-mock" style="display: flex; flex-direction: column; gap: 3px;">
+                  <div style="font-size: 12px; color: #202124;">
+                    https://{{ containers.find(c => c.id === formContainerId)?.customDomain || 'site.stackbyte.id' }} › {{ formSlug || 'artikel-slug' }}
+                  </div>
+                  <div style="font-size: 18px; color: #1a0dab; font-weight: 500; cursor: pointer;">
+                    {{ formTitle || 'Judul Halaman / Artikel - HeroCMS Studio' }}
+                  </div>
+                  <div style="font-size: 13px; color: #4d5156; line-height: 1.4;">
+                    {{ formExcerpt || formMetaDesc || 'Deskripsi meta halaman akan tampil di bawah judul pencarian Google untuk menarik pengunjung organik.' }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Social Share (OpenGraph) Card Preview -->
+              <div class="seo-card-preview-block" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px;">
+                <div style="font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                  <Globe :size="13" style="color: #059669;" />
+                  <span>SIMULASI KARTU SOSIAL (WHATSAPP, LINKEDIN, TWITTER)</span>
+                </div>
+                <div class="og-card-mock" style="border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; max-width: 440px; background: #f8fafc;">
+                  <div style="height: 140px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 12px;">
+                    <FileCode :size="24" style="margin-right: 8px;" />
+                    <span>Gambar Pratinjau Open Graph (1200×630)</span>
+                  </div>
+                  <div style="padding: 12px 14px;">
+                    <div style="font-size: 10.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">{{ containers.find(c => c.id === formContainerId)?.customDomain || 'STACKBYTE.ID' }}</div>
+                    <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 3px 0;">{{ formTitle || 'Judul Kartu Sosial Media' }}</div>
+                    <div style="font-size: 12px; color: #64748b; line-height: 1.4;">{{ formExcerpt || formMetaDesc || 'Ringkasan singkat konten...' }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer (Bespoke Flush to Bottom with Separation & Status Hint) -->
+            <div class="modal-footer modal-footer-bespoke" style="padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; margin-top: 0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+              <div style="font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 7px;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                <span>Tersimpan langsung di draf konfigurasi kontainer • Edge CDN Ready</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <button type="button" class="btn-picker-footer-ghost" @click="closeEditorModal">
+                  Batal
+                </button>
+                <button type="submit" class="btn-picker-footer-confirm">
+                  <Check :size="14" />
+                  <span>Simpan {{ editorContentType === 'article' ? 'Artikel' : 'Halaman' }}</span>
+                </button>
+              </div>
+            </div>
+          </form>
     </div>
-    </Teleport>
+  </div>
+</Teleport>
   </section>
 </template>

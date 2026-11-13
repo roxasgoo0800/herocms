@@ -298,8 +298,8 @@ func (r *Repository) ensureDatabaseSchemaAndSeeds() {
 		'active'
 	) ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
-	-- Purge legacy dummy seeds so the dashboard strictly displays 100% genuine user resources
-	DELETE FROM sites WHERE subdomain IN ('rizal', 'wedak', 'rizal.stackbyte.id', 'wedak.stackbyte.id', 'rizal.cloudcms.app', 'wedak.cloudcms.app') OR id IN ('99420000-0000-0000-0000-000000000001', '99420000-0000-0000-0000-000000000002');
+	-- Purge outdated legacy dummy subdomains
+	DELETE FROM sites WHERE subdomain IN ('rizal', 'wedak', 'rizal.stackbyte.id', 'wedak.stackbyte.id', 'rizal.cloudcms.app', 'wedak.cloudcms.app');
 	DELETE FROM custom_domains WHERE domain = 'rizalpratama.cloud';
 	DELETE FROM content_items WHERE slug IN ('arsitektur-multi-tenant-aether-core-stack-rls', 'strategi-caching-traefik-v3-tls', 'pengamanan-linux-kernel-cgroups-seccomp');
 	DELETE FROM ticket_messages WHERE ticket_id IN ('99420000-0000-0000-0000-000000000401', '99420000-0000-0000-0000-000000000402');
@@ -327,7 +327,8 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 		rows, err := r.DB.QueryContext(ctx, `
 			SELECT id, name, category, template_name, subdomain, status, 
 			       cpu_usage, ram_usage, ram_limit, cpu_limit, uptime, visits_this_week, 
-			       accent_color, role_headline, bio_intro, theme_config, last_deployed_at
+			       accent_color, role_headline, bio_intro, theme_config, last_deployed_at,
+			       COALESCE(custom_domain, '')
 			FROM sites
 			WHERE tenant_id = $1
 			ORDER BY created_at ASC
@@ -336,7 +337,7 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 			defer rows.Close()
 			var list []gin.H
 			for rows.Next() {
-				var id, name, category, templateName, subdomain, status, cpuLimit, uptime, accentColor string
+				var id, name, category, templateName, subdomain, status, cpuLimit, uptime, accentColor, customDomain string
 				var roleHeadline, bioIntro sql.NullString
 				var themeConfigBytes []byte
 				var cpuUsage, ramUsage, ramLimit, visits int
@@ -344,7 +345,7 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 
 				if err := rows.Scan(&id, &name, &category, &templateName, &subdomain, &status,
 					&cpuUsage, &ramUsage, &ramLimit, &cpuLimit, &uptime, &visits,
-					&accentColor, &roleHeadline, &bioIntro, &themeConfigBytes, &lastDeployed); err == nil {
+					&accentColor, &roleHeadline, &bioIntro, &themeConfigBytes, &lastDeployed, &customDomain); err == nil {
 
 					subDomainFull := subdomain
 					if !strings.HasSuffix(subdomain, ".stackbyte.id") && !strings.HasSuffix(subdomain, ".cloudcms.app") {
@@ -370,6 +371,7 @@ func (r *Repository) GetSites(ctx context.Context, tenantID string) ([]gin.H, er
 						"category":       category,
 						"templateName":   templateName,
 						"subdomain":      subDomainFull,
+						"customDomain":   customDomain,
 						"status":         status,
 						"cpuUsage":       cpuUsage,
 						"ramUsage":       ramUsage,
@@ -425,13 +427,26 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".stackbyte.id")
 		cleanSubdomain = strings.TrimSuffix(cleanSubdomain, ".cloudcms.app")
 
+		customDomain := ""
+		if cd, ok := site["customDomain"].(string); ok {
+			customDomain = cd
+		}
+
 		var newUUID string
 		err := r.DB.QueryRowContext(ctx, `
 			INSERT INTO sites (
-				tenant_id, name, category, template_name, subdomain, status,
+				tenant_id, name, category, template_name, subdomain, custom_domain, status,
 				cpu_usage, ram_usage, ram_limit, cpu_limit, uptime, visits_this_week,
 				accent_color, role_headline, bio_intro, last_deployed_at
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
+			ON CONFLICT (subdomain) DO UPDATE SET
+				name = EXCLUDED.name,
+				category = EXCLUDED.category,
+				template_name = EXCLUDED.template_name,
+				status = EXCLUDED.status,
+				cpu_usage = EXCLUDED.cpu_usage,
+				ram_usage = EXCLUDED.ram_usage,
+				updated_at = NOW()
 			RETURNING id
 		`,
 			tenantID,
@@ -439,6 +454,7 @@ func (r *Repository) InsertSite(ctx context.Context, tenantID string, site gin.H
 			fmt.Sprintf("%v", site["category"]),
 			fmt.Sprintf("%v", site["templateName"]),
 			cleanSubdomain,
+			customDomain,
 			status,
 			14, 88, 256, "0.5 vCPU", "Baru saja aktif", 0,
 			fmt.Sprintf("%v", site["accentColor"]),
@@ -762,6 +778,13 @@ func (r *Repository) InsertArticle(ctx context.Context, tenantID string, art gin
 	if sid, ok := art["containerId"].(string); ok && sid != "" {
 		if _, err := uuid.Parse(sid); err == nil {
 			siteID = &sid
+		} else if r.DB != nil {
+			var foundID string
+			cleanSid := strings.TrimPrefix(sid, "site_")
+			_ = r.DB.QueryRowContext(ctx, `SELECT id::text FROM sites WHERE tenant_id = $1 AND (subdomain = $2 OR subdomain LIKE $3 OR name ILIKE $4) LIMIT 1`, tenantID, sid, cleanSid+"%", "%"+sid+"%").Scan(&foundID)
+			if foundID != "" {
+				siteID = &foundID
+			}
 		}
 	}
 
@@ -820,6 +843,13 @@ func (r *Repository) UpdateArticle(ctx context.Context, tenantID, articleID stri
 	if sid, ok := art["containerId"].(string); ok && sid != "" {
 		if _, err := uuid.Parse(sid); err == nil {
 			siteID = &sid
+		} else if r.DB != nil {
+			var foundID string
+			cleanSid := strings.TrimPrefix(sid, "site_")
+			_ = r.DB.QueryRowContext(ctx, `SELECT id::text FROM sites WHERE tenant_id = $1 AND (subdomain = $2 OR subdomain LIKE $3 OR name ILIKE $4) LIMIT 1`, tenantID, sid, cleanSid+"%", "%"+sid+"%").Scan(&foundID)
+			if foundID != "" {
+				siteID = &foundID
+			}
 		}
 	}
 
@@ -976,6 +1006,13 @@ func (r *Repository) InsertPage(ctx context.Context, tenantID string, pg gin.H) 
 	if sid, ok := pg["containerId"].(string); ok && sid != "" {
 		if _, err := uuid.Parse(sid); err == nil {
 			siteID = &sid
+		} else if r.DB != nil {
+			var foundID string
+			cleanSid := strings.TrimPrefix(sid, "site_")
+			_ = r.DB.QueryRowContext(ctx, `SELECT id::text FROM sites WHERE tenant_id = $1 AND (subdomain = $2 OR subdomain LIKE $3 OR name ILIKE $4) LIMIT 1`, tenantID, sid, cleanSid+"%", "%"+sid+"%").Scan(&foundID)
+			if foundID != "" {
+				siteID = &foundID
+			}
 		}
 	}
 
@@ -1032,6 +1069,13 @@ func (r *Repository) UpdatePage(ctx context.Context, tenantID, pageID string, pg
 	if sid, ok := pg["containerId"].(string); ok && sid != "" {
 		if _, err := uuid.Parse(sid); err == nil {
 			siteID = &sid
+		} else if r.DB != nil {
+			var foundID string
+			cleanSid := strings.TrimPrefix(sid, "site_")
+			_ = r.DB.QueryRowContext(ctx, `SELECT id::text FROM sites WHERE tenant_id = $1 AND (subdomain = $2 OR subdomain LIKE $3 OR name ILIKE $4) LIMIT 1`, tenantID, sid, cleanSid+"%", "%"+sid+"%").Scan(&foundID)
+			if foundID != "" {
+				siteID = &foundID
+			}
 		}
 	}
 

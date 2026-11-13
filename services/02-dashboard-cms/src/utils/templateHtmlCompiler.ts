@@ -10,6 +10,12 @@ export interface CompileTemplateOptions {
   bioIntro?: string;
   isDarkMode?: boolean;
   blocksOverride?: VisualBlock[];
+  activeRoutePath?: string;
+  sitemapPages?: Array<{ id: string; title: string; path: string }>;
+  faviconUrl?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  ogImageUrl?: string;
 }
 
 function escapeHtml(str?: string): string {
@@ -80,6 +86,38 @@ export function renderIconSvg(iconName?: string, size = 20, color = 'currentColo
       return `<svg ${stroke}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
     case 'workflow':
       return `<svg ${stroke}><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>`;
+    case 'phone':
+      return `<svg ${stroke}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+    case 'mappin':
+    case 'map-pin':
+      return `<svg ${stroke}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
+    case 'clock':
+      return `<svg ${stroke}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+    case 'calendar':
+      return `<svg ${stroke}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>`;
+    case 'user':
+      return `<svg ${stroke}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    case 'users':
+      return `<svg ${stroke}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+    case 'filetext':
+    case 'file-text':
+      return `<svg ${stroke}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>`;
+    case 'layout':
+      return `<svg ${stroke}><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`;
+    case 'tag':
+      return `<svg ${stroke}><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><circle cx="7" cy="7" r=".5" fill="${c}"/></svg>`;
+    case 'headphones':
+      return `<svg ${stroke}><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>`;
+    case 'heart':
+      return `<svg ${stroke}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
+    case 'compass':
+      return `<svg ${stroke}><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`;
+    case 'messagesquare':
+    case 'message-square':
+      return `<svg ${stroke}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+    case 'checkcircle':
+    case 'check-circle':
+      return `<svg ${stroke}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
     default:
       return `<svg ${stroke}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
   }
@@ -143,9 +181,9 @@ export function compileTemplateToHTML(
     const block = blocks[idx];
     if (block.isVisible === false) continue;
 
-    switch (block.type) {
+    switch (block.type as string) {
       case 'navbar': {
-        const glyph = block.styles?.brandGlyph || (template.category === 'portfolio' ? 'R' : siteName.slice(0, 1) || 'H');
+        const glyph = block.styles?.brandGlyph || '◆';
         const brandTitle = escapeHtml(block.title || siteName);
         const buttonText = block.buttonText ? escapeHtml(block.buttonText) : '';
         const buttonUrl = block.buttonUrl || '#contact';
@@ -154,39 +192,36 @@ export function compileTemplateToHTML(
         const navAlign = block.styles?.navAlign || 'split';
 
         let navLinks = '';
-        if (block.items && block.items.length > 0) {
-          navLinks = block.items
-            .map((item, i) => {
-              const activeClass = item.active || i === 0 ? ' class="active"' : '';
-              return `<a href="${escapeHtml(item.url || '#')}"${activeClass}>${escapeHtml(item.title)}</a>`;
+        const navItemsToRender = (options.sitemapPages && options.sitemapPages.length > 0)
+          ? options.sitemapPages.map(sp => ({
+              title: sp.title,
+              url: sp.path,
+              active: sp.path === (options.activeRoutePath || '/')
+            }))
+          : (block.items && block.items.length > 0)
+          ? block.items.map((item, i) => ({
+              title: item.title,
+              url: item.url || '#',
+              active: options.activeRoutePath ? item.url === options.activeRoutePath : (item.active || (i === 0 && !options.activeRoutePath))
+            }))
+          : null;
+
+        if (navItemsToRender && navItemsToRender.length > 0) {
+          navLinks = navItemsToRender
+            .map(item => {
+              const activeClass = item.active ? ' class="active"' : '';
+              return `<a href="${escapeHtml(item.url)}"${activeClass}>${escapeHtml(item.title)}</a>`;
             })
             .join('\n            ');
         } else {
-          navLinks = template.category === 'business'
-            ? `
-            <a href="#hero">Beranda</a>
-            <a href="#products">Katalog Produk</a>
-            <a href="#features">Keunggulan</a>
-            <a href="#contact">WhatsApp Toko</a>
-          `
-            : template.category === 'education'
-            ? `
-            <a href="#hero">Beranda</a>
-            <a href="#courses">Katalog Kursus</a>
-            <a href="#syllabus">Silabus Modul</a>
-            <a href="#pricing">Biaya Belajar</a>
-          `
-            : `
-            <a href="#hero">Beranda</a>
-            <a href="#showcase">Karya & Proyek</a>
-            <a href="#features">Teknologi</a>
-            <a href="#contact">Hubungi Saya</a>
-          `;
+          navLinks = '<a href="/" class="active">Beranda</a>';
         }
 
         const stickyStyle = isSticky ? 'position: sticky; top: 0; z-index: 50;' : 'position: relative;';
         const bgStyle =
-          navStyle === 'solid'
+          block.styles?.bgColor
+            ? `background: ${block.styles.bgColor} !important;`
+            : navStyle === 'solid'
             ? isDarkMode
               ? 'background: #0f172a;'
               : 'background: #ffffff;'
@@ -198,26 +233,28 @@ export function compileTemplateToHTML(
               : 'background: #ffffff; border-bottom: 2px solid #cbd5e1;'
             : '';
         const alignClass = navAlign === 'center' ? ' is-centered' : '';
+        const navFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const navTextColor = block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a');
 
-        const glyphBg = block.styles?.buttonColor || block.styles?.accentColor || accentColor;
-        const navBtnStyle = getBtnInlineStyle(block.styles, false, glyphBg);
+        const glyphColor = block.styles?.accentColor || accentColor;
+        const navBtnStyle = getBtnInlineStyle(block.styles, false, glyphColor);
 
         renderedBlocksHtml += `
         <!-- NAVBAR -->
-        <header class="sim-block-navbar${alignClass}" style="${stickyStyle} ${bgStyle}">
+        <header class="sim-block-navbar${alignClass}" style="${stickyStyle} ${bgStyle} ${navFont}">
           <div class="sim-brand-area">
-            <span class="sim-brand-glyph" style="background-color: ${glyphBg}; color: #ffffff;">
+            <span class="sim-brand-glyph" style="color: ${glyphColor}; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center;">
               ${glyph}
             </span>
-            <span class="sim-brand-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">
+            <span class="sim-brand-title" style="color: ${navTextColor}; ${navFont}">
               ${brandTitle}
             </span>
           </div>
-          <nav class="sim-nav-links-row">
-            ${navLinks}
-          </nav>
-          <div class="sim-nav-actions">
-            ${buttonText ? `<a href="${escapeHtml(buttonUrl)}" class="sim-btn-nav-cta" style="${navBtnStyle}">${buttonText}</a>` : ''}
+          <div class="sim-nav-cluster${alignClass}">
+            <nav class="sim-nav-links-row">
+              ${navLinks}
+            </nav>
+            ${buttonText ? `<div class="sim-nav-actions"><a href="${escapeHtml(buttonUrl)}" class="sim-btn-nav-cta" style="${navBtnStyle}">${buttonText}</a></div>` : ''}
           </div>
         </header>`;
         break;
@@ -227,7 +264,6 @@ export function compileTemplateToHTML(
         const heroAccent = block.styles?.accentColor || accentColor;
         const badge = block.badge ? escapeHtml(block.badge) : '';
         const headline = escapeHtml(block.title || roleHeadline);
-        const subheadline = escapeHtml(block.subtitle || bioIntro);
         const btnPrimary = block.buttonText ? escapeHtml(block.buttonText) : 'Mulai Sekarang';
         const btnSecondary = block.secondaryButtonText ? escapeHtml(block.secondaryButtonText) : '';
         const targetUrl = block.buttonUrl || '#contact';
@@ -265,20 +301,30 @@ export function compileTemplateToHTML(
           </div>`;
         }
 
+        const heroBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : '';
+        const heroTextColor = block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a');
+        const heroSubColor = block.styles?.textColor ? `${block.styles.textColor}cc` : (isDarkMode ? '#94a3b8' : '#475569');
+        const heroFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const heroPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : '';
+        const heroAlign = block.styles?.align ? `text-align: ${block.styles.align} !important;` : '';
+        const fullSub = escapeHtml(block.subtitle || block.content || bioIntro);
+
         renderedBlocksHtml += `
         <!-- HERO SECTION -->
-        <section class="sim-block-hero" id="hero">
+        <section class="sim-block-hero" id="hero" style="${heroBg} ${heroFont} ${heroPadding} ${heroAlign}">
+          <!-- Glowing Ambient Blur Mesh matching Design View -->
+          <div class="sim-ambient-glow" style="position: absolute; top: -15%; left: 15%; width: 70%; height: 130%; background: radial-gradient(circle, ${heroAccent}33 0%, transparent 70%); filter: blur(50px); pointer-events: none; z-index: 0;"></div>
           ${badge ? `
-          <div class="sim-hero-badge-pill" style="background-color: ${heroAccent}18; color: ${heroAccent}; border-color: ${heroAccent}40;">
+          <div class="sim-hero-badge-pill" style="position: relative; z-index: 1; background-color: ${heroAccent}18; color: ${heroAccent}; border-color: ${heroAccent}40;">
             <span>${badge}</span>
           </div>` : ''}
-          <h1 class="sim-hero-headline" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">
+          <h1 class="sim-hero-headline" style="position: relative; z-index: 1; color: ${heroTextColor}; ${heroFont}">
             ${headline}
           </h1>
-          <p class="sim-hero-subheadline" style="color: ${isDarkMode ? '#94a3b8' : '#475569'};">
-            ${subheadline}
+          <p class="sim-hero-subheadline" style="position: relative; z-index: 1; color: ${heroSubColor}; ${heroFont}">
+            ${fullSub}
           </p>
-          <div class="sim-hero-btn-group">
+          <div class="sim-hero-btn-group" style="position: relative; z-index: 1;">
             <a href="${targetUrl}" class="sim-btn-primary" style="${heroPrimaryStyle}">
               <span>${btnPrimary}</span>
               <span style="font-size: 1.1em; line-height: 1;">&rarr;</span>
@@ -288,18 +334,24 @@ export function compileTemplateToHTML(
               <span>${btnSecondary}</span>
             </a>` : ''}
           </div>
-          ${terminalHtml}
+          ${terminalHtml ? `<div style="position: relative; z-index: 1; width: 100%; max-width: 680px; margin-top: 24px;">${terminalHtml}</div>` : ''}
         </section>`;
         break;
       }
 
       case 'stats': {
+        const statBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : '';
+        const statText = block.styles?.textColor ? `color: ${block.styles.textColor} !important;` : '';
+        const statFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const statPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : '';
+        const statAccent = block.styles?.accentColor || accentColor;
+
         const items = block.items || [];
         let itemsHtml = '';
         for (const item of items) {
           itemsHtml += `
           <div class="sim-stat-box">
-            <span class="sim-stat-value" style="color: ${accentColor};">
+            <span class="sim-stat-value" style="color: ${statAccent};">
               ${escapeHtml(item.title)}
             </span>
             <span class="sim-stat-desc" style="color: ${isDarkMode ? '#cbd5e1' : '#64748b'};">
@@ -310,7 +362,7 @@ export function compileTemplateToHTML(
 
         renderedBlocksHtml += `
         <!-- STATS SECTION -->
-        <section class="sim-block-stats ${isDarkMode ? 'stats-dark' : ''}" id="stats">
+        <section class="sim-block-stats ${isDarkMode ? 'stats-dark' : ''}" id="stats" style="${statBg} ${statText} ${statFont} ${statPadding}">
           <div class="sim-stats-container">
             ${itemsHtml}
           </div>
@@ -342,13 +394,20 @@ export function compileTemplateToHTML(
           </div>`;
         }
 
+        const featBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : '';
+        const featText = block.styles?.textColor ? `color: ${block.styles.textColor} !important;` : '';
+        const featFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const featPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : '';
+        const featTitleColor = block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a');
+        const featSubColor = block.styles?.textColor ? `${block.styles.textColor}cc` : (isDarkMode ? '#94a3b8' : '#64748b');
+
         renderedBlocksHtml += `
         <!-- FEATURES SECTION -->
-        <section class="sim-block-features ${isDarkMode ? 'features-dark' : ''}" id="features">
+        <section class="sim-block-features ${isDarkMode ? 'features-dark' : ''}" id="features" style="${featBg} ${featText} ${featFont} ${featPadding}">
           <div class="sim-section-header-wrap">
-            ${badge ? `<span class="sim-section-sub-badge" style="color: ${accentColor};">${badge}</span>` : ''}
-            <h2 class="sim-section-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">${title}</h2>
-            ${subtitle ? `<p class="sim-section-sub" style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">${subtitle}</p>` : ''}
+            ${badge ? `<span class="sim-section-sub-badge" style="color: ${featAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="color: ${featTitleColor}; ${featFont}">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="color: ${featSubColor}; ${featFont}">${subtitle}</p>` : ''}
           </div>
           <div class="sim-features-grid">
             ${featuresHtml}
@@ -523,57 +582,92 @@ export function compileTemplateToHTML(
 
       
       case 'carousel': {
-        const title = escapeHtml(block.title || 'Galeri & Slider Interaktif');
+        const title = escapeHtml(block.title || 'Sorotan Portofolio & Pelanggan');
+        const badge = block.badge ? escapeHtml(block.badge) : '';
+        const subtitle = block.subtitle ? escapeHtml(block.subtitle) : '';
         const items = block.items || [];
+        const crAccent = block.styles?.accentColor || accentColor;
+        const crAlign = block.styles?.align || 'center';
+        const crPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : '';
+        const crBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : '';
+        const crFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+
         let slidesHtml = '';
         for (let sIdx = 0; sIdx < items.length; sIdx++) {
           const item = items[sIdx];
-          const itemImg = item.image || '';
+          const isAct = sIdx === (block.activeItemIndex || 0);
           slidesHtml += `
-          <div class="sim-carousel-slide ${sIdx === 0 ? 'active' : ''}" style="background: linear-gradient(135deg, #0f172a 0%, ${accentColor}33 100%); position: relative; border-radius: 12px; overflow: hidden; height: 260px; margin-bottom: 12px;">
-            ${itemImg ? `<img src="${escapeHtml(itemImg)}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;" />` : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:2rem;color:#ffffff;">${renderIconSvg(item.icon || 'star', 36, accentColor)}</div>`}
-            <div class="sim-carousel-caption" style="position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); padding: 10px 14px; border-radius: 8px;">
-              <strong style="color: #ffffff; display: block; font-size: 0.95rem;">${escapeHtml(item.title)}</strong>
-              <p style="color: #cbd5e1; margin: 4px 0 0 0; font-size: 0.82rem;">${escapeHtml(item.desc || '')}</p>
-            </div>
+          <div class="sim-carousel-slide ${isAct ? 'active' : ''}" data-index="${sIdx}" style="display: ${isAct ? 'flex' : 'none'}; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+            ${item.image ? `
+            <div class="sim-carousel-img-wrap" style="width: 100%; max-width: 680px; height: 220px; border-radius: 12px; overflow: hidden; margin-bottom: 8px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08); border: 1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}; background: ${isDarkMode ? '#0f172a' : '#f8fafc'};">
+              <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+            </div>` : ''}
+            ${item.tag ? `<span class="sim-carousel-tag" style="background: ${crAccent}; color: #ffffff; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 12px; border-radius: 20px;">${escapeHtml(item.tag)}</span>` : ''}
+            <h3 class="sim-carousel-headline" style="font-size: 1.35rem; font-weight: 800; color: ${isDarkMode ? '#ffffff' : '#0f172a'}; margin: 0;">${escapeHtml(item.title)}</h3>
+            <p class="sim-carousel-desc" style="font-size: 0.92rem; color: ${isDarkMode ? '#94a3b8' : '#475569'}; max-width: 600px; line-height: 1.6; margin: 0;">${escapeHtml(item.desc || '')}</p>
+            ${item.author ? `<span class="sim-carousel-author" style="font-size: 0.8rem; font-weight: 600; color: #94a3b8;">— ${escapeHtml(item.author)}</span>` : ''}
           </div>`;
         }
+
         renderedBlocksHtml += `
-        <section class="sim-block-carousel ${isDarkMode ? 'carousel-dark' : ''}" id="carousel" style="padding: 40px 24px; max-width: 900px; margin: 0 auto;">
-          <div class="sim-section-header-wrap" style="text-align: center; margin-bottom: 24px;">
-            <h2 class="sim-section-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">${title}</h2>
+        <!-- CAROUSEL / SHOWCASE BANNER -->
+        <section class="sim-block-carousel ${isDarkMode ? 'carousel-dark' : ''}" id="carousel" style="${crPadding} ${crBg} ${crFont}">
+          <div class="sim-section-header-wrap" style="text-align: ${crAlign}; margin-bottom: 24px;">
+            ${badge ? `<span class="sim-badge-mini-caps" style="color: ${crAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="font-size: 1.85rem; font-weight: 850; color: ${isDarkMode ? '#ffffff' : '#0f172a'}; letter-spacing: -0.02em; margin: 4px 0 8px 0;">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="font-size: 0.95rem; color: ${isDarkMode ? '#94a3b8' : '#64748b'}; margin: 0;">${subtitle}</p>` : ''}
           </div>
-          <div class="sim-carousel-viewport">
-            ${slidesHtml}
+          <div class="sim-carousel-stage-container ${isDarkMode ? 'stage-dark' : ''}">
+            <div class="sim-carousel-slides-wrap">
+              ${slidesHtml}
+            </div>
+            ${items.length > 1 ? `
+            <div class="sim-carousel-nav-arrows">
+              <button type="button" class="sim-carousel-arrow-btn" onclick="stepCarousel(this, -1)" title="Slide Sebelumnya">&larr;</button>
+              <button type="button" class="sim-carousel-arrow-btn" onclick="stepCarousel(this, 1)" title="Slide Berikutnya">&rarr;</button>
+            </div>` : ''}
           </div>
         </section>`;
         break;
       }
 
       case 'progressbar': {
-        const title = escapeHtml(block.title || 'Keahlian & Metrik Performa');
+        const title = escapeHtml(block.title || 'Pencapaian Kapasitas & Performa');
+        const badge = block.badge ? escapeHtml(block.badge) : '';
+        const subtitle = block.subtitle ? escapeHtml(block.subtitle) : '';
         const items = block.items || [];
-        let barsHtml = '';
+        const pbAccent = block.styles?.accentColor || accentColor;
+        const pbAlign = block.styles?.align || 'left';
+        const pbPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : '';
+        const pbBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : '';
+        const pbFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+
+        let cardsHtml = '';
         for (const item of items) {
           const pct = Math.min(100, Math.max(0, item.percentage ?? 85));
-          barsHtml += `
-          <div class="sim-progress-item" style="margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-              <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.9rem;">${escapeHtml(item.title)}</strong>
-              <span style="color: ${accentColor}; font-weight: 700; font-size: 0.9rem;">${pct}%</span>
+          cardsHtml += `
+          <div class="sim-progress-meter-card ${isDarkMode ? 'card-dark' : ''}">
+            <div class="sim-pm-head">
+              <strong class="sim-pm-title">${escapeHtml(item.title)}</strong>
+              <span class="sim-pm-val" style="color: ${pbAccent};">${pct}%</span>
             </div>
-            <div style="background: ${isDarkMode ? '#334155' : '#e2e8f0'}; height: 8px; border-radius: 9999px; overflow: hidden;">
-              <div style="background: ${accentColor}; height: 100%; width: ${pct}%; border-radius: 9999px; transition: width 0.5s ease;"></div>
+            <div class="sim-pm-track">
+              <div class="sim-pm-fill" style="width: ${pct}%; background: linear-gradient(90deg, ${pbAccent}, #38bdf8);"></div>
             </div>
+            ${item.desc ? `<p class="sim-pm-desc">${escapeHtml(item.desc)}</p>` : ''}
           </div>`;
         }
+
         renderedBlocksHtml += `
-        <section class="sim-block-progressbar ${isDarkMode ? 'progressbar-dark' : ''}" id="progressbar" style="padding: 40px 24px; max-width: 720px; margin: 0 auto;">
-          <div class="sim-section-header-wrap" style="text-align: center; margin-bottom: 24px;">
-            <h2 class="sim-section-title" style="color: ${isDarkMode ? '#ffffff' : '#0f172a'};">${title}</h2>
+        <!-- PROGRESS / TELEMETRI SECTION -->
+        <section class="sim-block-progressbar ${isDarkMode ? 'progressbar-dark' : ''}" id="progressbar" style="${pbPadding} ${pbBg} ${pbFont}">
+          <div class="sim-section-header-wrap" style="text-align: ${pbAlign}; margin-bottom: 24px;">
+            ${badge ? `<span class="sim-badge-mini-caps" style="color: ${pbAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="font-size: 1.85rem; font-weight: 850; color: ${isDarkMode ? '#ffffff' : '#0f172a'}; letter-spacing: -0.02em; margin: 4px 0 8px 0;">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="font-size: 0.95rem; color: ${isDarkMode ? '#94a3b8' : '#64748b'}; margin: 0;">${subtitle}</p>` : ''}
           </div>
-          <div>
-            ${barsHtml}
+          <div class="sim-progress-meters-grid">
+            ${cardsHtml}
           </div>
         </section>`;
         break;
@@ -648,6 +742,171 @@ export function compileTemplateToHTML(
         break;
       }
 
+      case 'contact': {
+        const title = escapeHtml(block.title || 'Hubungi Kami');
+        const subtitle = escapeHtml(block.subtitle || block.content || 'Kami siap membantu kebutuhan implementasi sistem & konsultasi infrastruktur digital Anda.');
+        const badge = block.badge ? escapeHtml(block.badge) : 'KONTAK LANGSUNG';
+        const btnText = escapeHtml(block.buttonText || 'Kirim Pesan');
+        const cAccent = block.styles?.accentColor || accentColor;
+        const cBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : (isDarkMode ? 'background: #090d16;' : 'background: #f8fafc;');
+        const cText = block.styles?.textColor ? `color: ${block.styles.textColor} !important;` : '';
+        const cFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const cPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : 'padding: 60px 24px;';
+        const cTitleColor = block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a');
+        const cSubColor = block.styles?.textColor ? `${block.styles.textColor}cc` : (isDarkMode ? '#94a3b8' : '#64748b');
+
+        renderedBlocksHtml += `
+        <!-- CONTACT SECTION -->
+        <section class="sim-block-contact" id="contact" style="${cBg} ${cText} ${cFont} ${cPadding}">
+          <div class="sim-section-header-wrap">
+            ${badge ? `<span class="sim-section-sub-badge" style="color: ${cAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="color: ${cTitleColor}; ${cFont}">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="color: ${cSubColor}; ${cFont}">${subtitle}</p>` : ''}
+          </div>
+          <div class="sim-contact-layout">
+            <div class="sim-contact-info-card" style="border-color: ${cAccent}33; background: ${isDarkMode ? '#0f172a' : '#ffffff'};">
+              <div class="sim-contact-info-header">
+                <span class="sim-contact-pill" style="background: ${cAccent}15; color: ${cAccent};">Respons Cepat</span>
+                <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 1.1rem; display: block; margin-top: 8px;">Koneksi Langsung Edge</strong>
+                <p style="color: ${isDarkMode ? '#94a3b8' : '#64748b'}; font-size: 0.88rem; margin: 4px 0 0;">Infrastruktur kami siap 24/7 untuk melayani komunikasi dan kebutuhan sistem Anda.</p>
+              </div>
+              <div class="sim-contact-meta-list">
+                <div class="sim-meta-item">
+                  <span class="sim-meta-icon" style="color: ${cAccent};">${renderIconSvg('mail', 18, cAccent)}</span>
+                  <div>
+                    <span class="meta-label" style="color: #94a3b8; font-size: 0.75rem; display: block;">Email Resmi</span>
+                    <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.9rem;">support@${subdomain}</strong>
+                  </div>
+                </div>
+                <div class="sim-meta-item">
+                  <span class="sim-meta-icon" style="color: ${cAccent};">${renderIconSvg('phone', 18, cAccent)}</span>
+                  <div>
+                    <span class="meta-label" style="color: #94a3b8; font-size: 0.75rem; display: block;">Saluran Siaga</span>
+                    <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.9rem;">+62 (021) 8087-STACK</strong>
+                  </div>
+                </div>
+                <div class="sim-meta-item">
+                  <span class="sim-meta-icon" style="color: ${cAccent};">${renderIconSvg('shieldcheck', 18, cAccent)}</span>
+                  <div>
+                    <span class="meta-label" style="color: #94a3b8; font-size: 0.75rem; display: block;">Keamanan Ingress</span>
+                    <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.9rem;">Traefik TLS 1.3 Terisolasi</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="sim-contact-form-card" style="background: ${isDarkMode ? '#0f172a' : '#ffffff'}; border-color: ${isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0'};">
+              <form onsubmit="event.preventDefault();" class="sim-form-grid">
+                <div class="sim-form-field">
+                  <label style="color: ${isDarkMode ? '#cbd5e1' : '#334155'}; font-size: 0.8rem; font-weight: 700;">Nama Lengkap</label>
+                  <input type="text" placeholder="Nama Anda atau Perusahaan" class="sim-form-input" style="background: ${isDarkMode ? '#1e293b' : '#ffffff'}; color: ${isDarkMode ? '#ffffff' : '#0f172a'};" />
+                </div>
+                <div class="sim-form-field">
+                  <label style="color: ${isDarkMode ? '#cbd5e1' : '#334155'}; font-size: 0.8rem; font-weight: 700;">Alamat Email</label>
+                  <input type="email" placeholder="nama@perusahaan.com" class="sim-form-input" style="background: ${isDarkMode ? '#1e293b' : '#ffffff'}; color: ${isDarkMode ? '#ffffff' : '#0f172a'};" />
+                </div>
+                <div class="sim-form-field">
+                  <label style="color: ${isDarkMode ? '#cbd5e1' : '#334155'}; font-size: 0.8rem; font-weight: 700;">Pesan atau Kebutuhan Solusi</label>
+                  <textarea rows="3" placeholder="Ceritakan kebutuhan atau pertanyaan Anda..." class="sim-form-input" style="background: ${isDarkMode ? '#1e293b' : '#ffffff'}; color: ${isDarkMode ? '#ffffff' : '#0f172a'}; resize: vertical;"></textarea>
+                </div>
+                <button type="submit" class="sim-btn-contact-submit" style="background-color: ${cAccent}; color: #ffffff;">
+                  ${btnText} &rarr;
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>`;
+        break;
+      }
+
+      case 'testimonials': {
+        const title = escapeHtml(block.title || 'Apa Kata Klien Kami');
+        const subtitle = escapeHtml(block.subtitle || 'Kepercayaan dari berbagai pelaku industri dan profesional.');
+        const badge = block.badge ? escapeHtml(block.badge) : 'TESTIMONIAL';
+        const tAccent = block.styles?.accentColor || accentColor;
+        const tBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : (isDarkMode ? 'background: #090d16;' : 'background: #ffffff;');
+        const tText = block.styles?.textColor ? `color: ${block.styles.textColor} !important;` : '';
+        const tFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const tPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : 'padding: 60px 24px;';
+        const items = block.items || [];
+        let itemsHtml = '';
+
+        for (const item of items) {
+          const author = escapeHtml(item.author || item.title || 'Pengguna Terverifikasi');
+          const role = escapeHtml(item.role || item.tag || 'Client Partner');
+          const quote = escapeHtml(item.desc || (item as any).content || 'Layanan yang sangat memuaskan dengan performa tinggi.');
+          itemsHtml += `
+          <div class="sim-testimonial-card ${isDarkMode ? 'card-dark' : ''}" style="border-top: 3px solid ${tAccent};">
+            <div class="sim-stars-row" style="color: #f59e0b;">
+              ★ ★ ★ ★ ★
+            </div>
+            <p class="sim-testi-quote" style="color: ${isDarkMode ? '#cbd5e1' : '#475569'};">"${quote}"</p>
+            <div class="sim-testi-author-row">
+              <div class="sim-author-avatar" style="background: ${tAccent}22; color: ${tAccent};">
+                ${author.slice(0, 1).toUpperCase()}
+              </div>
+              <div>
+                <strong style="color: ${isDarkMode ? '#ffffff' : '#0f172a'}; font-size: 0.95rem; display: block;">${author}</strong>
+                <span style="color: #94a3b8; font-size: 0.8rem;">${role}</span>
+              </div>
+            </div>
+          </div>`;
+        }
+
+        renderedBlocksHtml += `
+        <!-- TESTIMONIALS SECTION -->
+        <section class="sim-block-testimonials" id="testimonials" style="${tBg} ${tText} ${tFont} ${tPadding}">
+          <div class="sim-section-header-wrap">
+            ${badge ? `<span class="sim-section-sub-badge" style="color: ${tAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="color: ${block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a')}; ${tFont}">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">${subtitle}</p>` : ''}
+          </div>
+          <div class="sim-testimonials-grid">
+            ${itemsHtml}
+          </div>
+        </section>`;
+        break;
+      }
+
+      case 'bento':
+      case 'services': {
+        const title = escapeHtml(block.title || 'Layanan & Kapabilitas');
+        const subtitle = escapeHtml(block.subtitle || 'Modul terintegrasi untuk akselerasi solusi digital.');
+        const badge = block.badge ? escapeHtml(block.badge) : 'KAPABILITAS';
+        const sAccent = block.styles?.accentColor || accentColor;
+        const sBg = block.styles?.bgColor ? `background: ${block.styles.bgColor} !important;` : (isDarkMode ? 'background: #090d16;' : 'background: #f8fafc;');
+        const sText = block.styles?.textColor ? `color: ${block.styles.textColor} !important;` : '';
+        const sFont = block.styles?.fontFamily ? `font-family: '${block.styles.fontFamily}', sans-serif !important;` : '';
+        const sPadding = block.styles?.paddingY !== undefined ? `padding: ${block.styles.paddingY}px 24px !important;` : 'padding: 60px 24px;';
+        const items = block.items || [];
+        let itemsHtml = '';
+
+        for (const item of items) {
+          const itemColor = item.buttonColor || sAccent;
+          itemsHtml += `
+          <div class="sim-feature-card-item ${isDarkMode ? 'card-dark' : ''}">
+            <div class="sim-feature-icon-box" style="background-color: ${itemColor}18; color: ${itemColor};">
+              ${renderIconSvg(item.icon, 22, itemColor)}
+            </div>
+            <strong style="color: ${isDarkMode ? '#f8fafc' : '#0f172a'};">${escapeHtml(item.title)}</strong>
+            <p style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">${escapeHtml(item.desc || '')}</p>
+          </div>`;
+        }
+
+        renderedBlocksHtml += `
+        <!-- BENTO / SERVICES SECTION -->
+        <section class="sim-block-features ${isDarkMode ? 'features-dark' : ''}" id="${block.type}" style="${sBg} ${sText} ${sFont} ${sPadding}">
+          <div class="sim-section-header-wrap">
+            ${badge ? `<span class="sim-section-sub-badge" style="color: ${sAccent};">${badge}</span>` : ''}
+            <h2 class="sim-section-title" style="color: ${block.styles?.textColor || (isDarkMode ? '#ffffff' : '#0f172a')}; ${sFont}">${title}</h2>
+            ${subtitle ? `<p class="sim-section-sub" style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">${subtitle}</p>` : ''}
+          </div>
+          <div class="sim-features-grid">
+            ${itemsHtml}
+          </div>
+        </section>`;
+        break;
+      }
+
       case 'footer': {
         const brand = escapeHtml(block.title || siteName);
         const copyright = escapeHtml(block.content || block.subtitle || `© 2026 ${siteName}. Seluruh Hak Cipta Dilindungi.`);
@@ -657,8 +916,9 @@ export function compileTemplateToHTML(
         <footer class="sim-block-footer ${isDarkMode ? 'footer-dark' : ''}">
           <div class="sim-footer-inner">
             <div class="footer-left">
-              <div class="footer-brand" style="color: ${accentColor};">
-                ${brand}
+              <div class="footer-brand" style="color: ${accentColor}; display: flex; align-items: center; gap: 6px;">
+                <span>◆</span>
+                <span>${brand}</span>
               </div>
               <p style="color: ${isDarkMode ? '#94a3b8' : '#64748b'};">
                 ${copyright}
@@ -676,15 +936,35 @@ export function compileTemplateToHTML(
     }
   }
 
+  const favicon = options.faviconUrl;
+  const metaTitle = options.metaTitle || roleHeadline || siteName;
+  const metaDesc = options.metaDescription || bioIntro;
+  const ogImg = options.ogImageUrl;
+  const currentUrl = `https://${subdomain}${options.activeRoutePath && options.activeRoutePath !== '/' ? options.activeRoutePath : ''}`;
+
   return `<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${siteName} | ${escapeHtml(template.title)}</title>
+    <title>${siteName} | ${escapeHtml(metaTitle)}</title>
+    ${favicon ? `<link rel="icon" href="${escapeHtml(favicon)}" type="image/x-icon">` : '<link rel="icon" href="/favicon.ico" type="image/x-icon">'}
+    ${metaDesc ? `<meta name="description" content="${escapeHtml(metaDesc)}">` : ''}
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${currentUrl}">
+    <meta property="og:title" content="${escapeHtml(metaTitle)}">
+    <meta property="og:description" content="${escapeHtml(metaDesc)}">
+    ${ogImg ? `<meta property="og:image" content="${escapeHtml(ogImg)}">` : ''}
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="${currentUrl}">
+    <meta name="twitter:title" content="${escapeHtml(metaTitle)}">
+    <meta name="twitter:description" content="${escapeHtml(metaDesc)}">
+    ${ogImg ? `<meta name="twitter:image" content="${escapeHtml(ogImg)}">` : ''}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --tpl-accent: ${accentColor};
@@ -702,18 +982,45 @@ export function compileTemplateToHTML(
             overflow-x: hidden;
         }
 
+        /* Contact Section */
+        .sim-block-contact { padding: 60px 24px; }
+        .sim-contact-layout { display: grid; grid-template-columns: 1fr 1.3fr; gap: 32px; max-width: 980px; margin: 0 auto; }
+        @media (max-width: 768px) { .sim-contact-layout { grid-template-columns: 1fr; } }
+        .sim-contact-info-card { border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; }
+        .sim-contact-pill { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 9999px; align-self: flex-start; }
+        .sim-contact-meta-list { display: flex; flex-direction: column; gap: 16px; }
+        .sim-meta-item { display: flex; align-items: center; gap: 12px; }
+        .sim-meta-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .sim-contact-form-card { border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 28px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05); box-sizing: border-box; }
+        .sim-form-grid { display: flex; flex-direction: column; gap: 14px; }
+        .sim-form-field { display: flex; flex-direction: column; gap: 6px; }
+        .sim-form-input { padding: 10px 14px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; outline: none; transition: border-color 0.15s ease; box-sizing: border-box; width: 100%; }
+        .sim-btn-contact-submit { padding: 12px 20px; border-radius: 8px; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.15s ease; }
+        .sim-btn-contact-submit:hover { opacity: 0.92; transform: translateY(-1px); }
+
+        /* Testimonials Section */
+        .sim-block-testimonials { padding: 60px 24px; }
+        .sim-testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1040px; margin: 0 auto; }
+        .sim-testimonial-card { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04); box-sizing: border-box; }
+        .sim-testimonial-card.card-dark { background: #0f172a; border-color: rgba(255, 255, 255, 0.08); }
+        .sim-stars-row { font-size: 1rem; letter-spacing: 2px; }
+        .sim-testi-quote { font-size: 0.92rem; line-height: 1.6; font-style: italic; margin: 0; flex: 1; }
+        .sim-testi-author-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+        .sim-author-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; flex-shrink: 0; }
+
         /* 1. Navbar */
         .sim-block-navbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 28px;
+            padding: 16px 32px;
             background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
             position: sticky;
             top: 0;
             z-index: 50;
+            box-sizing: border-box;
         }
         ${isDarkMode ? `
         .sim-block-navbar {
@@ -723,44 +1030,59 @@ export function compileTemplateToHTML(
         .sim-brand-area {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         .sim-brand-glyph {
-            width: 34px;
-            height: 34px;
-            border-radius: 9px;
-            display: flex;
+            font-size: 0.95rem;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.05rem;
-            font-weight: 800;
+            user-select: none;
+            line-height: 1;
         }
         .sim-brand-title {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 800;
             letter-spacing: -0.02em;
+        }
+        .sim-nav-cluster {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .sim-nav-cluster.is-centered {
+            flex: 1;
+            justify-content: center;
         }
         .sim-nav-links-row {
             display: flex;
             align-items: center;
-            gap: 22px;
+            gap: 20px;
         }
         .sim-nav-links-row a {
-            color: #64748b;
+            color: #475569;
             text-decoration: none;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             font-weight: 600;
             transition: color 0.15s ease;
         }
-        .sim-nav-links-row a:hover { color: ${accentColor}; }
+        .sim-nav-links-row a:hover { color: #0f172a; }
+        .sim-nav-links-row a.active {
+            color: ${accentColor};
+            font-weight: 700;
+        }
         .sim-btn-nav-cta {
-            padding: 8px 18px;
+            padding: 8px 16px;
             border-radius: 8px;
             color: #ffffff;
             font-size: 0.82rem;
             font-weight: 700;
             border: none;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             transition: opacity 0.15s ease;
         }
         .sim-btn-nav-cta:hover { opacity: 0.9; }
@@ -773,6 +1095,7 @@ export function compileTemplateToHTML(
             flex-direction: column;
             align-items: center;
             position: relative;
+            overflow: hidden;
         }
         .sim-hero-badge-pill {
             display: inline-flex;
@@ -1045,6 +1368,137 @@ export function compileTemplateToHTML(
         .sim-acc-arrow.rotated { transform: rotate(180deg); }
         .sim-accordion-body { padding: 0 20px 16px; font-size: 0.88rem; line-height: 1.55; }
 
+        /* Progress Bar / Telemetry */
+        .sim-block-progressbar {
+            padding: 56px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .sim-badge-mini-caps {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+        .sim-progress-meters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .sim-progress-meter-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.03);
+            box-sizing: border-box;
+        }
+        .sim-progress-meter-card.card-dark {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        .sim-pm-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sim-pm-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .card-dark .sim-pm-title {
+            color: #f8fafc;
+        }
+        .sim-pm-val {
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+        .sim-pm-track {
+            width: 100%;
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .card-dark .sim-pm-track {
+            background: #334155;
+        }
+        .sim-pm-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+        .sim-pm-desc {
+            font-size: 0.78rem;
+            color: #64748b;
+            margin: 0;
+        }
+        .card-dark .sim-pm-desc {
+            color: #94a3b8;
+        }
+
+        /* Carousel Component */
+        .sim-block-carousel {
+            padding: 56px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .sim-carousel-stage-container {
+            max-width: 860px;
+            margin: 24px auto 0;
+            position: relative;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 36px 40px;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+            box-sizing: border-box;
+        }
+        .sim-carousel-stage-container.stage-dark {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        .sim-carousel-nav-arrows {
+            display: flex;
+            justify-content: space-between;
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            right: 12px;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        .sim-carousel-arrow-btn {
+            pointer-events: auto;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1);
+            transition: all 0.15s ease;
+            font-size: 1rem;
+        }
+        .sim-carousel-arrow-btn:hover {
+            background: var(--tpl-accent, #2563eb);
+            color: #ffffff;
+            border-color: var(--tpl-accent, #2563eb);
+        }
+
         /* 9. Pricing */
         .sim-block-pricing { padding: 60px 24px; background: #f8fafc; }
         .sim-block-pricing.pricing-dark { background: #090d16; }
@@ -1138,37 +1592,10 @@ export function compileTemplateToHTML(
         .footer-left p { font-size: 0.8rem; margin: 4px 0 0; }
         .edge-status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.74rem; color: #64748b; font-weight: 600; font-family: monospace; }
         .edge-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; }
-
-        /* Floating Pod Badge */
-        .pod-floating-badge {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(15, 23, 42, 0.92);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(16, 185, 129, 0.45);
-            border-radius: 9999px;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.78rem;
-            color: #10b981;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            font-weight: 600;
-        }
-        .pod-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
     </style>
 </head>
 <body>
     ${renderedBlocksHtml}
-
-    <div class="pod-floating-badge">
-        <span class="pod-dot"></span>
-        <span>Pod Kontainer Aktif (${subdomain})</span>
-    </div>
 
     <script>
         function toggleAcc(el) {
@@ -1201,6 +1628,20 @@ export function compileTemplateToHTML(
                 el.innerText = isAnnual ? '/ thn' : '/ bln';
             });
         }
+
+        function stepCarousel(btn, delta) {
+            const stage = btn.closest('.sim-carousel-stage-container');
+            if (!stage) return;
+            const slides = stage.querySelectorAll('.sim-carousel-slide');
+            if (slides.length <= 1) return;
+            let activeIdx = 0;
+            slides.forEach((s, idx) => {
+                if (s.style.display !== 'none') activeIdx = idx;
+            });
+            slides[activeIdx].style.display = 'none';
+            let nextIdx = (activeIdx + delta + slides.length) % slides.length;
+            slides[nextIdx].style.display = 'flex';
+        }
     </script>
 </body>
 </html>`;
@@ -1220,12 +1661,24 @@ export function compileMultiPageSiteToHTML(
   const result: Record<string, string> = {};
   for (const page of pages) {
     const filename = page.path === '/' ? 'index.html' : `${page.path.replace(/^\//, '')}.html`;
-    result[filename] = compileTemplateToHTML(template, {
+    const cleanRoute = page.path === '/' ? '/' : `/${page.path.replace(/^\//, '')}`;
+    const pageHtml = compileTemplateToHTML(template, {
       ...options,
-      roleOrHeadline: page.title,
-      bioIntro: page.description,
-      blocksOverride: page.blocks
+      roleOrHeadline: page.title || options.roleOrHeadline,
+      bioIntro: page.description || options.bioIntro,
+      activeRoutePath: cleanRoute,
+      sitemapPages: options.sitemapPages || pages,
+      blocksOverride: page.blocks,
+      faviconUrl: (page as any).faviconUrl || options.faviconUrl,
+      metaTitle: (page as any).metaTitle || page.title || options.metaTitle,
+      metaDescription: (page as any).metaDescription || page.description || options.metaDescription,
+      ogImageUrl: (page as any).ogImageUrl || options.ogImageUrl
     });
+    result[filename] = pageHtml;
+    // Also include clean path key without .html for orchestrator directory creation
+    if (page.path !== '/') {
+      result[page.path.replace(/^\//, '')] = pageHtml;
+    }
   }
   return result;
 }

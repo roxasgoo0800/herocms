@@ -28,10 +28,11 @@ type DeployRequest struct {
 	SiteName     string `json:"site_name,omitempty"`
 	TemplateName string `json:"template_name,omitempty"`
 	Category     string `json:"category,omitempty"`
-	RoleHeadline string `json:"role_headline,omitempty"`
-	BioIntro     string `json:"bio_intro,omitempty"`
-	AccentColor  string `json:"accent_color,omitempty"`
-	CustomHTML   string `json:"custom_html,omitempty"`
+	RoleHeadline string            `json:"role_headline,omitempty"`
+	BioIntro     string            `json:"bio_intro,omitempty"`
+	AccentColor  string            `json:"accent_color,omitempty"`
+	CustomHTML   string            `json:"custom_html,omitempty"`
+	Pages        map[string]string `json:"pages,omitempty"`
 }
 
 // StorageProvisionRequest defines payload for storage creation
@@ -134,6 +135,7 @@ func SetupRouter(
 				BioIntro:     req.BioIntro,
 				AccentColor:  req.AccentColor,
 				CustomHTML:   req.CustomHTML,
+				Pages:        req.Pages,
 			})
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -287,8 +289,9 @@ func SetupRouter(
 				Category     string `json:"category"`
 				RoleHeadline string `json:"role_headline"`
 				BioIntro     string `json:"bio_intro"`
-				AccentColor  string `json:"accent_color"`
-				CustomHTML   string `json:"custom_html,omitempty"`
+				AccentColor  string            `json:"accent_color"`
+				CustomHTML   string            `json:"custom_html,omitempty"`
+				Pages        map[string]string `json:"pages,omitempty"`
 			}
 			if err := c.ShouldBindJSON(&req); err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "code": "ERR_INVALID_PAYLOAD"})
@@ -309,6 +312,7 @@ func SetupRouter(
 					BioIntro:     req.BioIntro,
 					AccentColor:  req.AccentColor,
 					CustomHTML:   req.CustomHTML,
+					Pages:        req.Pages,
 				}); err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "code": "ERR_APPLY_TEMPLATE_FAILED"})
 					return
@@ -363,6 +367,10 @@ func SetupRouter(
 			id := c.Param("id")
 			stats, err := prov.GetContainerStats(c.Request.Context(), id)
 			if err != nil {
+				if strings.Contains(err.Error(), "No such container") || strings.Contains(err.Error(), "not found") {
+					c.JSON(http.StatusNotFound, gin.H{"error": "container not found in docker engine", "status": "stopped"})
+					return
+				}
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}

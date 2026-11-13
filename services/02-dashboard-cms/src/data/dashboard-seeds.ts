@@ -98,24 +98,24 @@ export const subscriptionPlansCatalog: SubscriptionPlanCatalogItem[] = [
 
 export const initialContainers: ContainerSite[] = [
   {
-    id: 'hero_tenant_9942',
-    name: 'Portofolio Rizal Pratama',
-    category: 'portfolio',
-    templateName: 'Portofolio Teknis Engineer',
-    subdomain: 'rizal.stackbyte.id',
-    customDomain: 'rizalpratama.cloud',
+    id: '48114681-7444-48ea-ad4d-3342e0eb55c7',
+    name: 'Portal HeroCMS Flagship',
+    category: 'business',
+    templateName: 'Toko Online Modern & Katalog Penjualan Produk (E-Commerce)',
+    subdomain: 'portal-digital.stackbyte.id',
+    customDomain: '',
     status: 'running',
-    cpuUsage: 14,
-    ramUsage: 88,
+    cpuUsage: 18,
+    ramUsage: 94,
     ramLimit: 256,
     cpuLimit: '0.5 vCPU',
-    uptime: '4 hari 12 jam',
-    visitsThisWeek: 3892,
+    uptime: '4 hari 12 jam (99.98% SLA)',
+    visitsThisWeek: 1420,
     ssl: true,
-    roleOrHeadline: 'Senior Cloud & Distributed Systems Engineer',
-    bioIntro: 'Membangun arsitektur microservices terdistribusi, orkestrasi kontainer Docker otonom, dan pipeline telemetri real-time dengan latensi rendah.',
+    roleOrHeadline: 'Website Resmi Portal Digital',
+    bioIntro: 'Selamat datang di website resmi yang didukung arsitektur kontainer otonom HeroCMS Studio.',
     accentColor: '#2563eb',
-    lastDeployed: '10 menit lalu'
+    lastDeployed: '6 Nov 2026'
   }
 ];
 
@@ -180,21 +180,149 @@ export const initialCustomDomains: CustomDomainItem[] = [
   {
     id: 'dom_1',
     domain: 'rizalpratama.cloud',
-    targetContainer: 'Portofolio Rizal Pratama',
-    containerId: 'hero_tenant_9942',
+    targetContainer: 'Situs Utama Corporate',
+    containerId: 'site_main_corporate',
     status: 'active',
     sslStatus: 'issued',
     cnameRecord: 'edge.stackbyte.id',
     aRecord: '103.144.20.1',
     addedDate: '12 Sep 2026'
+  },
+  {
+    id: 'dom_2',
+    domain: 'portal.perusahaan.com',
+    targetContainer: 'Portal Edukasi LMS',
+    containerId: 'site_portal_edu',
+    status: 'active',
+    sslStatus: 'issued',
+    cnameRecord: 'edge.stackbyte.id',
+    aRecord: '103.144.20.1',
+    addedDate: '18 Okt 2026'
   }
 ];
 
-export const initialArticles: ContentArticle[] = [];
+export const initialArticles: ContentArticle[] = [
+  {
+    id: 'art_101',
+    containerId: 'site_main_corporate',
+    siteName: 'Situs Utama Corporate',
+    title: 'Arsitektur Cloud-Native & Orkestrasi Kontainer Otonom',
+    slug: 'arsitektur-cloud-native',
+    excerpt: 'Panduan teknis perancangan microservices otonom berbasis Docker Engine SDK, Traefik edge proxy, dan multi-tenant PostgreSQL RLS.',
+    content: `## Pengantar Arsitektur Cloud-Native\n\nDalam membangun sistem komputasi modern, isolasi beban kerja (workload isolation) menjadi faktor penentu keandalan infrastruktur. HeroCMS dirancang menggunakan pendekatan kontainerisasi mandiri per-tenant, di mana setiap website berjalan di lingkungan Linux cgroups v2 yang terpisah.\n\n### Keunggulan Traefik Dynamic Ingress\n\nTraefik v3 bertindak sebagai gerbang ingress utama yang menangani terminasi TLS 1.3 secara otomatis melalui integrasi Let's Encrypt ACME ALPN. Routing dilakukan secara dinamis berdasarkan label kontainer Docker tanpa perlu me-reload daemon proxy.\n\n\`\`\`go\n// Dynamic label routing configuration\nlabels := map[string]string{\n    "traefik.enable": "true",\n    "traefik.http.routers.site.rule": "Host(\`site.stackbyte.id\`)",\n}\n\`\`\`\n\n### Kesimpulan\n\nDengan model komputasi terdistribusi ini, setiap tenant memiliki jaminan performa CPU dan RAM mandiri tanpa risiko noisy neighbor effect.`,
+    category: 'Engineering',
+    status: 'published',
+    author: 'Rizal Pratama',
+    tags: ['Golang', 'Docker', 'Edge CDN', 'Traefik'],
+    publishedAt: '04 November 2026',
+    views: 1420
+  },
+  {
+    id: 'art_102',
+    containerId: 'site_main_corporate',
+    siteName: 'Situs Utama Corporate',
+    title: 'Panduan Integrasi Headless REST API & Webhooks Real-Time',
+    slug: 'integrasi-headless-api',
+    excerpt: 'Cara mudah mengintegrasikan konten artikel, formulir leads, dan katalog media ke Next.js, Nuxt, atau aplikasi mobile dengan token PAT aman.',
+    content: `## Integrasi Headless CMS dengan Personal Access Token\n\nHeroCMS Studio menyediakan endpoint REST API standar industri yang dilindungi oleh sistem otorisasi token Personal Access Token (PAT) dengan cakupan izin granular (scopes).\n\n### Autentikasi Permintaan\n\nKirimkan token PAT melalui header \`Authorization: Bearer <TOKEN>\` pada setiap request API:\n\n\`\`\`bash\ncurl -X GET "https://api.stackbyte.id/api/v1/content/articles" \\\n  -H "Authorization: Bearer stack_pat_9942_••••••••••••e8a1"\n\`\`\`\n\nData JSON akan dikembalikan dengan struktur terstandarisasi untuk konsumsi aplikasi frontend Jamstack.`,
+    category: 'Tutorial',
+    status: 'published',
+    author: 'Irgi & Rizal',
+    tags: ['Headless', 'REST API', 'Webhooks', 'Security'],
+    publishedAt: '02 November 2026',
+    views: 890
+  },
+  {
+    id: 'art_103',
+    containerId: 'site_portal_edu',
+    siteName: 'Portal Edukasi LMS',
+    title: 'Optimasi Core Web Vitals (LCP, CLS, INP) pada Arsitektur Edge',
+    slug: 'optimasi-core-web-vitals',
+    excerpt: 'Strategi pencapaian skor 100/100 Google Lighthouse dengan memanfaatkan kompresi Brotli, cache HTTP immutable, dan code-splitting Vite.',
+    content: `## Mengapa Core Web Vitals Sangat Krusial?\n\nPengalaman pengguna di web bergantung langsung pada kecepatan visual rendering. Tiga metrik utama Google CWV—Largest Contentful Paint (LCP), Cumulative Layout Shift (CLS), dan Interaction to Next Paint (INP)—menentukan peringkat SEO dan konversi pengunjung.\n\n### Kebijakan Caching Immutability\n\nAset statis ter-hash yang disajikan melalui Traefik dikonfigurasi dengan cache header tahunan:\n\n\`\`\`http\nCache-Control: public, max-age=31536000, immutable\n\`\`\`\n\nHal ini menjamin latensi respon TTFB tetap berada di bawah 2 milidetik pada kunjungan berulang.`,
+    category: 'DevOps',
+    status: 'published',
+    author: 'Andalusia',
+    tags: ['Performance', 'Lighthouse', 'Vite', 'Brotli'],
+    publishedAt: '28 Oktober 2026',
+    views: 654
+  }
+];
 
-export const initialCmsPages: CmsPage[] = [];
+export const initialCmsPages: CmsPage[] = [
+  {
+    id: 'page_1',
+    containerId: 'site_main_corporate',
+    siteName: 'Situs Utama Corporate',
+    title: 'Tentang Kami & Arsitektur Sistem',
+    path: '/about',
+    templateLayout: 'standard-prose',
+    isInNavbar: true,
+    isInFooter: true,
+    status: 'published',
+    updatedAt: '06 November 2026',
+    metaTitle: 'Tentang Kami • HeroCMS Studio',
+    metaDesc: 'Mengenal tim rekayasa di balik ekosistem cloud HeroCMS Studio.',
+    content: '## Visi & Misi HeroCMS\n\nKami percaya bahwa setiap bisnis dan developer berhak memiliki kedaulatan data penuh atas website mereka tanpa ketergantungan pada SaaS tertutup.'
+  },
+  {
+    id: 'page_2',
+    containerId: 'site_main_corporate',
+    siteName: 'Situs Utama Corporate',
+    title: 'Kebijakan Privasi & Ketentuan Layanan',
+    path: '/privacy',
+    templateLayout: 'legal-document',
+    isInNavbar: false,
+    isInFooter: true,
+    status: 'published',
+    updatedAt: '05 November 2026',
+    metaTitle: 'Kebijakan Privasi Data • HeroCMS Studio',
+    metaDesc: 'Komitmen perlindungan data dan kepatuhan GDPR / UU PDP.',
+    content: '## Kebijakan Privasi Data\n\nSeluruh data tenant disimpan di database terisolasi dengan Row-Level Security (RLS) aktif.'
+  }
+];
 
-export const initialMediaAssets: MediaAssetItem[] = [];
+// Valid, self-contained base64 PDF that renders seamlessly in any browser offline
+export const SAMPLE_PDF_DATA_URI = 'data:application/pdf;base64,JVBERi0xLjQKMSAwIG9iaiA8PC9UeXBlIC9DYXRhbG9nIC9QYWdlcyAyIDAgUj4+IGVuZG9iagoyIDAgb2JqIDw8L1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDE+PiBlbmRvYmoKMyAwIG9iaiA8PC9UeXBlIC9QYWdlIC9QYXJlbnQgMiAwIFIgL1Jlc291cmNlcyA8PC9Gb250IDw8L0YxIDQgMCBSPj4+PiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvQ29udGVudHMgNSAwIFI+PiBlbmRvYmoKNCAwIG9iaiA8PC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvQmFzZUZvbnQgL0hlbHZldGljYT4+IGVuZG9iago1IDAgb2JqIDw8L0xlbmd0aCAyNDg+PiBzdHJlYW0KQlQKL0YxIDE4IFRmCjUwIDcyMCBUZAooSEVST0NNUyBTVFVESU8gLSBET0tVTUVOIEFSU0lURUtUVVIgQ0xPVUQpIFRqCjAgLTMyIFRkCi9GMSAxMSBUZgooTGFwb3JhbiBSZXNtaSBBcnNpdGVrdHVyIEtvbnRhaW5lciBPdG9ub20gJiBUcmFlZmlrIEVkZ2UgSW5ncmVzcykgVGoKMCAtMjQgVGQKKFRlbmFudDogUFQgSGVybyBEaWdpdGFsIE11bHRpdGVrIHwgU3RhdHVzOiBWZXJpZmllZCBDbGVhbikgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyMjQgMDAwMDAgbiAKMDAwMDAwMDI5MyAwMDAwMCBuIAp0cmFpbGVyIDw8L1NpemUgNiAvUm9vdCAxIDAgUj4+CnN0YXJ0eHJlZgo1OTIKJSVFT0Y=';
+
+export const initialMediaAssets: MediaAssetItem[] = [
+  {
+    id: 'med_pdf_01',
+    name: 'Laporan-Masalah-BMT-Assyafiiyah-2026-10-30.pdf',
+    type: 'PDF',
+    size: '119.4 KB',
+    sizeBytes: 122266,
+    dimensions: 'Portable Document',
+    url: SAMPLE_PDF_DATA_URI,
+    s3Key: '1793933847448012000-Laporan-Masalah-BMT-Assyafiiyah-2026-10-30.pdf',
+    bucketName: 'tenant-994200000000-media',
+    uploadedAt: '6 Nov 2026'
+  },
+  {
+    id: 'med_png_02',
+    name: 'Profil Wanita dengan Halo Bintang.png',
+    type: 'PNG',
+    size: '267.4 KB',
+    sizeBytes: 273817,
+    dimensions: '1254x1254 px',
+    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect width="100%" height="100%" fill="%23f8fafc"/><circle cx="200" cy="200" r="140" fill="none" stroke="%232563eb" stroke-width="4"/><path d="M200 60 L200 340 M60 200 L340 200" stroke="%2394a3b8" stroke-dasharray="4,4"/><text x="200" y="208" font-family="sans-serif" font-size="16" font-weight="bold" fill="%230f172a" text-anchor="middle">Aset Media MinIO S3</text></svg>',
+    s3Key: '1793614066-profil-wanita.png',
+    bucketName: 'tenant-994200000000-media',
+    uploadedAt: '5 Nov 2026'
+  },
+  {
+    id: 'med_svg_03',
+    name: 'HeroCMS Logo Glyph.svg',
+    type: 'SVG',
+    size: '14.2 KB',
+    sizeBytes: 14540,
+    dimensions: 'Vector Scalable',
+    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="100%" height="100%" rx="32" fill="%232563eb"/><path d="M60 100 L90 130 L140 70" stroke="%23ffffff" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    s3Key: '1793614066-herocms-logo.svg',
+    bucketName: 'tenant-994200000000-media',
+    uploadedAt: '4 Nov 2026'
+  }
+];
 
 export const availablePatScopes: PatScopeDefinition[] = [
   // Konten & Headless CMS

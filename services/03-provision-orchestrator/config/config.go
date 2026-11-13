@@ -26,7 +26,7 @@ type Config struct {
 func LoadConfig() *Config {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8083"
 	}
 
 	dockerSocket := os.Getenv("DOCKER_HOST")
@@ -46,8 +46,16 @@ func LoadConfig() *Config {
 
 	storageBase := os.Getenv("TENANT_STORAGE_BASE")
 	if storageBase == "" {
-		// Default to dedicated data directory
-		storageBase = "/var/lib/herocms/tenants"
+		// Prefer standard Linux container volume mount if accessible
+		candidate := "/var/lib/herocms/tenants"
+		if err := os.MkdirAll(candidate, 0755); err == nil {
+			storageBase = candidate
+		} else {
+			// Fallback for non-root host dev environment (e.g. macOS)
+			fallback := "./data/tenants"
+			_ = os.MkdirAll(fallback, 0755)
+			storageBase = fallback
+		}
 	}
 
 	templatesDir := os.Getenv("TEMPLATES_RUNTIME_DIR")

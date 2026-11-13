@@ -87,8 +87,7 @@ func BuildHostConfig(specs SandboxSpecs, dataPath, uploadsPath, publicPath strin
 			"/run": "size=4m,mode=1777,noexec,nosuid,nodev",
 		},
 		RestartPolicy: container.RestartPolicy{
-			Name:              "on-failure",
-			MaximumRetryCount: 3,
+			Name: "unless-stopped",
 		},
 	}
 }

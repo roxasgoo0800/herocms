@@ -98,9 +98,9 @@ services:
       REQUIRE_INTERNAL_AUTH: "true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - tenant_storage:/var/lib/herocms/tenants
-    expose:
-      - "8080" # Strict Local-Only (Direct hit internal dari CMS, zero open port)
+      - /var/lib/herocms/tenants:/var/lib/herocms/tenants
+    ports:
+      - "${ORCHESTRATOR_PORT:-8083}:8080" # Exposed to host on dedicated port 8083 to prevent port collision with Traefik 8080
     networks:
       - herocms_internal_net
       - herocms_edge_net
@@ -328,6 +328,27 @@ services:
       - n8n_data:/home/node/.n8n
     networks:
       - herocms_internal_net
+
+  # ---------------------------------------------------------------------------
+  # 12. Visual Database Web GUI (pgAdmin 4 - Official Enterprise PostgreSQL Web Manager)
+  # ---------------------------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: herocms_pgadmin
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@rizalpratama.cloud}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    volumes:
+      - ./deploy/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    networks:
+      - herocms_internal_net
+    depends_on:
+      - postgres
 
 networks:
   herocms_edge_net:

@@ -154,6 +154,12 @@ func RateLimiter(rdb *redis.Client, maxRequests int, window time.Duration) gin.H
 		}
 
 		clientIP := c.ClientIP()
+		// Allow unlimited local development traffic on loopback to prevent 429 during active studio polling
+		if clientIP == "127.0.0.1" || clientIP == "::1" || clientIP == "localhost" {
+			c.Next()
+			return
+		}
+
 		key := fmt.Sprintf("%s:%s", clientIP, c.FullPath())
 
 		if !rdb.AllowRequest(c.Request.Context(), key, maxRequests, window) {

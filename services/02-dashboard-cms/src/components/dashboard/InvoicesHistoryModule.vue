@@ -435,7 +435,7 @@ onUnmounted(() => {
           Dokumen penagihan sah ber-NPWP PT Hero Digital Multitek untuk rekonsiliasi akuntansi perusahaan, audit PPN 11%, dan bukti potong fiskal elektronik DJP.
         </p>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" style="display: flex; align-items: center; gap: 10px;">
         <button class="btn-outline-action" @click="handleExportCSV" title="Unduh format tabel CSV">
           <FileSpreadsheet :size="14" />
           <span>Ekspor CSV</span>
@@ -483,59 +483,88 @@ onUnmounted(() => {
     <!-- 4 Commercial & Tax Telemetry Summary Cards -->
     <div class="stats-overview-grid">
       <!-- Card 1: Next Billing -->
-      <div class="telemetry-card accent-blue">
-        <div class="telemetry-corner-watermark blue"><Clock :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">TAGIHAN PERIODE BERIKUTNYA</span>
+          <div class="telemetry-glyph"><Clock :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          Rp 149.000 <span class="badge-online">15 Nov 2026</span>
+          Rp 149.000 <span class="badge-mono active">15 Nov 2026</span>
+        </div>
+        <div class="ingress-mesh-track">
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node active"></span>
+          <span class="ingress-node"></span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Perpanjangan otomatis via BCA VA (Auto-Debit)</span>
         </div>
       </div>
 
       <!-- Card 2: Total Spend YTD -->
-      <div class="telemetry-card accent-emerald">
-        <div class="telemetry-corner-watermark emerald"><CheckCircle2 :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">TOTAL BELANJA SAAS YTD 2026</span>
+          <div class="telemetry-glyph"><CheckCircle2 :size="18" /></div>
         </div>
         <div class="telemetry-val">
           Rp {{ totalSpendYtd.toLocaleString('id-ID') }}
-          <span class="badge-online">{{ invoices.length }} Lunas</span>
+          <span class="badge-mono active">{{ invoices.length }} Lunas</span>
+        </div>
+        <div class="sparkline-histogram">
+          <span class="spark-bar" style="height: 30%"></span>
+          <span class="spark-bar" style="height: 45%"></span>
+          <span class="spark-bar" style="height: 60%"></span>
+          <span class="spark-bar" style="height: 40%"></span>
+          <span class="spark-bar" style="height: 80%"></span>
+          <span class="spark-bar" style="height: 65%"></span>
+          <span class="spark-bar active" style="height: 100%"></span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>DPP: Rp {{ totalDppYtd.toLocaleString('id-ID') }} • 100% lunas terverifikasi</span>
         </div>
       </div>
 
       <!-- Card 3: Tax PPN 11% -->
-      <div class="telemetry-card accent-purple">
-        <div class="telemetry-corner-watermark purple"><ShieldCheck :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">AKUMULASI PPN 11% DISETOR</span>
+          <div class="telemetry-glyph"><ShieldCheck :size="18" /></div>
         </div>
         <div class="telemetry-val">
           Rp {{ totalTaxYtd.toLocaleString('id-ID') }}
-          <span class="badge-growth-pill">DJP Valid</span>
+          <span class="badge-mono active">DJP Valid</span>
+        </div>
+        <div class="security-meter-track">
+          <div class="security-meter-fill" style="width: 100%;"></div>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>Dipungut & disetor sesuai PMK-60/PMK.03/2022</span>
         </div>
       </div>
 
       <!-- Card 4: Legal & NPWP Entity -->
-      <div class="telemetry-card accent-sky">
-        <div class="telemetry-corner-watermark sky"><Building2 :size="58" /></div>
+      <div class="telemetry-card">
         <div class="telemetry-top">
           <span class="telemetry-label">BADAN USAHA & NPWP PENERBIT</span>
+          <div class="telemetry-glyph"><Building2 :size="18" /></div>
         </div>
         <div class="telemetry-val">
-          E-Faktur <span class="badge-online">Terverifikasi</span>
+          E-Faktur <span class="badge-mono active">Terverifikasi</span>
+        </div>
+        <div class="slot-segments">
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
+          <span class="slot-segment filled"></span>
         </div>
         <div class="telemetry-sub">
+          <span class="dot-lead live"></span>
           <span>PT Hero Digital Multitek • Cyber 2 Tower Jkt</span>
         </div>
       </div>
@@ -943,8 +972,8 @@ onUnmounted(() => {
         class="modal-backdrop"
         @click.self="isInvoiceDetailModalOpen = false"
       >
-        <div class="modal-dialog modal-dialog-invoice">
-          <div class="modal-header">
+        <div class="modal-dialog modal-dialog-seamless modal-dialog-invoice" style="max-width: 900px; width: 92vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0 !important; border-radius: 16px !important;">
+          <div class="modal-header modal-header-bespoke" style="padding: 14px 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; background: #ffffff;">
             <div class="modal-header-leading">
               <div class="modal-header-icon-box" style="background: #eff6ff; color: #2563eb;">
                 <Receipt :size="18" />
@@ -959,7 +988,7 @@ onUnmounted(() => {
             </button>
           </div>
 
-          <div class="invoice-doc-body">
+          <div class="invoice-doc-body" style="flex: 1; overflow-y: auto; padding: 20px 24px;">
             <div class="invoice-paper" id="printable-invoice">
               <!-- Paper Top Header -->
               <div class="inv-paper-top">
@@ -1151,20 +1180,20 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Modal Footer Actions (Guaranteed Side-by-Side) -->
-          <div class="modal-footer-row">
-            <button type="button" class="btn-modal-ghost" @click="isInvoiceDetailModalOpen = false">
+          <!-- Modal Footer Actions (Flush to bottom) -->
+          <div class="modal-footer modal-footer-bespoke" style="padding: 12px 22px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+            <button type="button" class="btn-picker-footer-ghost" @click="isInvoiceDetailModalOpen = false">
               <span>Tutup</span>
             </button>
-            <button type="button" class="btn-modal-ghost" @click="copyInvoiceId(selectedInvoice.id)">
+            <button type="button" class="btn-picker-footer-ghost" @click="copyInvoiceId(selectedInvoice.id)">
               <Copy :size="14" />
               <span>Salin No. Faktur</span>
             </button>
-            <button type="button" class="btn-modal-ghost" @click="handlePrintInvoice">
+            <button type="button" class="btn-picker-footer-ghost" @click="handlePrintInvoice">
               <Printer :size="14" />
               <span>Cetak / Simpan PDF</span>
             </button>
-            <button type="button" class="btn-modal-confirm" @click="downloadInvoiceReceipt(selectedInvoice)">
+            <button type="button" class="btn-picker-footer-confirm" @click="downloadInvoiceReceipt(selectedInvoice)">
               <Download :size="14" />
               <span>Unduh Dokumen Faktur</span>
             </button>
