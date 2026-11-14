@@ -107,6 +107,8 @@ import {
   type BrandPalette,
   type AnimationOption
 } from '../../data/editor-presets';
+import CanvasDropPreview from './CanvasDropPreview.vue';
+import CanvasBlockRenderer from './CanvasBlockRenderer.vue';
 
 const {
   activeMenu,
@@ -336,13 +338,35 @@ const isHudFontOpen = ref(false);
 const hudPatternDropdownRef = ref<HTMLElement | null>(null);
 const hudAnimDropdownRef = ref<HTMLElement | null>(null);
 const hudFontDropdownRef = ref<HTMLElement | null>(null);
-const blockAnimKeys = ref<Record<string, number>>({});
+const playingAnimBlockId = ref<string | null>(null);
+let animPlayTimer: ReturnType<typeof setTimeout> | null = null;
+
+const triggerOneShotBlockAnim = (blockId: string, durationSec = 0.8) => {
+  if (animPlayTimer) {
+    clearTimeout(animPlayTimer);
+    animPlayTimer = null;
+  }
+  playingAnimBlockId.value = null;
+  requestAnimationFrame(() => {
+    playingAnimBlockId.value = blockId;
+    const ms = Math.max(400, Math.round(durationSec * 1000) + 180);
+    animPlayTimer = setTimeout(() => {
+      if (playingAnimBlockId.value === blockId) {
+        playingAnimBlockId.value = null;
+      }
+    }, ms);
+  });
+};
 
 const patternOptionsList = [
   { id: 'none', name: 'Pola: Off' },
   { id: 'dots', name: 'Dot Grid' },
   { id: 'grid', name: 'Matrix Grid' },
-  { id: 'mesh', name: 'Ambient Glow' }
+  { id: 'mesh', name: 'Ambient Glow' },
+  { id: 'diagonal', name: 'Diagonal Stripes' },
+  { id: 'cross', name: 'Cross Plus Grid' },
+  { id: 'radial', name: 'Radial Spotlight' },
+  { id: 'blueprint', name: 'Blueprint Fine' }
 ];
 
 const hudAnimationList = [
@@ -355,7 +379,7 @@ const hudAnimationList = [
   { id: 'springPop', name: 'Spring 3D Elastic' },
   { id: 'zoomIn', name: 'Zoom In Pop' },
   { id: 'tiltIn', name: 'Perspective Tilt 3D' },
-  { id: 'float', name: 'Floating Infinite' },
+  { id: 'float', name: 'Soft Float' },
   { id: 'pulseGlow', name: 'Pulse Glow' },
   { id: 'bounce', name: 'Dynamic Bounce' }
 ];
@@ -374,9 +398,14 @@ const currentAnimLabel = computed(() => {
 });
 
 const currentBlockFontLabel = computed(() => {
-  const currentFam = selectedBlock.value?.styles?.fontFamily || currentFont.value;
-  const found = fontOptions.find(f => f.family === currentFam || f.id === currentFam || currentFam.includes(f.name.split(' (')[0]));
-  return found ? found.name.split(' (')[0] : 'Inter';
+  const currentFam = selectedBlock.value?.styles?.fontFamily || currentFont.value || '';
+  const found = fontOptions.find(
+    f =>
+      f.family === currentFam ||
+      f.id === currentFam ||
+      currentFam.toLowerCase().includes(f.name.split(' (')[0].toLowerCase())
+  );
+  return found ? found.name.split(' (')[0] : currentFam.split(',')[0].replace(/['"]/g, '') || 'Inter';
 });
 
 const toggleHudPatternDropdown = () => {
@@ -411,13 +440,22 @@ const selectHudAnim = (aId: string) => {
   if (selectedBlock.value) {
     if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
     selectedBlock.value.styles.animation = aId as any;
-    // Remount key so CSS animation replays immediately with visible motion!
-    const bId = selectedBlock.value.id;
-    blockAnimKeys.value[bId] = (blockAnimKeys.value[bId] || 0) + 1;
+    if (aId !== 'none') {
+      triggerOneShotBlockAnim(selectedBlock.value.id, selectedBlock.value.styles.animationDuration || 0.8);
+    } else {
+      playingAnimBlockId.value = null;
+    }
     recordHistory();
     triggerAutoSaveDraft();
   }
   isHudAnimOpen.value = false;
+};
+
+const replaySelectedBlockAnim = () => {
+  if (!selectedBlock.value) return;
+  const aId = selectedBlock.value.styles?.animation;
+  if (!aId || aId === 'none') return;
+  triggerOneShotBlockAnim(selectedBlock.value.id, selectedBlock.value.styles?.animationDuration || 0.8);
 };
 
 const selectHudFont = (family: string) => {
@@ -2215,6 +2253,13 @@ const onKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'h') {
     activeTool.value = 'hand';
   }
+  if (e.key === 'Escape') {
+    if (isPointerDragging.value || draggedBlockType.value) {
+      e.preventDefault();
+      cleanupPointerDragListeners();
+      cancelPointerDragWithAnimation();
+    }
+  }
   if (e.key === 'Delete' || e.key === 'Backspace') {
     if (selectedBlockId.value) {
       deleteBlock(selectedBlockId.value);
@@ -2228,6 +2273,10 @@ const onKeyUp = (e: KeyboardEvent) => {
   }
 };
 
+function handleGlobalDragEnd() {
+  draggedBlockType.value = null;
+  activeDropSlotIndex.value = null;
+}
 
 onMounted(async () => {
   window.addEventListener('keydown', onKeyDown);
@@ -2238,6 +2287,8 @@ onMounted(async () => {
   window.addEventListener('resize', updateChipsScrollState);
   window.addEventListener('resize', updateShelfPosition);
   window.addEventListener('scroll', updateShelfPosition, true);
+  window.addEventListener('dragend', handleGlobalDragEnd);
+  window.addEventListener('drop', handleGlobalDragEnd);
   document.addEventListener('click', handleSiteDropdownOutsideClick);
   document.addEventListener('click', handleAllDropdownOutsideClick);
 
@@ -2288,6 +2339,12 @@ onUnmounted(() => {
   window.removeEventListener('resize', updateChipsScrollState);
   window.removeEventListener('resize', updateShelfPosition);
   window.removeEventListener('scroll', updateShelfPosition, true);
+  window.removeEventListener('dragend', handleGlobalDragEnd);
+  window.removeEventListener('drop', handleGlobalDragEnd);
+  cleanupPointerDragListeners();
+  if (cancelDragTimer) clearTimeout(cancelDragTimer);
+  if (dropSuccessTimer) clearTimeout(dropSuccessTimer);
+  if (animPlayTimer) clearTimeout(animPlayTimer);
   document.removeEventListener('click', handleSiteDropdownOutsideClick);
   document.removeEventListener('click', handleAllDropdownOutsideClick);
 
@@ -2454,6 +2511,7 @@ const onImageClick = (block: VisualBlock, idx?: number, e?: MouseEvent) => {
   if (e) e.stopPropagation();
   selectBlock(block.id);
   setHudContext('image', block, idx);
+  triggerImageUpload(block.id, idx);
 };
 
 const adjustFontSize = (delta: number) => {
@@ -2904,34 +2962,212 @@ const toggleBlockVisibility = (b: VisualBlock) => {
   b.isVisible = !b.isVisible;
 };
 
-// Add New Block from Library
+// Add New Block from Library (Smart Context Insert)
 const addBlockFromLibrary = (type: VisualBlock['type']) => {
+  if (suppressNextCatalogClick) return;
   const newBlock = createLibraryBlock(type);
+  if (selectedBlockId.value) {
+    const selIdx = pageBlocks.value.findIndex((b) => b.id === selectedBlockId.value);
+    if (selIdx !== -1) {
+      pageBlocks.value.splice(selIdx + 1, 0, newBlock);
+    } else {
+      insertNearFooter(newBlock);
+    }
+  } else {
+    insertNearFooter(newBlock);
+  }
+  selectedBlockId.value = newBlock.id;
+  recordHistory();
+  triggerAutoSaveDraft();
+  showToast(`Komponen '${newBlock.name}' berhasil ditambahkan ke kanvas!`, 'success');
+};
+
+const insertNearFooter = (newBlock: VisualBlock) => {
   const footerIdx = pageBlocks.value.findIndex((b) => b.type === 'footer');
   if (footerIdx !== -1) {
     pageBlocks.value.splice(footerIdx, 0, newBlock);
   } else {
     pageBlocks.value.push(newBlock);
   }
-  selectedBlockId.value = newBlock.id;
-  showToast(`Komponen '${newBlock.name}' berhasil ditambahkan ke kanvas!`, 'success');
 };
 
-// Drag & Drop Block from Catalog to Canvas
+// Cached component instances for consistent catalog & drag previews (Single Source Renderer)
+const catalogPreviewCache = new Map<string, VisualBlock>();
+const getCatalogPreviewBlock = (type: VisualBlock['type']): VisualBlock => {
+  if (!catalogPreviewCache.has(type)) {
+    catalogPreviewCache.set(type, createLibraryBlock(type));
+  }
+  return catalogPreviewCache.get(type)!;
+};
+
+// Drag & Drop Block from Catalog to Canvas (Pointer-based zero-delay tracking + Native fallback)
 const draggedBlockType = ref<string | null>(null);
 const activeDropSlotIndex = ref<number | null>(null);
+const isPointerDragging = ref(false);
+const isCancellingDrag = ref(false);
+const justDroppedBlockId = ref<string | null>(null);
+const dragPointerPos = reactive({ x: 0, y: 0 });
+const dragSourceRect = ref<{ left: number; top: number; width: number; height: number } | null>(null);
+let pendingDragType: string | null = null;
+let pendingDragStart = { x: 0, y: 0 };
+let pendingSourceEl: HTMLElement | null = null;
+let suppressNextCatalogClick = false;
+let cancelDragTimer: ReturnType<typeof setTimeout> | null = null;
+let dropSuccessTimer: ReturnType<typeof setTimeout> | null = null;
 
-const onCatalogDragStart = (e: DragEvent, type: string) => {
-  draggedBlockType.value = type;
-  if (e.dataTransfer) {
-    e.dataTransfer.setData('text/plain', type);
-    e.dataTransfer.effectAllowed = 'copy';
+const prefersReducedMotion = (): boolean => {
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+};
+
+const floatingDragPreviewStyle = computed(() => {
+  if (isCancellingDrag.value && dragSourceRect.value) {
+    return {
+      transform: `translate3d(${dragSourceRect.value.left}px, ${dragSourceRect.value.top}px, 0) scale(0.95)`,
+      opacity: 0,
+      transition: prefersReducedMotion()
+        ? 'none'
+        : 'transform 180ms ease-out, opacity 180ms ease-out'
+    };
+  }
+  return {
+    transform: `translate3d(${dragPointerPos.x - 165}px, ${dragPointerPos.y - 24}px, 0) scale(1)`,
+    opacity: 1,
+    transition: 'none'
+  };
+});
+
+function cleanupPointerDragListeners() {
+  window.removeEventListener('pointermove', onCatalogPointerMove);
+  window.removeEventListener('pointerup', onCatalogPointerUp);
+  window.removeEventListener('pointercancel', onCatalogPointerCancel);
+}
+
+function cancelPointerDragWithAnimation() {
+  activeDropSlotIndex.value = null;
+  if (prefersReducedMotion() || !dragSourceRect.value) {
+    draggedBlockType.value = null;
+    isPointerDragging.value = false;
+    isCancellingDrag.value = false;
+    dragSourceRect.value = null;
+    return;
+  }
+  isCancellingDrag.value = true;
+  if (cancelDragTimer) clearTimeout(cancelDragTimer);
+  cancelDragTimer = setTimeout(() => {
+    draggedBlockType.value = null;
+    isPointerDragging.value = false;
+    isCancellingDrag.value = false;
+    dragSourceRect.value = null;
+  }, 190);
+}
+
+const onCatalogPointerMove = (e: PointerEvent) => {
+  if (!pendingDragType) return;
+
+  if (!isPointerDragging.value) {
+    const dist = Math.hypot(e.clientX - pendingDragStart.x, e.clientY - pendingDragStart.y);
+    if (dist < 5) return;
+
+    isPointerDragging.value = true;
+    isCancellingDrag.value = false;
+    draggedBlockType.value = pendingDragType;
+    suppressNextCatalogClick = true;
+
+    if (pendingSourceEl) {
+      const r = pendingSourceEl.getBoundingClientRect();
+      dragSourceRect.value = { left: r.left, top: r.top, width: r.width, height: r.height };
+    }
+  }
+
+  dragPointerPos.x = e.clientX;
+  dragPointerPos.y = e.clientY;
+
+  const surfaceEl = document.querySelector('.website-rendered-surface') as HTMLElement | null;
+  if (surfaceEl) {
+    const sRect = surfaceEl.getBoundingClientRect();
+    const isInsideSurface =
+      e.clientX >= sRect.left - 24 &&
+      e.clientX <= sRect.right + 24 &&
+      e.clientY >= sRect.top - 24 &&
+      e.clientY <= sRect.bottom + 24;
+
+    if (isInsideSurface) {
+      const nextSlot = getClosestDropSlotIndex(e.clientY);
+      if (activeDropSlotIndex.value !== nextSlot) {
+        activeDropSlotIndex.value = nextSlot;
+      }
+    } else if (activeDropSlotIndex.value !== null) {
+      activeDropSlotIndex.value = null;
+    }
   }
 };
 
-const onCatalogDragEnd = () => {
-  draggedBlockType.value = null;
-  activeDropSlotIndex.value = null;
+const onCatalogPointerUp = () => {
+  cleanupPointerDragListeners();
+
+  if (isPointerDragging.value) {
+    if (activeDropSlotIndex.value !== null && draggedBlockType.value) {
+      insertBlockFromLibraryAt(draggedBlockType.value as VisualBlock['type'], activeDropSlotIndex.value);
+      draggedBlockType.value = null;
+      activeDropSlotIndex.value = null;
+      isPointerDragging.value = false;
+      isCancellingDrag.value = false;
+      dragSourceRect.value = null;
+    } else {
+      cancelPointerDragWithAnimation();
+    }
+    setTimeout(() => {
+      suppressNextCatalogClick = false;
+    }, 0);
+  } else {
+    suppressNextCatalogClick = false;
+  }
+
+  pendingDragType = null;
+  pendingSourceEl = null;
+};
+
+const onCatalogPointerCancel = () => {
+  cleanupPointerDragListeners();
+  if (isPointerDragging.value) {
+    cancelPointerDragWithAnimation();
+  }
+  pendingDragType = null;
+  pendingSourceEl = null;
+  suppressNextCatalogClick = false;
+};
+
+const onCatalogPointerDown = (e: PointerEvent, type: string) => {
+  if (e.button !== 0) return;
+  if (cancelDragTimer) {
+    clearTimeout(cancelDragTimer);
+    cancelDragTimer = null;
+  }
+  isCancellingDrag.value = false;
+  pendingDragType = type;
+  pendingDragStart = { x: e.clientX, y: e.clientY };
+  pendingSourceEl = e.currentTarget as HTMLElement;
+  dragPointerPos.x = e.clientX;
+  dragPointerPos.y = e.clientY;
+
+  window.addEventListener('pointermove', onCatalogPointerMove, { passive: true });
+  window.addEventListener('pointerup', onCatalogPointerUp);
+  window.addEventListener('pointercancel', onCatalogPointerCancel);
+};
+
+const getClosestDropSlotIndex = (clientY: number): number => {
+  if (!pageBlocks.value.length) return 0;
+  for (let i = 0; i < pageBlocks.value.length; i++) {
+    const block = pageBlocks.value[i];
+    if (!block.isVisible) continue;
+    const el = document.getElementById(`canvas-block-node-${block.id}`);
+    if (!el) continue;
+    const rect = el.getBoundingClientRect();
+    if (clientY < rect.top + rect.height / 2) {
+      return i;
+    }
+  }
+  return pageBlocks.value.length;
 };
 
 const onCanvasDropSlotDragOver = (e: DragEvent, idx: number) => {
@@ -2939,17 +3175,18 @@ const onCanvasDropSlotDragOver = (e: DragEvent, idx: number) => {
   if (e.dataTransfer) {
     e.dataTransfer.dropEffect = 'copy';
   }
-  activeDropSlotIndex.value = idx;
+  if (activeDropSlotIndex.value !== idx) {
+    activeDropSlotIndex.value = idx;
+  }
 };
 
-const onCanvasDropSlotDragLeave = (idx: number) => {
-  if (activeDropSlotIndex.value === idx) {
-    activeDropSlotIndex.value = null;
-  }
+const onCanvasDropSlotDragLeave = (_idx?: number) => {
+  // Biarkan onSurfaceDragLeave menangani saat kursor benar-benar keluar kanvas
 };
 
 const onCanvasDropSlotDrop = (e: DragEvent, idx: number) => {
   e.preventDefault();
+  e.stopPropagation();
   const type = (e.dataTransfer?.getData('text/plain') || draggedBlockType.value) as VisualBlock['type'];
   if (type) {
     insertBlockFromLibraryAt(type, idx);
@@ -2958,10 +3195,64 @@ const onCanvasDropSlotDrop = (e: DragEvent, idx: number) => {
   activeDropSlotIndex.value = null;
 };
 
+const onBlockDragOver = (e: DragEvent, bIdx: number) => {
+  e.preventDefault();
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'copy';
+  }
+  if (!draggedBlockType.value) return;
+  const currentTarget = e.currentTarget as HTMLElement;
+  const rect = currentTarget.getBoundingClientRect();
+  const relY = e.clientY - rect.top;
+  const targetSlot = relY < rect.height / 2 ? bIdx : bIdx + 1;
+  if (activeDropSlotIndex.value !== targetSlot) {
+    activeDropSlotIndex.value = targetSlot;
+  }
+};
+
+const onBlockDrop = (e: DragEvent, bIdx: number) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const targetIdx = activeDropSlotIndex.value !== null ? activeDropSlotIndex.value : bIdx;
+  onCanvasDropSlotDrop(e, targetIdx);
+};
+
+const onSurfaceDragOver = (e: DragEvent) => {
+  e.preventDefault();
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'copy';
+  }
+  if (!draggedBlockType.value) return;
+  const targetSlot = getClosestDropSlotIndex(e.clientY);
+  if (activeDropSlotIndex.value !== targetSlot) {
+    activeDropSlotIndex.value = targetSlot;
+  }
+};
+
+const onSurfaceDragLeave = (e: DragEvent) => {
+  const currentTarget = e.currentTarget as HTMLElement;
+  if (currentTarget && e.relatedTarget && currentTarget.contains(e.relatedTarget as Node)) {
+    return;
+  }
+  activeDropSlotIndex.value = null;
+};
+
+const onSurfaceDrop = (e: DragEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const targetIdx = activeDropSlotIndex.value !== null ? activeDropSlotIndex.value : pageBlocks.value.length;
+  onCanvasDropSlotDrop(e, targetIdx);
+};
+
 const insertBlockFromLibraryAt = (type: VisualBlock['type'], idx: number) => {
   const newBlock = createLibraryBlock(type);
   pageBlocks.value.splice(idx, 0, newBlock);
   selectedBlockId.value = newBlock.id;
+  justDroppedBlockId.value = newBlock.id;
+  if (dropSuccessTimer) clearTimeout(dropSuccessTimer);
+  dropSuccessTimer = setTimeout(() => {
+    justDroppedBlockId.value = null;
+  }, 220);
   recordHistory();
   triggerAutoSaveDraft();
   showToast(`Komponen '${newBlock.name}' berhasil dipasang ke kanvas!`, 'success');
@@ -3679,6 +3970,33 @@ const executeVsCodeReplaceAll = () => {
     showToast('File ini read-only. Penggantian hanya didukung di blocks.json.', 'info');
   }
 };
+
+const canvasBlockHandlers = {
+  onTextClick,
+  onInlineTextKeyDown,
+  onInlineTextBlur,
+  onInlineItemTextBlur,
+  onInlineFeatureBlur,
+  onButtonClick,
+  onCardItemClick,
+  onImageClick,
+  onNavItemClick,
+  onProgressItemClick,
+  cycleNavbarBrandGlyph,
+  addNavItem,
+  removeNavItem,
+  openIconPickerForBlock,
+  openMediaPickerForBlock,
+  triggerImageUpload,
+  prevSlide,
+  nextSlide,
+  setSlide,
+  selectDropdownOption,
+  toggleAccordionItem,
+  toggleBlockOpen,
+  setPageNumber,
+  setCanvasViewMode
+};
 </script>
 
 <template>
@@ -4365,9 +4683,8 @@ const executeVsCodeReplaceAll = () => {
                   v-for="item in filteredCatalogItems"
                   :key="item.id"
                   class="visual-wireframe-card"
-                  draggable="true"
-                  @dragstart="onCatalogDragStart($event, item.type)"
-                  @dragend="onCatalogDragEnd"
+                  :class="{ 'is-being-dragged': draggedBlockType === item.type }"
+                  @pointerdown="onCatalogPointerDown($event, item.type)"
                   @click="addBlockFromLibrary(item.type)"
                   :title="'Klik atau Drag ' + item.name + ' ke Kanvas'"
                 >
@@ -4379,175 +4696,14 @@ const executeVsCodeReplaceAll = () => {
                     </span>
                   </div>
 
-                  <!-- CANVA-STYLE MINI VISUAL WIREFRAME PREVIEW -->
-                  <div class="block-wireframe-preview" :class="'wf-' + item.previewWireframe">
-                    <!-- 1. Navbar Wireframe -->
-                    <div v-if="item.previewWireframe === 'navbar'" class="mini-wf-navbar">
-                      <div class="mini-brand"><span class="mini-dot"></span><span>STUDIO</span></div>
-                      <div class="mini-links"><span></span><span></span><span></span></div>
-                      <div class="mini-pill-btn"></div>
-                    </div>
-
-                    <!-- 2. Hero Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'hero'" class="mini-wf-hero">
-                      <div class="mini-badge-line"></div>
-                      <div class="mini-title-line"></div>
-                      <div class="mini-desc-line"></div>
-                      <div class="mini-buttons-row">
-                        <div class="mini-btn primary"></div>
-                        <div class="mini-btn secondary"></div>
-                      </div>
-                    </div>
-
-                    <!-- 3. Features Bento Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'features'" class="mini-wf-bento">
-                      <div v-for="i in 3" :key="i" class="mini-bento-tile">
-                        <span class="mini-icon-circle"></span>
-                        <span class="mini-line-sm"></span>
-                        <span class="mini-line-xs"></span>
-                      </div>
-                    </div>
-
-                    <!-- 4. Progress Bar Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'progressbar'" class="mini-wf-progress">
-                      <div class="mini-pg-row">
-                        <div class="mini-pg-label"><span>Lighthouse Core</span><span>95%</span></div>
-                        <div class="mini-pg-track"><div class="mini-pg-fill" style="width: 95%"></div></div>
-                      </div>
-                      <div class="mini-pg-row">
-                        <div class="mini-pg-label"><span>Docker RAM</span><span>72%</span></div>
-                        <div class="mini-pg-track"><div class="mini-pg-fill" style="width: 72%"></div></div>
-                      </div>
-                      <div class="mini-pg-row">
-                        <div class="mini-pg-label"><span>SSL Ingress</span><span>100%</span></div>
-                        <div class="mini-pg-track"><div class="mini-pg-fill" style="width: 100%"></div></div>
-                      </div>
-                    </div>
-
-                    <!-- 5. Accordion Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'accordion'" class="mini-wf-accordion">
-                      <div class="mini-acc-item open">
-                        <div class="mini-acc-head"><span>Isolasi cgroups v2</span><span class="mini-chevron">▼</span></div>
-                        <div class="mini-acc-body"><span class="mini-line-xs"></span><span class="mini-line-xs w-75"></span></div>
-                      </div>
-                      <div class="mini-acc-item">
-                        <div class="mini-acc-head"><span>Otomatisasi SSL TLS</span><span class="mini-chevron">▶</span></div>
-                      </div>
-                      <div class="mini-acc-item">
-                        <div class="mini-acc-head"><span>Koneksi Custom Domain</span><span class="mini-chevron">▶</span></div>
-                      </div>
-                    </div>
-
-                    <!-- 6. Carousel Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'carousel'" class="mini-wf-carousel">
-                      <div class="mini-carousel-arrows">
-                        <span class="mini-arrow">&lt;</span>
-                        <div class="mini-slide-content">
-                          <span class="mini-slide-tag">Rilis 2.4</span>
-                          <span class="mini-line-sm"></span>
-                        </div>
-                        <span class="mini-arrow">&gt;</span>
-                      </div>
-                      <div class="mini-carousel-dots">
-                        <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
-                      </div>
-                    </div>
-
-                    <!-- 7. Form Control Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'formcontrol'" class="mini-wf-form">
-                      <div class="mini-form-row"><span class="mini-input-field">Nama Lengkap...</span></div>
-                      <div class="mini-form-row"><span class="mini-input-field">name@domain.com</span></div>
-                      <div class="mini-form-row split">
-                        <span class="mini-select-field">Pilih Layanan ▼</span>
-                        <span class="mini-submit-btn">Kirim</span>
-                      </div>
-                    </div>
-
-                    <!-- 8. Card Grid Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'card'" class="mini-wf-cards">
-                      <div v-for="i in 3" :key="i" class="mini-card-col">
-                        <div class="mini-card-img"></div>
-                        <span class="mini-line-sm"></span>
-                        <span class="mini-line-xs"></span>
-                      </div>
-                    </div>
-
-                    <!-- 9. Modal Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'modal'" class="mini-wf-modal-backdrop">
-                      <div class="mini-wf-modal-dialog">
-                        <div class="mini-modal-head"><span>Akses Pro</span><span class="mini-close">&times;</span></div>
-                        <span class="mini-line-xs"></span>
-                        <div class="mini-modal-btns">
-                          <span class="mini-btn-xs cancel">Tutup</span>
-                          <span class="mini-btn-xs ok">Klaim</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 10. Dropdown Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'dropdown'" class="mini-wf-dropdown">
-                      <div class="mini-dropdown-trigger">
-                        <span>Filter Kategori</span>
-                        <span class="mini-arrow">▼</span>
-                      </div>
-                      <div class="mini-dropdown-menu">
-                        <span class="mini-dd-item active">✓ Cloud & Docker</span>
-                        <span class="mini-dd-item">Studio UI/UX</span>
-                      </div>
-                    </div>
-
-                    <!-- 11. List Group Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'listgroup'" class="mini-wf-listgroup">
-                      <div class="mini-lg-row active"><span class="mini-chk">✓</span><span>Domain Otomatis</span></div>
-                      <div class="mini-lg-row"><span class="mini-chk">✓</span><span>cgroups v2 Kernel</span></div>
-                      <div class="mini-lg-row"><span class="mini-chk">✓</span><span>BFF Go Latensi 1ms</span></div>
-                    </div>
-
-                    <!-- 12. Pricing Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'pricing'" class="mini-wf-pricing">
-                      <div class="mini-price-col"><span>49k</span><div class="mini-btn-xs">Pilih</div></div>
-                      <div class="mini-price-col popular"><span class="pop-pill">PRO</span><span>149k</span><div class="mini-btn-xs pop">Pilih</div></div>
-                      <div class="mini-price-col"><span>399k</span><div class="mini-btn-xs">Pilih</div></div>
-                    </div>
-
-                    <!-- 13. Stats Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'stats'" class="mini-wf-stats">
-                      <div class="mini-stat-tile"><strong>99.98%</strong><span>Uptime</span></div>
-                      <div class="mini-stat-tile"><strong>1.2ms</strong><span>Latency</span></div>
-                      <div class="mini-stat-tile"><strong>12.8M</strong><span>Requests</span></div>
-                      <div class="mini-stat-tile"><strong>256MB</strong><span>RAM</span></div>
-                    </div>
-
-                    <!-- 14. CTA Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'cta'" class="mini-wf-cta">
-                      <span class="mini-cta-title">Siap Deploy Website?</span>
-                      <span class="mini-cta-btn">Mulai Sekarang</span>
-                    </div>
-
-                    <!-- 15. Pagination Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'pagination'" class="mini-wf-pagination">
-                      <span class="mini-pg-btn">&laquo;</span>
-                      <span class="mini-pg-btn">1</span>
-                      <span class="mini-pg-btn active">2</span>
-                      <span class="mini-pg-btn">3</span>
-                      <span class="mini-pg-btn">&raquo;</span>
-                    </div>
-
-                    <!-- 16. Breadcrumb Wireframe -->
-                    <div v-else-if="item.previewWireframe === 'breadcrumb'" class="mini-wf-breadcrumb">
-                      <span>Home</span><span class="slash">/</span>
-                      <span>Docs</span><span class="slash">/</span>
-                      <span class="active">Editor</span>
-                    </div>
-
-                    <!-- 17. Footer Wireframe -->
-                    <div v-else class="mini-wf-footer">
-                      <div class="mini-ft-cols">
-                        <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
-                        <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
-                        <div class="col"><span class="bar"></span><span class="bar sm"></span></div>
-                      </div>
-                      <div class="mini-ft-copy"><span>© 2026 Stack Studio</span></div>
+                  <!-- LIVE PROPORTIONAL COMPONENT PREVIEW (Single Source Renderer) -->
+                  <div class="catalog-live-preview-box">
+                    <div class="catalog-live-preview-stage">
+                      <CanvasBlockRenderer
+                        :block="getCatalogPreviewBlock(item.type)"
+                        :accent-color="activeContainer.accentColor"
+                        :preview-mode="true"
+                      />
                     </div>
                   </div>
 
@@ -5392,6 +5548,15 @@ const executeVsCodeReplaceAll = () => {
                         <span>{{ currentAnimLabel }}</span>
                         <ChevronDown :size="11" class="hud-chevron" :class="{ 'is-rotated': isHudAnimOpen }" />
                       </button>
+                      <button
+                        v-if="selectedBlock.styles?.animation && selectedBlock.styles.animation !== 'none'"
+                        type="button"
+                        class="shelf-btn"
+                        @click.stop="replaySelectedBlockAnim"
+                        title="Putar Ulang Animasi"
+                      >
+                        <Play :size="10" />
+                      </button>
                       <transition name="hud-pop-scale">
                         <div v-if="isHudAnimOpen" class="hud-popover-menu" @click.stop @mousedown.stop @wheel.stop>
                           <button
@@ -5721,7 +5886,14 @@ const executeVsCodeReplaceAll = () => {
               </div>
 
               <!-- Website Content Stage -->
-              <div class="website-rendered-surface" :style="{ '--accent-brand': activeContainer.accentColor }">
+              <div
+                class="website-rendered-surface"
+                :class="{ 'is-canvas-drag-active': draggedBlockType !== null }"
+                :style="{ '--accent-brand': activeContainer.accentColor }"
+                @dragover="onSurfaceDragOver"
+                @dragleave="onSurfaceDragLeave"
+                @drop="onSurfaceDrop"
+              >
                 <!-- Loop Over Blocks with Drag & Drop Slots -->
                 <template v-for="(block, bIdx) in pageBlocks" :key="block.id">
                   <!-- Canvas Drag and Drop Slot (Before Block) -->
@@ -5736,7 +5908,14 @@ const executeVsCodeReplaceAll = () => {
                     @dragleave="onCanvasDropSlotDragLeave(bIdx)"
                     @drop="onCanvasDropSlotDrop($event, bIdx)"
                   >
-                    <div class="drop-slot-line">
+                    <!-- Live Content Insertion Preview (Canva/Figma Interactive Ghost) -->
+                    <CanvasDropPreview
+                      v-if="activeDropSlotIndex === bIdx && draggedBlockType"
+                      :block-type="draggedBlockType"
+                      :accent-color="activeContainer.accentColor"
+                    />
+
+                    <div v-else class="drop-slot-line">
                       <span class="drop-slot-badge">
                         <Plus :size="12" /> Pasang di sini
                       </span>
@@ -5752,7 +5931,10 @@ const executeVsCodeReplaceAll = () => {
                       'is-selected': selectedBlockId === block.id && editorViewMode === 'design',
                       'is-hovered': hoveredBlockId === block.id && editorViewMode === 'design',
                       'is-locked': block.isLocked,
-                      [block.styles?.animation && block.styles.animation !== 'none' ? 'anim-' + block.styles.animation : '']: true
+                      'is-drag-target-top': draggedBlockType !== null && activeDropSlotIndex === bIdx,
+                      'is-drag-target-bottom': draggedBlockType !== null && activeDropSlotIndex === bIdx + 1,
+                      'is-just-dropped': justDroppedBlockId === block.id,
+                      [playingAnimBlockId === block.id && block.styles?.animation && block.styles.animation !== 'none' ? 'anim-' + block.styles.animation : '']: true
                     }"
                     :style="{
                       zIndex: selectedBlockId === block.id && editorViewMode === 'design' ? 99999 : 1,
@@ -5769,6 +5951,8 @@ const executeVsCodeReplaceAll = () => {
                     @click="selectBlock(block.id, $event)"
                     @mouseenter="hoveredBlockId = block.id"
                     @mouseleave="hoveredBlockId = null"
+                    @dragover="onBlockDragOver($event, bIdx)"
+                    @drop.stop="onBlockDrop($event, bIdx)"
                   >
                     <!-- SELECTION BOUNDING BOX (Canva/Figma Crisp Canvas Outlines) -->
                     <div v-if="selectedBlockId === block.id && editorViewMode === 'design'" class="selection-overlay-box">
@@ -5779,1252 +5963,24 @@ const executeVsCodeReplaceAll = () => {
                       <span class="corner-anchor br"></span>
                     </div>
 
-                    <!-- BLOCK TYPE 1: NAVBAR -->
-                    <nav
-                      v-if="block.type === 'navbar'"
-                      class="rendered-nav-block"
-                      :class="[
-                        `nav-style-${block.styles?.navStyle || block.styles?.bgMode || 'glass'}`,
-                        `nav-align-${block.styles?.navAlign || 'split'}`
-                      ]"
-                      :style="{
-                        padding: `${block.styles?.paddingY || 16}px 32px`,
-                        position: block.styles?.isSticky ? 'sticky' : 'relative',
-                        top: block.styles?.isSticky ? '0' : undefined,
-                        zIndex: block.styles?.isSticky ? 40 : undefined,
-                        backgroundColor: block.styles?.navStyle === 'solid' ? (block.styles?.bgColor || '#ffffff') :
-                                         block.styles?.navStyle === 'transparent' ? 'transparent' :
-                                         block.styles?.navStyle === 'bordered' ? (block.styles?.bgColor || '#ffffff') : undefined,
-                        borderBottom: block.styles?.navStyle === 'bordered' ? `2px solid ${block.styles?.accentColor || '#cbd5e1'}` : undefined
-                      }"
-                    >
-                      <div class="site-brand-logo" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">
-                        <span
-                          class="brand-cube-icon"
-                          @click="cycleNavbarBrandGlyph(block)"
-                          title="Klik untuk ganti lambang brand"
-                        >
-                          {{ block.styles?.brandGlyph || '◆' }}
-                        </span>
-                        <span
-                          class="brand-title inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                          title="Klik untuk mengedit brand"
-                        >{{ block.title }}</span>
-                      </div>
+                    <!-- SECTION BACKGROUND PATTERN LAYER -->
+                    <div
+                      v-if="block.styles?.bgPattern && block.styles.bgPattern !== 'none'"
+                      class="section-bg-pattern-layer"
+                      :class="'pattern-' + block.styles.bgPattern"
+                      aria-hidden="true"
+                    ></div>
 
-                      <div class="nav-links-cluster" :class="{ 'is-centered': block.styles?.navAlign === 'center' }">
-                        <!-- Integrasi Alur Figma Indicator Badge -->
-                        <div
-                          v-if="multiPages.length > 1"
-                          class="nav-sitemap-sync-indicator"
-                          @click.stop="setCanvasViewMode('sitemap')"
-                          title="Menu navigasi terintegrasi langsung dengan Alur Figma (Klik untuk lihat Alur Figma)"
-                        >
-                          <Workflow :size="10" />
-                          <span>Alur Figma ({{ multiPages.length }})</span>
-                        </div>
-                        <div
-                          v-for="(item, idx) in getRenderedNavItems(block)"
-                          :key="item.id || idx"
-                          class="nav-link-item-wrapper"
-                          @click="onNavItemClick(block, idx, $event)"
-                        >
-                          <a
-                            :href="item.url || '#'"
-                            class="nav-anchor"
-                            :class="{ active: (activePage && activePage.path === item.url) || item.active }"
-                            :style="{ color: ((activePage && activePage.path === item.url) || item.active) ? (block.styles?.accentColor || activeContainer.accentColor) : undefined }"
-                            @click.prevent
-                          >
-                            <span
-                              class="inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
-                              title="Klik untuk edit menu navigasi"
-                            >{{ item.title }}</span>
-                          </a>
-                          <button
-                            v-if="selectedBlockId === block.id && getRenderedNavItems(block).length > 1"
-                            type="button"
-                            class="btn-nav-link-delete"
-                            @click.stop="removeNavItem(block, idx)"
-                            title="Hapus rute halaman ini dari Alur Figma & navigasi"
-                          >
-                            ×
-                          </button>
-                        </div>
-
-                        <!-- Quick Add Link Button on Canvas when Navbar selected -->
-                        <button
-                          v-if="selectedBlockId === block.id"
-                          type="button"
-                          class="btn-nav-quick-add"
-                          @click.stop="addNavItem(block)"
-                          title="Tambah Link Navigasi Baru"
-                        >
-                          <Plus :size="11" />
-                        </button>
-
-                        <button
-                          class="btn-nav-action"
-                          :style="{
-                            backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
-                            color: block.styles?.buttonTextColor || '#ffffff',
-                            borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
-                            border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
-                            boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 16px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
-                          }"
-                          @click="onButtonClick(block, 'primary', $event)"
-                        >
-                          <span
-                            class="inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'buttonText', $event)"
-                            title="Klik untuk mengedit tombol"
-                          >{{ block.buttonText || 'Hubungi Saya' }}</span>
-                        </button>
-                      </div>
-                    </nav>
-
-                    <!-- BLOCK TYPE 2: HERO SECTION -->
-                    <header
-                      v-else-if="block.type === 'hero'"
-                      class="rendered-hero-block"
-                      :style="{
-                        padding: `${block.styles?.paddingY || 72}px 32px`,
-                        textAlign: block.styles?.align || 'center'
-                      }"
-                    >
-                      <!-- Glowing Ambient Blur Mesh -->
-                      <div
-                        class="ambient-mesh-glow"
-                        :style="{
-                          background: `radial-gradient(circle, ${(block.styles?.accentColor || activeContainer.accentColor)}33 0%, transparent 70%)`
-                        }"
-                      ></div>
-
-                      <div
-                        v-if="block.badge"
-                        class="hero-badge-tag"
-                        :style="{
-                          color: block.styles?.accentColor || activeContainer.accentColor,
-                          borderColor: (block.styles?.accentColor || activeContainer.accentColor) + '40',
-                          backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
-                        }"
-                        @click="onTextClick(block, 'badge', $event)"
-                      >
-                        <span
-                          class="inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'badge', $event)"
-                        >{{ block.badge }}</span>
-                      </div>
-
-                      <h1
-                        class="hero-main-heading inline-editable-text"
-                        :contenteditable="selectedBlockId === block.id"
-                        @click="onTextClick(block, 'title', $event)"
-                        @keydown="onInlineTextKeyDown"
-                        @blur="onInlineTextBlur(block, 'title', $event)"
-                        title="Klik untuk mengedit judul hero"
-                      >
-                        {{ block.title }}
-                      </h1>
-
-                      <p
-                        class="hero-bio-lead inline-editable-text"
-                        :contenteditable="selectedBlockId === block.id"
-                        @click="onTextClick(block, 'subtitle', $event)"
-                        @keydown="onInlineTextKeyDown"
-                        @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        title="Klik untuk mengedit deskripsi hero"
-                      >
-                        {{ block.subtitle }}
-                      </p>
-
-                      <div class="hero-cta-cluster">
-                        <button
-                          class="btn-primary-glow"
-                          :style="{
-                            backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
-                            color: block.styles?.buttonTextColor || '#ffffff',
-                            borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
-                            border: block.styles?.buttonStyle === 'outline' ? `2px solid ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}` : undefined,
-                            boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
-                          }"
-                          @click="onButtonClick(block, 'primary', $event)"
-                        >
-                          <span
-                            class="inline-editable-text"
-                            :style="{ color: block.styles?.buttonTextColor || '#ffffff' }"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'buttonText', $event)"
-                            title="Klik untuk mengedit tombol"
-                          >{{ block.buttonText || 'Eksplorasi Karya' }}</span>
-                          <ArrowRight :size="14" />
-                        </button>
-                        <button
-                          v-if="block.secondaryButtonText"
-                          class="btn-secondary-clean"
-                          :style="{
-                            backgroundColor: block.styles?.secondaryButtonColor || 'transparent',
-                            color: block.styles?.secondaryButtonTextColor || '#0f172a',
-                            borderRadius: (block.styles?.secondaryButtonRadius !== undefined ? block.styles.secondaryButtonRadius + 'px' : '8px'),
-                            border: block.styles?.secondaryButtonStyle === 'outline' ? '2px solid #cbd5e1' : undefined,
-                            boxShadow: block.styles?.secondaryButtonStyle === 'glow' ? '0 0 16px rgba(100, 116, 139, 0.4)' : undefined
-                          }"
-                          @click="onButtonClick(block, 'secondary', $event)"
-                        >
-                          <span
-                            class="inline-editable-text"
-                            :style="{ color: block.styles?.secondaryButtonTextColor || '#0f172a' }"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'secondaryButtonText', $event)"
-                          >{{ block.secondaryButtonText }}</span>
-                        </button>
-                      </div>
-                    </header>
-
-                    <!-- BLOCK TYPE 3: FEATURES GRID -->
-                    <section
-                      v-else-if="block.type === 'features' || block.type === 'showcase'"
-                      class="rendered-features-block"
-                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
-                    >
-                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span
-                          v-if="block.badge"
-                          class="badge-mini-caps inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'badge', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'badge', $event)"
-                        >{{ block.badge }}</span>
-                        <h2
-                          class="sec-headline inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                        >{{ block.title }}</h2>
-                        <p
-                          v-if="block.subtitle"
-                          class="sec-lead inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        >{{ block.subtitle }}</p>
-                      </div>
-
-                      <div
-                        class="features-cards-trio"
-                        :style="{
-                          gridTemplateColumns: block.styles?.cardColumns ? `repeat(${block.styles.cardColumns}, minmax(0, 1fr))` : undefined
-                        }"
-                      >
-                        <div
-                          v-for="(item, idx) in block.items"
-                          :key="item.id"
-                          class="feature-bento-card"
-                          :style="{
-                            borderRadius: (block.styles?.cardRadius !== undefined ? block.styles.cardRadius + 'px' : undefined)
-                          }"
-                          @click="onCardItemClick(block, idx, $event)"
-                        >
-                          <div
-                            class="card-icon-pill is-clickable-icon"
-                            :style="{
-                              color: block.styles?.accentColor || activeContainer.accentColor,
-                              backgroundColor: (block.styles?.accentColor || activeContainer.accentColor) + '12'
-                            }"
-                            @click="openIconPickerForBlock(block.id, idx)"
-                            title="Klik untuk langsung ganti icon item"
-                          >
-                            <component :is="getIconComponent(item.icon)" :size="20" />
-                            <span class="icon-edit-pencil-badge" title="Ganti Ikon">
-                              <Edit3 :size="8" />
-                            </span>
-                          </div>
-                          <h3
-                            class="card-item-title inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
-                          >{{ item.title }}</h3>
-                          <p
-                            class="card-item-desc inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
-                          >{{ item.desc }}</p>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE 4: PRICING -->
-                    <section
-                      v-else-if="block.type === 'pricing'"
-                      class="rendered-pricing-block"
-                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
-                    >
-                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span
-                          v-if="block.badge"
-                          class="badge-mini-caps inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'badge', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'badge', $event)"
-                        >{{ block.badge }}</span>
-                        <h2
-                          class="sec-headline inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                        >{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p
-                          v-else-if="block.subtitle"
-                          class="sec-lead inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        >{{ block.subtitle }}</p>
-                      </div>
-
-                      <div class="pricing-cards-row">
-                        <div
-                          v-for="(item, idx) in block.items"
-                          :key="item.id"
-                          class="price-tier-card"
-                          :class="{ featured: item.tag === 'Terpopuler' }"
-                          @click="onCardItemClick(block, idx, $event)"
-                        >
-                          <span
-                            v-if="item.tag"
-                            class="tier-tag-pill inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            :style="{ backgroundColor: block.styles?.accentColor || activeContainer.accentColor }"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, idx, 'tag', $event)"
-                          >
-                            {{ item.tag }}
-                          </span>
-                          <h4
-                            class="tier-name inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
-                          >{{ item.title }}</h4>
-                          <div class="tier-price-val">
-                            <span
-                              class="price-num inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'price', $event)"
-                            >{{ item.price }}</span>
-                            <span
-                              class="price-cycle inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'period', $event)"
-                            >{{ item.period }}</span>
-                          </div>
-                          <p
-                            class="tier-desc inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
-                          >{{ item.desc }}</p>
-                          <ul v-if="item.features" class="tier-feature-list">
-                            <li v-for="(f, fi) in item.features" :key="fi">
-                              <Check :size="13" :color="block.styles?.accentColor || activeContainer.accentColor" />
-                              <span
-                                class="inline-editable-text"
-                                :contenteditable="selectedBlockId === block.id"
-                                @keydown="onInlineTextKeyDown"
-                                @blur="onInlineFeatureBlur(block, idx, fi, $event)"
-                              >{{ f }}</span>
-                            </li>
-                          </ul>
-                          <button
-                            class="btn-tier-action"
-                            :style="{
-                              backgroundColor: item.buttonColor || (item.tag === 'Terpopuler' ? (block.styles?.accentColor || activeContainer.accentColor) : '#f1f5f9'),
-                              color: item.buttonColor ? '#ffffff' : (item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a'),
-                              borderRadius: (item.buttonRadius !== undefined ? item.buttonRadius + 'px' : (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px')),
-                              border: item.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
-                              boxShadow: item.buttonStyle === 'glow' ? `0 0 16px ${(item.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
-                            }"
-                            @click="onButtonClick(block, idx, $event)"
-                          >
-                            <span
-                              class="inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineTextBlur(block, 'buttonText', $event)"
-                            >{{ block.buttonText || 'Pilih Paket' }}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE 5: CALL TO ACTION -->
-                    <section
-                      v-else-if="block.type === 'cta'"
-                      class="rendered-cta-block"
-                      :style="{ padding: `${block.styles?.paddingY || 50}px 32px` }"
-                    >
-                      <div
-                        class="cta-inner-banner"
-                        :style="{
-                          borderColor: (block.styles?.accentColor || activeContainer.accentColor) + '30',
-                          background: `linear-gradient(135deg, ${(block.styles?.accentColor || activeContainer.accentColor)}15 0%, #ffffff80 100%)`
-                        }"
-                      >
-                        <h2
-                          class="cta-heading inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                        >{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="cta-lead"></div>
-                        <p
-                          v-else
-                          class="cta-lead inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        >{{ block.subtitle }}</p>
-                        <button
-                          class="btn-cta-big"
-                          :style="{
-                            backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
-                            borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
-                            border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
-                            boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
-                          }"
-                          @click="onButtonClick(block, 'primary', $event)"
-                        >
-                          <span
-                            class="inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'buttonText', $event)"
-                          >{{ block.buttonText || 'Mulai Sekarang' }}</span>
-                        </button>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: PROGRESS BAR -->
-                    <section
-                      v-else-if="block.type === 'progressbar'"
-                      class="rendered-progressbar-block"
-                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
-                    >
-                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
-                        <span
-                          v-if="block.badge"
-                          class="badge-mini-caps inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'badge', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'badge', $event)"
-                        >{{ block.badge }}</span>
-                        <h2
-                          class="sec-headline inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                        >{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p
-                          v-else-if="block.subtitle"
-                          class="sec-lead inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        >{{ block.subtitle }}</p>
-                      </div>
-
-                      <div class="progress-meters-grid">
-                        <div
-                          v-for="(item, idx) in block.items"
-                          :key="item.id"
-                          class="progress-meter-card"
-                          @click="onProgressItemClick(block, idx, $event)"
-                        >
-                          <div class="pm-head">
-                            <span
-                              class="pm-title inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
-                            >{{ item.title }}</span>
-                            <span
-                              class="pm-val inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              :style="{ color: block.styles?.accentColor || activeContainer.accentColor }"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'percentage', $event)"
-                              title="Klik untuk ubah persen"
-                            >{{ item.percentage || 0 }}%</span>
-                          </div>
-                          <div class="pm-track" @click="onProgressItemClick(block, idx, $event)">
-                            <div
-                              class="pm-fill"
-                              :style="{
-                                width: (item.percentage || 0) + '%',
-                                background: `linear-gradient(90deg, ${block.styles?.accentColor || activeContainer.accentColor}, #38bdf8)`
-                              }"
-                            ></div>
-                          </div>
-                          <p
-                            v-if="item.desc"
-                            class="pm-desc inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
-                          >{{ item.desc }}</p>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: ACCORDION / COLLAPSE -->
-                    <section
-                      v-else-if="block.type === 'accordion'"
-                      class="rendered-accordion-block"
-                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
-                    >
-                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span
-                          v-if="block.badge"
-                          class="badge-mini-caps inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'badge', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'badge', $event)"
-                        >{{ block.badge }}</span>
-                        <h2
-                          class="sec-headline inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                        >{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p
-                          v-else-if="block.subtitle"
-                          class="sec-lead inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        >{{ block.subtitle }}</p>
-                      </div>
-
-                      <div class="accordion-items-stack">
-                        <div
-                          v-for="(item, idx) in block.items"
-                          :key="item.id"
-                          class="accordion-card-item"
-                          :class="{ 'is-expanded': (block.activeItemIndex ?? 0) === idx }"
-                          @click="onCardItemClick(block, idx, $event)"
-                        >
-                          <button class="acc-card-trigger" @click.stop="toggleAccordionItem(block, idx)">
-                            <span
-                              class="acc-card-title inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
-                            >{{ item.title }}</span>
-                            <ChevronDown :size="16" class="acc-card-icon" />
-                          </button>
-                          <div
-                            v-if="(block.activeItemIndex ?? 0) === idx"
-                            class="acc-card-content inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
-                          >
-                            {{ item.desc }}
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: CAROUSEL / SLIDER -->
-                    <section
-                      v-else-if="block.type === 'carousel'"
-                      class="rendered-carousel-block"
-                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
-                    >
-                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span
-                          v-if="block.badge"
-                          class="badge-mini-caps inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'badge', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'badge', $event)"
-                        >{{ block.badge }}</span>
-                        <h2
-                          class="sec-headline inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                        >{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p
-                          v-else-if="block.subtitle"
-                          class="sec-lead inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        >{{ block.subtitle }}</p>
-                      </div>
-
-                      <div class="carousel-stage-container">
-                        <div v-if="block.items && block.items.length > 0" class="carousel-slide-card">
-                          <div
-                            v-if="block.items[block.activeItemIndex || 0]?.image"
-                            class="carousel-slide-img-wrap"
-                            @click="onImageClick(block, block.activeItemIndex || 0, $event)"
-                            title="Klik ganti foto slide langsung"
-                            style="cursor: pointer;"
-                          >
-                            <img
-                              :src="block.items[block.activeItemIndex || 0].image"
-                              :alt="block.items[block.activeItemIndex || 0].title || 'Slide Image'"
-                              class="carousel-slide-img"
-                            />
-                            <!-- Hover Overlay: Ganti Foto Langsung -->
-                            <div class="carousel-img-hover-overlay">
-                              <span class="btn-change-photo-badge">
-                                <UploadCloud :size="13" />
-                                <span>Ganti Foto</span>
-                              </span>
-                            </div>
-                          </div>
-                          <span
-                            v-if="block.items[block.activeItemIndex || 0]?.tag"
-                            class="carousel-tag-badge inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'tag', $event)"
-                          >
-                            {{ block.items[block.activeItemIndex || 0]?.tag }}
-                          </span>
-                          <h3
-                            class="carousel-headline inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'title', $event)"
-                          >{{ block.items[block.activeItemIndex || 0]?.title }}</h3>
-                          <p
-                            class="carousel-lead-desc inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'desc', $event)"
-                          >{{ block.items[block.activeItemIndex || 0]?.desc }}</p>
-                          <span
-                            v-if="block.items[block.activeItemIndex || 0]?.author"
-                            class="carousel-author-credit inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, block.activeItemIndex || 0, 'role', $event)"
-                          >
-                            — {{ block.items[block.activeItemIndex || 0]?.author }}
-                          </span>
-                        </div>
-
-                        <!-- Carousel Nav Arrows -->
-                        <div class="carousel-nav-arrows">
-                          <button class="carousel-arrow-btn" @click.stop="prevSlide(block)" title="Slide Sebelumnya">
-                            <ArrowLeft :size="16" />
-                          </button>
-                          <button class="carousel-arrow-btn" @click.stop="nextSlide(block)" title="Slide Berikutnya">
-                            <ArrowRight :size="16" />
-                          </button>
-                        </div>
-
-                        <!-- Dots -->
-                        <div class="carousel-dots-indicator">
-                          <button
-                            v-for="(item, sIdx) in block.items"
-                            :key="item.id"
-                            class="carousel-dot"
-                            :class="{ active: (block.activeItemIndex || 0) === sIdx }"
-                            @click.stop="setSlide(block, sIdx)"
-                          ></button>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: FORM CONTROL -->
-                    <section
-                      v-else-if="block.type === 'formcontrol'"
-                      class="rendered-formcontrol-block"
-                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
-                    >
-                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span
-                          v-if="block.badge"
-                          class="badge-mini-caps inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'badge', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'badge', $event)"
-                        >{{ block.badge }}</span>
-                        <h2
-                          class="sec-headline inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                        >{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p
-                          v-else-if="block.subtitle"
-                          class="sec-lead inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        >{{ block.subtitle }}</p>
-                      </div>
-
-                      <div class="form-card-container">
-                        <form class="form-fields-stack" @submit.prevent>
-                          <div v-for="(item, idx) in block.items" :key="item.id" class="form-field-group">
-                            <label
-                              class="form-field-label inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
-                            >{{ item.title }}</label>
-                            <select v-if="item.tag === 'select'" class="form-rendered-select">
-                              <option>Pilihan 1: Solusi Cloud & Docker</option>
-                              <option>Pilihan 2: Visual Studio CMS</option>
-                              <option>Pilihan 3: Domain & Edge SSL</option>
-                            </select>
-                            <textarea
-                              v-else-if="item.tag === 'textarea'"
-                              rows="3"
-                              class="form-rendered-textarea"
-                              :placeholder="item.label || item.desc"
-                            ></textarea>
-                            <input
-                              v-else
-                              :type="item.tag || 'text'"
-                              class="form-rendered-input"
-                              :placeholder="item.label || item.desc"
-                            />
-                          </div>
-                          <button
-                            class="btn-form-submit"
-                            :style="{
-                              backgroundColor: block.styles?.accentColor || activeContainer.accentColor,
-                              borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px')
-                            }"
-                            @click="onButtonClick(block, 'primary', $event)"
-                          >
-                            <span
-                              class="inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineTextBlur(block, 'buttonText', $event)"
-                            >{{ block.buttonText || 'Kirim Pesan Sekarang' }}</span>
-                          </button>
-                        </form>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: MODAL -->
-                    <section
-                      v-else-if="block.type === 'modal'"
-                      class="rendered-modal-block"
-                      :style="{ padding: `${block.styles?.paddingY || 48}px 32px` }"
-                    >
-                      <div class="modal-preview-stage">
-                        <div class="modal-stage-header">
-                          <span
-                            class="modal-stage-badge inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @click="onTextClick(block, 'badge', $event)"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'badge', $event)"
-                          >{{ block.badge || 'POPUP PROMOSI' }}</span>
-                          <button class="modal-stage-close" @click.stop="toggleBlockOpen(block)">
-                            <X :size="14" />
-                          </button>
-                        </div>
-                        <div class="modal-stage-body">
-                          <h3
-                            class="modal-stage-title inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @click="onTextClick(block, 'title', $event)"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'title', $event)"
-                          >{{ block.title }}</h3>
-                          <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="modal-stage-desc"></div>
-                          <p
-                            v-else
-                            class="modal-stage-desc inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @click="onTextClick(block, 'subtitle', $event)"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                          >{{ block.subtitle }}</p>
-                          <div class="modal-stage-actions">
-                            <button
-                              class="btn-modal-secondary"
-                              :style="{
-                                backgroundColor: block.styles?.secondaryButtonColor || 'transparent',
-                                borderRadius: (block.styles?.secondaryButtonRadius !== undefined ? block.styles.secondaryButtonRadius + 'px' : '8px'),
-                                border: block.styles?.secondaryButtonStyle === 'outline' ? '2px solid #cbd5e1' : undefined,
-                                boxShadow: block.styles?.secondaryButtonStyle === 'glow' ? '0 0 16px rgba(100, 116, 139, 0.4)' : undefined
-                              }"
-                              @click="onButtonClick(block, 'secondary', $event)"
-                            >
-                              <span
-                                class="inline-editable-text"
-                                :contenteditable="selectedBlockId === block.id"
-                                @keydown="onInlineTextKeyDown"
-                                @blur="onInlineTextBlur(block, 'secondaryButtonText', $event)"
-                              >{{ block.secondaryButtonText || 'Nanti Saja' }}</span>
-                            </button>
-                            <button
-                              class="btn-modal-primary"
-                              :style="{
-                                backgroundColor: block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor,
-                                borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
-                                border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
-                                boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || block.styles?.accentColor || activeContainer.accentColor)}66` : undefined
-                              }"
-                              @click="onButtonClick(block, 'primary', $event)"
-                            >
-                              <span
-                                class="inline-editable-text"
-                                :contenteditable="selectedBlockId === block.id"
-                                @keydown="onInlineTextKeyDown"
-                                @blur="onInlineTextBlur(block, 'buttonText', $event)"
-                              >{{ block.buttonText || 'Klaim Sekarang' }}</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: DROPDOWN -->
-                    <section
-                      v-else-if="block.type === 'dropdown'"
-                      class="rendered-dropdown-block"
-                      :style="{ padding: `${block.styles?.paddingY || 36}px 32px` }"
-                    >
-                      <div class="dropdown-component-card">
-                        <div class="section-title-wrap" style="margin-bottom: 12px; text-align: left;">
-                          <span
-                            v-if="block.badge"
-                            class="badge-mini-caps inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @click="onTextClick(block, 'badge', $event)"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'badge', $event)"
-                          >{{ block.badge }}</span>
-                          <h3
-                            class="sec-headline inline-editable-text"
-                            style="font-size: 1.1rem;"
-                            :contenteditable="selectedBlockId === block.id"
-                            @click="onTextClick(block, 'title', $event)"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'title', $event)"
-                          >{{ block.title }}</h3>
-                          <div v-if="block.styles?.richContent" v-html="block.styles.richContent" style="font-size: 0.85rem; color: #64748b; margin-top: 4px;"></div>
-                          <p
-                            v-else-if="block.subtitle"
-                            class="inline-editable-text"
-                            style="font-size: 0.85rem; color: #64748b; margin-top: 4px;"
-                            :contenteditable="selectedBlockId === block.id"
-                            @click="onTextClick(block, 'subtitle', $event)"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                          >{{ block.subtitle }}</p>
-                        </div>
-                        <button class="dropdown-trigger-btn" @click.stop="toggleBlockOpen(block)">
-                          <span>{{ block.items?.[block.activeItemIndex || 0]?.title || 'Pilih Kategori...' }}</span>
-                          <ChevronDown :size="16" />
-                        </button>
-                        <div v-if="block.isOpen" class="dropdown-options-list">
-                          <div
-                            v-for="(item, dIdx) in block.items"
-                            :key="item.id"
-                            class="dropdown-option-row"
-                            :class="{ 'is-selected': (block.activeItemIndex || 0) === dIdx }"
-                            @click.stop="selectDropdownOption(block, dIdx)"
-                          >
-                            <span
-                              class="inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, dIdx, 'title', $event)"
-                            >{{ item.title }}</span>
-                            <span
-                              v-if="item.desc"
-                              class="inline-editable-text"
-                              style="font-size: 0.72rem; color: #94a3b8;"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, dIdx, 'desc', $event)"
-                            >{{ item.desc }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: CARDS GRID -->
-                    <section
-                      v-else-if="block.type === 'card'"
-                      class="rendered-card-block"
-                      :style="{ padding: `${block.styles?.paddingY || 60}px 32px` }"
-                    >
-                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span
-                          v-if="block.badge"
-                          class="badge-mini-caps inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'badge', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'badge', $event)"
-                        >{{ block.badge }}</span>
-                        <h2
-                          class="sec-headline inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                        >{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p
-                          v-else-if="block.subtitle"
-                          class="sec-lead inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        >{{ block.subtitle }}</p>
-                      </div>
-
-                      <div
-                        class="cards-showcase-grid"
-                        :style="{
-                          gridTemplateColumns: block.styles?.cardColumns ? `repeat(${block.styles?.cardColumns}, minmax(0, 1fr))` : undefined
-                        }"
-                      >
-                        <div
-                          v-for="(item, idx) in block.items"
-                          :key="item.id"
-                          class="showcase-grid-card"
-                          :style="{
-                            borderRadius: (block.styles?.cardRadius !== undefined ? block.styles.cardRadius + 'px' : undefined)
-                          }"
-                          @click="onCardItemClick(block, idx, $event)"
-                        >
-                          <div class="card-header-banner">
-                            <!-- Cover Image if present -->
-                            <img
-                              v-if="item.image"
-                              :src="item.image"
-                              :alt="item.title || 'Card Cover'"
-                              class="card-cover-image"
-                            />
-                            <!-- Hover Overlay: Ganti Foto Langsung -->
-                            <div class="card-cover-hover-overlay">
-                              <span class="btn-card-change-photo" @click.stop="openMediaPickerForBlock(block.id, idx)" title="Pilih dari Pustaka MinIO S3">
-                                <Database :size="12" />
-                                <span>Pustaka</span>
-                              </span>
-                              <span class="btn-card-change-photo secondary" @click.stop="triggerImageUpload(block.id, idx)" title="Upload dari Komputer">
-                                <UploadCloud :size="12" />
-                                <span>Upload</span>
-                              </span>
-                            </div>
-                            <span
-                              v-if="item.tag"
-                              class="card-tag-pill inline-editable-text"
-                              style="position: relative; z-index: 2;"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'tag', $event)"
-                            >{{ item.tag }}</span>
-                          </div>
-                          <div class="card-body-content">
-                            <h3
-                              class="card-grid-title inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
-                            >{{ item.title }}</h3>
-                            <p
-                              class="card-grid-desc inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
-                            >{{ item.desc }}</p>
-                            <span
-                              v-if="item.role"
-                              class="card-role-label inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'role', $event)"
-                            >Peran: {{ item.role }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: LIST GROUP -->
-                    <section
-                      v-else-if="block.type === 'listgroup'"
-                      class="rendered-listgroup-block"
-                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
-                    >
-                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'left' }">
-                        <span
-                          v-if="block.badge"
-                          class="badge-mini-caps inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'badge', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'badge', $event)"
-                        >{{ block.badge }}</span>
-                        <h2
-                          class="sec-headline inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                        >{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p
-                          v-else-if="block.subtitle"
-                          class="sec-lead inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        >{{ block.subtitle }}</p>
-                      </div>
-
-                      <div class="listgroup-stack-card">
-                        <div
-                          v-for="(item, idx) in block.items"
-                          :key="item.id"
-                          class="listgroup-item-row"
-                          @click="onCardItemClick(block, idx, $event)"
-                        >
-                          <span class="lg-check-icon"><Check :size="14" /></span>
-                          <div class="lg-text-meta">
-                            <span
-                              class="lg-item-title inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
-                            >{{ item.title }}</span>
-                            <span
-                              v-if="item.desc"
-                              class="lg-item-desc inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
-                            >{{ item.desc }}</span>
-                          </div>
-                          <span
-                            v-if="item.tag"
-                            class="lg-badge-tag inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, idx, 'tag', $event)"
-                          >{{ item.tag }}</span>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: STATS -->
-                    <section
-                      v-else-if="block.type === 'stats'"
-                      class="rendered-stats-block"
-                      :style="{ padding: `${block.styles?.paddingY || 56}px 32px` }"
-                    >
-                      <div class="section-title-wrap" :style="{ textAlign: block.styles?.align || 'center' }">
-                        <span
-                          v-if="block.badge"
-                          class="badge-mini-caps inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'badge', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'badge', $event)"
-                        >{{ block.badge }}</span>
-                        <h2
-                          class="sec-headline inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'title', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'title', $event)"
-                        >{{ block.title }}</h2>
-                        <div v-if="block.styles?.richContent" v-html="block.styles.richContent" class="sec-lead"></div>
-                        <p
-                          v-else-if="block.subtitle"
-                          class="sec-lead inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                        >{{ block.subtitle }}</p>
-                      </div>
-
-                      <div class="stats-counters-row">
-                        <div
-                          v-for="(item, idx) in block.items"
-                          :key="item.id"
-                          class="stat-counter-box"
-                          @click="onCardItemClick(block, idx, $event)"
-                        >
-                          <span
-                            class="stat-number-val inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @click="onTextClick(block, 'title', $event)"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, idx, 'title', $event)"
-                          >{{ item.title }}</span>
-                          <span
-                            class="stat-number-desc inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @click="onTextClick(block, 'subtitle', $event)"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, idx, 'desc', $event)"
-                          >{{ item.desc }}</span>
-                        </div>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: PAGINATION -->
-                    <section
-                      v-else-if="block.type === 'pagination'"
-                      class="rendered-pagination-block"
-                      :style="{ padding: `${block.styles?.paddingY || 32}px 32px` }"
-                    >
-                      <div
-                        v-if="block.subtitle"
-                        class="inline-editable-text"
-                        style="text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 8px;"
-                        :contenteditable="selectedBlockId === block.id"
-                        @click="onTextClick(block, 'subtitle', $event)"
-                        @keydown="onInlineTextKeyDown"
-                        @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                      >
-                        {{ block.subtitle }}
-                      </div>
-                      <div class="pagination-controls-row">
-                        <button class="pagination-btn" title="Sebelumnya">&laquo;</button>
-                        <button
-                          v-for="(item, pIdx) in block.items"
-                          :key="item.id"
-                          class="pagination-btn"
-                          :class="{ 'is-active': (block.activeItemIndex || 0) === pIdx }"
-                          @click.stop="setPageNumber(block, pIdx)"
-                        >
-                          <span
-                            class="inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, pIdx, 'title', $event)"
-                          >{{ item.title }}</span>
-                        </button>
-                        <button class="pagination-btn" title="Berikutnya">&raquo;</button>
-                      </div>
-                    </section>
-
-                    <!-- BLOCK TYPE: BREADCRUMB -->
-                    <nav
-                      v-else-if="block.type === 'breadcrumb'"
-                      class="rendered-breadcrumb-block"
-                      :style="{ padding: `${block.styles?.paddingY || 20}px 32px` }"
-                    >
-                      <div class="breadcrumb-trail-nav">
-                        <template v-for="(item, bIdx) in block.items" :key="item.id">
-                          <span v-if="bIdx > 0" class="bc-sep-icon">/</span>
-                          <a
-                            v-if="bIdx < (block.items?.length || 1) - 1"
-                            :href="item.url || '#'"
-                            class="bc-item-anchor"
-                            @click.prevent
-                          >
-                            <span
-                              class="inline-editable-text"
-                              :contenteditable="selectedBlockId === block.id"
-                              @keydown="onInlineTextKeyDown"
-                              @blur="onInlineItemTextBlur(block, bIdx, 'title', $event)"
-                            >{{ item.title }}</span>
-                          </a>
-                          <span
-                            v-else
-                            class="bc-item-current inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineItemTextBlur(block, bIdx, 'title', $event)"
-                          >{{ item.title }}</span>
-                        </template>
-                      </div>
-                    </nav>
-
-                    <!-- BLOCK TYPE 6: FOOTER -->
-                    <footer
-                      v-else-if="block.type === 'footer'"
-                      class="rendered-footer-block"
-                      :style="{ padding: `${block.styles?.paddingY || 36}px 32px` }"
-                    >
-                      <div class="footer-divider-line"></div>
-                      <div class="footer-content-row">
-                        <div class="footer-brand">
-                          <span class="brand-cube-icon" :style="{ color: block.styles?.accentColor || activeContainer.accentColor }">◆</span>
-                          <strong
-                            class="inline-editable-text"
-                            :contenteditable="selectedBlockId === block.id"
-                            @click="onTextClick(block, 'title', $event)"
-                            @keydown="onInlineTextKeyDown"
-                            @blur="onInlineTextBlur(block, 'title', $event)"
-                            title="Klik untuk mengedit brand footer"
-                          >{{ block.title }}</strong>
-                        </div>
-                        <p
-                          class="footer-copy inline-editable-text"
-                          :contenteditable="selectedBlockId === block.id"
-                          @click="onTextClick(block, 'subtitle', $event)"
-                          @keydown="onInlineTextKeyDown"
-                          @blur="onInlineTextBlur(block, 'subtitle', $event)"
-                          title="Klik untuk mengedit copyright footer"
-                        >{{ block.subtitle }}</p>
-                      </div>
-                    </footer>
+                    <!-- UNIFIED CANVAS BLOCK RENDERER -->
+                    <CanvasBlockRenderer
+                      :block="block"
+                      :accent-color="activeContainer.accentColor"
+                      :is-selected="selectedBlockId === block.id"
+                      :nav-items="getRenderedNavItems(block)"
+                      :active-page-path="activePage?.path"
+                      :multi-pages-count="multiPages.length"
+                      :handlers="canvasBlockHandlers"
+                    />
                   </div>
                 </template>
 
@@ -7039,7 +5995,14 @@ const executeVsCodeReplaceAll = () => {
                   @dragleave="onCanvasDropSlotDragLeave(pageBlocks.length)"
                   @drop="onCanvasDropSlotDrop($event, pageBlocks.length)"
                 >
-                  <div class="drop-slot-line">
+                  <!-- Live Content Insertion Preview (Canva/Figma Interactive Ghost) -->
+                  <CanvasDropPreview
+                    v-if="activeDropSlotIndex === pageBlocks.length && draggedBlockType"
+                    :block-type="draggedBlockType"
+                    :accent-color="activeContainer.accentColor"
+                  />
+
+                  <div v-else class="drop-slot-line">
                     <span class="drop-slot-badge">
                       <Plus :size="12" /> Pasang di akhir halaman
                     </span>
@@ -8627,12 +7590,36 @@ const executeVsCodeReplaceAll = () => {
 
                       <div class="carousel-stage-container">
                         <div v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0" class="carousel-slide-card">
-                          <div v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.image" class="carousel-slide-img-wrap">
+                          <div
+                            v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.image"
+                            class="carousel-slide-img-wrap"
+                            @click="triggerImageUpload(editingBlockDraft.id, editingBlockDraft.activeItemIndex || 0)"
+                            title="Klik ganti foto slide langsung"
+                            style="cursor: pointer;"
+                          >
                             <img
                               :src="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0].image"
                               :alt="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0].title || 'Slide Image'"
                               class="carousel-slide-img"
                             />
+                            <div class="carousel-img-hover-overlay">
+                              <span
+                                class="btn-change-photo-badge"
+                                @click.stop="triggerImageUpload(editingBlockDraft.id, editingBlockDraft.activeItemIndex || 0)"
+                                title="Unggah Foto dari Komputer"
+                              >
+                                <UploadCloud :size="13" />
+                                <span>Ganti Foto</span>
+                              </span>
+                              <span
+                                class="btn-change-photo-badge secondary"
+                                @click.stop="openMediaPickerForBlock(editingBlockDraft.id, editingBlockDraft.activeItemIndex || 0)"
+                                title="Pilih dari Pustaka MinIO S3"
+                              >
+                                <Database :size="13" />
+                                <span>Pustaka</span>
+                              </span>
+                            </div>
                           </div>
                           <span v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.tag" class="carousel-tag-badge">
                             {{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.tag }}
@@ -9992,6 +8979,27 @@ const executeVsCodeReplaceAll = () => {
                 <span>Simpan Pengaturan</span>
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- FLOATING DRAG PREVIEW (Zero-Delay Pointer Tracking + Cancel Return Animation) -->
+    <Teleport to="body">
+      <div
+        v-if="(isPointerDragging || isCancellingDrag) && draggedBlockType"
+        class="floating-drag-preview-shell"
+        :class="{ 'is-cancelling': isCancellingDrag }"
+        :style="floatingDragPreviewStyle"
+        aria-hidden="true"
+      >
+        <div class="floating-drag-preview-card">
+          <div class="floating-drag-preview-stage">
+            <CanvasBlockRenderer
+              :block="getCatalogPreviewBlock(draggedBlockType as any)"
+              :accent-color="activeContainer.accentColor"
+              :preview-mode="true"
+            />
           </div>
         </div>
       </div>

@@ -1831,11 +1831,13 @@
 .block-node-wrapper.is-hovered:not(.is-selected) {
   outline: 1.5px dashed #93c5fd;
   outline-offset: -1.5px;
+  transition: none !important;
 }
 
 .block-node-wrapper.is-selected {
   outline: none;
   z-index: 800 !important;
+  transition: none !important;
 }
 
 .section-content-anim-viewport {
@@ -1844,9 +1846,10 @@
 }
 
 .block-node-wrapper.is-being-dragged {
-  opacity: 0.35;
+  opacity: 0.92;
   outline: 2px dashed #3b82f6 !important;
   outline-offset: -2px;
+  transition: none !important;
 }
 
 /* Canvas Drag and Drop Indicator Slots */
@@ -1854,18 +1857,25 @@
   position: relative;
   height: 0px;
   margin: 0;
-  transition: height 0.18s cubic-bezier(0.16, 1, 0.3, 1), margin 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: visible;
+  transition: none !important;
+  overflow: hidden;
   z-index: 28;
 }
 
 .canvas-drop-slot.is-drag-in-progress {
-  height: 8px;
+  height: 20px;
+  margin: 4px 0;
 }
 
 .canvas-drop-slot.is-active-drop {
-  height: 42px;
-  margin: 8px 0;
+  height: auto;
+  min-height: 120px;
+  margin: 12px 0;
+  overflow: visible;
+}
+
+.canvas-drop-slot.is-active-drop .drop-slot-line {
+  display: none;
 }
 
 .drop-slot-line {
@@ -1880,41 +1890,53 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.18s ease;
+  transition: none !important;
   pointer-events: none;
 }
 
 .canvas-drop-slot.is-drag-in-progress .drop-slot-line {
-  background: rgba(37, 99, 235, 0.18);
-  border-top: 1.5px dashed rgba(37, 99, 235, 0.45);
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  height: 18px;
+  border-radius: 8px;
 }
 
 .canvas-drop-slot.is-active-drop .drop-slot-line {
-  background: #2563eb;
-  height: 3px;
-  box-shadow: 0 0 14px rgba(37, 99, 235, 0.65);
+  display: none !important;
 }
 
 .drop-slot-badge {
   display: none;
   align-items: center;
-  gap: 5px;
-  padding: 4px 14px;
+  gap: 6px;
+  padding: 6px 16px;
   border-radius: 999px;
-  background: #2563eb;
-  color: #ffffff;
-  font-size: 0.72rem;
+  background: #334155;
+  color: #f8fafc;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
-  transform: scale(0.9);
-  transition: transform 0.15s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: none !important;
+  transition: none !important;
   pointer-events: none;
 }
 
 .canvas-drop-slot.is-active-drop .drop-slot-badge {
   display: inline-flex;
-  transform: scale(1);
+  transform: none !important;
+}
+
+.block-node-wrapper.is-drag-target-top {
+  box-shadow: none !important;
+}
+
+.block-node-wrapper.is-drag-target-bottom {
+  box-shadow: none !important;
+}
+
+.website-rendered-surface.is-canvas-drag-active {
+  cursor: copy;
 }
 
 /* Empty Canvas Drop Target */
@@ -1927,19 +1949,19 @@
   border: 2px dashed #cbd5e1;
   border-radius: 12px;
   background: #f8fafc;
-  transition: all 0.2s ease;
+  transition: none !important;
   cursor: pointer;
 }
 
 .canvas-empty-drop-slot.is-drag-in-progress {
-  border-color: #93c5fd;
-  background: rgba(239, 246, 255, 0.5);
+  border-color: #94a3b8;
+  background: rgba(241, 245, 249, 0.72);
 }
 
 .canvas-empty-drop-slot.is-active-drop {
-  border-color: #2563eb;
-  background: rgba(239, 246, 255, 0.95);
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.15);
+  border-color: #64748b;
+  background: rgba(248, 250, 252, 0.96);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
 }
 
 .empty-drop-body {
@@ -1958,11 +1980,11 @@
 }
 
 .canvas-empty-drop-slot.is-active-drop .empty-drop-body {
-  color: #1e40af;
+  color: #0f172a;
 }
 
 .canvas-empty-drop-slot.is-active-drop .empty-drop-body .empty-icon {
-  color: #2563eb;
+  color: #475569;
 }
 
 /* Selection Bounding Box Overlay & Floating Toolbar */
@@ -1977,6 +1999,8 @@
   box-sizing: border-box;
   pointer-events: none;
   z-index: 9999 !important;
+  transition: none !important;
+  animation: none !important;
 }
 
 .corner-anchor {
@@ -1989,6 +2013,8 @@
   box-sizing: border-box;
   will-change: transform;
   transform: translateZ(0);
+  transition: none !important;
+  animation: none !important;
 }
 
 .corner-anchor.tl { top: -4px; left: -4px; }
@@ -4449,10 +4475,10 @@
 }
 
 .visual-wireframe-card.is-being-dragged {
-  opacity: 0.45;
-  border-color: #2563eb;
+  opacity: 0.72;
+  border-color: #94a3b8;
   border-style: dashed;
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .card-meta-left {
@@ -5334,6 +5360,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -5366,6 +5393,19 @@
   background: #2563eb;
   color: #ffffff;
   border-color: #2563eb;
+  transform: translateY(-2px) scale(1.05);
+}
+
+.btn-change-photo-badge.secondary {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f8fafc;
+}
+
+.btn-change-photo-badge.secondary:hover {
+  background: #1e293b;
+  color: #38bdf8;
+  border-color: #38bdf8;
   transform: translateY(-2px) scale(1.05);
 }
 .carousel-tag-badge {
@@ -6002,10 +6042,10 @@
   animation: animBounceSoft 1.2s ease both;
 }
 .anim-pulseGlow {
-  animation: animPulseCyanGlow 2.5s infinite ease-in-out;
+  animation: animPulseCyanGlow 1.1s ease-out 1 both;
 }
 .anim-float {
-  animation: animFloatSmooth 3.5s infinite ease-in-out;
+  animation: animFloatSmooth 1.0s ease-out 1 both;
 }
 .anim-blurFade {
   animation: animBlurFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -9706,6 +9746,39 @@
     radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.18) 0%, transparent 55%);
 }
 
+.section-bg-pattern-layer.pattern-diagonal {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(100, 116, 139, 0.16) 0,
+    rgba(100, 116, 139, 0.16) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+}
+
+.section-bg-pattern-layer.pattern-cross {
+  background-image:
+    radial-gradient(rgba(100, 116, 139, 0.35) 1px, transparent 1px),
+    radial-gradient(rgba(100, 116, 139, 0.22) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+.section-bg-pattern-layer.pattern-radial {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.2) 0%, transparent 65%),
+    radial-gradient(ellipse at 50% 100%, rgba(14, 165, 233, 0.14) 0%, transparent 60%);
+}
+
+.section-bg-pattern-layer.pattern-blueprint {
+  background-image:
+    linear-gradient(to right, rgba(37, 99, 235, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(37, 99, 235, 0.12) 1px, transparent 1px),
+    linear-gradient(to right, rgba(37, 99, 235, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(37, 99, 235, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px, 48px 48px, 12px 12px, 12px 12px;
+}
+
 .block-node-wrapper {
   overflow: hidden;
 }
@@ -12977,4 +13050,207 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ==========================================================================
+   Unified Component Preview, Drag Preview & Drop Micro-Interactions
+   ========================================================================== */
+
+/* 1. Catalog Panel Live Proportional Preview (Single-Source Canvas Renderer) */
+.catalog-live-preview-box {
+  position: relative;
+  width: 100%;
+  height: 112px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.catalog-live-preview-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1200px;
+  transform: scale(0.275);
+  transform-origin: top left;
+  background: #ffffff;
+  pointer-events: none;
+}
+
+/* 2. Floating Drag Preview (Follows Pointer Without Delay) */
+.floating-drag-preview-shell {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999999;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform, opacity;
+}
+
+.floating-drag-preview-card {
+  width: 330px;
+  height: 128px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: 0 18px 40px -6px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.floating-drag-preview-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1200px;
+  transform: scale(0.275);
+  transform-origin: top left;
+  background: #ffffff;
+  pointer-events: none;
+}
+
+/* 3. Drop Success Micro-Interaction (Light & Accurate) */
+@keyframes canvasBlockDropSuccess {
+  from {
+    opacity: 0.95;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.block-node-wrapper.is-just-dropped {
+  animation: canvasBlockDropSuccess 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block-node-wrapper.is-just-dropped {
+    animation: none !important;
+  }
+  .floating-drag-preview-shell {
+    transition: none !important;
+  }
+}
+
+/* 4. Marquee Component Canvas Styles */
+.rendered-marquee-block {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.marquee-logos-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.marquee-logo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+/* ========================================================================== */
+/* TOOLBAR TYPOGRAPHY, TEXT COLOR & FONT SIZE SCALING OVERRIDES               */
+/* ========================================================================== */
+.canvas-block-renderer-root[data-has-custom-font="true"],
+.canvas-block-renderer-root[data-has-custom-font="true"] h1,
+.canvas-block-renderer-root[data-has-custom-font="true"] h2,
+.canvas-block-renderer-root[data-has-custom-font="true"] h3,
+.canvas-block-renderer-root[data-has-custom-font="true"] h4,
+.canvas-block-renderer-root[data-has-custom-font="true"] p,
+.canvas-block-renderer-root[data-has-custom-font="true"] span,
+.canvas-block-renderer-root[data-has-custom-font="true"] a,
+.canvas-block-renderer-root[data-has-custom-font="true"] li,
+.canvas-block-renderer-root[data-has-custom-font="true"] label,
+.canvas-block-renderer-root[data-has-custom-font="true"] button,
+.canvas-block-renderer-root[data-has-custom-font="true"] input,
+.canvas-block-renderer-root[data-has-custom-font="true"] textarea {
+  font-family: inherit !important;
+}
+
+.canvas-block-renderer-root[data-has-custom-text-color="true"] h1,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] h2,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] h3,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] h4,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] p,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] li,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] label,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .hero-main-heading,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .hero-sub-lead,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .hero-subtitle,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .hero-lead,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .sec-headline,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .sec-lead,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .sec-kicker,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .tier-name,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .tier-price-num,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .tier-desc,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .feat-title,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .feat-desc,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .cta-banner-heading,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .cta-banner-sub,
+.canvas-block-renderer-root[data-has-custom-text-color="true"] .nav-link-item {
+  color: var(--block-text-color) !important;
+}
+
+.canvas-block-renderer-root[data-has-custom-size="true"] {
+  font-size: calc(16px * var(--block-font-scale, 1));
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] h1 {
+  font-size: calc(2.5rem * var(--block-font-scale, 1));
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] h2 {
+  font-size: calc(1.85rem * var(--block-font-scale, 1));
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] h3 {
+  font-size: calc(1.2rem * var(--block-font-scale, 1));
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] p,
+.canvas-block-renderer-root[data-has-custom-size="true"] li {
+  font-size: calc(0.95rem * var(--block-font-scale, 1));
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] .hero-main-heading {
+  font-size: calc(2.8rem * var(--block-font-scale, 1)) !important;
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] .hero-sub-lead,
+.canvas-block-renderer-root[data-has-custom-size="true"] .hero-subtitle,
+.canvas-block-renderer-root[data-has-custom-size="true"] .hero-lead {
+  font-size: calc(1.05rem * var(--block-font-scale, 1)) !important;
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] .sec-headline {
+  font-size: calc(1.9rem * var(--block-font-scale, 1)) !important;
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] .sec-lead {
+  font-size: calc(0.95rem * var(--block-font-scale, 1)) !important;
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] .tier-name {
+  font-size: calc(1.15rem * var(--block-font-scale, 1)) !important;
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] .tier-price-num {
+  font-size: calc(2.1rem * var(--block-font-scale, 1)) !important;
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] .cta-inner-banner h2,
+.canvas-block-renderer-root[data-has-custom-size="true"] .cta-banner-heading {
+  font-size: calc(1.85rem * var(--block-font-scale, 1)) !important;
+}
+.canvas-block-renderer-root[data-has-custom-size="true"] .cta-inner-banner p,
+.canvas-block-renderer-root[data-has-custom-size="true"] .cta-banner-sub {
+  font-size: calc(0.95rem * var(--block-font-scale, 1)) !important;
 }

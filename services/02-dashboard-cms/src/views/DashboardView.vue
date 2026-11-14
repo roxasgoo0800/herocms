@@ -72,7 +72,6 @@ const { isDashboardEntering } = useSplashTransition();
 
 const {
   activeMenu,
-  isEditorSidebarHidden,
   isReaderSidebarHidden,
   userEmail,
   userPlan,
@@ -464,6 +463,17 @@ const handleTerminalRestart = async () => {
 // Responsive Mobile Navigation Drawer State
 const isMobileNavOpen = ref(false);
 
+// State tracking menu dashboard terakhir saat membuka fullscreen Visual Editor
+const lastDashboardMenu = ref<string>('containers');
+watch(activeMenu, (newVal) => {
+  if (newVal !== 'editor') {
+    lastDashboardMenu.value = newVal;
+  }
+});
+const currentDashboardView = computed(() => {
+  return activeMenu.value === 'editor' ? lastDashboardMenu.value : activeMenu.value;
+});
+
 const selectMenu = (menuKey: string) => {
   activeMenu.value = menuKey as any;
   isMobileNavOpen.value = false;
@@ -476,15 +486,29 @@ onMounted(async () => {
       isMobileNavOpen.value = false;
     }
   });
+
+  // Preload VisualEditorModule saat browser idle agar transisi ke editor instan tanpa jeda/flicker
+  if (typeof window !== 'undefined') {
+    const preloadEditor = () => {
+      import('../components/dashboard/VisualEditorModule.vue').catch(() => {});
+    };
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(preloadEditor, { timeout: 2000 });
+    } else {
+      setTimeout(preloadEditor, 1200);
+    }
+  }
 });
 
-// Smooth scroll ke atas saat berganti menu antarmuka
-watch(activeMenu, () => {
-  const pane = document.querySelector('.content-scroll-pane');
-  if (pane) {
-    pane.scrollTo({ top: 0, behavior: 'smooth' });
+// Smooth scroll ke atas saat berganti menu antarmuka (hanya untuk menu dashboard non-editor)
+watch(activeMenu, (newVal) => {
+  if (newVal !== 'editor') {
+    const pane = document.querySelector('.content-scroll-pane');
+    if (pane) {
+      pane.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 const handleLogout = async () => {
@@ -497,8 +521,6 @@ const handleLogout = async () => {
     <div
       class="app-shell"
       :class="{
-        'editor-active-mode': activeMenu === 'editor',
-        'editor-immersive-mode': activeMenu === 'editor' && isEditorSidebarHidden,
         'reader-immersive-mode': activeMenu === 'content' && activeArticleForReader && isReaderSidebarHidden,
         'dashboard-choreographed-enter': isDashboardEntering,
         'mobile-nav-open': isMobileNavOpen
@@ -756,26 +778,25 @@ const handleLogout = async () => {
             <span>Stack Studio</span>
             <ChevronRight :size="14" class="crumb-sep" />
             <span
-              :class="(activeMenu === 'content' && activeArticleForReader) || (activeMenu === 'analytics' && selectedContainerForDetail) ? 'crumb-link' : 'crumb-current'"
-              @click="(activeMenu === 'content' && activeArticleForReader) ? (activeArticleForReader = null) : (activeMenu === 'analytics' && selectedContainerForDetail) ? (selectedContainerForDetail = null) : null"
-              :title="(activeMenu === 'content' && activeArticleForReader) ? 'Kembali ke Daftar Artikel' : (activeMenu === 'analytics' && selectedContainerForDetail) ? 'Kembali ke Ikhtisar Telemetri Fleet' : undefined"
+              :class="(currentDashboardView === 'content' && activeArticleForReader) || (currentDashboardView === 'analytics' && selectedContainerForDetail) ? 'crumb-link' : 'crumb-current'"
+              @click="(currentDashboardView === 'content' && activeArticleForReader) ? (activeArticleForReader = null) : (currentDashboardView === 'analytics' && selectedContainerForDetail) ? (selectedContainerForDetail = null) : null"
+              :title="(currentDashboardView === 'content' && activeArticleForReader) ? 'Kembali ke Daftar Artikel' : (currentDashboardView === 'analytics' && selectedContainerForDetail) ? 'Kembali ke Ikhtisar Telemetri Fleet' : undefined"
             >
               {{
-                activeMenu === 'containers' ? 'Situs & Kontainer' :
-                activeMenu === 'editor' ? 'Editor Visual Studio' :
-                activeMenu === 'content' ? 'Artikel & Halaman CMS' :
-                activeMenu === 'media' ? 'Media Assets & Storage S3' :
-                activeMenu === 'templates' ? 'Katalog Template & Pricelist' :
-                activeMenu === 'domains' ? 'Custom Domain & DNS Traefik' :
-                activeMenu === 'analytics' ? 'Analitik Real-Time (Kafka & Redis)' :
-                activeMenu === 'webhooks' ? 'Webhooks & Integrasi API' :
-                activeMenu === 'billing' ? 'Kapasitas & Paket Langganan' :
-                activeMenu === 'invoices' ? 'Faktur & Riwayat Invoice Resmi' :
-                activeMenu === 'tickets' ? 'Pusat Bantuan & Tiket Support' :
+                currentDashboardView === 'containers' ? 'Situs & Kontainer' :
+                currentDashboardView === 'content' ? 'Artikel & Halaman CMS' :
+                currentDashboardView === 'media' ? 'Media Assets & Storage S3' :
+                currentDashboardView === 'templates' ? 'Katalog Template & Pricelist' :
+                currentDashboardView === 'domains' ? 'Custom Domain & DNS Traefik' :
+                currentDashboardView === 'analytics' ? 'Analitik Real-Time (Kafka & Redis)' :
+                currentDashboardView === 'webhooks' ? 'Webhooks & Integrasi API' :
+                currentDashboardView === 'billing' ? 'Kapasitas & Paket Langganan' :
+                currentDashboardView === 'invoices' ? 'Faktur & Riwayat Invoice Resmi' :
+                currentDashboardView === 'tickets' ? 'Pusat Bantuan & Tiket Support' :
                 'Changelog & Catatan Rilis Sistem'
               }}
             </span>
-            <template v-if="activeMenu === 'content' && activeArticleForReader">
+            <template v-if="currentDashboardView === 'content' && activeArticleForReader">
               <ChevronRight :size="14" class="crumb-sep" />
               <span class="crumb-current crumb-article-title" :title="activeArticleForReader.title">
                 {{ activeArticleForReader.title }}
@@ -844,23 +865,31 @@ const handleLogout = async () => {
       </div>
 
       <!-- Main Dynamic Workspace View (Modular per-menu components) -->
-      <main class="content-scroll-pane" :class="{ 'is-editor-workspace': activeMenu === 'editor' }">
+      <main class="content-scroll-pane">
         <Transition name="studio-workspace-stage" mode="out-in">
-          <ContainersModule v-if="activeMenu === 'containers'" key="menu-containers" />
-          <VisualEditorModule v-else-if="activeMenu === 'editor'" key="menu-editor" />
-          <ContentArticlesModule v-else-if="activeMenu === 'content'" key="menu-content" />
-          <MediaAssetsModule v-else-if="activeMenu === 'media'" key="menu-media" />
-          <TemplatesCatalogModule v-else-if="activeMenu === 'templates'" key="menu-templates" />
-          <CustomDomainsModule v-else-if="activeMenu === 'domains'" key="menu-domains" />
-          <AnalyticsTelemetryModule v-else-if="activeMenu === 'analytics'" key="menu-analytics" />
-          <WebhooksApiModule v-else-if="activeMenu === 'webhooks'" key="menu-webhooks" />
-          <BillingPlanModule v-else-if="activeMenu === 'billing'" key="menu-billing" />
-          <InvoicesHistoryModule v-else-if="activeMenu === 'invoices'" key="menu-invoices" />
-          <SupportTicketingModule v-else-if="activeMenu === 'tickets'" key="menu-tickets" />
-          <ChangelogModule v-else-if="activeMenu === 'changelog'" key="menu-changelog" />
+          <ContainersModule v-if="currentDashboardView === 'containers'" key="menu-containers" />
+          <ContentArticlesModule v-else-if="currentDashboardView === 'content'" key="menu-content" />
+          <MediaAssetsModule v-else-if="currentDashboardView === 'media'" key="menu-media" />
+          <TemplatesCatalogModule v-else-if="currentDashboardView === 'templates'" key="menu-templates" />
+          <CustomDomainsModule v-else-if="currentDashboardView === 'domains'" key="menu-domains" />
+          <AnalyticsTelemetryModule v-else-if="currentDashboardView === 'analytics'" key="menu-analytics" />
+          <WebhooksApiModule v-else-if="currentDashboardView === 'webhooks'" key="menu-webhooks" />
+          <BillingPlanModule v-else-if="currentDashboardView === 'billing'" key="menu-billing" />
+          <InvoicesHistoryModule v-else-if="currentDashboardView === 'invoices'" key="menu-invoices" />
+          <SupportTicketingModule v-else-if="currentDashboardView === 'tickets'" key="menu-tickets" />
+          <ChangelogModule v-else-if="currentDashboardView === 'changelog'" key="menu-changelog" />
         </Transition>
       </main>
     </div>
+
+    <!-- ============================================================= -->
+    <!-- DEDICATED FULLSCREEN VISUAL EDITOR OVERLAY (ZERO JANK/LAG)    -->
+    <!-- ============================================================= -->
+    <Transition name="editor-stage-fade">
+      <div v-if="activeMenu === 'editor'" class="editor-fullscreen-stage" key="editor-fullscreen">
+        <VisualEditorModule />
+      </div>
+    </Transition>
 
     <!-- ============================================================= -->
     <!-- MODAL: BUAT SITUS & KONTAINER BARU (EXPANSIVE STUDIO DESIGN)  -->

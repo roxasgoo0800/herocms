@@ -776,12 +776,23 @@ export interface FontOption {
 export const fontOptions: FontOption[] = [
   { id: 'inter', name: 'Inter (Sleek Clean)', family: "'Inter', system-ui, sans-serif", category: 'sans' },
   { id: 'plus-jakarta', name: 'Plus Jakarta Sans (Modern UI)', family: "'Plus Jakarta Sans', system-ui, sans-serif", category: 'sans' },
+  { id: 'dm-sans', name: 'DM Sans (Crisp SaaS)', family: "'DM Sans', system-ui, sans-serif", category: 'sans' },
   { id: 'outfit', name: 'Outfit (Geometric High-End)', family: "'Outfit', system-ui, sans-serif", category: 'sans' },
+  { id: 'manrope', name: 'Manrope (Editorial Tech)', family: "'Manrope', system-ui, sans-serif", category: 'sans' },
+  { id: 'space-grotesk', name: 'Space Grotesk (Futuristic)', family: "'Space Grotesk', system-ui, sans-serif", category: 'sans' },
+  { id: 'sora', name: 'Sora (Clean Startup)', family: "'Sora', system-ui, sans-serif", category: 'sans' },
   { id: 'poppins', name: 'Poppins (Friendly Tech)', family: "'Poppins', sans-serif", category: 'sans' },
+  { id: 'montserrat', name: 'Montserrat (Bold Geometric)', family: "'Montserrat', sans-serif", category: 'sans' },
+  { id: 'roboto', name: 'Roboto (Neutral Pro)', family: "'Roboto', sans-serif", category: 'sans' },
+  { id: 'open-sans', name: 'Open Sans (Readable Web)', family: "'Open Sans', sans-serif", category: 'sans' },
+  { id: 'work-sans', name: 'Work Sans (Clean Minimal)', family: "'Work Sans', sans-serif", category: 'sans' },
   { id: 'syne', name: 'Syne (Avant-Garde Display)', family: "'Syne', sans-serif", category: 'display' },
+  { id: 'bricolage', name: 'Bricolage Grotesque (Expressive)', family: "'Bricolage Grotesque', sans-serif", category: 'display' },
   { id: 'playfair', name: 'Playfair Display (Luxury Serif)', family: "'Playfair Display', Georgia, serif", category: 'serif' },
+  { id: 'lora', name: 'Lora (Modern Editorial Serif)', family: "'Lora', Georgia, serif", category: 'serif' },
+  { id: 'merriweather', name: 'Merriweather (Classic Serif)', family: "'Merriweather', Georgia, serif", category: 'serif' },
   { id: 'fira-code', name: 'Fira Code (Developer Mono)', family: "'Fira Code', 'Courier New', monospace", category: 'mono' },
-  { id: 'roboto', name: 'Roboto (Neutral Pro)', family: "'Roboto', sans-serif", category: 'sans' }
+  { id: 'jetbrains-mono', name: 'JetBrains Mono (Code Pro)', family: "'JetBrains Mono', monospace", category: 'mono' }
 ];
 
 export interface ColorPreset {

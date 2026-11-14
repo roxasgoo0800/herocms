@@ -14,21 +14,21 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.25',
+    version: 'v1.42.33',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '06 November 2026',
+    lastUpdated: '14 November 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
     id: '03-provision-orchestrator',
     name: 'Service 03: Container Provision Orchestrator',
-    version: 'v1.2.4',
+    version: 'v1.2.5',
     serviceFolder: 'services/03-provision-orchestrator',
     badge: 'Stable',
     stack: 'Golang • Docker Engine SDK • cgroups v2',
-    lastUpdated: '02 November 2026',
+    lastUpdated: '14 November 2026',
     leadPic: 'Andalusia & Rizal'
   },
   {
@@ -75,13 +75,223 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.33',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Perbaikan Kontrol Floating Toolbar: Tipografi, Ukuran Font, Warna Teks, Pattern Latar, Pemisahan Target Bg & Animasi One-Shot',
+    summary: 'Menyempurnakan seluruh kontrol Floating Toolbar pada Visual Editor tanpa mengubah desain maupun tata letak toolbar: memperluas pilihan 19 Google Fonts modern, mengaktifkan penskalaan ukuran teks (A-/A+), memperbaiki warna teks agar tidak memengaruhi tombol, merender 8 pola latar per-section, memisahkan target Bg tombol vs banner/navbar, dan mengubah animasi masuk menjadi one-shot (tidak berulang saat hover atau rerender) baik di Kanvas Editor maupun Preview/Public HTML.',
+    badge: 'Latest',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14233-1',
+        type: 'improvement',
+        scope: 'Typography, Font Size & Text Color Controls',
+        description: 'Memperluas fontOptions menjadi 19 font modern (Plus Jakarta Sans, Inter, DM Sans, Outfit, Space Grotesk, Syne, Sora, Poppins, Manrope, Work Sans, Nunito, Rubik, Playfair Display, Lora, Merriweather, JetBrains Mono, Fira Code) di index.html, editor-presets.ts, CanvasBlockRenderer.vue, dan templateHtmlCompiler.ts, lengkap dengan penskalaan --block-font-scale dan warna teks terisolasi.'
+      },
+      {
+        id: 'c-02dash-14233-2',
+        type: 'improvement',
+        scope: 'Section Background Pattern Layer',
+        description: 'Menambahkan elemen .section-bg-pattern-layer di Kanvas Editor dan hasil kompilasi HTML dengan 8 opsi pola (Off, Dots, Grid, Mesh, Diagonal, Cross, Radial, Blueprint) yang terisolasi pada masing-masing section.'
+      },
+      {
+        id: 'c-02dash-14233-3',
+        type: 'bugfix',
+        scope: 'Button vs Banner Background Target & One-Shot Animations',
+        description: 'Memperbaiki binding bgColor pada Navbar/CTA/Form/Pricing/Modal agar warna tombol dan latar section tidak saling tertimpa, menghapus animation: none saat hover yang memicu replay animasi, mengubah pulseGlow & float menjadi one-shot (1 both), serta menambahkan tombol putar ulang animasi dan IntersectionObserver di Preview/Public HTML.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.32',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Penyatuan Renderer Komponen Canvas, Indikator Drop Netral & Micro-Interaction Drop/Cancel Halus',
+    summary: 'Menyatukan seluruh sumber rendering komponen (Panel Pemilihan Menu, Floating Drag Preview, Drop Preview, dan Kanvas Utama) melalui satu komponen tunggal CanvasBlockRenderer.vue agar 100% konsisten secara visual dan proporsional. Mengubah warna indikator drop target menjadi slate netral yang selaras dengan tema kanvas, serta menambahkan animasi micro-interaction 180ms ease-out untuk penempatan berhasil (opacity 0.95->1, scale 0.98->1) dan pembatalan drag (Esc/area tidak valid kembali ke sumber) dengan dukungan penuh prefers-reduced-motion.',
+    badge: 'Stable',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14232-1',
+        type: 'improvement',
+        scope: 'Single-Source CanvasBlockRenderer Architecture',
+        description: 'Mengekstrak CanvasBlockRenderer.vue sebagai sumber tunggal perenderan 18 tipe komponen sehingga panel pemilihan (scaled proporsional 0.275x), pratinjau drop, dan kanvas akhir identik 100%.'
+      },
+      {
+        id: 'c-02dash-14232-2',
+        type: 'bugfix',
+        scope: 'Neutral Drop Target Indicator & Color Preservation',
+        description: 'Mengganti highlight dan outline drop target dari biru dominan ke slate netral (#94a3b8 / #f8fafc) agar menyatu dengan kanvas tanpa mengubah warna komponen yang di-drag.'
+      },
+      {
+        id: 'c-02dash-14232-3',
+        type: 'feature',
+        scope: 'Pointer Tracking & Smooth Drop/Cancel Micro-Interactions',
+        description: 'Mengimplementasikan pointer-based drag tracking tanpa delay (translate3d), animasi penempatan 180ms ease-out, serta animasi pembatalan drag kembali ke kartu sumber saat menekan Esc atau melepas di luar target.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.31',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Perbaikan Stabilitas Drag and Drop Kanvas, Indikator Seleksi Instan & Pratinjau Drop Target Autentik',
+    summary: 'Menyelesaikan 3 perbaikan krusial pada interaksi kanvas: (1) Pratinjau Drop Target Autentik: Komponen yang sedang di-drag tetap mempertahankan warna dan tampilan aslinya tanpa diubah menjadi abu-abu pudar, dengan highlight visual yang jelas pada kotak drop target; (2) Eliminasi Glitch Indikator Seleksi: Menghilangkan efek delay/overshoot membesar-mengecil pada garis seleksi dengan menonaktifkan transisi non-linear sehingga muncul instan dan stabil; (3) Drag Behavior & Smoothness: Menerapkan container-level hit testing berbasis midpoint blok, event listener dragleave batas kanvas, serta global handler pembatalan (Escape/drop di luar kanvas) sehingga elemen tidak tersangkut, tidak lag, dan pergerakan kursor sangat mulus.',
+    badge: 'Stable',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14231-1',
+        type: 'bugfix',
+        scope: 'Authentic Drop Target Preview & Visual Clarity',
+        description: 'Mempertahankan warna asli dan komponen visual kartu tanpa pengabuan (no grayscale/washout), dengan penekanan highlight pada slot target penempatan.'
+      },
+      {
+        id: 'c-02dash-14231-2',
+        type: 'bugfix',
+        scope: 'Instant Selection Bounding Box & Zero-Glitch Indicators',
+        description: 'Menghilangkan spring transition kurva bezier pada garis putus-putus dan bounding box seleksi agar muncul instan tanpa efek membesar lalu mengecil.'
+      },
+      {
+        id: 'c-02dash-14231-3',
+        type: 'improvement',
+        scope: 'Robust Drag-and-Drop Hit Testing & Boundary Exit Handling',
+        description: 'Mengoptimasi tracking drag berbasis midpoint blok kanvas, boundary leave detection pada surface, serta listener global untuk drop/cancel Escape tanpa lag atau elemen tersangkut.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.30',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Penyempurnaan Estetika Visual Pratinjau Peletakan Komponen & Eliminasi Garis Biru Agresif',
+    summary: 'Menyempurnakan tampilan visual saat drag & drop komponen: (1) Dark Charcoal Blueprint Theme: Mengganti warna kotak pratinjau menjadi abu-abu kehitaman (#0f172a / #1e293b) dengan opacity lembut 0.88 agar tidak menyilaukan; (2) Muted Gray Dashed Border: Mengganti garis putus-putus biru agresif menjadi garis abu-abu slate (#64748b / #334155) yang elegan dan profesional; (3) Clean Block Separation: Menghilangkan garis batas biru atas dan bawah (inset box-shadow) pada blok kanvas untuk menjaga kebersihan visual tata letak halaman.',
+    badge: 'Stable',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14230-1',
+        type: 'improvement',
+        scope: 'Visual Canvas Drop Ghost Theme & Opacity',
+        description: 'Menerapkan palet warna abu-abu kehitaman slate pada kotak pratinjau komponen dan menurunkan opacity ke 0.88 untuk tampilan blueprint yang subtle.'
+      },
+      {
+        id: 'c-02dash-14230-2',
+        type: 'improvement',
+        scope: 'Drop Slot Border & Line Color Neutralization',
+        description: 'Mengubah garis putus-putus slot dan batas penempatan menjadi abu-abu netral serta menghapus garis biru inset pada tepi blok.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.29',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Implementasi Live Content Placement Preview saat Drag & Drop Komponen ke Kanvas',
+    summary: 'Menghadirkan pengalaman drag & drop interaktif ala Canva/Figma dengan visualisasi pratinjau konten sesungguhnya sebelum dilepas: (1) Live Interactive Component Mockup: Saat komponen diseret ke atas kanvas, slot target menampilkan pratinjau visual representatif dari komponen tersebut (Carousel Banner dengan gambar & tombol ganti foto, Hero dengan headline & CTA, Bento Grid 3 kartu, Pricing 3 tier, Formulir kontak, dsb.); (2) Context-Aware Spacing & Layout Insight: Pengguna dapat langsung melihat kesesuaian visual komponen terhadap blok di atas dan di bawahnya sebelum menentukan posisi peletakan; (3) Adaptive Drag-Over Tracking & Instant Surface Engagement: Kursor mendeteksi separuh atas/bawah blok dan mengaktifkan pratinjau penempatan seketika kursor menyentuh kanvas.',
+    badge: 'Stable',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14229-1',
+        type: 'feature',
+        scope: 'Visual Canvas Live Insertion Preview',
+        description: 'Membuat komponen CanvasDropPreview.vue yang merender pratinjau konten representatif dan realistis saat komponen di-drag ke atas slot kanvas.'
+      },
+      {
+        id: 'c-02dash-14229-2',
+        type: 'improvement',
+        scope: 'Adaptive Drop Slot Geometry & Visual Feedback',
+        description: 'Mengubah tinggi slot drop menjadi responsif auto dengan batas pulsing glow neon (#2563eb) dan badge penjelas posisi penempatan komponen.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.28',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Eliminasi Transisi Lag & Distorsi Layout Saat Membuka Editor Visual',
+    summary: 'Menyelesaikan permasalahan visual glitch/flicker saat berpindah dari dasbor utama ke Visual Editor: (1) Dedicated Fullscreen Overlay Stage: Visual Editor kini di-mount di overlay viewport terisolasi (.editor-fullscreen-stage) dengan z-index tinggi dan animasi transisi halus editor-stage-fade tanpa merusak struktur DOM dasbor utama; (2) Background Dashboard State Preservation: Mempertahankan view dasbor aktif (containers/analytics) dan posisi scroll di latar belakang agar kembali dari editor berlangsung instan (0ms); (3) Preloading Async Module: Memanfaatkan browser idle callback (requestIdleCallback) untuk pre-fetch chunk VisualEditorModule di latar belakang sehingga pembukaan editor instan tanpa delay download bundle.',
+    badge: 'Stable',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14228-1',
+        type: 'bugfix',
+        scope: 'Dashboard to Visual Editor Stage Transition',
+        description: 'Menghilangkan override CSS destruktif pada .app-sidebar dan .top-nav-header yang memicu distorsi layout kartu kontainer full-width saat proses transition leave.'
+      },
+      {
+        id: 'c-02dash-14228-2',
+        type: 'performance',
+        scope: 'Visual Editor Chunk Preloading & Background State Retention',
+        description: 'Mengimplementasikan idle preloading bundle editor via requestIdleCallback dan mempertahankan DOM dasbor tetap mounted di background untuk navigasi bolak-balik tanpa delay.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.27',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Optimasi Presisi & Forgiving Drop Zone Drag & Drop Komponen ke Kanvas',
+    summary: 'Meningkatkan kenyamanan interaksi drag & drop ala Canva/Figma: (1) Full-Block Adaptive Drop Zone: Menghilangkan keharusan membidik slot 8px dengan mendeteksi posisi kursor pada paruh atas/bawah seluruh badan blok untuk penyisipan otomatis; (2) Expanded Glowing Drop Slots: Memperbesar area drop slot menjadi 22px (in-progress) dan 54px (active) dengan garis batas interaktif dan badge visual; (3) Whole-Surface Drop Fallback: Seluruh artboard kanvas kini menerima drop event tanpa error cursor not-allowed; (4) Context-Aware Single-Click Add: Mengklik kartu katalog langsung menyisipkan komponen tepat di bawah blok yang sedang aktif terseleksi.',
+    badge: 'Stable',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14227-1',
+        type: 'improvement',
+        scope: 'Visual Canvas Drop Zone Engine',
+        description: 'Menambahkan handler onBlockDragOver dan onBlockDrop pada block-node-wrapper dengan deteksi posisi kursor atas/bawah 50% untuk penempatan blok yang responsif dan pemaaf.'
+      },
+      {
+        id: 'c-02dash-14227-2',
+        type: 'improvement',
+        scope: 'Catalog Quick Insertion & Visual Cues',
+        description: 'Memperluas dimensi slot drop, menambahkan feedback visual garis tepi penempatan, dan mendukung penambahan instan dengan klik pada kartu katalog.'
+      }
+    ]
+  },
+  {
+    version: 'v1.42.26',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Resolusi Aksi Ganti Foto pada Komponen Slide & Banner Carousel di Visual Editor',
+    summary: 'Memperbaiki interaktivitas penggantian gambar slide banner carousel: (1) Menyematkan event handler triggerImageUpload dan openMediaPickerForBlock pada tombol overlay [ ☁ Ganti Foto ] dan [ 🗄️ Pustaka ]; (2) Menghubungkan klik langsung pada carousel-slide-img-wrap ke dialog picker berkas native; (3) Sinkronisasi overlay ganti foto pada modal editor detail draft.',
+    badge: 'Stable',
+    author: 'Irgi & Rizal (DevOps & Frontend)',
+    items: [
+      {
+        id: 'c-02dash-14226-1',
+        type: 'bugfix',
+        scope: 'Visual Canvas Carousel Photo Action',
+        description: 'Menghubungkan tombol overlay Ganti Foto pada slide carousel ke fungsi triggerImageUpload dan menyediakan tombol Pustaka untuk memilih gambar dari MinIO S3.'
+      },
+      {
+        id: 'c-02dash-14226-2',
+        type: 'improvement',
+        scope: 'Modal Editor Detail Carousel Sync',
+        description: 'Menambahkan overlay ganti foto interaktif dan styling tombol sekunder pada pratinjau carousel di dalam modal editor detail.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.25',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Resolusi Duplikasi Subdomain (Unique Constraint 23505) & Perbaikan Lifecycle Start/Deploy Kontainer',
     summary: 'Memperbaiki alur start/nyalakan kontainer dan query database: (1) Menambahkan klausul ON CONFLICT (subdomain) DO UPDATE SET pada InsertSite repository Go untuk mencegah pelanggaran unique constraint sites_subdomain_key; (2) Menghilangkan redundansi pemanggilan createContainer dalam blok penanganan kesalahan startContainer di useDashboardData.ts; (3) Menghentikan proses orphaned host API pada port 8083 sehingga komunikasi Go BFF terhubung langsung ke kontainer orkestrator Docker Engine.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

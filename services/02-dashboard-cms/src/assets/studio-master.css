@@ -462,26 +462,35 @@ a[class*="btn-"] svg,
   }
 }
 
-/* Editor Immersive Mode & Active Mode: Full-bleed edge-to-edge canvas with zero constraints */
-.app-shell.editor-immersive-mode .app-sidebar {
-  display: none !important;
+/* Dedicated Full-Screen Immersive Studio Stage for Visual Editor */
+.editor-fullscreen-stage {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99990;
+  background: #f8fafc;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.app-shell.editor-active-mode .top-nav-header,
-.app-shell.editor-immersive-mode .top-nav-header {
-  display: none !important;
+.editor-stage-fade-enter-active {
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.app-shell.editor-active-mode .content-scroll-pane,
-.app-shell.editor-immersive-mode .content-scroll-pane,
-.content-scroll-pane.is-editor-workspace {
-  padding: 0 !important;
-  margin: 0 !important;
-  max-width: none !important;
-  width: 100% !important;
-  height: 100vh !important;
-  overflow: hidden !important;
-  box-sizing: border-box !important;
+.editor-stage-fade-leave-active {
+  transition: opacity 0.18s cubic-bezier(0.4, 0, 1, 1), transform 0.18s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.editor-stage-fade-enter-from {
+  opacity: 0;
+  transform: scale(0.994);
+}
+
+.editor-stage-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.998);
 }
 
 /* Reader Immersive Mode: Hide Sidebar to provide distraction-free reading space */
