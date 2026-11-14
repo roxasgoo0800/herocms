@@ -14,11 +14,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.25',
+    version: 'v1.42.26',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
-    lastUpdated: '06 November 2026',
+    lastUpdated: '14 November 2026',
     leadPic: 'Irgi & Rizal'
   },
   {
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.26',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Resolusi Aksi Ganti Foto pada Komponen Slide & Banner Carousel di Visual Editor',
+    summary: 'Memperbaiki interaktivitas penggantian gambar slide banner carousel: (1) Menyematkan event handler triggerImageUpload dan openMediaPickerForBlock pada tombol overlay [ ☁ Ganti Foto ] dan [ 🗄️ Pustaka ]; (2) Menghubungkan klik langsung pada carousel-slide-img-wrap ke dialog picker berkas native; (3) Sinkronisasi overlay ganti foto pada modal editor detail draft.',
+    badge: 'Latest',
+    author: 'Irgi & Rizal (DevOps & Frontend)',
+    items: [
+      {
+        id: 'c-02dash-14226-1',
+        type: 'bugfix',
+        scope: 'Visual Canvas Carousel Photo Action',
+        description: 'Menghubungkan tombol overlay Ganti Foto pada slide carousel ke fungsi triggerImageUpload dan menyediakan tombol Pustaka untuk memilih gambar dari MinIO S3.'
+      },
+      {
+        id: 'c-02dash-14226-2',
+        type: 'improvement',
+        scope: 'Modal Editor Detail Carousel Sync',
+        description: 'Menambahkan overlay ganti foto interaktif dan styling tombol sekunder pada pratinjau carousel di dalam modal editor detail.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.25',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '06 November 2026',
     title: 'Resolusi Duplikasi Subdomain (Unique Constraint 23505) & Perbaikan Lifecycle Start/Deploy Kontainer',
     summary: 'Memperbaiki alur start/nyalakan kontainer dan query database: (1) Menambahkan klausul ON CONFLICT (subdomain) DO UPDATE SET pada InsertSite repository Go untuk mencegah pelanggaran unique constraint sites_subdomain_key; (2) Menghilangkan redundansi pemanggilan createContainer dalam blok penanganan kesalahan startContainer di useDashboardData.ts; (3) Menghentikan proses orphaned host API pada port 8083 sehingga komunikasi Go BFF terhubung langsung ke kontainer orkestrator Docker Engine.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Aether Core Dev (Rizal) & Paijo AI',
     items: [
       {

@@ -2454,6 +2454,7 @@ const onImageClick = (block: VisualBlock, idx?: number, e?: MouseEvent) => {
   if (e) e.stopPropagation();
   selectBlock(block.id);
   setHudContext('image', block, idx);
+  triggerImageUpload(block.id, idx);
 };
 
 const adjustFontSize = (delta: number) => {
@@ -6418,9 +6419,21 @@ const executeVsCodeReplaceAll = () => {
                             />
                             <!-- Hover Overlay: Ganti Foto Langsung -->
                             <div class="carousel-img-hover-overlay">
-                              <span class="btn-change-photo-badge">
+                              <span
+                                class="btn-change-photo-badge"
+                                @click.stop="triggerImageUpload(block.id, block.activeItemIndex || 0)"
+                                title="Unggah Foto dari Komputer"
+                              >
                                 <UploadCloud :size="13" />
                                 <span>Ganti Foto</span>
+                              </span>
+                              <span
+                                class="btn-change-photo-badge secondary"
+                                @click.stop="openMediaPickerForBlock(block.id, block.activeItemIndex || 0)"
+                                title="Pilih dari Pustaka MinIO S3"
+                              >
+                                <Database :size="13" />
+                                <span>Pustaka</span>
                               </span>
                             </div>
                           </div>
@@ -8627,12 +8640,36 @@ const executeVsCodeReplaceAll = () => {
 
                       <div class="carousel-stage-container">
                         <div v-if="editingBlockDraft.items && editingBlockDraft.items.length > 0" class="carousel-slide-card">
-                          <div v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.image" class="carousel-slide-img-wrap">
+                          <div
+                            v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.image"
+                            class="carousel-slide-img-wrap"
+                            @click="triggerImageUpload(editingBlockDraft.id, editingBlockDraft.activeItemIndex || 0)"
+                            title="Klik ganti foto slide langsung"
+                            style="cursor: pointer;"
+                          >
                             <img
                               :src="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0].image"
                               :alt="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0].title || 'Slide Image'"
                               class="carousel-slide-img"
                             />
+                            <div class="carousel-img-hover-overlay">
+                              <span
+                                class="btn-change-photo-badge"
+                                @click.stop="triggerImageUpload(editingBlockDraft.id, editingBlockDraft.activeItemIndex || 0)"
+                                title="Unggah Foto dari Komputer"
+                              >
+                                <UploadCloud :size="13" />
+                                <span>Ganti Foto</span>
+                              </span>
+                              <span
+                                class="btn-change-photo-badge secondary"
+                                @click.stop="openMediaPickerForBlock(editingBlockDraft.id, editingBlockDraft.activeItemIndex || 0)"
+                                title="Pilih dari Pustaka MinIO S3"
+                              >
+                                <Database :size="13" />
+                                <span>Pustaka</span>
+                              </span>
+                            </div>
                           </div>
                           <span v-if="editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.tag" class="carousel-tag-badge">
                             {{ editingBlockDraft.items[editingBlockDraft.activeItemIndex || 0]?.tag }}
