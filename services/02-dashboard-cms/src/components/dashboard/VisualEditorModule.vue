@@ -2216,6 +2216,12 @@ const onKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'h') {
     activeTool.value = 'hand';
   }
+  if (e.key === 'Escape') {
+    if (draggedBlockType.value) {
+      draggedBlockType.value = null;
+      activeDropSlotIndex.value = null;
+    }
+  }
   if (e.key === 'Delete' || e.key === 'Backspace') {
     if (selectedBlockId.value) {
       deleteBlock(selectedBlockId.value);
@@ -2229,6 +2235,10 @@ const onKeyUp = (e: KeyboardEvent) => {
   }
 };
 
+function handleGlobalDragEnd() {
+  draggedBlockType.value = null;
+  activeDropSlotIndex.value = null;
+}
 
 onMounted(async () => {
   window.addEventListener('keydown', onKeyDown);
@@ -2239,6 +2249,8 @@ onMounted(async () => {
   window.addEventListener('resize', updateChipsScrollState);
   window.addEventListener('resize', updateShelfPosition);
   window.addEventListener('scroll', updateShelfPosition, true);
+  window.addEventListener('dragend', handleGlobalDragEnd);
+  window.addEventListener('drop', handleGlobalDragEnd);
   document.addEventListener('click', handleSiteDropdownOutsideClick);
   document.addEventListener('click', handleAllDropdownOutsideClick);
 
@@ -2289,6 +2301,8 @@ onUnmounted(() => {
   window.removeEventListener('resize', updateChipsScrollState);
   window.removeEventListener('resize', updateShelfPosition);
   window.removeEventListener('scroll', updateShelfPosition, true);
+  window.removeEventListener('dragend', handleGlobalDragEnd);
+  window.removeEventListener('drop', handleGlobalDragEnd);
   document.removeEventListener('click', handleSiteDropdownOutsideClick);
   document.removeEventListener('click', handleAllDropdownOutsideClick);
 
@@ -2951,22 +2965,38 @@ const onCatalogDragEnd = () => {
   activeDropSlotIndex.value = null;
 };
 
+const getClosestDropSlotIndex = (clientY: number): number => {
+  if (!pageBlocks.value.length) return 0;
+  for (let i = 0; i < pageBlocks.value.length; i++) {
+    const block = pageBlocks.value[i];
+    if (!block.isVisible) continue;
+    const el = document.getElementById(`canvas-block-node-${block.id}`);
+    if (!el) continue;
+    const rect = el.getBoundingClientRect();
+    if (clientY < rect.top + rect.height / 2) {
+      return i;
+    }
+  }
+  return pageBlocks.value.length;
+};
+
 const onCanvasDropSlotDragOver = (e: DragEvent, idx: number) => {
   e.preventDefault();
   if (e.dataTransfer) {
     e.dataTransfer.dropEffect = 'copy';
   }
-  activeDropSlotIndex.value = idx;
+  if (activeDropSlotIndex.value !== idx) {
+    activeDropSlotIndex.value = idx;
+  }
 };
 
-const onCanvasDropSlotDragLeave = (idx: number) => {
-  if (activeDropSlotIndex.value === idx) {
-    activeDropSlotIndex.value = null;
-  }
+const onCanvasDropSlotDragLeave = (_idx?: number) => {
+  // Biarkan onSurfaceDragLeave menangani saat kursor benar-benar keluar kanvas
 };
 
 const onCanvasDropSlotDrop = (e: DragEvent, idx: number) => {
   e.preventDefault();
+  e.stopPropagation();
   const type = (e.dataTransfer?.getData('text/plain') || draggedBlockType.value) as VisualBlock['type'];
   if (type) {
     insertBlockFromLibraryAt(type, idx);
@@ -2980,19 +3010,19 @@ const onBlockDragOver = (e: DragEvent, bIdx: number) => {
   if (e.dataTransfer) {
     e.dataTransfer.dropEffect = 'copy';
   }
+  if (!draggedBlockType.value) return;
   const currentTarget = e.currentTarget as HTMLElement;
   const rect = currentTarget.getBoundingClientRect();
   const relY = e.clientY - rect.top;
-  // Paruh atas: drop sebelum blok (bIdx) | Paruh bawah: drop setelah blok (bIdx + 1)
-  if (relY < rect.height / 2) {
-    activeDropSlotIndex.value = bIdx;
-  } else {
-    activeDropSlotIndex.value = bIdx + 1;
+  const targetSlot = relY < rect.height / 2 ? bIdx : bIdx + 1;
+  if (activeDropSlotIndex.value !== targetSlot) {
+    activeDropSlotIndex.value = targetSlot;
   }
 };
 
 const onBlockDrop = (e: DragEvent, bIdx: number) => {
   e.preventDefault();
+  e.stopPropagation();
   const targetIdx = activeDropSlotIndex.value !== null ? activeDropSlotIndex.value : bIdx;
   onCanvasDropSlotDrop(e, targetIdx);
 };
@@ -3002,13 +3032,24 @@ const onSurfaceDragOver = (e: DragEvent) => {
   if (e.dataTransfer) {
     e.dataTransfer.dropEffect = 'copy';
   }
-  if (draggedBlockType.value && activeDropSlotIndex.value === null) {
-    activeDropSlotIndex.value = pageBlocks.value.length;
+  if (!draggedBlockType.value) return;
+  const targetSlot = getClosestDropSlotIndex(e.clientY);
+  if (activeDropSlotIndex.value !== targetSlot) {
+    activeDropSlotIndex.value = targetSlot;
   }
+};
+
+const onSurfaceDragLeave = (e: DragEvent) => {
+  const currentTarget = e.currentTarget as HTMLElement;
+  if (currentTarget && e.relatedTarget && currentTarget.contains(e.relatedTarget as Node)) {
+    return;
+  }
+  activeDropSlotIndex.value = null;
 };
 
 const onSurfaceDrop = (e: DragEvent) => {
   e.preventDefault();
+  e.stopPropagation();
   const targetIdx = activeDropSlotIndex.value !== null ? activeDropSlotIndex.value : pageBlocks.value.length;
   onCanvasDropSlotDrop(e, targetIdx);
 };
@@ -5782,6 +5823,7 @@ const executeVsCodeReplaceAll = () => {
                 :class="{ 'is-canvas-drag-active': draggedBlockType !== null }"
                 :style="{ '--accent-brand': activeContainer.accentColor }"
                 @dragover="onSurfaceDragOver"
+                @dragleave="onSurfaceDragLeave"
                 @drop="onSurfaceDrop"
               >
                 <!-- Loop Over Blocks with Drag & Drop Slots -->

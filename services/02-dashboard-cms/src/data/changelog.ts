@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.30',
+    version: 'v1.42.31',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.31',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Perbaikan Stabilitas Drag and Drop Kanvas, Indikator Seleksi Instan & Pratinjau Drop Target Autentik',
+    summary: 'Menyelesaikan 3 perbaikan krusial pada interaksi kanvas: (1) Pratinjau Drop Target Autentik: Komponen yang sedang di-drag tetap mempertahankan warna dan tampilan aslinya tanpa diubah menjadi abu-abu pudar, dengan highlight visual yang jelas pada kotak drop target; (2) Eliminasi Glitch Indikator Seleksi: Menghilangkan efek delay/overshoot membesar-mengecil pada garis seleksi dengan menonaktifkan transisi non-linear sehingga muncul instan dan stabil; (3) Drag Behavior & Smoothness: Menerapkan container-level hit testing berbasis midpoint blok, event listener dragleave batas kanvas, serta global handler pembatalan (Escape/drop di luar kanvas) sehingga elemen tidak tersangkut, tidak lag, dan pergerakan kursor sangat mulus.',
+    badge: 'Latest',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14231-1',
+        type: 'bugfix',
+        scope: 'Authentic Drop Target Preview & Visual Clarity',
+        description: 'Mempertahankan warna asli dan komponen visual kartu tanpa pengabuan (no grayscale/washout), dengan penekanan highlight pada slot target penempatan.'
+      },
+      {
+        id: 'c-02dash-14231-2',
+        type: 'bugfix',
+        scope: 'Instant Selection Bounding Box & Zero-Glitch Indicators',
+        description: 'Menghilangkan spring transition kurva bezier pada garis putus-putus dan bounding box seleksi agar muncul instan tanpa efek membesar lalu mengecil.'
+      },
+      {
+        id: 'c-02dash-14231-3',
+        type: 'improvement',
+        scope: 'Robust Drag-and-Drop Hit Testing & Boundary Exit Handling',
+        description: 'Mengoptimasi tracking drag berbasis midpoint blok kanvas, boundary leave detection pada surface, serta listener global untuk drop/cancel Escape tanpa lag atau elemen tersangkut.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.30',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '14 November 2026',
     title: 'Penyempurnaan Estetika Visual Pratinjau Peletakan Komponen & Eliminasi Garis Biru Agresif',
     summary: 'Menyempurnakan tampilan visual saat drag & drop komponen: (1) Dark Charcoal Blueprint Theme: Mengganti warna kotak pratinjau menjadi abu-abu kehitaman (#0f172a / #1e293b) dengan opacity lembut 0.88 agar tidak menyilaukan; (2) Muted Gray Dashed Border: Mengganti garis putus-putus biru agresif menjadi garis abu-abu slate (#64748b / #334155) yang elegan dan profesional; (3) Clean Block Separation: Menghilangkan garis batas biru atas dan bawah (inset box-shadow) pada blok kanvas untuk menjaga kebersihan visual tata letak halaman.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Irgi & Rizal (Frontend & UX)',
     items: [
       {
