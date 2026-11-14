@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.29',
+    version: 'v1.42.30',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.30',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Penyempurnaan Estetika Visual Pratinjau Peletakan Komponen & Eliminasi Garis Biru Agresif',
+    summary: 'Menyempurnakan tampilan visual saat drag & drop komponen: (1) Dark Charcoal Blueprint Theme: Mengganti warna kotak pratinjau menjadi abu-abu kehitaman (#0f172a / #1e293b) dengan opacity lembut 0.88 agar tidak menyilaukan; (2) Muted Gray Dashed Border: Mengganti garis putus-putus biru agresif menjadi garis abu-abu slate (#64748b / #334155) yang elegan dan profesional; (3) Clean Block Separation: Menghilangkan garis batas biru atas dan bawah (inset box-shadow) pada blok kanvas untuk menjaga kebersihan visual tata letak halaman.',
+    badge: 'Latest',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14230-1',
+        type: 'improvement',
+        scope: 'Visual Canvas Drop Ghost Theme & Opacity',
+        description: 'Menerapkan palet warna abu-abu kehitaman slate pada kotak pratinjau komponen dan menurunkan opacity ke 0.88 untuk tampilan blueprint yang subtle.'
+      },
+      {
+        id: 'c-02dash-14230-2',
+        type: 'improvement',
+        scope: 'Drop Slot Border & Line Color Neutralization',
+        description: 'Mengubah garis putus-putus slot dan batas penempatan menjadi abu-abu netral serta menghapus garis biru inset pada tepi blok.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.29',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '14 November 2026',
     title: 'Implementasi Live Content Placement Preview saat Drag & Drop Komponen ke Kanvas',
     summary: 'Menghadirkan pengalaman drag & drop interaktif ala Canva/Figma dengan visualisasi pratinjau konten sesungguhnya sebelum dilepas: (1) Live Interactive Component Mockup: Saat komponen diseret ke atas kanvas, slot target menampilkan pratinjau visual representatif dari komponen tersebut (Carousel Banner dengan gambar & tombol ganti foto, Hero dengan headline & CTA, Bento Grid 3 kartu, Pricing 3 tier, Formulir kontak, dsb.); (2) Context-Aware Spacing & Layout Insight: Pengguna dapat langsung melihat kesesuaian visual komponen terhadap blok di atas dan di bawahnya sebelum menentukan posisi peletakan; (3) Adaptive Drag-Over Tracking & Instant Surface Engagement: Kursor mendeteksi separuh atas/bawah blok dan mengaktifkan pratinjau penempatan seketika kursor menyentuh kanvas.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Irgi & Rizal (Frontend & UX)',
     items: [
       {

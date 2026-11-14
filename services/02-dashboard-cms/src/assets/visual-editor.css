@@ -1891,18 +1891,14 @@
 }
 
 .canvas-drop-slot.is-drag-in-progress .drop-slot-line {
-  background: rgba(37, 99, 235, 0.08);
-  border: 1.5px dashed rgba(37, 99, 235, 0.5);
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px dashed rgba(148, 163, 184, 0.35);
   height: 18px;
   border-radius: 8px;
 }
 
 .canvas-drop-slot.is-active-drop .drop-slot-line {
-  background: rgba(37, 99, 235, 0.14);
-  border: 2px solid #2563eb;
-  height: 46px;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
+  display: none !important;
 }
 
 .drop-slot-badge {
@@ -1911,12 +1907,12 @@
   gap: 6px;
   padding: 6px 16px;
   border-radius: 999px;
-  background: #2563eb;
-  color: #ffffff;
-  font-size: 0.76rem;
+  background: #334155;
+  color: #f8fafc;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: scale(0.9);
   transition: transform 0.15s ease;
   pointer-events: none;
@@ -1928,11 +1924,11 @@
 }
 
 .block-node-wrapper.is-drag-target-top {
-  box-shadow: inset 0 3px 0 0 #2563eb;
+  box-shadow: none !important;
 }
 
 .block-node-wrapper.is-drag-target-bottom {
-  box-shadow: inset 0 -3px 0 0 #2563eb;
+  box-shadow: none !important;
 }
 
 .website-rendered-surface.is-canvas-drag-active {
