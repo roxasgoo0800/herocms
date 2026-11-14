@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.31',
+    version: 'v1.42.32',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.32',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Penyatuan Renderer Komponen Canvas, Indikator Drop Netral & Micro-Interaction Drop/Cancel Halus',
+    summary: 'Menyatukan seluruh sumber rendering komponen (Panel Pemilihan Menu, Floating Drag Preview, Drop Preview, dan Kanvas Utama) melalui satu komponen tunggal CanvasBlockRenderer.vue agar 100% konsisten secara visual dan proporsional. Mengubah warna indikator drop target menjadi slate netral yang selaras dengan tema kanvas, serta menambahkan animasi micro-interaction 180ms ease-out untuk penempatan berhasil (opacity 0.95->1, scale 0.98->1) dan pembatalan drag (Esc/area tidak valid kembali ke sumber) dengan dukungan penuh prefers-reduced-motion.',
+    badge: 'Latest',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14232-1',
+        type: 'improvement',
+        scope: 'Single-Source CanvasBlockRenderer Architecture',
+        description: 'Mengekstrak CanvasBlockRenderer.vue sebagai sumber tunggal perenderan 18 tipe komponen sehingga panel pemilihan (scaled proporsional 0.275x), pratinjau drop, dan kanvas akhir identik 100%.'
+      },
+      {
+        id: 'c-02dash-14232-2',
+        type: 'bugfix',
+        scope: 'Neutral Drop Target Indicator & Color Preservation',
+        description: 'Mengganti highlight dan outline drop target dari biru dominan ke slate netral (#94a3b8 / #f8fafc) agar menyatu dengan kanvas tanpa mengubah warna komponen yang di-drag.'
+      },
+      {
+        id: 'c-02dash-14232-3',
+        type: 'feature',
+        scope: 'Pointer Tracking & Smooth Drop/Cancel Micro-Interactions',
+        description: 'Mengimplementasikan pointer-based drag tracking tanpa delay (translate3d), animasi penempatan 180ms ease-out, serta animasi pembatalan drag kembali ke kartu sumber saat menekan Esc atau melepas di luar target.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.31',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '14 November 2026',
     title: 'Perbaikan Stabilitas Drag and Drop Kanvas, Indikator Seleksi Instan & Pratinjau Drop Target Autentik',
     summary: 'Menyelesaikan 3 perbaikan krusial pada interaksi kanvas: (1) Pratinjau Drop Target Autentik: Komponen yang sedang di-drag tetap mempertahankan warna dan tampilan aslinya tanpa diubah menjadi abu-abu pudar, dengan highlight visual yang jelas pada kotak drop target; (2) Eliminasi Glitch Indikator Seleksi: Menghilangkan efek delay/overshoot membesar-mengecil pada garis seleksi dengan menonaktifkan transisi non-linear sehingga muncul instan dan stabil; (3) Drag Behavior & Smoothness: Menerapkan container-level hit testing berbasis midpoint blok, event listener dragleave batas kanvas, serta global handler pembatalan (Escape/drop di luar kanvas) sehingga elemen tidak tersangkut, tidak lag, dan pergerakan kursor sangat mulus.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Irgi & Rizal (Frontend & UX)',
     items: [
       {

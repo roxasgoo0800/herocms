@@ -1,7 +1,7 @@
 {
   "name": "cloudcms-dashboard-cms",
   "private": true,
-  "version": "1.42.31",
+  "version": "1.42.32",
   "type": "module",
   "scripts": {
     "dev": "vite",
