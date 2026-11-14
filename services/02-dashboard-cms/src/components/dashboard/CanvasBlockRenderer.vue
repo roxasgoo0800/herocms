@@ -109,7 +109,19 @@ const callHandler = (name: string, ...args: any[]) => {
 </script>
 
 <template>
-  <div class="canvas-block-renderer-root" :class="{ 'is-preview-mode': previewMode }">
+  <div
+    class="canvas-block-renderer-root"
+    :class="{ 'is-preview-mode': previewMode }"
+    :data-has-custom-font="!!block.styles?.fontFamily ? 'true' : undefined"
+    :data-has-custom-text-color="!!block.styles?.textColor ? 'true' : undefined"
+    :data-has-custom-size="!!block.styles?.fontSize ? 'true' : undefined"
+    :style="{
+      fontFamily: block.styles?.fontFamily || undefined,
+      color: block.styles?.textColor || undefined,
+      '--block-text-color': block.styles?.textColor || undefined,
+      '--block-font-scale': block.styles?.fontSize ? String(block.styles.fontSize / 16) : '1'
+    }"
+  >
     <!-- BLOCK TYPE 1: NAVBAR -->
     <nav
       v-if="block.type === 'navbar'"
@@ -123,9 +135,10 @@ const callHandler = (name: string, ...args: any[]) => {
         position: !previewMode && block.styles?.isSticky ? 'sticky' : 'relative',
         top: !previewMode && block.styles?.isSticky ? '0' : undefined,
         zIndex: !previewMode && block.styles?.isSticky ? 40 : undefined,
-        backgroundColor: block.styles?.navStyle === 'solid' ? (block.styles?.bgColor || '#ffffff') :
+        backgroundColor: block.styles?.bgColor ? block.styles.bgColor :
+                         block.styles?.navStyle === 'solid' ? '#ffffff' :
                          block.styles?.navStyle === 'transparent' ? 'transparent' :
-                         block.styles?.navStyle === 'bordered' ? (block.styles?.bgColor || '#ffffff') : undefined,
+                         block.styles?.navStyle === 'bordered' ? '#ffffff' : undefined,
         borderBottom: block.styles?.navStyle === 'bordered' ? `2px solid ${block.styles?.accentColor || '#cbd5e1'}` : undefined
       }"
     >
@@ -492,7 +505,7 @@ const callHandler = (name: string, ...args: any[]) => {
             class="btn-tier-action"
             :style="{
               backgroundColor: item.buttonColor || (item.tag === 'Terpopuler' ? effectiveAccent : '#f1f5f9'),
-              color: item.buttonColor ? '#ffffff' : (item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a'),
+              color: item.buttonTextColor || (item.buttonColor ? '#ffffff' : (item.tag === 'Terpopuler' ? '#ffffff' : '#0f172a')),
               borderRadius: (item.buttonRadius !== undefined ? item.buttonRadius + 'px' : (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px')),
               border: item.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
               boxShadow: item.buttonStyle === 'glow' ? `0 0 16px ${(item.buttonColor || effectiveAccent)}66` : undefined
@@ -520,7 +533,9 @@ const callHandler = (name: string, ...args: any[]) => {
         class="cta-inner-banner"
         :style="{
           borderColor: effectiveAccent + '30',
-          background: `linear-gradient(135deg, ${effectiveAccent}15 0%, #ffffff80 100%)`
+          background: block.styles?.bgColor
+            ? block.styles.bgColor
+            : `linear-gradient(135deg, ${effectiveAccent}15 0%, #ffffff80 100%)`
         }"
       >
         <h2
@@ -543,6 +558,7 @@ const callHandler = (name: string, ...args: any[]) => {
           class="btn-cta-big"
           :style="{
             backgroundColor: block.styles?.buttonColor || effectiveAccent,
+            color: block.styles?.buttonTextColor || '#ffffff',
             borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
             border: block.styles?.buttonStyle === 'outline' ? '2px solid currentColor' : undefined,
             boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || effectiveAccent)}66` : undefined
@@ -878,10 +894,14 @@ const callHandler = (name: string, ...args: any[]) => {
             />
           </div>
           <button
+            type="button"
             class="btn-form-submit"
             :style="{
-              backgroundColor: effectiveAccent,
-              borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px')
+              backgroundColor: block.styles?.buttonColor || effectiveAccent,
+              color: block.styles?.buttonTextColor || '#ffffff',
+              borderRadius: (block.styles?.buttonRadius !== undefined ? block.styles.buttonRadius + 'px' : '8px'),
+              border: block.styles?.buttonStyle === 'outline' ? `2px solid ${block.styles?.buttonColor || effectiveAccent}` : undefined,
+              boxShadow: block.styles?.buttonStyle === 'glow' ? `0 0 20px ${(block.styles?.buttonColor || effectiveAccent)}66` : undefined
             }"
             @click="callHandler('onButtonClick', block, 'primary', $event)"
           >

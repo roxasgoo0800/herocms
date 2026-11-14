@@ -338,13 +338,35 @@ const isHudFontOpen = ref(false);
 const hudPatternDropdownRef = ref<HTMLElement | null>(null);
 const hudAnimDropdownRef = ref<HTMLElement | null>(null);
 const hudFontDropdownRef = ref<HTMLElement | null>(null);
-const blockAnimKeys = ref<Record<string, number>>({});
+const playingAnimBlockId = ref<string | null>(null);
+let animPlayTimer: ReturnType<typeof setTimeout> | null = null;
+
+const triggerOneShotBlockAnim = (blockId: string, durationSec = 0.8) => {
+  if (animPlayTimer) {
+    clearTimeout(animPlayTimer);
+    animPlayTimer = null;
+  }
+  playingAnimBlockId.value = null;
+  requestAnimationFrame(() => {
+    playingAnimBlockId.value = blockId;
+    const ms = Math.max(400, Math.round(durationSec * 1000) + 180);
+    animPlayTimer = setTimeout(() => {
+      if (playingAnimBlockId.value === blockId) {
+        playingAnimBlockId.value = null;
+      }
+    }, ms);
+  });
+};
 
 const patternOptionsList = [
   { id: 'none', name: 'Pola: Off' },
   { id: 'dots', name: 'Dot Grid' },
   { id: 'grid', name: 'Matrix Grid' },
-  { id: 'mesh', name: 'Ambient Glow' }
+  { id: 'mesh', name: 'Ambient Glow' },
+  { id: 'diagonal', name: 'Diagonal Stripes' },
+  { id: 'cross', name: 'Cross Plus Grid' },
+  { id: 'radial', name: 'Radial Spotlight' },
+  { id: 'blueprint', name: 'Blueprint Fine' }
 ];
 
 const hudAnimationList = [
@@ -357,7 +379,7 @@ const hudAnimationList = [
   { id: 'springPop', name: 'Spring 3D Elastic' },
   { id: 'zoomIn', name: 'Zoom In Pop' },
   { id: 'tiltIn', name: 'Perspective Tilt 3D' },
-  { id: 'float', name: 'Floating Infinite' },
+  { id: 'float', name: 'Soft Float' },
   { id: 'pulseGlow', name: 'Pulse Glow' },
   { id: 'bounce', name: 'Dynamic Bounce' }
 ];
@@ -376,9 +398,14 @@ const currentAnimLabel = computed(() => {
 });
 
 const currentBlockFontLabel = computed(() => {
-  const currentFam = selectedBlock.value?.styles?.fontFamily || currentFont.value;
-  const found = fontOptions.find(f => f.family === currentFam || f.id === currentFam || currentFam.includes(f.name.split(' (')[0]));
-  return found ? found.name.split(' (')[0] : 'Inter';
+  const currentFam = selectedBlock.value?.styles?.fontFamily || currentFont.value || '';
+  const found = fontOptions.find(
+    f =>
+      f.family === currentFam ||
+      f.id === currentFam ||
+      currentFam.toLowerCase().includes(f.name.split(' (')[0].toLowerCase())
+  );
+  return found ? found.name.split(' (')[0] : currentFam.split(',')[0].replace(/['"]/g, '') || 'Inter';
 });
 
 const toggleHudPatternDropdown = () => {
@@ -413,13 +440,22 @@ const selectHudAnim = (aId: string) => {
   if (selectedBlock.value) {
     if (!selectedBlock.value.styles) selectedBlock.value.styles = {};
     selectedBlock.value.styles.animation = aId as any;
-    // Remount key so CSS animation replays immediately with visible motion!
-    const bId = selectedBlock.value.id;
-    blockAnimKeys.value[bId] = (blockAnimKeys.value[bId] || 0) + 1;
+    if (aId !== 'none') {
+      triggerOneShotBlockAnim(selectedBlock.value.id, selectedBlock.value.styles.animationDuration || 0.8);
+    } else {
+      playingAnimBlockId.value = null;
+    }
     recordHistory();
     triggerAutoSaveDraft();
   }
   isHudAnimOpen.value = false;
+};
+
+const replaySelectedBlockAnim = () => {
+  if (!selectedBlock.value) return;
+  const aId = selectedBlock.value.styles?.animation;
+  if (!aId || aId === 'none') return;
+  triggerOneShotBlockAnim(selectedBlock.value.id, selectedBlock.value.styles?.animationDuration || 0.8);
 };
 
 const selectHudFont = (family: string) => {
@@ -2308,6 +2344,7 @@ onUnmounted(() => {
   cleanupPointerDragListeners();
   if (cancelDragTimer) clearTimeout(cancelDragTimer);
   if (dropSuccessTimer) clearTimeout(dropSuccessTimer);
+  if (animPlayTimer) clearTimeout(animPlayTimer);
   document.removeEventListener('click', handleSiteDropdownOutsideClick);
   document.removeEventListener('click', handleAllDropdownOutsideClick);
 
@@ -5511,6 +5548,15 @@ const canvasBlockHandlers = {
                         <span>{{ currentAnimLabel }}</span>
                         <ChevronDown :size="11" class="hud-chevron" :class="{ 'is-rotated': isHudAnimOpen }" />
                       </button>
+                      <button
+                        v-if="selectedBlock.styles?.animation && selectedBlock.styles.animation !== 'none'"
+                        type="button"
+                        class="shelf-btn"
+                        @click.stop="replaySelectedBlockAnim"
+                        title="Putar Ulang Animasi"
+                      >
+                        <Play :size="10" />
+                      </button>
                       <transition name="hud-pop-scale">
                         <div v-if="isHudAnimOpen" class="hud-popover-menu" @click.stop @mousedown.stop @wheel.stop>
                           <button
@@ -5888,7 +5934,7 @@ const canvasBlockHandlers = {
                       'is-drag-target-top': draggedBlockType !== null && activeDropSlotIndex === bIdx,
                       'is-drag-target-bottom': draggedBlockType !== null && activeDropSlotIndex === bIdx + 1,
                       'is-just-dropped': justDroppedBlockId === block.id,
-                      [block.styles?.animation && block.styles.animation !== 'none' ? 'anim-' + block.styles.animation : '']: true
+                      [playingAnimBlockId === block.id && block.styles?.animation && block.styles.animation !== 'none' ? 'anim-' + block.styles.animation : '']: true
                     }"
                     :style="{
                       zIndex: selectedBlockId === block.id && editorViewMode === 'design' ? 99999 : 1,
@@ -5916,6 +5962,14 @@ const canvasBlockHandlers = {
                       <span class="corner-anchor bl"></span>
                       <span class="corner-anchor br"></span>
                     </div>
+
+                    <!-- SECTION BACKGROUND PATTERN LAYER -->
+                    <div
+                      v-if="block.styles?.bgPattern && block.styles.bgPattern !== 'none'"
+                      class="section-bg-pattern-layer"
+                      :class="'pattern-' + block.styles.bgPattern"
+                      aria-hidden="true"
+                    ></div>
 
                     <!-- UNIFIED CANVAS BLOCK RENDERER -->
                     <CanvasBlockRenderer

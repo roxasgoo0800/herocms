@@ -180,6 +180,7 @@ export function compileTemplateToHTML(
   for (let idx = 0; idx < blocks.length; idx++) {
     const block = blocks[idx];
     if (block.isVisible === false) continue;
+    const prevHtmlLen = renderedBlocksHtml.length;
 
     switch (block.type as string) {
       case 'navbar': {
@@ -934,6 +935,40 @@ export function compileTemplateToHTML(
         break;
       }
     }
+
+    const blockInnerHtml = renderedBlocksHtml.slice(prevHtmlLen);
+    if (blockInnerHtml) {
+      const shellAttrs: string[] = ['class="sim-block-shell"'];
+      const shellStyles: string[] = [];
+      if (block.styles?.fontFamily) {
+        shellAttrs.push('data-has-custom-font="true"');
+        shellStyles.push(`font-family: ${block.styles.fontFamily};`);
+      }
+      if (block.styles?.textColor) {
+        shellAttrs.push('data-has-custom-text-color="true"');
+        shellStyles.push(`color: ${block.styles.textColor}; --block-text-color: ${block.styles.textColor};`);
+      }
+      if (block.styles?.fontSize) {
+        shellAttrs.push('data-has-custom-size="true"');
+        shellStyles.push(`--block-font-scale: ${(block.styles.fontSize / 16).toFixed(4)};`);
+      }
+      if (block.styles?.animation && block.styles.animation !== 'none') {
+        shellAttrs.push(`data-sim-anim="anim-${escapeHtml(block.styles.animation)}"`);
+        if (block.styles.animationDuration) {
+          shellStyles.push(`animation-duration: ${block.styles.animationDuration}s;`);
+        }
+      }
+      if (shellStyles.length > 0) {
+        shellAttrs.push(`style="${shellStyles.join(' ')}"`);
+      }
+      const patternLayerHtml =
+        block.styles?.bgPattern && block.styles.bgPattern !== 'none'
+          ? `<div class="section-bg-pattern-layer pattern-${escapeHtml(block.styles.bgPattern)}" aria-hidden="true"></div>`
+          : '';
+      renderedBlocksHtml =
+        renderedBlocksHtml.slice(0, prevHtmlLen) +
+        `<div ${shellAttrs.join(' ')}>${patternLayerHtml}<div class="sim-block-shell-content">${blockInnerHtml}</div></div>`;
+    }
   }
 
   const favicon = options.faviconUrl;
@@ -964,7 +999,7 @@ export function compileTemplateToHTML(
     ${ogImg ? `<meta name="twitter:image" content="${escapeHtml(ogImg)}">` : ''}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;700;800&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&family=Sora:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800&family=Rubik:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800&family=Lora:wght@400;500;600;700&family=Merriweather:wght@400;700;900&family=JetBrains+Mono:wght@400;600;700&family=Fira+Code:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --tpl-accent: ${accentColor};
@@ -1592,6 +1627,53 @@ export function compileTemplateToHTML(
         .footer-left p { font-size: 0.8rem; margin: 4px 0 0; }
         .edge-status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.74rem; color: #64748b; font-weight: 600; font-family: monospace; }
         .edge-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; }
+
+        /* 12. Section Shell, Patterns, Typography Overrides & One-Shot Animations */
+        .sim-block-shell { position: relative; overflow: hidden; }
+        .sim-block-shell-content { position: relative; z-index: 1; }
+        .section-bg-pattern-layer { position: absolute; inset: 0; pointer-events: none; z-index: 0; border-radius: inherit; overflow: hidden; }
+        .section-bg-pattern-layer.pattern-dots { background-image: radial-gradient(rgba(100, 116, 139, 0.45) 1.5px, transparent 1.5px); background-size: 20px 20px; }
+        .section-bg-pattern-layer.pattern-grid { background-image: linear-gradient(to right, rgba(100, 116, 139, 0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(100, 116, 139, 0.2) 1px, transparent 1px); background-size: 28px 28px; }
+        .section-bg-pattern-layer.pattern-mesh { background: radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.22) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.18) 0%, transparent 55%); }
+        .section-bg-pattern-layer.pattern-diagonal { background-image: repeating-linear-gradient(-45deg, rgba(100, 116, 139, 0.16) 0, rgba(100, 116, 139, 0.16) 1px, transparent 1px, transparent 14px); }
+        .section-bg-pattern-layer.pattern-cross { background-image: radial-gradient(rgba(100, 116, 139, 0.35) 1px, transparent 1px), radial-gradient(rgba(100, 116, 139, 0.22) 1px, transparent 1px); background-size: 24px 24px; background-position: 0 0, 12px 12px; }
+        .section-bg-pattern-layer.pattern-radial { background: radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.2) 0%, transparent 65%), radial-gradient(ellipse at 50% 100%, rgba(14, 165, 233, 0.14) 0%, transparent 60%); }
+        .section-bg-pattern-layer.pattern-blueprint { background-image: linear-gradient(to right, rgba(37, 99, 235, 0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(37, 99, 235, 0.12) 1px, transparent 1px), linear-gradient(to right, rgba(37, 99, 235, 0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(37, 99, 235, 0.06) 1px, transparent 1px); background-size: 48px 48px, 48px 48px, 12px 12px, 12px 12px; }
+
+        .sim-block-shell[data-has-custom-font="true"],
+        .sim-block-shell[data-has-custom-font="true"] * { font-family: inherit !important; }
+        .sim-block-shell[data-has-custom-text-color="true"] h1,
+        .sim-block-shell[data-has-custom-text-color="true"] h2,
+        .sim-block-shell[data-has-custom-text-color="true"] h3,
+        .sim-block-shell[data-has-custom-text-color="true"] p,
+        .sim-block-shell[data-has-custom-text-color="true"] li,
+        .sim-block-shell[data-has-custom-text-color="true"] .sim-section-title,
+        .sim-block-shell[data-has-custom-text-color="true"] .sim-section-sub { color: var(--block-text-color) !important; }
+        .sim-block-shell[data-has-custom-size="true"] h1 { font-size: calc(2.5rem * var(--block-font-scale, 1)) !important; }
+        .sim-block-shell[data-has-custom-size="true"] h2,
+        .sim-block-shell[data-has-custom-size="true"] .sim-section-title { font-size: calc(1.85rem * var(--block-font-scale, 1)) !important; }
+        .sim-block-shell[data-has-custom-size="true"] h3 { font-size: calc(1.2rem * var(--block-font-scale, 1)) !important; }
+        .sim-block-shell[data-has-custom-size="true"] p,
+        .sim-block-shell[data-has-custom-size="true"] .sim-section-sub { font-size: calc(0.95rem * var(--block-font-scale, 1)) !important; }
+
+        @keyframes simFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes simSlideUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes simZoomIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+        @keyframes simBounce { 0% { opacity: 0; transform: translateY(24px); } 55% { opacity: 1; transform: translateY(-6px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes simPulseGlow { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.35); } 50% { box-shadow: 0 0 24px 6px rgba(59, 130, 246, 0.25); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+        @keyframes simFloat { 0% { transform: translateY(0); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0); } }
+        @keyframes simBlurFade { from { opacity: 0; filter: blur(10px); transform: translateY(8px); } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
+        @keyframes simSpringPop { 0% { opacity: 0; transform: scale(0.86); } 65% { opacity: 1; transform: scale(1.03); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes simTiltIn { from { opacity: 0; transform: perspective(700px) rotateX(8deg) translateY(16px); } to { opacity: 1; transform: perspective(700px) rotateX(0) translateY(0); } }
+        .anim-fadeIn { animation: simFadeIn 0.6s ease-out 1 both; }
+        .anim-slideUp { animation: simSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1 both; }
+        .anim-zoomIn { animation: simZoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1 both; }
+        .anim-bounce { animation: simBounce 0.9s ease 1 both; }
+        .anim-pulseGlow { animation: simPulseGlow 1.1s ease-out 1 both; }
+        .anim-float { animation: simFloat 1.0s ease-out 1 both; }
+        .anim-blurFade { animation: simBlurFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1 both; }
+        .anim-springPop { animation: simSpringPop 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) 1 both; }
+        .anim-tiltIn { animation: simTiltIn 0.75s cubic-bezier(0.16, 1, 0.3, 1) 1 both; }
     </style>
 </head>
 <body>
@@ -1642,6 +1724,27 @@ export function compileTemplateToHTML(
             let nextIdx = (activeIdx + delta + slides.length) % slides.length;
             slides[nextIdx].style.display = 'flex';
         }
+
+        (function initOneShotAnimations() {
+            const targets = document.querySelectorAll('[data-sim-anim]');
+            if (!targets.length) return;
+            if (!('IntersectionObserver' in window)) {
+                targets.forEach(function (el) {
+                    const cls = el.getAttribute('data-sim-anim');
+                    if (cls) el.classList.add(cls);
+                });
+                return;
+            }
+            const observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) return;
+                    const cls = entry.target.getAttribute('data-sim-anim');
+                    if (cls) entry.target.classList.add(cls);
+                    observer.unobserve(entry.target);
+                });
+            }, { threshold: 0.12 });
+            targets.forEach(function (el) { observer.observe(el); });
+        })();
     </script>
 </body>
 </html>`;

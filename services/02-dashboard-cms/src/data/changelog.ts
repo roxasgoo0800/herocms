@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.32',
+    version: 'v1.42.33',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,43 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.33',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Perbaikan Kontrol Floating Toolbar: Tipografi, Ukuran Font, Warna Teks, Pattern Latar, Pemisahan Target Bg & Animasi One-Shot',
+    summary: 'Menyempurnakan seluruh kontrol Floating Toolbar pada Visual Editor tanpa mengubah desain maupun tata letak toolbar: memperluas pilihan 19 Google Fonts modern, mengaktifkan penskalaan ukuran teks (A-/A+), memperbaiki warna teks agar tidak memengaruhi tombol, merender 8 pola latar per-section, memisahkan target Bg tombol vs banner/navbar, dan mengubah animasi masuk menjadi one-shot (tidak berulang saat hover atau rerender) baik di Kanvas Editor maupun Preview/Public HTML.',
+    badge: 'Latest',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14233-1',
+        type: 'improvement',
+        scope: 'Typography, Font Size & Text Color Controls',
+        description: 'Memperluas fontOptions menjadi 19 font modern (Plus Jakarta Sans, Inter, DM Sans, Outfit, Space Grotesk, Syne, Sora, Poppins, Manrope, Work Sans, Nunito, Rubik, Playfair Display, Lora, Merriweather, JetBrains Mono, Fira Code) di index.html, editor-presets.ts, CanvasBlockRenderer.vue, dan templateHtmlCompiler.ts, lengkap dengan penskalaan --block-font-scale dan warna teks terisolasi.'
+      },
+      {
+        id: 'c-02dash-14233-2',
+        type: 'improvement',
+        scope: 'Section Background Pattern Layer',
+        description: 'Menambahkan elemen .section-bg-pattern-layer di Kanvas Editor dan hasil kompilasi HTML dengan 8 opsi pola (Off, Dots, Grid, Mesh, Diagonal, Cross, Radial, Blueprint) yang terisolasi pada masing-masing section.'
+      },
+      {
+        id: 'c-02dash-14233-3',
+        type: 'bugfix',
+        scope: 'Button vs Banner Background Target & One-Shot Animations',
+        description: 'Memperbaiki binding bgColor pada Navbar/CTA/Form/Pricing/Modal agar warna tombol dan latar section tidak saling tertimpa, menghapus animation: none saat hover yang memicu replay animasi, mengubah pulseGlow & float menjadi one-shot (1 both), serta menambahkan tombol putar ulang animasi dan IntersectionObserver di Preview/Public HTML.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.32',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '14 November 2026',
     title: 'Penyatuan Renderer Komponen Canvas, Indikator Drop Netral & Micro-Interaction Drop/Cancel Halus',
     summary: 'Menyatukan seluruh sumber rendering komponen (Panel Pemilihan Menu, Floating Drag Preview, Drop Preview, dan Kanvas Utama) melalui satu komponen tunggal CanvasBlockRenderer.vue agar 100% konsisten secara visual dan proporsional. Mengubah warna indikator drop target menjadi slate netral yang selaras dengan tema kanvas, serta menambahkan animasi micro-interaction 180ms ease-out untuk penempatan berhasil (opacity 0.95->1, scale 0.98->1) dan pembatalan drag (Esc/area tidak valid kembali ke sumber) dengan dukungan penuh prefers-reduced-motion.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Irgi & Rizal (Frontend & UX)',
     items: [
       {
