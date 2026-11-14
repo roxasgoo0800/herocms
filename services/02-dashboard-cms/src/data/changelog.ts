@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.27',
+    version: 'v1.42.28',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.28',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Eliminasi Transisi Lag & Distorsi Layout Saat Membuka Editor Visual',
+    summary: 'Menyelesaikan permasalahan visual glitch/flicker saat berpindah dari dasbor utama ke Visual Editor: (1) Dedicated Fullscreen Overlay Stage: Visual Editor kini di-mount di overlay viewport terisolasi (.editor-fullscreen-stage) dengan z-index tinggi dan animasi transisi halus editor-stage-fade tanpa merusak struktur DOM dasbor utama; (2) Background Dashboard State Preservation: Mempertahankan view dasbor aktif (containers/analytics) dan posisi scroll di latar belakang agar kembali dari editor berlangsung instan (0ms); (3) Preloading Async Module: Memanfaatkan browser idle callback (requestIdleCallback) untuk pre-fetch chunk VisualEditorModule di latar belakang sehingga pembukaan editor instan tanpa delay download bundle.',
+    badge: 'Latest',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14228-1',
+        type: 'bugfix',
+        scope: 'Dashboard to Visual Editor Stage Transition',
+        description: 'Menghilangkan override CSS destruktif pada .app-sidebar dan .top-nav-header yang memicu distorsi layout kartu kontainer full-width saat proses transition leave.'
+      },
+      {
+        id: 'c-02dash-14228-2',
+        type: 'perf',
+        scope: 'Visual Editor Chunk Preloading & Background State Retention',
+        description: 'Mengimplementasikan idle preloading bundle editor via requestIdleCallback dan mempertahankan DOM dasbor tetap mounted di background untuk navigasi bolak-balik tanpa delay.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.27',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '14 November 2026',
     title: 'Optimasi Presisi & Forgiving Drop Zone Drag & Drop Komponen ke Kanvas',
     summary: 'Meningkatkan kenyamanan interaksi drag & drop ala Canva/Figma: (1) Full-Block Adaptive Drop Zone: Menghilangkan keharusan membidik slot 8px dengan mendeteksi posisi kursor pada paruh atas/bawah seluruh badan blok untuk penyisipan otomatis; (2) Expanded Glowing Drop Slots: Memperbesar area drop slot menjadi 22px (in-progress) dan 54px (active) dengan garis batas interaktif dan badge visual; (3) Whole-Surface Drop Fallback: Seluruh artboard kanvas kini menerima drop event tanpa error cursor not-allowed; (4) Context-Aware Single-Click Add: Mengklik kartu katalog langsung menyisipkan komponen tepat di bawah blok yang sedang aktif terseleksi.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Irgi & Rizal (Frontend & UX)',
     items: [
       {
