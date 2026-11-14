@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.28',
+    version: 'v1.42.29',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.29',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Implementasi Live Content Placement Preview saat Drag & Drop Komponen ke Kanvas',
+    summary: 'Menghadirkan pengalaman drag & drop interaktif ala Canva/Figma dengan visualisasi pratinjau konten sesungguhnya sebelum dilepas: (1) Live Interactive Component Mockup: Saat komponen diseret ke atas kanvas, slot target menampilkan pratinjau visual representatif dari komponen tersebut (Carousel Banner dengan gambar & tombol ganti foto, Hero dengan headline & CTA, Bento Grid 3 kartu, Pricing 3 tier, Formulir kontak, dsb.); (2) Context-Aware Spacing & Layout Insight: Pengguna dapat langsung melihat kesesuaian visual komponen terhadap blok di atas dan di bawahnya sebelum menentukan posisi peletakan; (3) Adaptive Drag-Over Tracking & Instant Surface Engagement: Kursor mendeteksi separuh atas/bawah blok dan mengaktifkan pratinjau penempatan seketika kursor menyentuh kanvas.',
+    badge: 'Latest',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14229-1',
+        type: 'feature',
+        scope: 'Visual Canvas Live Insertion Preview',
+        description: 'Membuat komponen CanvasDropPreview.vue yang merender pratinjau konten representatif dan realistis saat komponen di-drag ke atas slot kanvas.'
+      },
+      {
+        id: 'c-02dash-14229-2',
+        type: 'improvement',
+        scope: 'Adaptive Drop Slot Geometry & Visual Feedback',
+        description: 'Mengubah tinggi slot drop menjadi responsif auto dengan batas pulsing glow neon (#2563eb) dan badge penjelas posisi penempatan komponen.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.28',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '14 November 2026',
     title: 'Eliminasi Transisi Lag & Distorsi Layout Saat Membuka Editor Visual',
     summary: 'Menyelesaikan permasalahan visual glitch/flicker saat berpindah dari dasbor utama ke Visual Editor: (1) Dedicated Fullscreen Overlay Stage: Visual Editor kini di-mount di overlay viewport terisolasi (.editor-fullscreen-stage) dengan z-index tinggi dan animasi transisi halus editor-stage-fade tanpa merusak struktur DOM dasbor utama; (2) Background Dashboard State Preservation: Mempertahankan view dasbor aktif (containers/analytics) dan posisi scroll di latar belakang agar kembali dari editor berlangsung instan (0ms); (3) Preloading Async Module: Memanfaatkan browser idle callback (requestIdleCallback) untuk pre-fetch chunk VisualEditorModule di latar belakang sehingga pembukaan editor instan tanpa delay download bundle.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Irgi & Rizal (Frontend & UX)',
     items: [
       {
@@ -92,7 +116,7 @@ export const changelogReleases: ChangelogRelease[] = [
       },
       {
         id: 'c-02dash-14228-2',
-        type: 'perf',
+        type: 'performance',
         scope: 'Visual Editor Chunk Preloading & Background State Retention',
         description: 'Mengimplementasikan idle preloading bundle editor via requestIdleCallback dan mempertahankan DOM dasbor tetap mounted di background untuk navigasi bolak-balik tanpa delay.'
       }

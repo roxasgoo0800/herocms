@@ -1865,8 +1865,13 @@
 }
 
 .canvas-drop-slot.is-active-drop {
-  height: 54px;
-  margin: 10px 0;
+  height: auto;
+  min-height: 120px;
+  margin: 14px 0;
+}
+
+.canvas-drop-slot.is-active-drop .drop-slot-line {
+  display: none;
 }
 
 .drop-slot-line {

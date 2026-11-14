@@ -107,6 +107,7 @@ import {
   type BrandPalette,
   type AnimationOption
 } from '../../data/editor-presets';
+import CanvasDropPreview from './CanvasDropPreview.vue';
 
 const {
   activeMenu,
@@ -3001,6 +3002,9 @@ const onSurfaceDragOver = (e: DragEvent) => {
   if (e.dataTransfer) {
     e.dataTransfer.dropEffect = 'copy';
   }
+  if (draggedBlockType.value && activeDropSlotIndex.value === null) {
+    activeDropSlotIndex.value = pageBlocks.value.length;
+  }
 };
 
 const onSurfaceDrop = (e: DragEvent) => {
@@ -5794,7 +5798,14 @@ const executeVsCodeReplaceAll = () => {
                     @dragleave="onCanvasDropSlotDragLeave(bIdx)"
                     @drop="onCanvasDropSlotDrop($event, bIdx)"
                   >
-                    <div class="drop-slot-line">
+                    <!-- Live Content Insertion Preview (Canva/Figma Interactive Ghost) -->
+                    <CanvasDropPreview
+                      v-if="activeDropSlotIndex === bIdx && draggedBlockType"
+                      :block-type="draggedBlockType"
+                      :accent-color="activeContainer.accentColor"
+                    />
+
+                    <div v-else class="drop-slot-line">
                       <span class="drop-slot-badge">
                         <Plus :size="12" /> Pasang di sini
                       </span>
@@ -7113,7 +7124,14 @@ const executeVsCodeReplaceAll = () => {
                   @dragleave="onCanvasDropSlotDragLeave(pageBlocks.length)"
                   @drop="onCanvasDropSlotDrop($event, pageBlocks.length)"
                 >
-                  <div class="drop-slot-line">
+                  <!-- Live Content Insertion Preview (Canva/Figma Interactive Ghost) -->
+                  <CanvasDropPreview
+                    v-if="activeDropSlotIndex === pageBlocks.length && draggedBlockType"
+                    :block-type="draggedBlockType"
+                    :accent-color="activeContainer.accentColor"
+                  />
+
+                  <div v-else class="drop-slot-line">
                     <span class="drop-slot-badge">
                       <Plus :size="12" /> Pasang di akhir halaman
                     </span>
