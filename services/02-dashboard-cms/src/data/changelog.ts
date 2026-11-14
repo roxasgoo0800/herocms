@@ -14,7 +14,7 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '02-dashboard-cms',
     name: 'Service 02: Dashboard Studio & Go BFF',
-    version: 'v1.42.26',
+    version: 'v1.42.27',
     serviceFolder: 'services/02-dashboard-cms',
     badge: 'Latest',
     stack: 'Vue 3 • Vite • Pinia • Go Gin (8085)',
@@ -75,13 +75,37 @@ export const microserviceVersions: MicroserviceVersion[] = [
 
 export const changelogReleases: ChangelogRelease[] = [
   {
+    version: 'v1.42.27',
+    service: '02-dashboard-cms',
+    serviceName: 'Service 02: Dashboard Studio & Go BFF',
+    releaseDate: '14 November 2026',
+    title: 'Optimasi Presisi & Forgiving Drop Zone Drag & Drop Komponen ke Kanvas',
+    summary: 'Meningkatkan kenyamanan interaksi drag & drop ala Canva/Figma: (1) Full-Block Adaptive Drop Zone: Menghilangkan keharusan membidik slot 8px dengan mendeteksi posisi kursor pada paruh atas/bawah seluruh badan blok untuk penyisipan otomatis; (2) Expanded Glowing Drop Slots: Memperbesar area drop slot menjadi 22px (in-progress) dan 54px (active) dengan garis batas interaktif dan badge visual; (3) Whole-Surface Drop Fallback: Seluruh artboard kanvas kini menerima drop event tanpa error cursor not-allowed; (4) Context-Aware Single-Click Add: Mengklik kartu katalog langsung menyisipkan komponen tepat di bawah blok yang sedang aktif terseleksi.',
+    badge: 'Latest',
+    author: 'Irgi & Rizal (Frontend & UX)',
+    items: [
+      {
+        id: 'c-02dash-14227-1',
+        type: 'improvement',
+        scope: 'Visual Canvas Drop Zone Engine',
+        description: 'Menambahkan handler onBlockDragOver dan onBlockDrop pada block-node-wrapper dengan deteksi posisi kursor atas/bawah 50% untuk penempatan blok yang responsif dan pemaaf.'
+      },
+      {
+        id: 'c-02dash-14227-2',
+        type: 'improvement',
+        scope: 'Catalog Quick Insertion & Visual Cues',
+        description: 'Memperluas dimensi slot drop, menambahkan feedback visual garis tepi penempatan, dan mendukung penambahan instan dengan klik pada kartu katalog.'
+      }
+    ]
+  },
+  {
     version: 'v1.42.26',
     service: '02-dashboard-cms',
     serviceName: 'Service 02: Dashboard Studio & Go BFF',
     releaseDate: '14 November 2026',
     title: 'Resolusi Aksi Ganti Foto pada Komponen Slide & Banner Carousel di Visual Editor',
     summary: 'Memperbaiki interaktivitas penggantian gambar slide banner carousel: (1) Menyematkan event handler triggerImageUpload dan openMediaPickerForBlock pada tombol overlay [ ☁ Ganti Foto ] dan [ 🗄️ Pustaka ]; (2) Menghubungkan klik langsung pada carousel-slide-img-wrap ke dialog picker berkas native; (3) Sinkronisasi overlay ganti foto pada modal editor detail draft.',
-    badge: 'Latest',
+    badge: 'Stable',
     author: 'Irgi & Rizal (DevOps & Frontend)',
     items: [
       {

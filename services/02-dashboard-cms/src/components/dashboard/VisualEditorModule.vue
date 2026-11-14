@@ -2905,17 +2905,32 @@ const toggleBlockVisibility = (b: VisualBlock) => {
   b.isVisible = !b.isVisible;
 };
 
-// Add New Block from Library
+// Add New Block from Library (Smart Context Insert)
 const addBlockFromLibrary = (type: VisualBlock['type']) => {
   const newBlock = createLibraryBlock(type);
+  if (selectedBlockId.value) {
+    const selIdx = pageBlocks.value.findIndex((b) => b.id === selectedBlockId.value);
+    if (selIdx !== -1) {
+      pageBlocks.value.splice(selIdx + 1, 0, newBlock);
+    } else {
+      insertNearFooter(newBlock);
+    }
+  } else {
+    insertNearFooter(newBlock);
+  }
+  selectedBlockId.value = newBlock.id;
+  recordHistory();
+  triggerAutoSaveDraft();
+  showToast(`Komponen '${newBlock.name}' berhasil ditambahkan ke kanvas!`, 'success');
+};
+
+const insertNearFooter = (newBlock: VisualBlock) => {
   const footerIdx = pageBlocks.value.findIndex((b) => b.type === 'footer');
   if (footerIdx !== -1) {
     pageBlocks.value.splice(footerIdx, 0, newBlock);
   } else {
     pageBlocks.value.push(newBlock);
   }
-  selectedBlockId.value = newBlock.id;
-  showToast(`Komponen '${newBlock.name}' berhasil ditambahkan ke kanvas!`, 'success');
 };
 
 // Drag & Drop Block from Catalog to Canvas
@@ -2957,6 +2972,41 @@ const onCanvasDropSlotDrop = (e: DragEvent, idx: number) => {
   }
   draggedBlockType.value = null;
   activeDropSlotIndex.value = null;
+};
+
+const onBlockDragOver = (e: DragEvent, bIdx: number) => {
+  e.preventDefault();
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'copy';
+  }
+  const currentTarget = e.currentTarget as HTMLElement;
+  const rect = currentTarget.getBoundingClientRect();
+  const relY = e.clientY - rect.top;
+  // Paruh atas: drop sebelum blok (bIdx) | Paruh bawah: drop setelah blok (bIdx + 1)
+  if (relY < rect.height / 2) {
+    activeDropSlotIndex.value = bIdx;
+  } else {
+    activeDropSlotIndex.value = bIdx + 1;
+  }
+};
+
+const onBlockDrop = (e: DragEvent, bIdx: number) => {
+  e.preventDefault();
+  const targetIdx = activeDropSlotIndex.value !== null ? activeDropSlotIndex.value : bIdx;
+  onCanvasDropSlotDrop(e, targetIdx);
+};
+
+const onSurfaceDragOver = (e: DragEvent) => {
+  e.preventDefault();
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'copy';
+  }
+};
+
+const onSurfaceDrop = (e: DragEvent) => {
+  e.preventDefault();
+  const targetIdx = activeDropSlotIndex.value !== null ? activeDropSlotIndex.value : pageBlocks.value.length;
+  onCanvasDropSlotDrop(e, targetIdx);
 };
 
 const insertBlockFromLibraryAt = (type: VisualBlock['type'], idx: number) => {
@@ -4366,6 +4416,7 @@ const executeVsCodeReplaceAll = () => {
                   v-for="item in filteredCatalogItems"
                   :key="item.id"
                   class="visual-wireframe-card"
+                  :class="{ 'is-being-dragged': draggedBlockType === item.type }"
                   draggable="true"
                   @dragstart="onCatalogDragStart($event, item.type)"
                   @dragend="onCatalogDragEnd"
@@ -5722,7 +5773,13 @@ const executeVsCodeReplaceAll = () => {
               </div>
 
               <!-- Website Content Stage -->
-              <div class="website-rendered-surface" :style="{ '--accent-brand': activeContainer.accentColor }">
+              <div
+                class="website-rendered-surface"
+                :class="{ 'is-canvas-drag-active': draggedBlockType !== null }"
+                :style="{ '--accent-brand': activeContainer.accentColor }"
+                @dragover="onSurfaceDragOver"
+                @drop="onSurfaceDrop"
+              >
                 <!-- Loop Over Blocks with Drag & Drop Slots -->
                 <template v-for="(block, bIdx) in pageBlocks" :key="block.id">
                   <!-- Canvas Drag and Drop Slot (Before Block) -->
@@ -5753,6 +5810,8 @@ const executeVsCodeReplaceAll = () => {
                       'is-selected': selectedBlockId === block.id && editorViewMode === 'design',
                       'is-hovered': hoveredBlockId === block.id && editorViewMode === 'design',
                       'is-locked': block.isLocked,
+                      'is-drag-target-top': draggedBlockType !== null && activeDropSlotIndex === bIdx,
+                      'is-drag-target-bottom': draggedBlockType !== null && activeDropSlotIndex === bIdx + 1,
                       [block.styles?.animation && block.styles.animation !== 'none' ? 'anim-' + block.styles.animation : '']: true
                     }"
                     :style="{
@@ -5770,6 +5829,8 @@ const executeVsCodeReplaceAll = () => {
                     @click="selectBlock(block.id, $event)"
                     @mouseenter="hoveredBlockId = block.id"
                     @mouseleave="hoveredBlockId = null"
+                    @dragover="onBlockDragOver($event, bIdx)"
+                    @drop.stop="onBlockDrop($event, bIdx)"
                   >
                     <!-- SELECTION BOUNDING BOX (Canva/Figma Crisp Canvas Outlines) -->
                     <div v-if="selectedBlockId === block.id && editorViewMode === 'design'" class="selection-overlay-box">

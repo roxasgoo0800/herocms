@@ -1860,12 +1860,13 @@
 }
 
 .canvas-drop-slot.is-drag-in-progress {
-  height: 8px;
+  height: 22px;
+  margin: 4px 0;
 }
 
 .canvas-drop-slot.is-active-drop {
-  height: 42px;
-  margin: 8px 0;
+  height: 54px;
+  margin: 10px 0;
 }
 
 .drop-slot-line {
@@ -1885,28 +1886,32 @@
 }
 
 .canvas-drop-slot.is-drag-in-progress .drop-slot-line {
-  background: rgba(37, 99, 235, 0.18);
-  border-top: 1.5px dashed rgba(37, 99, 235, 0.45);
+  background: rgba(37, 99, 235, 0.08);
+  border: 1.5px dashed rgba(37, 99, 235, 0.5);
+  height: 18px;
+  border-radius: 8px;
 }
 
 .canvas-drop-slot.is-active-drop .drop-slot-line {
-  background: #2563eb;
-  height: 3px;
-  box-shadow: 0 0 14px rgba(37, 99, 235, 0.65);
+  background: rgba(37, 99, 235, 0.14);
+  border: 2px solid #2563eb;
+  height: 46px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
 }
 
 .drop-slot-badge {
   display: none;
   align-items: center;
-  gap: 5px;
-  padding: 4px 14px;
+  gap: 6px;
+  padding: 6px 16px;
   border-radius: 999px;
   background: #2563eb;
   color: #ffffff;
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
   transform: scale(0.9);
   transition: transform 0.15s ease;
   pointer-events: none;
@@ -1915,6 +1920,18 @@
 .canvas-drop-slot.is-active-drop .drop-slot-badge {
   display: inline-flex;
   transform: scale(1);
+}
+
+.block-node-wrapper.is-drag-target-top {
+  box-shadow: inset 0 3px 0 0 #2563eb;
+}
+
+.block-node-wrapper.is-drag-target-bottom {
+  box-shadow: inset 0 -3px 0 0 #2563eb;
+}
+
+.website-rendered-surface.is-canvas-drag-active {
+  cursor: copy;
 }
 
 /* Empty Canvas Drop Target */
