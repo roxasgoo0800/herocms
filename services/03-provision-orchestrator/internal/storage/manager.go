@@ -36,14 +36,17 @@ func NewManager(baseDir string) (*Manager, error) {
 		baseDir = "/var/lib/herocms/tenants"
 	}
 
-	// In development or local testing without root, allow fallback to local path
-	if err := os.MkdirAll(baseDir, 0755); err != nil {
+	// In development or local testing without root, allow fallback to local path if not writable
+	probeFile := filepath.Join(baseDir, ".probe_write")
+	if err := os.MkdirAll(baseDir, 0777); err != nil || os.WriteFile(probeFile, []byte("ok"), 0644) != nil {
 		localFallback := filepath.Join(os.TempDir(), "herocms_tenants")
-		log.Printf("[STORAGE NOTICE] Unable to create %s (%v). Falling back to %s", baseDir, err, localFallback)
-		if errFallback := os.MkdirAll(localFallback, 0755); errFallback != nil {
+		log.Printf("[STORAGE NOTICE] Unable to write to %s. Falling back to %s", baseDir, localFallback)
+		if errFallback := os.MkdirAll(localFallback, 0777); errFallback != nil {
 			return nil, fmt.Errorf("failed to initialize storage base dir: %w", errFallback)
 		}
 		baseDir = localFallback
+	} else {
+		_ = os.Remove(probeFile)
 	}
 
 	return &Manager{

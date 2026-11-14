@@ -6,6 +6,20 @@ Dokumen ini memuat catatan riwayat perubahan versi (*Changelog*) dan buku catata
 
 ## 📑 1. Daftar Riwayat Rilis (Release Ledger)
 
+### [03-orchestrator-v1.2.5] - 14 November 2026
+**Tipe Rilis**: Bugfix & Storage Write-Probe Hardening (`TENANT_STORAGE_BASE` permission check)  
+**Status**: Production Ready & Stable  
+**PIC Tim**: Rizal (DevOps & Security), Paijo (QA/QC Lead)
+
+#### 🌟 Ringkasan Rilis
+1. **Perbaikan Deteksi Izin Tulis Direktori Storage Tenant (`config.LoadConfig` & `storage.NewManager`)**:
+   - Menambahkan pengujian izin tulis aktif (*write-probe*) menggunakan probe file sementara `.probe_write` pada kandidat path `/var/lib/herocms/tenants`.
+   - Mencegah kesalahan false-positive saat direktori telah dibuat oleh daemon root Docker dengan izin 0755, sehingga proses non-root host dev otomatis dialihkan ke fallback absolut `./data/tenants` tanpa memicu error `permission denied`.
+2. **Sinkronisasi Izin Direktori Host di Skrip Dev Runner (`scripts/run_dev.sh`)**:
+   - Menambahkan pemulihan izin otomatis pada `/var/lib/herocms` (`chmod 0777` dan ownership user lokal) saat dev server dinyalakan.
+
+---
+
 ### [03-orchestrator-v1.2.4] - 02 November 2026
 **Tipe Rilis**: Feature Hardening & Multi-Page Storage Seeding (`public/<page>.html` & `public/<page>/index.html`)  
 **Status**: Production Ready & Stable  

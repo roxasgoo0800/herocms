@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -46,14 +47,26 @@ func LoadConfig() *Config {
 
 	storageBase := os.Getenv("TENANT_STORAGE_BASE")
 	if storageBase == "" {
-		// Prefer standard Linux container volume mount if accessible
+		// Prefer standard Linux container volume mount if accessible and writable
 		candidate := "/var/lib/herocms/tenants"
+		isWritable := false
 		if err := os.MkdirAll(candidate, 0755); err == nil {
+			probeFile := filepath.Join(candidate, ".probe_write")
+			if errWrite := os.WriteFile(probeFile, []byte("ok"), 0644); errWrite == nil {
+				_ = os.Remove(probeFile)
+				isWritable = true
+			}
+		}
+
+		if isWritable {
 			storageBase = candidate
 		} else {
-			// Fallback for non-root host dev environment (e.g. macOS)
-			fallback := "./data/tenants"
-			_ = os.MkdirAll(fallback, 0755)
+			// Fallback for non-root host dev environment (e.g. macOS or non-root Linux)
+			fallback, err := filepath.Abs("./data/tenants")
+			if err != nil {
+				fallback = "./data/tenants"
+			}
+			_ = os.MkdirAll(fallback, 0777)
 			storageBase = fallback
 		}
 	}

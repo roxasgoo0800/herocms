@@ -24,11 +24,11 @@ export const microserviceVersions: MicroserviceVersion[] = [
   {
     id: '03-provision-orchestrator',
     name: 'Service 03: Container Provision Orchestrator',
-    version: 'v1.2.4',
+    version: 'v1.2.5',
     serviceFolder: 'services/03-provision-orchestrator',
     badge: 'Stable',
     stack: 'Golang • Docker Engine SDK • cgroups v2',
-    lastUpdated: '02 November 2026',
+    lastUpdated: '14 November 2026',
     leadPic: 'Andalusia & Rizal'
   },
   {
